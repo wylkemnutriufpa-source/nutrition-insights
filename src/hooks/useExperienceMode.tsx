@@ -25,16 +25,18 @@ export interface ExperienceModeContextValue {
 
 
 export function useExperienceMode(): ExperienceModeContextValue {
-  const { profile, experienceMode, experienceRole, setMode, loading, refreshProfile } = useAuth();
+  const { experienceMode, experienceRole, setMode, loading, refreshProfile } = useAuth();
 
-  const mode = experienceMode as ExperienceMode;
+  const mode = (experienceMode as ExperienceMode) || "basic";
   const role = experienceRole;
 
-  // Forçar atualização local quando o modo mudar no perfil
+  // Use state to allow immediate UI feedback while waiting for DB
   const [localMode, setLocalMode] = useState<ExperienceMode>(mode);
 
+  // Keep local state in sync with auth profile when it changes
   useEffect(() => {
-    if (mode !== localMode) {
+    if (mode && mode !== localMode) {
+      console.log("[ExperienceMode] Syncing local mode with auth profile:", mode);
       setLocalMode(mode);
     }
   }, [mode]);
@@ -50,24 +52,29 @@ export function useExperienceMode(): ExperienceModeContextValue {
     return Array.isArray(allowedFeatures) ? allowedFeatures.includes(feature) : false;
   };
 
-  // Mantido apenas para compatibilidade visual ou se algum componente antigo usar
   const minMode = (requiredMode: ExperienceMode) => {
     const levels = { basic: 0, pro: 1, advanced: 2 };
-    return levels[localMode] >= levels[requiredMode];
+    const currentLevel = levels[localMode] ?? 0;
+    const requiredLevel = levels[requiredMode] ?? 0;
+    return currentLevel >= requiredLevel;
   };
 
-  // Mantido para compatibilidade com rotas/menus se necessário
-  const isRouteAllowed = (route: string) => {
-    // Se quiser implementar lógica de bloqueio de rota baseada em modo no futuro:
-    // return isFeatureEnabled(routeToFeature(route));
-    return true;
-  };
+  const isRouteAllowed = (route: string) => true;
 
   const wrappedSetMode = async (newMode: string) => {
-    await setMode(newMode);
+    console.log("[ExperienceMode] Setting new mode:", newMode);
+    // Immediate feedback
     setLocalMode(newMode as ExperienceMode);
-    // Forçar refresh do perfil para garantir que useAuth e o banco estejam em sincronia total
-    setTimeout(() => refreshProfile(), 500);
+    
+    try {
+      await setMode(newMode);
+      // Optional: immediate refresh to ensure absolute sync
+      await refreshProfile();
+    } catch (err) {
+      console.error("[ExperienceMode] Failed to save mode:", err);
+      // Revert local state on failure
+      setLocalMode(mode);
+    }
   };
 
   return {
@@ -77,9 +84,9 @@ export function useExperienceMode(): ExperienceModeContextValue {
     isFeatureEnabled,
     minMode,
     isRouteAllowed,
-    isBasic: mode === "basic",
-    isPro: mode === "pro",
-    isAdvanced: mode === "advanced",
+    isBasic: localMode === "basic",
+    isPro: localMode === "pro",
+    isAdvanced: localMode === "advanced",
     isLoading: loading,
     failedMode: null,
     retryLastMode: () => {},

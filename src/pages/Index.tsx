@@ -1249,7 +1249,7 @@ export default function Index() {
     return (
       <div className="space-y-6">
         {/* Experience mode inline toggle */}
-        {minMode("pro") && <InlineExperienceToggle />}
+        <InlineExperienceToggle />
         {/* View mode toggle — PRO+ only */}
         {minMode("pro") && (
           <div className="flex items-center justify-end">
