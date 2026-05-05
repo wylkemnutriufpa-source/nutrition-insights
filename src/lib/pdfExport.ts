@@ -3,6 +3,22 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 /**
+ * Clean up text from technical audit information and weird symbols
+ */
+function cleanClinicalText(text: string): string {
+  if (!text) return "";
+  const auditMarkers = ["AUDITORIA CLÍNICA", "TRILHA DE REGRAS", "Motor de Cálculo", "Clinical Engine", "Timestamp:", "Protocolo:", "MEAL_KCAL_SPLIT", "Status: Validado"];
+  let cleaned = text.replace(/[Ø=Ý]+/g, "");
+  const lines = cleaned.split("\n");
+  const filteredLines = lines.filter(line => {
+    const upperLine = line.toUpperCase();
+    return !auditMarkers.some(marker => upperLine.includes(marker.toUpperCase()));
+  });
+  return filteredLines.join("\n").trim();
+}
+
+
+/**
  * Utility para gerar e baixar PDFs usando a API nativa do navegador (print).
  * Cria uma janela de impressão formatada que pode ser salva como PDF.
  */
@@ -133,7 +149,7 @@ export function generateMealPlanPDF(data: MealPlanPDFData) {
         ${items.map(item => `
           <tr>
             <td><span class="badge">${item.mealType}</span><br/>${item.title}</td>
-            <td>${item.description || '-'}</td>
+            <td>${item.description ? cleanClinicalText(item.description) : '-'}</td>
             <td>${item.calories || '-'}</td>
             <td>${item.protein ? item.protein + 'g' : '-'}</td>
             <td>${item.carbs ? item.carbs + 'g' : '-'}</td>
@@ -217,7 +233,7 @@ export function generateAssessmentPDF(data: AssessmentPDFData) {
 
     ${data.notes ? `
       <div class="notes">
-        <strong>Observações:</strong> ${data.notes}
+        <strong>Observações:</strong> ${cleanClinicalText(data.notes)}
       </div>
     ` : ''}
 
