@@ -30,12 +30,20 @@ export interface DraftRecord {
 const DRAFT_PAYLOAD_VERSION = 1;
 
 async function getActiveTenant(): Promise<string | null> {
-  const { data, error } = await supabase.rpc('get_user_active_tenant');
-  if (error) {
-    console.error('[v3-draft] get_user_active_tenant error');
+  try {
+    const { data, error } = await supabase.rpc('get_user_active_tenant');
+    if (error) {
+      console.error('[v3-draft] RPC get_user_active_tenant failed:', error.message);
+      return null;
+    }
+    if (!data) {
+      console.warn('[v3-draft] No active tenant found for user');
+    }
+    return (data as string | null) ?? null;
+  } catch (err) {
+    console.error('[v3-draft] Unexpected error fetching active tenant:', err);
     return null;
   }
-  return (data as string | null) ?? null;
 }
 
 function computeMacros(meals: Meal[]) {
@@ -132,9 +140,15 @@ export async function loadOrCreateDraft(
     .single();
 
   if (insErr) {
-    console.error('[v3-draft] create failed');
+    console.error('[v3-draft] create failed:', insErr.message, {
+      patientId,
+      nutritionistId,
+      tenantId,
+      errorDetails: insErr
+    });
     return null;
   }
+  console.info('[v3-draft] draft created successfully:', created?.id);
   return created as unknown as DraftRecord;
 }
 
@@ -174,9 +188,15 @@ export async function saveDraft(
     .single();
 
   if (error) {
-    console.warn('[v3-draft] save failed — keeping local fallback');
+    console.warn('[v3-draft] save failed — keeping local fallback', {
+      draftId,
+      errorMessage: error.message,
+      errorCode: error.code
+    });
     return null;
   }
+  
+  console.debug('[v3-draft] saved successfully:', draftId);
 
   // Log de acesso: Edição de draft
   const { data: userRes } = await supabase.auth.getUser();
