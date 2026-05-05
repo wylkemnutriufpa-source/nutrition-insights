@@ -43,8 +43,10 @@ describe("v3Motor", () => {
 
     it("should suggest other proteins for a protein item", () => {
       const suggestions = getDeterministicSuggestions("Frango", foods, "gram");
-      expect(suggestions.some(f => f.name === "Carne")).toBe(true);
-      expect(suggestions.some(f => f.name === "Arroz")).toBe(false);
+      const proteinNames = suggestions.map(f => f.name);
+      expect(proteinNames).toContain("Carne");
+      expect(proteinNames).toContain("Peixe");
+      expect(proteinNames).not.toContain("Arroz");
     });
 
     it("should handle items not in main categories by falling back to measurementType", () => {
