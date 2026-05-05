@@ -269,7 +269,7 @@ export default function ClientDashboard() {
                       </p>
                       <div className="flex items-center gap-2">
                         <h1 className={`font-display text-xl sm:text-2xl md:text-3xl font-bold truncate ${
-                          mode === 'advanced' ? 'text-foreground' : 
+                          mode === 'advanced' ? 'text-amber-600 dark:text-amber-400' : 
                           mode === 'pro' ? 'text-blue-600 dark:text-blue-400' : 
                           'text-green-800 dark:text-green-400'
                         }`}>
@@ -277,8 +277,17 @@ export default function ClientDashboard() {
                         </h1>
                         {mode === 'advanced' && <PremiumBadge />}
                         {mode === 'pro' && <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded">Completo</span>}
+                        {mode === 'basic' && <span className="text-[10px] font-bold uppercase tracking-wider bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded">Essencial</span>}
                       </div>
-                      {mode === 'advanced' ? <PremiumAccentLine /> : <div className={`h-1 w-12 mt-2 rounded-full ${mode === 'pro' ? 'bg-blue-500' : 'bg-green-600'}`} />}
+                      
+                      {/* Descrição dinâmica por modo */}
+                      <p className="text-sm mt-2 max-w-lg opacity-80">
+                        {mode === 'advanced' && "Você está no nível Advanced. Todas as inteligências clínicas e métricas de elite estão ativas."}
+                        {mode === 'pro' && "Modo Pro ativado. Acompanhamento completo e ferramentas de performance disponíveis."}
+                        {mode === 'basic' && "Experiência essencial. Foco no acompanhamento básico e metas diárias."}
+                      </p>
+
+                      {mode === 'advanced' ? <PremiumAccentLine /> : <div className={`h-1 w-12 mt-3 rounded-full ${mode === 'pro' ? 'bg-blue-500' : 'bg-green-600'}`} />}
                     </div>
                   </div>
                 </div>

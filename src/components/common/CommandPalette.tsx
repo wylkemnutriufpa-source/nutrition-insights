@@ -180,7 +180,7 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
 
   useEffect(() => {
     const handleOpen = () => {
-      console.log("[CommandPalette] Event 'open-command-palette' received");
+      console.log("[CommandPalette] Event received: open-command-palette");
       setIsOpen(true);
     };
     window.addEventListener("open-command-palette", handleOpen);
