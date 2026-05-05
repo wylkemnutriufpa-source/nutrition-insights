@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseBodyAssessment, generateBodyCompositionFlags } from "./bodyAssessmentParser";
+import { parseBodyAssessment, generateBodyCompositionFlags } from "../bodyAssessmentParser";
 
 describe("bodyAssessmentParser", () => {
   describe("parseBodyAssessment", () => {

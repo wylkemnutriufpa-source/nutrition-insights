@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { safeNum, fmtMacro, safeMultiplier, isMacroInconsistent } from "./formatMacros";
+import { safeNum, fmtMacro, safeMultiplier, isMacroInconsistent } from "../formatMacros";
 
 describe("formatMacros utils", () => {
   describe("safeNum", () => {

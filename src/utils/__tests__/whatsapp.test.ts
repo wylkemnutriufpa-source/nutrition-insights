@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatInternationalWhatsApp, validateWhatsApp, normalizeWhatsApp } from "./whatsapp";
+import { formatInternationalWhatsApp, validateWhatsApp, normalizeWhatsApp } from "../whatsapp";
 
 describe("whatsapp utils", () => {
   describe("formatInternationalWhatsApp", () => {
