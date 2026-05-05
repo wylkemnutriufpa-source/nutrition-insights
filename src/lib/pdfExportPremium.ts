@@ -454,12 +454,14 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
       const substitutions = groupItems.filter(i => i !== primary);
 
+      const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
+      const showTitle = primary.title && !sameAsLabel;
       return `
         <div class="meal-row">
           <div class="meal-header-row">
             <div class="meal-title-group">
               <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.label}</span>
-              <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
+              ${showTitle ? `<span class="meal-primary-title">${escapeHtml(primary.title)}</span>` : ""}
             </div>
             <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
           </div>
@@ -467,14 +469,14 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <div class="food-list">
               ${primary.description ? formatDescription(primary.description) : ""}
             </div>
-            
+
             ${substitutions.length > 0 ? `
               <div class="substitution-box">
                 <div class="sub-header">Opções de Substituição</div>
                 ${substitutions.map(sub => `
                   <div class="sub-item">
                     <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
-                    <span style="color: #999; font-size: 9px;">${sub.calories_target} kcal</span>
+                    <span style="color: #999; font-size: 9px;">${sub.calories_target || 0} kcal</span>
                   </div>
                 `).join("")}
               </div>
