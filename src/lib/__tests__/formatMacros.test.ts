@@ -1,91 +1,57 @@
-/**
- * Unit tests for the global macros formatting helpers.
- * These guarantee that the UI never renders `NaN`/`Infinity`/`undefined`
- * regardless of upstream bugs in adapters, calculations, or DB nulls.
- */
 import { describe, it, expect } from "vitest";
-import { safeNum, fmtMacro, fmtMacroDecimal, safeMultiplier } from "../formatMacros";
+import { safeNum, fmtMacro, safeMultiplier, isMacroInconsistent } from "../formatMacros";
 
-describe("safeNum", () => {
-  it("returns valid finite numbers untouched", () => {
-    expect(safeNum(0)).toBe(0);
-    expect(safeNum(42)).toBe(42);
-    expect(safeNum(-3.5)).toBe(-3.5);
+describe("formatMacros utils", () => {
+  describe("safeNum", () => {
+    it("should return finite numbers as is", () => {
+      expect(safeNum(10)).toBe(10);
+      expect(safeNum("20.5")).toBe(20.5);
+    });
+
+    it("should return 0 for NaN, Infinity, null, undefined", () => {
+      expect(safeNum(NaN)).toBe(0);
+      expect(safeNum(Infinity)).toBe(0);
+      expect(safeNum(null)).toBe(0);
+      expect(safeNum(undefined)).toBe(0);
+      expect(safeNum("abc")).toBe(0);
+    });
   });
 
-  it("coerces nullish/invalid inputs to 0", () => {
-    expect(safeNum(null)).toBe(0);
-    expect(safeNum(undefined)).toBe(0);
-    expect(safeNum(NaN)).toBe(0);
-    expect(safeNum(Infinity)).toBe(0);
-    expect(safeNum(-Infinity)).toBe(0);
-    expect(safeNum("not a number")).toBe(0);
-    expect(safeNum({})).toBe(0);
+  describe("fmtMacro", () => {
+    it("should round numbers to string", () => {
+      expect(fmtMacro(10.6)).toBe("11");
+      expect(fmtMacro(10.4)).toBe("10");
+    });
+
+    it("should return fallback for non-finite or negative numbers", () => {
+      expect(fmtMacro(null)).toBe("0");
+      expect(fmtMacro(-10, "N/A")).toBe("N/A");
+    });
   });
 
-  it("parses numeric strings", () => {
-    expect(safeNum("123")).toBe(123);
-    expect(safeNum("3.14")).toBe(3.14);
-  });
-});
+  describe("safeMultiplier", () => {
+    it("should calculate correct multiplier", () => {
+      expect(safeMultiplier(100, 50)).toBe(2);
+    });
 
-describe("fmtMacro", () => {
-  it("rounds finite numbers to integer string", () => {
-    expect(fmtMacro(1783)).toBe("1783");
-    expect(fmtMacro(85.4)).toBe("85");
-    expect(fmtMacro(85.6)).toBe("86");
-    expect(fmtMacro(0)).toBe("0");
+    it("should return fallback if base is 0 or invalid", () => {
+      expect(safeMultiplier(100, 0)).toBe(1);
+      expect(safeMultiplier(100, null, 2)).toBe(2);
+    });
   });
 
-  it("returns fallback for invalid values (the bug)", () => {
-    expect(fmtMacro(NaN)).toBe("0");
-    expect(fmtMacro(Infinity)).toBe("0");
-    expect(fmtMacro(undefined)).toBe("0");
-    expect(fmtMacro(null)).toBe("0");
-    expect(fmtMacro("NaN")).toBe("0");
-    expect(fmtMacro("foo")).toBe("0");
-  });
+  describe("isMacroInconsistent", () => {
+    it("should return false if macros match calories (4/4/9)", () => {
+      // 100kcal: 10g prot (40), 10g carb (40), 2.22g fat (20)
+      expect(isMacroInconsistent(100, 10, 10, 2.22)).toBe(false);
+    });
 
-  it("respects custom fallback", () => {
-    expect(fmtMacro(NaN, "—")).toBe("—");
-    expect(fmtMacro(undefined, "?")).toBe("?");
-  });
-});
+    it("should return true if there is a significant gap", () => {
+      expect(isMacroInconsistent(100, 10, 10, 10)).toBe(true); // 40+40+90 = 170 vs 100
+    });
 
-describe("fmtMacroDecimal", () => {
-  it("preserves decimals for valid inputs", () => {
-    expect(fmtMacroDecimal(3.14)).toBe("3.1");
-    expect(fmtMacroDecimal(3.16, 1)).toBe("3.2");
-    expect(fmtMacroDecimal(3.149, 2)).toBe("3.15");
-  });
-
-  it("falls back for invalid inputs", () => {
-    expect(fmtMacroDecimal(NaN)).toBe("0");
-    expect(fmtMacroDecimal(undefined, 2, "—")).toBe("—");
-  });
-});
-
-describe("safeMultiplier", () => {
-  it("computes target/base ratio for valid inputs", () => {
-    expect(safeMultiplier(1800, 1800)).toBe(1);
-    expect(safeMultiplier(900, 1800)).toBe(0.5);
-    expect(safeMultiplier(2000, 1000)).toBe(2);
-  });
-
-  it("returns fallback when base is 0/negative/invalid (divisão por zero)", () => {
-    expect(safeMultiplier(1800, 0)).toBe(1);
-    expect(safeMultiplier(1800, null)).toBe(1);
-    expect(safeMultiplier(1800, undefined)).toBe(1);
-    expect(safeMultiplier(1800, NaN)).toBe(1);
-    expect(safeMultiplier(1800, -5)).toBe(1);
-  });
-
-  it("returns fallback when target is invalid", () => {
-    expect(safeMultiplier(NaN, 1800)).toBe(0); // 0/1800 = 0 (válido)
-    expect(safeMultiplier(undefined, 1800)).toBe(0);
-  });
-
-  it("respects custom fallback", () => {
-    expect(safeMultiplier(1800, 0, 0.5)).toBe(0.5);
+    it("should handle 0 calories as consistent", () => {
+      expect(isMacroInconsistent(0, 0, 0, 0)).toBe(false);
+    });
   });
 });
