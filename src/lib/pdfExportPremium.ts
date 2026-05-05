@@ -332,14 +332,27 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   </div>
 
   <div class="macro-summary">
-    <div class="macro-card kcal">
-      <div class="macro-value">${data.targetCalories || 0} <span style="font-size:11px">kcal</span></div>
+    <div class="macro-card">
+      <div class="macro-label">Energia Total</div>
+      <div class="macro-value">${data.targetCalories || 0} kcal</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-label">Proteínas</div>
+      <div class="macro-value">${data.targetProtein || 0}g</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-label">Carboidratos</div>
+      <div class="macro-value">${data.targetCarbs || 0}g</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-label">Gorduras</div>
+      <div class="macro-value">${data.targetFat || 0}g</div>
     </div>
   </div>
 
   ${sortedDays.map(dayKey => {
     const dayItems = groupedByDay[dayKey];
-    const dayName = dayKey === -1 ? "Todos os Dias" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
+    const dayName = dayKey === -1 ? "Diário (Todos os Dias)" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
 
     const mealTypeGroups = mealOrder.map(mType => {
       const typeItems = dayItems.filter(i => i.mealType === mType);
@@ -361,43 +374,32 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const renderGroup = (groupItems: MealPlanPDFItem[]) => {
         const primary = groupItems.find(i => i.is_primary) || groupItems[0];
         const substitutions = groupItems.filter(i => i !== primary);
-        
-        const subKcal = substitutions.reduce((s, i) => s + (i.calories_target || 0), 0);
-        const subProt = substitutions.reduce((s, i) => s + (i.protein_target || 0), 0);
-        const subCarb = substitutions.reduce((s, i) => s + (i.carbs_target || 0), 0);
-        const subFat = substitutions.reduce((s, i) => s + (i.fat_target || 0), 0);
 
         return `
           <div class="meal-row">
-            <div class="meal-type-bar" style="background: ${mealInfo.color}"></div>
-            <div class="meal-content">
-              <div class="meal-info">
-                <div class="meal-title">
-                  <span style="color: ${mealInfo.color}; margin-right: 5px;">${mealInfo.emoji}</span>
-                  ${escapeHtml(mealInfo.label)}: ${escapeHtml(primary.title)}
-                </div>
+            <div class="meal-header-row">
+              <div class="meal-title-group">
+                <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.emoji} ${mealInfo.label}</span>
+                <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
+              </div>
+              <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
+            </div>
+            <div class="meal-body">
+              <div class="food-list">
                 ${primary.description ? formatDescription(primary.description) : ""}
-                
-                ${substitutions.length > 0 ? `
-                  <div style="margin-top: 10px; padding: 8px; background: #fafafa; border-radius: 6px; border-left: 3px solid #eee;">
-                    <div style="font-size: 9px; font-weight: 800; color: #999; margin-bottom: 5px; text-transform: uppercase;">Opções de Substituição</div>
-                    ${substitutions.map(sub => `
-                      <div style="margin-bottom: 4px;">
-                        <div style="font-size: 11px; font-weight: 700;">${escapeHtml(sub.title)}</div>
-                        <div style="font-size: 9px; color: #999;">${sub.calories_target} kcal · P ${sub.protein_target}g</div>
-                      </div>
-                    `).join("")}
-                    <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #eee; font-size: 9px; color: #777;">
-                      <span style="font-weight: 800; color: #c44; text-transform: uppercase;">Macros não considerados:</span>
-                      <span style="margin-left: 4px;">${subKcal} kcal · P ${subProt}g · C ${subCarb}g · G ${subFat}g</span>
+              </div>
+              
+              ${substitutions.length > 0 ? `
+                <div class="substitution-box">
+                  <div class="sub-header">🔄 Opções de Substituição</div>
+                  ${substitutions.map(sub => `
+                    <div class="sub-item">
+                      <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
+                      <span style="color: #999; font-size: 9px;">${sub.calories_target} kcal</span>
                     </div>
-                  </div>
-                ` : ""}
-              </div>
-              <div class="meal-macros">
-                <div class="kcal-value">${primary.calories_target || 0}</div>
-                <div style="font-size: 8px; color: #D4A84B; font-weight: 700; margin-top: 2px;">(Total Considerado)</div>
-              </div>
+                  `).join("")}
+                </div>
+              ` : ""}
             </div>
           </div>
         `;
@@ -410,10 +412,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     });
 
     const filteredGroups = mealTypeGroups.filter(g => g !== "");
-    return `<div class="day-section"><div class="day-header"><div class="day-number">${dayKey === 0 ? 7 : dayKey}</div><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
+    return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
 
-  <div class="premium-footer"><div>FitJourney</div><div>${new Date().toLocaleDateString('pt-BR')}</div></div>
+  <div class="premium-footer">
+    <div>Gerado por FitJourney Premium</div>
+    <div>${new Date().toLocaleDateString('pt-BR')}</div>
+  </div>
 </body></html>`;
 
   return html;
