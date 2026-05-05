@@ -492,7 +492,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   ${data.notes ? `
     <div style="margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
       <div style="font-size: 9px; text-transform: uppercase; font-weight: 700; color: #6c757d; margin-bottom: 4px;">Observações do Nutricionista</div>
-      <div style="font-size: 11px; line-height: 1.5; color: #333;">${escapeHtml(data.notes)}</div>
+      <div style="font-size: 11px; line-height: 1.5; color: #333;">${escapeHtml(cleanClinicalText(data.notes || ""))}</div>
     </div>
   ` : ""}
 
