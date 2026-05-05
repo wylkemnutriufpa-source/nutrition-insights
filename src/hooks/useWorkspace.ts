@@ -28,6 +28,7 @@ export interface WorkspaceItem {
   route?: string;
   icon?: string;
   premium_only?: boolean;
+  feature?: string;
   role_visibility?: string[];
 }
 
