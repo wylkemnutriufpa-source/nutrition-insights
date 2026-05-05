@@ -360,19 +360,19 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   </div>
 
   <div class="macro-summary">
-    <div class="macro-card">
+    <div class="macro-card" style="border-top: 3px solid #D4A84B;">
       <div class="macro-label">Energia Total</div>
-      <div class="macro-value">${data.targetCalories || 0} kcal</div>
+      <div class="macro-value">${data.targetCalories || 0} <span style="font-size: 10px; font-weight: 500;">kcal</span></div>
     </div>
-    <div class="macro-card">
+    <div class="macro-card" style="border-top: 3px solid #EF4444;">
       <div class="macro-label">Proteínas</div>
       <div class="macro-value">${data.targetProtein || 0}g</div>
     </div>
-    <div class="macro-card">
+    <div class="macro-card" style="border-top: 3px solid #F59E0B;">
       <div class="macro-label">Carboidratos</div>
       <div class="macro-value">${data.targetCarbs || 0}g</div>
     </div>
-    <div class="macro-card">
+    <div class="macro-card" style="border-top: 3px solid #3B82F6;">
       <div class="macro-label">Gorduras</div>
       <div class="macro-value">${data.targetFat || 0}g</div>
     </div>
