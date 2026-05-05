@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         } else if (event === "SIGNED_OUT") {
           setProfile(null);
-          setRoles([]);
+          setRoles(null);
           setSubscription(defaultSubscription);
           setError(null);
         }
