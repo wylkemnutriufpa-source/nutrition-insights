@@ -14,7 +14,7 @@ import {
   CalendarDays, Star, ChevronDown, ChevronUp, Trophy,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown, Calendar
 } from "lucide-react";
-import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
+import { generatePremiumMealPlanPDF, buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
 import {
@@ -109,6 +109,8 @@ export default function PatientMealPlan() {
   const [exportingPDF, setExportingPDF] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const { isStreakAtRisk, isNearCompletion, identityStatus } = useEngagement();
+  const [previewData, setPreviewData] = useState<PremiumMealPlanPDFData | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -343,7 +345,6 @@ export default function PatientMealPlan() {
       const { data: myProfile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
       if (myProfile?.full_name) patientName = myProfile.full_name;
 
-      // Get nutritionist name from the plan
       const { data: planFull } = await supabase.from("meal_plans").select("nutritionist_id, total_target_calories, total_target_protein, total_target_carbs, total_target_fat, description").eq("id", plan.id).maybeSingle();
       if (planFull?.nutritionist_id) {
         const { data: nutProfile } = await supabase.from("profiles").select("full_name").eq("user_id", planFull.nutritionist_id).maybeSingle();
@@ -355,7 +356,7 @@ export default function PatientMealPlan() {
         if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
       } catch { /* ignore */ }
 
-      generatePremiumMealPlanPDF({
+      const data: PremiumMealPlanPDFData = {
         planTitle: plan.title || "Plano Alimentar",
         patientName,
         nutritionistName,
@@ -378,10 +379,12 @@ export default function PatientMealPlan() {
         targetFat: planFull?.total_target_fat || undefined,
         goal,
         notes: planFull?.description || undefined,
-      });
-      toast.success("PDF gerado! Use Ctrl+P para salvar.");
+      };
+
+      setPreviewData(data);
+      setShowPreview(true);
     } catch {
-      toast.error("Erro ao gerar PDF");
+      toast.error("Erro ao preparar visualização");
     } finally {
       setExportingPDF(false);
     }
