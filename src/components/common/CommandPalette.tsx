@@ -172,6 +172,7 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { user, isNutritionist, isPatient, isAdmin, isPersonal } = useAuth();
+  const { isPatientContext } = useWorkspaceContext();
   const [patients, setPatients] = useState<ProfileResult[]>([]);
   const [professionals, setProfessionals] = useState<ProfileResult[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlanResult[]>([]);
@@ -208,7 +209,10 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   // Load profiles + extra data when palette opens
   useEffect(() => {
     if (!isOpen || dataLoaded) return;
-    if (isPatient && !isAdmin && !isNutritionist && !isPersonal) {
+    
+    // Se estiver em contexto de paciente, não carrega dados pro (pacientes, protocolos, etc)
+    // mesmo que o usuário tenha a role de nutricionista (caso híbrido)
+    if (isPatientContext || (isPatient && !isAdmin && !isNutritionist && !isPersonal)) {
       setDataLoaded(true);
       return;
     }
@@ -340,8 +344,12 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   }, [isNutritionist, isPatient, isAdmin, isPersonal]);
 
   const filteredRoutes = useMemo(
-    () => allRoutes.filter((r) => r.roles.some((role) => userRoles.includes(role))),
-    [userRoles]
+    () => allRoutes.filter((r) => {
+      // Se em contexto de paciente, oculta rotas que não têm 'patient' nas roles
+      if (isPatientContext && !r.roles.includes("patient")) return false;
+      return r.roles.some((role) => userRoles.includes(role));
+    }),
+    [userRoles, isPatientContext]
   );
 
   // Smart filtering: normalize query and match against keywords + label + desc

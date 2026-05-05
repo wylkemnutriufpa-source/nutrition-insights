@@ -41,10 +41,30 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     }
   }
 
-  // 3. Rotas específicas que devem ser exclusivas de nutricionista
-  const proOnlyPaths = ["/patients", "/diet-builder", "/meal-plans/editor", "/analyze-meal"];
+  // 3. Rotas específicas que devem ser exclusivas de nutricionista/profissional
+  const proOnlyPaths = [
+    "/patients", 
+    "/diet-builder", 
+    "/meal-plans", 
+    "/analyze-meal",
+    "/automation",
+    "/financial",
+    "/diet-templates",
+    "/food-database",
+    "/clinical-intelligence",
+    "/library",
+    "/planner",
+    "/team",
+    "/import-patients",
+    "/branding",
+    "/clinical-risk",
+    "/therapeutic-intelligence",
+    "/clinical-orchestration",
+    "/weight-trajectory",
+    "/physical-assessment"
+  ];
   if (proOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro) {
-    console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /client/dashboard | reason: pro role required for nutritionist features`);
+    console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /client/dashboard | reason: pro role required for restricted path: ${location.pathname}`);
     return <Navigate to="/client/dashboard" replace />;
   }
 
