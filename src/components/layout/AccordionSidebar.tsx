@@ -162,7 +162,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const location = useLocation();
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
-  const { isRouteAllowed, isFeatureEnabled } = useExperienceMode();
+  const { isRouteAllowed, isFeatureEnabled, minMode } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
@@ -179,9 +179,12 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   return (
     <div className="space-y-1">
       {visibleSections.map(section => {
-        const sectionItems = getItemsForSection(section.id).filter(i => {
-          if (!i.is_visible) return false;
-          if (i.premium_only && !isFeatureEnabled("pro")) return false; // Exemplo de bloqueio por modo
+        const sectionItems = getItemsForSection(section.id).filter(item => {
+          if (!item.is_visible) return false;
+          // Priority 1: Specific feature check
+          if (item.feature && !isFeatureEnabled(item.feature)) return false;
+          // Priority 2: Generic premium check
+          if (item.premium_only && !minMode("pro")) return false;
           return true;
         });
         
@@ -350,8 +353,14 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   if (loading || !hasRole) return null;
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
-    if ((item as any).feature) {
-      return isFeatureEnabled((item as any).feature);
+    // Priority 1: Role check (already done in useSmartMenu, but safe to keep)
+    // Priority 2: Specific feature check
+    if (item.feature) {
+      return isFeatureEnabled(item.feature);
+    }
+    // Priority 3: Generic premium check
+    if (item.premium_only && !minMode("pro")) {
+      return false;
     }
     return true;
   });

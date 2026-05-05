@@ -28,6 +28,7 @@ export interface WorkspaceItem {
   route?: string;
   icon?: string;
   premium_only?: boolean;
+  feature?: string;
   role_visibility?: string[];
 }
 
@@ -108,7 +109,7 @@ export function useWorkspace() {
       if (menuItemIds.length > 0) {
         const { data: menuData } = await supabase
           .from("menu_items")
-          .select("id, label, label_key, route, icon, premium_only, role_visibility")
+          .select("id, label, label_key, route, icon, premium_only, feature, role_visibility")
           .in("id", menuItemIds);
 
         (menuData || []).forEach((m: any) => menuMap.set(m.id, m));
@@ -123,6 +124,7 @@ export function useWorkspace() {
           route: menu?.route || "/",
           icon: menu?.icon || "LayoutDashboard",
           premium_only: menu?.premium_only || false,
+          feature: menu?.feature || undefined,
           role_visibility: Array.isArray(menu?.role_visibility) ? menu.role_visibility : [],
         };
       });
