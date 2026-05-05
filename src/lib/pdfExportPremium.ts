@@ -89,7 +89,7 @@ function buildPremiumCSS(): string {
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
 
       @page {
-        margin: 12mm 14mm;
+        margin: 10mm;
         size: A4;
       }
 
@@ -100,149 +100,196 @@ function buildPremiumCSS(): string {
         color: #1a1a2e;
         background: #ffffff;
         font-size: 11px;
-        line-height: 1.5;
+        line-height: 1.4;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
       .premium-header {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 40%, #0d0d1a 100%);
-        border-radius: 16px;
-        padding: 28px 32px;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .header-content {
-        position: relative;
-        z-index: 1;
+        background: #0a0a0f;
+        border-radius: 12px;
+        padding: 20px 25px;
+        margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-      }
-
-      .brand-area {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        align-items: center;
+        border-bottom: 3px solid #D4A84B;
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 32px;
+        font-size: 28px;
         font-weight: 800;
         letter-spacing: -0.02em;
         line-height: 1;
       }
 
-      .logo-fit {
-        background: linear-gradient(180deg, #D4A84B 0%, #F5D55A 25%, #FFFBE6 50%, #F5D55A 75%, #8B6914 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      .logo-journey {
-        background: linear-gradient(180deg, #8A8A8A 0%, #C0C0C0 20%, #E8E8E8 45%, #F5F5F5 55%, #C0C0C0 75%, #3A3A3A 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
+      .logo-fit { color: #D4A84B; }
+      .logo-journey { color: #ffffff; }
 
       .patient-info {
         text-align: right;
-        color: rgba(255,255,255,0.7);
-        font-size: 11px;
+        color: #ffffff;
       }
 
       .patient-info .name {
         font-size: 16px;
         font-weight: 700;
-        color: #fff;
+        color: #D4A84B;
         margin-bottom: 2px;
+        text-transform: uppercase;
       }
 
       .macro-summary {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-bottom: 24px;
+        gap: 10px;
+        margin-bottom: 20px;
       }
 
       .macro-card {
-        background: #fafafa;
-        border: 1px solid #eee;
-        border-radius: 12px;
-        padding: 14px 16px;
+        background: #f8f8f8;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px;
         text-align: center;
-        position: relative;
-        overflow: hidden;
       }
 
-      .macro-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
+      .macro-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        color: #666;
+        font-weight: 700;
+        margin-bottom: 4px;
       }
-
-      .macro-card.kcal::before { background: linear-gradient(90deg, #D4A84B, #F5D55A); }
-      .macro-card.prot::before { background: linear-gradient(90deg, #EF4444, #F87171); }
-      .macro-card.carb::before { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
-      .macro-card.fat::before { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
 
       .macro-value {
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 800;
         color: #1a1a2e;
-        line-height: 1.1;
       }
 
-      .day-section { margin-bottom: 20px; page-break-inside: avoid; }
+      .day-section { margin-bottom: 25px; page-break-inside: avoid; }
 
       .day-header {
+        background: #1a1a2e;
+        color: #ffffff;
+        padding: 8px 15px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 12px;
-        padding: 8px 0;
-        border-bottom: 2px solid #1a1a2e;
       }
 
-      .day-number {
-        width: 32px;
-        height: 32px;
-        background: #1a1a2e;
-        color: #D4A84B;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .day-header .day-name {
+        font-size: 14px;
         font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
 
       .meal-row {
-        display: flex;
-        background: #fff;
-        border: 1px solid #f0f0f0;
-        border-radius: 10px;
-        margin-bottom: 8px;
+        border: 1px solid #eeeeee;
+        border-radius: 8px;
+        margin-bottom: 10px;
         overflow: hidden;
-        page-break-inside: avoid;
+        background: #ffffff;
       }
 
-      .meal-type-bar { width: 5px; flex-shrink: 0; }
-      .meal-content { flex: 1; padding: 10px 14px; display: flex; gap: 14px; }
-      .meal-info { flex: 1; }
-      .meal-title { font-size: 13px; font-weight: 700; color: #1a1a2e; }
-      .food-line { display: flex; align-items: baseline; gap: 6px; font-size: 10.5px; color: #555; }
-      .food-bullet { color: #D4A84B; font-size: 6px; margin-top: 3px; }
-      .meal-macros { min-width: 80px; text-align: right; font-size: 10px; color: #888; }
-      .kcal-value { font-size: 15px; font-weight: 800; color: #D4A84B; }
-      .premium-footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid #eee; display: flex; justify-content: space-between; font-size: 9px; color: #ccc; }
+      .meal-header-row {
+        background: #fdfdfd;
+        padding: 10px 15px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .meal-title-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .meal-label-tag {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #fff;
+      }
+
+      .meal-primary-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1a1a2e;
+      }
+
+      .meal-kcal-badge {
+        font-weight: 800;
+        color: #D4A84B;
+        font-size: 12px;
+      }
+
+      .meal-body {
+        padding: 12px 15px;
+      }
+
+      .food-list {
+        margin-bottom: 10px;
+      }
+
+      .food-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 4px;
+        color: #333;
+        font-size: 11px;
+      }
+
+      .food-bullet { color: #D4A84B; font-weight: bold; }
+
+      .substitution-box {
+        background: #fafafa;
+        border: 1px dashed #ddd;
+        border-radius: 6px;
+        padding: 10px;
+        margin-top: 10px;
+      }
+
+      .sub-header {
+        font-size: 9px;
+        font-weight: 800;
+        color: #999;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .sub-item {
+        font-size: 10px;
+        padding: 4px 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+      }
+      .sub-item:last-child { border-bottom: none; }
+
+      .premium-footer {
+        margin-top: 40px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        font-size: 9px;
+        color: #999;
+        font-weight: 500;
+      }
     </style>
   `;
 }
