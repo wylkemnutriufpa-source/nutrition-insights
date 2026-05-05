@@ -473,8 +473,6 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const filteredGroups = [...mealTypeGroups, ...remainingGroups].filter(g => g !== "");
     return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
-    return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
-  }).join("")}
 
   <div class="premium-footer">
     <div>Gerado por FitJourney Premium</div>
