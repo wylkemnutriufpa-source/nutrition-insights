@@ -12,7 +12,7 @@ export default function WorkspaceContextSwitcher({ collapsed = false }: Props) {
   const { activeContext, setContext, isHybridUser } = useWorkspaceContext();
   const { isBasic } = useExperienceMode();
 
-  if (!isHybridUser || isBasic) return null;
+  if (!isHybridUser) return null;
 
   const isPro = activeContext === "professional";
 
