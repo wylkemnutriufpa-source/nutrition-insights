@@ -54,8 +54,7 @@ function normalizeText(text: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/,/g, ".");
+    .replace(/\s+/g, " ");
 }
 
 function extractNumber(text: string, patterns: RegExp[]): number | undefined {
