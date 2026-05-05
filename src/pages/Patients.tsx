@@ -237,7 +237,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
       transition={{ delay: idx * 0.04 }}
       whileHover={{ y: -2 }}
       className={`glass-premium rounded-xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow`}
-      onClick={() => navigate(p.patient_id)}
+      onClick={() => navigate(`/patients/${p.patient_id}`)}
     >
       {isInactive && (
         <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
@@ -318,7 +318,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
                 return;
               }
               // Navigate to patient detail where they can choose the correct editor version
-              navigate(`/${encodeURIComponent(p.patient_id)}`); 
+              navigate(`/patients/${encodeURIComponent(p.patient_id)}`); 
             }}
             size="sm"
             className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20"
@@ -328,7 +328,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           </Button>
           <div className="flex items-center gap-0.5 ml-2">
             <button
-              onClick={(e) => { e.stopPropagation(); navigate(`/${p.patient_id}?section=plan`); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/patients/${p.patient_id}?section=plan`); }}
               className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Plano Alimentar"
             >
               <FileText className="w-4 h-4" />
