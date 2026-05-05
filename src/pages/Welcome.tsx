@@ -7,8 +7,8 @@ import { BrainLoaderScreen } from "@/components/common/BrainLoader";
  * Função utilitária para blindagem da navegação.
  * Garante que só navegamos quando o estado está 100% consolidado.
  */
-function isNavigationReady(authStatus: AuthStatus, roles: string[]) {
-  return authStatus === "authenticated" && roles.length > 0;
+function isNavigationReady(authStatus: AuthStatus, roles: string[] | null) {
+  return authStatus === "authenticated" && roles !== null;
 }
 
 export default function Welcome() {
@@ -36,23 +36,27 @@ export default function Welcome() {
     if (isNavigationReady(authStatus, roles)) {
       navigatedRef.current = true;
 
-      // Prioridade: Admin/Nutri/Personal
+      // 1. Se não tem roles (array vazio), fallback seguro para paciente
+      if (roles.length === 0) {
+        if (import.meta.env.DEV) console.info("[Welcome] No roles found, falling back to patient");
+        navigate(nextPath || "/client/dashboard", { replace: true });
+        return;
+      }
+
+      // 2. Prioridade: Admin/Nutri/Personal
       if (roles.includes("nutritionist") || roles.includes("personal") || roles.includes("admin")) {
         navigate(nextPath || "/admin/dashboard", { replace: true });
         return;
       }
 
-      // Fallback: Paciente
+      // 3. Específico: Paciente
       if (roles.includes("patient")) {
         navigate(nextPath || "/client/dashboard", { replace: true });
         return;
       }
 
-      // Se por algum motivo chegou aqui com roles mas nenhuma mapeada, 
-      // evita loop ficando no loading ou tratando como erro (não faz nada)
-      if (import.meta.env.DEV) {
-        console.warn("[Welcome] Roles detected but no route match:", roles);
-      }
+      // 4. Última instância: Se tem roles mas não mapeadas, dashboard de cliente
+      navigate(nextPath || "/client/dashboard", { replace: true });
     }
   }, [roles, authStatus, loading, navigate, nextPath]);
 
@@ -64,7 +68,7 @@ export default function Welcome() {
           "Carregando autenticação…",
           "Validando credenciais…",
         ]
-      : authStatus === "authenticated" && roles.length === 0
+      : authStatus === "authenticated" && roles === null
       ? [
           "Carregando suas permissões…",
           "Sincronizando perfil clínico…",
