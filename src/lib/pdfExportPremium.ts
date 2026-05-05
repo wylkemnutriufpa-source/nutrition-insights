@@ -363,7 +363,8 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       return [...sortedSubGroups, ...renderedOrphans].join("");
     }).join("");
 
-    return `<div class="day-section"><div class="day-header"><div class="day-number">${dayKey === 0 ? 7 : dayKey}</div><div class="day-name">${dayName}</div></div>${mealTypeGroups}</div>`;
+    const filteredGroups = mealTypeGroups.filter(g => g !== "");
+    return `<div class="day-section"><div class="day-header"><div class="day-number">${dayKey === 0 ? 7 : dayKey}</div><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
 
   <div class="premium-footer"><div>FitJourney</div><div>${new Date().toLocaleDateString('pt-BR')}</div></div>
