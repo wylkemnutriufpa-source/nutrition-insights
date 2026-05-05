@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql",
-  "migrationsCount": 663,
+  "lastMigration": "20260505163040_cb8577b4-7bf5-4132-b845-865307547fe5.sql",
+  "migrationsCount": 667,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -215,6 +215,7 @@
       "metabolic_phase_last_updated_at",
       "metabolic_response_type",
       "notes",
+      "onboarding_completed",
       "patient_state",
       "phone",
       "plateau_probability",
