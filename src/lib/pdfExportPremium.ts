@@ -326,7 +326,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <div class="meal-type-bar" style="background: ${mealInfo.color}"></div>
             <div class="meal-content">
               <div class="meal-info">
-                <div class="meal-title">${escapeHtml(primary.title)}</div>
+                <div class="meal-title">
+                  <span style="color: ${mealInfo.color}; margin-right: 5px;">${mealInfo.emoji}</span>
+                  ${escapeHtml(mealInfo.label)}: ${escapeHtml(primary.title)}
+                </div>
                 ${primary.description ? formatDescription(primary.description) : ""}
                 
                 ${substitutions.length > 0 ? `
@@ -354,7 +357,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
         `;
       };
 
-      return Object.values(subGroups).map(renderGroup).join("") + orphans.map(i => renderGroup([i])).join("");
+      const sortedSubGroups = Object.keys(subGroups).sort().map(key => renderGroup(subGroups[key]));
+      const renderedOrphans = orphans.map(i => renderGroup([i]));
+      
+      return [...sortedSubGroups, ...renderedOrphans].join("");
     }).join("");
 
     return `<div class="day-section"><div class="day-header"><div class="day-number">${dayKey === 0 ? 7 : dayKey}</div><div class="day-name">${dayName}</div></div>${mealTypeGroups}</div>`;
