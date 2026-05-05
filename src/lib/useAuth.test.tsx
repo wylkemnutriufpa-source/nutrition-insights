@@ -25,6 +25,7 @@ vi.mock("@/integrations/supabase/client", () => ({
       on: vi.fn().mockReturnThis(),
       subscribe: vi.fn().mockReturnThis(),
     })),
+    removeChannel: vi.fn(), // Added missing function
     functions: {
       invoke: vi.fn(),
     },
