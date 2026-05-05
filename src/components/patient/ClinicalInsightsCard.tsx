@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useNavigate } from "react-router-dom";
 import { getLearnedPatterns } from "@/lib/clinicalLearningEngine";
-import { Brain, TrendingUp, Utensils, Dumbbell, Sparkles } from "lucide-react";
+import { Brain, TrendingUp, Utensils, Dumbbell, Sparkles, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { safeNum } from "@/lib/formatMacros";
 
@@ -23,6 +24,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default function ClinicalInsightsCard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patterns, setPatterns] = useState<any[]>([]);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function ClinicalInsightsCard() {
   if (patterns.length === 0) return null;
 
   return (
-    <Card className="glass border-border/50">
+    <Card className="glass border-border/50 hover:border-primary/30 transition-all duration-300 cursor-pointer group" onClick={() => navigate("/journey")}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-display flex items-center gap-2">
           <Brain className="w-4 h-4 text-primary" />

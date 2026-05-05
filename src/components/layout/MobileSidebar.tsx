@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LogOut, Moon, Sun, Settings, ChevronDown, LayoutDashboard,
@@ -58,6 +59,7 @@ export default function MobileSidebar({
   onLinkClick,
 }: MobileSidebarProps) {
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { mode } = useExperienceMode();
   const { isProfessionalContext } = useWorkspaceContext();
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
@@ -154,7 +156,11 @@ export default function MobileSidebar({
     : [];
 
   return (
-    <div className="flex h-full flex-col bg-card">
+    <div className={`flex h-full flex-col transition-colors duration-500 ${
+      mode === 'advanced' ? 'bg-card/95 backdrop-blur-xl' :
+      mode === 'pro' ? 'bg-blue-500/5' :
+      'bg-green-700/5'
+    }`}>
       {/* ═══════════ 1. HEADER ═══════════ */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
         <FitJourneyLogo collapsed={false} size="sm" />
@@ -175,7 +181,11 @@ export default function MobileSidebar({
               {/* Active module display + toggle */}
               <button
                 onClick={() => setModulesExpanded((v) => !v)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl bg-primary/8 border border-primary/20 transition-all"
+                className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all ${
+                  mode === 'advanced' ? 'bg-amber-500/10 border-amber-500/20' :
+                  mode === 'pro' ? 'bg-blue-500/10 border-blue-500/20' :
+                  'bg-primary/8 border-primary/20'
+                }`}
               >
                 {activeModule ? (
                   <>

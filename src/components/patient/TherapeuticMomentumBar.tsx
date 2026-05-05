@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useNavigate } from "react-router-dom";
 import { getTherapeuticMomentum } from "@/lib/therapeuticPriorityEngine";
-import { Flame, AlertTriangle, TrendingUp } from "lucide-react";
+import { Flame, AlertTriangle, TrendingUp, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { safeNum } from "@/lib/formatMacros";
 
@@ -13,6 +14,7 @@ const MOMENTUM_CONFIG: Record<string, { icon: any; bg: string; text: string }> =
 
 export default function TherapeuticMomentumBar() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [momentum, setMomentum] = useState<{ score: number; label: string; color: string } | null>(null);
 
   useEffect(() => {
@@ -29,7 +31,13 @@ export default function TherapeuticMomentumBar() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border ${config.bg} p-3 flex items-center gap-3`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => {
+        console.log("[ACTION] Momentum bar clicked");
+        navigate("/journey");
+      }}
+      className={`rounded-xl border ${config.bg} p-3 flex items-center gap-3 cursor-pointer hover:shadow-md transition-all duration-300 group`}
     >
       <div className={`w-10 h-10 rounded-lg bg-background/50 flex items-center justify-center ${config.text}`}>
         <Icon className="w-5 h-5" />
