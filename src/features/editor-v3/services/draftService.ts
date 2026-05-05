@@ -31,15 +31,15 @@ async function getActiveTenant(): Promise<string | null> {
   try {
     const { data, error } = await supabase.rpc('get_user_active_tenant');
     if (error) {
-      console.error('[v3-draft] RPC get_user_active_tenant failed:', error.message);
+      console.error('[v3-monitor] Critical: RPC get_user_active_tenant failed:', error.message);
       return null;
     }
     if (!data) {
-      console.warn('[v3-draft] No active tenant found for user');
+      console.warn('[v3-monitor] Warning: No active tenant found for user');
     }
     return (data as string | null) ?? null;
   } catch (err) {
-    console.error('[v3-draft] Unexpected error fetching active tenant:', err);
+    console.error('[v3-monitor] Error: Unexpected exception fetching active tenant:', err);
     return null;
   }
 }
@@ -102,7 +102,7 @@ export async function loadOrCreateDraft(
 
   const tenantId = await getActiveTenant();
   if (!tenantId) {
-    console.warn('[v3-draft] no active tenant — cannot create draft');
+    console.error('[v3-monitor] Blocked: Cannot create draft without valid tenant association');
     return null;
   }
 
@@ -129,7 +129,7 @@ export async function loadOrCreateDraft(
     .single();
 
   if (insErr) {
-    console.error('[v3-draft] create failed:', insErr.message);
+    console.error('[v3-monitor] Draft Creation Failure:', insErr.message);
     return null;
   }
   console.info('[v3-draft] draft created successfully:', (created as any)?.id);
@@ -162,7 +162,7 @@ export async function saveDraft(
     .single();
 
   if (error) {
-    console.warn('[v3-draft] save failed — keeping local fallback', error.message);
+    console.error('[v3-monitor] Draft Save Failure:', error.message);
     return null;
   }
   
