@@ -335,6 +335,8 @@ export const AppRoutes = () => {
       <Route path="/patient-meal-plan" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientMealPlan /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/workouts" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientWorkouts /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/personal/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/personal/students" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalStudents /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/personal/workouts" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalWorkouts /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/personal-dashboard" element={<Navigate to="/personal/dashboard" replace />} />
       <Route path="/body-analysis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyAnalysis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/body-projection" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyProjectionExperience /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
