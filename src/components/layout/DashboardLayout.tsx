@@ -196,7 +196,7 @@ function DynamicSidebar({
   onLinkClick?: () => void;
 }) {
   const { categories, flatItems, trackClick } = useSmartMenu();
-  const { minMode, mode } = useExperienceMode();
+  const { minMode, mode, isFeatureEnabled } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
