@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, createContext, useContext, ReactNode, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CommandDialog,
@@ -78,7 +79,7 @@ const allRoutes = [
   { to: "/water-calculator", icon: Droplets, label: "Calculadora de Água", keywords: "calculadora agua hidratacao litros ml beber water", roles: ["patient"], desc: "Quanto beber de água" },
   { to: "/health-quiz", icon: Heart, label: "Health Check Quiz", keywords: "quiz saude avaliacao teste health check pergunta score", roles: ["patient"], desc: "Teste de saúde" },
   { to: "/checkin", icon: ClipboardCheck, label: "Check-in", keywords: "checkin check-in peso medidas fotos enviar progresso", roles: ["patient"], desc: "Enviar check-in" },
-  { to: "/analyze", icon: Camera, label: "Analisar Refeição", keywords: "analisar refeicao ia foto comida analise nutricional ai camera", roles: ["patient"], desc: "IA analisa sua refeição" },
+  { to: "/analyze-meal", icon: Camera, label: "Analisar Refeição", keywords: "analisar refeicao ia foto comida analise nutricional ai camera", roles: ["patient"], desc: "IA analisa sua refeição" },
   { to: "/my-referrals", icon: Share2, label: "Minhas Indicações", keywords: "indicacoes indicar amigo referral compartilhar convite", roles: ["patient"], desc: "Indicar amigos" },
   { to: "/body-projection", icon: Camera, label: "Projeção Corporal", keywords: "projecao corporal corpo futuro simulacao transformacao antes depois", roles: ["patient"], desc: "Projeção corporal" },
   // Personal
@@ -172,6 +173,7 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { user, isNutritionist, isPatient, isAdmin, isPersonal } = useAuth();
+  const { isPatientContext } = useWorkspaceContext();
   const [patients, setPatients] = useState<ProfileResult[]>([]);
   const [professionals, setProfessionals] = useState<ProfileResult[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlanResult[]>([]);
@@ -208,7 +210,10 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   // Load profiles + extra data when palette opens
   useEffect(() => {
     if (!isOpen || dataLoaded) return;
-    if (isPatient && !isAdmin && !isNutritionist && !isPersonal) {
+    
+    // Se estiver em contexto de paciente, não carrega dados pro (pacientes, protocolos, etc)
+    // mesmo que o usuário tenha a role de nutricionista (caso híbrido)
+    if (isPatientContext || (isPatient && !isAdmin && !isNutritionist && !isPersonal)) {
       setDataLoaded(true);
       return;
     }
@@ -340,8 +345,12 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   }, [isNutritionist, isPatient, isAdmin, isPersonal]);
 
   const filteredRoutes = useMemo(
-    () => allRoutes.filter((r) => r.roles.some((role) => userRoles.includes(role))),
-    [userRoles]
+    () => allRoutes.filter((r) => {
+      // Se em contexto de paciente, oculta rotas que não têm 'patient' nas roles
+      if (isPatientContext && !r.roles.includes("patient")) return false;
+      return r.roles.some((role) => userRoles.includes(role));
+    }),
+    [userRoles, isPatientContext]
   );
 
   // Smart filtering: normalize query and match against keywords + label + desc

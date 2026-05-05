@@ -56,12 +56,22 @@ function LayoutFallbackCard({
 }
 
 function SidebarFallback({ onLinkClick }: { onLinkClick?: () => void }) {
-  const fallbackLinks = [
+  const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const isPro = isNutritionist || isPersonal || isAdmin;
+
+  const fallbackLinks = isPro ? [
     { to: "/", label: "Início" },
     { to: "/patients", label: "Pacientes" },
     { to: "/meal-plans", label: "Planos" },
     { to: "/recipes", label: "Receitas" },
     { to: "/automation", label: "Automação" },
+    { to: "/settings", label: "Configurações" },
+  ] : [
+    { to: "/", label: "Início" },
+    { to: "/journey", label: "Jornada" },
+    { to: "/my-diet", label: "Minha Dieta" },
+    { to: "/meals", label: "Refeições" },
+    { to: "/recipes", label: "Receitas" },
     { to: "/settings", label: "Configurações" },
   ];
 
