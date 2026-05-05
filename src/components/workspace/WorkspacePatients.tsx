@@ -189,7 +189,7 @@ export default function WorkspacePatients({ search }: Props) {
               />
 
               {/* Avatar + Info (link) */}
-              <Link to={`/patient/${p.patient_id}`} className="flex items-center gap-3 flex-1 min-w-0">
+              <Link to={`/patients/${p.patient_id}`} className="flex items-center gap-3 flex-1 min-w-0">
                 <Avatar className="w-9 h-9">
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
                 </Avatar>
