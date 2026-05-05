@@ -92,7 +92,7 @@ function buildPremiumCSS(): string {
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
 
       @page {
-        margin: 10mm;
+        margin: 0;
         size: A4;
       }
 
@@ -100,12 +100,16 @@ function buildPremiumCSS(): string {
       
       body {
         font-family: 'Inter', -apple-system, sans-serif;
-        color: #1a1a2e;
+        color: #1e293b;
         background: #ffffff;
         font-size: 11px;
-        line-height: 1.4;
+        line-height: 1.5;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+      }
+
+      .page-content {
+        padding: 0 40px 40px 40px;
       }
 
       .premium-header {
