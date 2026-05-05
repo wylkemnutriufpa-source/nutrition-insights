@@ -235,9 +235,20 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus } = useAuth();
+  const { authStatus, roles } = useAuth();
+  const location = useLocation();
+
   if (authStatus === "loading") return null;
-  if (authStatus !== "authenticated") return <Navigate to="/auth" replace />;
+  
+  if (authStatus !== "authenticated") {
+    console.log("[NAV] ProtectedRoute redirecting to /auth", {
+      from: location.pathname,
+      roles,
+      status: authStatus,
+      reason: "not authenticated"
+    });
+    return <Navigate to="/auth" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -263,7 +274,12 @@ export const AppRoutes = () => {
       <Route
         path="/"
         element={
-          authStatus === "authenticated" ? <Navigate to="/welcome" replace /> : <Auth />
+          authStatus === "authenticated" ? (
+            (() => {
+              console.log("[NAV] Root path redirecting to /welcome", { authStatus });
+              return <Navigate to="/welcome" replace />;
+            })()
+          ) : <Auth />
         }
       />
       <Route path="/auth" element={<Auth />} />
@@ -282,20 +298,20 @@ export const AppRoutes = () => {
       <Route path="/analyze-meal" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/diet-builder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietBuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/meal-plans/editor/v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlanEditorV2Entry /></Suspense></ProtectedRoute>} />
+      <Route path="/meal-plans/editor/v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlanEditorV2Entry /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/editor/v2/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlanEditorV2 /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/editor/v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/recipes" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Recipes /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/appointments" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Appointments /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/financial" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Financial /></Suspense></ProtectedRoute>} />
+      <Route path="/financial" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Financial /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Settings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/branding" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Branding /></Suspense></ProtectedRoute>} />
-      <Route path="/integrations" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Integrations /></Suspense></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Reports /></Suspense></ProtectedRoute>} />
+      <Route path="/branding" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Branding /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/integrations" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Integrations /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Reports /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/library" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Library /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/automation" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AutomationCenter /></Suspense></ProtectedRoute>} />
-      <Route path="/clinical-brain" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalBrain /></Suspense></ProtectedRoute>} />
-      <Route path="/intelligence-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><IntelligenceSettings /></Suspense></ProtectedRoute>} />
+      <Route path="/automation" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AutomationCenter /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/clinical-brain" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalBrain /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/intelligence-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><IntelligenceSettings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Rotas de Admin */}
       <Route path="/admin/affiliates" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminAffiliates /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />

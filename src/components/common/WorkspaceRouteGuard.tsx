@@ -19,21 +19,23 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   // 1. Proteção de Admin/Profissional
   if (location.pathname.startsWith("/admin")) {
     if (!isPro) {
-      // Se não tem role pro, vai para dashboard de cliente
+      console.log("[NAV] WorkspaceRouteGuard redirecting to /client/dashboard", {
+        from: location.pathname,
+        roles,
+        reason: "pro role required for /admin path"
+      });
       return <Navigate to="/client/dashboard" replace />;
-    }
-    // Se tem role pro mas está no contexto paciente (hybrid user), força contexto pro
-    if (!isProfessionalContext) {
-      // Idealmente aqui dispararíamos uma mudança de contexto, mas como estamos no render, 
-      // o Navigate apenas previne acesso indevido se o guard estivesse bloqueando.
-      // Como queremos "Garantir que cada rota respeite a role", se ele é pro e está em /admin, ok.
     }
   }
 
   // 2. Proteção de Client (Paciente)
   if (location.pathname.startsWith("/client")) {
     if (!isPatient && isPro) {
-      // Se ele é apenas pro, redireciona para admin
+      console.log("[NAV] WorkspaceRouteGuard redirecting to /admin/dashboard", {
+        from: location.pathname,
+        roles,
+        reason: "patient role missing for /client path, redirecting pro to admin"
+      });
       return <Navigate to="/admin/dashboard" replace />;
     }
   }
@@ -41,13 +43,22 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   // 3. Rotas específicas que devem ser exclusivas de nutricionista
   const proOnlyPaths = ["/patients", "/diet-builder", "/meal-plans/editor", "/analyze-meal"];
   if (proOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro) {
+    console.log("[NAV] WorkspaceRouteGuard redirecting to /client/dashboard", {
+      from: location.pathname,
+      roles,
+      reason: "pro role required for nutritionist features"
+    });
     return <Navigate to="/client/dashboard" replace />;
   }
 
   // 4. Rotas específicas que devem ser exclusivas de paciente
   const patientOnlyPaths = ["/journey", "/patient-plan", "/checkin", "/meals"];
   if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient) {
-    // Caso bizarro sem role, vai para welcome
+    console.log("[NAV] WorkspaceRouteGuard redirecting to /welcome", {
+      from: location.pathname,
+      roles,
+      reason: "no valid role found for patient features"
+    });
     return <Navigate to="/welcome" replace />;
   }
 
