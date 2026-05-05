@@ -110,6 +110,35 @@ export default function AdminFeatureControl() {
     }
   };
 
+  const toggleExpFeature = async (role: string, mode: string, featureKey: string, currentStatus: boolean) => {
+    setSavingExp(true);
+    const { error } = await supabase
+      .from("experience_configurations")
+      .upsert({
+        role,
+        mode,
+        feature_key: featureKey,
+        is_enabled: !currentStatus,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "role,mode,feature_key" });
+
+    if (error) {
+      toast.error("Erro ao atualizar configuração: " + error.message);
+    } else {
+      setExpConfigs(prev => {
+        const idx = prev.findIndex(c => c.role === role && c.mode === mode && c.feature_key === featureKey);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], is_enabled: !currentStatus };
+          return updated;
+        }
+        return [...prev, { role, mode, feature_key: featureKey, is_enabled: !currentStatus }];
+      });
+      toast.success(`Feature ${featureKey} ${!currentStatus ? 'ativada' : 'desativada'} para ${role} em modo ${mode}`);
+    }
+    setSavingExp(false);
+  };
+
   const selectedNutData = nutritionists.find(n => n.user_id === selectedNut);
 
   const categories = useMemo(() => {
