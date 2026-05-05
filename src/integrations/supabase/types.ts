@@ -4256,6 +4256,39 @@ export type Database = {
         }
         Relationships: []
       }
+      experience_configurations: {
+        Row: {
+          created_at: string | null
+          feature_key: string
+          id: string
+          is_enabled: boolean
+          mode: string
+          role: string
+          ui_component_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feature_key: string
+          id?: string
+          is_enabled?: boolean
+          mode: string
+          role: string
+          ui_component_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feature_key?: string
+          id?: string
+          is_enabled?: boolean
+          mode?: string
+          role?: string
+          ui_component_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       experience_mode_audit_log: {
         Row: {
           attempted_mode: string
