@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Run Smoke Tests
-        run: bun run test src/tests/smoke.test.ts
+        run: bun run test src/tests/smoke_api.test.ts
 
   e2e-tests:
     name: E2E Tests
