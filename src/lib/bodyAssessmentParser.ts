@@ -110,7 +110,7 @@ export function parseBodyAssessment(rawText: string): ParseResult {
 
   const fieldPatterns: Record<string, RegExp[]> = {
     weight_kg: [
-      /(?:peso|massa corporal|weight)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:peso|massa corporal|weight).{0,5}(\d{2,3}(?:[.,]\d+)?)/,
       /(\d{2,3}(?:[.,]\d+)?)\s*kg/,
     ],
     height_m: [
