@@ -106,12 +106,19 @@ function cleanClinicalText(text: string): string {
 
 function formatDescription(desc: string): string {
   const cleanedDesc = cleanClinicalText(desc);
-  
+
   return cleanedDesc
     .split("\n")
-    .filter(l => l.trim())
+    .filter(l => {
+      const t = l.trim().toLowerCase();
+      if (!t) return false;
+      // Remove linhas redundantes de cabeçalho de substituições embutidas no description
+      if (/^substitui[çc][õo]es?\s*:?$/.test(t)) return false;
+      // Remove "x → y" lines (já são renderizadas no box de substituições)
+      if (/[→➜>]/.test(l) && !/^\d/.test(t)) return false;
+      return true;
+    })
     .map(line => {
-      // Remove any existing bullet points and trim
       const cleaned = line.replace(/^[•\-●*]\s*/, "").trim();
       if (!cleaned) return "";
       return `<div class="food-line">
