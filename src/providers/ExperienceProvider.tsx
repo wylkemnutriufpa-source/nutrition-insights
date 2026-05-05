@@ -16,12 +16,55 @@ export const ExperienceProvider = ({ children }: { children: ReactNode }) => {
 
   const [mode, setModeState] = useState<ExperienceMode>(authMode);
   const [role, setRoleState] = useState<"nutritionist" | "patient">(authRole);
+  const [config, setConfig] = useState<Record<string, boolean>>({});
+  const [configLoading, setConfigLoading] = useState(true);
 
   // Sync state with auth context whenever it changes
   useEffect(() => {
     setModeState(authMode);
     setRoleState(authRole);
   }, [authMode, authRole]);
+
+  // Fetch dynamic experience configurations
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("experience_configurations")
+          .select("feature_key, is_enabled")
+          .eq("role", role)
+          .eq("mode", mode);
+
+        if (!error && data) {
+          const configMap: Record<string, boolean> = {};
+          data.forEach(row => {
+            configMap[row.feature_key] = row.is_enabled;
+          });
+          setConfig(configMap);
+        }
+      } catch (err) {
+        console.error("[ExperienceProvider] Error fetching config:", err);
+      } finally {
+        setConfigLoading(false);
+      }
+    };
+
+    fetchConfig();
+
+    // Subscribe to config changes
+    const channel = supabase
+      .channel(`experience-config-${role}-${mode}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "experience_configurations" },
+        () => fetchConfig()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role, mode]);
 
   // Realtime subscription to profile changes (redundant with auth.tsx but ensures UI reaction here)
   useEffect(() => {
@@ -63,19 +106,21 @@ export const ExperienceProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isFeatureEnabled = (feature: string) => {
+    // 1. Check dynamic config first if it exists for this role/mode
+    if (config[feature] !== undefined) {
+      return config[feature];
+    }
+    
+    // 2. Fallback to hardcoded registry/map
     return checkFeaturePermission(feature, mode, role);
   };
 
   const isRouteAllowed = (route: string) => {
     const cleanRoute = route.split('?')[0].split('#')[0].replace(/^\//, '');
-    console.log(`[DEBUG] isRouteAllowed checking route: "${route}" (clean: "${cleanRoute}") | mode: ${mode}`);
     if (!cleanRoute || cleanRoute === 'dashboard') {
-      console.log(`[DEBUG] isRouteAllowed allowed by default: ${cleanRoute}`);
       return true;
     }
-    const allowed = isFeatureEnabled(cleanRoute);
-    console.log(`[DEBUG] isRouteAllowed result for ${cleanRoute}: ${allowed}`);
-    return allowed;
+    return isFeatureEnabled(cleanRoute);
   };
 
   const value: ExperienceModeContextValue = {
@@ -88,7 +133,7 @@ export const ExperienceProvider = ({ children }: { children: ReactNode }) => {
     isBasic: mode === "basic",
     isPro: mode === "pro",
     isAdvanced: mode === "advanced",
-    isLoading: authLoading,
+    isLoading: authLoading || configLoading,
     failedMode: null,
     retryLastMode: () => {},
     lastError: null,
