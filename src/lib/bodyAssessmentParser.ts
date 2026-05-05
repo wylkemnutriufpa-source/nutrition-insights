@@ -110,58 +110,58 @@ export function parseBodyAssessment(rawText: string): ParseResult {
 
   const fieldPatterns: Record<string, RegExp[]> = {
     weight_kg: [
-      /(?:peso|massa corporal|weight).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:peso|massa corporal|weight).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
       /(\d{2,3}(?:[.,]\d+)?)\s*kg/,
     ],
     height_m: [
-      /(?:altura|estatura|height).{0,10}(\d(?:[.,]\d+)?)/,
-      /(?:altura|estatura).{0,10}(\d{3})\s*(?:cm)?/,
+      /(?:altura|estatura|height).{0,15}(\d(?:[.,]\d{2}))/,
+      /(?:altura|estatura).{0,15}(\d{3})\s*(?:cm)?/,
     ],
     bmi: [
-      /(?:imc|bmi).{0,10}(\d{1,2}(?:[.,]\d+)?)/,
+      /(?:imc|bmi).{0,15}(\d{1,2}(?:[.,]\d+)?)/,
     ],
     body_fat_percent: [
-      /(?:%\s*gordura|gordura corporal|body fat|bf|percentual de gordura).{0,10}(\d{1,2}(?:[.,]\d+)?)/,
-      /gordura.{0,10}(\d{1,2}(?:[.,]\d+)?)\s*%/,
+      /(?:%\s*gordura|gordura corporal|body fat|bf|percentual de gordura).{0,15}(\d{1,2}(?:[.,]\d+)?)/,
+      /gordura.{0,15}(\d{1,2}(?:[.,]\d+)?)\s*%/,
     ],
     lean_mass_kg: [
-      /(?:massa magra|lean mass|massa muscular).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:massa magra|lean mass|massa muscular).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     fat_mass_kg: [
-      /(?:massa gorda|fat mass|massa de gordura).{0,10}(\d{1,3}(?:[.,]\d+)?)/,
+      /(?:massa gorda|fat mass|massa de gordura).{0,15}(\d{1,3}(?:[.,]\d+)?)/,
     ],
     waist_cm: [
-      /(?:cintura|waist).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:cintura|waist).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     hip_cm: [
-      /(?:quadril|hip).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:quadril|hip).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     abdomen_cm: [
-      /(?:abdomen|abdominal).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:abdomen|abdominal).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     chest_cm: [
-      /(?:peitoral|torax|peito|chest).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:peitoral|torax|peito|chest).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     arm_cm: [
-      /(?:braco|arm).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:braco|arm).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     thigh_cm: [
-      /(?:coxa|thigh).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:coxa|thigh).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     calf_cm: [
-      /(?:panturrilha|calf).{0,10}(\d{2,3}(?:[.,]\d+)?)/,
+      /(?:panturrilha|calf).{0,15}(\d{2,3}(?:[.,]\d+)?)/,
     ],
     visceral_fat_level: [
-      /(?:gordura visceral|visceral fat|visceral).{0,10}(\d{1,2}(?:[.,]\d+)?)/,
+      /(?:gordura visceral|visceral fat|visceral).{0,15}(\d{1,2}(?:[.,]\d+)?)/,
     ],
     metabolic_age: [
-      /(?:idade metabolica|metabolic age).{0,10}(\d{1,3}(?:[.,]\d+)?)/,
+      /(?:idade metabolica|metabolic age).{0,15}(\d{1,3}(?:[.,]\d+)?)/,
     ],
     hydration_percent: [
-      /(?:hidratacao|water|tbw|agua corporal).{0,10}(\d{1,2}(?:[.,]\d+)?)/,
+      /(?:hidratacao|water|tbw|agua corporal).{0,15}(\d{1,2}(?:[.,]\d+)?)/,
     ],
     bone_mass_kg: [
-      /(?:massa ossea|bone mass).{0,10}(\d{1,2}(?:[.,]\d+)?)/,
+      /(?:massa ossea|bone mass).{0,15}(\d{1,2}(?:[.,]\d+)?)/,
     ],
   };
 
