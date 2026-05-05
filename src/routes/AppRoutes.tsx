@@ -372,7 +372,7 @@ export const AppRoutes = () => {
       <Route path="/patient/view/:token" element={<Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense>} />
       <Route path="/anamnesis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Anamnesis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/programs" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Programs /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/programs/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProgramDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/programs/:programId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProgramDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/checkin-panel" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CheckinPanel /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/checklist" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Checklist /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/feedbacks" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Feedbacks /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
