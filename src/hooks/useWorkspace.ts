@@ -1,27 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { Database } from "@/integrations/supabase/types";
 
-export interface WorkspaceSection {
-  id: string;
-  workspace_id: string;
-  section_name: string;
-  section_icon: string;
-  section_color: string;
-  sort_order: number;
-  is_visible: boolean;
-  is_collapsed: boolean;
-}
+type WorkspaceProfileRow = Database["public"]["Tables"]["workspace_profiles"]["Row"];
+type WorkspaceSectionRow = Database["public"]["Tables"]["workspace_sections"]["Row"];
+type WorkspaceItemRow = Database["public"]["Tables"]["workspace_items"]["Row"];
 
-export interface WorkspaceItem {
-  id: string;
-  workspace_id: string;
-  section_id: string;
-  menu_item_id: string;
-  sort_order: number;
-  is_pinned: boolean;
-  is_visible: boolean;
-  custom_label: string | null;
+export interface WorkspaceSection extends WorkspaceSectionRow {}
+
+export interface WorkspaceItem extends WorkspaceItemRow {
   // Joined from menu_items
   label?: string;
   label_key?: string;
@@ -32,12 +20,7 @@ export interface WorkspaceItem {
   role_visibility?: string[];
 }
 
-export interface WorkspaceProfile {
-  id: string;
-  user_id: string;
-  workspace_name: string;
-  is_default: boolean;
-}
+export interface WorkspaceProfile extends WorkspaceProfileRow {}
 
 export function useWorkspace() {
   const { user, isNutritionist, isPersonal, isAdmin, roles } = useAuth();
