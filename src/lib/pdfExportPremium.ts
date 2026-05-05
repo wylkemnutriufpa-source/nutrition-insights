@@ -37,6 +37,7 @@ const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
   lunch: { label: "Almoço", color: "#f59e0b" },
   afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
+  snack: { label: "Lanche", color: "#ec4899" },
   pre_workout: { label: "Pré-Treino", color: "#ef4444" },
   post_workout: { label: "Pós-Treino", color: "#3b82f6" },
   dinner: { label: "Jantar", color: "#6366f1" },
