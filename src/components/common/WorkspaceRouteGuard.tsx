@@ -46,7 +46,6 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     "/patients", 
     "/diet-builder", 
     "/meal-plans", 
-    "/analyze-meal",
     "/automation",
     "/financial",
     "/diet-templates",
@@ -61,7 +60,9 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     "/therapeutic-intelligence",
     "/clinical-orchestration",
     "/weight-trajectory",
-    "/physical-assessment"
+    "/physical-assessment",
+    "/checkin-panel",
+    "/in-office"
   ];
   if (proOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro) {
     console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /client/dashboard | reason: pro role required for restricted path: ${location.pathname}`);

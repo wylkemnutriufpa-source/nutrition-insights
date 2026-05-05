@@ -79,7 +79,7 @@ const allRoutes = [
   { to: "/water-calculator", icon: Droplets, label: "Calculadora de Água", keywords: "calculadora agua hidratacao litros ml beber water", roles: ["patient"], desc: "Quanto beber de água" },
   { to: "/health-quiz", icon: Heart, label: "Health Check Quiz", keywords: "quiz saude avaliacao teste health check pergunta score", roles: ["patient"], desc: "Teste de saúde" },
   { to: "/checkin", icon: ClipboardCheck, label: "Check-in", keywords: "checkin check-in peso medidas fotos enviar progresso", roles: ["patient"], desc: "Enviar check-in" },
-  { to: "/analyze", icon: Camera, label: "Analisar Refeição", keywords: "analisar refeicao ia foto comida analise nutricional ai camera", roles: ["patient"], desc: "IA analisa sua refeição" },
+  { to: "/analyze-meal", icon: Camera, label: "Analisar Refeição", keywords: "analisar refeicao ia foto comida analise nutricional ai camera", roles: ["patient"], desc: "IA analisa sua refeição" },
   { to: "/my-referrals", icon: Share2, label: "Minhas Indicações", keywords: "indicacoes indicar amigo referral compartilhar convite", roles: ["patient"], desc: "Indicar amigos" },
   { to: "/body-projection", icon: Camera, label: "Projeção Corporal", keywords: "projecao corporal corpo futuro simulacao transformacao antes depois", roles: ["patient"], desc: "Projeção corporal" },
   // Personal
