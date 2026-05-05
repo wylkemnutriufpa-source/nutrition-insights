@@ -32,6 +32,7 @@ const TOOLS = [
   { key: "auto-gen", label: "Gerar Automático", icon: Wand2, color: "text-emerald-500" },
   { key: "preview", label: "Preview da Dieta", icon: Eye, color: "text-violet-500" },
   { key: "export-pdf", label: "Exportar PDF", icon: FileDown, color: "text-amber-500" },
+  { key: "share", label: "Enviar ao Paciente", icon: Share2, color: "text-emerald-500" },
 ] as const;
 
 export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Props) {
