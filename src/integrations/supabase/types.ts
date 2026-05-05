@@ -21406,7 +21406,7 @@ export type Database = {
       get_system_health_score: { Args: never; Returns: Json }
       get_team_head_id: { Args: { _user_id: string }; Returns: string }
       get_team_permissions: { Args: { _user_id: string }; Returns: Json }
-      get_user_active_tenant: { Args: { _user_id: string }; Returns: string }
+      get_user_active_tenant: { Args: never; Returns: string }
       get_user_email_by_id: { Args: { _user_id: string }; Returns: string }
       get_user_id_by_email: { Args: { _email: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
