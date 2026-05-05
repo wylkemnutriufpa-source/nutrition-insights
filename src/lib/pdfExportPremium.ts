@@ -138,22 +138,22 @@ function buildPremiumCSS(): string {
         font-family: 'Inter', -apple-system, sans-serif;
         color: #0f172a;
         background: #ffffff;
-        font-size: 11px;
-        line-height: 1.6;
+        font-size: 10.5px;
+        line-height: 1.45;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
       .page-content {
-        padding: 0 50px 50px 50px;
+        padding: 0 28px 24px 28px;
         position: relative;
       }
 
       /* Estilo Premium para o Header */
       .premium-header {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        padding: 50px 40px;
-        margin-bottom: 40px;
+        padding: 22px 28px;
+        margin-bottom: 18px;
         display: flex;
         justify-content: space-between;
         align-items: center;
