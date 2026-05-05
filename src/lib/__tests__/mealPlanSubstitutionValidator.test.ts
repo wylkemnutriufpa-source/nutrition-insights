@@ -5,14 +5,18 @@ describe("mealPlanSubstitutionValidator", () => {
   const baseItem = {
     id: "item1",
     title: "Almoço",
-    calories_target: 0, // Disable macro check for structure tests
+    calories_target: 200,
+    protein_target: 30,
+    carbs_target: 50,
+    fat_target: 10,
     meal_type: "lunch",
     metadata: {
-      substitutions_json: ["• Frango Grelhado", "• Carne Moída"]
+      substitutions_json: ["• Frango grelhado", "• Patinho grelhado"]
     }
   };
 
-  it("should return valid for correct substitutions structure", () => {
+  it("should return valid for correct substitutions structure and matching database macros", () => {
+    // Frango grelhado is 198kcal, base is 200kcal. Diff is < 12%. Valid.
     const result = validateMealSubstitutions(baseItem as any);
     expect(result.valid).toBe(true);
   });
@@ -30,17 +34,17 @@ describe("mealPlanSubstitutionValidator", () => {
   it("should fail for incoherent meal types (breakfast in lunch)", () => {
     const mixed = {
       ...baseItem,
-      metadata: { substitutions_json: ["• Pão de forma"] }
+      metadata: { substitutions_json: ["• Pão integral"] }
     };
     const result = validateMealSubstitutions(mixed as any);
     expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain("Possível mistura");
+    expect(result.errors.some(e => e.includes("Possível mistura"))).toBe(true);
   });
 
   it("should apply Wannubia specific rules", () => {
     const wannubiaItem = {
       ...baseItem,
-      metadata: { substitutions_json: ["• Arroz"] } 
+      metadata: { substitutions_json: ["• Arroz branco"] } 
     };
     const result = validateMealSubstitutions(wannubiaItem as any, 4, "Wannubia");
     expect(result.valid).toBe(false);
@@ -50,7 +54,7 @@ describe("mealPlanSubstitutionValidator", () => {
   it("should fail for Marmita Fixa without enough items", () => {
     const fixed = {
       ...baseItem,
-      metadata: { is_fixed: true, substitutions_json: ["• Frango"] }
+      metadata: { is_fixed: true, substitutions_json: ["• Frango grelhado"] }
     };
     const result = validateMealSubstitutions(fixed as any);
     expect(result.valid).toBe(false);
@@ -65,7 +69,7 @@ describe("mealPlanSubstitutionValidator", () => {
   it("should handle complex strings with arrows and separators", () => {
     const complex = {
       ...baseItem,
-      metadata: { substitutions_json: ["Opção 1 → Frango"] }
+      metadata: { substitutions_json: ["Opção 1 → Frango grelhado"] }
     };
     const result = validateMealSubstitutions(complex as any);
     expect(result.valid).toBe(true);
