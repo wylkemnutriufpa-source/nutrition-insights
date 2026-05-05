@@ -4,8 +4,6 @@ import type { Meal } from '../types';
 
 /**
  * Suite de Testes de Integração - Editor V3
- * -----------------------------------------
- * Valida o ciclo de vida do draft e persistência.
  */
 export async function runV3IntegrationTests(patientId: string) {
   console.group('V3 Integration Tests');
@@ -32,7 +30,7 @@ export async function runV3IntegrationTests(patientId: string) {
     const { data: dbRecord, error: dbErr } = await supabase
       .from('v3_drafts' as any)
       .select('id')
-      .eq('id', draft.id)
+      .eq('id', (draft as any).id)
       .single();
 
     if (dbErr || !dbRecord) {
@@ -43,10 +41,10 @@ export async function runV3IntegrationTests(patientId: string) {
 
     // 3. Validar ação de save
     console.log('Test 3: saveDraft...');
-    const mealsToSave: Meal[] = draft.payload.meals;
-    const saved = await saveDraft(draft.id, mealsToSave);
+    const mealsToSave: Meal[] = (draft as any).payload.meals;
+    const saved = await saveDraft((draft as any).id, mealsToSave);
     
-    if (saved && saved.id === draft.id) {
+    if (saved && (saved as any).id === (draft as any).id) {
       console.log('✅ Save successful');
       results.step3_saveAction = true;
     } else {
