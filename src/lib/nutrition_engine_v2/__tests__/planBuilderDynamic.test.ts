@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { buildDynamicPlan } from "../planBuilderDynamic";
 import { calcMetrics } from "../calculations";
 import { FoodRecord } from "../planBuilder";

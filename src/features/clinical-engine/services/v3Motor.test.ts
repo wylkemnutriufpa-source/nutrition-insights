@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { isProtein, isCarb, isFruit, calculateItemMacros, getDeterministicSuggestions } from "./v3Motor";
 
 describe("v3Motor", () => {

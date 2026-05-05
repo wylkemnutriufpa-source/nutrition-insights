@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from "./foodNormalization";
 
 describe("foodNormalization (V3 Engine)", () => {
