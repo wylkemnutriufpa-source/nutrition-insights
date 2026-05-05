@@ -393,7 +393,7 @@ export const AppRoutes = () => {
       
       {/* Public Booking / Profiles */}
       <Route path="/booking/:slug" element={<Suspense fallback={<PageLoader />}><PublicBooking /></Suspense>} />
-      <Route path="/plans/:slug" element={<Suspense fallback={<PageLoader />}><PublicPlans /></Suspense>} />
+      <Route path="/plans/:slug" element={<Suspense fallback={<PageLoader />}><PublicPlans planType="patient_prestige" /></Suspense>} />
       <Route path="/profile/:slug" element={<Suspense fallback={<PageLoader />}><PublicProfile /></Suspense>} />
       <Route path="/program/:programId" element={<Suspense fallback={<PageLoader />}><PublicProgram /></Suspense>} />
       <Route path="/quick-link/:nutriId" element={<Suspense fallback={<PageLoader />}><QuickLink /></Suspense>} />
