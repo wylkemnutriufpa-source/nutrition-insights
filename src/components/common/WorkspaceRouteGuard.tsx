@@ -5,11 +5,13 @@ import { Navigate, useLocation } from "react-router-dom";
 
 export default function WorkspaceRouteGuard({ children }: { children: React.ReactNode }) {
   const { isPatientContext, isProfessionalContext } = useWorkspaceContext();
-  const { isPatient, isNutritionist, isPersonal, isAdmin, roles, authStatus } = useAuth();
+  const { isPatient, isNutritionist, isPersonal, isAdmin, roles, authStatus, loading } = useAuth();
   const location = useLocation();
 
-  // Se ainda está carregando, não faz nada
-  if (authStatus === "loading") return null;
+  // Se ainda está carregando o estado básico ou roles ainda não foram consolidadas
+  if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
+    return null;
+  }
 
   const isAuthRoute = ["/auth", "/welcome", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
   if (isAuthRoute) return <>{children}</>;
@@ -53,7 +55,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
 
   // 4. Rotas específicas que devem ser exclusivas de paciente
   const patientOnlyPaths = ["/journey", "/patient-plan", "/checkin", "/meals"];
-  if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient) {
+  if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
     console.log("[NAV] WorkspaceRouteGuard redirecting to /welcome", {
       from: location.pathname,
       roles,
