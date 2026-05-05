@@ -61,7 +61,8 @@ function extractNumber(text: string, patterns: RegExp[]): number | undefined {
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
-      const val = parseFloat(match[1].replace(",", "."));
+      const raw = match[1].replace(",", ".");
+      const val = parseFloat(raw);
       if (!isNaN(val)) return val;
     }
   }
