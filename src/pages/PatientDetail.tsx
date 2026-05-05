@@ -652,7 +652,7 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/meal-plans?patientId=${resolvedPatientId}`);
+                navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}`);
               }}
             >
               <UtensilsCrossed className="w-4 h-4" /> Montar Plano (V2)
@@ -663,7 +663,7 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/v3/${resolvedPatientId}`);
+                navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}`);
               }}
             >
               <Sparkles className="w-4 h-4" /> Editor V3 (Beta)
@@ -907,7 +907,7 @@ export default function PatientDetail() {
                     onClick={() => {
                       const version = plan.editor_version || "v2";
                       if (version === "v3" && resolvedPatientId) {
-                        navigate(`/v3/${resolvedPatientId}?planId=${plan.id}`);
+                        navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}&planId=${plan.id}`);
                       } else {
                         navigate(`/meal-plans/${plan.id}`);
                       }
@@ -1537,7 +1537,7 @@ export default function PatientDetail() {
                           if (newPlan?.id && resolvedPatientId) {
                             toast.success("Plano criado! Abrindo Builder...");
                             const isV3 = newPlan.editor_version === "v3";
-                            const path = isV3 ? `/v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}` : `/meal-plans/${newPlan.id}`;
+                            const path = isV3 ? `/meal-plans/editor/v3?patientId=${encodeURIComponent(resolvedPatientId)}&planId=${newPlan.id}` : `/meal-plans/${newPlan.id}`;
                             navigate(path, { replace: true });
                           }
                         } catch (err: any) {
@@ -1686,7 +1686,7 @@ export default function PatientDetail() {
                                       onClick={() => {
                                         setOpenSection(null);
                                         const path = plan.editor_version === "v3" 
-                                          ? `/v3/${resolvedPatientId}?planId=${plan.id}`
+                                          ? `/meal-plans/editor/v3?patientId=${resolvedPatientId}&planId=${plan.id}`
                                           : `/meal-plans/${plan.id}`;
                                         navigate(path);
                                       }}
@@ -1701,7 +1701,7 @@ export default function PatientDetail() {
                                     onClick={() => {
                                       setOpenSection(null);
                                       const path = plan.editor_version === "v3" 
-                                        ? `/v3/${resolvedPatientId}?planId=${plan.id}`
+                                        ? `/meal-plans/editor/v3?patientId=${resolvedPatientId}&planId=${plan.id}`
                                         : `/meal-plans/${plan.id}`;
                                       navigate(path);
                                     }}
