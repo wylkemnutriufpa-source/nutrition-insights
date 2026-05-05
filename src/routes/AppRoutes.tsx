@@ -314,6 +314,18 @@ export const AppRoutes = () => {
       <Route path="/automation" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AutomationCenter /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/clinical-brain" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalBrain /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/intelligence-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><IntelligenceSettings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/chat" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Chat /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Notifications /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/reset-password" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><ResetPassword /></Suspense></ProtectedRoute>} />
+      <Route path="/supplements" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Supplements /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/water-calculator" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WaterCalculator /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/weight-calculator" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeightCalculator /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient-meal-plan" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientMealPlan /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/workouts" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientWorkouts /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/personal-dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/body-analysis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyAnalysis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/body-projection" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyProjectionExperience /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/consent" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ConsentRequired /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Rotas de Admin */}
       <Route path="/admin/affiliates" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminAffiliates /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
