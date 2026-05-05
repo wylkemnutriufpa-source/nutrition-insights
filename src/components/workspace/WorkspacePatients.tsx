@@ -223,7 +223,7 @@ export default function WorkspacePatients({ search }: Props) {
                 <Settings2 className="h-3.5 w-3.5 text-amber-500/70" />
               </Button>
 
-              <Link to={`/patient/${p.patient_id}`} className="shrink-0">
+              <Link to={`/patients/${p.patient_id}`} className="shrink-0">
                 <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>
