@@ -43,7 +43,8 @@ export function EditorVersionPicker({
       if (patientId) {
         navigate(`/v3/${patientId}?planId=${planId}`);
       } else {
-        navigate(`/meal-plan-editor-v3?planId=${planId}`);
+        // Fallback safety: do not navigate if we don't have patientId for V3
+        console.warn("[EditorVersionPicker] Missing patientId for V3 navigation");
       }
     }
   };
