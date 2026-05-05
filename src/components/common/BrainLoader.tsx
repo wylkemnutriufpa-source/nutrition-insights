@@ -158,30 +158,38 @@ export function BrainLoaderScreen({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-background"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-background"
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col items-center gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative w-full h-full flex items-center justify-center overflow-hidden"
           >
             <video
-              src="/videos/loading.mp4"
+              src="/src/assets/logo-video.mp4"
               autoPlay
               loop
               muted
               playsInline
-              className="w-64 h-64 object-contain drop-shadow-[0_0_24px_hsl(var(--primary)/0.35)]"
+              className="absolute inset-0 w-full h-full object-cover sm:object-contain"
             />
-            <MessageRotator messages={messages} text={text} />
-            <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
+            
+            {/* Overlay for messages if needed, positioned lower */}
+            {(text || (messages && messages.length > 0)) && (
+              <div className="absolute bottom-20 left-0 right-0 z-10 px-4">
+                <MessageRotator messages={messages} text={text} />
+              </div>
+            )}
+            
+            {/* Full width progress bar at the very bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/20 overflow-hidden">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary"
+                className="h-full bg-primary/80"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 6, ease: "easeInOut" }}
+                transition={{ duration: 6, ease: "linear" }}
               />
             </div>
           </motion.div>
