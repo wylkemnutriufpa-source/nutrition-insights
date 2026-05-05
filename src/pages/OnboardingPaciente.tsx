@@ -74,23 +74,54 @@ export default function OnboardingPaciente() {
   const { user } = useAuth();
 
   const complete = useCallback(async () => {
-    console.log("[FJ:Onboarding] Finalizing slides → updating patient_state and navigating explicitly.");
+    console.log("[FJ:Onboarding] Finalizing slides → updating patient_state and onboarding_completed.");
     
     if (user?.id) {
-      await supabase
-        .from("profiles")
-        .update({ patient_state: 'anamnesis' })
-        .eq("user_id", user.id);
+      try {
+        // Atomic update to ensure consistent state
+        const { error } = await supabase
+          .from("profiles")
+          .update({ 
+            patient_state: 'anamnesis',
+            onboarding_completed: false // Slides finished, but anamnesis is next
+          })
+          .eq("user_id", user.id);
+        
+        if (error) throw error;
+      } catch (err) {
+        console.error("[FJ:Onboarding] Error updating state:", err);
+      }
     }
 
     localStorage.setItem(ONBOARDING_KEY, "true");
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
 
-    navigate("/client/dashboard");
+    navigate("/anamnesis", { replace: true });
   }, [user?.id, navigate]);
 
-  const skip = complete;
+  const skip = useCallback(async () => {
+    console.log("[FJ:Onboarding] Skipping onboarding → forcing active_plan and onboarding_completed = true");
+    
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ 
+            patient_state: 'active_plan' as any,
+            onboarding_completed: true
+          })
+          .eq("user_id", user.id);
+        
+        if (error) throw error;
+      } catch (err) {
+        console.error("[FJ:Onboarding] Error skipping onboarding:", err);
+      }
+    }
+
+    localStorage.setItem(ONBOARDING_KEY, "true");
+    navigate("/client/dashboard", { replace: true });
+  }, [user?.id, navigate]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

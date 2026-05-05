@@ -64,18 +64,24 @@ export default function Welcome() {
       // Flow Paciente
       if (effectiveRoles.includes("patient")) {
         // Garantir que temos o estado mais recente do banco
-        const pState = (profile as any)?.patient_state || "onboarding_slides";
+        const pState = (profile as any)?.patient_state;
         const onboardingCompleted = (profile as any)?.onboarding_completed;
         
-        // Regra de Ouro: se pState for null, concluído ou active_plan, vai para dashboard
+        console.log("[NAV] Welcome -> Analyzing patient state", { pState, onboardingCompleted });
+
+        // Regra de Ouro: se onboarding_completed for true, SEMPRE vai para dashboard
+        if (onboardingCompleted) {
+          console.log("[NAV] Welcome -> Onboarding completed, going to dashboard");
+          navigate("/client/dashboard", { replace: true });
+          return;
+        }
+
+        // Se onboarding_completed é falso ou nulo, segue o fluxo de pState
         let target = "/client/dashboard";
         
-        if (pState === "onboarding_slides") target = "/onboarding/paciente";
+        if (!pState || pState === "onboarding_slides") target = "/onboarding/paciente";
         else if (pState === "anamnesis") target = "/anamnesis";
-        else if (pState === "collecting_profile") target = "/client/dashboard"; // Fallback
-        
-        // Se onboarding_completed for true, SEMPRE vai para dashboard (segurança extra)
-        if (onboardingCompleted) {
+        else if (pState === "collecting_profile" || pState === "active_plan" || pState === "plan_generated" || pState === "ready_for_plan") {
           target = "/client/dashboard";
         }
         

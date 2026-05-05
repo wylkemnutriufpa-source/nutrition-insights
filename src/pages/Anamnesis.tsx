@@ -1162,7 +1162,7 @@ export default function Anamnesis() {
       await supabase.from("profiles").update({ 
         patient_state: 'active_plan' as any,
         onboarding_completed: true
-      }).eq("user_id", targetUserId);
+      } as any).eq("user_id", targetUserId);
     }
 
     if (pipelineRes.data && !isPipelineMode) {
