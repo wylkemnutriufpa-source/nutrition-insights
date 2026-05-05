@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { featureMap } from "@/config/features";
 
@@ -23,23 +22,18 @@ export interface ExperienceModeContextValue {
   queueStats: { processed: number; failed: number; isFull: boolean; hasExpired: boolean };
 }
 
-
 export function useExperienceMode(): ExperienceModeContextValue {
-  const { experienceMode, experienceRole, setMode, loading, refreshProfile } = useAuth();
+  const { experienceMode, experienceRole, setMode, loading } = useAuth();
 
   const mode = (experienceMode as ExperienceMode) || "basic";
   const role = experienceRole;
 
-  // Use state to allow immediate UI feedback while waiting for DB
-  const [localMode, setLocalMode] = useState<ExperienceMode>(mode);
-
-  // Keep local state in sync with auth profile when it changes
-  useEffect(() => {
-    if (mode && mode !== localMode) {
-      console.log("[ExperienceMode] Syncing local mode with auth profile:", mode);
-      setLocalMode(mode);
-    }
-  }, [mode]);
+  const minMode = (requiredMode: ExperienceMode) => {
+    const levels = { basic: 0, pro: 1, advanced: 2 };
+    const currentLevel = levels[mode] ?? 0;
+    const requiredLevel = levels[requiredMode] ?? 0;
+    return currentLevel >= requiredLevel;
+  };
 
   const isFeatureEnabled = (feature: string) => {
     // Se a feature for o nome de um modo, usamos minMode
@@ -48,7 +42,8 @@ export function useExperienceMode(): ExperienceModeContextValue {
     }
 
     const userRole = role === "nutritionist" ? "nutritionist" : "patient";
-    const userMode = (localMode === "pro" || localMode === "advanced") ? localMode : "basic";
+    // For feature mapping, pro and advanced are treated as having their own lists
+    const userMode = (mode === "pro" || mode === "advanced") ? mode : "basic";
 
     const roleMap = featureMap[userRole] || featureMap.patient;
     const allowedFeatures = roleMap[userMode] || roleMap.basic;
@@ -57,41 +52,18 @@ export function useExperienceMode(): ExperienceModeContextValue {
     return Array.isArray(allowedFeatures) ? allowedFeatures.includes(feature) : false;
   };
 
-  const minMode = (requiredMode: ExperienceMode) => {
-    const levels = { basic: 0, pro: 1, advanced: 2 };
-    const currentLevel = levels[localMode] ?? 0;
-    const requiredLevel = levels[requiredMode] ?? 0;
-    return currentLevel >= requiredLevel;
-  };
-
   const isRouteAllowed = (route: string) => true;
 
-  const wrappedSetMode = async (newMode: string) => {
-    console.log("[ExperienceMode] Setting new mode:", newMode);
-    // Immediate feedback
-    setLocalMode(newMode as ExperienceMode);
-    
-    try {
-      await setMode(newMode);
-      // Optional: immediate refresh to ensure absolute sync
-      await refreshProfile();
-    } catch (err) {
-      console.error("[ExperienceMode] Failed to save mode:", err);
-      // Revert local state on failure
-      setLocalMode(mode);
-    }
-  };
-
   return {
-    mode: localMode,
+    mode,
     role,
-    setMode: wrappedSetMode,
+    setMode,
     isFeatureEnabled,
     minMode,
     isRouteAllowed,
-    isBasic: localMode === "basic",
-    isPro: localMode === "pro",
-    isAdvanced: localMode === "advanced",
+    isBasic: mode === "basic",
+    isPro: mode === "pro",
+    isAdvanced: mode === "advanced",
     isLoading: loading,
     failedMode: null,
     retryLastMode: () => {},
