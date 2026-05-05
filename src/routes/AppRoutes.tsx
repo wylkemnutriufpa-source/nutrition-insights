@@ -238,19 +238,19 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, roles, loading } = useAuth();
   const location = useLocation();
 
+  console.log(`[DEBUG] ProtectedRoute check | path: ${location.pathname} | authStatus: ${authStatus} | rolesLoaded: ${roles !== null}`);
+
   if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
+    console.log(`[DEBUG] ProtectedRoute waiting...`);
     return null;
   }
   
   if (authStatus !== "authenticated") {
-    console.log("[NAV] ProtectedRoute redirecting to /auth", {
-      from: location.pathname,
-      roles,
-      status: authStatus,
-      reason: "not authenticated"
-    });
+    console.log(`[DEBUG] ProtectedRoute redirecting to /auth | reason: not authenticated`);
     return <Navigate to="/auth" replace />;
   }
+  
+  console.log(`[DEBUG] ProtectedRoute allowing: ${location.pathname}`);
   return <>{children}</>;
 }
 
