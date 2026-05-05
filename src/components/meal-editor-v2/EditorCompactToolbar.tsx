@@ -185,6 +185,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
       case "auto-gen": setAutoGenOpen(true); break;
       case "preview": setPreviewOpen(true); break;
       case "export-pdf": handleExportPDF(); break;
+      case "share": handleShare(); break;
     }
   };
 
