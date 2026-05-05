@@ -381,7 +381,11 @@ export default function ClientDashboard() {
                 {/* Challenges & Community - HIDDEN IN BASIC */}
                 {mode !== "basic" && (
                   <motion.div variants={item}>
-                    <AchievementBadges />
+                    <AchievementBadges achievements={{
+                      oneDay: (stats?.meals_logged || 0) >= 1,
+                      threeDays: (stats?.current_streak || 0) >= 3,
+                      sevenDays: (stats?.current_streak || 0) >= 7
+                    }} />
                   </motion.div>
                 )}
 
