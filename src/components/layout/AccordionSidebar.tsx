@@ -179,9 +179,12 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   return (
     <div className="space-y-1">
       {visibleSections.map(section => {
-        const sectionItems = getItemsForSection(section.id).filter(i => {
-          if (!i.is_visible) return false;
-          if (i.premium_only && !isFeatureEnabled("pro")) return false; // Exemplo de bloqueio por modo
+        const sectionItems = getItemsForSection(section.id).filter(item => {
+          if (!item.is_visible) return false;
+          // Priority 1: Specific feature check
+          if (item.feature && !isFeatureEnabled(item.feature)) return false;
+          // Priority 2: Generic premium check
+          if (item.premium_only && !minMode("pro")) return false;
           return true;
         });
         
