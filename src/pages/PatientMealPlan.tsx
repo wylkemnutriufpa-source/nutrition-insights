@@ -14,7 +14,7 @@ import {
   CalendarDays, Star, ChevronDown, ChevronUp, Trophy,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown, Calendar
 } from "lucide-react";
-import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
+import { generatePremiumMealPlanPDF, buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
 import {
@@ -109,6 +109,8 @@ export default function PatientMealPlan() {
   const [exportingPDF, setExportingPDF] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const { isStreakAtRisk, isNearCompletion, identityStatus } = useEngagement();
+  const [previewData, setPreviewData] = useState<PremiumMealPlanPDFData | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -343,7 +345,6 @@ export default function PatientMealPlan() {
       const { data: myProfile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
       if (myProfile?.full_name) patientName = myProfile.full_name;
 
-      // Get nutritionist name from the plan
       const { data: planFull } = await supabase.from("meal_plans").select("nutritionist_id, total_target_calories, total_target_protein, total_target_carbs, total_target_fat, description").eq("id", plan.id).maybeSingle();
       if (planFull?.nutritionist_id) {
         const { data: nutProfile } = await supabase.from("profiles").select("full_name").eq("user_id", planFull.nutritionist_id).maybeSingle();
@@ -355,7 +356,7 @@ export default function PatientMealPlan() {
         if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
       } catch { /* ignore */ }
 
-      generatePremiumMealPlanPDF({
+      const data: PremiumMealPlanPDFData = {
         planTitle: plan.title || "Plano Alimentar",
         patientName,
         nutritionistName,
@@ -378,10 +379,12 @@ export default function PatientMealPlan() {
         targetFat: planFull?.total_target_fat || undefined,
         goal,
         notes: planFull?.description || undefined,
-      });
-      toast.success("PDF gerado! Use Ctrl+P para salvar.");
+      };
+
+      setPreviewData(data);
+      setShowPreview(true);
     } catch {
-      toast.error("Erro ao gerar PDF");
+      toast.error("Erro ao preparar visualização");
     } finally {
       setExportingPDF(false);
     }
@@ -714,6 +717,49 @@ export default function PatientMealPlan() {
               setSubstitutionItem(null);
             }}
           />
+          <Dialog open={showPreview} onOpenChange={setShowPreview}>
+            <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50 border-none rounded-3xl">
+              <DialogHeader className="p-6 bg-white border-b shrink-0">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <DialogTitle className="font-display text-2xl font-bold flex items-center gap-2">
+                      <FileDown className="w-6 h-6 text-primary" />
+                      Visualização do Plano Premium
+                    </DialogTitle>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      Confira as informações antes de gerar o documento final.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" onClick={() => setShowPreview(false)} className="rounded-full px-6">
+                      Cancelar
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        if (previewData) generatePremiumMealPlanPDF(previewData);
+                        setShowPreview(false);
+                      }} 
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 shadow-lg shadow-primary/20"
+                    >
+                      <FileDown className="w-4 h-4 mr-2" />
+                      Confirmar e Imprimir
+                    </Button>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-100/50">
+                <div className="bg-white shadow-2xl rounded-2xl mx-auto max-w-[800px] min-h-full overflow-hidden">
+                  {previewData && (
+                    <iframe
+                      srcDoc={buildPremiumMealPlanHTML(previewData)}
+                      className="w-full h-[calc(90vh-140px)] border-none"
+                      title="PDF Preview"
+                    />
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </DashboardLayout>

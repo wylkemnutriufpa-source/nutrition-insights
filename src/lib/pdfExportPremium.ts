@@ -32,15 +32,15 @@ export interface PremiumMealPlanPDFData {
   notes?: string;
 }
 
-const MEAL_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-  breakfast: { label: "Café da Manhã", emoji: "☕", color: "#D4A84B" },
-  morning_snack: { label: "Lanche da Manhã", emoji: "🍎", color: "#4CAF50" },
-  lunch: { label: "Almoço", emoji: "🍽️", color: "#FF6B35" },
-  afternoon_snack: { label: "Lanche da Tarde", emoji: "🍪", color: "#E91E8C" },
-  pre_workout: { label: "Pré-Treino", emoji: "⚡", color: "#F44336" },
-  post_workout: { label: "Pós-Treino", emoji: "💪", color: "#2196F3" },
-  dinner: { label: "Jantar", emoji: "🌙", color: "#5C6BC0" },
-  evening_snack: { label: "Ceia", emoji: "🫖", color: "#7E57C2" },
+const MEAL_LABELS: Record<string, { label: string; color: string }> = {
+  breakfast: { label: "Café da Manhã", color: "#6366f1" },
+  morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
+  lunch: { label: "Almoço", color: "#f59e0b" },
+  afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
+  pre_workout: { label: "Pré-Treino", color: "#ef4444" },
+  post_workout: { label: "Pós-Treino", color: "#3b82f6" },
+  dinner: { label: "Jantar", color: "#6366f1" },
+  evening_snack: { label: "Ceia", color: "#8b5cf6" },
 };
 
 const DAY_NAMES: Record<number, string> = {
@@ -78,7 +78,7 @@ function formatDescription(desc: string): string {
       const cleaned = line.replace(/^[•\-]\s*/, "").trim();
       if (!cleaned) return "";
       return `<div class="food-line">
-        <span class="food-bullet">◆</span>
+        <span class="food-bullet">●</span>
         <span>${escapeHtml(cleaned)}</span>
       </div>`;
     })
@@ -108,50 +108,34 @@ function buildPremiumCSS(): string {
       }
 
       .premium-header {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
-        border-radius: 16px;
-        padding: 25px 32px;
-        margin-bottom: 24px;
+        background: #ffffff;
+        border-radius: 0;
+        padding: 40px 0 24px 0;
+        margin-bottom: 32px;
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        border-bottom: 4px solid #D4A84B;
+        align-items: flex-end;
+        border-bottom: 2px solid #0f172a;
         position: relative;
-        overflow: hidden;
-      }
-
-      .premium-header::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(212,168,75,0.1) 0%, transparent 70%);
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 36px;
+        font-size: 42px;
         font-weight: 800;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
         line-height: 1;
-        position: relative;
-        z-index: 2;
+        color: #0f172a;
       }
 
       .logo-fit {
-        background: linear-gradient(180deg, #D4A84B 0%, #F5D55A 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #D4A84B;
       }
-      .logo-journey { color: #ffffff; }
+      .logo-journey { color: #0f172a; }
 
       .patient-info {
         text-align: right;
-        color: #ffffff;
-        position: relative;
-        z-index: 2;
+        color: #0f172a;
       }
 
       .patient-info .name {
@@ -165,7 +149,7 @@ function buildPremiumCSS(): string {
 
       .patient-info .label {
         font-size: 10px;
-        color: rgba(255,255,255,0.6);
+        color: #64748b;
         text-transform: uppercase;
         font-weight: 600;
       }
@@ -313,12 +297,12 @@ function buildPremiumCSS(): string {
 
       .premium-footer {
         margin-top: 40px;
-        padding-top: 15px;
+        padding-top: 20px;
         border-top: 1px solid #eee;
         display: flex;
-        justify-content: space-between;
-        font-size: 9px;
-        color: #999;
+        justify-content: center;
+        font-size: 10px;
+        color: #94a3b8;
         font-weight: 500;
       }
     </style>
@@ -338,7 +322,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       }
     });
 
-    const mealInfo = MEAL_LABELS[mType] || { label: mType, emoji: "🍽️", color: "#888" };
+    const mealInfo = MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
 
     const renderGroup = (groupItems: MealPlanPDFItem[]) => {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
@@ -348,7 +332,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
         <div class="meal-row">
           <div class="meal-header-row">
             <div class="meal-title-group">
-              <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.emoji} ${mealInfo.label}</span>
+              <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.label}</span>
               <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
             </div>
             <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
@@ -360,7 +344,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             
             ${substitutions.length > 0 ? `
               <div class="substitution-box">
-                <div class="sub-header">🔄 Opções de Substituição</div>
+                <div class="sub-header">Opções de Substituição</div>
                 ${substitutions.map(sub => `
                   <div class="sub-item">
                     <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
@@ -474,10 +458,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
 
-  <div class="premium-footer">
-    <div>Gerado por FitJourney Premium</div>
-    <div>${new Date().toLocaleDateString('pt-BR')}</div>
-  </div>
+  <div style="margin-bottom: 40px;"></div>
 </body></html>`;
 
   return html;
