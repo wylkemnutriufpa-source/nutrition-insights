@@ -124,6 +124,7 @@ export function useWorkspace() {
           route: menu?.route || "/",
           icon: menu?.icon || "LayoutDashboard",
           premium_only: menu?.premium_only || false,
+          feature: menu?.feature || undefined,
           role_visibility: Array.isArray(menu?.role_visibility) ? menu.role_visibility : [],
         };
       });
