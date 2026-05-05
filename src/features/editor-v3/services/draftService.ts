@@ -27,19 +27,34 @@ export interface DraftRecord {
 
 const DRAFT_PAYLOAD_VERSION = 1;
 
+async function logCriticalFailure(eventType: string, errorMessage: string, payload: any = {}) {
+  const { data: userRes } = await supabase.auth.getUser();
+  if (userRes?.user?.id) {
+    await supabase.from('critical_logs').insert({
+      event_type: eventType,
+      user_id: userRes.user.id,
+      error_message: errorMessage,
+      payload
+    } as any);
+  }
+}
+
 async function getActiveTenant(): Promise<string | null> {
   try {
     const { data, error } = await supabase.rpc('get_user_active_tenant');
     if (error) {
       console.error('[v3-monitor] Critical: RPC get_user_active_tenant failed:', error.message);
+      await logCriticalFailure('tenant_failure', error.message);
       return null;
     }
     if (!data) {
       console.warn('[v3-monitor] Warning: No active tenant found for user');
+      await logCriticalFailure('tenant_failure', 'No active tenant returned from RPC');
     }
     return (data as string | null) ?? null;
   } catch (err) {
     console.error('[v3-monitor] Error: Unexpected exception fetching active tenant:', err);
+    await logCriticalFailure('tenant_failure', err instanceof Error ? err.message : String(err));
     return null;
   }
 }
@@ -130,6 +145,7 @@ export async function loadOrCreateDraft(
 
   if (insErr) {
     console.error('[v3-monitor] Draft Creation Failure:', insErr.message);
+    await logCriticalFailure('draft_failure', insErr.message, { patientId, nutritionistId, tenantId });
     return null;
   }
   console.info('[v3-draft] draft created successfully:', (created as any)?.id);
@@ -163,6 +179,7 @@ export async function saveDraft(
 
   if (error) {
     console.error('[v3-monitor] Draft Save Failure:', error.message);
+    await logCriticalFailure('save_failure', error.message, { draftId, macros });
     return null;
   }
   
