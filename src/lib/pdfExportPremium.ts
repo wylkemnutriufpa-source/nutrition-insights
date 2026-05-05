@@ -37,6 +37,8 @@ const MEAL_LABELS: Record<string, { label: string; emoji: string; color: string 
   morning_snack: { label: "Lanche da Manhã", emoji: "🍎", color: "#4CAF50" },
   lunch: { label: "Almoço", emoji: "🍽️", color: "#FF6B35" },
   afternoon_snack: { label: "Lanche da Tarde", emoji: "🍪", color: "#E91E8C" },
+  pre_workout: { label: "Pré-Treino", emoji: "⚡", color: "#F44336" },
+  post_workout: { label: "Pós-Treino", emoji: "💪", color: "#2196F3" },
   dinner: { label: "Jantar", emoji: "🌙", color: "#5C6BC0" },
   evening_snack: { label: "Ceia", emoji: "🫖", color: "#7E57C2" },
 };
@@ -338,7 +340,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return order.indexOf(a) - order.indexOf(b);
   });
 
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "pre_workout", "post_workout", "dinner", "evening_snack"];
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -459,13 +461,29 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
 
 function openPremiumPrintWindow(html: string, title: string) {
   if (typeof window === 'undefined') return;
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${title}.html`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    // Fallback if popup is blocked
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    return;
+  }
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+  
+  // Wait for fonts/resources to load before printing
+  printWindow.onload = () => {
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
 }
