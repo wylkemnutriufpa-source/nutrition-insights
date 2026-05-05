@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { loadOrCreateDraft, saveDraft } from './draftService';
+import type { Meal } from '../types';
 
 /**
  * Suite de Testes de Integração - Editor V3
@@ -29,7 +30,7 @@ export async function runV3IntegrationTests(patientId: string) {
     // 2. Validar persistência no banco
     console.log('Test 2: DB persistence check...');
     const { data: dbRecord, error: dbErr } = await supabase
-      .from('v3_drafts')
+      .from('v3_drafts' as any)
       .select('id')
       .eq('id', draft.id)
       .single();
@@ -42,8 +43,8 @@ export async function runV3IntegrationTests(patientId: string) {
 
     // 3. Validar ação de save
     console.log('Test 3: saveDraft...');
-    const updatedPayload = { ...draft.payload, lastTestAt: new Date().toISOString() };
-    const saved = await saveDraft(draft.id, updatedPayload);
+    const mealsToSave: Meal[] = draft.payload.meals;
+    const saved = await saveDraft(draft.id, mealsToSave);
     
     if (saved && saved.id === draft.id) {
       console.log('✅ Save successful');
