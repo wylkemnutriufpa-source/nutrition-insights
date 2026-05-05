@@ -151,6 +151,22 @@ export function BrainLoaderScreen({
   visible = true,
   onComplete,
 }: BrainLoaderProps & { visible?: boolean; onComplete?: () => void }) {
+  const [videoError, setVideoError] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+
+  // Safety timeout: If video takes more than 5s to load, show fallback
+  useEffect(() => {
+    if (!visible) return;
+    const timer = setTimeout(() => {
+      if (!videoLoaded) {
+        console.warn("[BrainLoader] Video load timeout, showing fallback");
+        setVideoError(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [visible, videoLoaded]);
+
   return (
     <AnimatePresence onExitComplete={onComplete}>
       {visible && (
@@ -160,27 +176,51 @@ export function BrainLoaderScreen({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
           className="fixed inset-0 z-[120] flex items-center justify-center bg-background"
+          role="progressbar"
+          aria-label={text || messages[0] || "Carregando..."}
+          aria-valuetext={text || messages[0]}
         >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="relative w-full h-full flex items-center justify-center overflow-hidden"
+            className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden"
           >
-            <video
-              src="/src/assets/logo-video.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover sm:object-contain"
-            />
+            {!videoError && !shouldReduceMotion ? (
+              <video
+                src={logoVideo}
+                autoPlay
+                loop
+                muted
+                playsInline
+                onCanPlayThrough={() => setVideoLoaded(true)}
+                onError={() => {
+                  console.error("[BrainLoader] Video failed to load");
+                  setVideoError(true);
+                }}
+                className={`absolute inset-0 w-full h-full object-cover sm:object-contain transition-opacity duration-1000 ${
+                  videoLoaded ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            ) : null}
+
+            {/* Fallback UI: If video fails or reduced motion is active */}
+            {(videoError || shouldReduceMotion || !videoLoaded) && (
+              <div className="flex flex-col items-center justify-center gap-8 animate-in fade-in duration-1000">
+                <AnimatedBrain size={120} glowSize={180} />
+                {!videoLoaded && !videoError && !shouldReduceMotion && (
+                   <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
+                )}
+              </div>
+            )}
             
-            {/* Overlay for messages if needed, positioned lower */}
+            {/* Overlay for messages, centered horizontally, positioned from bottom */}
             {(text || (messages && messages.length > 0)) && (
-              <div className="absolute bottom-20 left-0 right-0 z-10 px-4">
-                <MessageRotator messages={messages} text={text} />
+              <div className="absolute bottom-[15%] left-0 right-0 z-10 px-6 max-w-md mx-auto">
+                <div className="bg-background/40 backdrop-blur-sm py-2 px-4 rounded-full border border-primary/10 shadow-lg">
+                  <MessageRotator messages={messages} text={text} />
+                </div>
               </div>
             )}
             
@@ -190,7 +230,7 @@ export function BrainLoaderScreen({
                 className="h-full bg-primary/80"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 6, ease: "linear" }}
+                transition={{ duration: 10, ease: "easeInOut" }}
               />
             </div>
           </motion.div>
