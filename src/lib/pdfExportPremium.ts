@@ -109,38 +109,35 @@ function buildPremiumCSS(): string {
       }
 
       .premium-header {
-        background: #ffffff;
-        border-radius: 0;
-        padding: 40px 0 24px 0;
-        margin-bottom: 32px;
+        background: #0f172a;
+        padding: 40px 30px;
+        margin-bottom: 30px;
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
-        border-bottom: 2px solid #0f172a;
-        position: relative;
+        align-items: center;
+        border-radius: 0 0 20px 20px;
+        color: white;
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 42px;
+        font-size: 36px;
         font-weight: 800;
-        letter-spacing: -0.03em;
+        letter-spacing: -0.02em;
         line-height: 1;
-        color: #0f172a;
       }
 
       .logo-fit {
         color: #D4A84B;
       }
-      .logo-journey { color: #0f172a; }
+      .logo-journey { color: #ffffff; }
 
       .patient-info {
         text-align: right;
-        color: #0f172a;
       }
 
       .patient-info .name {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 800;
         color: #D4A84B;
         margin-bottom: 4px;
@@ -150,9 +147,17 @@ function buildPremiumCSS(): string {
 
       .patient-info .label {
         font-size: 10px;
-        color: #64748b;
+        color: #94a3b8;
         text-transform: uppercase;
         font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      .professional-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #ffffff;
+        opacity: 0.9;
       }
 
       .macro-summary {
