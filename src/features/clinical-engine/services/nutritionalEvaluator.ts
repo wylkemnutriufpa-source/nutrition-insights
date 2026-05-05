@@ -18,6 +18,12 @@ export const calculateNutritionalScore = (
   meals: Meal[],
   metadata: PlanMetadata = {}
 ): NutritionalScore => {
+  if (!meals || meals.length === 0) {
+    return {
+      total: 0,
+      breakdown: { calories: 0, macros: 0, distribution: 0, quality: 0 }
+    };
+  }
   const isPersonalized = !!metadata.goal;
   // ... rest of logic uses metadata to adjust weights
 
