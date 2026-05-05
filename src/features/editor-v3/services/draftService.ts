@@ -138,13 +138,14 @@ export async function loadOrCreateDraft(
 
 export async function saveDraft(
   draftId: string,
-  meals: Meal[]
+  meals: Meal[],
+  auditLog: AuditLogEntry[] = []
 ): Promise<DraftRecord | null> {
   const macros = computeMacros(meals);
   const payload: DraftPayload = {
     meals,
     version: DRAFT_PAYLOAD_VERSION,
-    audit_log: []
+    audit_log: auditLog
   };
 
   const { data, error } = await supabase
