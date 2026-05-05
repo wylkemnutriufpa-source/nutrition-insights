@@ -183,23 +183,20 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
       console.log("[CommandPalette] Event received: open-command-palette");
       setIsOpen(true);
     };
-    window.addEventListener("open-command-palette", handleOpen);
-    return () => window.removeEventListener("open-command-palette", handleOpen);
-  }, []);
 
-  useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setIsOpen((o) => !o);
       }
     };
+
+    window.addEventListener("open-command-palette", handleOpen);
     document.addEventListener("keydown", down);
-    const openHandler = () => setIsOpen(true);
-    window.addEventListener("open-command-palette", openHandler);
+
     return () => {
+      window.removeEventListener("open-command-palette", handleOpen);
       document.removeEventListener("keydown", down);
-      window.removeEventListener("open-command-palette", openHandler);
     };
   }, []);
 
