@@ -1,7 +1,17 @@
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
-import type { Tables } from "@/integrations/supabase/types";
 
-type MealPlanItem = Tables<"meal_plan_items">;
+export type MealPlanItem = {
+  id: string;
+  title: string;
+  calories_target?: number | null;
+  protein_target?: number | null;
+  carbs_target?: number | null;
+  fat_target?: number | null;
+  meal_type?: string | null;
+  description?: string | null;
+  metadata?: any;
+  edit_metadata?: any;
+};
 
 const SUB_TOLERANCE = { 
   kcalPct: 0.12,    // 12% tolerance for calories
