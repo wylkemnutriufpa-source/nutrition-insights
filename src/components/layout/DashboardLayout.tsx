@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket, RefreshCw } from "lucide-react";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import SyncButton from "@/components/common/SyncButton";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { openCommandPalette } from "@/components/common/CommandPalette";
 import { useIsMobile } from "@/hooks/use-mobile";
