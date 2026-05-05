@@ -37,6 +37,8 @@ export default function AdminFeatureControl() {
   const [search, setSearch] = useState("");
   const [selectedNut, setSelectedNut] = useState<string | null>(null);
   const [globalDefaults, setGlobalDefaults] = useState<Record<string, boolean>>({});
+  const [expConfigs, setExpConfigs] = useState<any[]>([]);
+  const [savingExp, setSavingExp] = useState(false);
 
   useEffect(() => {
     if (!user) return;
