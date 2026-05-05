@@ -277,12 +277,12 @@ export const AppRoutes = () => {
       <Route path="/client/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClientDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
 
       {/* Mapeamento de Rotas do Nutritionist (Conforme imports acima) */}
-      <Route path="/patients" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Patients /></Suspense></ProtectedRoute>} />
-      <Route path="/patients/:id" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><PatientDetail /></Suspense></ProtectedRoute>} />
-      <Route path="/analyze-meal" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></ProtectedRoute>} />
-      <Route path="/diet-builder" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><DietBuilder /></Suspense></ProtectedRoute>} />
-      <Route path="/meal-plans" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></ProtectedRoute>} />
-      <Route path="/meal-plans/editor/v2" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><MealPlanEditorV2Entry /></Suspense></ProtectedRoute>} />
+      <Route path="/patients" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Patients /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patients/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/analyze-meal" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/diet-builder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietBuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/meal-plans/editor/v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlanEditorV2Entry /></Suspense></ProtectedRoute>} />
       <Route path="/meal-plans/editor/v2/:id" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><MealPlanEditorV2 /></Suspense></ProtectedRoute>} />
       <Route path="/meal-plans/editor/v3" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></ProtectedRoute>} />
       <Route path="/recipes" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Recipes /></Suspense></ProtectedRoute>} />
