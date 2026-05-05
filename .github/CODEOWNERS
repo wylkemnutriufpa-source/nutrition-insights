@@ -1,0 +1,10 @@
+# Regras de revisão obrigatória para diretórios críticos
+# Qualquer mudança nestes diretórios exige aprovação do time sênior
+
+/core/**                 @fitjourney-senior-team
+/supabase/migrations/**  @fitjourney-senior-team
+/src/providers/**        @fitjourney-senior-team
+/supabase/config.toml    @fitjourney-senior-team
+/package.json            @fitjourney-senior-team
+/tsconfig.json           @fitjourney-senior-team
+/.github/workflows/**    @fitjourney-senior-team
