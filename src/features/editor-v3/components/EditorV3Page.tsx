@@ -5,6 +5,7 @@ import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
 import { loadOrCreateDraft } from '../services/draftService';
+import { runV3IntegrationTests } from '../services/v3Tests';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
@@ -278,6 +279,19 @@ const EditorV3Page = () => {
     };
     fetchClinicalData();
   }, [patientId, setPatientContext]);
+
+  useEffect(() => {
+    if (patientId) {
+      console.debug('[v3-init] checking system health for patient:', patientId);
+      runV3IntegrationTests(patientId).then(res => {
+        if (res.errors.length > 0) {
+          console.error('[v3-health] issues detected during initialization', res.errors);
+        } else {
+          console.info('[v3-health] all systems operational');
+        }
+      });
+    }
+  }, [patientId]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
