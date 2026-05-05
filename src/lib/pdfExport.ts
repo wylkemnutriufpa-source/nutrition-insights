@@ -233,7 +233,7 @@ export function generateAssessmentPDF(data: AssessmentPDFData) {
 
     ${data.notes ? `
       <div class="notes">
-        <strong>Observações:</strong> ${data.notes}
+        <strong>Observações:</strong> ${cleanClinicalText(data.notes)}
       </div>
     ` : ''}
 
