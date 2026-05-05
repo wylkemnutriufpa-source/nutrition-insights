@@ -564,19 +564,18 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
   ${sortedDays.map(dayKey => {
     const dayItems = groupedByDay[dayKey];
-    const dayName = dayKey === -1 ? "Diário (Todos os Dias)" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
+    const dayName = dayKey === -1 ? "" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
+    const showDayHeader = sortedDays.length > 1 && dayKey !== -1;
 
     const processedMealTypes = new Set<string>();
-    
+
     const mealTypeGroups = mealOrder.map(mType => {
       const typeItems = dayItems.filter(i => i.mealType === mType);
       if (typeItems.length === 0) return "";
       processedMealTypes.add(mType);
-
       return renderMealTypeItems(typeItems, mType);
     });
 
-    // Add any meal types that were not in the mealOrder
     const remainingItems = dayItems.filter(i => !processedMealTypes.has(i.mealType));
     const remainingGroups = [...new Set(remainingItems.map(i => i.mealType))].map(mType => {
       const typeItems = remainingItems.filter(i => i.mealType === mType);
@@ -586,9 +585,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const filteredGroups = [...mealTypeGroups, ...remainingGroups].filter(g => g !== "");
     return `
       <div class="day-section">
-        <div class="day-header">
-          <div class="day-name">${dayName}</div>
-        </div>
+        ${showDayHeader ? `<div class="day-header"><div class="day-name">${dayName}</div></div>` : ""}
         ${filteredGroups.join("")}
       </div>
     `;
