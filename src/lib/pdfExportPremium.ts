@@ -235,79 +235,79 @@ function buildPremiumCSS(): string {
       .macro-summary {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        margin-bottom: 35px;
+        gap: 10px;
+        margin-bottom: 18px;
       }
 
       .macro-card {
         background: #ffffff;
         border: 1px solid #f1f5f9;
-        border-radius: 16px;
-        padding: 20px 15px;
+        border-radius: 10px;
+        padding: 10px 8px;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        transition: transform 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
       }
 
       .macro-label {
-        font-size: 10px;
+        font-size: 9px;
         text-transform: uppercase;
         color: #64748b;
         font-weight: 800;
-        margin-bottom: 6px;
-        letter-spacing: 1px;
+        margin-bottom: 3px;
+        letter-spacing: 0.6px;
       }
 
       .macro-value {
         font-family: 'Montserrat', sans-serif;
-        font-size: 22px;
+        font-size: 16px;
         font-weight: 800;
         color: #0f172a;
       }
 
       .macro-value span {
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 500;
         color: #94a3b8;
       }
 
       /* Seções de Dias */
-      .day-section { margin-bottom: 40px; page-break-inside: avoid; }
+      .day-section { margin-bottom: 16px; page-break-inside: avoid; }
 
       .day-header {
         background: #0f172a;
         color: #ffffff;
-        padding: 12px 25px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+        padding: 7px 18px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 10px;
       }
 
       .day-header .day-name {
         font-family: 'Montserrat', sans-serif;
-        font-size: 16px;
+        font-size: 12px;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 3px;
+        letter-spacing: 2px;
       }
 
       /* Linhas de Refeição */
       .meal-row {
-        border: 1px solid #f1f5f9;
-        border-radius: 16px;
-        margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 8px;
         overflow: hidden;
         background: #ffffff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        page-break-inside: avoid;
       }
 
       .meal-header-row {
         background: #f8fafc;
-        padding: 15px 25px;
+        padding: 8px 14px;
         border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
         display: flex;
         justify-content: space-between;
         align-items: center;
