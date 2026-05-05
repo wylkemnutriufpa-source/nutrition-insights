@@ -496,7 +496,12 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
                         <Link
                           key={menuItem.id}
                           to={menuItem.route}
-                          onClick={() => { trackClick(menuItem.id); setOpenGroup(null); onLinkClick?.(); }}
+                          onClick={() => { 
+                            console.log("[NAV] Sidebar clicking legacy flyout item", { to: menuItem.route, id: menuItem.id });
+                            trackClick(menuItem.id); 
+                            setOpenGroup(null); 
+                            onLinkClick?.(); 
+                          }}
                           className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
                             ${active
                               ? isPremium
