@@ -284,7 +284,11 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                         <Link
                           key={item.id}
                           to={item.route || "/"}
-                          onClick={() => { setOpenSection(null); onLinkClick?.(); }}
+                          onClick={() => { 
+                            console.log("[NAV] Sidebar clicking workspace flyout item", { to: item.route, id: item.id });
+                            setOpenSection(null); 
+                            onLinkClick?.(); 
+                          }}
                           className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
                             ${active
                               ? isPremium
