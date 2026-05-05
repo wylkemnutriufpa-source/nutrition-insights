@@ -55,7 +55,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
 
   // 4. Rotas específicas que devem ser exclusivas de paciente
   const patientOnlyPaths = ["/journey", "/patient-plan", "/checkin", "/meals"];
-  if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient) {
+  if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
     console.log("[NAV] WorkspaceRouteGuard redirecting to /welcome", {
       from: location.pathname,
       roles,
