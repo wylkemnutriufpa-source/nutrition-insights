@@ -60,6 +60,7 @@ function normalizeText(text: string): string {
 function extractNumber(text: string, patterns: RegExp[]): number | undefined {
   for (const pattern of patterns) {
     const match = text.match(pattern);
+    console.log(`[Parser DEBUG] Testing pattern ${pattern} against "${text}": match=${!!match}`);
     if (match) {
       const raw = match[1].replace(",", ".");
       const val = parseFloat(raw);
