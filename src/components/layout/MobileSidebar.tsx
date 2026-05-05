@@ -149,10 +149,10 @@ export default function MobileSidebar({
   /* ── Patient-specific links ── */
   const patientLinks = !effectiveProRole
     ? [
-        { label: "Inteligência FitJourney", route: "/patient-intelligence", icon: Brain, colorClass: "text-amber-500" },
-        { label: "Onboarding", route: "/onboarding", icon: Rocket, colorClass: "text-primary" },
-        { label: "Meu Painel", route: "/patient-overview", icon: Activity, colorClass: "text-violet-500" },
-      ]
+        { label: "Inteligência FitJourney", route: "/patient-intelligence", icon: Brain, colorClass: "text-amber-500", feature: "ai-insights" },
+        { label: "Onboarding", route: "/onboarding", icon: Rocket, colorClass: "text-primary", feature: "anamnesis" },
+        { label: "Meu Painel", route: "/patient-overview", icon: Activity, colorClass: "text-violet-500", feature: "journey" },
+      ].filter(l => isFeatureEnabled(l.feature))
     : [];
 
   return (
