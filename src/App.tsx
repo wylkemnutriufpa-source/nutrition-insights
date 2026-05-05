@@ -2,18 +2,15 @@
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useAuth } from "./lib/auth";
-import IndependentLoader from "./components/ui/IndependentLoader";
+import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 
 const AppContent = () => {
   const { loading } = useAuth();
 
-  // Exibição baseada puramente no estado de carregamento da autenticação
+  // Se a sessão principal ainda está sendo recuperada do Supabase,
+  // mostramos o loader oficial em vídeo.
   if (loading) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h1>Carregando...</h1>
-      </div>
-    );
+    return <BrainLoaderScreen visible />;
   }
 
   return <AppRoutes />;
