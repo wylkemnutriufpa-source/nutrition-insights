@@ -68,8 +68,14 @@ export const ExperienceProvider = ({ children }: { children: ReactNode }) => {
 
   const isRouteAllowed = (route: string) => {
     const cleanRoute = route.split('?')[0].split('#')[0].replace(/^\//, '');
-    if (!cleanRoute || cleanRoute === 'dashboard') return true;
-    return isFeatureEnabled(cleanRoute);
+    console.log(`[DEBUG] isRouteAllowed checking route: "${route}" (clean: "${cleanRoute}") | mode: ${mode}`);
+    if (!cleanRoute || cleanRoute === 'dashboard') {
+      console.log(`[DEBUG] isRouteAllowed allowed by default: ${cleanRoute}`);
+      return true;
+    }
+    const allowed = isFeatureEnabled(cleanRoute);
+    console.log(`[DEBUG] isRouteAllowed result for ${cleanRoute}: ${allowed}`);
+    return allowed;
   };
 
   const value: ExperienceModeContextValue = {

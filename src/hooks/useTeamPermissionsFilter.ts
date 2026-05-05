@@ -74,18 +74,23 @@ export function useTeamPermissionsFilter() {
    */
   const isRouteAllowed = useMemo(() => {
     if (!isEmployee || !permissions) {
-      // Non-employee: everything allowed. Employee without permissions loaded: allow all (safe default while loading)
+      const allowed = !isEmployee;
+      console.log(`[DEBUG] useTeamPermissionsFilter isRouteAllowed (lazy check) | isEmployee: ${isEmployee} | permissionsLoaded: ${!!permissions} | result: ${allowed}`);
       return (_route: string) => !isEmployee;
     }
 
     return (route: string) => {
+      console.log(`[DEBUG] useTeamPermissionsFilter checking route: ${route}`);
       // Check all route patterns
       for (const [routePattern, permKey] of Object.entries(ROUTE_PERMISSION_MAP)) {
         if (route === routePattern || route.startsWith(routePattern)) {
-          return permissions[permKey] === true;
+          const allowed = permissions[permKey] === true;
+          console.log(`[DEBUG] useTeamPermissionsFilter result for ${route} (pattern: ${routePattern}): ${allowed}`);
+          return allowed;
         }
       }
       // Routes not in the map are allowed by default
+      console.log(`[DEBUG] useTeamPermissionsFilter result for ${route} (no pattern): true`);
       return true;
     };
   }, [isEmployee, permissions]);
