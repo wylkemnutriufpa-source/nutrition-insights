@@ -169,9 +169,9 @@ async function fetchLifecycleState(patientId: string): Promise<Record<string, un
   );
   if (error) {
     console.error("Error resolving lifecycle state:", error);
-    return { lifecycle_state: "onboarding_started" };
+    return { state: "onboarding_started" };
   }
-  const envelope = (result as Record<string, unknown>) || { lifecycle_state: "onboarding_started" };
+  const envelope = (result as Record<string, unknown>) || { state: "onboarding_started" };
   // Runtime coherence check — surfaces structured errors when has_active_plan
   // is true but plan_id/plan_title/plan are null.
   const validation = validateLifecycleEnvelope(envelope);
