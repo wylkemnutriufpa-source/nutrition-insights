@@ -153,15 +153,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initialize = async () => {
       setLoading(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            // Background fetch, non-blocking
-            fetchData(session.user.id).catch((e) => {
-              if (import.meta.env.DEV) console.error("[Auth] bg fetch:", e);
-            });
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          if (initialSession?.user) {
+            // Wait for roles and profile before finishing loading
+            await fetchData(initialSession.user.id);
           }
         }
       } catch (e) {
