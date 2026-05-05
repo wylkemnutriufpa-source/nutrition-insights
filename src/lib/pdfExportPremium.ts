@@ -91,8 +91,12 @@ function cleanClinicalText(text: string): string {
 
   let cleaned = text;
   
-  // Remove technical symbols like Ø=Ý
+  // Remove símbolos técnicos e emojis que não renderizam corretamente nos PDFs
   cleaned = cleaned.replace(/[Ø=Ý]+/g, "");
+  // Remove emojis (planos suplementares Unicode) e símbolos pictográficos
+  cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}]/gu, "");
+  // Remove caracteres de controle
+  cleaned = cleaned.replace(/[\u0000-\u001F\u007F]/g, " ");
 
   // If we find any audit marker, we try to remove the line
   const lines = cleaned.split("\n");
