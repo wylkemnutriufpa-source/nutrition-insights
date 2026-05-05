@@ -14785,6 +14785,7 @@ export type Database = {
           metabolic_phase_last_updated_at: string | null
           metabolic_response_type: string | null
           notes: string | null
+          onboarding_completed: boolean | null
           patient_state: Database["public"]["Enums"]["patient_state_type"]
           phone: string | null
           plateau_probability: number | null
@@ -14844,6 +14845,7 @@ export type Database = {
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           notes?: string | null
+          onboarding_completed?: boolean | null
           patient_state?: Database["public"]["Enums"]["patient_state_type"]
           phone?: string | null
           plateau_probability?: number | null
@@ -14903,6 +14905,7 @@ export type Database = {
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           notes?: string | null
+          onboarding_completed?: boolean | null
           patient_state?: Database["public"]["Enums"]["patient_state_type"]
           phone?: string | null
           plateau_probability?: number | null
