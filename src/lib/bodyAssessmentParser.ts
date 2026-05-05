@@ -114,7 +114,7 @@ export function parseBodyAssessment(rawText: string): ParseResult {
       /(\d{2,3}(?:[.,]\d+)?)\s*kg/,
     ],
     height_m: [
-      /(?:altura|estatura|height).{0,10}(\d(?:[.,]\d{2}))/,
+      /(?:altura|estatura|height).{0,10}(\d(?:[.,]\d+)?)/,
       /(?:altura|estatura).{0,10}(\d{3})\s*(?:cm)?/,
     ],
     bmi: [
