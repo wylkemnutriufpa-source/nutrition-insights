@@ -27,6 +27,7 @@ import { useSyncStatus } from "@/hooks/useSyncStatus";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@/utils/dataSafety";
 import { safeLocalStorage, safeSessionStorage } from "@/lib/safeStorage";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 
 
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
@@ -1156,16 +1157,11 @@ export default function Anamnesis() {
       console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
     } else {
       console.log("[FJ:Anamnesis] patient_state updated to collecting_profile");
-      // Double check state from server
-      const { data: checkData } = await supabase
-        .from("profiles")
-        .select("patient_state")
-        .eq("user_id", targetUserId)
-        .single();
-      
-      if (checkData?.patient_state !== 'collecting_profile') {
-        await supabase.from("profiles").update({ patient_state: 'collecting_profile' }).eq("user_id", targetUserId);
-      }
+      // Hardening: Explicitly verify and set state
+      await supabase.from("profiles").update({ 
+        patient_state: 'collecting_profile',
+        onboarding_completed: true // Marcar como concluído se for o fim do fluxo esperado
+      }).eq("user_id", targetUserId);
     }
 
     if (pipelineRes.data && !isPipelineMode) {
@@ -1185,6 +1181,7 @@ export default function Anamnesis() {
       // automaticamente para /body-analysis.
       setTimeout(() => {
         if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
+        navigate("/client/dashboard", { replace: true });
       }, 1500);
 
       void (async () => {

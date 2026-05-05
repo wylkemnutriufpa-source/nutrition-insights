@@ -253,20 +253,32 @@ export default function ClientDashboard() {
             
             {/* Premium Header */}
             <motion.div variants={item}>
-              <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
-                <div className="glass-premium rounded-2xl p-4 md:p-6 shimmer-sweep">
+              <PremiumCardWrapper 
+                className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${
+                  mode === 'advanced' ? 'gradient-border particles-bg' : 
+                  mode === 'pro' ? 'border-blue-500/30 bg-blue-500/5' : 
+                  'border-green-700/30 bg-green-700/5'
+                }`} 
+                enableShimmer={mode === 'advanced'}
+              >
+                <div className={`rounded-2xl p-4 md:p-6 ${mode === 'advanced' ? 'glass-premium shimmer-sweep' : ''}`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
                         {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
                       </p>
                       <div className="flex items-center gap-2">
-                        <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold truncate">
+                        <h1 className={`font-display text-xl sm:text-2xl md:text-3xl font-bold truncate ${
+                          mode === 'advanced' ? 'text-foreground' : 
+                          mode === 'pro' ? 'text-blue-600 dark:text-blue-400' : 
+                          'text-green-800 dark:text-green-400'
+                        }`}>
                           Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
                         </h1>
-                        <PremiumBadge />
+                        {mode === 'advanced' && <PremiumBadge />}
+                        {mode === 'pro' && <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded">Completo</span>}
                       </div>
-                      <PremiumAccentLine />
+                      {mode === 'advanced' ? <PremiumAccentLine /> : <div className={`h-1 w-12 mt-2 rounded-full ${mode === 'pro' ? 'bg-blue-500' : 'bg-green-600'}`} />}
                     </div>
                   </div>
                 </div>
@@ -291,7 +303,11 @@ export default function ClientDashboard() {
 
                 {/* Daily Meal Tracker */}
                 <motion.div variants={item}>
-                  <Card className="border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm">
+                  <Card className={`border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm transition-all duration-500 ${
+                    mode === 'advanced' ? 'ring-1 ring-amber-500/20' : 
+                    mode === 'pro' ? 'ring-1 ring-blue-500/20' : 
+                    'ring-1 ring-green-700/20'
+                  }`}>
                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                       <UtensilsCrossed className="w-24 h-24" />
                     </div>
@@ -312,6 +328,10 @@ export default function ClientDashboard() {
                           title={meal.title || "Refeição"}
                           time={meal.time || "--:--"}
                           kcal={safeNum(meal.calories_target)}
+                          onClick={() => {
+                            console.log("[ACTION] Meal clicked", { mealId: meal.id, title: meal.title });
+                            navigate(`/meals?id=${meal.id || idx}`);
+                          }}
                         />
                       ))}
                       {(!lifecycle.plan?.meals || lifecycle.plan.meals.length === 0) && (

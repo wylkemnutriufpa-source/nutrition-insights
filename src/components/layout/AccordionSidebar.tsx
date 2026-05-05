@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   ChevronDown, Trophy, LayoutDashboard, Users, UtensilsCrossed,
@@ -326,8 +327,9 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
  */
 export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const { sections, loading: wsLoading } = useWorkspace();
+  const { isProfessionalContext } = useWorkspaceContext();
 
-  const hasWorkspaceConfig = isProRole && !wsLoading && sections.length > 0;
+  const hasWorkspaceConfig = isProRole && isProfessionalContext && !wsLoading && sections.length > 0;
 
   if (hasWorkspaceConfig) {
     return <WorkspaceSidebar collapsed={collapsed} onLinkClick={onLinkClick} />;
@@ -339,7 +341,7 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isFeatureEnabled, minMode } = useExperienceMode();
+  const { isFeatureEnabled, minMode, mode } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const { isPatient, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
@@ -387,19 +389,34 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
             }}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all border mb-2
               ${active
-                ? "bg-gradient-to-r from-amber-500/15 to-amber-600/10 border-amber-500/30 shadow-sm"
-                : "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10"
+                ? mode === 'advanced' ? "bg-gradient-to-r from-amber-500/15 to-amber-600/10 border-amber-500/30 shadow-sm" :
+                  mode === 'pro' ? "bg-blue-500/10 border-blue-500/30 shadow-sm" :
+                  "bg-green-700/10 border-green-700/30 shadow-sm"
+                : mode === 'advanced' ? "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10" :
+                  mode === 'pro' ? "border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10" :
+                  "border-green-700/20 bg-green-700/5 hover:bg-green-700/10"
               }`}
           >
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${active ? "bg-amber-500/20" : "bg-amber-500/10"}`}>
-              <Icon className="w-4 h-4 text-amber-500" />
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+              active 
+                ? mode === 'advanced' ? "bg-amber-500/20" : mode === 'pro' ? "bg-blue-500/20" : "bg-green-700/20" 
+                : mode === 'advanced' ? "bg-amber-500/10" : mode === 'pro' ? "bg-blue-500/10" : "bg-green-700/10"
+            }`}>
+              <Icon className={`w-4 h-4 ${
+                mode === 'advanced' ? "text-amber-500" : mode === 'pro' ? "text-blue-500" : "text-green-700"
+              }`} />
             </div>
             {!collapsed && (
-              <span className="text-xs font-bold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
+              <span className={`text-xs font-bold ${
+                mode === 'advanced' ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent" :
+                mode === 'pro' ? "text-blue-600" : "text-green-800"
+              }`}>
                 {String(t(item.label_key, item.label))}
               </span>
             )}
-            {active && !collapsed && <Crown className="w-3.5 h-3.5 ml-auto text-amber-500" />}
+            {active && !collapsed && <Crown className={`w-3.5 h-3.5 ml-auto ${
+              mode === 'advanced' ? "text-amber-500" : mode === 'pro' ? "text-blue-500" : "text-green-700"
+            }`} />}
           </Link>
         );
       })}

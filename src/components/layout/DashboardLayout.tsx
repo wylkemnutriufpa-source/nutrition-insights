@@ -112,7 +112,10 @@ function SidebarFooter({
       {!collapsed && isProRole && (
         <Link
           to="/workspace"
-          onClick={onLinkClick}
+          onClick={() => {
+            console.log("[NAV] Sidebar clicking Editor Workspace");
+            onLinkClick?.();
+          }}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
         >
           <LayoutDashboard className="w-5 h-5" />
@@ -121,7 +124,10 @@ function SidebarFooter({
       )}
       <Link
         to="/settings"
-        onClick={onLinkClick}
+        onClick={() => {
+          console.log("[NAV] Sidebar clicking Configurações");
+          onLinkClick?.();
+        }}
         className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
       >
         <Settings className="w-5 h-5" />
@@ -339,7 +345,10 @@ function DynamicSidebar({
           {(isNutritionist || isAdmin) && (
             <Link
               to="/cockpit"
-              onClick={onLinkClick}
+              onClick={() => {
+                console.log("[NAV] Sidebar clicking Cockpit Premium");
+                onLinkClick?.();
+              }}
               className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
             >
               <Rocket className="w-4 h-4 text-amber-500 flex-shrink-0" />
@@ -354,7 +363,10 @@ function DynamicSidebar({
           {(isNutritionist || isAdmin) && (
             <Link
               to="/clinical-workspace"
-              onClick={onLinkClick}
+              onClick={() => {
+                console.log("[NAV] Sidebar clicking Workspace Clínico");
+                onLinkClick?.();
+              }}
               className={`flex items-center gap-2 w-full rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
             >
               <LayoutDashboard className="w-4 h-4 text-sky-500 flex-shrink-0" />
