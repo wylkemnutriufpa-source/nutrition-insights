@@ -79,9 +79,11 @@ export const validateClinicalValidity = (data: any) => {
   // Placeholder for clinical rules
   // Example: Total calories shouldn't be zero if items exist
   let totalKcal = 0;
+  if (!data.meals) return true;
   data.meals.forEach((meal: any) => {
+    if (!meal.items) return;
     meal.items.forEach((item: any) => {
-      totalKcal += (item.kcal * item.quantity);
+      totalKcal += (Number(item.kcal || 0) * Number(item.quantity || 0));
     });
   });
 
