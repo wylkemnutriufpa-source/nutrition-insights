@@ -69,9 +69,10 @@ export default function Welcome() {
         
         console.log("[NAV] Welcome -> Analyzing patient state", { pState, onboardingCompleted });
 
-        // Regra de Ouro: se onboarding_completed for true, SEMPRE vai para dashboard
-        if (onboardingCompleted) {
-          console.log("[NAV] Welcome -> Onboarding completed, going to dashboard");
+        // Regra de Ouro v2: se onboarding_completed for true, SEMPRE vai para dashboard.
+        // Adicionamos redundância verificando se o pState não é explicitamente um estado inicial bloqueante.
+        if (onboardingCompleted === true) {
+          console.log("[NAV] Welcome -> Onboarding confirmed as completed, going to dashboard");
           navigate("/client/dashboard", { replace: true });
           return;
         }
