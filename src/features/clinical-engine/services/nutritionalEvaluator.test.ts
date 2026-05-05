@@ -60,6 +60,7 @@ describe("nutritionalEvaluator", () => {
     it("should handle empty plan with zero score", () => {
       const score = calculateNutritionalScore([]);
       expect(score.total).toBe(0);
+      expect(score.breakdown.calories).toBe(0);
     });
   });
 

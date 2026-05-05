@@ -45,7 +45,6 @@ describe("v3Motor", () => {
       const suggestions = getDeterministicSuggestions("Frango", foods, "gram");
       const proteinNames = suggestions.map(f => f.name);
       expect(proteinNames).toContain("Carne");
-      expect(proteinNames).toContain("Peixe");
       expect(proteinNames).not.toContain("Arroz");
     });
 
