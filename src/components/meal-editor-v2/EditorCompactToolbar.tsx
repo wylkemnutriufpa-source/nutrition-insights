@@ -42,6 +42,66 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
   const [assistedOpen, setAssistedOpen] = useState(false);
   const [librarySidebarOpen, setLibrarySidebarOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareData, setShareData] = useState<PremiumMealPlanPDFData | null>(null);
+
+  const buildPdfData = async (): Promise<PremiumMealPlanPDFData | null> => {
+    const store = useMealPlanEditorV2Store.getState();
+    const { items, plan } = store;
+    if (!items.length) {
+      toast.error("Nenhum item para compartilhar");
+      return null;
+    }
+    let patientName = "Paciente";
+    let nutritionistName = "Profissional";
+    let goal = "";
+    if (plan?.patient_id) {
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", plan.patient_id).maybeSingle();
+      if (profile?.full_name) patientName = profile.full_name;
+    }
+    if (plan?.nutritionist_id) {
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", plan.nutritionist_id).maybeSingle();
+      if (profile?.full_name) nutritionistName = profile.full_name;
+    }
+    if (plan?.patient_id) {
+      try {
+        const { data: a } = await supabase.from("patient_anamnesis" as any).select("goal").eq("patient_id", plan.patient_id).limit(1).maybeSingle();
+        if ((a as any)?.goal) goal = String((a as any).goal);
+      } catch { /* ignore */ }
+    }
+    return {
+      planTitle: plan?.title || "Plano Alimentar",
+      patientName,
+      nutritionistName,
+      startDate: plan?.start_date ? new Date(plan.start_date).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR"),
+      endDate: plan?.end_date ? new Date(plan.end_date).toLocaleDateString("pt-BR") : undefined,
+      items: items.map(i => ({
+        mealType: i.meal_type || "lunch",
+        title: i.title || "Refeição",
+        description: i.description || undefined,
+        calories_target: i.calories_target || undefined,
+        protein_target: i.protein_target || undefined,
+        carbs_target: i.carbs_target || undefined,
+        fat_target: i.fat_target || undefined,
+        day_of_week: i.day_of_week ?? undefined,
+        is_primary: (i as any).is_primary,
+        substitution_group_id: (i as any).substitution_group_id,
+      })),
+      targetCalories: plan?.total_target_calories || undefined,
+      targetProtein: plan?.total_target_protein || undefined,
+      targetCarbs: plan?.total_target_carbs || undefined,
+      targetFat: plan?.total_target_fat || undefined,
+      goal,
+      notes: plan?.description || undefined,
+    };
+  };
+
+  const handleShare = async () => {
+    const data = await buildPdfData();
+    if (!data) return;
+    setShareData(data);
+    setShareOpen(true);
+  };
 
   const handleExportPDF = async () => {
     const store = useMealPlanEditorV2Store.getState();
