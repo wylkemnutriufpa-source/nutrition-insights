@@ -371,8 +371,8 @@ export default function ClientDashboard() {
                   </motion.div>
                 )}
 
-                {/* Clinical & Behavioral Insights - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Clinical & Behavioral Insights - FEATURE: insights */}
+                {isFeatureEnabled("insights") && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <motion.div variants={item} className="h-full">
                       <ClinicalInsightsCard />
@@ -385,8 +385,8 @@ export default function ClientDashboard() {
               </div>
 
               <div className="lg:col-span-4 space-y-6">
-                {/* Adherence & Streaks - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Adherence & Streaks - FEATURE: performance */}
+                {isFeatureEnabled("performance") && (
                   <motion.div variants={item}>
                     <AdherenceStats 
                       streak={stats?.current_streak || 0} 
@@ -397,7 +397,8 @@ export default function ClientDashboard() {
                 )}
 
                 {/* Challenges & Community - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Challenges & Community - FEATURE: performance (shared) */}
+                {isFeatureEnabled("performance") && (
                   <motion.div variants={item}>
                     <AchievementBadges achievements={{
                       oneDay: (stats?.total_checkins || 0) >= 1,
@@ -408,7 +409,8 @@ export default function ClientDashboard() {
                 )}
 
                 {/* Smart Tips - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Smart Tips - FEATURE: tips (fallback to basic mode) */}
+                {(mode !== "basic" || isFeatureEnabled("tips")) && (
                   <motion.div variants={item}>
                     <SmartTips />
                   </motion.div>
