@@ -435,7 +435,7 @@ export default function ClientDashboard() {
             )}
 
             {/* Team & Programs */}
-            {mode !== 'basic' && (
+            {(mode !== 'basic' || isFeatureEnabled("team")) && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div variants={item}>
                   <Card className="glass-premium overflow-hidden border-border/50">
