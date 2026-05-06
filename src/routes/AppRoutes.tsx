@@ -411,6 +411,5 @@ export const AppRoutes = () => {
       <Route path="*" element={<Navigate to="/welcome" replace />} />
     </Routes>
   );
-}
 };
 
