@@ -1,34 +1,13 @@
-import { describe, test, expect, vi, beforeAll } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 
-// CRITICAL: Initialize mock before any imports that might trigger side effects
-if (typeof localStorage === 'undefined') {
-  (global as any).localStorage = {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  };
-}
-
-// Mock Supabase client
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ 
-          data: [
-            { name: 'Frango', display_name: 'Frango', image_url: '/img/frango.jpg', is_active: true }
-          ], 
-          error: null 
-        })),
-        ilike: vi.fn(() => ({
-            eq: vi.fn(() => ({
-                not: vi.fn(() => Promise.resolve({ data: [], error: null }))
-            }))
-        }))
-      }))
-    }))
-  }
+// Mock imageResolver BEFORE any other imports
+vi.mock("./imageResolver", () => ({
+  getFoodImage: vi.fn((name) => Promise.resolve({
+    url: name === 'Frango' ? '/img/frango.jpg' : '/placeholder.svg',
+    source: 'exact'
+  })),
+  filterFoodsWithImages: vi.fn((foods) => Promise.resolve(foods)),
+  validateMealImage: vi.fn(() => true)
 }));
 
 import { 
@@ -39,6 +18,7 @@ import {
 } from "./integration";
 import { FoodItem } from "./v3Motor";
 import { MealSlot } from "./distribution";
+
 
 const mockFoods: FoodItem[] = [
   {
