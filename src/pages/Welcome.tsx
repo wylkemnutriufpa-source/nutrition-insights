@@ -68,9 +68,11 @@ export default function Welcome() {
       const savedContext = localStorage.getItem("fj_workspace_context");
       const isProRole = effectiveRoles.includes("nutritionist") || effectiveRoles.includes("personal") || effectiveRoles.includes("admin");
       
-      // Se for um usuário Pro (ou Hybrid em contexto profissional), vai para admin/dashboard
+      // Se for um usuário Pro (ou Hybrid em contexto profissional), vai para o Dashboard Clínico
       if (isProRole && savedContext !== "patient") {
-        const target = nextPath || "/dashboard";
+        // Redirecionamos para /dashboard por padrão, ignorando nextPath se ele for para o painel admin indesejado
+        let target = (nextPath && nextPath !== "/admin/dashboard") ? nextPath : "/dashboard";
+        
         console.warn(`[RASTREADOR] Redirect para ${target} disparado por: Welcome page (Pro Flow)`);
         navigate(target, { replace: true });
         return;
