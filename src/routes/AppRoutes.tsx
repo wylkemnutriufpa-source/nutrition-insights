@@ -30,11 +30,11 @@ const AnalyzeMeal = lazy(() => import("../pages/AnalyzeMeal"));
 const Patients = lazy(() => import("../pages/Patients"));
 const PatientDetail = lazy(() => import("../pages/PatientDetail"));
 const ClientDashboard = lazy(() => import("../pages/ClientDashboard"));
-const MealPlanEditorV2 = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
-const MealPlanEditorV2Entry = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
+const EditorV2Page = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
+const EditorV2EntryPage = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
 const EditorV3Page = lazyDebug(() => import("../features/editor-v3").then(m => ({ default: m.EditorV3Page })), "Editor V3");
-// Removed MealPlanEditorV2Redirect as it was mixing V2 and V3 logic.
-// Routes now point directly to their respective editors.
+// Standardized editor routes for V2 and V3
+
 const DietBuilder = lazy(() => import("../pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
@@ -322,12 +322,20 @@ export const AppRoutes = () => {
       <Route path="/analyze-meal" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/diet-builder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietBuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/v3" element={<Navigate to="/meal-plans/editor/v3" replace />} />
-      <Route path="/v3/:patientId" element={<RedirectWithParams to="/meal-plans/editor/v3?patientId=:patientId" />} />
-      <Route path="/meal-plans/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlanEditorV2 /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/meal-plans/editor/v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlanEditorV2Entry /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/meal-plans/editor/v2/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlanEditorV2 /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor" element={<Navigate to="/editor-v3" replace />} />
+      <Route path="/editor-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v3/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2EntryPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v2/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2EntryPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v2/plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      
+      {/* Legacy routes for compatibility */}
+      <Route path="/meal-plans/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/meal-plans/editor/v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2EntryPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/meal-plans/editor/v2/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/editor/v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/v3" element={<Navigate to="/editor-v3" replace />} />
+      <Route path="/v3/:patientId" element={<RedirectWithParams to="/editor-v3/:patientId" />} />
       <Route path="/recipes" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Recipes /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/appointments" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Appointments /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/financial" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Financial /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function MealPlanEditorV2Entry() {
   const navigate = useNavigate();
+  const { patientId } = useParams<{ patientId?: string }>();
   const { user } = useAuth();
   const { tenantId } = useTenant();
 
@@ -16,7 +17,7 @@ export default function MealPlanEditorV2Entry() {
     if (!user?.id) return;
 
     const activeEditorRoute = readActiveEditorRoute();
-    if (activeEditorRoute?.shouldRestore) {
+    if (activeEditorRoute?.shouldRestore && !patientId) {
       navigate(activeEditorRoute.route, { replace: true });
       return;
     }
@@ -24,25 +25,30 @@ export default function MealPlanEditorV2Entry() {
     let cancelled = false;
 
     const openLatestPlanInV2 = async () => {
-      const { data, error } = await withTenantFilter(
-        supabase
-          .from("meal_plans")
-          .select("id")
-          .eq("nutritionist_id", user.id)
-          .order("is_active", { ascending: false })
-          .order("created_at", { ascending: false })
-          .limit(1),
-        tenantId
-      ).maybeSingle();
+      let query = supabase
+        .from("meal_plans")
+        .select("id")
+        .eq("nutritionist_id", user.id)
+        .order("is_active", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (patientId) {
+        query = query.eq("patient_id", patientId);
+      }
+
+      const { data, error } = await withTenantFilter(query, tenantId).maybeSingle();
 
       if (cancelled) return;
 
       if (error || !data?.id) {
-        navigate("/meal-plans", { replace: true });
+        // If no plan exists for this patient, we might want to redirect to meal-plans list
+        // or patient detail. Standard V2 behavior was redirecting to /meal-plans.
+        navigate(patientId ? `/patients/${patientId}` : "/meal-plans", { replace: true });
         return;
       }
 
-      navigate(`/meal-plans/${data.id}`, { replace: true });
+      navigate(`/editor-v2/plan/${data.id}`, { replace: true });
     };
 
     void openLatestPlanInV2();
@@ -50,7 +56,7 @@ export default function MealPlanEditorV2Entry() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, user?.id]);
+  }, [navigate, user?.id, patientId, tenantId]);
 
   return (
     <DashboardLayout>

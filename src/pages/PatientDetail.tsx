@@ -652,10 +652,10 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}`);
+                navigate(`/editor-v2/${resolvedPatientId}`);
               }}
             >
-              <UtensilsCrossed className="w-4 h-4" /> Montar Plano (V2)
+              <UtensilsCrossed className="w-4 h-4" /> Plano V2 (legado)
             </Button>
             <Button
               variant="outline"
@@ -663,7 +663,7 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}`);
+                navigate(`/editor-v3/${resolvedPatientId}`);
               }}
             >
               <Sparkles className="w-4 h-4" /> Editor V3 (Beta)
@@ -1486,7 +1486,7 @@ export default function PatientDetail() {
                           if (pd?.generated_plan_id && pd?.plan_generated) {
                             const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", pd.generated_plan_id).single();
                             const isV3 = planData?.editor_version === "v3";
-                            const path = isV3 ? `/meal-plans/editor/v3?patientId=${patientIdentity.canonicalId}&planId=${pd.generated_plan_id}` : `/meal-plans/${pd.generated_plan_id}`;
+                            const path = isV3 ? `/editor-v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}` : `/editor-v2/plan/${pd.generated_plan_id}`;
                             navigate(path);
                             return;
                           }
@@ -1502,7 +1502,7 @@ export default function PatientDetail() {
                           if (genData.mealPlanId) {
                             const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
                             const isV3 = planData?.editor_version === "v3";
-                            const path = isV3 ? `/meal-plans/editor/v3?patientId=${patientIdentity.canonicalId}&planId=${genData.mealPlanId}` : `/meal-plans/${genData.mealPlanId}`;
+                            const path = isV3 ? `/editor-v3/${patientIdentity.canonicalId}?planId=${genData.mealPlanId}` : `/editor-v2/plan/${genData.mealPlanId}`;
                             
                             if (genData.is_fallback_template) {
                               toast.info(`Nota: Usamos template padrão como fallback.`);
@@ -1537,7 +1537,7 @@ export default function PatientDetail() {
                           if (newPlan?.id && resolvedPatientId) {
                             toast.success("Plano criado! Abrindo Builder...");
                             const isV3 = newPlan.editor_version === "v3";
-                            const path = isV3 ? `/meal-plans/editor/v3?patientId=${encodeURIComponent(resolvedPatientId)}&planId=${newPlan.id}` : `/meal-plans/${newPlan.id}`;
+                            const path = isV3 ? `/editor-v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}` : `/editor-v2/plan/${newPlan.id}`;
                             navigate(path, { replace: true });
                           }
                         } catch (err: any) {
@@ -1553,7 +1553,7 @@ export default function PatientDetail() {
                             if (!activePlan) return;
                             setOpenSection(null);
                             const isV3 = activePlan.editor_version === "v3";
-                            const path = isV3 ? `/v3/${patientId}?planId=${activePlan.id}` : `/meal-plans/${activePlan.id}`;
+                            const path = isV3 ? `/editor-v3/${patientId}?planId=${activePlan.id}` : `/editor-v2/plan/${activePlan.id}`;
                             navigate(path);
                           }}>
                             <Pencil className="w-3 h-3" /> Editar Ativo
