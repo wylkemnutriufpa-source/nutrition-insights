@@ -71,7 +71,7 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
     // Se já estiver logado, o "voltar ao início" deve ser o dashboard respectivo,
     // não a rota raiz que dispara o fluxo de Welcome.
     const isPro = isAdmin || isNutritionist || isPersonal;
-    const target = isPro ? "/admin/dashboard" : (isPatient ? "/client/dashboard" : "/");
+    const target = isPro ? "/dashboard" : (isPatient ? "/client/dashboard" : "/");
 
     console.log("[NAV] FitJourneyLogo -> Smart redirect", { isPro, target });
     
