@@ -101,7 +101,7 @@ describe("Phase 3 — Weekly Planner", () => {
       options: {
         enable_variation: true,
         variation_rules: {
-          max_repeat_protein: 3,
+          max_repeat_protein: 4,
           max_consecutive_days: 1,
           allowed_substitutions: [proteinGroup],
         },
