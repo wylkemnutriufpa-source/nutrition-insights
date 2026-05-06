@@ -530,7 +530,28 @@ function DynamicSidebar({
       </ErrorBoundary>
 
       {isAdmin && (
-        <div className="px-3 mb-2">
+        <div className="px-3 mb-2 space-y-1">
+          <Link
+            to="/admin/dashboard"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
+          >
+            <div className="relative flex-shrink-0">
+              <motion.div
+                className="absolute -inset-1 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.25), transparent 70%)" }}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <ShieldCheck className="w-4 h-4 text-primary relative z-10" />
+            </div>
+            {!collapsed && (
+              <span className="text-xs font-semibold text-primary truncate">
+                Painel Administrativo
+              </span>
+            )}
+          </Link>
+
           <Link
             to="/admin/diagnostics"
             onClick={onLinkClick}
