@@ -118,7 +118,15 @@ export const useEditorState = create<EditorState>()(
             console.log(`[Blindagem:Sucesso] ${action}`);
           }
         } catch (error: any) {
-          console.error(`[Blindagem:VIOLAÇÃO] ${action}:`, error.message);
+          console.error(`[Blindagem:VIOLAÇÃO/ERRO] ${action}:`, error);
+          
+          // Fallback UI for incomplete patient data or contract violation
+          const isContractViolation = error.message && (error.message.includes('contrato') || error.message.includes('validade'));
+          const errorMessage = isContractViolation 
+            ? `Erro de contrato em ${action}: ${error.message}`
+            : `Dados do paciente incompletos ou erro em ${action}`;
+
+          toast.error(errorMessage);
           
           // 4. Rollback (Etapa 3 - Garantia de Estado)
           set({ 
