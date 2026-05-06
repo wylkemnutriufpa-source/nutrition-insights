@@ -106,6 +106,7 @@ function SidebarFooter({
   setCollapsed,
   onLinkClick,
   isProRole,
+  mode,
 }: {
   collapsed: boolean;
   dark: boolean;
