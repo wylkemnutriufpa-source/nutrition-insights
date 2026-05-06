@@ -628,11 +628,32 @@ const EditorV3Page = () => {
     }
   };
 
+  const sanitizeFoods = (foods: Food[]) => {
+    return foods.map(f => {
+      // Se for gramas e a base for <= 1, corrige para 100g
+      if (f.measurementType === 'gram' && (f.portionValue <= 1 || !f.portionValue)) {
+        return {
+          ...f,
+          portionValue: 100,
+          portionLabel: "100g",
+          kcal: f.kcal > 0 && f.portionValue === 1 ? f.kcal * 100 : f.kcal, // Se era 1g, multiplica kcal por 100
+          calories: f.calories > 0 && f.portionValue === 1 ? f.calories * 100 : f.calories
+        };
+      }
+      return f;
+    });
+  };
+
   const handleExecuteGeneration = async (calories: number) => {
     setIsGeneratingGlobal(true);
     setShowCalorieModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
-    generatePlan(selectedDietType || 'muscle-gain', calories, baseFoods, replaceExistingFlag);
+
+    const sanitized = sanitizeFoods(baseFoods);
+    console.log('[SANITIZE] Foods Processed:');
+    console.table(sanitized.slice(0, 5).map(f => ({ name: f.name, base: f.portionValue, kcal: f.kcal })));
+    
+    generatePlan(selectedDietType || 'muscle-gain', calories, sanitized, replaceExistingFlag);
     
     // Atualiza metas no estado para o Score
     setGoalMetadata({
