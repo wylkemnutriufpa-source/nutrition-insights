@@ -57,7 +57,6 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
 
   const proOnlyPaths = [
     "/patients", 
-    "/diet-builder", 
     "/meal-plans", 
     "/editor-v3",
     "/editor-v2",
