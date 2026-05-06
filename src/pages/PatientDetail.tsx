@@ -1502,7 +1502,7 @@ export default function PatientDetail() {
                           if (genData.mealPlanId) {
                             const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
                             const isV3 = planData?.editor_version === "v3";
-                            const path = isV3 ? `/meal-plans/editor/v3?patientId=${patientIdentity.canonicalId}&planId=${genData.mealPlanId}` : `/meal-plans/${genData.mealPlanId}`;
+                            const path = isV3 ? `/editor-v3/${patientIdentity.canonicalId}?planId=${genData.mealPlanId}` : `/editor-v2/plan/${genData.mealPlanId}`;
                             
                             if (genData.is_fallback_template) {
                               toast.info(`Nota: Usamos template padrão como fallback.`);
