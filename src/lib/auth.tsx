@@ -173,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        console.log(`[RASTREADOR] Auth state change event: ${event}`);
         if (event === "INITIAL_SESSION") return;
         
         setSession(currentSession);
@@ -180,10 +181,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
 
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
+          console.log(`[RASTREADOR] Fetching data for user: ${currentUser.id}`);
           fetchData(currentUser.id).catch((e) => {
             if (import.meta.env.DEV) console.error("[Auth] state fetch:", e);
           });
         } else if (event === "SIGNED_OUT") {
+          console.warn("[RASTREADOR] User SIGNED_OUT event detected");
           setProfile(null);
           setRoles(null);
           setSubscription(defaultSubscription);
