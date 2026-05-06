@@ -382,6 +382,23 @@ export const AppRoutes = () => {
       <Route path="/admin/experimental" element={<Navigate to="/admin/feature-control" replace />} />
       <Route path="/admin/performance" element={<Navigate to="/admin/dashboard" replace />} />
       
+      {/* Rotas Extras e Inteligência */}
+      <Route path="/ranking" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><GlobalRanking /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/ambassador" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AmbassadorDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/curiosidades" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Curiosidades /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/global-tips" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><GlobalTips /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/weekly-goals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeeklyGoals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/user-guide" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><UserGuide /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/apresentacao" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SystemPresentation /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/health-quiz" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><HealthCheckQuiz /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/clinical-intelligence" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProfessionalClinicalAnalytics /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/weekly-report" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeeklyReport /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/clinical-risk" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalRiskDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/therapeutic-intelligence" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><TherapeuticIntelligence /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/clinical-orchestration" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalOrchestration /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/clinical-predictions" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalPredictions /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/weight-trajectory" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeightTrajectory /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      
       {/* Rotas de Paciente */}
       <Route path="/journey" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Journey /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/achievements" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Achievements /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />

@@ -64,8 +64,12 @@ export default function Welcome() {
       // Fallback: se roles vazio, trata como paciente
       const effectiveRoles = roles.length === 0 ? ["patient"] : roles;
 
-      // Prioridade Pro
-      if (effectiveRoles.includes("nutritionist") || effectiveRoles.includes("personal") || effectiveRoles.includes("admin")) {
+      // Prioridade Pro / Contexto
+      const savedContext = localStorage.getItem("fj_workspace_context");
+      const isProRole = effectiveRoles.includes("nutritionist") || effectiveRoles.includes("personal") || effectiveRoles.includes("admin");
+      
+      // Se for um usuário Pro (ou Hybrid em contexto profissional), vai para admin/dashboard
+      if (isProRole && savedContext !== "patient") {
         const target = nextPath || "/admin/dashboard";
         console.warn(`[RASTREADOR] Redirect para ${target} disparado por: Welcome page (Pro Flow)`);
         navigate(target, { replace: true });
