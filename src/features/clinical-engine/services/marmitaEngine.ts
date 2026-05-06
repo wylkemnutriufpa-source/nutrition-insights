@@ -32,7 +32,8 @@ export async function loadMarmitas(): Promise<Marmita[]> {
     .from('nutritionist_meal_templates' as any)
     .select('*')
     .ilike('name', '%Marmita%')
-    .eq('is_global', true);
+    .eq('is_global', true)
+    .not('imageUrl', 'is', null);
 
   if (error) {
     console.error("Error loading marmitas:", error);
