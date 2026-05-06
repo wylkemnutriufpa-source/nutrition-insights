@@ -470,7 +470,11 @@ export const seedBaseData = async (nutritionistId: string): Promise<boolean> => 
       { nutritionist_id: nutritionistId, name: 'Marmita Lasanha de Berinjela', fixed_calories: 290, fixed_protein: 22, carbs: 15, fat: 12, is_active: true },
       { nutritionist_id: nutritionistId, name: 'Marmita Frango desfiado com Milho', fixed_calories: 340, fixed_protein: 38, carbs: 25, fat: 8, is_active: true },
       { nutritionist_id: nutritionistId, name: 'Marmita Risoto de Alho Poró & Tilápia', fixed_calories: 370, fixed_protein: 28, carbs: 45, fat: 6, is_active: true },
-      { nutritionist_id: nutritionistId, name: 'Marmita Almôndegas de Frango & Purê de Abóbora', fixed_calories: 310, fixed_protein: 30, carbs: 20, fat: 10, is_active: true }
+      { nutritionist_id: nutritionistId, name: 'Marmita Almôndegas de Frango & Purê de Abóbora', fixed_calories: 310, fixed_protein: 30, fixed_carbs: 20, fixed_fat: 10, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Fit de Carne Desfiada com Abóbora', fixed_calories: 330, fixed_protein: 32, fixed_carbs: 22, fixed_fat: 11, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita de Tilápia ao Molho de Alcaparras e Arroz Sete Grãos', fixed_calories: 340, fixed_protein: 28, fixed_carbs: 35, fixed_fat: 9, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Proteica de Frango com Grão de Bico e Espinafre', fixed_calories: 390, fixed_protein: 35, fixed_carbs: 42, fixed_fat: 8, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Low Carb de Almôndegas com Macarrão de Abobrinha', fixed_calories: 270, fixed_protein: 25, fixed_carbs: 12, fixed_fat: 13, is_active: true }
     ];
 
     const { count: marmitaCount } = await supabase.from('meal_recipes').select('*', { count: 'exact', head: true }).eq('nutritionist_id', nutritionistId);
