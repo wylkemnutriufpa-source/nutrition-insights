@@ -1685,6 +1685,110 @@ const EditorV3Page = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!selectedItem} onOpenChange={(v) => !v && setSelectedItem(null)}>
+        <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
+          {selectedItem && (
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                    {selectedItem.item.imageUrl ? (
+                      <img src={selectedItem.item.imageUrl} alt={selectedItem.item.name} className="w-full h-full object-cover rounded-xl" />
+                    ) : (
+                      <Apple className="w-8 h-8 text-emerald-500" />
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">{selectedItem.item.name}</h2>
+                    <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Ajuste de Porção e Substituições Inteligentes</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedItem(null)} className="text-white/40 hover:text-white rounded-full">
+                  <X className="w-6 h-6" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3 block">Quantidade</Label>
+                    <div className="flex items-center gap-4">
+                      <Input 
+                        type="number" 
+                        value={selectedItem.item.quantity} 
+                        onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
+                        className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50"
+                      />
+                      <span className="text-lg font-black text-white/60 uppercase">{selectedItem.item.portionUnitLabel}</span>
+                    </div>
+                    <div className="mt-4 flex gap-4">
+                      <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                        <p className="text-[8px] font-black text-white/30 uppercase">Calorias</p>
+                        <p className="text-sm font-black text-white">{Math.round(recalculateMacros(selectedItem.item, selectedItem.item.quantity).calories)} kcal</p>
+                      </div>
+                      <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                        <p className="text-[8px] font-black text-white/30 uppercase">Proteína</p>
+                        <p className="text-sm font-black text-emerald-400">{Math.round(recalculateMacros(selectedItem.item, selectedItem.item.quantity).protein)}g</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <Label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-4 block">Substituições Recomendadas</Label>
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                      {isLoadingSmartSubs ? (
+                        <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 text-blue-500 animate-spin" /></div>
+                      ) : smartSubstitutions.map((sub) => (
+                        <button 
+                          key={sub.id}
+                          onClick={() => handleRequestSwap(selectedItem.mealId, selectedItem.item, sub)}
+                          className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left group"
+                        >
+                          <span className="text-xs font-bold text-white group-hover:text-blue-400">{sub.name}</span>
+                          <span className="text-[9px] font-black text-white/30 uppercase">{sub.kcal} kcal</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                   <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                      <Input 
+                        placeholder="Buscar outra substituição..." 
+                        value={substitutionSearch}
+                        onChange={(e) => setSubstitutionSearch(e.target.value)}
+                        className="bg-white/5 border-white/10 h-11 rounded-xl pl-10 text-sm focus:border-emerald-500/50"
+                      />
+                   </div>
+                   
+                   <ScrollArea className="h-[350px] pr-2">
+                      <div className="grid gap-2">
+                        {(substitutionSearch.length > 0 ? substitutionResults : []).map((res) => (
+                          <button 
+                            key={res.id}
+                            onClick={() => handleRequestSwap(selectedItem.mealId, selectedItem.item, res)}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 transition-all text-left"
+                          >
+                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                               {res.imageUrl ? <img src={res.imageUrl} className="w-full h-full object-cover rounded-lg" /> : <Apple className="w-5 h-5 text-white/20" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                               <p className="text-xs font-bold text-white truncate">{res.name}</p>
+                               <p className="text-[9px] font-black text-white/30 uppercase">{res.kcal} kcal / 100g</p>
+                            </div>
+                            <Plus className="w-4 h-4 text-emerald-500/40" />
+                          </button>
+                        ))}
+                      </div>
+                   </ScrollArea>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
