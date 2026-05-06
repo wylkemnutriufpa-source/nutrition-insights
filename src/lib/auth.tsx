@@ -88,15 +88,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
-      setProfile((profileRes.data as any) ?? null);
+      
+      const profileData = profileRes.data as Profile | null;
+      setProfile(profileData);
       setRoles(((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[]);
+
+      if (profileData?.tenant_id) {
+        setTenantId(profileData.tenant_id);
+        const { data: tenantData } = await supabase.from("tenants").select("*").eq("id", profileData.tenant_id).maybeSingle();
+        setTenant(tenantData);
+      }
     } catch (e) {
       if (import.meta.env.DEV) {
         console.error("[Auth] fetchData error (non-fatal):", e);
       }
-      // Non-blocking fallback: empty profile and roles
       setProfile(null);
       setRoles([]);
+      setTenantId(null);
+      setTenant(null);
     }
   };
 
