@@ -671,11 +671,12 @@ const EditorV3Page = () => {
     setGeneratingMealId(mealId);
     await new Promise(resolve => setTimeout(resolve, 600));
     
+    const sanitized = sanitizeFoods(baseFoods);
     // Motor Adaptativo: Usa o objetivo do paciente se disponível, fallback para muscle-gain
     const goal = patientContext?.goal || 'muscle-gain';
     const targetCals = patientContext?.calories_target || 2000;
     
-    generateMeal(mealId, goal, baseFoods, targetCals);
+    generateMeal(mealId, goal, sanitized, targetCals);
     setGeneratingMealId(null);
   };
 
