@@ -1,3 +1,4 @@
+console.log('[V3-READY] Editor Page Initialized');
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { isFeatureEnabled } from '../../security/services/featureFlags';
