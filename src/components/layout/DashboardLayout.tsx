@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket, RefreshCw } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket, RefreshCw, ShieldCheck } from "lucide-react";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import SyncButton from "@/components/common/SyncButton";
 import { Search, Loader2 } from "lucide-react";
@@ -60,14 +60,14 @@ function SidebarFallback({ onLinkClick }: { onLinkClick?: () => void }) {
   const isPro = isNutritionist || isPersonal || isAdmin;
 
   const fallbackLinks = isPro ? [
-    { to: "/", label: "Início" },
+    { to: "/dashboard", label: "Início" },
     { to: "/patients", label: "Pacientes" },
     { to: "/meal-plans", label: "Planos" },
     { to: "/recipes", label: "Receitas" },
     { to: "/automation", label: "Automação" },
     { to: "/settings", label: "Configurações" },
   ] : [
-    { to: "/", label: "Início" },
+    { to: "/client/dashboard", label: "Início" },
     { to: "/journey", label: "Jornada" },
     { to: "/patient-meal-plan", label: "Minha Dieta" },
     { to: "/meals", label: "Refeições" },
@@ -530,7 +530,28 @@ function DynamicSidebar({
       </ErrorBoundary>
 
       {isAdmin && (
-        <div className="px-3 mb-2">
+        <div className="px-3 mb-2 space-y-1">
+          <Link
+            to="/admin/dashboard"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
+          >
+            <div className="relative flex-shrink-0">
+              <motion.div
+                className="absolute -inset-1 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.25), transparent 70%)" }}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <ShieldCheck className="w-4 h-4 text-primary relative z-10" />
+            </div>
+            {!collapsed && (
+              <span className="text-xs font-semibold text-primary truncate">
+                Painel Administrativo
+              </span>
+            )}
+          </Link>
+
           <Link
             to="/admin/diagnostics"
             onClick={onLinkClick}

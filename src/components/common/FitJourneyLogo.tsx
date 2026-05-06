@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { forwardRef, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 import logoPng from "@/assets/logo.png";
 
 
@@ -62,21 +63,28 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
   const s = sizes[size];
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAdmin, isNutritionist, isPersonal, isPatient } = useAuth();
 
   const handleClick = useCallback(() => {
     if (typeof window === "undefined") return;
 
-    // Clear session storage to force intro trigger
+    // Se já estiver logado, o "voltar ao início" deve ser o dashboard respectivo,
+    // não a rota raiz que dispara o fluxo de Welcome.
+    const isPro = isAdmin || isNutritionist || isPersonal;
+    const target = isPro ? "/admin/dashboard" : (isPatient ? "/client/dashboard" : "/");
+
+    console.log("[NAV] FitJourneyLogo -> Smart redirect", { isPro, target });
+    
+    // Clear session storage only if we really want to reset something, 
+    // but for navigation it might be better to just go to target.
     sessionStorage.removeItem(STORAGE_KEY);
     
-    // Navigate to root with intro flag
-    navigate("/?intro=1", { replace: true });
+    navigate(target, { replace: true });
     
-    // Force a full reload if already on root to ensure Index.tsx re-runs all effects
-    if (location.pathname === "/") {
+    if (location.pathname === target) {
       window.location.reload();
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, isAdmin, isNutritionist, isPersonal, isPatient]);
 
 
   const particles = useMemo(
