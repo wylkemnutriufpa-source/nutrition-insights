@@ -925,7 +925,7 @@ function NutritionistDashboardContent() {
           {[
             { to: "/patients", icon: Users, label: "Pacientes", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "basic" as const },
             { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "basic" as const },
-            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
+            { to: "/editor-v3", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
             { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5", min: "basic" as const },
             { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "pro" as const },
             { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "pro" as const },
