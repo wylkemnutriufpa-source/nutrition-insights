@@ -361,9 +361,9 @@ export default function ClientDashboard() {
                         />
                       ))}
                       {(!lifecycle.plan?.meals || lifecycle.plan.meals.length === 0) && (
-                        <div className="col-span-full text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border/50">
+                        <div className={`col-span-full text-center py-12 rounded-2xl border border-dashed border-border/50 ${mode === 'basic' ? 'bg-muted/10' : 'bg-muted/20'}`}>
                            <UtensilsCrossed className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-                           <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando suas refeições.</p>
+                           <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando seu plano alimentar.</p>
                         </div>
                       )}
                     </CardContent>
