@@ -431,43 +431,45 @@ export default function ClientDashboard() {
             )}
 
             {/* Team & Programs */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <motion.div variants={item}>
-                <Card className="glass-premium overflow-hidden border-border/50">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" /> Meu Time Profissional
-                    </h3>
-                  </CardHeader>
-                  <CardContent>
-                    <MyTeamTab />
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {programs.length > 0 && (
+            {mode !== 'basic' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div variants={item}>
                   <Card className="glass-premium overflow-hidden border-border/50">
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
                       <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                        <Rocket className="w-5 h-5 text-accent" /> Projetos em Andamento
+                        <Users className="w-5 h-5 text-primary" /> Meu Time Profissional
                       </h3>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      {programs.map(p => (
-                        <div key={p.id} className="p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between">
-                          <div>
-                            <p className="font-bold text-sm">{p.title}</p>
-                            <p className="text-xs text-muted-foreground">{p.tag} • Fase {p.current_phase || 1}</p>
-                          </div>
-                          <Button size="sm" variant="ghost" className="rounded-full">Ver mais</Button>
-                        </div>
-                      ))}
+                    <CardContent>
+                      <MyTeamTab />
                     </CardContent>
                   </Card>
                 </motion.div>
-              )}
-            </div>
+
+                {programs.length > 0 && (
+                  <motion.div variants={item}>
+                    <Card className="glass-premium overflow-hidden border-border/50">
+                      <CardHeader>
+                        <h3 className="font-display font-bold text-lg flex items-center gap-2">
+                          <Rocket className="w-5 h-5 text-accent" /> Projetos em Andamento
+                        </h3>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {programs.map(p => (
+                          <div key={p.id} className="p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between">
+                            <div>
+                              <p className="font-bold text-sm">{p.title}</p>
+                              <p className="text-xs text-muted-foreground">{p.tag} • Fase {p.current_phase || 1}</p>
+                            </div>
+                            <Button size="sm" variant="ghost" className="rounded-full">Ver mais</Button>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </div>
+            )}
 
           </motion.div>
         </>
