@@ -644,10 +644,11 @@ const EditorV3Page = () => {
       return f;
     });
 
-    console.log('[SANITIZE] Foods Processed:', sanitized.length);
-    if (sanitized.length > 0) {
-      console.table(sanitized.slice(0, 5).map(f => ({ name: f.name, base: f.portionValue, kcal: f.kcal })));
-    }
+    sanitized.forEach(f => {
+      if (f.portionValue === 100) {
+        console.log(`[SANITIZE] Corrected: ${f.name} to 100g | kcal: ${f.kcal}`);
+      }
+    });
     return sanitized;
   };
 
