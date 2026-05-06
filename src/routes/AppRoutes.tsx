@@ -235,22 +235,24 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus, roles, loading } = useAuth();
+  const { authStatus, roles, loading, user } = useAuth();
   const location = useLocation();
 
-  console.log(`[DEBUG] ProtectedRoute check | path: ${location.pathname} | authStatus: ${authStatus} | rolesLoaded: ${roles !== null}`);
+  useEffect(() => {
+    if (authStatus === "unauthenticated") {
+      console.warn(`[RASTREADOR] Redirect para /auth disparado por: ProtectedRoute`);
+      console.log(`[RASTREADOR] Estado: user=${!!user}, roles=${roles}, path=${location.pathname}`);
+    }
+  }, [authStatus, roles, location.pathname, user]);
 
   if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
-    console.log(`[DEBUG] ProtectedRoute waiting...`);
     return null;
   }
   
   if (authStatus !== "authenticated") {
-    console.log(`[DEBUG] ProtectedRoute redirecting to /auth | reason: not authenticated`);
     return <Navigate to="/auth" replace />;
   }
   
-  console.log(`[DEBUG] ProtectedRoute allowing: ${location.pathname}`);
   return <>{children}</>;
 }
 

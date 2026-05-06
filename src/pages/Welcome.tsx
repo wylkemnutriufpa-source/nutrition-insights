@@ -28,7 +28,7 @@ export default function Welcome() {
 
     // 3. Se não está autenticado, vai para login
     if (authStatus === "unauthenticated") {
-      console.log("[NAV] Welcome -> Redirecting to /auth (Not authenticated)");
+      console.warn(`[RASTREADOR] Redirect para /auth disparado por: Welcome page`);
       navigatedRef.current = true;
       navigate("/auth", { replace: true });
       return;
@@ -56,7 +56,7 @@ export default function Welcome() {
       // Prioridade Pro
       if (effectiveRoles.includes("nutritionist") || effectiveRoles.includes("personal") || effectiveRoles.includes("admin")) {
         const target = nextPath || "/admin/dashboard";
-        console.log("[NAV] Welcome -> Admin/Pro Flow", { roles: effectiveRoles, target });
+        console.warn(`[RASTREADOR] Redirect para ${target} disparado por: Welcome page (Pro Flow)`);
         navigate(target, { replace: true });
         return;
       }
