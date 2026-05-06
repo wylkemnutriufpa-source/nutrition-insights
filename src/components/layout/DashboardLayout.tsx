@@ -60,14 +60,14 @@ function SidebarFallback({ onLinkClick }: { onLinkClick?: () => void }) {
   const isPro = isNutritionist || isPersonal || isAdmin;
 
   const fallbackLinks = isPro ? [
-    { to: "/", label: "Início" },
+    { to: "/dashboard", label: "Início" },
     { to: "/patients", label: "Pacientes" },
     { to: "/meal-plans", label: "Planos" },
     { to: "/recipes", label: "Receitas" },
     { to: "/automation", label: "Automação" },
     { to: "/settings", label: "Configurações" },
   ] : [
-    { to: "/", label: "Início" },
+    { to: "/client/dashboard", label: "Início" },
     { to: "/journey", label: "Jornada" },
     { to: "/patient-meal-plan", label: "Minha Dieta" },
     { to: "/meals", label: "Refeições" },
