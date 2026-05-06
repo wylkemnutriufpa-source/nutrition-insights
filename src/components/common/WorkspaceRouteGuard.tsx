@@ -50,8 +50,8 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   // 2. Proteção de Client (Paciente)
   if (location.pathname.startsWith("/client")) {
     if (!isPatient && isPro) {
-      console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /client sendo PRO (e não paciente). Redirecionando para /admin/dashboard.`);
-      return <Navigate to="/admin/dashboard" replace />;
+      console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /client sendo PRO (e não paciente). Redirecionando para /dashboard.`);
+      return <Navigate to="/dashboard" replace />;
     }
   }
 
