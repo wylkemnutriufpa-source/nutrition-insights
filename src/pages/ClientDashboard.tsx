@@ -355,7 +355,6 @@ export default function ClientDashboard() {
                           time={meal.time || "--:--"}
                           kcal={safeNum(meal.calories_target)}
                           onClick={() => {
-                            console.log("[ACTION] Meal clicked", { mealId: meal.id, title: meal.title });
                             navigate(`/patient-meal-plan?id=${meal.id || idx}`);
                           }}
                         />
