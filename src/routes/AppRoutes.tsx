@@ -66,6 +66,7 @@ const MealCoverageDashboard = lazy(() => import("../pages/admin/MealCoverageDash
 const MealVisualLibraryAdmin = lazyDebug(() => import("../pages/admin/MealVisualLibraryAdmin.tsx"), "Biblioteca Visual Admin");
 const PlanBatchAudit = lazy(() => import("../pages/admin/PlanBatchAudit.tsx"));
 const TemplateMassReformulation = lazy(() => import("../pages/admin/TemplateMassReformulation.tsx"));
+const AdminSettings = lazy(() => import("../pages/admin/AdminSettings.tsx"));
 const JobDashboard = lazy(() => import("../components/dev/JobDashboard"));
 
 
@@ -373,6 +374,7 @@ export const AppRoutes = () => {
       <Route path="/professional/crm" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalCRM /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/patient-features" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminPatientFeatures /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/qa" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><QAChecklist /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/admin/settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminSettings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Rotas de Paciente */}
       <Route path="/journey" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Journey /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
