@@ -30,11 +30,11 @@ const AnalyzeMeal = lazy(() => import("../pages/AnalyzeMeal"));
 const Patients = lazy(() => import("../pages/Patients"));
 const PatientDetail = lazy(() => import("../pages/PatientDetail"));
 const ClientDashboard = lazy(() => import("../pages/ClientDashboard"));
-const MealPlanEditorV2 = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
-const MealPlanEditorV2Entry = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
+const EditorV2Page = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
+const EditorV2EntryPage = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
 const EditorV3Page = lazyDebug(() => import("../features/editor-v3").then(m => ({ default: m.EditorV3Page })), "Editor V3");
-// Removed MealPlanEditorV2Redirect as it was mixing V2 and V3 logic.
-// Routes now point directly to their respective editors.
+// Standardized editor routes for V2 and V3
+
 const DietBuilder = lazy(() => import("../pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
