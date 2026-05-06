@@ -152,7 +152,7 @@ export default function MobileSidebar({
         { label: "Inteligência FitJourney", route: "/patient-intelligence", icon: Brain, colorClass: "text-amber-500", feature: "ai-insights" },
         { label: "Onboarding", route: "/onboarding", icon: Rocket, colorClass: "text-primary", feature: "anamnesis" },
         { label: "Meu Painel", route: "/patient-overview", icon: Activity, colorClass: "text-violet-500", feature: "journey" },
-      ].filter(l => isFeatureEnabled(l.feature))
+      ].filter(l => isFeatureEnabled(l.feature) && (mode !== 'basic' || l.feature === 'anamnesis'))
     : [];
 
   return (
