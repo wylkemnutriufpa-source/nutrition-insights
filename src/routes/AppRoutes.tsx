@@ -306,6 +306,7 @@ export const AppRoutes = () => {
       <Route path="/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Index /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/client/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClientDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/client/meals" element={<Navigate to="/meals" replace />} />
 
       {/* Mapeamento de Rotas do Nutritionist (Conforme imports acima) */}
       <Route path="/physical-assessment" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PhysicalAssessment /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
