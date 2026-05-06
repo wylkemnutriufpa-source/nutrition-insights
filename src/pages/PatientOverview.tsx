@@ -188,7 +188,7 @@ export default function PatientOverview() {
               </motion.div>
 
               <motion.div variants={item}>
-                <Link to="/my-diet">
+                <Link to="/patient-meal-plan">
                   <Card className="group hover:shadow-lg hover:shadow-violet-500/10 transition-all cursor-pointer border-violet-500/20 hover:border-violet-500/40">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">

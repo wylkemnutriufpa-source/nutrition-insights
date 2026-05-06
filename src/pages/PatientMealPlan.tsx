@@ -162,12 +162,10 @@ export default function PatientMealPlan() {
     let resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
     let resolvedAllItems = resolvedItems;
 
-    // Resiliência: se a RPC retornar o plano mas o dia atual vier sem itens,
-    // buscamos o plano completo para evitar o falso estado de "nenhum plano".
-    // Isso cobre cenários onde o plano semanal foi salvo apenas com alguns dias
-    // preenchidos ou quando há desalinhamento de day_of_week.
-    const shouldFetchFullPlanItems = !!planData.id && (resolvedItems.length === 0 || allItems.length === 0);
-    if (shouldFetchFullPlanItems) {
+    // Use a flag to avoid infinite loops when fetching full items
+    const hasItems = resolvedItems.length > 0;
+    
+    if (planData.id && !hasItems) {
       const { data: fullItemsData, error: fullItemsError } = await supabase
         .from("meal_plan_items")
         .select("*")
@@ -243,9 +241,11 @@ export default function PatientMealPlan() {
 
     setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
     setLoading(false);
-  }, [user, date, weekDates, allItems.length]);
+  }, [user, date, weekDates]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { 
+    fetchData(); 
+  }, [fetchData]);
 
   useEffect(() => {
     if (!user || !plan) return;
