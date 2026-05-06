@@ -346,7 +346,7 @@ export default function ClientDashboard() {
                         rewardImpact={rewardImpact}
                       />
                     </CardHeader>
-                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <CardContent className={`${mode === 'basic' ? 'pt-2 px-0' : 'pt-6'} grid grid-cols-1 md:grid-cols-2 gap-3`}>
                       {lifecycle.plan?.meals?.map((meal: any, idx: number) => (
                         <MealCheckinCard 
                           key={meal.id || idx}
