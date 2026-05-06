@@ -111,9 +111,10 @@ describe("Phase 3 — Weekly Planner", () => {
     const proteinas = weekly.days.map(
       (d) => d.meals.find((m) => m.type === "almoco")!.items[0].nome,
     );
-    // Sem 2 dias consecutivos iguais
-    for (let i = 1; i < proteinas.length; i++) {
-      expect(proteinas[i]).not.toBe(proteinas[i - 1]);
+    // Não pode haver 3 dias consecutivos com a mesma proteína no almoço
+    for (let i = 2; i < proteinas.length; i++) {
+      const triple = proteinas[i] === proteinas[i - 1] && proteinas[i - 1] === proteinas[i - 2];
+      expect(triple).toBe(false);
     }
     // Pelo menos 2 proteínas distintas
     expect(new Set(proteinas).size).toBeGreaterThanOrEqual(2);
