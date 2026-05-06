@@ -326,11 +326,13 @@ export default function ClientDashboard() {
                   <Card className={`border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm transition-all duration-500 ${
                     mode === 'advanced' ? 'ring-1 ring-amber-500/20' : 
                     mode === 'pro' ? 'ring-1 ring-blue-500/20' : 
-                    'ring-1 ring-green-700/20'
+                    mode === 'basic' ? 'border-none bg-transparent shadow-none' : 'ring-1 ring-green-700/20'
                   }`}>
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <UtensilsCrossed className="w-24 h-24" />
-                    </div>
+                    {mode !== 'basic' && (
+                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <UtensilsCrossed className="w-24 h-24" />
+                      </div>
+                    )}
                     <CardHeader className="pb-4 border-b border-border/10">
                       <DailyEngagementProgress 
                         completed={checkins?.length || 0} 
