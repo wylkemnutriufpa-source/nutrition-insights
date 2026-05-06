@@ -408,9 +408,9 @@ export const AppRoutes = () => {
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
-      <Route path="/dashboard" element={<Navigate to="/welcome?next=/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/welcome" replace />} />
     </Routes>
   );
+}
 };
 
