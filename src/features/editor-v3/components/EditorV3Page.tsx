@@ -750,7 +750,7 @@ const EditorV3Page = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-black flex flex-col font-sans selection:bg-emerald-500/30">
       <div className="bg-black border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-8">
