@@ -276,8 +276,30 @@ export const useEditorState = create<EditorState>()(
       },
 
       hydrateMeals: (meals, auditLog = [], token = null) => {
-        set({ meals, auditLog, sharingToken: token, planStatus: 'saved' });
-        get().recalculateScore();
+        try {
+          // Blindagem Anti-Tela Branca: Validar e corrigir IDs nulos ou itens corrompidos
+          const sanitizedMeals = meals.map(meal => ({
+            ...meal,
+            id: meal.id || Math.random().toString(36).substring(2, 9),
+            items: (meal.items || []).map(item => ({
+              ...item,
+              instanceId: item.instanceId || Math.random().toString(36).substring(2, 10),
+              // Garantir que macros não sejam undefined
+              kcal: item.kcal || 0,
+              protein: item.protein || 0,
+              carbs: item.carbs || 0,
+              fat: item.fat || 0
+            }))
+          }));
+
+          set({ meals: sanitizedMeals, auditLog, sharingToken: token, planStatus: 'saved' });
+          get().recalculateScore();
+        } catch (error) {
+          console.error('[V3 Hydrate Error] Failed to hydrate meals, recovering...', error);
+          toast.error("Erro ao carregar dados do plano. Tentando recuperar...");
+          // Fallback para estado inicial seguro
+          set({ meals: initialMeals, planStatus: 'draft' });
+        }
       },
 
       addMeal: () => {

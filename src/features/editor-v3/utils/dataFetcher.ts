@@ -374,18 +374,19 @@ export const getBaseFoods = async (): Promise<Food[]> => {
     'Brócolis', 'Cenoura', 'Azeite', 'Castanha', 'Amendoim'
   ];
   
-  const { data, error } = await supabase
-    .from("food_database")
-    .select("*")
-    .or(commonKeywords.map(k => `name.ilike.%${k}%`).join(','))
-    .limit(100);
+  try {
+    const { data, error } = await supabase
+      .from("food_database")
+      .select("*")
+      .or(commonKeywords.map(k => `name.ilike.%${k}%`).join(','))
+      .limit(100);
 
-  if (error) {
-    console.error("Error fetching base foods:", error);
-    return [];
-  }
+    if (error) {
+      console.error("Error fetching base foods:", error);
+      return [];
+    }
 
-  return (data || []).map((f: any) => ({
+    return (data || []).map((f: any) => ({
     id: f.id,
     name: f.name,
     kcal: f.calories,
@@ -398,7 +399,11 @@ export const getBaseFoods = async (): Promise<Food[]> => {
     portionUnit: "g",
     portionLabel: "100g",
     measurementType: "gram",
-  }));
+    }));
+  } catch (err) {
+    console.error("Critical error in getBaseFoods:", err);
+    return [];
+  }
 };
 
 export const seedBaseData = async (nutritionistId: string): Promise<boolean> => {
