@@ -416,17 +416,19 @@ export default function ClientDashboard() {
 
 
             {/* Secondary Sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
-               <motion.div variants={item}>
-                 <SubscriptionCard />
-               </motion.div>
-               <motion.div variants={item}>
-                <NutritionistStatusBanner patientId={user?.id} />
-               </motion.div>
-               <motion.div variants={item}>
-                <PatientAIInsightsWidget />
-               </motion.div>
-            </div>
+            {mode !== 'basic' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
+                 <motion.div variants={item}>
+                   <SubscriptionCard />
+                 </motion.div>
+                 <motion.div variants={item}>
+                  <NutritionistStatusBanner patientId={user?.id} />
+                 </motion.div>
+                 <motion.div variants={item}>
+                  <PatientAIInsightsWidget />
+                 </motion.div>
+              </div>
+            )}
 
             {/* Team & Programs */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
