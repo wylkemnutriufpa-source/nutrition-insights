@@ -88,7 +88,7 @@ export function calculateMacros(targetCalories: number, weight_kg: number, goal:
 
   return {
     calorias: targetCalories,
-    proteina_g,
+    proteina_g: protein_g,
     carboidrato_g: carbo_g,
     gordura_g,
     fibra_g: 25,
