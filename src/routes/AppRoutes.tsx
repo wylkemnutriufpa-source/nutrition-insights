@@ -378,6 +378,9 @@ export const AppRoutes = () => {
       <Route path="/admin/ai-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AIUsageDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/security" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SecurityDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/health" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SystemHealthLive /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/admin/migrations" element={<Navigate to="/schema-monitor" replace />} />
+      <Route path="/admin/experimental" element={<Navigate to="/admin/feature-control" replace />} />
+      <Route path="/admin/performance" element={<Navigate to="/admin/dashboard" replace />} />
       
       {/* Rotas de Paciente */}
       <Route path="/journey" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Journey /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
