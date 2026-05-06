@@ -162,7 +162,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const location = useLocation();
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
-  const { isRouteAllowed, isFeatureEnabled, minMode } = useExperienceMode();
+  const { isRouteAllowed, isFeatureEnabled, minMode, isBasic } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
@@ -181,6 +181,11 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
       {visibleSections.map(section => {
         const sectionItems = getItemsForSection(section.id).filter(item => {
           if (!item.is_visible) return false;
+          
+          // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
+          const isDietRoute = item.route === "/patient-meal-plan";
+          if (isBasic && isPatient && isDietRoute) return true;
+
           // Priority 1: Specific feature check
           if (item.feature && !isFeatureEnabled(item.feature)) return false;
           // Priority 2: Generic premium check
@@ -359,6 +364,10 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   const allItems = categories.flatMap((c) => c.items).filter(item => {
     const featureKey = item.feature || item.route.replace(/^\//, '');
     
+    // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
+    const isDietRoute = item.route === "/patient-meal-plan";
+    if (isBasic && isPatient && isDietRoute) return true;
+
     // 1. Check feature permission using isFeatureEnabled (which checks both dynamic config and hardcoded map)
     if (!isFeatureEnabled(featureKey)) return false;
 
