@@ -19,7 +19,7 @@ export function useExperienceUI() {
     /** Show meal macros (calories, protein, carbs, fat) */
     showMacros: true, 
     /** Show full plan structure and adjustments */
-    showPlanStructure: isFeatureEnabled("diet-builder"),
+    showPlanStructure: isFeatureEnabled("editorV3"),
     /** Show advanced technical details (engine version, metadata, full logs) */
     showTechnicalDetails: isAdvanced,
 
