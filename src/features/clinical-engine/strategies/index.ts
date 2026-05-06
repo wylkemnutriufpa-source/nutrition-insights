@@ -148,13 +148,14 @@ export class DefaultV3Strategy implements ClinicalStrategy {
     let newItems: (MealItem | null)[] = [];
 
     if (mealName.includes('café') || mealName.includes('desjejum')) {
-      const proteins = shuffleArray(availableFoods.filter(f => ['Ovo', 'Queijo'].some(w => f.name.includes(w))));
-      const carbs = shuffleArray(availableFoods.filter(f => ['Pão', 'Fruta'].some(w => f.name.includes(w))));
-      newItems = [createMealItem(proteins[0], 2 * scale), createMealItem(carbs[0], 50 * scale)];
+      const proteins = shuffleArray(availableFoods.filter(f => ['Ovo', 'Queijo', 'Iogurte'].some(w => f.name.includes(w))));
+      const carbs = shuffleArray(availableFoods.filter(f => ['Pão', 'Fruta', 'Aveia'].some(w => f.name.includes(w))));
+      // No V3, passamos gramas reais (ex: 100g = 2 ovos, 50g = 2 fatias pão)
+      newItems = [createMealItem(proteins[0], 100 * scale), createMealItem(carbs[0], 80 * scale)];
     } else {
-      const proteins = shuffleArray(availableFoods.filter(f => ['Frango', 'Carne'].some(w => f.name.includes(w))));
-      const carbs = shuffleArray(availableFoods.filter(f => ['Arroz', 'Feijão'].some(w => f.name.includes(w))));
-      newItems = [createMealItem(proteins[0], 120 * scale), createMealItem(carbs[0], 150 * scale)];
+      const proteins = shuffleArray(availableFoods.filter(f => ['Frango', 'Carne', 'Peixe'].some(w => f.name.includes(w))));
+      const carbs = shuffleArray(availableFoods.filter(f => ['Arroz', 'Feijão', 'Batata'].some(w => f.name.includes(w))));
+      newItems = [createMealItem(proteins[0], 150 * scale), createMealItem(carbs[0], 200 * scale)];
     }
 
     return newItems.filter((i): i is MealItem => i !== null);
