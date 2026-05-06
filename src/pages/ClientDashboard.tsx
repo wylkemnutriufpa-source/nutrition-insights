@@ -252,47 +252,58 @@ export default function ClientDashboard() {
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden pb-12">
             
             {/* Premium Header */}
-            <motion.div variants={item}>
-              <PremiumCardWrapper 
-                className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${
-                  mode === 'advanced' ? 'gradient-border particles-bg' : 
-                  mode === 'pro' ? 'border-blue-500/30 bg-blue-500/5' : 
-                  'border-green-700/30 bg-green-700/5'
-                }`} 
-                enableShimmer={mode === 'advanced'}
-              >
-                <div className={`rounded-2xl p-4 md:p-6 ${mode === 'advanced' ? 'glass-premium shimmer-sweep' : ''}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <h1 className={`font-display text-xl sm:text-2xl md:text-3xl font-bold truncate ${
-                          mode === 'advanced' ? 'text-amber-600 dark:text-amber-400' : 
-                          mode === 'pro' ? 'text-blue-600 dark:text-blue-400' : 
-                          'text-green-800 dark:text-green-400'
-                        }`}>
-                          Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
-                        </h1>
-                        {mode === 'advanced' && <PremiumBadge />}
-                        {mode === 'pro' && <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded">Completo</span>}
-                        {mode === 'basic' && <span className="text-[10px] font-bold uppercase tracking-wider bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded">Essencial</span>}
-                      </div>
-                      
-                      {/* Descrição dinâmica por modo */}
-                      <p className="text-sm mt-2 max-w-lg opacity-80">
-                        {mode === 'advanced' && "Você está no nível Advanced. Todas as inteligências clínicas e métricas de elite estão ativas."}
-                        {mode === 'pro' && "Modo Pro ativado. Acompanhamento completo e ferramentas de performance disponíveis."}
-                        {mode === 'basic' && "Experiência essencial. Foco no acompanhamento básico e metas diárias."}
-                      </p>
+            {mode !== 'basic' && (
+              <motion.div variants={item}>
+                <PremiumCardWrapper 
+                  className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${
+                    mode === 'advanced' ? 'gradient-border particles-bg' : 
+                    mode === 'pro' ? 'border-blue-500/30 bg-blue-500/5' : 
+                    'border-green-700/30 bg-green-700/5'
+                  }`} 
+                  enableShimmer={mode === 'advanced'}
+                >
+                  <div className={`rounded-2xl p-4 md:p-6 ${mode === 'advanced' ? 'glass-premium shimmer-sweep' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <h1 className={`font-display text-xl sm:text-2xl md:text-3xl font-bold truncate ${
+                            mode === 'advanced' ? 'text-amber-600 dark:text-amber-400' : 
+                            mode === 'pro' ? 'text-blue-600 dark:text-blue-400' : 
+                            'text-green-800 dark:text-green-400'
+                          }`}>
+                            Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
+                          </h1>
+                          {mode === 'advanced' && <PremiumBadge />}
+                          {mode === 'pro' && <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded">Completo</span>}
+                        </div>
+                        
+                        <p className="text-sm mt-2 max-w-lg opacity-80">
+                          {mode === 'advanced' && "Você está no nível Advanced. Todas as inteligências clínicas e métricas de elite estão ativas."}
+                          {mode === 'pro' && "Modo Pro ativado. Acompanhamento completo e ferramentas de performance disponíveis."}
+                        </p>
 
-                      {mode === 'advanced' ? <PremiumAccentLine /> : <div className={`h-1 w-12 mt-3 rounded-full ${mode === 'pro' ? 'bg-blue-500' : 'bg-green-600'}`} />}
+                        {mode === 'advanced' ? <PremiumAccentLine /> : <div className={`h-1 w-12 mt-3 rounded-full ${mode === 'pro' ? 'bg-blue-500' : 'bg-green-600'}`} />}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </PremiumCardWrapper>
-            </motion.div>
+                </PremiumCardWrapper>
+              </motion.div>
+            )}
+
+            {mode === 'basic' && (
+              <motion.div variants={item} className="px-4 py-2">
+                <p className="text-sm text-muted-foreground mb-1">
+                  {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                </p>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">Veja sua alimentação de hoje abaixo.</p>
+              </motion.div>
+            )}
 
             {/* Retention Recovery Alert */}
             <RetentionAlert 
