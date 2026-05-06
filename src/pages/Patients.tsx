@@ -1293,6 +1293,22 @@ export default function Patients() {
         onAssigned={() => {}}
       />
 
+      <EngineSelector 
+        isOpen={!!engineSelectorTarget}
+        onClose={() => setEngineSelectorTarget(null)}
+        patientName={engineSelectorTarget?.name}
+        onSelect={(version) => {
+          if (!engineSelectorTarget) return;
+          const patientId = engineSelectorTarget.id;
+          setEngineSelectorTarget(null);
+          if (version === 'v3') {
+            nav(`/editor-v3/${patientId}`);
+          } else {
+            nav(`/editor-v2/${patientId}`);
+          }
+        }}
+      />
+
       {/* Expiry Date Dialog */}
       <Dialog open={!!expiryTarget} onOpenChange={(open) => !open && setExpiryTarget(null)}>
         <DialogContent className="max-w-sm">
