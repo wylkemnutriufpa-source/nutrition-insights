@@ -1170,7 +1170,8 @@ const EditorV3Page = () => {
                   {activeTab === 'food' && <Apple className="w-8 h-8 text-emerald-500" />}
                   {activeTab === 'marmita' && <Utensils className="w-8 h-8 text-blue-500" />}
                   {activeTab === 'template' && <Layers className="w-8 h-8 text-amber-500" />}
-                  {activeTab === 'food' ? 'Biblioteca de Alimentos' : activeTab === 'marmita' ? 'Minhas Marmitas' : 'Templates de Refeição'}
+                  {activeTab === 'visual' && <ImageIcon className="w-8 h-8 text-rose-500" />}
+                  {activeTab === 'food' ? 'Biblioteca de Alimentos' : activeTab === 'marmita' ? 'Minhas Marmitas' : activeTab === 'template' ? 'Templates de Refeição' : 'Biblioteca Visual'}
                 </DialogTitle>
                 <DialogDescription className="text-white/40 font-bold text-sm mt-1 uppercase tracking-widest">
                   {activeTab === 'food' ? 'Explore a base TACO/USDA para adicionar à sua refeição.' : activeTab === 'marmita' ? 'Refeições completas prontas para montagem rápida.' : 'Modelos estruturados para ganho de velocidade clínica.'}
