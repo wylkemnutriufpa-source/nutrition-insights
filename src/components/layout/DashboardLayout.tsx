@@ -576,6 +576,7 @@ function DynamicSidebar({
         setCollapsed={setCollapsed}
         onLinkClick={onLinkClick}
         isProRole={effectiveProRole}
+        mode={mode}
       />
     </div>
   );
