@@ -39,14 +39,18 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
 
   const isPro = isNutritionist || isPersonal || isAdmin;
 
+  // 1. Proteção de Admin/Profissional
   if (location.pathname.startsWith("/admin")) {
     if (!isPro) {
+      console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /admin sem ser PRO. Redirecionando para /client/dashboard.`);
       return <Navigate to="/client/dashboard" replace />;
     }
   }
 
+  // 2. Proteção de Client (Paciente)
   if (location.pathname.startsWith("/client")) {
     if (!isPatient && isPro) {
+      console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /client sendo PRO (e não paciente). Redirecionando para /admin/dashboard.`);
       return <Navigate to="/admin/dashboard" replace />;
     }
   }
