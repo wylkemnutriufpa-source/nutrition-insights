@@ -357,6 +357,11 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   if (loading || !hasRole) return null;
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
+    // 0. Hard hide for basic mode unless explicitly allowed
+    if (isBasic && !['diet', 'recipes', 'feedback', 'checklist', 'anamnesis'].includes(item.feature || item.route.replace(/^\//, ''))) {
+      return false;
+    }
+
     // 1. Check feature name in isFeatureEnabled (which now uses dynamic config)
     if (!isFeatureEnabled(item.feature || item.route.replace(/^\//, ''))) return false;
 
