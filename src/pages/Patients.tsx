@@ -579,6 +579,7 @@ export default function Patients() {
   const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [expiryTarget, setExpiryTarget] = useState<{ id: string, name: string, current: string | null } | null>(null);
+  const [engineSelectorTarget, setEngineSelectorTarget] = useState<{ id: string, name: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
   const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
