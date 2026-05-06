@@ -1,6 +1,10 @@
 import { describe, test, expect, vi } from "vitest";
 
-// Mock imageResolver BEFORE any other imports
+// Mock dependencies to avoid loading problematic client.ts
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {}
+}));
+
 vi.mock("./imageResolver", () => ({
   getFoodImage: vi.fn((name) => Promise.resolve({
     url: name === 'Frango' ? '/img/frango.jpg' : '/placeholder.svg',
@@ -8,6 +12,15 @@ vi.mock("./imageResolver", () => ({
   })),
   filterFoodsWithImages: vi.fn((foods) => Promise.resolve(foods)),
   validateMealImage: vi.fn(() => true)
+}));
+
+vi.mock("./marmitaEngine", () => ({
+  calculateDayWithMarmita: vi.fn((dayPlan) => ({
+    meals: dayPlan.meals,
+    total_calories: 2000,
+    macros: { calories: 2000, protein_g: 150, carbs_g: 200, fat_g: 60 }
+  })),
+  loadMarmitas: vi.fn(() => Promise.resolve([]))
 }));
 
 import { 
@@ -18,7 +31,6 @@ import {
 } from "./integration";
 import { FoodItem } from "./v3Motor";
 import { MealSlot } from "./distribution";
-
 
 const mockFoods: FoodItem[] = [
   {
