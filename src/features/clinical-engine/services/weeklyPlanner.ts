@@ -244,9 +244,9 @@ export function applyVariation(
         usageByGroup.set(item.group, usage);
         if (last && last.name === chosen.nome) {
           lastNameByGroup.set(item.group, {
-            name: chosen.name ?? chosen.nome,
+            name: chosen.nome,
             streak: last.streak + 1,
-          } as any);
+          });
         } else {
           lastNameByGroup.set(item.group, { name: chosen.nome, streak: 1 });
         }
