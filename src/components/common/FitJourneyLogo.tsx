@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { forwardRef, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 import logoPng from "@/assets/logo.png";
 
 
