@@ -8,6 +8,16 @@ import {
 import { FoodItem } from "./v3Motor";
 import { MealSlot } from "./distribution";
 
+// Mock localStorage for Supabase client
+if (typeof localStorage === 'undefined') {
+  (global as any).localStorage = {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  };
+}
+
 // Mock Supabase for image resolver
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
@@ -23,6 +33,7 @@ vi.mock("@/integrations/supabase/client", () => ({
     }))
   }
 }));
+
 
 const mockFoods: FoodItem[] = [
   {
