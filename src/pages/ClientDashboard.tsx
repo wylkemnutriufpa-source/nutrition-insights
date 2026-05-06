@@ -244,9 +244,11 @@ export default function ClientDashboard() {
               </div>
             </div>
           )}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <ExperienceModeSwitcher />
-          </div>
+          {mode !== 'basic' && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <ExperienceModeSwitcher />
+            </div>
+          )}
           <OnboardingProgressModal />
           <OnboardingExitGuard />
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden pb-12">
