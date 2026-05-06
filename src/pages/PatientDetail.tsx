@@ -652,10 +652,10 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}`);
+                navigate(`/editor-v2/${resolvedPatientId}`);
               }}
             >
-              <UtensilsCrossed className="w-4 h-4" /> Montar Plano (V2)
+              <UtensilsCrossed className="w-4 h-4" /> Plano V2 (legado)
             </Button>
             <Button
               variant="outline"
@@ -663,7 +663,7 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}`);
+                navigate(`/editor-v3/${resolvedPatientId}`);
               }}
             >
               <Sparkles className="w-4 h-4" /> Editor V3 (Beta)
