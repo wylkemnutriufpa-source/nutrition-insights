@@ -656,8 +656,6 @@ const EditorV3Page = () => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const sanitized = sanitizeFoods(baseFoods);
-    console.log('[SANITIZE] Foods Processed:');
-    console.table(sanitized.slice(0, 5).map(f => ({ name: f.name, base: f.portionValue, kcal: f.kcal })));
     
     generatePlan(selectedDietType || 'muscle-gain', calories, sanitized, replaceExistingFlag);
     
