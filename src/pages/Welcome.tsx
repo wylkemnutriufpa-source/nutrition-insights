@@ -48,6 +48,17 @@ export default function Welcome() {
 
     // 5. Se roles consolidado, decide destino
     if (isNavigationReady(authStatus, roles)) {
+      // PROVA DE CONCEITO: Blindagem contra redirecionamento indesejado fora da página Welcome
+      // Se já estamos em uma rota válida e autenticada, não forçamos a volta para o dashboard
+      // a menos que estejamos explicitamente na página de Welcome ou Root.
+      const currentPath = window.location.pathname;
+      const isWelcomeOrRoot = currentPath === "/welcome" || currentPath === "/";
+      
+      if (!isWelcomeOrRoot && !nextPath) {
+        console.log("[NAV] Welcome -> Skipping redirect: user already in a valid route", { currentPath });
+        return;
+      }
+
       navigatedRef.current = true;
       
       // Fallback: se roles vazio, trata como paciente
