@@ -289,11 +289,11 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
         protein: f.protein || 0,
         carbs: f.carbs || 0,
         fat: f.fat || 0,
-        portionValue: 1,
+        portionValue: f.portion?.includes("g") ? 100 : 1, // Base 100 para gramas, 1 para unidades
         portionUnitLabel: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
         portionUnit: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
         portionLabel: f.portion || "100g",
-        measurementType: f.portion?.includes("g") ? "gram" : (f.portion?.includes("ml") ? "ml" : "unit")
+        measurementType: f.portion?.includes("g") ? "gram" : (f.portion?.includes("ml") ? "ml" : "unit") as any
       }))
     };
   });
