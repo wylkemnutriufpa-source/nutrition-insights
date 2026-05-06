@@ -39,6 +39,7 @@ import type { PatientInfo, ProgramInfo, PatientsListParams } from "@/hooks/queri
 import type { PrestigePlan } from "@/hooks/usePrestige";
 import PaginationControls from "@/components/patients/PaginationControls";
 import PatientQueueTabs from "@/components/patients/PatientQueueTabs";
+import { EngineSelector } from "@/features/editor-v3/components/EngineSelector";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
