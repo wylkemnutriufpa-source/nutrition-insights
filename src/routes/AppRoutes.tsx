@@ -35,7 +35,7 @@ const EditorV2EntryPage = lazyDebug(() => import("../pages/MealPlanEditorV2Entry
 const EditorV3Page = lazyDebug(() => import("../features/editor-v3").then(m => ({ default: m.EditorV3Page })), "Editor V3");
 // Standardized editor routes for V2 and V3
 
-const DietBuilder = lazy(() => import("../pages/diet-builder/DietBuilder"));
+
 const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
 const Invitation = lazy(() => import("../pages/Invitation"));
