@@ -308,9 +308,9 @@ export const AppRoutes = () => {
       <Route path="/client/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClientDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
 
       {/* Mapeamento de Rotas do Nutritionist (Conforme imports acima) */}
+      <Route path="/physical-assessment" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PhysicalAssessment /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patients" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Patients /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patients/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/physical-assessment" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PhysicalAssessment /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyPublicProfile /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/analyze-meal" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/diet-builder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietBuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
