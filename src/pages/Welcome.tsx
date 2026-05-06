@@ -70,7 +70,7 @@ export default function Welcome() {
       
       // Se for um usuário Pro (ou Hybrid em contexto profissional), vai para admin/dashboard
       if (isProRole && savedContext !== "patient") {
-        const target = nextPath || "/admin/dashboard";
+        const target = nextPath || "/dashboard";
         console.warn(`[RASTREADOR] Redirect para ${target} disparado por: Welcome page (Pro Flow)`);
         navigate(target, { replace: true });
         return;
