@@ -1274,7 +1274,7 @@ const EditorV3Page = () => {
 
           <ScrollArea className="flex-1 px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
-              {activeTab === 'food' && foods.map((f) => (
+              {activeTab === 'food' && (foodSearch.length > 0 ? foods : baseFoods).map((f) => (
                 <button
                   key={f.id}
                   onClick={() => {
