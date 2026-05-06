@@ -48,7 +48,7 @@ export default function MealPlanEditorV2Entry() {
         return;
       }
 
-      navigate(`/editor-v2/${data.id}`, { replace: true });
+      navigate(`/editor-v2/plan/${data.id}`, { replace: true });
     };
 
     void openLatestPlanInV2();
