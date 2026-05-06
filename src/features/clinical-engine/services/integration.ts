@@ -7,8 +7,10 @@ import { distributeCalories, MealSlot } from "./distribution";
 import { generateWeeklyPlan, DayPlan, Macronutrients, PlannedMeal } from "./weeklyPlanner";
 import { calculateDayWithMarmita, Marmita } from "./marmitaEngine";
 import { getFoodImage } from "./imageResolver";
-// Removed problematic direct import of supabase client to allow testing
-// In production, imageResolver uses it internaly.
+
+// Types derived from engine to ensure consistency
+export type { Macronutrients, DayPlan, MealSlot };
+
 
 
 /**
