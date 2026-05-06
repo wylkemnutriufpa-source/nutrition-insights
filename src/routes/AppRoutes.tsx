@@ -235,22 +235,24 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus, roles, loading } = useAuth();
+  const { authStatus, roles, loading, user } = useAuth();
   const location = useLocation();
 
-  console.log(`[DEBUG] ProtectedRoute check | path: ${location.pathname} | authStatus: ${authStatus} | rolesLoaded: ${roles !== null}`);
+  useEffect(() => {
+    if (authStatus === "unauthenticated") {
+      console.warn(`[RASTREADOR] Redirect para /auth disparado por: ProtectedRoute`);
+      console.log(`[RASTREADOR] Estado: user=${!!user}, roles=${roles}, path=${location.pathname}`);
+    }
+  }, [authStatus, roles, location.pathname, user]);
 
   if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
-    console.log(`[DEBUG] ProtectedRoute waiting...`);
     return null;
   }
   
   if (authStatus !== "authenticated") {
-    console.log(`[DEBUG] ProtectedRoute redirecting to /auth | reason: not authenticated`);
     return <Navigate to="/auth" replace />;
   }
   
-  console.log(`[DEBUG] ProtectedRoute allowing: ${location.pathname}`);
   return <>{children}</>;
 }
 
@@ -270,19 +272,29 @@ function RedirectWithParams({ to }: { to: string }) {
 
 
 export const AppRoutes = () => {
-  const { authStatus } = useAuth();
+  const { authStatus, user } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log(`[RASTREADOR] AppRoutes montado/atualizado | path: ${location.pathname} | authStatus: ${authStatus} | user: ${!!user}`);
+  }, [location.pathname, authStatus, user]);
+
   return (
     <Routes>
       <Route
         path="/"
         element={
-          authStatus === "authenticated" ? (
+          authStatus === "loading" ? (
+            <PageLoader />
+          ) : authStatus === "authenticated" ? (
             (() => {
               const search = window.location.search;
               console.log("[NAV] Root path redirecting to /welcome", { authStatus, search });
               return <Navigate to={`/welcome${search}`} replace />;
             })()
-          ) : <Auth />
+          ) : (
+            <Auth />
+          )
         }
       />
       <Route path="/auth" element={<Auth />} />
@@ -406,7 +418,6 @@ export const AppRoutes = () => {
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
-      <Route path="/dashboard" element={<Navigate to="/welcome?next=/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/welcome" replace />} />
     </Routes>
   );

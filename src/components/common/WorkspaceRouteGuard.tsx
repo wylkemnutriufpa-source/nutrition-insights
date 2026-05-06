@@ -2,24 +2,38 @@
 import { useAuth } from "@/lib/auth";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function WorkspaceRouteGuard({ children }: { children: React.ReactNode }) {
   const { isPatientContext, isProfessionalContext } = useWorkspaceContext();
   const { isPatient, isNutritionist, isPersonal, isAdmin, roles, authStatus, loading } = useAuth();
   const location = useLocation();
 
-  // [DEBUG] Monitor redirecionamento
-  console.log(`[DEBUG] WorkspaceRouteGuard check | path: ${location.pathname} | authStatus: ${authStatus} | roles: ${roles}`);
+  // [RASTREADOR]
+  useEffect(() => {
+    const isPro = isNutritionist || isPersonal || isAdmin;
+    const isAuthRoute = ["/auth", "/welcome", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
+    
+    if (!loading && authStatus === "authenticated" && roles !== null && !isAuthRoute) {
+      if (location.pathname.startsWith("/admin") && !isPro) {
+        console.warn(`[RASTREADOR] Redirect para /client/dashboard disparado por: WorkspaceRouteGuard (Admin protection)`);
+        console.log(`[RASTREADOR] Estado: user=${!!roles}, roles=${roles}, path=${location.pathname}, isPro=${isPro}`);
+      }
 
-  // Se ainda está carregando o estado básico ou roles ainda não foram consolidadas
+      const proOnlyPaths = ["/patients", "/diet-builder", "/meal-plans", "/automation", "/financial", "/diet-templates", "/food-database", "/clinical-intelligence", "/library", "/planner", "/team", "/import-patients", "/branding", "/clinical-risk", "/therapeutic-intelligence", "/clinical-orchestration", "/weight-trajectory", "/physical-assessment", "/checkin-panel", "/in-office"];
+      if (proOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro) {
+        console.warn(`[RASTREADOR] Redirect para /client/dashboard disparado por: WorkspaceRouteGuard (Pro-only paths)`);
+        console.log(`[RASTREADOR] Estado: roles=${roles}, path=${location.pathname}`);
+      }
+    }
+  }, [location.pathname, isNutritionist, isPersonal, isAdmin, loading, authStatus, roles]);
+
   if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
-    console.log(`[DEBUG] WorkspaceRouteGuard waiting for auth/roles...`);
     return null;
   }
 
   const isAuthRoute = ["/auth", "/welcome", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
   if (isAuthRoute) {
-    console.log(`[DEBUG] WorkspaceRouteGuard allowing auth route: ${location.pathname}`);
     return <>{children}</>;
   }
 
@@ -28,7 +42,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   // 1. Proteção de Admin/Profissional
   if (location.pathname.startsWith("/admin")) {
     if (!isPro) {
-      console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /client/dashboard | reason: pro role required for /admin`);
+      console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /admin sem ser PRO. Redirecionando para /client/dashboard.`);
       return <Navigate to="/client/dashboard" replace />;
     }
   }
@@ -36,12 +50,11 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   // 2. Proteção de Client (Paciente)
   if (location.pathname.startsWith("/client")) {
     if (!isPatient && isPro) {
-      console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /admin/dashboard | reason: patient role missing for /client`);
+      console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /client sendo PRO (e não paciente). Redirecionando para /admin/dashboard.`);
       return <Navigate to="/admin/dashboard" replace />;
     }
   }
 
-  // 3. Rotas específicas que devem ser exclusivas de nutricionista/profissional
   const proOnlyPaths = [
     "/patients", 
     "/diet-builder", 
@@ -65,17 +78,14 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     "/in-office"
   ];
   if (proOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro) {
-    console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /client/dashboard | reason: pro role required for restricted path: ${location.pathname}`);
     return <Navigate to="/client/dashboard" replace />;
   }
 
-  // 4. Rotas específicas que devem ser exclusivas de paciente
   const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/checkin", "/meals"];
   if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
-    console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /welcome | reason: no valid role found for patient features`);
+    console.warn(`[RASTREADOR] Redirect para /welcome disparado por: WorkspaceRouteGuard (Patient only paths)`);
     return <Navigate to="/welcome" replace />;
   }
 
-  console.log(`[DEBUG] WorkspaceRouteGuard allowing route: ${location.pathname}`);
   return <>{children}</>;
 }

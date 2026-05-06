@@ -241,9 +241,11 @@ export default function AdminFeatureControl() {
                             { key: 'checklist', label: 'Checklist' },
                             { key: 'anamnesis', label: 'Anamnese' },
                             { key: 'journey', label: 'Jornada/Timeline' },
+                            { key: 'insights', label: 'Insights Clínicos' },
+                            { key: 'performance', label: 'Métricas/Ganhos' },
                           ].map(f => {
                             const config = expConfigs.find(c => c.role === 'patient' && c.mode === 'basic' && c.feature_key === f.key);
-                            const isEnabled = config ? config.is_enabled : true; // default
+                            const isEnabled = config ? config.is_enabled : (['diet', 'recipes', 'feedback', 'checklist', 'anamnesis'].includes(f.key)); // default logic
                             return (
                               <button
                                 key={f.key}

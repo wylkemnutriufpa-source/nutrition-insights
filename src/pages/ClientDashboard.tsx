@@ -86,6 +86,7 @@ const item = {
 
 export default function ClientDashboard() {
   const { user, profile, isPatient } = useAuth();
+  const { mode, isLoading, failedMode, retryLastMode, isFeatureEnabled } = useExperienceMode();
   const page = usePageState({ initialStatus: "loading" });
   
   const handleSupabaseError = (error: any, context: string) => {
@@ -94,7 +95,6 @@ export default function ClientDashboard() {
       toast.error(`Acesso negado ao carregar ${context}. Verifique seu vínculo profissional.`);
     }
   };
-  const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const lifecycle = usePatientLifecycleState();
   const { 
     stats, 
@@ -325,52 +325,54 @@ export default function ClientDashboard() {
                   </motion.div>
                 )}
 
-                {/* Daily Meal Tracker - ALWAYS ENABLED (DIET) */}
-                <motion.div variants={item}>
-                  <Card className={`border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm transition-all duration-500 ${
-                    mode === 'advanced' ? 'ring-1 ring-amber-500/20' : 
-                    mode === 'pro' ? 'ring-1 ring-blue-500/20' : 
-                    mode === 'basic' ? 'border-none bg-transparent shadow-none' : 'ring-1 ring-green-700/20'
-                  }`}>
-                    {mode !== 'basic' && (
-                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <UtensilsCrossed className="w-24 h-24" />
-                      </div>
-                    )}
-                    <CardHeader className={`pb-4 border-b border-border/10 ${mode === 'basic' ? 'hidden' : ''}`}>
-                      <DailyEngagementProgress 
-                        completed={checkins?.length || 0} 
-                        total={lifecycle.plan?.meals?.length || 0} 
-                        expectationMessage={expectationMessage}
-                        personalMessage={personalMessage}
-                        rewardImpact={rewardImpact}
-                      />
-                    </CardHeader>
-                    <CardContent className={`${mode === 'basic' ? 'pt-2 px-0' : 'pt-6'} grid grid-cols-1 md:grid-cols-2 gap-3`}>
-                      {lifecycle.plan?.meals?.map((meal: any, idx: number) => (
-                        <MealCheckinCard 
-                          key={meal.id || idx}
-                          mealId={meal.id || String(idx)}
-                          title={meal.title || "Refeição"}
-                          time={meal.time || "--:--"}
-                          kcal={safeNum(meal.calories_target)}
-                          onClick={() => {
-                            navigate(`/patient-meal-plan?id=${meal.id || idx}`);
-                          }}
-                        />
-                      ))}
-                      {(!lifecycle.plan?.meals || lifecycle.plan.meals.length === 0) && (
-                        <div className={`col-span-full text-center py-12 rounded-2xl border border-dashed border-border/50 ${mode === 'basic' ? 'bg-muted/10' : 'bg-muted/20'}`}>
-                           <UtensilsCrossed className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-                           <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando seu plano alimentar.</p>
+                {/* Daily Meal Tracker - FEATURE: diet */}
+                {isFeatureEnabled("diet") && (
+                  <motion.div variants={item}>
+                    <Card className={`border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm transition-all duration-500 ${
+                      mode === 'advanced' ? 'ring-1 ring-amber-500/20' : 
+                      mode === 'pro' ? 'ring-1 ring-blue-500/20' : 
+                      mode === 'basic' ? 'border-none bg-transparent shadow-none' : 'ring-1 ring-green-700/20'
+                    }`}>
+                      {mode !== 'basic' && (
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                          <UtensilsCrossed className="w-24 h-24" />
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                      <CardHeader className={`pb-4 border-b border-border/10 ${mode === 'basic' ? 'hidden' : ''}`}>
+                        <DailyEngagementProgress 
+                          completed={checkins?.length || 0} 
+                          total={lifecycle.plan?.meals?.length || 0} 
+                          expectationMessage={expectationMessage}
+                          personalMessage={personalMessage}
+                          rewardImpact={rewardImpact}
+                        />
+                      </CardHeader>
+                      <CardContent className={`${mode === 'basic' ? 'pt-2 px-0' : 'pt-6'} grid grid-cols-1 md:grid-cols-2 gap-3`}>
+                        {lifecycle.plan?.meals?.map((meal: any, idx: number) => (
+                          <MealCheckinCard 
+                            key={meal.id || idx}
+                            mealId={meal.id || String(idx)}
+                            title={meal.title || "Refeição"}
+                            time={meal.time || "--:--"}
+                            kcal={safeNum(meal.calories_target)}
+                            onClick={() => {
+                              navigate(`/patient-meal-plan?id=${meal.id || idx}`);
+                            }}
+                          />
+                        ))}
+                        {(!lifecycle.plan?.meals || lifecycle.plan.meals.length === 0) && (
+                          <div className={`col-span-full text-center py-12 rounded-2xl border border-dashed border-border/50 ${mode === 'basic' ? 'bg-muted/10' : 'bg-muted/20'}`}>
+                             <UtensilsCrossed className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
+                             <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando seu plano alimentar.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
 
-                {/* Clinical & Behavioral Insights - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Clinical & Behavioral Insights - FEATURE: insights */}
+                {isFeatureEnabled("insights") && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <motion.div variants={item} className="h-full">
                       <ClinicalInsightsCard />
@@ -383,8 +385,8 @@ export default function ClientDashboard() {
               </div>
 
               <div className="lg:col-span-4 space-y-6">
-                {/* Adherence & Streaks - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Adherence & Streaks - FEATURE: performance */}
+                {isFeatureEnabled("performance") && (
                   <motion.div variants={item}>
                     <AdherenceStats 
                       streak={stats?.current_streak || 0} 
@@ -395,7 +397,8 @@ export default function ClientDashboard() {
                 )}
 
                 {/* Challenges & Community - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Challenges & Community - FEATURE: performance (shared) */}
+                {isFeatureEnabled("performance") && (
                   <motion.div variants={item}>
                     <AchievementBadges achievements={{
                       oneDay: (stats?.total_checkins || 0) >= 1,
@@ -406,7 +409,8 @@ export default function ClientDashboard() {
                 )}
 
                 {/* Smart Tips - HIDDEN IN BASIC */}
-                {mode !== "basic" && (
+                {/* Smart Tips - FEATURE: tips (fallback to basic mode) */}
+                {(mode !== "basic" || isFeatureEnabled("tips")) && (
                   <motion.div variants={item}>
                     <SmartTips />
                   </motion.div>
@@ -431,7 +435,7 @@ export default function ClientDashboard() {
             )}
 
             {/* Team & Programs */}
-            {mode !== 'basic' && (
+            {(mode !== 'basic' || isFeatureEnabled("team")) && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div variants={item}>
                   <Card className="glass-premium overflow-hidden border-border/50">

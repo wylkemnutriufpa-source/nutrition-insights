@@ -357,13 +357,10 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   if (loading || !hasRole) return null;
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
-    // 0. Hard hide for basic mode unless explicitly allowed
-    if (isBasic && !['diet', 'recipes', 'feedback', 'checklist', 'anamnesis'].includes(item.feature || item.route.replace(/^\//, ''))) {
-      return false;
-    }
-
-    // 1. Check feature name in isFeatureEnabled (which now uses dynamic config)
-    if (!isFeatureEnabled(item.feature || item.route.replace(/^\//, ''))) return false;
+    const featureKey = item.feature || item.route.replace(/^\//, '');
+    
+    // 1. Check feature permission using isFeatureEnabled (which checks both dynamic config and hardcoded map)
+    if (!isFeatureEnabled(featureKey)) return false;
 
     // 2. Legacy fallback for premium_only without specific feature key
     if (item.premium_only && !item.feature && !minMode("pro")) return false;
