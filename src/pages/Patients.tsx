@@ -39,6 +39,7 @@ import type { PatientInfo, ProgramInfo, PatientsListParams } from "@/hooks/queri
 import type { PrestigePlan } from "@/hooks/usePrestige";
 import PaginationControls from "@/components/patients/PaginationControls";
 import PatientQueueTabs from "@/components/patients/PatientQueueTabs";
+import { EngineSelector } from "@/features/editor-v3/components/EngineSelector";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
@@ -578,6 +579,7 @@ export default function Patients() {
   const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [expiryTarget, setExpiryTarget] = useState<{ id: string, name: string, current: string | null } | null>(null);
+  const [engineSelectorTarget, setEngineSelectorTarget] = useState<{ id: string, name: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
   const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
@@ -1289,6 +1291,22 @@ export default function Patients() {
         patient={assignTarget}
         programs={programs}
         onAssigned={() => {}}
+      />
+
+      <EngineSelector 
+        isOpen={!!engineSelectorTarget}
+        onClose={() => setEngineSelectorTarget(null)}
+        patientName={engineSelectorTarget?.name}
+        onSelect={(version) => {
+          if (!engineSelectorTarget) return;
+          const patientId = engineSelectorTarget.id;
+          setEngineSelectorTarget(null);
+          if (version === 'v3') {
+            nav(`/editor-v3/${patientId}`);
+          } else {
+            nav(`/editor-v2/${patientId}`);
+          }
+        }}
       />
 
       {/* Expiry Date Dialog */}
