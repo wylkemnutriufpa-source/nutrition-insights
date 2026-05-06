@@ -62,7 +62,7 @@ function SidebarFallback({ onLinkClick }: { onLinkClick?: () => void }) {
   const fallbackLinks = isPro ? [
     { to: "/dashboard", label: "Início" },
     { to: "/patients", label: "Pacientes" },
-    { to: "/meal-plans", label: "Planos" },
+    { to: "/editor-v3", label: "Planos" },
     { to: "/recipes", label: "Receitas" },
     { to: "/automation", label: "Automação" },
     { to: "/settings", label: "Configurações" },
