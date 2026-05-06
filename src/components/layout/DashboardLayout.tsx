@@ -116,6 +116,7 @@ function SidebarFooter({
   setCollapsed?: (v: boolean) => void;
   onLinkClick?: () => void;
   isProRole?: boolean;
+  mode?: string;
 }) {
   return (
     <div className="flex-shrink-0 p-3 border-t border-border space-y-2">
