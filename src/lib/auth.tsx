@@ -92,7 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const profileData = profileRes.data as Profile | null;
       setProfile(profileData);
-      setRoles(((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[]);
+      
+      const newRoles = ((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[];
+      setRoles(newRoles);
 
       if (profileData?.tenant_id) {
         setTenantId(profileData.tenant_id);
@@ -103,10 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (import.meta.env.DEV) {
         console.error("[Auth] fetchData error (non-fatal):", e);
       }
-      setProfile(null);
-      setRoles([]);
-      setTenantId(null);
-      setTenant(null);
+      // CRITICAL: Don't clear roles on failure if we already have them, 
+      // as this triggers the "Ghost Redirect" to dashboard.
+      setRoles(prev => prev ?? []);
+      setTenantId(prev => prev);
+      setTenant(prev => prev);
     }
   };
 
