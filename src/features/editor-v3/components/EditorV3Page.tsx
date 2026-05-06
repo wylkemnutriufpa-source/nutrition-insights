@@ -629,7 +629,7 @@ const EditorV3Page = () => {
   };
 
   const sanitizeFoods = (foods: Food[]) => {
-    return foods.map(f => {
+    const sanitized = foods.map(f => {
       // Se for gramas e a base for <= 1, corrige para 100g
       if (f.measurementType === 'gram' && (f.portionValue <= 1 || !f.portionValue)) {
         return {
@@ -642,6 +642,12 @@ const EditorV3Page = () => {
       }
       return f;
     });
+
+    console.log('[SANITIZE] Foods Processed:', sanitized.length);
+    if (sanitized.length > 0) {
+      console.table(sanitized.slice(0, 5).map(f => ({ name: f.name, base: f.portionValue, kcal: f.kcal })));
+    }
+    return sanitized;
   };
 
   const handleExecuteGeneration = async (calories: number) => {
