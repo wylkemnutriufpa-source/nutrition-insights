@@ -272,7 +272,13 @@ function RedirectWithParams({ to }: { to: string }) {
 
 
 export const AppRoutes = () => {
-  const { authStatus } = useAuth();
+  const { authStatus, user } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log(`[RASTREADOR] AppRoutes montado/atualizado | path: ${location.pathname} | authStatus: ${authStatus} | user: ${!!user}`);
+  }, [location.pathname, authStatus, user]);
+
   return (
     <Routes>
       <Route
