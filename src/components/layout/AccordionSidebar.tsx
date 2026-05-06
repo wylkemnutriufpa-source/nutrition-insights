@@ -344,7 +344,7 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isFeatureEnabled, minMode, mode } = useExperienceMode();
+  const { isFeatureEnabled, minMode, mode, isBasic } = useExperienceMode();
   
   console.log(`[DEBUG] LegacySidebar render | mode: ${mode}`);
   console.log(`[DEBUG] Itens ANTES do filtro:`, categories.flatMap(c => c.items).map(i => ({ label: i.label, feature: i.feature, premium: i.premium_only })));
@@ -357,6 +357,11 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   if (loading || !hasRole) return null;
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
+    // 0. Hard hide for basic mode unless explicitly allowed
+    if (isBasic && !['diet', 'recipes', 'feedback', 'checklist', 'anamnesis'].includes(item.feature || item.route.replace(/^\//, ''))) {
+      return false;
+    }
+
     // 1. Check feature name in isFeatureEnabled (which now uses dynamic config)
     if (!isFeatureEnabled(item.feature || item.route.replace(/^\//, ''))) return false;
 

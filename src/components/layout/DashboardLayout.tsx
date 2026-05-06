@@ -106,6 +106,7 @@ function SidebarFooter({
   setCollapsed,
   onLinkClick,
   isProRole,
+  mode,
 }: {
   collapsed: boolean;
   dark: boolean;
@@ -116,6 +117,7 @@ function SidebarFooter({
   setCollapsed?: (v: boolean) => void;
   onLinkClick?: () => void;
   isProRole?: boolean;
+  mode?: string;
 }) {
   return (
     <div className="flex-shrink-0 p-3 border-t border-border space-y-2">
@@ -132,17 +134,19 @@ function SidebarFooter({
           <span className="text-sm">Editor Workspace</span>
         </Link>
       )}
-      <Link
-        to="/settings"
-        onClick={() => {
-          console.log("[NAV] Sidebar clicking Configurações");
-          onLinkClick?.();
-        }}
-        className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
-      >
-        <Settings className="w-5 h-5" />
-        {!collapsed && <span className="text-sm">Configurações</span>}
-      </Link>
+      {!mode?.includes('basic') && (
+        <Link
+          to="/settings"
+          onClick={() => {
+            console.log("[NAV] Sidebar clicking Configurações");
+            onLinkClick?.();
+          }}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
+        >
+          <Settings className="w-5 h-5" />
+          {!collapsed && <span className="text-sm">Configurações</span>}
+        </Link>
+      )}
 
       <button
         onClick={toggleDark}
@@ -287,7 +291,7 @@ function DynamicSidebar({
             )}
           </Link>
         </div>
-      ) : isFeatureEnabled("ai-insights") && (
+      ) : isFeatureEnabled("ai-insights") && !mode.includes('basic') && (
         <div className="px-3 mb-1">
           <Link
             to="/patient-intelligence"
@@ -573,6 +577,7 @@ function DynamicSidebar({
         setCollapsed={setCollapsed}
         onLinkClick={onLinkClick}
         isProRole={effectiveProRole}
+        mode={mode}
       />
     </div>
   );

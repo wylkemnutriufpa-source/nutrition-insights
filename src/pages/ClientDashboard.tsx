@@ -244,55 +244,68 @@ export default function ClientDashboard() {
               </div>
             </div>
           )}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <ExperienceModeSwitcher />
-          </div>
+          {mode !== 'basic' && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <ExperienceModeSwitcher />
+            </div>
+          )}
           <OnboardingProgressModal />
           <OnboardingExitGuard />
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden pb-12">
             
             {/* Premium Header */}
-            <motion.div variants={item}>
-              <PremiumCardWrapper 
-                className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${
-                  mode === 'advanced' ? 'gradient-border particles-bg' : 
-                  mode === 'pro' ? 'border-blue-500/30 bg-blue-500/5' : 
-                  'border-green-700/30 bg-green-700/5'
-                }`} 
-                enableShimmer={mode === 'advanced'}
-              >
-                <div className={`rounded-2xl p-4 md:p-6 ${mode === 'advanced' ? 'glass-premium shimmer-sweep' : ''}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <h1 className={`font-display text-xl sm:text-2xl md:text-3xl font-bold truncate ${
-                          mode === 'advanced' ? 'text-amber-600 dark:text-amber-400' : 
-                          mode === 'pro' ? 'text-blue-600 dark:text-blue-400' : 
-                          'text-green-800 dark:text-green-400'
-                        }`}>
-                          Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
-                        </h1>
-                        {mode === 'advanced' && <PremiumBadge />}
-                        {mode === 'pro' && <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded">Completo</span>}
-                        {mode === 'basic' && <span className="text-[10px] font-bold uppercase tracking-wider bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded">Essencial</span>}
-                      </div>
-                      
-                      {/* Descrição dinâmica por modo */}
-                      <p className="text-sm mt-2 max-w-lg opacity-80">
-                        {mode === 'advanced' && "Você está no nível Advanced. Todas as inteligências clínicas e métricas de elite estão ativas."}
-                        {mode === 'pro' && "Modo Pro ativado. Acompanhamento completo e ferramentas de performance disponíveis."}
-                        {mode === 'basic' && "Experiência essencial. Foco no acompanhamento básico e metas diárias."}
-                      </p>
+            {mode !== 'basic' && (
+              <motion.div variants={item}>
+                <PremiumCardWrapper 
+                  className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${
+                    mode === 'advanced' ? 'gradient-border particles-bg' : 
+                    mode === 'pro' ? 'border-blue-500/30 bg-blue-500/5' : 
+                    'border-green-700/30 bg-green-700/5'
+                  }`} 
+                  enableShimmer={mode === 'advanced'}
+                >
+                  <div className={`rounded-2xl p-4 md:p-6 ${mode === 'advanced' ? 'glass-premium shimmer-sweep' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <h1 className={`font-display text-xl sm:text-2xl md:text-3xl font-bold truncate ${
+                            mode === 'advanced' ? 'text-amber-600 dark:text-amber-400' : 
+                            mode === 'pro' ? 'text-blue-600 dark:text-blue-400' : 
+                            'text-green-800 dark:text-green-400'
+                          }`}>
+                            Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
+                          </h1>
+                          {mode === 'advanced' && <PremiumBadge />}
+                          {mode === 'pro' && <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded">Completo</span>}
+                        </div>
+                        
+                        <p className="text-sm mt-2 max-w-lg opacity-80">
+                          {mode === 'advanced' && "Você está no nível Advanced. Todas as inteligências clínicas e métricas de elite estão ativas."}
+                          {mode === 'pro' && "Modo Pro ativado. Acompanhamento completo e ferramentas de performance disponíveis."}
+                        </p>
 
-                      {mode === 'advanced' ? <PremiumAccentLine /> : <div className={`h-1 w-12 mt-3 rounded-full ${mode === 'pro' ? 'bg-blue-500' : 'bg-green-600'}`} />}
+                        {mode === 'advanced' ? <PremiumAccentLine /> : <div className={`h-1 w-12 mt-3 rounded-full ${mode === 'pro' ? 'bg-blue-500' : 'bg-green-600'}`} />}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </PremiumCardWrapper>
-            </motion.div>
+                </PremiumCardWrapper>
+              </motion.div>
+            )}
+
+            {mode === 'basic' && (
+              <motion.div variants={item} className="px-4 py-2">
+                <p className="text-sm text-muted-foreground mb-1">
+                  {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                </p>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">Veja sua alimentação de hoje abaixo.</p>
+              </motion.div>
+            )}
 
             {/* Retention Recovery Alert */}
             <RetentionAlert 
@@ -306,21 +319,25 @@ export default function ClientDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-8 space-y-6">
                 {/* Unified Focus Entry */}
-                <motion.div variants={item}>
-                  <PatientDailyFocusHero />
-                </motion.div>
+                {mode !== 'basic' && (
+                  <motion.div variants={item}>
+                    <PatientDailyFocusHero />
+                  </motion.div>
+                )}
 
                 {/* Daily Meal Tracker - ALWAYS ENABLED (DIET) */}
                 <motion.div variants={item}>
                   <Card className={`border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm transition-all duration-500 ${
                     mode === 'advanced' ? 'ring-1 ring-amber-500/20' : 
                     mode === 'pro' ? 'ring-1 ring-blue-500/20' : 
-                    'ring-1 ring-green-700/20'
+                    mode === 'basic' ? 'border-none bg-transparent shadow-none' : 'ring-1 ring-green-700/20'
                   }`}>
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <UtensilsCrossed className="w-24 h-24" />
-                    </div>
-                    <CardHeader className="pb-4 border-b border-border/10">
+                    {mode !== 'basic' && (
+                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <UtensilsCrossed className="w-24 h-24" />
+                      </div>
+                    )}
+                    <CardHeader className={`pb-4 border-b border-border/10 ${mode === 'basic' ? 'hidden' : ''}`}>
                       <DailyEngagementProgress 
                         completed={checkins?.length || 0} 
                         total={lifecycle.plan?.meals?.length || 0} 
@@ -329,7 +346,7 @@ export default function ClientDashboard() {
                         rewardImpact={rewardImpact}
                       />
                     </CardHeader>
-                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <CardContent className={`${mode === 'basic' ? 'pt-2 px-0' : 'pt-6'} grid grid-cols-1 md:grid-cols-2 gap-3`}>
                       {lifecycle.plan?.meals?.map((meal: any, idx: number) => (
                         <MealCheckinCard 
                           key={meal.id || idx}
@@ -338,15 +355,14 @@ export default function ClientDashboard() {
                           time={meal.time || "--:--"}
                           kcal={safeNum(meal.calories_target)}
                           onClick={() => {
-                            console.log("[ACTION] Meal clicked", { mealId: meal.id, title: meal.title });
                             navigate(`/patient-meal-plan?id=${meal.id || idx}`);
                           }}
                         />
                       ))}
                       {(!lifecycle.plan?.meals || lifecycle.plan.meals.length === 0) && (
-                        <div className="col-span-full text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border/50">
+                        <div className={`col-span-full text-center py-12 rounded-2xl border border-dashed border-border/50 ${mode === 'basic' ? 'bg-muted/10' : 'bg-muted/20'}`}>
                            <UtensilsCrossed className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-                           <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando suas refeições.</p>
+                           <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando seu plano alimentar.</p>
                         </div>
                       )}
                     </CardContent>
@@ -400,56 +416,60 @@ export default function ClientDashboard() {
 
 
             {/* Secondary Sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
-               <motion.div variants={item}>
-                 <SubscriptionCard />
-               </motion.div>
-               <motion.div variants={item}>
-                <NutritionistStatusBanner patientId={user?.id} />
-               </motion.div>
-               <motion.div variants={item}>
-                <PatientAIInsightsWidget />
-               </motion.div>
-            </div>
+            {mode !== 'basic' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
+                 <motion.div variants={item}>
+                   <SubscriptionCard />
+                 </motion.div>
+                 <motion.div variants={item}>
+                  <NutritionistStatusBanner patientId={user?.id} />
+                 </motion.div>
+                 <motion.div variants={item}>
+                  <PatientAIInsightsWidget />
+                 </motion.div>
+              </div>
+            )}
 
             {/* Team & Programs */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <motion.div variants={item}>
-                <Card className="glass-premium overflow-hidden border-border/50">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" /> Meu Time Profissional
-                    </h3>
-                  </CardHeader>
-                  <CardContent>
-                    <MyTeamTab />
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {programs.length > 0 && (
+            {mode !== 'basic' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div variants={item}>
                   <Card className="glass-premium overflow-hidden border-border/50">
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
                       <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                        <Rocket className="w-5 h-5 text-accent" /> Projetos em Andamento
+                        <Users className="w-5 h-5 text-primary" /> Meu Time Profissional
                       </h3>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      {programs.map(p => (
-                        <div key={p.id} className="p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between">
-                          <div>
-                            <p className="font-bold text-sm">{p.title}</p>
-                            <p className="text-xs text-muted-foreground">{p.tag} • Fase {p.current_phase || 1}</p>
-                          </div>
-                          <Button size="sm" variant="ghost" className="rounded-full">Ver mais</Button>
-                        </div>
-                      ))}
+                    <CardContent>
+                      <MyTeamTab />
                     </CardContent>
                   </Card>
                 </motion.div>
-              )}
-            </div>
+
+                {programs.length > 0 && (
+                  <motion.div variants={item}>
+                    <Card className="glass-premium overflow-hidden border-border/50">
+                      <CardHeader>
+                        <h3 className="font-display font-bold text-lg flex items-center gap-2">
+                          <Rocket className="w-5 h-5 text-accent" /> Projetos em Andamento
+                        </h3>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {programs.map(p => (
+                          <div key={p.id} className="p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between">
+                            <div>
+                              <p className="font-bold text-sm">{p.title}</p>
+                              <p className="text-xs text-muted-foreground">{p.tag} • Fase {p.current_phase || 1}</p>
+                            </div>
+                            <Button size="sm" variant="ghost" className="rounded-full">Ver mais</Button>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </div>
+            )}
 
           </motion.div>
         </>
