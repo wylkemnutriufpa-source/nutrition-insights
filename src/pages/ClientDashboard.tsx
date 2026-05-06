@@ -319,9 +319,11 @@ export default function ClientDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-8 space-y-6">
                 {/* Unified Focus Entry */}
-                <motion.div variants={item}>
-                  <PatientDailyFocusHero />
-                </motion.div>
+                {mode !== 'basic' && (
+                  <motion.div variants={item}>
+                    <PatientDailyFocusHero />
+                  </motion.div>
+                )}
 
                 {/* Daily Meal Tracker - ALWAYS ENABLED (DIET) */}
                 <motion.div variants={item}>
