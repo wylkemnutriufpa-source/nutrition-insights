@@ -1463,7 +1463,7 @@ export default function PatientDetail() {
                   if (version === "v2") {
                     setOpenSection("meal-plans");
                   } else {
-                    navigate(`/diet-builder?patientId=${resolvedPatientId}`);
+                    navigate(`/editor-v3/${resolvedPatientId}`);
                   }
                 }}
               />

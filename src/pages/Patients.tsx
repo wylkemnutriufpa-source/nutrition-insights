@@ -886,7 +886,7 @@ export default function Patients() {
                     <UserPlus className="w-4 h-4" /> Convidar Paciente
                   </Button>
                 </Link>
-                <Link to="/diet-builder">
+                <Link to="/editor-v3">
                   <Button variant="outline" className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/5">
                     <Zap className="w-4 h-4" /> Editor V3
                   </Button>

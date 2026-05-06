@@ -179,9 +179,7 @@ export const calculateItemMacros = (item: Partial<Food>, quantity: number) => {
   const carbs = item.carbs ?? 0;
   const fat = item.fat ?? 0;
 
-  const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') 
-    ? (quantity > 1000 ? 1 : quantity / 100) 
-    : quantity;
+  const factor = quantity;
 
   return {
     kcal: cal * factor,

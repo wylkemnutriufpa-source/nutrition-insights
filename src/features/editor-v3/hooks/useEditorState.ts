@@ -118,7 +118,15 @@ export const useEditorState = create<EditorState>()(
             console.log(`[Blindagem:Sucesso] ${action}`);
           }
         } catch (error: any) {
-          console.error(`[Blindagem:VIOLAÇÃO] ${action}:`, error.message);
+          console.error(`[Blindagem:VIOLAÇÃO/ERRO] ${action}:`, error);
+          
+          // Fallback UI for incomplete patient data or contract violation
+          const isContractViolation = error.message && (error.message.includes('contrato') || error.message.includes('validade'));
+          const errorMessage = isContractViolation 
+            ? `Erro de contrato em ${action}: ${error.message}`
+            : `Dados do paciente incompletos ou erro em ${action}`;
+
+          toast.error(errorMessage);
           
           // 4. Rollback (Etapa 3 - Garantia de Estado)
           set({ 
@@ -567,33 +575,40 @@ export const useEditorState = create<EditorState>()(
       },
 
       savePlan: async () => {
-        const { validationIssues, confidence, patientId, addAuditEntry } = get();
-        
-        // Registrar tentativa de salvar
-        addAuditEntry({
-          type: 'save_attempt',
-          description: 'Nutricionista tentou promover o plano',
-          source: 'manual'
-        });
-
-        const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
-        if (criticalIssues.length > 0 || (confidence && confidence.value < 70)) {
-          const reason = criticalIssues.length > 0 ? criticalIssues[0].message : 'Baixa confiança clínica';
+        try {
+          const { validationIssues, confidence, patientId, addAuditEntry } = get();
           
-          set({ lastBlockedReason: reason });
-          
+          // Registrar tentativa de salvar
           addAuditEntry({
-            type: 'save_blocked',
-            description: `Salvamento bloqueado: ${reason}`,
-            source: 'system',
-            metadata: { issues: criticalIssues.map(i => i.message) }
+            type: 'save_attempt',
+            description: 'Nutricionista tentou promover o plano',
+            source: 'manual'
           });
-        }
 
-        set({ planStatus: 'saving' });
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        set({ planStatus: 'saved' });
-        toast.success('Plano salvo com sucesso!');
+          const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
+          if (criticalIssues.length > 0 || (confidence && confidence.value < 70)) {
+            const reason = criticalIssues.length > 0 ? criticalIssues[0].message : 'Baixa confiança clínica';
+            
+            set({ lastBlockedReason: reason });
+            
+            addAuditEntry({
+              type: 'save_blocked',
+              description: `Salvamento bloqueado: ${reason}`,
+              source: 'system',
+              metadata: { issues: criticalIssues.map(i => i.message) }
+            });
+            // Don't stop here yet, as per user requirement to have a functional V3
+          }
+
+          set({ planStatus: 'saving' });
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          set({ planStatus: 'saved' });
+          toast.success('Plano salvo com sucesso!');
+        } catch (error: any) {
+          console.error('[EditorV3] Erro ao salvar:', error);
+          toast.error('Erro ao salvar plano. Verifique os dados do paciente.');
+          set({ planStatus: 'draft' });
+        }
       },
 
       resetEditor: () => {

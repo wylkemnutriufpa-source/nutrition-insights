@@ -35,7 +35,7 @@ const EditorV2EntryPage = lazyDebug(() => import("../pages/MealPlanEditorV2Entry
 const EditorV3Page = lazyDebug(() => import("../features/editor-v3").then(m => ({ default: m.EditorV3Page })), "Editor V3");
 // Standardized editor routes for V2 and V3
 
-const DietBuilder = lazy(() => import("../pages/diet-builder/DietBuilder"));
+
 const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
 const Invitation = lazy(() => import("../pages/Invitation"));
@@ -320,7 +320,7 @@ export const AppRoutes = () => {
       <Route path="/patients/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyPublicProfile /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/analyze-meal" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/diet-builder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietBuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      
       <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/editor" element={<Navigate to="/editor-v3" replace />} />
       <Route path="/editor-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
