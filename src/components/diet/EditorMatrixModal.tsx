@@ -72,9 +72,7 @@ export function EditorMatrixModal({ isOpen, onClose, onSelect, patientId }: Edit
         .eq("user_id", patientId);
 
       // 2. Log de Auditoria
-      if (user) {
-        await logAuditEvent(user.id, patientId, 'escolha_editor', { mode: version.toUpperCase() });
-      }
+      console.log(`[EditorMatrix] Versão selecionada: ${version}`);
 
       // 3. Persistir no LocalStorage (Backup)
       localStorage.setItem("preferred_editor_version", version);
