@@ -2,6 +2,7 @@
 import { useAuth } from "@/lib/auth";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function WorkspaceRouteGuard({ children }: { children: React.ReactNode }) {
   const { isPatientContext, isProfessionalContext } = useWorkspaceContext();
