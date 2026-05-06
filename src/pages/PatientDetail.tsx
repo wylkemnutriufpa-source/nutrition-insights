@@ -1537,7 +1537,7 @@ export default function PatientDetail() {
                           if (newPlan?.id && resolvedPatientId) {
                             toast.success("Plano criado! Abrindo Builder...");
                             const isV3 = newPlan.editor_version === "v3";
-                            const path = isV3 ? `/meal-plans/editor/v3?patientId=${encodeURIComponent(resolvedPatientId)}&planId=${newPlan.id}` : `/meal-plans/${newPlan.id}`;
+                            const path = isV3 ? `/editor-v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}` : `/editor-v2/plan/${newPlan.id}`;
                             navigate(path, { replace: true });
                           }
                         } catch (err: any) {
