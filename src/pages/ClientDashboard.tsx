@@ -337,7 +337,7 @@ export default function ClientDashboard() {
                         <UtensilsCrossed className="w-24 h-24" />
                       </div>
                     )}
-                    <CardHeader className="pb-4 border-b border-border/10">
+                    <CardHeader className={`pb-4 border-b border-border/10 ${mode === 'basic' ? 'hidden' : ''}`}>
                       <DailyEngagementProgress 
                         completed={checkins?.length || 0} 
                         total={lifecycle.plan?.meals?.length || 0} 
