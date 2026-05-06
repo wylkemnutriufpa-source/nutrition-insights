@@ -287,7 +287,7 @@ function DynamicSidebar({
             )}
           </Link>
         </div>
-      ) : isFeatureEnabled("ai-insights") && (
+      ) : isFeatureEnabled("ai-insights") && !mode.includes('basic') && (
         <div className="px-3 mb-1">
           <Link
             to="/patient-intelligence"
