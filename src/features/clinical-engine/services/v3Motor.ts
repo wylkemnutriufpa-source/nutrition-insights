@@ -179,7 +179,10 @@ export const calculateItemMacros = (item: Partial<Food>, quantity: number) => {
   const carbs = item.carbs ?? 0;
   const fat = item.fat ?? 0;
 
-  const factor = quantity;
+  // No V3, a base de cálculo é dinâmica baseada no portionValue (geralmente 100g para alimentos da Tabela TACO/USDA)
+  // Se for unidade, portionValue é 1, resultando em fator = quantity
+  const base = (item as any).portionValue || 100;
+  const factor = quantity / base;
 
   return {
     kcal: cal * factor,

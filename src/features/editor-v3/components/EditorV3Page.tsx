@@ -649,7 +649,12 @@ const EditorV3Page = () => {
   const handleMealGenerate = async (mealId: string) => {
     setGeneratingMealId(mealId);
     await new Promise(resolve => setTimeout(resolve, 600));
-    generateMeal(mealId, 'muscle-gain', baseFoods, 2000);
+    
+    // Motor Adaptativo: Usa o objetivo do paciente se disponível, fallback para muscle-gain
+    const goal = patientContext?.goal || 'muscle-gain';
+    const targetCals = patientContext?.calories_target || 2000;
+    
+    generateMeal(mealId, goal, baseFoods, targetCals);
     setGeneratingMealId(null);
   };
 
@@ -745,7 +750,7 @@ const EditorV3Page = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-black flex flex-col font-sans selection:bg-emerald-500/30">
       <div className="bg-black border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-8">
@@ -1165,7 +1170,8 @@ const EditorV3Page = () => {
                   {activeTab === 'food' && <Apple className="w-8 h-8 text-emerald-500" />}
                   {activeTab === 'marmita' && <Utensils className="w-8 h-8 text-blue-500" />}
                   {activeTab === 'template' && <Layers className="w-8 h-8 text-amber-500" />}
-                  {activeTab === 'food' ? 'Biblioteca de Alimentos' : activeTab === 'marmita' ? 'Minhas Marmitas' : 'Templates de Refeição'}
+                  {activeTab === 'visual' && <ImageIcon className="w-8 h-8 text-rose-500" />}
+                  {activeTab === 'food' ? 'Biblioteca de Alimentos' : activeTab === 'marmita' ? 'Minhas Marmitas' : activeTab === 'template' ? 'Templates de Refeição' : 'Biblioteca Visual'}
                 </DialogTitle>
                 <DialogDescription className="text-white/40 font-bold text-sm mt-1 uppercase tracking-widest">
                   {activeTab === 'food' ? 'Explore a base TACO/USDA para adicionar à sua refeição.' : activeTab === 'marmita' ? 'Refeições completas prontas para montagem rápida.' : 'Modelos estruturados para ganho de velocidade clínica.'}
@@ -1268,7 +1274,7 @@ const EditorV3Page = () => {
 
           <ScrollArea className="flex-1 px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
-              {activeTab === 'food' && foods.map((f) => (
+              {activeTab === 'food' && (foodSearch.length > 0 ? foods : baseFoods).map((f) => (
                 <button
                   key={f.id}
                   onClick={() => {

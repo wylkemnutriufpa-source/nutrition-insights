@@ -233,25 +233,33 @@ export const searchMarmitas = async (nutritionistId: string | null): Promise<Foo
     return [];
   }
 
-  return (data || []).map((r: any) => ({
-    id: r.id,
-    name: r.name,
-    kcal: r.fixed_calories || 0,
-    calories: r.fixed_calories || 0,
-    protein: r.fixed_protein || 0,
-    carbs: r.fixed_carbs || 0,
-    fat: r.fixed_fat || 0,
-    portionValue: 1,
-    portionUnitLabel: "marmita",
-    portionUnit: "marmita",
-    portionLabel: "1 marmita",
-    measurementType: "unit",
-    isMarmita: true,
-    locked: false, // Permite editar marmitas agora
-    imageUrl: r.image_url || undefined,
-    ingredients: r.foods_json || [],
-    instructions: r.instructions || ""
-  }));
+  return (data || []).map((r: any) => {
+    // Cálculo de fallback se os macros fixos forem zero ou nulos
+    const kcal = r.fixed_calories || 0;
+    const protein = r.fixed_protein || 0;
+    const carbs = r.fixed_carbs || 0;
+    const fat = r.fixed_fat || 0;
+
+    return {
+      id: r.id,
+      name: r.name,
+      kcal,
+      calories: kcal,
+      protein,
+      carbs,
+      fat,
+      portionValue: 1,
+      portionUnitLabel: "marmita",
+      portionUnit: "marmita",
+      portionLabel: "1 marmita",
+      measurementType: "unit",
+      isMarmita: true,
+      locked: false, 
+      imageUrl: r.image_url || undefined,
+      ingredients: r.foods_json || [],
+      instructions: r.instructions || ""
+    };
+  });
 };
 
 export const searchTemplates = async (): Promise<MealTemplate[]> => {
@@ -281,11 +289,11 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
         protein: f.protein || 0,
         carbs: f.carbs || 0,
         fat: f.fat || 0,
-        portionValue: 1,
+        portionValue: f.portion?.includes("g") ? 100 : 1, // Base 100 para gramas, 1 para unidades
         portionUnitLabel: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
         portionUnit: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
         portionLabel: f.portion || "100g",
-        measurementType: f.portion?.includes("g") ? "gram" : (f.portion?.includes("ml") ? "ml" : "unit")
+        measurementType: f.portion?.includes("g") ? "gram" : (f.portion?.includes("ml") ? "ml" : "unit") as any
       }))
     };
   });
