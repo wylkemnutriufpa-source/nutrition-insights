@@ -23,6 +23,7 @@ interface Profile {
   is_orphan?: boolean;
   patient_state?: string | null;
   onboarding_completed?: boolean;
+  tenant_id?: string | null;
 }
 
 interface SubscriptionState {
