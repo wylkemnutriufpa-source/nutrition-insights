@@ -344,7 +344,7 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isFeatureEnabled, minMode, mode } = useExperienceMode();
+  const { isFeatureEnabled, minMode, mode, isBasic } = useExperienceMode();
   
   console.log(`[DEBUG] LegacySidebar render | mode: ${mode}`);
   console.log(`[DEBUG] Itens ANTES do filtro:`, categories.flatMap(c => c.items).map(i => ({ label: i.label, feature: i.feature, premium: i.premium_only })));
