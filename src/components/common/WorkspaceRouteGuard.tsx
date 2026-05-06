@@ -20,7 +20,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
         console.log(`[RASTREADOR] Estado: user=${!!roles}, roles=${roles}, path=${location.pathname}, isPro=${isPro}`);
       }
 
-      const proOnlyPaths = ["/patients", "/diet-builder", "/meal-plans", "/automation", "/financial", "/diet-templates", "/food-database", "/clinical-intelligence", "/library", "/planner", "/team", "/import-patients", "/branding", "/clinical-risk", "/therapeutic-intelligence", "/clinical-orchestration", "/weight-trajectory", "/physical-assessment", "/checkin-panel", "/in-office"];
+      const proOnlyPaths = ["/patients", "/diet-builder", "/meal-plans", "/editor-v3", "/editor-v2", "/automation", "/financial", "/diet-templates", "/food-database", "/clinical-intelligence", "/library", "/planner", "/team", "/import-patients", "/branding", "/clinical-risk", "/therapeutic-intelligence", "/clinical-orchestration", "/weight-trajectory", "/physical-assessment", "/checkin-panel", "/in-office"];
       if (proOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro) {
         console.warn(`[RASTREADOR] Redirect para /client/dashboard disparado por: WorkspaceRouteGuard (Pro-only paths)`);
         console.log(`[RASTREADOR] Estado: roles=${roles}, path=${location.pathname}`);
