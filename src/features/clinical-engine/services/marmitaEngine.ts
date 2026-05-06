@@ -25,13 +25,9 @@ export interface AdjustedDayPlan {
 
 /**
  * Phase 5 — Marmita Engine (V3, ISOLATED)
- *
- * Marmitas are fixed meal templates. Adjustment happens in other meals or via fruits.
  */
 
 export async function loadMarmitas(): Promise<Marmita[]> {
-  // Loading from nutritionist_meal_templates where name contains "Marmita"
-  // In a real scenario, we might have a specific flag or category.
   const { data, error } = await supabase
     .from('nutritionist_meal_templates' as any)
     .select('*')
@@ -43,7 +39,9 @@ export async function loadMarmitas(): Promise<Marmita[]> {
     return [];
   }
 
-  return (data || []).map(item => ({
+  const items = (data || []) as any[];
+
+  return items.map(item => ({
     id: item.id,
     nome: item.name,
     tipo: 'marmita',
@@ -61,7 +59,6 @@ export async function loadMarmitas(): Promise<Marmita[]> {
 }
 
 export async function replaceMarmita(currentMarmitaId: string, newMarmitaId: string): Promise<Marmita | null> {
-  // In this context, it just loads the new one.
   const { data, error } = await supabase
     .from('nutritionist_meal_templates' as any)
     .select('*')
@@ -70,18 +67,20 @@ export async function replaceMarmita(currentMarmitaId: string, newMarmitaId: str
 
   if (error || !data) return null;
 
+  const item = data as any;
+
   return {
-    id: data.id,
-    nome: data.name,
+    id: item.id,
+    nome: item.name,
     tipo: 'marmita',
-    ingredientes: data.foods_structure || [],
+    ingredientes: item.foods_structure || [],
     macros_fixos: {
-      calories: data.kcal_base || 0,
-      protein_g: data.protein_base || 0,
-      carbs_g: data.carbs_base || 0,
-      fat_g: data.fat_base || 0
+      calories: item.kcal_base || 0,
+      protein_g: item.protein_base || 0,
+      carbs_g: item.carbs_base || 0,
+      fat_g: item.fat_base || 0
     },
-    imagem_url: data.imageUrl || '/placeholder.svg',
+    imagem_url: item.imageUrl || '/placeholder.svg',
     instrucoes: "Congelado. Micro-ondas 4 min.",
     rendimento: 1
   };
@@ -98,7 +97,6 @@ export function calculateDayWithMarmita(
   let marmitaCarbs = 0;
   let marmitaFat = 0;
 
-  // 1. Fix marmita slots
   for (const meal of adjustedMeals) {
     const marmita = marmitaSlots[meal.type];
     if (marmita) {
@@ -121,38 +119,25 @@ export function calculateDayWithMarmita(
     }
   }
 
-  // 2. Remaining calories
-  const remainingCalories = targetCalories - marmitaCalories;
-  
-  // 3. Redistribute in non-marmita meals
+  const remainingCalories = Math.max(0, targetCalories - marmitaCalories);
   const nonMarmitaMeals = adjustedMeals.filter((m: any) => !m.isMarmita);
+  
   if (nonMarmitaMeals.length > 0) {
-    // Basic redistribution: proportional to original distribution or equal
     const totalOriginalNonMarmitaKcal = nonMarmitaMeals.reduce((acc: number, m: any) => acc + (m.calories || 0), 0) || 1;
     
     for (const meal of nonMarmitaMeals) {
       const proportion = (meal.calories || (totalOriginalNonMarmitaKcal / nonMarmitaMeals.length)) / totalOriginalNonMarmitaKcal;
       const targetMealKcal = remainingCalories * proportion;
-      
-      // Adjust items in this meal to reach targetMealKcal
       const currentMealKcal = meal.calories || 1;
       const ratio = targetMealKcal / currentMealKcal;
       
       meal.items = (meal.items || []).map((item: any) => ({
         ...item,
-        gramas: Math.round(item.gramas * ratio)
+        gramas: Math.round((item.gramas || 100) * ratio)
       }));
       
       meal.calories = targetMealKcal;
-      // Note: Macros would also need to be recalculated in a real scenario, 
-      // but following the high-level logic for Phase 5.
     }
-  }
-
-  // 4. Fine adjustment with fruit if needed (simplification for spec)
-  if (remainingCalories < 0) {
-     // If target is exceeded by marmitas alone, we might need a warning or different logic.
-     // For Phase 5, we assume targetCalories >= marmitaCalories.
   }
 
   const finalCalories = adjustedMeals.reduce((acc: number, m: any) => acc + (m.calories || 0), 0);
@@ -169,9 +154,6 @@ export function calculateDayWithMarmita(
   };
 }
 
-/**
- * Adds a fruit (80-100kcal) to a specific meal for fine adjustment.
- */
 export function addAdjustmentFruit(meal: any, fruit: any): void {
   if (!meal.items) meal.items = [];
   meal.items.push({
