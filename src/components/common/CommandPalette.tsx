@@ -36,7 +36,7 @@ const allRoutes = [
   { to: "/protocols", icon: FileText, label: "Protocolos", keywords: "protocolos clinicos tratamento protocolo procedimentos regras plano", roles: ["nutritionist", "admin"], desc: "Protocolos clínicos" },
   { to: "/programs", icon: Rocket, label: "Programas", keywords: "programas programa nutricional grupo turma inscricao enrollment biquini", roles: ["nutritionist", "admin"], desc: "Programas nutricionais" },
   { to: "/automation", icon: Bot, label: "Automação", keywords: "automacao automatico regras triggers disparos notificacoes automatizadas bot", roles: ["nutritionist", "admin"], desc: "Regras de automação" },
-  { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos Alimentares", keywords: "planos alimentares dieta plano alimentar refeicao calorias macros cardapio", roles: ["nutritionist", "admin"], desc: "Gerenciar dietas" },
+  { to: "/editor-v3", icon: UtensilsCrossed, label: "Planos Alimentares", keywords: "planos alimentares dieta plano alimentar refeicao calorias macros cardapio", roles: ["nutritionist", "admin"], desc: "Gerenciar dietas" },
   { to: "/diet-templates", icon: BookOpen, label: "Templates de Dieta", keywords: "templates dieta modelo base pre-definido template padrao low carb cetogenica", roles: ["nutritionist", "admin"], desc: "Modelos de dieta" },
   { to: "/recipes", icon: ChefHat, label: "Receitas", keywords: "receitas receita culinaria cozinhar preparar alimento recipe", roles: ["nutritionist", "admin", "patient"], desc: "Receitas saudáveis" },
   { to: "/recipe-builder", icon: ChefHat, label: "Calculadora de Receitas", keywords: "calculadora receita macro calorias montar criar recipe builder", roles: ["nutritionist", "admin", "patient"], desc: "Monte e calcule macros" },
