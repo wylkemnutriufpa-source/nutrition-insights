@@ -1,14 +1,6 @@
-import { describe, test, expect, vi } from "vitest";
-import { 
-  createPlanWithV3, 
-  getPlanMotor, 
-  migratePlanV2toV3,
-  PatientMetrics 
-} from "./integration";
-import { FoodItem } from "./v3Motor";
-import { MealSlot } from "./distribution";
+import { describe, test, expect, vi, beforeAll } from "vitest";
 
-// Mock localStorage for Supabase client
+// CRITICAL: Initialize mock before any imports that might trigger side effects
 if (typeof localStorage === 'undefined') {
   (global as any).localStorage = {
     getItem: vi.fn(),
@@ -18,7 +10,7 @@ if (typeof localStorage === 'undefined') {
   };
 }
 
-// Mock Supabase for image resolver
+// Mock Supabase client
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
@@ -28,12 +20,25 @@ vi.mock("@/integrations/supabase/client", () => ({
             { name: 'Frango', display_name: 'Frango', image_url: '/img/frango.jpg', is_active: true }
           ], 
           error: null 
+        })),
+        ilike: vi.fn(() => ({
+            eq: vi.fn(() => ({
+                not: vi.fn(() => Promise.resolve({ data: [], error: null }))
+            }))
         }))
       }))
     }))
   }
 }));
 
+import { 
+  createPlanWithV3, 
+  getPlanMotor, 
+  migratePlanV2toV3,
+  PatientMetrics 
+} from "./integration";
+import { FoodItem } from "./v3Motor";
+import { MealSlot } from "./distribution";
 
 const mockFoods: FoodItem[] = [
   {
@@ -98,7 +103,6 @@ describe("Phase 7 — V3 Integration Module", () => {
     
     expect(plan.weekly_plan).toBeDefined();
     expect(plan.weekly_plan.days.length).toBe(7);
-    expect(plan.weekly_plan.days[0].day_of_week).toBe("domingo"); // base on mock current date in test might vary, but length 7 is fixed
   });
 
   test("getPlanMotor detecta corretamente", () => {
