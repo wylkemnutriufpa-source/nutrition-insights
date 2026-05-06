@@ -398,7 +398,7 @@ export const AppRoutes = () => {
       <Route path="/admin/subscription-monitor" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminSubscriptionMonitor /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/migrations" element={<Navigate to="/schema-monitor" replace />} />
       <Route path="/admin/experimental" element={<Navigate to="/admin/feature-control" replace />} />
-      <Route path="/admin/performance" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="/admin/performance" element={<Navigate to="/dashboard" replace />} />
       <Route path="/my-referrals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyReferrals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Rotas Extras e Inteligência */}
