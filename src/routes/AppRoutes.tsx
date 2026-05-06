@@ -326,7 +326,10 @@ export const AppRoutes = () => {
       <Route path="/editor-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/editor-v3/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/editor-v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2EntryPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/editor-v2/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v2/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2EntryPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v2/plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      
+      {/* Legacy routes for compatibility */}
       <Route path="/meal-plans/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/editor/v2" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2EntryPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/editor/v2/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV2Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
