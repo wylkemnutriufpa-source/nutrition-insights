@@ -59,6 +59,8 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     "/patients", 
     "/diet-builder", 
     "/meal-plans", 
+    "/editor-v3",
+    "/editor-v2",
     "/automation",
     "/financial",
     "/diet-templates",
