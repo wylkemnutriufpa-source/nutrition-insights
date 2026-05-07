@@ -134,16 +134,21 @@ export async function loadOrCreateDraft(
       const convertedMeals: Meal[] = officialPlan.meal_plan_items.map((item: any) => ({
         id: Math.random().toString(36).substring(2, 9),
         name: item.title,
-        time: '00:00', // V2 pode não ter hora exata no item
+        time: '00:00',
         items: [{
+          id: Math.random().toString(36).substring(2, 9),
           instanceId: Math.random().toString(36).substring(2, 10),
           name: item.title,
-          kcal: item.calories_target,
-          protein: item.protein_target,
-          carbs: item.carbs_target,
-          fat: item.fat_target,
+          kcal: item.calories_target || 0,
+          calories: item.calories_target || 0,
+          protein: item.protein_target || 0,
+          carbs: item.carbs_target || 0,
+          fat: item.fat_target || 0,
           quantity: 1,
-          measurementType: 'unit',
+          measurementType: 'unit' as const,
+          portionValue: 1,
+          portionUnitLabel: 'porção',
+          portionUnit: 'porção',
           portionLabel: '1 porção',
           substitutions: []
         }]
