@@ -205,11 +205,10 @@ function NutritionistDashboardContent() {
       if (limitedIds.length > 0) {
         const periodDate = new Date(Date.now() - evolutionPeriod * 86400000).toISOString();
 
-        // Batch all patient data in parallel (6 bulk queries instead of 30×6 individual)
-        const [allProfiles, allAnamnesis, allStats, allChecks, allMeals, allAssess] = await Promise.all([
+        // Batch all patient data in parallel (5 bulk queries)
+        const [allProfiles, allAnamnesis, allChecks, allMeals, allAssess] = await Promise.all([
           supabase.from("profiles").select("user_id, full_name").in("user_id", limitedIds),
           supabase.from("patient_anamnesis").select("user_id, answers, status").in("user_id", limitedIds).order("created_at", { ascending: false }),
-          // player_stats removed from MVP cleanup
           supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", limitedIds).gte("date", periodDate.split("T")[0]),
           supabase.from("meals").select("user_id, logged_at").in("user_id", limitedIds).gte("logged_at", periodDate),
           supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", limitedIds).order("assessment_date", { ascending: false }),
