@@ -7,6 +7,7 @@ import { useTenant } from "@/lib/tenantContext";
 import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
 import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
+import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
