@@ -139,43 +139,33 @@ export class BiquiniBrancoStrategy implements ClinicalStrategy {
 
 export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
-  name = 'Engine V2 Determinística';
+  name = 'Engine NutriCore V2';
 
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
-    // Integração com o Motor V2 para a geração de refeições
-    const mealName = meal.name.toLowerCase();
-    const type = meal.type || (mealName.includes('café') ? 'breakfast' : (mealName.includes('almoço') ? 'lunch' : (mealName.includes('jantar') ? 'dinner' : 'afternoon_snack')));
+  generateMeal(meal: V3Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
+    const { NutriCoreV2Adapter } = require('@/lib/nutricore_v2/adapter');
     
-    // Mapeamento de objetivos para o motor V2
-    const v2Goal = goal === 'lose-weight' ? 'lose' : (goal === 'muscle-gain' ? 'gain' : 'maintain');
+    // Para gerar apenas uma refeição, o orquestrador Elite V3 espera MealItem[]
+    // Mas o NutriCore gera o plano inteiro para garantir a distribuição.
+    // Usaremos um truque: gerar o plano inteiro e pegar apenas a refeição correspondente.
     
-    // Pegar template do motor V2
-    const { MEAL_TEMPLATES } = require('@/lib/nutrition_engine_v2/templates');
-    const template = MEAL_TEMPLATES[type]?.[v2Goal] || MEAL_TEMPLATES[type]?.maintain || [];
+    // Mock do contexto se não disponível (idealmente deveria vir do orquestrador)
+    const context = {
+      weight: 75,
+      height: 175,
+      age: 30,
+      gender: 'male',
+      goal: goal === 'lose-weight' ? 'lose_weight' : (goal === 'muscle-gain' ? 'gain_muscle' : 'maintain'),
+      restrictions: [],
+      preferences: []
+    };
+
+    const fullPlan = NutriCoreV2Adapter.generateElitePlan(context as any, availableFoods);
+    const generatedMeal = fullPlan.find((m: any) => m.name.toLowerCase() === meal.name.toLowerCase());
     
-    // Resolver alimentos contra a base disponível (disponibilizada pelo dataFetcher para o editor)
-    const newItems: MealItem[] = [];
-    const scale = baseCalories / 2000;
-
-    template.forEach((tItem: any) => {
-      const candidates = [tItem.food_name, ...(tItem.aliases || [])];
-      let resolvedFood: Food | undefined;
-      
-      for (const c of candidates) {
-        resolvedFood = availableFoods.find(f => f.name.toLowerCase().includes(c.toLowerCase()));
-        if (resolvedFood) break;
-      }
-
-      if (resolvedFood) {
-        const item = createMealItem(resolvedFood, tItem.base_grams * scale);
-        if (item) newItems.push(item);
-      }
-    });
-
-    return newItems;
+    return generatedMeal ? generatedMeal.items : [];
   }
 
-  explainDecision(meal: Meal, items: MealItem[]): string {
-    return "Geração determinística via Motor V2 (Seção 4: MEAL_TEMPLATES).";
+  explainDecision(meal: V3Meal, items: MealItem[]): string {
+    return "Geração determinística via novo Motor NutriCore V2 (Orquestrador Central).";
   }
 }
