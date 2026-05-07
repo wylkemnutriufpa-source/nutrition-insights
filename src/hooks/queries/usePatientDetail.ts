@@ -41,8 +41,6 @@ function getVisibleMealPlans(plans: any[]) {
       return true;
     }
 
-    // If there is already a canonical/active plan, drafts must stay out of the main patient view.
-    // This avoids newer auto-corrected drafts visually overriding the published source of truth.
     if (hasCanonicalPlan && status === "draft_auto_corrected") {
       return false;
     }
@@ -175,21 +173,16 @@ export function usePatientDetail(patientId: string | undefined) {
       const currentPrestigePlan = matchedPlan || null;
 
       let patientEmail = "";
-      // Profissional vinculado já tem permissão para ver o e-mail do próprio paciente — usado
-      // apenas como fallback de identificação visual quando full_name está vazio.
       try {
         const { data: emailData } = await supabase.rpc("get_user_email_by_id", { _user_id: patientUserId });
         if (emailData) patientEmail = emailData;
-      } catch {
-        // silencioso: e-mail é apenas um fallback visual
-      }
+      } catch { }
 
       const uniqueDocs = dedupeById(docs);
       const uniqueMealPlans = getVisibleMealPlans(dedupeById(mealPlansRes.data));
       const adherenceRows = dedupeBySignature(adherenceRes.data, (row: any) => `${row.date}-${row.adherence_status}`);
 
       return {
-        /** Canonical user_id — use this for all child component queries */
         resolvedPatientId: patientUserId,
         profile: resolvedProfile,
         timeline: dedupeById(timelineRes.data),
@@ -249,7 +242,6 @@ export function useDeletePatientLink() {
 
   return useMutation({
     mutationFn: async (npId: string) => {
-      // First get the patient_id from the link
       const { data: linkData, error: linkError } = await supabase
         .from("nutritionist_patients")
         .select("patient_id")
@@ -257,14 +249,12 @@ export function useDeletePatientLink() {
         .single();
       if (linkError) throw linkError;
 
-      // Deactivate any active meal plans to avoid trigger guard
       await supabase
         .from("meal_plans")
         .update({ is_active: false })
         .eq("patient_id", linkData.patient_id)
         .eq("is_active", true);
 
-      // Now delete the link
       const { error } = await supabase.from("nutritionist_patients").delete().eq("id", npId);
       if (error) throw error;
     },
