@@ -608,7 +608,7 @@ export default function AdminPrestige() {
                 onClick={async () => {
                   setResetting(true);
                   try {
-                    const { data, error } = await supabase.rpc("reset_all_ranking_points");
+                    const { data, error } = await (supabase.rpc as any)("reset_all_ranking_points");
                     if (error) throw error;
                     const result = data as any;
                     toast.success(`Ranking zerado! ${result?.archived_count ?? 0} registros arquivados.`);
