@@ -174,25 +174,19 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     const pip = pipelineOverride || selectedPipeline;
     if (!pip || !user) throw new Error("Pipeline inválido");
 
-    const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-      body: {
-        patientId: pip.patient_id,
-        nutritionistId: user.id,
-        weight: pip.weight,
-        height: pip.height,
-        mealCount: pip.meal_count,
-        cookingPreference: pip.cooking_preference,
-        isPipeline: true,
-        planCount: 3,
-        ...(targetPlanId ? { meal_plan_id: targetPlanId } : {}),
-      },
+    const data = await localGenerateMealPlan({
+      patientId: pip.patient_id,
+      nutritionistId: user.id,
+      weight: pip.weight,
+      height: pip.height,
+      mealCount: pip.meal_count,
+      cookingPreference: pip.cooking_preference,
+      isPipeline: true,
+      planCount: 3,
+      ...(targetPlanId ? { meal_plan_id: targetPlanId } : {}),
     });
 
-    if (error) {
-      const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
-      throw new Error(msg);
-    }
-    if (!data?.success) throw new Error(data?.error || "Falha na geração do plano");
+    if (!data?.success) throw new Error("Falha na geração do plano");
 
     const planId = data?.mealPlanId || targetPlanId;
     if (!planId) throw new Error("ID do plano não retornado pela geração");
