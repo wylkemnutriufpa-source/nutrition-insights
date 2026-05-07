@@ -1741,20 +1741,11 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Clinical Decision Support Modal */}
+              {/* Clinical Decision Support Modal (Cleaned up for MVP) */}
               <Dialog open={openSection === "clinical-decision"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
                   <ClinicalDecisionSupport patientId={resolvedPatientId} nutritionistId={user!.id} />
-                  <div className="border-t border-border pt-6 space-y-4">
-                    <SmartRecommendationsPanel signals={{
-                      adherenceScore: data?.adherence7d ?? 0,
-                      adherenceTrend: 0,
-                      streakDays: 0,
-                      mealsPerDay: 0,
-                      checklistPct: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
-                    } as PatientSignals} />
-                  </div>
                 </DialogContent>
               </Dialog>
 
