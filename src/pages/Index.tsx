@@ -543,12 +543,7 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Portfolio Intelligence — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <PortfolioIntelligencePanel />
-        </motion.div>
-      )}
+      {/* Portfolio Intelligence — PRO+ (Removed for MVP cleanup) */}
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
       <motion.div variants={item} className={`grid grid-cols-2 sm:grid-cols-3 ${isBasic ? "lg:grid-cols-4" : "lg:grid-cols-6"} gap-3`}>
