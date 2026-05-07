@@ -226,10 +226,9 @@ export function usePatientsList(params: PatientsListParams = {}) {
 
       const patientIds = allData.map((p: any) => p.patient_id);
 
-      // BATCH queries (8 parallel)
-      const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes, progsRes, assessmentsRes] = await Promise.all([
+      // BATCH queries (7 parallel - player_stats removed)
+      const [profilesRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes, progsRes, assessmentsRes] = await Promise.all([
         withTenantFilter(supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds), tenantId),
-        supabase.from("player_stats").select("user_id, last_meal_date, total_xp, current_streak").in("user_id", patientIds),
         withTenantFilter(supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today), tenantId),
         supabase.from("program_patients")
           .select("patient_id, program_id, programs(id, title)")
@@ -253,7 +252,6 @@ export function usePatientsList(params: PatientsListParams = {}) {
       (profilesRes.data || []).forEach((p: any) => profileMap.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }));
 
       const statsMap = new Map<string, any>();
-      (statsRes.data || []).forEach((s: any) => statsMap.set(s.user_id, { last_meal_date: s.last_meal_date, total_xp: s.total_xp, current_streak: s.current_streak }));
 
       const checklistMap = new Map<string, { total: number; completed: number }>();
       (checklistRes.data || []).forEach((t: any) => {
