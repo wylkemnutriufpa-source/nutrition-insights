@@ -455,7 +455,7 @@ export const AppRoutes = () => {
       {/* Protocolos Especiais */}
       <Route path="/biquini-branco" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoLanding /></Suspense>} />
       <Route path="/biquini-branco/:programId" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoDetail /></Suspense>} />
-      
+      <Route path="/diagnostics" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SystemDiagnostics /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
