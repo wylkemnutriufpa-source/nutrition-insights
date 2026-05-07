@@ -929,7 +929,7 @@ export default function AdminDashboard() {
     return (
       <DashboardLayout>
         <div className="p-12">
-          <BrainLoaderCard text="Acessando Camada de Controle..." />
+          <BrainLoaderCard text="Preparando painel administrativo..." />
         </div>
       </DashboardLayout>
     );

@@ -117,7 +117,8 @@ const ClinicalHealthDashboard = lazy(() => import("../pages/ClinicalHealthDashbo
 const ClinicalPipeline = lazy(() => import("../pages/ClinicalPipeline"));
 const ClinicalWorkspace = lazy(() => import("../pages/ClinicalWorkspace"));
 const CoachBodybuilder = lazy(() => import("../pages/CoachBodybuilder"));
-// Cockpit and Curiosidades removed for MVP
+const CockpitPremium = lazy(() => import("../pages/CockpitPremium"));
+const Curiosidades = lazy(() => import("../pages/Curiosidades"));
 const GatewayPage = lazy(() => import("../pages/GatewayPage"));
 const GlobalAdaptiveIntelligence = lazy(() => import("../pages/GlobalAdaptiveIntelligence"));
 const HybridPlanBuilder = lazy(() => import("../pages/HybridPlanBuilder"));
@@ -199,7 +200,7 @@ const WeeklyReport = lazy(() => import("../pages/WeeklyReport"));
 const WeightTrajectory = lazy(() => import("../pages/WeightTrajectory"));
 const AdminPrestige = lazy(() => import("../pages/AdminPrestige"));
 const OperationalDashboard = lazy(() => import("../pages/OperationalDashboard"));
-// Ambassador, InOffice and Presentation removed for MVP
+const SystemPresentation = lazy(() => import("../pages/SystemPresentation"));
 const PlatformGovernance = lazy(() => import("../pages/PlatformGovernance"));
 const SystemAudit = lazy(() => import("../pages/SystemAudit"));
 const SystemDiagnostics = lazy(() => import("../pages/SystemDiagnostics"));
@@ -343,7 +344,7 @@ export const AppRoutes = () => {
       <Route path="/mission-control" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MissionControl /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/workspace-editor" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WorkspaceEditor /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/control-tower" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalControlTower /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      // Cockpit removed
+      <Route path="/cockpit" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CockpitPremium /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/clinical-workspace" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalWorkspace /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/coach-bodybuilder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CoachBodybuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/protocols" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Protocols /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -394,12 +395,12 @@ export const AppRoutes = () => {
       <Route path="/my-referrals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyReferrals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Rotas Extras e Inteligência */}
-// Ranking, Ambassador and Curiosidades removed
+<Route path="/curiosidades" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Curiosidades /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
 
       <Route path="/global-tips" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><GlobalTips /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/weekly-goals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeeklyGoals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/user-guide" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><UserGuide /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      // Presentation removed
+      <Route path="/apresentacao" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SystemPresentation /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/health-quiz" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><HealthCheckQuiz /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/clinical-intelligence" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProfessionalClinicalAnalytics /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/weekly-report" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeeklyReport /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -454,7 +455,7 @@ export const AppRoutes = () => {
       {/* Protocolos Especiais */}
       <Route path="/biquini-branco" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoLanding /></Suspense>} />
       <Route path="/biquini-branco/:programId" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoDetail /></Suspense>} />
-      
+      <Route path="/diagnostics" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SystemDiagnostics /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
