@@ -141,14 +141,10 @@ export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
   name = 'Engine NutriCore V2';
 
-  generateMeal(meal: V3Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
     const { NutriCoreV2Adapter } = require('@/lib/nutricore_v2/adapter');
     
-    // Para gerar apenas uma refeição, o orquestrador Elite V3 espera MealItem[]
-    // Mas o NutriCore gera o plano inteiro para garantir a distribuição.
-    // Usaremos um truque: gerar o plano inteiro e pegar apenas a refeição correspondente.
-    
-    // Mock do contexto se não disponível (idealmente deveria vir do orquestrador)
+    // Mock do contexto se não disponível
     const context = {
       weight: 75,
       height: 175,
@@ -165,7 +161,7 @@ export class DefaultV3Strategy implements ClinicalStrategy {
     return generatedMeal ? generatedMeal.items : [];
   }
 
-  explainDecision(meal: V3Meal, items: MealItem[]): string {
+  explainDecision(meal: Meal, items: MealItem[]): string {
     return "Geração determinística via novo Motor NutriCore V2 (Orquestrador Central).";
   }
 }
