@@ -57,8 +57,7 @@ import { usePatientDetail, useTogglePatientDetailStatus, useDeletePatientLink } 
 import { queryKeys } from "@/hooks/queries/queryKeys";
 // Gamification removed from MVP
 
-// Removed EditorVersionPicker to maintain absolute independence between V2 and V3 flows
-import { EditorMatrixModal } from "@/components/diet/EditorMatrixModal";
+// V2 Editor removed as per NutriCore V3 unifications
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
@@ -149,7 +148,6 @@ export default function PatientDetail() {
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
-  const [matrixOpen, setMatrixOpen] = useState(false);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
@@ -1124,7 +1122,7 @@ export default function PatientDetail() {
                     </h3>
                     <Button 
                       size="sm" 
-                      onClick={() => navigate(`/meal-plans?patientId=${resolvedPatientId}`)}
+                      onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
                       className="gradient-primary h-8"
                     >
                       <Plus className="w-4 h-4 mr-1" /> Novo Plano
@@ -1154,10 +1152,7 @@ export default function PatientDetail() {
                               size="sm" 
                               className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
                               onClick={() => {
-                                const path = plan.editor_version === 'v3' 
-                                  ? `/v3/${resolvedPatientId}?planId=${plan.id}` 
-                                  : `/meal-plans/${plan.id}`;
-                                navigate(path);
+                                navigate(`/v3/${resolvedPatientId}?planId=${plan.id}`);
                               }}
                             >
                               <PencilLine className="w-4 h-4 mr-1" /> Editar
