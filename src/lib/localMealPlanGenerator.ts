@@ -17,6 +17,7 @@ export interface LocalGenerateParams {
   cookingPreference?: string | null;
   planCount?: number;
   isPipeline?: boolean;
+  meal_plan_id?: string;
 }
 
 export async function localGenerateMealPlan(params: LocalGenerateParams) {
