@@ -1164,9 +1164,8 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Timeline de Jornada</DialogTitle></DialogHeader>
                   <div className="space-y-4">
-                    {/* Momentum Indicator for this patient */}
-                    <MomentumIndicator variant="card" patientId={resolvedPatientId} />
-                    
+                    {/* Momentum Indicator removed */}
+
                     <div className="flex justify-end">
                       <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
                         <DialogTrigger asChild>
