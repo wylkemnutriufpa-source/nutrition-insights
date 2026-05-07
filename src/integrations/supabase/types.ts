@@ -4003,56 +4003,6 @@ export type Database = {
         }
         Relationships: []
       }
-      engagement_signals: {
-        Row: {
-          created_at: string | null
-          detected_at: string | null
-          id: string
-          is_resolved: boolean | null
-          nutritionist_id: string
-          patient_id: string
-          resolved_at: string | null
-          severity: string
-          signal_data: Json | null
-          signal_type: string
-          tenant_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          detected_at?: string | null
-          id?: string
-          is_resolved?: boolean | null
-          nutritionist_id: string
-          patient_id: string
-          resolved_at?: string | null
-          severity?: string
-          signal_data?: Json | null
-          signal_type: string
-          tenant_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          detected_at?: string | null
-          id?: string
-          is_resolved?: boolean | null
-          nutritionist_id?: string
-          patient_id?: string
-          resolved_at?: string | null
-          severity?: string
-          signal_data?: Json | null
-          signal_type?: string
-          tenant_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "engagement_signals_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       enrollment_photos: {
         Row: {
           created_at: string | null
@@ -4289,48 +4239,6 @@ export type Database = {
         }
         Relationships: []
       }
-      experience_mode_audit_log: {
-        Row: {
-          attempted_mode: string
-          correlation_id: string
-          created_at: string
-          error_code: string | null
-          id: string
-          metadata: Json | null
-          outcome: string
-          previous_mode: string | null
-          reason: string | null
-          unlock_date: string | null
-          user_id: string
-        }
-        Insert: {
-          attempted_mode: string
-          correlation_id: string
-          created_at?: string
-          error_code?: string | null
-          id?: string
-          metadata?: Json | null
-          outcome: string
-          previous_mode?: string | null
-          reason?: string | null
-          unlock_date?: string | null
-          user_id: string
-        }
-        Update: {
-          attempted_mode?: string
-          correlation_id?: string
-          created_at?: string
-          error_code?: string | null
-          id?: string
-          metadata?: Json | null
-          outcome?: string
-          previous_mode?: string | null
-          reason?: string | null
-          unlock_date?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       export_tasks: {
         Row: {
           created_at: string | null
@@ -4402,53 +4310,6 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
-      }
-      feature_marketing_assets: {
-        Row: {
-          caption: string | null
-          created_at: string
-          edited_at: string | null
-          feature_id: string
-          id: string
-          post_image_prompt: string | null
-          post_instagram_data: Json
-          slide_data: Json
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          caption?: string | null
-          created_at?: string
-          edited_at?: string | null
-          feature_id: string
-          id?: string
-          post_image_prompt?: string | null
-          post_instagram_data?: Json
-          slide_data?: Json
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          caption?: string | null
-          created_at?: string
-          edited_at?: string | null
-          feature_id?: string
-          id?: string
-          post_image_prompt?: string | null
-          post_instagram_data?: Json
-          slide_data?: Json
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "feature_marketing_assets_feature_id_fkey"
-            columns: ["feature_id"]
-            isOneToOne: true
-            referencedRelation: "feature_registry"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       feature_registry: {
         Row: {
@@ -14067,53 +13928,6 @@ export type Database = {
         }
         Relationships: []
       }
-      player_stats: {
-        Row: {
-          current_streak: number
-          id: string
-          last_meal_date: string | null
-          level: number
-          longest_streak: number
-          meals_logged: number
-          tenant_id: string | null
-          total_xp: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          current_streak?: number
-          id?: string
-          last_meal_date?: string | null
-          level?: number
-          longest_streak?: number
-          meals_logged?: number
-          tenant_id?: string | null
-          total_xp?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          current_streak?: number
-          id?: string
-          last_meal_date?: string | null
-          level?: number
-          longest_streak?: number
-          meals_logged?: number
-          tenant_id?: string | null
-          total_xp?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "player_stats_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       population_clinical_insights: {
         Row: {
           created_at: string | null
@@ -16346,57 +16160,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           points?: number
-        }
-        Relationships: []
-      }
-      ranking_snapshots: {
-        Row: {
-          created_at: string
-          id: string
-          patient_id: string
-          period_type: string
-          plan_slug: string | null
-          points_checkin: number | null
-          points_checklist: number | null
-          points_meals: number | null
-          points_other: number | null
-          points_protocols: number | null
-          points_training: number | null
-          rank_position: number | null
-          snapshot_date: string
-          total_points: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          patient_id: string
-          period_type?: string
-          plan_slug?: string | null
-          points_checkin?: number | null
-          points_checklist?: number | null
-          points_meals?: number | null
-          points_other?: number | null
-          points_protocols?: number | null
-          points_training?: number | null
-          rank_position?: number | null
-          snapshot_date?: string
-          total_points?: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          patient_id?: string
-          period_type?: string
-          plan_slug?: string | null
-          points_checkin?: number | null
-          points_checklist?: number | null
-          points_meals?: number | null
-          points_other?: number | null
-          points_protocols?: number | null
-          points_training?: number | null
-          rank_position?: number | null
-          snapshot_date?: string
-          total_points?: number
         }
         Relationships: []
       }
@@ -18710,38 +18473,6 @@ export type Database = {
           },
         ]
       }
-      timeline_reactions: {
-        Row: {
-          created_at: string
-          emoji: string
-          event_id: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          emoji?: string
-          event_id: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          emoji?: string
-          event_id?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "timeline_reactions_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "timeline_events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tip_library: {
         Row: {
           age_group: string | null
@@ -19082,35 +18813,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_achievements: {
-        Row: {
-          achievement_id: string
-          earned_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          achievement_id: string
-          earned_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          achievement_id?: string
-          earned_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_achievements_achievement_id_fkey"
-            columns: ["achievement_id"]
-            isOneToOne: false
-            referencedRelation: "achievements"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_activity_log: {
         Row: {
           action_type: string
@@ -19176,44 +18878,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
-      user_challenges: {
-        Row: {
-          challenge_id: string
-          completed_at: string | null
-          id: string
-          progress: number
-          started_at: string
-          status: Database["public"]["Enums"]["challenge_status"]
-          user_id: string
-        }
-        Insert: {
-          challenge_id: string
-          completed_at?: string | null
-          id?: string
-          progress?: number
-          started_at?: string
-          status?: Database["public"]["Enums"]["challenge_status"]
-          user_id: string
-        }
-        Update: {
-          challenge_id?: string
-          completed_at?: string | null
-          id?: string
-          progress?: number
-          started_at?: string
-          status?: Database["public"]["Enums"]["challenge_status"]
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_challenges_challenge_id_fkey"
-            columns: ["challenge_id"]
-            isOneToOne: false
-            referencedRelation: "challenges"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_linkage_log: {
         Row: {
@@ -19627,53 +19291,6 @@ export type Database = {
         }
         Relationships: []
       }
-      whatsapp_inbound_messages: {
-        Row: {
-          confidence_score: number | null
-          created_at: string
-          id: string
-          interpreted_intent: string | null
-          message_text: string
-          patient_id: string | null
-          phone_number: string
-          processed: boolean
-          professional_id: string
-          tenant_id: string | null
-        }
-        Insert: {
-          confidence_score?: number | null
-          created_at?: string
-          id?: string
-          interpreted_intent?: string | null
-          message_text: string
-          patient_id?: string | null
-          phone_number: string
-          processed?: boolean
-          professional_id: string
-          tenant_id?: string | null
-        }
-        Update: {
-          confidence_score?: number | null
-          created_at?: string
-          id?: string
-          interpreted_intent?: string | null
-          message_text?: string
-          patient_id?: string | null
-          phone_number?: string
-          processed?: boolean
-          professional_id?: string
-          tenant_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "whatsapp_inbound_messages_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       whatsapp_integrations: {
         Row: {
           connection_validated_at: string | null
@@ -19755,15 +19372,7 @@ export type Database = {
           original_message?: string
           was_correct?: boolean | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "whatsapp_intent_learning_log_inbound_message_id_fkey"
-            columns: ["inbound_message_id"]
-            isOneToOne: false
-            referencedRelation: "whatsapp_inbound_messages"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       whatsapp_invitation_logs: {
         Row: {
@@ -21701,7 +21310,6 @@ export type Database = {
         Returns: Json
       }
       reprocess_dead_letter_job: { Args: { dlq_id: string }; Returns: string }
-      reset_all_ranking_points: { Args: never; Returns: Json }
       reset_onboarding_pipeline: {
         Args: {
           _nutritionist_id: string
