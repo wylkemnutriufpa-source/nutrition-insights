@@ -7,6 +7,7 @@ import { useTenant } from "@/lib/tenantContext";
 import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
 import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
+import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
@@ -289,24 +290,18 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
     setOpeningEditor(true);
     try {
-      toast.info("Gerando opções de plano... Aguarde.");
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-        body: {
-          patientId: pipeline.patient_id,
-          nutritionistId: user.id,
-          weight: pipeline.weight,
-          height: pipeline.height,
-          mealCount: pipeline.meal_count,
-          cookingPreference: pipeline.cooking_preference,
-          isPipeline: true,
-          planCount: 3,
-        },
+      toast.info("Gerando opções de plano (NutriCore V2)... Aguarde.");
+      const data = await localGenerateMealPlan({
+        patientId: pipeline.patient_id,
+        nutritionistId: user.id,
+        weight: pipeline.weight,
+        height: pipeline.height,
+        mealCount: pipeline.meal_count,
+        cookingPreference: pipeline.cooking_preference,
+        isPipeline: true,
+        planCount: 3,
       });
-      if (error) {
-        const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
-        throw new Error(msg);
-      }
-      if (!data?.success) throw new Error(data?.error || "Falha na geração");
+      if (!data?.success) throw new Error("Falha na geração");
 
       if (data.multiPlan && data.plans?.length > 0) {
         // Multi-plan: show options for selection
@@ -388,24 +383,18 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             ? "Plano sem refeições detectado. Gerando itens automaticamente..."
             : "Plano sem itens detectado. Gerando uma versão nova...");
 
-          const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-            body: {
-              patientId: pipeline.patient_id,
-              nutritionistId: user.id,
-              weight: pipeline.weight,
-              height: pipeline.height,
-              mealCount: pipeline.meal_count,
-              cookingPreference: pipeline.cooking_preference,
-              isPipeline: true,
-              ...(resolvedPlan && !resolvedPlan.hasItems ? { meal_plan_id: planId } : {}),
-            },
+          const data = await localGenerateMealPlan({
+            patientId: pipeline.patient_id,
+            nutritionistId: user.id,
+            weight: pipeline.weight,
+            height: pipeline.height,
+            mealCount: pipeline.meal_count,
+            cookingPreference: pipeline.cooking_preference,
+            isPipeline: true,
+            ...(resolvedPlan && !resolvedPlan.hasItems ? { meal_plan_id: planId } : {}),
           });
 
-          if (error) {
-            const msg = await friendlyEdgeFunctionError(error, "Falha ao regenerar plano");
-            throw new Error(msg);
-          }
-          if (!data?.success) throw new Error(data?.error || "Falha ao regenerar plano");
+          if (!data?.success) throw new Error("Falha ao regenerar plano");
 
           resolvedPlanId = data?.mealPlanId || planId;
           resolvedPlan = await inspectOnboardingPlan(resolvedPlanId);
