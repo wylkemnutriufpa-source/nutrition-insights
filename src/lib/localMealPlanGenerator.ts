@@ -32,20 +32,26 @@ export async function localGenerateMealPlan(params: LocalGenerateParams) {
   // Sobrescrever com parâmetros fornecidos se existirem
   if (params.weight) profile.weight = params.weight;
   
-  // 2. Criar o rascunho do plano no banco
-  const { data: plan, error: planError } = await createMealPlanDraft({
-    nutritionistId: params.nutritionistId,
-    patientId: params.patientId,
-    tenantId: null, // Será resolvido pelo createMealPlanDraft ou via context
-    editorVersion: "v2",
-    title: "Plano Gerado (NutriCore V2)"
-  });
+  // 2. Resolver ou Criar o plano no banco
+  let planId = params.meal_plan_id;
 
-  if (planError || !plan) {
-    throw new Error("Falha ao criar rascunho do plano: " + (planError?.message || "Erro desconhecido"));
+  if (!planId) {
+    const { data: plan, error: planError } = await createMealPlanDraft({
+      nutritionistId: params.nutritionistId,
+      patientId: params.patientId,
+      tenantId: null,
+      editorVersion: "v2",
+      title: "Plano Gerado (NutriCore V2)"
+    });
+
+    if (planError || !plan) {
+      throw new Error("Falha ao criar rascunho do plano: " + (planError?.message || "Erro desconhecido"));
+    }
+    planId = plan.id;
+  } else {
+    // Se já temos um plano, limpar os itens antigos antes de regenerar
+    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", planId);
   }
-
-  const planId = plan.id;
 
   // 3. Executar o motor local
   setGenerationSeed(params.patientId, 0);
