@@ -1115,6 +1115,66 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
+              {/* Meal Plans Section */}
+              <div className="md:col-span-2">
+                <div className="glass rounded-xl p-6 border-emerald-500/10 shadow-glow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-display font-semibold flex items-center gap-2">
+                      <ChefHat className="w-5 h-5 text-emerald-500" /> Planos Alimentares
+                    </h3>
+                    <Button 
+                      size="sm" 
+                      onClick={() => navigate(`/meal-plans?patientId=${resolvedPatientId}`)}
+                      className="gradient-primary h-8"
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Novo Plano
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {mealPlans && mealPlans.length > 0 ? (
+                      mealPlans.map((plan: any) => (
+                        <div key={plan.id} className="flex items-center justify-between p-3 rounded-lg bg-card border border-border hover:border-emerald-500/30 transition-all group">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm group-hover:text-emerald-500 transition-colors">{plan.title}</span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant={plan.is_active ? "default" : "secondary"} className="text-[10px] h-4">
+                                {plan.is_active ? 'Ativo' : 'Inativo'}
+                              </Badge>
+                              <Badge variant="outline" className="text-[10px] h-4 border-emerald-500/20 text-emerald-600">
+                                {plan.editor_version === 'v3' ? 'V3 Premium' : 'V2 Standard'}
+                              </Badge>
+                              <span className="text-[10px] text-muted-foreground">
+                                {new Date(plan.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
+                              onClick={() => {
+                                const path = plan.editor_version === 'v3' 
+                                  ? `/v3/${resolvedPatientId}?planId=${plan.id}` 
+                                  : `/meal-plans/${plan.id}`;
+                                navigate(path);
+                              }}
+                            >
+                              <PencilLine className="w-4 h-4 mr-1" /> Editar
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 border-2 border-dashed border-border rounded-xl">
+                        <UtensilsCrossed className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Nenhum plano alimentar encontrado</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Assessment Modal */}
               <Dialog open={openSection === "assessment"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
