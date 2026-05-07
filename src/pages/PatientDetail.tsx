@@ -1767,8 +1767,7 @@ export default function PatientDetail() {
                   <PatientLabExams patientId={resolvedPatientId} />
                 </DialogContent>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>
-                  <MissionCreator patientId={resolvedPatientId} patientName={profile?.full_name || undefined} />
+                  <DialogHeader><DialogTitle className="font-display">Missões (removido para MVP)</DialogTitle></DialogHeader>
                 </DialogContent>
               </Dialog>
 
