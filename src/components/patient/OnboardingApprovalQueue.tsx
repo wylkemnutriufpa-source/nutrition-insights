@@ -290,18 +290,16 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
     setOpeningEditor(true);
     try {
-      toast.info("Gerando opções de plano... Aguarde.");
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-        body: {
-          patientId: pipeline.patient_id,
-          nutritionistId: user.id,
-          weight: pipeline.weight,
-          height: pipeline.height,
-          mealCount: pipeline.meal_count,
-          cookingPreference: pipeline.cooking_preference,
-          isPipeline: true,
-          planCount: 3,
-        },
+      toast.info("Gerando opções de plano (NutriCore V2)... Aguarde.");
+      const data = await localGenerateMealPlan({
+        patientId: pipeline.patient_id,
+        nutritionistId: user.id,
+        weight: pipeline.weight,
+        height: pipeline.height,
+        mealCount: pipeline.meal_count,
+        cookingPreference: pipeline.cooking_preference,
+        isPipeline: true,
+        planCount: 3,
       });
       if (error) {
         const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
