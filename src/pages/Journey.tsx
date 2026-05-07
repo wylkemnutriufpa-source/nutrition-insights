@@ -43,7 +43,7 @@ export default function Journey() {
         <MomentumIndicator variant="card" />
 
         {/* Journey Phases */}
-        <JourneyPhases />
+        {/* JourneyPhases removed */}
 
         {/* Before/After Report */}
         <BeforeAfterReport />
