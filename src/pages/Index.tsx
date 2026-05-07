@@ -612,14 +612,7 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Insights Comportamentais — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Insights Comportamentais">
-            <TreatmentInsightsPanel />
-          </ExpandablePanel>
-        </motion.div>
-      )}
+      {/* Insights Comportamentais — PRO+ (Removed for MVP cleanup) */}
 
       {/* ── Patient Retention Risk — ADVANCED ── */}
       {minMode("advanced") && (
