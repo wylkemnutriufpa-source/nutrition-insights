@@ -30,15 +30,14 @@ import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient
 import CinematicIntro from "@/components/landing/CinematicIntro";
 import BrainLoader from "@/components/common/BrainLoader";
 
-import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
-import PortfolioIntelligencePanel from "@/components/dashboard/PortfolioIntelligencePanel";
-import FitJourneyIntelligencePanel from "@/components/dashboard/FitJourneyIntelligencePanel";
+// Removed legacy panels for MVP cleanup
+
 import { PremiumControlTowerBanner } from "@/components/premium/PremiumBanners";
 import SetupWizard from "@/components/professional/SetupWizard";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
-import { TreatmentInsightsPanel } from "@/components/dashboard/TreatmentInsightsPanel";
+// TreatmentInsightsPanel removed due to table removal
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import PatientMomentumSummary from "@/components/dashboard/PatientMomentumSummary";
 import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
@@ -210,7 +209,7 @@ function NutritionistDashboardContent() {
         const [allProfiles, allAnamnesis, allStats, allChecks, allMeals, allAssess] = await Promise.all([
           supabase.from("profiles").select("user_id, full_name").in("user_id", limitedIds),
           supabase.from("patient_anamnesis").select("user_id, answers, status").in("user_id", limitedIds).order("created_at", { ascending: false }),
-          supabase.from("player_stats").select("user_id, current_streak, meals_logged, level").in("user_id", limitedIds),
+          // player_stats removed from MVP cleanup
           supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", limitedIds).gte("date", periodDate.split("T")[0]),
           supabase.from("meals").select("user_id, logged_at").in("user_id", limitedIds).gte("logged_at", periodDate),
           supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", limitedIds).order("assessment_date", { ascending: false }),
@@ -221,8 +220,8 @@ function NutritionistDashboardContent() {
         (allProfiles.data || []).forEach((p: any) => { profileMap[p.user_id] = p.full_name; });
         const anamMap: Record<string, any> = {};
         (allAnamnesis.data || []).forEach((a: any) => { if (!anamMap[a.user_id]) anamMap[a.user_id] = a; }); // first = latest
-        const statsMap: Record<string, any> = {};
-        (allStats.data || []).forEach((s: any) => { statsMap[s.user_id] = s; });
+// statsMap removed
+
         const checkMap: Record<string, { total: number; completed: number }> = {};
         (allChecks.data || []).forEach((c: any) => {
           if (!checkMap[c.patient_id]) checkMap[c.patient_id] = { total: 0, completed: 0 };
@@ -246,7 +245,7 @@ function NutritionistDashboardContent() {
           const name = profileMap[pid]?.trim();
           if (!name) continue;
           const anam = anamMap[pid];
-          const stats = statsMap[pid];
+          const stats = null; // Removed from MVP cleanup
           const checks = checkMap[pid] || { total: 0, completed: 0 };
           const checkCompletion = checks.total > 0 ? Math.round((checks.completed / checks.total) * 100) : 0;
           const meals = mealMap[pid] || { count: 0 };
