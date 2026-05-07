@@ -203,6 +203,20 @@ export const useEditorState = create<EditorState>()(
           runClinicalRegressions();
         }
         
+        // Integração com Motor V2 para avaliação de macros
+        const { calculateItemMacros: calcMacrosV2 } = require('@/features/clinical-engine/services/v3Motor');
+        
+        const totals = meals.reduce((acc, meal) => {
+          meal.items.forEach(item => {
+            const macros = calcMacrosV2(item, item.quantity);
+            acc.kcal += macros.kcal;
+            acc.protein += macros.protein;
+            acc.carbs += macros.carbs;
+            acc.fat += macros.fat;
+          });
+          return acc;
+        }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
         // Fallback para o sistema anterior se não houver contexto clínico
         const nutritionalScore = calculatePersonalizedScore(meals, goalMetadata);
         const clinicalIssues = validateClinicalContext(meals, goalMetadata);
@@ -213,14 +227,6 @@ export const useEditorState = create<EditorState>()(
         
         // Registrar macros no console em dev para debug
         if (process.env.NODE_ENV === 'development') {
-          const totals = meals.reduce((acc, meal) => {
-            meal.items.forEach(item => {
-              const macros = calculateItemMacros(item, item.quantity);
-              acc.kcal += macros.kcal;
-              acc.protein += macros.protein;
-            });
-            return acc;
-          }, { kcal: 0, protein: 0 });
           console.log(`[V3 Score] Total Kcal: ${Math.round(totals.kcal)}, Protein: ${Math.round(totals.protein)}g`);
         }
         

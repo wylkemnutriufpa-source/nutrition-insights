@@ -1033,40 +1033,27 @@ export default function Anamnesis() {
       setSubmitting(false); return;
     }
 
-    // Compute TMB (Harris-Benedict Revised)
-    let tmb: number;
-    if (sex === "male") {
-      tmb = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
-    } else {
-      tmb = 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
-    }
+    // Integração com o Motor V2 — Camada Matemática Determinística
+    const { calcMetrics } = require('@/lib/nutrition_engine_v2/calculations');
+    
+    // Mapeamento de entradas para o Motor V2
+    const v2Metrics = calcMetrics({
+      weight_kg: weight,
+      height_cm: height,
+      sex: sex === "male" ? "M" : "F",
+      age: age,
+      activity_level: answers.activity_level || "moderate",
+      goal: answers.goal === "lose_weight" ? "lose" : (answers.goal === "gain_muscle" ? "gain" : "maintain")
+    });
 
-    // TMB sanity check (realistic adult range: 800–3500 kcal)
-    if (tmb < 800 || tmb > 3500) {
-      console.warn(`[FJ:Anamnesis] TMB fora de faixa: ${Math.round(tmb)} kcal (peso=${weight}, altura=${height}, idade=${age}, sexo=${sex})`);
-    }
+    const tmb = v2Metrics.tmb;
+    const multiplier = 1; // Já embutido no GET do V2
+    let kcalTarget = v2Metrics.target_kcal;
+    const protein = v2Metrics.protein_g;
+    const carbs = v2Metrics.carb_g;
+    const fat = v2Metrics.fat_g;
 
-    const activityMultipliers: Record<string, number> = {
-      sedentary: 1.2, light: 1.375, moderate: 1.55, intense: 1.725,
-    };
-    const multiplier = activityMultipliers[answers.activity_level] || 1.375;
-    let kcalTarget = Math.round(tmb * multiplier);
-
-    if (answers.goal === "lose_weight") kcalTarget = Math.round(kcalTarget * 0.8);
-    else if (answers.goal === "gain_muscle") kcalTarget = Math.round(kcalTarget * 1.15);
-
-    // Enforce clinical calorie floors
-    const kcalFloor = sex === "male" ? 1500 : 1200;
-    if (kcalTarget < kcalFloor) {
-      console.warn(`[FJ:Anamnesis] Meta calórica ${kcalTarget} abaixo do piso clínico ${kcalFloor}. Ajustando.`);
-      kcalTarget = kcalFloor;
-    }
-
-    const protein = Math.round((kcalTarget * 0.3) / 4);
-    const carbs = Math.round((kcalTarget * 0.45) / 4);
-    const fat = Math.round((kcalTarget * 0.25) / 9);
-
-    console.info(`[FJ:Anamnesis] Cálculo: peso=${weight}kg, altura=${height}cm, idade=${age}, sexo=${sex}, TMB=${Math.round(tmb)}, TDEE=${Math.round(tmb * multiplier)}, meta=${kcalTarget}, P=${protein}g C=${carbs}g G=${fat}g`);
+    console.info(`[FJ:Anamnesis] Motor V2: peso=${weight}kg, altura=${height}cm, idade=${age}, sexo=${sex}, TMB=${tmb}, GET=${v2Metrics.get}, meta=${kcalTarget}, P=${protein}g C=${carbs}g G=${fat}g`);
 
     // Extract clinical flags from adaptive blocks
     const clinicalFlags = extractClinicalFlags(answers);
