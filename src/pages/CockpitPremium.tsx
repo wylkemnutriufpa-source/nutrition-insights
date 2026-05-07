@@ -29,17 +29,17 @@ export default function CockpitPremium() {
       assessments: "/physical-assessment",
       anamnesis: "/patients",
       // Workspace
-      calendar: "/clinical-workspace?tab=calendar",
-      evolution: "/clinical-workspace?tab=evolution",
-      periodization: "/clinical-workspace?tab=periodization",
-      cardio: "/clinical-workspace?tab=cardio",
-      comparison: "/clinical-workspace?tab=comparison",
-      records: "/clinical-workspace?tab=records",
-      challenges: "/clinical-workspace?tab=challenges",
+      calendar: "/appointments",
+      evolution: "/reports",
+      periodization: "/protocols",
+      cardio: "/body-analysis",
+      comparison: "/reports",
+      records: "/achievements",
+      challenges: "/challenges",
       chat: "/chat",
-      export: "/clinical-workspace?tab=export",
-      preplan: "/clinical-workspace?tab=preplan",
-      videos: "/clinical-workspace?tab=videos",
+      export: "/reports",
+      preplan: "/automation",
+      videos: "/library",
     };
 
     const route = routeMap[tabId];
