@@ -46,8 +46,7 @@ export function useEngagementSignals(nutritionistId?: string) {
     enabled: !!nutritionistId,
     staleTime: 2 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("engagement_signals")
+      const { data } = await (supabase.from("engagement_signals") as any)
         .select("*")
         .eq("nutritionist_id", nutritionistId!)
         .eq("is_resolved", false)
