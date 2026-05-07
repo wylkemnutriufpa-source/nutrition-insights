@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import ShareProgressButton from "@/components/social/ShareProgressButton";
-import JourneyPhases from "@/components/gamification/JourneyPhases";
+// JourneyPhases removed
 import BeforeAfterReport from "@/components/social/BeforeAfterReport";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
@@ -43,7 +43,7 @@ export default function Journey() {
         <MomentumIndicator variant="card" />
 
         {/* Journey Phases */}
-        <JourneyPhases />
+        {/* JourneyPhases removed */}
 
         {/* Before/After Report */}
         <BeforeAfterReport />

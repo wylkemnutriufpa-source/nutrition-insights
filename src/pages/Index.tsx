@@ -205,11 +205,10 @@ function NutritionistDashboardContent() {
       if (limitedIds.length > 0) {
         const periodDate = new Date(Date.now() - evolutionPeriod * 86400000).toISOString();
 
-        // Batch all patient data in parallel (6 bulk queries instead of 30×6 individual)
-        const [allProfiles, allAnamnesis, allStats, allChecks, allMeals, allAssess] = await Promise.all([
+        // Batch all patient data in parallel (5 bulk queries)
+        const [allProfiles, allAnamnesis, allChecks, allMeals, allAssess] = await Promise.all([
           supabase.from("profiles").select("user_id, full_name").in("user_id", limitedIds),
           supabase.from("patient_anamnesis").select("user_id, answers, status").in("user_id", limitedIds).order("created_at", { ascending: false }),
-          // player_stats removed from MVP cleanup
           supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", limitedIds).gte("date", periodDate.split("T")[0]),
           supabase.from("meals").select("user_id, logged_at").in("user_id", limitedIds).gte("logged_at", periodDate),
           supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", limitedIds).order("assessment_date", { ascending: false }),
@@ -535,12 +534,7 @@ function NutritionistDashboardContent() {
         )}
       </div>
 
-      {/* ── FitJourney Intelligence — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <FitJourneyIntelligencePanel />
-        </motion.div>
-      )}
+      {/* FitJourney Intelligence — PRO+ (Removed for MVP cleanup) */}
 
       {/* ── Premium Control Tower Banner — ADVANCED ── */}
       {minMode("advanced") && (
@@ -549,12 +543,7 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Portfolio Intelligence — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <PortfolioIntelligencePanel />
-        </motion.div>
-      )}
+      {/* Portfolio Intelligence — PRO+ (Removed for MVP cleanup) */}
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
       <motion.div variants={item} className={`grid grid-cols-2 sm:grid-cols-3 ${isBasic ? "lg:grid-cols-4" : "lg:grid-cols-6"} gap-3`}>
@@ -623,14 +612,7 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Insights Comportamentais — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Insights Comportamentais">
-            <TreatmentInsightsPanel />
-          </ExpandablePanel>
-        </motion.div>
-      )}
+      {/* Insights Comportamentais — PRO+ (Removed for MVP cleanup) */}
 
       {/* ── Patient Retention Risk — ADVANCED ── */}
       {minMode("advanced") && (
@@ -659,23 +641,7 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Patient Progress Simulation — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Simulação de Progresso">
-            <PatientProgressSimulation
-              patients={riskPatients.map(p => ({
-                id: p.id,
-                name: p.name,
-                currentWeight: evolutionData.avgWeight,
-                adherence: p.score,
-                streak: 0,
-              }))}
-              loading={aiLoading}
-            />
-          </ExpandablePanel>
-        </motion.div>
-      )}
+      {/* Patient Progress Simulation — ADVANCED (Removed for MVP cleanup) */}
 
       {/* ── Simulador de Faturamento — ADVANCED ── */}
       {minMode("advanced") && (

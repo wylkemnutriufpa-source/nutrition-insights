@@ -4003,6 +4003,44 @@ export type Database = {
         }
         Relationships: []
       }
+      engagement_signals: {
+        Row: {
+          detected_at: string | null
+          id: string
+          patient_id: string | null
+          severity: string | null
+          signal_data: Json | null
+          signal_type: string
+          tenant_id: string | null
+        }
+        Insert: {
+          detected_at?: string | null
+          id?: string
+          patient_id?: string | null
+          severity?: string | null
+          signal_data?: Json | null
+          signal_type: string
+          tenant_id?: string | null
+        }
+        Update: {
+          detected_at?: string | null
+          id?: string
+          patient_id?: string | null
+          severity?: string | null
+          signal_data?: Json | null
+          signal_type?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_signals_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrollment_photos: {
         Row: {
           created_at: string | null
@@ -4308,6 +4346,30 @@ export type Database = {
           key?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      feature_marketing_assets: {
+        Row: {
+          asset_type: string | null
+          asset_url: string | null
+          created_at: string | null
+          feature_name: string | null
+          id: string
+        }
+        Insert: {
+          asset_type?: string | null
+          asset_url?: string | null
+          created_at?: string | null
+          feature_name?: string | null
+          id?: string
+        }
+        Update: {
+          asset_type?: string | null
+          asset_url?: string | null
+          created_at?: string | null
+          feature_name?: string | null
+          id?: string
         }
         Relationships: []
       }
@@ -13928,6 +13990,42 @@ export type Database = {
         }
         Relationships: []
       }
+      player_stats: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          last_meal_date: string | null
+          level: number | null
+          longest_streak: number | null
+          meals_logged: number | null
+          total_xp: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          last_meal_date?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          meals_logged?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          last_meal_date?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          meals_logged?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       population_clinical_insights: {
         Row: {
           created_at: string | null
@@ -18473,6 +18571,30 @@ export type Database = {
           },
         ]
       }
+      timeline_reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string | null
+          reaction_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          reaction_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          reaction_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tip_library: {
         Row: {
           age_group: string | null
@@ -18813,6 +18935,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string | null
+          id: string
+          unlocked_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id?: string | null
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string | null
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_activity_log: {
         Row: {
           action_type: string
@@ -18875,6 +19018,30 @@ export type Database = {
           id?: string
           page?: string | null
           role?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_challenges: {
+        Row: {
+          challenge_id: string | null
+          id: string
+          joined_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          id?: string
+          joined_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          id?: string
+          joined_at?: string | null
+          status?: string | null
           user_id?: string | null
         }
         Relationships: []

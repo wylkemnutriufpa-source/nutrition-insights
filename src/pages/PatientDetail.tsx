@@ -1164,39 +1164,7 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Timeline de Jornada</DialogTitle></DialogHeader>
                   <div className="space-y-4">
-                    {/* Momentum Indicator for this patient */}
-                    <MomentumIndicator variant="card" patientId={resolvedPatientId} />
-                    
-                    <div className="flex justify-end">
-                      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-                        <DialogTrigger asChild>
-                          <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nota</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader><DialogTitle className="font-display">Adicionar Nota</DialogTitle></DialogHeader>
-                          <form onSubmit={addTimelineNote} className="space-y-4">
-                            <div>
-                              <Label>Tipo</Label>
-                              <Select value={noteForm.event_type} onValueChange={(v) => setNoteForm({ ...noteForm, event_type: v })}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="note">📝 Nota</SelectItem>
-                                  <SelectItem value="alert">⚠️ Alerta</SelectItem>
-                                  <SelectItem value="measurement">📏 Medição</SelectItem>
-                                  <SelectItem value="achievement">🏆 Conquista</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div><Label>Título</Label><Input value={noteForm.title} onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })} required /></div>
-                            <div><Label>Descrição</Label><Textarea value={noteForm.description} onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} /></div>
-                            <Button type="submit" className="w-full gradient-primary">Salvar</Button>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                    
-                    {/* Journey Timeline Feed */}
-                    <JourneyTimelineFeed patientId={resolvedPatientId} maxEvents={50} showFilters title="Eventos do Paciente" />
+                    {/* Components removed for MVP cleanup */}
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1773,20 +1741,11 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Clinical Decision Support Modal */}
+              {/* Clinical Decision Support Modal (Cleaned up for MVP) */}
               <Dialog open={openSection === "clinical-decision"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
                   <ClinicalDecisionSupport patientId={resolvedPatientId} nutritionistId={user!.id} />
-                  <div className="border-t border-border pt-6 space-y-4">
-                    <SmartRecommendationsPanel signals={{
-                      adherenceScore: data?.adherence7d ?? 0,
-                      adherenceTrend: 0,
-                      streakDays: 0,
-                      mealsPerDay: 0,
-                      checklistPct: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
-                    } as PatientSignals} />
-                  </div>
                 </DialogContent>
               </Dialog>
 

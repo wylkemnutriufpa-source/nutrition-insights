@@ -293,6 +293,13 @@ export const AppRoutes = () => {
       <Route path="/auth/confirm" element={<AuthConfirm />} />
       <Route path="/welcome" element={<Welcome />} />
       
+      {/* Public Invitation & Registration */}
+      <Route path="/invite/:code" element={<Suspense fallback={<PageLoader />}><Invitation /></Suspense>} />
+      <Route path="/convite/:code" element={<Suspense fallback={<PageLoader />}><Invitation /></Suspense>} />
+      <Route path="/convite/:code/status" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><InvitationStatus /></Suspense></ProtectedRoute>} />
+      <Route path="/cadastro" element={<Suspense fallback={<PageLoader />}><PatientRegister /></Suspense>} />
+      <Route path="/admin/invitations" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InvitationAudit /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+
       {/* Rotas Core - Dashboard Central */}
       <Route path="/index" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Index /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Index /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
