@@ -1033,27 +1033,26 @@ export default function Anamnesis() {
       setSubmitting(false); return;
     }
 
-    // Integração com o Motor V2 — Camada Matemática Determinística
-    const { calcMetrics } = require('@/lib/nutrition_engine_v2/calculations');
+    // Integração com o NOVO Motor NutriCore V2 (Projeto NutriCore)
+    const { runEngine } = require('@/lib/nutricore_v2/nutrition-engine');
     
-    // Mapeamento de entradas para o Motor V2
-    const v2Metrics = calcMetrics({
+    // Mapeamento de entradas para o Motor NutriCore
+    const engineResult = runEngine({
       weight_kg: weight,
       height_cm: height,
-      sex: sex === "male" ? "M" : "F",
-      age: age,
-      activity_level: answers.activity_level || "moderate",
-      goal: answers.goal === "lose_weight" ? "lose" : (answers.goal === "gain_muscle" ? "gain" : "maintain")
+      age_years: age,
+      sex: sex === "male" ? "masculino" : "feminino",
+      activity_level: answers.activity_level === 'sedentary' ? 'sedentario' : (answers.activity_level === 'light' ? 'leve' : (answers.activity_level === 'intense' ? 'intenso' : 'moderado')),
+      goal: answers.goal === "lose_weight" ? "emagrecimento" : (answers.goal === "gain_muscle" ? "hipertrofia" : "manutencao")
     });
 
-    const tmb = v2Metrics.tmb;
-    const multiplier = 1; // Já embutido no GET do V2
-    let kcalTarget = v2Metrics.target_kcal;
-    const protein = v2Metrics.protein_g;
-    const carbs = v2Metrics.carb_g;
-    const fat = v2Metrics.fat_g;
+    const tmb = engineResult.bmr_kcal;
+    const kcalTarget = engineResult.target_kcal;
+    const protein = engineResult.macros.protein_g;
+    const carbs = engineResult.macros.carb_g;
+    const fat = engineResult.macros.fat_g;
 
-    console.info(`[FJ:Anamnesis] Motor V2: peso=${weight}kg, altura=${height}cm, idade=${age}, sexo=${sex}, TMB=${tmb}, GET=${v2Metrics.get}, meta=${kcalTarget}, P=${protein}g C=${carbs}g G=${fat}g`);
+    console.info(`[FJ:Anamnesis] NutriCore V2: TMB=${tmb}, GET=${engineResult.tdee_kcal}, Meta=${kcalTarget}, P=${protein}g C=${carbs}g G=${fat}g`);
 
     // Extract clinical flags from adaptive blocks
     const clinicalFlags = extractClinicalFlags(answers);
