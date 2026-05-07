@@ -641,23 +641,7 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Patient Progress Simulation — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Simulação de Progresso">
-            <PatientProgressSimulation
-              patients={riskPatients.map(p => ({
-                id: p.id,
-                name: p.name,
-                currentWeight: evolutionData.avgWeight,
-                adherence: p.score,
-                streak: 0,
-              }))}
-              loading={aiLoading}
-            />
-          </ExpandablePanel>
-        </motion.div>
-      )}
+      {/* Patient Progress Simulation — ADVANCED (Removed for MVP cleanup) */}
 
       {/* ── Simulador de Faturamento — ADVANCED ── */}
       {minMode("advanced") && (
