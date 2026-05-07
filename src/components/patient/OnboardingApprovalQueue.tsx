@@ -301,11 +301,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         isPipeline: true,
         planCount: 3,
       });
-      if (error) {
-        const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
-        throw new Error(msg);
-      }
-      if (!data?.success) throw new Error(data?.error || "Falha na geração");
+      if (!data?.success) throw new Error("Falha na geração");
 
       if (data.multiPlan && data.plans?.length > 0) {
         // Multi-plan: show options for selection
