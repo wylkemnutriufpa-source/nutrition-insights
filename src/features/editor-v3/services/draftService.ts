@@ -81,7 +81,8 @@ function computeMacros(meals: Meal[]) {
 
 export async function loadOrCreateDraft(
   patientId: string,
-  seedMeals: Meal[] = []
+  seedMeals: Meal[] = [],
+  mealPlanId?: string | null
 ): Promise<DraftRecord | null> {
   const { data: userRes } = await supabase.auth.getUser();
   const nutritionistId = userRes.user?.id;
@@ -95,6 +96,7 @@ export async function loadOrCreateDraft(
     user_agent: navigator.userAgent
   } as any);
 
+  // 1. Tentar encontrar rascunho ativo
   const { data: existing, error: findErr } = await supabase
     .from('v3_drafts' as any)
     .select('*')
@@ -105,14 +107,52 @@ export async function loadOrCreateDraft(
 
   if (findErr) {
     console.warn('[v3-draft] load failed, will fallback to local');
-    return null;
   }
+
   if (existing) {
     const record = existing as unknown as DraftRecord;
     if (record.payload?.meals) {
       record.payload.meals = normalizeMeals(record.payload.meals);
     }
     return record;
+  }
+
+  // 2. Se não houver rascunho e houver mealPlanId, tentar migrar dados do plano oficial (Legado V2 -> V3)
+  let initialMealsToUse = seedMeals;
+  if (mealPlanId && (!initialMealsToUse || initialMealsToUse.length === 0)) {
+    console.info('[v3-draft] No draft found. Attempting to seed from official meal plan:', mealPlanId);
+    
+    // Tenta carregar o plano oficial (seja ele v2 ou v3)
+    const { data: officialPlan } = await supabase
+      .from('meal_plans')
+      .select('*, meal_plan_items(*)')
+      .eq('id', mealPlanId)
+      .single();
+
+    if (officialPlan && officialPlan.meal_plan_items) {
+      // Converte meal_plan_items (V2) para estrutura de Meals (V3)
+      const convertedMeals: Meal[] = officialPlan.meal_plan_items.map((item: any) => ({
+        id: Math.random().toString(36).substring(2, 9),
+        name: item.title,
+        time: '00:00', // V2 pode não ter hora exata no item
+        items: [{
+          instanceId: Math.random().toString(36).substring(2, 10),
+          name: item.title,
+          kcal: item.calories_target,
+          protein: item.protein_target,
+          carbs: item.carbs_target,
+          fat: item.fat_target,
+          quantity: 1,
+          measurementType: 'unit',
+          portionLabel: '1 porção',
+          substitutions: []
+        }]
+      }));
+      
+      if (convertedMeals.length > 0) {
+        initialMealsToUse = convertedMeals;
+      }
+    }
   }
 
   const tenantId = await getActiveTenant();
@@ -122,11 +162,11 @@ export async function loadOrCreateDraft(
   }
 
   const payload: DraftPayload = { 
-    meals: seedMeals, 
+    meals: initialMealsToUse.length > 0 ? initialMealsToUse : seedMeals, 
     version: DRAFT_PAYLOAD_VERSION,
     audit_log: [] 
   };
-  const macros = computeMacros(seedMeals);
+  const macros = computeMacros(payload.meals);
 
   const { data: created, error: insErr } = await supabase
     .from('v3_drafts' as any)
