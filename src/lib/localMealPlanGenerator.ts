@@ -53,46 +53,61 @@ export async function localGenerateMealPlan(params: LocalGenerateParams) {
     await supabase.from("meal_plan_items").delete().eq("meal_plan_id", planId);
   }
 
-  // 3. Executar o motor local
-  setGenerationSeed(params.patientId, 0);
-  const result = await generateMealPlanFromLibrary(profile);
+  // 3. Gerar planos (Suporta multi-plan se solicitado)
+  const planCount = params.planCount || 1;
+  const generatedPlans = [];
 
-  if (!result.success || result.slots.length === 0) {
+  for (let i = 0; i < planCount; i++) {
+    setGenerationSeed(params.patientId, i);
+    const result = await generateMealPlanFromLibrary(profile);
+
+    if (result.success && result.slots.length > 0) {
+      // Se for o primeiro plano, ou se for plano único, salvamos no plano principal (planId)
+      let targetPlanId = planId;
+      
+      // Se for multi-plan e não for o primeiro, criamos planos adicionais
+      if (i > 0) {
+        const { data: extraPlan } = await createMealPlanDraft({
+          nutritionistId: params.nutritionistId,
+          patientId: params.patientId,
+          tenantId: null,
+          editorVersion: "v2",
+          title: `Opção ${i + 1} (NutriCore V2)`
+        });
+        if (extraPlan) targetPlanId = extraPlan.id;
+      }
+
+      const inserts = await slotsToInserts(result.slots, targetPlanId);
+      await supabase.from("meal_plan_items").insert(inserts);
+      
+      await supabase.from("meal_plans").update({
+        plan_status: "under_professional_review",
+        generation_source: "nutricore_v2_local",
+        generation_metadata: result.metadata as any,
+        total_target_calories: profile.targetCalories,
+        total_target_protein: profile.targetProtein,
+        total_target_carbs: profile.targetCarbs,
+        total_target_fat: profile.targetFat,
+      } as any).eq("id", targetPlanId);
+
+      generatedPlans.push({
+        mealPlanId: targetPlanId,
+        items_count: result.slots.length,
+        metadata: result.metadata
+      });
+    }
+  }
+
+  if (generatedPlans.length === 0) {
     throw new Error("O motor local não conseguiu gerar refeições válidas.");
   }
 
-  // 4. Converter slots para inserções de banco
-  const inserts = await slotsToInserts(result.slots, planId);
-
-  // 5. Salvar itens no banco
-  const { error: itemsError } = await supabase
-    .from("meal_plan_items")
-    .insert(inserts);
-
-  if (itemsError) {
-    throw new Error("Erro ao salvar itens do plano: " + itemsError.message);
-  }
-
-  // 6. Atualizar metadados do plano
-  await supabase
-    .from("meal_plans")
-    .update({
-      plan_status: "under_professional_review",
-      generation_source: "nutricore_v2_local",
-      generation_metadata: result.metadata as any,
-      total_target_calories: profile.targetCalories,
-      total_target_protein: profile.targetProtein,
-      total_target_carbs: profile.targetCarbs,
-      total_target_fat: profile.targetFat,
-    } as any)
-    .eq("id", planId);
-
   return {
     success: true,
-    mealPlanId: planId,
-    items_count: result.slots.length,
-    metadata: result.metadata,
-    multiPlan: false,
-    plans: []
+    mealPlanId: generatedPlans[0].mealPlanId,
+    items_count: generatedPlans[0].items_count,
+    metadata: generatedPlans[0].metadata,
+    multiPlan: generatedPlans.length > 1,
+    plans: generatedPlans
   };
 }
