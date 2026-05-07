@@ -534,12 +534,7 @@ function NutritionistDashboardContent() {
         )}
       </div>
 
-      {/* ── FitJourney Intelligence — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <FitJourneyIntelligencePanel />
-        </motion.div>
-      )}
+      {/* FitJourney Intelligence — PRO+ (Removed for MVP cleanup) */}
 
       {/* ── Premium Control Tower Banner — ADVANCED ── */}
       {minMode("advanced") && (
