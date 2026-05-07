@@ -306,14 +306,11 @@ export function usePatientsList(params: PatientsListParams = {}) {
         };
       });
 
-      // Sort: recently viewed first, then by priority score
+      // Sort: recently viewed first
       enriched.sort((a, b) => {
         const recentA = getRecentScore(a.patient_id);
         const recentB = getRecentScore(b.patient_id);
-        if (recentA > 10 || recentB > 10) {
-          if (Math.abs(recentA - recentB) > 5) return recentB - recentA;
-        }
-        return (a.priorityScore || 0) - (b.priorityScore || 0);
+        return recentB - recentA;
       });
 
       const totalPages = Math.ceil(totalCount / pageSize);
