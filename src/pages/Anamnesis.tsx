@@ -1068,7 +1068,7 @@ export default function Anamnesis() {
       tenant_id: resolvedTenantId,
       answers: { ...answers, _extracted_clinical_flags: clinicalFlags },
       computed_tmb: Math.round(tmb),
-      computed_tdee: Math.round(tmb * multiplier),
+      computed_tdee: Math.round(engineResult.tdee_kcal),
       computed_kcal_target: kcalTarget,
       computed_protein: protein,
       computed_carbs: carbs,

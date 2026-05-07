@@ -55,8 +55,7 @@ export function useTimelineReactions(eventId: string) {
     enabled: !!eventId,
     staleTime: 15_000,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("timeline_reactions")
+      const { data } = await (supabase.from("timeline_reactions") as any)
         .select("*")
         .eq("event_id", eventId);
       return (data || []) as any[];
