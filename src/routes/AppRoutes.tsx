@@ -30,13 +30,9 @@ const AnalyzeMeal = lazy(() => import("../pages/AnalyzeMeal"));
 const Patients = lazy(() => import("../pages/Patients"));
 const PatientDetail = lazy(() => import("../pages/PatientDetail"));
 const ClientDashboard = lazy(() => import("../pages/ClientDashboard"));
-const EditorV2Page = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
-const EditorV2EntryPage = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
 const EditorV3Page = lazyDebug(() => import("../features/editor-v3").then(m => ({ default: m.EditorV3Page })), "Editor V3");
-// Standardized editor routes for V2 and V3
+// Standardized editor routes for V3
 
-
-const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
 const Invitation = lazy(() => import("../pages/Invitation"));
 
@@ -108,13 +104,11 @@ const DietTemplates = lazy(() => import("../pages/DietTemplates"));
 const FoodDatabase = lazy(() => import("../pages/FoodDatabase"));
 const AutomationCenter = lazy(() => import("../pages/AutomationCenter"));
 const CampaignCenter = lazy(() => import("../pages/CampaignCenter"));
-const ClinicalBrain = lazy(() => import("../pages/ClinicalBrain"));
-const LabInterpreter = lazy(() => import("../pages/LabInterpreter"));
 const MissionControl = lazy(() => import("../pages/MissionControl"));
 const WorkspaceEditor = lazy(() => import("../pages/WorkspaceEditor"));
 const PatientIntelligence = lazy(() => import("../pages/PatientIntelligence"));
 const ClinicalControlTower = lazy(() => import("../pages/ClinicalControlTower"));
-const TechnicalSheets = lazy(() => import("../pages/store/TechnicalSheets"));
+// Technical Sheets removed for MVP
 const AdminNutritionProtocols = lazy(() => import("../pages/AdminNutritionProtocols"));
 const AffiliateLanding = lazy(() => import("../pages/AffiliateLanding"));
 const BiquiniBrancoDetail = lazy(() => import("../pages/BiquiniBrancoDetail"));
@@ -123,15 +117,14 @@ const ClinicalHealthDashboard = lazy(() => import("../pages/ClinicalHealthDashbo
 const ClinicalPipeline = lazy(() => import("../pages/ClinicalPipeline"));
 const ClinicalWorkspace = lazy(() => import("../pages/ClinicalWorkspace"));
 const CoachBodybuilder = lazy(() => import("../pages/CoachBodybuilder"));
-const CockpitPremium = lazy(() => import("../pages/CockpitPremium"));
-const Curiosidades = lazy(() => import("../pages/Curiosidades"));
+// Cockpit and Curiosidades removed for MVP
 const GatewayPage = lazy(() => import("../pages/GatewayPage"));
 const GlobalAdaptiveIntelligence = lazy(() => import("../pages/GlobalAdaptiveIntelligence"));
 const HybridPlanBuilder = lazy(() => import("../pages/HybridPlanBuilder"));
 const IntakeOnboarding = lazy(() => import("../pages/IntakeOnboarding"));
 const IntelligenceSettings = lazy(() => import("../pages/IntelligenceSettings"));
 const InvitationStatus = lazy(() => import("../pages/InvitationStatus"));
-const MagicJourneyStory = lazy(() => import("../pages/MagicJourneyStory"));
+// Magic Journey removed for MVP
 const MobileQA = lazy(() => import("../pages/MobileQA"));
 const OnboardingPaciente = lazy(() => import("../pages/OnboardingPaciente"));
 const OnboardingPipeline = lazy(() => import("../pages/OnboardingPipeline"));
@@ -206,9 +199,7 @@ const WeeklyReport = lazy(() => import("../pages/WeeklyReport"));
 const WeightTrajectory = lazy(() => import("../pages/WeightTrajectory"));
 const AdminPrestige = lazy(() => import("../pages/AdminPrestige"));
 const OperationalDashboard = lazy(() => import("../pages/OperationalDashboard"));
-const AmbassadorDashboard = lazy(() => import("../pages/AmbassadorDashboard"));
-const InOfficeWizard = lazy(() => import("../pages/InOfficeWizard"));
-const SystemPresentation = lazy(() => import("../pages/SystemPresentation"));
+// Ambassador, InOffice and Presentation removed for MVP
 const PlatformGovernance = lazy(() => import("../pages/PlatformGovernance"));
 const SystemAudit = lazy(() => import("../pages/SystemAudit"));
 const SystemDiagnostics = lazy(() => import("../pages/SystemDiagnostics"));
@@ -218,7 +209,7 @@ const SchemaMonitor = lazy(() => import("../pages/SchemaMonitor"));
 const BiquiniBrancoLanding = lazy(() => import("../pages/BiquiniBrancoLanding"));
 const PublicDemo = lazy(() => import("../pages/PublicDemo"));
 const DiagnosticStatus = lazy(() => import("../pages/DiagnosticStatus"));
-const TestDeploy = lazy(() => import("../pages/TestDeploy"));
+// Test Deploy removed for MVP
 const AdminOperationalCosts = lazy(() => import("../pages/AdminOperationalCosts"));
 const PrivacyPolicy = lazy(() => import("../pages/PrivacyPolicy"));
 const TermsOfUse = lazy(() => import("../pages/TermsOfUse"));
@@ -341,16 +332,16 @@ export const AppRoutes = () => {
       <Route path="/automation" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AutomationCenter /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/food-database" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><FoodDatabase /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/campaigns" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CampaignCenter /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/lab-interpreter" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><LabInterpreter /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      // Lab Interpreter removed
       <Route path="/mission-control" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MissionControl /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/workspace-editor" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WorkspaceEditor /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/control-tower" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalControlTower /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/cockpit" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CockpitPremium /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      // Cockpit removed
       <Route path="/clinical-workspace" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalWorkspace /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/coach-bodybuilder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CoachBodybuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/protocols" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Protocols /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/technical-sheets" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><TechnicalSheets /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/clinical-brain" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalBrain /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+// Technical Sheets and Clinical Brain removed
+
       <Route path="/intelligence-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><IntelligenceSettings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/chat" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Chat /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Notifications /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -396,13 +387,12 @@ export const AppRoutes = () => {
       <Route path="/my-referrals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyReferrals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Rotas Extras e Inteligência */}
-      <Route path="/ranking" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><GlobalRanking /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/ambassador" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AmbassadorDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/curiosidades" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Curiosidades /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+// Ranking, Ambassador and Curiosidades removed
+
       <Route path="/global-tips" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><GlobalTips /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/weekly-goals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeeklyGoals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/user-guide" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><UserGuide /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/apresentacao" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SystemPresentation /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      // Presentation removed
       <Route path="/health-quiz" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><HealthCheckQuiz /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/clinical-intelligence" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProfessionalClinicalAnalytics /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/weekly-report" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeeklyReport /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -433,8 +423,8 @@ export const AppRoutes = () => {
       <Route path="/checklist" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Checklist /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/feedbacks" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Feedbacks /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/fitness-anamnesis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><FitnessAnamnesis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/in-office/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeWizard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/in-office" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeSelector /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+// InOffice removed
+
       
       {/* Onboarding */}
       <Route path="/onboarding" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><OnboardingEntry /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />

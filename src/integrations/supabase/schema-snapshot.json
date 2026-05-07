@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260506152802_82314d8c-1862-4e58-944c-cc0df3619cba.sql",
-  "migrationsCount": 684,
+  "lastMigration": "20260507222603_5719c525-9a41-4835-9158-aedf69627362.sql",
+  "migrationsCount": 685,
   "tables": {
     "meal_plan_items": [
       "calories_target",
