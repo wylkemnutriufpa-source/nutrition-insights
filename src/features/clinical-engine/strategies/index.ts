@@ -139,29 +139,43 @@ export class BiquiniBrancoStrategy implements ClinicalStrategy {
 
 export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
-  name = 'Engine V3 Padrão';
+  name = 'Engine V2 Determinística';
 
   generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
-    // Implementação original do engine.ts v3
+    // Integração com o Motor V2 para a geração de refeições
     const mealName = meal.name.toLowerCase();
+    const type = meal.type || (mealName.includes('café') ? 'breakfast' : (mealName.includes('almoço') ? 'lunch' : (mealName.includes('jantar') ? 'dinner' : 'afternoon_snack')));
+    
+    // Mapeamento de objetivos para o motor V2
+    const v2Goal = goal === 'lose-weight' ? 'lose' : (goal === 'muscle-gain' ? 'gain' : 'maintain');
+    
+    // Pegar template do motor V2
+    const { MEAL_TEMPLATES } = require('@/lib/nutrition_engine_v2/templates');
+    const template = MEAL_TEMPLATES[type]?.[v2Goal] || MEAL_TEMPLATES[type]?.maintain || [];
+    
+    // Resolver alimentos contra a base disponível (disponibilizada pelo dataFetcher para o editor)
+    const newItems: MealItem[] = [];
     const scale = baseCalories / 2000;
-    let newItems: (MealItem | null)[] = [];
 
-    if (mealName.includes('café') || mealName.includes('desjejum')) {
-      const proteins = shuffleArray(availableFoods.filter(f => ['Ovo', 'Queijo', 'Iogurte'].some(w => f.name.includes(w))));
-      const carbs = shuffleArray(availableFoods.filter(f => ['Pão', 'Fruta', 'Aveia'].some(w => f.name.includes(w))));
-      // No V3, passamos gramas reais (ex: 100g = 2 ovos, 50g = 2 fatias pão)
-      newItems = [createMealItem(proteins[0], 100 * scale), createMealItem(carbs[0], 80 * scale)];
-    } else {
-      const proteins = shuffleArray(availableFoods.filter(f => ['Frango', 'Carne', 'Peixe'].some(w => f.name.includes(w))));
-      const carbs = shuffleArray(availableFoods.filter(f => ['Arroz', 'Feijão', 'Batata'].some(w => f.name.includes(w))));
-      newItems = [createMealItem(proteins[0], 150 * scale), createMealItem(carbs[0], 200 * scale)];
-    }
+    template.forEach((tItem: any) => {
+      const candidates = [tItem.food_name, ...(tItem.aliases || [])];
+      let resolvedFood: Food | undefined;
+      
+      for (const c of candidates) {
+        resolvedFood = availableFoods.find(f => f.name.toLowerCase().includes(c.toLowerCase()));
+        if (resolvedFood) break;
+      }
 
-    return newItems.filter((i): i is MealItem => i !== null);
+      if (resolvedFood) {
+        const item = createMealItem(resolvedFood, tItem.base_grams * scale);
+        if (item) newItems.push(item);
+      }
+    });
+
+    return newItems;
   }
 
   explainDecision(meal: Meal, items: MealItem[]): string {
-    return "Geração determinística baseada em substituição por categoria nutricional.";
+    return "Geração determinística via Motor V2 (Seção 4: MEAL_TEMPLATES).";
   }
 }
