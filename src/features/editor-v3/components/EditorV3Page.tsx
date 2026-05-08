@@ -1568,41 +1568,70 @@ const EditorV3Page = () => {
                 </div>
               )}
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500 relative">
-                    <ChefHat className="w-6 h-6 text-emerald-500" />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={cn(
+                    "w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner transition-all duration-500 relative",
+                    activeMealId === meal.id ? "bg-emerald-500 text-black scale-110" : "bg-neutral-800 text-white/40 border border-white/5"
+                  )}>
+                    <ChefHat className="w-7 h-7" />
                     {!meal.imageUrl && (
                       <button 
                         onClick={() => openVisualLibraryForMeal(meal.id)}
-                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-black border border-white/10 flex items-center justify-center text-white/40 hover:text-emerald-500 hover:border-emerald-500/50 transition-all shadow-xl"
-                        title="Adicionar imagem à refeição"
+                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-neutral-950 border border-white/10 flex items-center justify-center text-white/40 hover:text-emerald-500 hover:border-emerald-500/50 transition-all shadow-xl"
+                        title="Adicionar imagem"
                       >
                         <ImageIcon className="w-3 h-3" />
                       </button>
                     )}
                   </div>
                   <div className="flex-1">
-                    <input className="bg-transparent border-none font-black text-xl tracking-tight text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-full max-w-[300px]" value={meal.name} onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')} />
-                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider mt-1">
-                      <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
-                      <input type="time" className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-20" value={meal.time || '00:00'} onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)} />
+                    <input 
+                      className="bg-transparent border-none font-black text-2xl tracking-tight text-white focus:outline-none focus:ring-0 rounded-none w-full placeholder:text-white/10" 
+                      value={meal.name} 
+                      placeholder="Nome da Refeição"
+                      onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')} 
+                    />
+                    <div className="flex items-center gap-2 text-white/30 text-[10px] font-black uppercase tracking-[0.2em] mt-1">
+                      <Clock className="w-3 h-3" />
+                      <input 
+                        type="time" 
+                        className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-0 rounded-none w-16 p-0" 
+                        value={meal.time || '00:00'} 
+                        onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)} 
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" disabled={generatingMealId === meal.id} onClick={() => handleMealGenerate(meal.id)} className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all border border-emerald-500/10">
-                    {generatingMealId === meal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar Refeição
+                
+                <div className="flex items-center gap-1.5 p-1 bg-black/20 rounded-2xl border border-white/5">
+                  <Button variant="ghost" size="sm" disabled={generatingMealId === meal.id} onClick={() => handleMealGenerate(meal.id)} className="h-10 px-4 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all">
+                    {generatingMealId === meal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar AI
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => duplicateMeal(meal.id)} className="rounded-xl h-9 w-9 text-blue-500/40 hover:text-blue-500 hover:bg-blue-500/10 transition-all border border-blue-500/10"><Layers className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="sm" onClick={() => { setActiveMealId(meal.id); setShowFoodsModal(true); }} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-1.5"><Plus className="w-3 h-3" /> Adicionar</Button>
-                  <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => duplicateMeal(meal.id)} className="rounded-xl h-10 w-10 text-white/20 hover:text-white hover:bg-white/5"><Layers className="w-4 h-4" /></Button>
+                  <Button 
+                    variant={activeMealId === meal.id ? "secondary" : "ghost"} 
+                    size="sm" 
+                    onClick={() => { 
+                      setActiveMealId(meal.id); 
+                      setActiveTab('food');
+                      toast.info(`Editando ${meal.name}. Selecione itens na biblioteca à esquerda.`, { duration: 2000 });
+                    }} 
+                    className={cn(
+                      "h-10 px-4 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all gap-1.5",
+                      activeMealId === meal.id ? "bg-emerald-500 text-black hover:bg-emerald-400" : "text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10"
+                    )}
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Adicionar
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
+              
               {validationIssues.some(issue => issue.mealId === meal.id) && (
-                <div className="flex items-center gap-1.5 mt-2 bg-amber-500/10 w-fit px-2 py-0.5 rounded-lg border border-amber-500/20 animate-in fade-in zoom-in duration-300">
-                  <AlertTriangle className="w-3 h-3 text-amber-500" />
-                  <span className="text-[9px] font-black text-amber-500 uppercase">Ajuste Clínico Necessário</span>
+                <div className="flex items-center gap-2 mt-4 bg-amber-500/10 w-fit px-3 py-1 rounded-xl border border-amber-500/20 animate-in fade-in slide-in-from-left-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Ajuste Clínico Necessário</span>
                 </div>
               )}
             </div>
