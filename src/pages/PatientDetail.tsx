@@ -1522,14 +1522,18 @@ export default function PatientDetail() {
                           }
                           // No onboarding plan — generate one
                           toast.info("Gerando plano a partir do onboarding...");
-                          const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
-                            body: { patientId: patientIdentity.canonicalId, nutritionistId: user?.id, isPipeline: true },
-                          });
-                          if (genError || !genData?.success) {
-                            toast.error(genData?.error || "Erro ao gerar plano");
+                          const { generateAndSaveLocalPlan } = await import("../features/editor-v3/services/localPlanGenerator");
+                          const genResult = await generateAndSaveLocalPlan(
+                            patientIdentity.canonicalId,
+                            user?.id || "",
+                            tenantId || ""
+                          );
+
+                          if (!genResult.success || !genResult.mealPlanId) {
+                            toast.error(genResult.error || "Erro ao gerar plano localmente");
                             return;
                           }
-                          if (genData.mealPlanId) {
+                          if (genResult.mealPlanId) {
                             const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
                             const isV3 = planData?.editor_version === "v3";
                             const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${genData.mealPlanId}`;
