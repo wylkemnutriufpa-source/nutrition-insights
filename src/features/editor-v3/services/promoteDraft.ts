@@ -101,11 +101,21 @@ export async function promoteDraftToMealPlan(
   const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
 
 
+  // 0) Resolve o ID real do Auth (auth.users.id) e do Perfil (profiles.id)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, user_id')
+    .or(`id.eq.${draft.patient_id},user_id.eq.${draft.patient_id}`)
+    .maybeSingle();
+
+  const authUserId = profile?.user_id || draft.patient_id;
+  const profileId = profile?.id || draft.patient_id;
+
   // 1) INSERT-FIRST: cria o meal_plan oficial já PUBLICADO
   const { data: plan, error: planErr } = await supabase
     .from('meal_plans')
     .insert({
-      patient_id: draft.patient_id,
+      patient_id: authUserId,
       nutritionist_id: draft.nutritionist_id,
       tenant_id: draft.tenant_id,
       title,
@@ -173,7 +183,7 @@ export async function promoteDraftToMealPlan(
   await supabase
     .from('meal_plans')
     .update({ is_active: false } as any)
-    .eq('patient_id', draft.patient_id)
+    .eq('patient_id', authUserId)
     .neq('id', plan.id)
     .eq('is_active', true);
 
@@ -190,7 +200,7 @@ export async function promoteDraftToMealPlan(
   // Log de acesso: Exportação/Promoção de draft para plano oficial
   await supabase.from('access_logs').insert({
     user_id: draft.nutritionist_id,
-    patient_id: draft.patient_id,
+    patient_id: profileId,
     action: 'export',
     resource: 'meal_plan',
     user_agent: navigator.userAgent
