@@ -1841,7 +1841,17 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Onboarding Pipeline Modal */}
+               {/* Curiosidades Modal */}
+              <Dialog open={openSection === "curiosidades"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Curiosidades & Dicas</DialogTitle></DialogHeader>
+                  <div className="space-y-4">
+                    <Curiosidades />
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+
               <Dialog open={openSection === "onboarding"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Onboarding Automático</DialogTitle></DialogHeader>
