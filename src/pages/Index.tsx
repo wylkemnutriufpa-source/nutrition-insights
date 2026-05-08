@@ -697,7 +697,7 @@ function NutritionistDashboardContent() {
                     className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     <HealthScoreRing score={p.score} size="sm" />
-                    <p className="text-xs font-medium truncate max-w-[80px] text-center">{p.name.split(" ")[0]}</p>
+                    <p className="text-xs font-medium text-center">{p.name}</p>
                   </motion.div>
                 ))}
               </div>

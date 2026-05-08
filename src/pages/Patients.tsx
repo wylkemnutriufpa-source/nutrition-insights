@@ -257,7 +257,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <h3 className="font-display font-semibold truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
+            <h3 className="font-display font-semibold" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
             {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={allPrestigePlans} size="sm" showLabel={false} />}
             {p.requires_medical_review && (
               <Badge variant="destructive" className="h-4 px-1.5 text-[9px] gap-0.5 animate-pulse">
@@ -425,7 +425,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <p className="font-semibold text-sm truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</p>
+          <p className="font-semibold text-sm" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</p>
           {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={allPrestigePlans} size="sm" showLabel={false} />}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
