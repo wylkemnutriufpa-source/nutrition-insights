@@ -1715,9 +1715,7 @@ export default function PatientDetail() {
                                       className="gradient-primary shadow-glow gap-1.5"
                                       onClick={() => {
                                         setOpenSection(null);
-                                        const path = plan.editor_version === "v3" 
-                                          ? `/meal-plans/editor/v3?patientId=${resolvedPatientId}&planId=${plan.id}`
-                                          : `/meal-plans/${plan.id}`;
+                                        const path = `/editor-v3/${resolvedPatientId}?planId=${plan.id}`;
                                         navigate(path);
                                       }}
                                     >
