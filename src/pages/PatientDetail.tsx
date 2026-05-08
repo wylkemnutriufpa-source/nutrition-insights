@@ -1534,13 +1534,8 @@ export default function PatientDetail() {
                             return;
                           }
                           if (genResult.mealPlanId) {
-                            const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
-                            const isV3 = planData?.editor_version === "v3";
-                            const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${genData.mealPlanId}`;
+                            const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${genResult.mealPlanId}`;
                             
-                            if (genData.is_fallback_template) {
-                              toast.info(`Nota: Usamos template padrão como fallback.`);
-                            }
                             toast.success("Plano gerado com sucesso!");
                             navigate(path);
                           }
