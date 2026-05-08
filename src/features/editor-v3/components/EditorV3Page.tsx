@@ -1557,6 +1557,8 @@ const EditorV3Page = () => {
                     ))}
                   </div>
                 )}
+
+                {activeTab === 'food' && foodSearch.length === 0 && baseFoods.length === 0 && (
                   <div className="py-10 text-center flex flex-col items-center gap-3">
                     <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
                     <p className="text-[10px] font-black uppercase text-white/20">Carregando base...</p>
