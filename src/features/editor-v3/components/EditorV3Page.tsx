@@ -376,6 +376,11 @@ const EditorV3Page = () => {
           console.error('[v3-health] issues detected during initialization', res.errors);
         } else {
           console.info('[v3-health] all systems operational');
+          // Rodar prova clínica
+          runClinicalProofTests(patientId).then(reports => {
+            console.log('--- RELATÓRIO DE PROVA CLÍNICA ---');
+            reports.forEach(r => console.log(r));
+          });
         }
       });
     }
