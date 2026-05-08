@@ -1,7 +1,7 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ReactNode } from "react";
 
-const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
+const EASE_PREMIUM = [0.22, 1, 0.36, 1];
 
 /**
  * Neural step transition — for anamnesis / onboarding steps.
