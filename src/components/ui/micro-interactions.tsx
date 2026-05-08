@@ -81,7 +81,7 @@ export function CognitiveHover({
           ? undefined
           : {
               y: -4,
-              transition: { duration: 0.14, ease: EASE_PREMIUM },
+              transition: { duration: 0.14, ease: EASE_PREMIUM as unknown as any },
             }
       }
       style={{
