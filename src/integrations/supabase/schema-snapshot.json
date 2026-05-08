@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260508000520_b0d2d384-fb57-4548-a66f-2dd09bcb0894.sql",
-  "migrationsCount": 689,
+  "lastMigration": "20260508015307_7cd662d9-2702-4b8b-a9d1-33eaf7e9a70b.sql",
+  "migrationsCount": 691,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -47,6 +47,7 @@
       "id",
       "is_active",
       "is_global_model",
+      "is_sharing_enabled",
       "last_validated_at",
       "nutritionist_id",
       "overall_score",
