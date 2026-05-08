@@ -5,8 +5,9 @@ import { isFeatureEnabled } from '../../security/services/featureFlags';
 import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
-import { loadOrCreateDraft } from '../services/draftService';
+import { loadOrCreateDraft, saveDraft } from '../services/draftService';
 import { runV3IntegrationTests } from '../services/v3Tests';
+import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
@@ -338,6 +339,16 @@ const EditorV3Page = () => {
         };
 
         console.info(`[V3-Context] Atribuindo contexto para ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
+        setGoalMetadata({
+          goalCalories: Number(kcal),
+          goalProtein: Number(protein),
+          goalCarbs: Number(carbs),
+          goalFat: Number(fat),
+          goal: goal,
+          restrictions: profileAny.restrictions || (anamnesis?.answers as any)?.restrictions || [],
+          preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || []
+        });
         setPatientContext(context);
         
         // Sincroniza o patientId na store com o ID REAL do perfil
@@ -370,11 +381,27 @@ const EditorV3Page = () => {
   useEffect(() => {
     if (patientId) {
       console.debug('[v3-init] checking system health for patient:', patientId);
+      // 🔥 Forçar a prova clínica no localStorage para debug imediato
+      runClinicalProofTests(patientId).then(reports => {
+        localStorage.setItem('v3_proof_report', JSON.stringify({
+          timestamp: new Date().toISOString(),
+          reports
+        }));
+      });
       runV3IntegrationTests(patientId).then(res => {
         if (res.errors.length > 0) {
           console.error('[v3-health] issues detected during initialization', res.errors);
         } else {
           console.info('[v3-health] all systems operational');
+          // Rodar prova clínica
+          runClinicalProofTests(patientId).then(reports => {
+            console.group('--- RELATÓRIO DE PROVA CLÍNICA ---');
+            reports.forEach(r => {
+              if (r.startsWith('✅')) console.info(r);
+              else console.warn(r);
+            });
+            console.groupEnd();
+          });
         }
       });
     }
