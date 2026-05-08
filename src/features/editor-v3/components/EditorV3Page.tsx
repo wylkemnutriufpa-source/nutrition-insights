@@ -1310,7 +1310,7 @@ const EditorV3Page = () => {
             )}
           </div>
 
-          <ScrollArea className="flex-1 px-8">
+          <ScrollArea className="flex-1 px-8 min-h-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
               {activeTab === 'food' && (foodSearch.length > 0 ? foods : baseFoods).map((f) => (
                 <button
