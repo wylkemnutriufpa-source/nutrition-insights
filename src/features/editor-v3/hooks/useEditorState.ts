@@ -168,6 +168,7 @@ export const useEditorState = create<EditorState>()(
         set({ 
           patientId: id,
           meals: initialMeals, // Start with a clean slate for the new patient
+          initialMeals: initialMeals,
           auditLog: [],
           sharingToken: null,
           planStatus: 'draft',
@@ -180,7 +181,6 @@ export const useEditorState = create<EditorState>()(
         get().addAuditEntry({
           type: 'system_action',
           description: `Patient ${id} selected (State Reset)`,
-          initialMeals: initialMeals,
           source: 'system'
         });
       },
