@@ -201,6 +201,7 @@ export default function MealPlanEditorV2() {
         patientName: store.patientName || "Paciente",
         nutritionistName: nutritionistName,
         startDate: new Date(plan.start_date || new Date()).toLocaleDateString("pt-BR"),
+        planMode: plan.plan_mode || "weekly",
         items: store.items.map(i => ({
           mealType: i.meal_type || "lunch",
           title: i.title || "Refeição",
@@ -218,6 +219,7 @@ export default function MealPlanEditorV2() {
         targetCarbs: plan.total_target_carbs || undefined,
         targetFat: plan.total_target_fat || undefined,
         notes: plan.description || undefined,
+        goal: store.patientGoal || undefined,
       };
 
       generatePremiumMealPlanPDF(pdfData);

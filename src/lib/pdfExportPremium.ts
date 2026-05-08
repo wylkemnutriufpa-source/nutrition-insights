@@ -30,6 +30,7 @@ export interface PremiumMealPlanPDFData {
   targetFat?: number;
   goal?: string;
   notes?: string;
+  planMode?: string;
 }
 
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
@@ -575,7 +576,8 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   ${sortedDays.map(dayKey => {
     const dayItems = groupedByDay[dayKey];
     const dayName = dayKey === -1 ? "" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
-    const showDayHeader = sortedDays.length > 1 && dayKey !== -1;
+    const isSingleDay = data.planMode === 'single_day';
+    const showDayHeader = !isSingleDay && sortedDays.length > 1 && dayKey !== -1;
 
     const processedMealTypes = new Set<string>();
 

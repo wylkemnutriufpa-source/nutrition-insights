@@ -34,6 +34,7 @@ interface EditorV2State {
   planId: string | null;
   plan: MealPlan | null;
   patientName: string;
+  patientGoal: string;
   items: MealPlanItem[];
   substitutionCount: number; // 0, 1, 2, 3, 4
 
@@ -305,6 +306,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   planId: null,
   plan: null,
   patientName: "",
+  patientGoal: "",
   items: [],
   substitutionCount: 4,
   hydrated: false,
@@ -330,6 +332,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         planId,
         plan: null,
         patientName: "",
+        patientGoal: "",
         items: [],
         pendingOps: [],
         syncingMap: {},
@@ -396,11 +399,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, goal")
       .eq("user_id", planData.patient_id)
       .maybeSingle();
-
+    
     const patientName = profile?.full_name || "Paciente";
+    const patientGoal = (profile as any)?.goal || "";
     const items = (itemsData || []) as MealPlanItem[];
 
     const normalizedPlan = planData;
@@ -408,6 +412,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     set({
       plan: normalizedPlan,
       patientName,
+      patientGoal,
       items: sortMealPlanItems(items),
       substitutionCount: (normalizedPlan as any).edit_metadata?.substitution_count ?? 4,
       hydrated: true,

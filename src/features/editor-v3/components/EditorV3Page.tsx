@@ -1290,6 +1290,7 @@ const EditorV3Page = () => {
                     patientName: patientContext?.name || "Paciente",
                     nutritionistName: prof?.full_name || "Seu Nutricionista",
                     startDate: new Date().toLocaleDateString("pt-BR"),
+                    planMode: 'single_day', // V3 currently uses a single day representation for export
                     items: meals.map(m => ({
                       mealType: m.name.toLowerCase().includes('café') ? 'breakfast' : 
                                 m.name.toLowerCase().includes('almoço') ? 'lunch' : 
@@ -1305,7 +1306,6 @@ const EditorV3Page = () => {
                     targetProtein: (nutritionalScore as any)?.total?.protein || 0,
                     targetCarbs: (nutritionalScore as any)?.total?.carbs || 0,
                     targetFat: (nutritionalScore as any)?.total?.fat || 0,
-
                     goal: patientContext?.goal,
                   };
                   generatePremiumMealPlanPDF(pdfData);
