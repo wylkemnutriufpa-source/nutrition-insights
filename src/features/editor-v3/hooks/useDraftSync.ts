@@ -70,7 +70,7 @@ export function useDraftSync(
     }
     setSyncState('loading');
 
-    const draft: DraftRecord | null = await loadOrCreateDraft(patientId, seedMeals);
+    const draft: DraftRecord | null = await loadOrCreateDraft(patientId, seedMeals, planId);
 
     if (draft) {
       setDraftId(draft.id);
