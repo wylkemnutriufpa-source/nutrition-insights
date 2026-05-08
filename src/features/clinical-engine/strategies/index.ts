@@ -157,7 +157,19 @@ export class DefaultV3Strategy implements ClinicalStrategy {
     console.info(`[V3-Engine] Gerando refeição "${meal.name}" para ${finalContext.weight}kg, Objetivo: ${finalContext.goal}`);
 
     const fullPlan = NutriCoreV2Adapter.generateElitePlan(finalContext as any, availableFoods);
-    const generatedMeal = fullPlan.find((m: any) => m.name.toLowerCase() === meal.name.toLowerCase());
+    const mealName = meal.name.toLowerCase();
+    const generatedMeal = fullPlan.find((m: any) => {
+      const gName = m.name.toLowerCase();
+      // Verificação flexível de nomes (café, cafe, lanche, almoço, almoco, etc)
+      return gName === mealName || 
+             (gName.includes('café') && mealName.includes('café')) ||
+             (gName.includes('cafe') && mealName.includes('cafe')) ||
+             (gName.includes('lanche') && mealName.includes('lanche')) ||
+             (gName.includes('almoço') && mealName.includes('almoço')) ||
+             (gName.includes('almoco') && mealName.includes('almoco')) ||
+             (gName.includes('jantar') && mealName.includes('jantar')) ||
+             (gName.includes('ceia') && mealName.includes('ceia'));
+    });
     
     return generatedMeal ? generatedMeal.items : [];
   }
