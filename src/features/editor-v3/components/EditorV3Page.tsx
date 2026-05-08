@@ -1211,6 +1211,15 @@ const EditorV3Page = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleGenerateFullPlan} 
+            disabled={isGeneratingGlobal}
+            className="h-9 px-4 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 hover:text-white hover:bg-emerald-600 rounded-xl transition-all gap-2 border border-emerald-500/20"
+          >
+            {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar Plano Completo
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => setShowAddMealModal(true)} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-2">
             <Plus className="w-3.5 h-3.5" /> Refeição
           </Button>
@@ -1218,6 +1227,7 @@ const EditorV3Page = () => {
             <Layers className="w-3.5 h-3.5" /> Templates
           </Button>
         </div>
+
       </header>
 
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
