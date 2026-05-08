@@ -81,7 +81,7 @@ export function CognitiveHover({
           ? undefined
           : {
               y: -4,
-              transition: { duration: 0.14, ease: EASE_PREMIUM },
+              transition: { duration: 0.14, ease: EASE_PREMIUM as any },
             }
       }
       style={{
@@ -111,7 +111,7 @@ export function ProgressPulse({
       className={className}
       initial={{ scale: 1 }}
       animate={{ scale: [1, 1.04, 1] }}
-      transition={{ duration: 0.3, ease: EASE_PREMIUM }}
+      transition={{ duration: 0.3, ease: EASE_PREMIUM as any }}
     >
       {children}
     </motion.div>
@@ -202,7 +202,7 @@ export function DecisionConfirm({
             }
           : {}
       }
-      transition={{ duration: 0.6, ease: EASE_PREMIUM }}
+      transition={{ duration: 0.6, ease: EASE_PREMIUM as any }}
     >
       {children}
     </motion.div>
