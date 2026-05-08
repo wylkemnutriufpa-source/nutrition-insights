@@ -28,6 +28,7 @@ import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@/utils/dataSafety";
 import { safeLocalStorage, safeSessionStorage } from "@/lib/safeStorage";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { runEngine } from '@/lib/nutricore_v2/nutrition-engine';
 
 
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
