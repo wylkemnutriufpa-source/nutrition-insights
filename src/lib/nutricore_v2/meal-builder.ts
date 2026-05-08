@@ -121,24 +121,7 @@ function finalizeMeal(type: MealType, time: string, items: PlannedItem[], target
   return { type, time, items, totalMacros };
 }
 
-  // Calcular totais finais
-  const totalMacros = items.reduce(
-    (acc, item) => ({
-      protein_g: round(acc.protein_g + item.macros.protein_g),
-      carb_g: round(acc.carb_g + item.macros.carb_g),
-      fat_g: round(acc.fat_g + item.macros.fat_g),
-      kcal: round(acc.kcal + item.macros.kcal),
-    }),
-    { protein_g: 0, carb_g: 0, fat_g: 0, kcal: 0 }
-  );
 
-  return {
-    type,
-    time,
-    items,
-    totalMacros,
-  };
-}
 
 
 function selectFood(
