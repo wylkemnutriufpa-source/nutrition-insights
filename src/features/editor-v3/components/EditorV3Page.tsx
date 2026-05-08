@@ -1151,7 +1151,7 @@ const EditorV3Page = () => {
               </Button>
 
               {showPatientSelector && (
-                <div className="absolute left-0 top-full mt-3 w-80 bg-black/95 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute left-0 top-full mt-3 w-80 bg-neutral-900/95 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-4 border-b border-white/5">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={14} />
