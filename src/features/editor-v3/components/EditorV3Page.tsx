@@ -264,90 +264,98 @@ const EditorV3Page = () => {
           .or(`id.eq.${patientId},user_id.eq.${patientId}`)
           .maybeSingle();
 
-        // 2. Carregar Avaliação Física (Fallback 1)
+        if (!profile) {
+          console.warn('[V3-Init] Perfil não encontrado para ID:', patientId);
+          return;
+        }
+
+        // Importante: A partir daqui, usamos o ID REAL do perfil (profiles.id)
+        // para garantir que queries em outras tabelas (que usam patient_id FK) funcionem.
+        const profileId = profile.id;
+        
+        // 2. Carregar Avaliação Física (Fallback 1) - Usando profileId
         const { data: assessment } = await supabase
           .from('physical_assessments')
           .select('*')
-          .eq('patient_id', patientId)
+          .eq('patient_id', profileId)
           .order('assessment_date', { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        // 3. Carregar Anamnese (Fallback 2)
+        // 3. Carregar Anamnese (Fallback 2) - Usando profileId ou user_id
         const { data: anamnesis } = await supabase
           .from('patient_anamnesis')
           .select('*')
-          .eq('user_id', patientId)
+          .eq('user_id', profile.user_id || profileId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
         
-        if (profile) {
-          const profileAny = profile as any;
+        const profileAny = profile as any;
+        
+        // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
+        const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
+        const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
+        const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
+        const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
+        const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
+        const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
+        
+        // Metas nutricionais (Priorizando o que o Nutri definiu na avaliação ou o que foi calculado na anamnese)
+        const kcal = assessment?.calories_target || anamnesis?.computed_kcal_target || 2000;
+        const protein = assessment?.protein_target || anamnesis?.computed_protein || 150;
+        const carbs = assessment?.carbs_target || anamnesis?.computed_carbs || 200;
+        const fat = assessment?.fat_target || anamnesis?.computed_fat || 60;
+
+        const context = {
+          id: profile.id,
+          name: profile.full_name || 'Paciente',
+          goal,
+          restrictions: profileAny.restrictions || (anamnesis?.answers as any)?.restrictions || [],
+          preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || [],
+          weight: Number(weight),
+          height: Number(height),
+          age: Number(age),
+          gender: sex,
+          activityLevel: activity,
+          calories_target: Number(kcal),
+          protein_target: Number(protein),
+          carbs_target: Number(carbs),
+          fat_target: Number(fat),
+          consent_given: profileAny.consent_given,
+          consent_date: profileAny.consent_date,
+          protocol_type: profileAny.protocol_type || 'default_v3',
+        };
+
+        console.info(`[V3-Context] Atribuindo contexto para ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        setPatientContext(context);
+        
+        // Sincroniza o patientId na store com o ID REAL do perfil
+        setPatientId(profileId);
+
+        // Handshake: Se a anamnese for recente (últimas 24h) e o plano estiver vazio, sugerir uso das metas
+        if (anamnesis) {
+          const anamnesisDate = new Date(anamnesis.created_at);
+          const isRecent = (Date.now() - anamnesisDate.getTime()) < 24 * 60 * 60 * 1000;
           
-          // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
-          const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
-          const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
-          const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
-          const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
-          const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
-          const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
+          const isPlanEmpty = meals.length <= 1 && (meals[0]?.items.length === 0);
           
-          // Metas nutricionais (Priorizando o que o Nutri definiu na avaliação ou o que foi calculado na anamnese)
-          const kcal = assessment?.calories_target || anamnesis?.computed_kcal_target || 2000;
-          const protein = assessment?.protein_target || anamnesis?.computed_protein || 150;
-          const carbs = assessment?.carbs_target || anamnesis?.computed_carbs || 200;
-          const fat = assessment?.fat_target || anamnesis?.computed_fat || 60;
-
-          const context = {
-            id: profile.id,
-            name: profile.full_name || 'Paciente',
-            goal,
-            restrictions: profileAny.restrictions || (anamnesis?.answers as any)?.restrictions || [],
-            preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || [],
-            weight: Number(weight),
-            height: Number(height),
-            age: Number(age),
-            gender: sex,
-            activityLevel: activity,
-            calories_target: Number(kcal),
-            protein_target: Number(protein),
-            carbs_target: Number(carbs),
-            fat_target: Number(fat),
-            consent_given: profileAny.consent_given,
-            consent_date: profileAny.consent_date,
-            protocol_type: profileAny.protocol_type || 'default_v3',
-          };
-
-          console.info(`[V3-Context] Atribuindo contexto: ${weight}kg, ${goal}, ${kcal}kcal`);
-          setPatientContext(context);
-
-          // Handshake: Se a anamnese for recente (últimas 24h) e o plano estiver vazio, sugerir uso das metas
-          if (anamnesis) {
-            const anamnesisDate = new Date(anamnesis.created_at);
-            const isRecent = (Date.now() - anamnesisDate.getTime()) < 24 * 60 * 60 * 1000;
-            
-            // Verificamos se o plano atual está "vazio" (sem refeições significativas)
-            const isPlanEmpty = meals.length <= 1 && (meals[0]?.items.length === 0);
-            
-            if (isRecent && isPlanEmpty && !planId) {
-              setPendingAnamnesisData({
-                kcal: Number(anamnesis.computed_kcal_target),
-                protein: Number(anamnesis.computed_protein),
-                carbs: Number(anamnesis.computed_carbs),
-                fat: Number(anamnesis.computed_fat)
-              });
-              setShowAnamnesisHandshake(true);
-            }
+          if (isRecent && isPlanEmpty && !planId) {
+            setPendingAnamnesisData({
+              kcal: Number(anamnesis.computed_kcal_target),
+              protein: Number(anamnesis.computed_protein),
+              carbs: Number(anamnesis.computed_carbs),
+              fat: Number(anamnesis.computed_fat)
+            });
+            setShowAnamnesisHandshake(true);
           }
         }
-
 
         if (assessment) setLastAssessment(assessment);
       }
     };
     fetchClinicalData();
-  }, [patientId, setPatientContext]);
+  }, [patientId, setPatientContext, setPatientId]);
 
   useEffect(() => {
     if (patientId) {
