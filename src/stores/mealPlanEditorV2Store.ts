@@ -399,11 +399,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, goal")
       .eq("user_id", planData.patient_id)
       .maybeSingle();
-
+    
     const patientName = profile?.full_name || "Paciente";
+    const patientGoal = (profile as any)?.goal || "";
     const items = (itemsData || []) as MealPlanItem[];
 
     const normalizedPlan = planData;
