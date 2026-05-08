@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { generatePlanWithEngine } from "@/features/clinical-engine";
 import type { Meal, Food } from "@/features/clinical-engine/types/clinical-types";
+import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import SmartNumericInput from "@/components/ui/SmartNumericInput";
