@@ -565,15 +565,11 @@ export default function PatientRegister() {
       try {
         if (invitationCode) {
           addLog("Atualizando status do convite para 'completed'...");
-          await supabase
-            .from("invitations")
-            .update({ 
-              status: 'completed', 
-              used_at: new Date().toISOString() 
-            } as any)
-            .eq("code", invitationCode);
-            
-          const { data: inviteData } = await supabase.from("invitations").select("id, professional_id, patient_email").eq("code", invitationCode).maybeSingle();
+          const { data: inviteRows } = await supabase.rpc("complete_invitation" as any, {
+            _code: invitationCode,
+            _patient_user_id: signUpData.user.id,
+          });
+          const inviteData = Array.isArray(inviteRows) ? inviteRows[0] : inviteRows;
           if (inviteData) {
             await supabase.from("invitation_logs").insert({
               invitation_id: inviteData.id,

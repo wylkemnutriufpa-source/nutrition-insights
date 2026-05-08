@@ -7464,6 +7464,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_global_model: boolean | null
+          is_sharing_enabled: boolean
           last_validated_at: string | null
           nutritionist_id: string
           overall_score: number | null
@@ -7524,6 +7525,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
+          is_sharing_enabled?: boolean
           last_validated_at?: string | null
           nutritionist_id: string
           overall_score?: number | null
@@ -7584,6 +7586,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
+          is_sharing_enabled?: boolean
           last_validated_at?: string | null
           nutritionist_id?: string
           overall_score?: number | null
@@ -20846,6 +20849,14 @@ export type Database = {
         Args: { _patient_id: string }
         Returns: undefined
       }
+      complete_invitation: {
+        Args: { _code: string; _patient_user_id: string }
+        Returns: {
+          id: string
+          patient_email: string
+          professional_id: string
+        }[]
+      }
       complete_patient_onboarding: {
         Args: {
           _nutritionist_id: string
@@ -21146,6 +21157,20 @@ export type Database = {
           last_event_at: string
         }[]
       }
+      get_invitation_by_code: {
+        Args: { _code: string }
+        Returns: {
+          code: string
+          expires_at: string
+          id: string
+          patient_email: string
+          patient_name: string
+          professional_avatar_url: string
+          professional_full_name: string
+          professional_id: string
+          status: string
+        }[]
+      }
       get_meal_plan_job_debug_info: {
         Args: never
         Returns: {
@@ -21405,6 +21430,7 @@ export type Database = {
           referral_code: string
         }[]
       }
+      mark_invitation_viewed: { Args: { _code: string }; Returns: undefined }
       mark_onboarding_sync_pending: {
         Args: { _error_message: string; _patient_id: string }
         Returns: undefined
