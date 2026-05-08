@@ -1429,6 +1429,7 @@ const EditorV3Page = () => {
                   <TabsTrigger value="food" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Alimentos</TabsTrigger>
                   <TabsTrigger value="marmita" className="data-[state=active]:bg-blue-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Prontas</TabsTrigger>
                   <TabsTrigger value="template" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Templates</TabsTrigger>
+                  <TabsTrigger value="visual" className="data-[state=active]:bg-rose-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Imagens</TabsTrigger>
                 </TabsList>
               </Tabs>
 
