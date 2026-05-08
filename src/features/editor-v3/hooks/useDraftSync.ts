@@ -103,7 +103,7 @@ export function useDraftSync(
       }
       setSyncState('offline');
     }
-  }, [patientId, seedMeals]);
+  }, [patientId, planId]); // Removido seedMeals para evitar loops de re-hidratação
 
   useEffect(() => {
     loadDraft();

@@ -513,14 +513,16 @@ const EditorV3Page = () => {
   }, [patientId, setPatientId]);
 
   useEffect(() => {
-    if (initialMeals && initialMeals.length > 0) {
+    if (initialMeals && initialMeals.length > 0 && !hydratedRef.current) {
+      console.log('[V3-UI] Hydrating meals from sync source', initialMeals.length);
       hydrateMeals(initialMeals, initialAuditLog, draftSharingToken || undefined);
       hydratedRef.current = true;
     }
-  }, [initialMeals, initialAuditLog, hydrateMeals]);
+  }, [initialMeals, initialAuditLog, hydrateMeals, draftSharingToken]);
 
   useEffect(() => {
     if (hydratedRef.current && draftId) {
+      console.debug('[V3-UI] Scheduling sync save for updated meals');
       scheduleSave(meals, auditLog);
     }
   }, [meals, auditLog, draftId, scheduleSave]);
@@ -1013,6 +1015,7 @@ const EditorV3Page = () => {
 
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
         <div className="lg:col-span-8 space-y-12">
+          {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
           {meals.map((meal, index) => (
 
           <section key={meal.id} className="group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
@@ -1100,7 +1103,7 @@ const EditorV3Page = () => {
             </div>
             <div className="grid gap-5">
               {meal.items.map((item) => (
-                <Card key={item.instanceId} className="p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all rounded-2xl cursor-pointer border-emerald-500/50" onClick={() => setSelectedItem({ mealId: meal.id, item })}>
+                <Card key={item.instanceId} className="p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all rounded-2xl cursor-pointer border-emerald-500/50" onClick={() => { console.log('[V3-UI] Item clicked:', item.name); setSelectedItem({ mealId: meal.id, item }); }}>
                   <div className="flex items-center gap-5">
                     {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />}
                     <div>
