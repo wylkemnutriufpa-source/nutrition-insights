@@ -1171,27 +1171,27 @@ const EditorV3Page = () => {
                         <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
                         <span className="text-[10px] font-black uppercase text-white/20">Buscando Base...</span>
                       </div>
-                    ) : patientsData && patientsData.length > 0 ? (
-                      patientsData.map(p => (
+                    ) : (patientsData?.patients?.length ?? 0) > 0 ? (
+                      patientsData?.patients?.map(p => (
                         <button
-                          key={p.id}
+                          key={p.patient_id}
                           onClick={() => {
-                            navigate(`/editor-v3/${p.id}`);
+                            navigate(`/editor-v3/${p.patient_id}`);
                             setShowPatientSelector(false);
                           }}
                           className={cn(
                             "w-full p-3 flex items-center gap-3 rounded-2xl transition-all text-left group",
-                            p.id === patientId ? "bg-emerald-500/10 border border-emerald-500/20" : "hover:bg-white/5 border border-transparent"
+                            p.patient_id === patientId ? "bg-emerald-500/10 border border-emerald-500/20" : "hover:bg-white/5 border border-transparent"
                           )}
                         >
                           <div className={cn(
                             "h-10 w-10 rounded-xl flex items-center justify-center text-xs font-black transition-colors",
-                            p.id === patientId ? "bg-emerald-500 text-black" : "bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white"
+                            p.patient_id === patientId ? "bg-emerald-500 text-black" : "bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white"
                           )}>
-                            {p.full_name[0]}
+                            {p.profile?.full_name ? p.profile.full_name[0] : 'P'}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-black text-white">{p.full_name}</span>
+                            <span className="text-xs font-black text-white">{p.profile?.full_name || 'Paciente'}</span>
                             <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Acessar Prontuário</span>
                           </div>
                         </button>
