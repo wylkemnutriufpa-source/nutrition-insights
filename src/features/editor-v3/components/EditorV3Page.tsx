@@ -2504,7 +2504,10 @@ const EditorV3Page = () => {
                           variant="outline" 
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
-                          onClick={() => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Math.max(0, selectedItem.item.quantity - 10))}
+                          onClick={() => {
+                            const step = selectedItem.item.measurementType === 'unit' ? 1 : 10;
+                            updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Math.max(0, selectedItem.item.quantity - step));
+                          }}
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
@@ -2518,7 +2521,10 @@ const EditorV3Page = () => {
                           variant="outline" 
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
-                          onClick={() => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, selectedItem.item.quantity + 10)}
+                          onClick={() => {
+                            const step = selectedItem.item.measurementType === 'unit' ? 1 : 10;
+                            updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, selectedItem.item.quantity + step);
+                          }}
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
