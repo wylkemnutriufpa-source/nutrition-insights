@@ -513,14 +513,16 @@ const EditorV3Page = () => {
   }, [patientId, setPatientId]);
 
   useEffect(() => {
-    if (initialMeals && initialMeals.length > 0) {
+    if (initialMeals && initialMeals.length > 0 && !hydratedRef.current) {
+      console.log('[V3-UI] Hydrating meals from sync source', initialMeals.length);
       hydrateMeals(initialMeals, initialAuditLog, draftSharingToken || undefined);
       hydratedRef.current = true;
     }
-  }, [initialMeals, initialAuditLog, hydrateMeals]);
+  }, [initialMeals, initialAuditLog, hydrateMeals, draftSharingToken]);
 
   useEffect(() => {
     if (hydratedRef.current && draftId) {
+      console.debug('[V3-UI] Scheduling sync save for updated meals');
       scheduleSave(meals, auditLog);
     }
   }, [meals, auditLog, draftId, scheduleSave]);
