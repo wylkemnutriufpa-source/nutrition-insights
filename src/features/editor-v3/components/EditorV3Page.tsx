@@ -1754,9 +1754,9 @@ const EditorV3Page = () => {
           </Card>
         </aside>
 
-        <div className="flex justify-center pb-24">
-          <Button onClick={addMeal} className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 text-emerald-500 font-black gap-4 transition-all hover:scale-105">
-            <Plus className="w-5 h-5" /> Adicionar Nova Refeição
+        <div className="flex justify-center pb-20 pt-6">
+          <Button onClick={addMeal} variant="ghost" className="h-14 px-8 rounded-2xl bg-white/5 hover:bg-emerald-500/10 border border-dashed border-white/10 hover:border-emerald-500/30 text-white/60 hover:text-emerald-500 font-black gap-3 transition-all">
+            <Plus className="w-5 h-5" /> Nova Refeição
           </Button>
         </div>
       </main>
