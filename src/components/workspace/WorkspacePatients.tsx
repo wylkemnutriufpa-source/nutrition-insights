@@ -194,7 +194,7 @@ export default function WorkspacePatients({ search }: Props) {
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{name}</p>
+                  <p className="text-sm font-medium">{name}</p>
                   <p className="text-xs text-muted-foreground">{profile?.phone || "Sem telefone"}</p>
                 </div>
               </Link>
