@@ -266,7 +266,7 @@ const EditorV3Page = () => {
             preferences: profileAny.preferences || [],
             weight: profileAny.current_weight_kg || assessment?.weight || 0,
             height: profileAny.current_height_cm || assessment?.height || 0,
-            activity_level: profileAny.activity_level || assessment?.activity_level || 'moderado',
+            activity_level: profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : 'moderado'),
             calories_target: assessment?.calories_target || 2000,
             protein_target: assessment?.protein_target || 150,
             carbs_target: assessment?.carbs_target || 200,
