@@ -31,13 +31,15 @@ const App = () => {
   );
 
   return (
-    <div className="relative min-h-screen bg-black">
+    <div className="relative min-h-screen">
       <Switcher />
       <Suspense fallback={<PageLoader />}>
         {mode === 'V1' ? (
           <AppRoutes />
         ) : (
-          <PrescriptionDashboard />
+          <div className="min-h-screen bg-black">
+            <PrescriptionDashboard />
+          </div>
         )}
       </Suspense>
     </div>
