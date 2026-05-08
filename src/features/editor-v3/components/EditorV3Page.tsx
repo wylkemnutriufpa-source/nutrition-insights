@@ -79,9 +79,9 @@ const MEASURE_OPTIONS = [
   { label: 'Prato Raso', unit: 'prato raso', type: 'unit' as const },
   { label: 'Prato Fundo', unit: 'prato fundo', type: 'unit' as const },
   { label: 'Prato Médio', unit: 'prato médio', type: 'unit' as const },
-  { label: 'Unid. P', unit: 'unid P', type: 'unit' as const },
-  { label: 'Unid. M', unit: 'unid M', type: 'unit' as const },
-  { label: 'Unid. G', unit: 'unid G', type: 'unit' as const },
+  { label: 'Unid. P', unit: 'Unid. P', type: 'unit' as const },
+  { label: 'Unid. M', unit: 'Unid. M', type: 'unit' as const },
+  { label: 'Unid. G', unit: 'Unid. G', type: 'unit' as const },
 ];
 
 const formatPortion = (item: MealItem) => {
