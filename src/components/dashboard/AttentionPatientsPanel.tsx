@@ -100,7 +100,7 @@ export default function AttentionPatientsPanel({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold truncate">{p.patient_name}</p>
+                    <p className="text-sm font-semibold">{p.patient_name}</p>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${config.badge}`}>
                       {config.label}
                     </span>
