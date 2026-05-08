@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import { useNutritionistProfile } from '../hooks/useNutritionistProfile';
 import { usePatients } from '../hooks/usePatients';
-import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, Layout, Zap } from 'lucide-react';
+import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, Layout, Zap, Search } from 'lucide-react';
 import { TemplateSelector } from './TemplateSelector';
 import { PlanResult } from './PlanResult';
-import { DailyPlan } from '../types';
+import { DailyPlan, UserProfile } from '../types';
 
 export const PrescriptionDashboard = () => {
   const { profile, loading: loadingProfile } = useNutritionistProfile();
   const { patients, loading: loadingPatients } = usePatients(profile?.id);
   const [activePlan, setActivePlan] = useState<DailyPlan | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showPatientList, setShowPatientList] = useState(false);
 
   if (loadingProfile) {
     return <div className="flex items-center justify-center h-screen bg-black text-white">Carregando...</div>;
   }
+
+  const filteredPatients = patients.filter(p => 
+    p.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSelectPatient = (patient: any) => {
+    setSelectedPatient(patient);
+    setShowPatientList(false);
+    setShowEditor(true);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -37,15 +50,69 @@ export const PrescriptionDashboard = () => {
           <div className="flex items-center justify-between border-b border-slate-800 pb-6">
             <div className="flex items-center gap-4">
               <button 
-                onClick={() => setShowEditor(false)}
+                onClick={() => {
+                  setShowEditor(false);
+                  setSelectedPatient(null);
+                  setActivePlan(null);
+                }}
                 className="h-10 w-10 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors"
               >
                 <ArrowRight className="rotate-180" size={20} />
               </button>
               <div>
-                <h2 className="text-2xl font-black uppercase tracking-tight">Editor V2: Novo Plano</h2>
-                <p className="text-xs text-slate-500 font-mono">SELECIONE O TEMPLATE PARA PLOTAGEM AUTOMÁTICA</p>
+                <h2 className="text-2xl font-black uppercase tracking-tight">
+                  Editor V2: {selectedPatient ? selectedPatient.full_name : 'Novo Plano'}
+                </h2>
+                <p className="text-xs text-slate-500 font-mono">
+                  {selectedPatient ? 'PACIENTE SELECIONADO • PLOTAGEM ATIVA' : 'SELECIONE O TEMPLATE PARA PLOTAGEM AUTOMÁTICA'}
+                </p>
               </div>
+            </div>
+
+            <div className="relative">
+              <button 
+                onClick={() => setShowPatientList(!showPatientList)}
+                className="flex items-center gap-3 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 transition-all group"
+              >
+                <Users size={18} className="text-slate-500 group-hover:text-blue-400" />
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Trocar Paciente</span>
+              </button>
+
+              {showPatientList && (
+                <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-3 border-b border-slate-800">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                      <input 
+                        type="text" 
+                        placeholder="Buscar paciente..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-black border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-xs focus:outline-none focus:border-blue-500 transition-colors"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {filteredPatients.length > 0 ? (
+                      filteredPatients.map(p => (
+                        <button
+                          key={p.id}
+                          onClick={() => handleSelectPatient(p)}
+                          className="w-full p-3 flex items-center gap-3 hover:bg-white/5 transition-colors text-left"
+                        >
+                          <div className="h-8 w-8 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] font-bold">
+                            {p.full_name[0]}
+                          </div>
+                          <span className="text-xs font-bold text-slate-300">{p.full_name}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-slate-600 text-[10px] uppercase font-bold">Nenhum resultado</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -131,7 +198,7 @@ export const PrescriptionDashboard = () => {
                     {patients.map((patient) => (
                       <div 
                         key={patient.id} 
-                        onClick={() => setShowEditor(true)}
+                        onClick={() => handleSelectPatient(patient)}
                         className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group"
                       >
                         <div className="flex items-center gap-4">
@@ -164,18 +231,56 @@ export const PrescriptionDashboard = () => {
             <div className="space-y-6">
               <h2 className="text-xl font-black uppercase tracking-tight">Atalhos</h2>
               <div className="grid grid-cols-1 gap-4">
-                <button 
-                  onClick={() => setShowEditor(true)}
-                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-600 to-green-500 rounded-2xl text-left hover:scale-[1.02] transition-transform shadow-lg shadow-green-900/20"
-                >
-                  <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-white">
-                    <Plus size={20} />
-                  </div>
-                  <div>
-                    <p className="font-black uppercase text-sm">Nova Prescrição</p>
-                    <p className="text-xs text-white/70">Inicia motor 2.0</p>
-                  </div>
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowPatientList(!showPatientList)}
+                    className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-green-600 to-green-500 rounded-2xl text-left hover:scale-[1.02] transition-transform shadow-lg shadow-green-900/20"
+                  >
+                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-white">
+                      <Plus size={20} />
+                    </div>
+                    <div>
+                      <p className="font-black uppercase text-sm">Nova Prescrição</p>
+                      <p className="text-xs text-white/70">Inicia motor 2.0</p>
+                    </div>
+                  </button>
+
+                  {showPatientList && !showEditor && (
+                    <div className="absolute left-0 mt-2 w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                      <div className="p-3 border-b border-slate-800">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                          <input 
+                            type="text" 
+                            placeholder="Buscar paciente..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-black border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-xs focus:outline-none focus:border-blue-500 transition-colors"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {filteredPatients.length > 0 ? (
+                          filteredPatients.map(p => (
+                            <button
+                              key={p.id}
+                              onClick={() => handleSelectPatient(p)}
+                              className="w-full p-3 flex items-center gap-3 hover:bg-white/5 transition-colors text-left"
+                            >
+                              <div className="h-8 w-8 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] font-bold">
+                                {p.full_name[0]}
+                              </div>
+                              <span className="text-xs font-bold text-slate-300">{p.full_name}</span>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-slate-600 text-[10px] uppercase font-bold">Nenhum resultado</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <button className="flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-left hover:bg-slate-800 transition-colors">
                   <div className="h-10 w-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
