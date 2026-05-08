@@ -19,8 +19,9 @@ import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget"
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
   UtensilsCrossed, Trophy, Target as TargetIcon, Dumbbell, Flame, ArrowRight, Clock, Users,
-  AlertTriangle, RefreshCw, Zap, AlertCircle, MessageSquare, ChevronRight
+  AlertTriangle, RefreshCw, Zap, AlertCircle, MessageSquare, ChevronRight, Camera
 } from "lucide-react";
+
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
