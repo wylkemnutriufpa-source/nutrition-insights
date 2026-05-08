@@ -257,10 +257,11 @@ const EditorV3Page = () => {
         console.debug('[V3-Init] Carregando dados clínicos para:', patientId);
         
         // 1. Carregar Perfil do Paciente (FONTE ÚNICA DA VERDADE)
+        // Buscamos tanto por id quanto por user_id para garantir compatibilidade
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', patientId)
+          .or(`id.eq.${patientId},user_id.eq.${patientId}`)
           .maybeSingle();
 
         // 2. Carregar Avaliação Física (Fallback 1)
@@ -753,7 +754,12 @@ const EditorV3Page = () => {
 
   const handleGenerateFullPlan = async () => {
     if (!patientContext) {
-      toast.error('Selecione um paciente para gerar o plano');
+      toast.error('Carregando dados do paciente... Aguarde.');
+      return;
+    }
+
+    if (!patientContext.weight || !patientContext.height) {
+      toast.error('O paciente está sem Peso ou Altura. Preencha os dados antropométricos antes de gerar o plano.');
       return;
     }
 
@@ -960,7 +966,8 @@ const EditorV3Page = () => {
     }
   };
 
-  if (!dataReady && !isSandbox) {
+  // Bloqueio de Carregamento Crucial
+  if (!dataReady || (patientId && !patientContext)) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
         <div className={cn(
@@ -970,10 +977,10 @@ const EditorV3Page = () => {
           {dbStatus.error ? <CloudOff className="w-10 h-10 text-rose-500" /> : <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />}
         </div>
         <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
-          {dbStatus.error ? "Base de dados não encontrada" : "Carregando Base Clínica"}
+          {dbStatus.error ? "Base de dados não encontrada" : patientId ? "Sincronizando Paciente" : "Carregando Base Clínica"}
         </h1>
         <p className="text-white/40 max-w-sm mb-8">
-          {dbStatus.error || "Sincronizando tabelas essenciais para garantir precisão clínica."}
+          {dbStatus.error || (patientId ? "Recuperando dados antropométricos e metas para precisão clínica." : "Sincronizando tabelas essenciais para garantir precisão clínica.") }
         </p>
         {dbStatus.error && (
           <Button onClick={() => window.location.reload()} className="bg-white text-black font-black uppercase tracking-widest px-8 h-12 rounded-xl">
@@ -1001,243 +1008,103 @@ const EditorV3Page = () => {
 
   return (
     <div className="min-h-screen bg-black flex flex-col font-sans selection:bg-emerald-500/30">
-      <div className="bg-black border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
+      <header className="bg-black/90 border-b border-white/5 py-4 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate(`/patients/${patientId || ''}`)}
-              className="text-white/40 hover:text-white rounded-full hover:bg-white/5"
+              className="text-white/40 hover:text-white rounded-2xl hover:bg-white/5 border border-white/5"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex items-center gap-8">
-             <div className="flex flex-col">
-               <div className="flex items-center gap-2 mb-1">
-                 <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
-                {nutritionalScore && (
-                   <Badge className={cn(
-                     "px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter",
-                     nutritionalScore.total >= 90 ? "bg-emerald-500 text-black" : 
-                     nutritionalScore.total >= 70 ? "bg-amber-500 text-black" : 
-                     "bg-rose-500 text-white"
-                    )}>
-                      {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
-                    </Badge>
-                  )}
-                  {patientContext?.protocol_type && (
-                    <Badge variant="outline" className="px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter border-amber-500/50 text-amber-500">
-                      Protocolo: {
-                        patientContext.protocol_type === 'fitjourney' ? 'FitJourney' : 
-                        patientContext.protocol_type === 'bikini_protocol' || patientContext.protocol_type === 'bikini_branco' ? 'Biquíni Branco' : 
-                        'Engine V3'
-                      }
-                    </Badge>
-                  )}
-                 {patientContext && (
-                   <Popover>
-                     <PopoverTrigger asChild>
-                       <Badge variant="outline" className="px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter border-emerald-500/50 text-emerald-500 cursor-help">
-                         Plano baseado no paciente
-                        </Badge>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-72 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl z-[100] shadow-2xl">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                             <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Compliance LGPD</p>
-                             <Badge className={cn(
-                               "text-[9px] font-black uppercase",
-                               patientContext.consent_given ? "bg-emerald-500 text-black" : "bg-amber-500 text-black"
-                             )}>
-                               {patientContext.consent_given ? "Consentimento Ativo" : "Consentimento Pendente"}
-                             </Badge>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                             <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Confiança Clínica</p>
-                            {confidence && (
-                              <Badge className={cn(
-                                "text-[9px] font-black uppercase",
-                                confidence.level === 'high' ? "bg-emerald-500 text-black" :
-                                confidence.level === 'medium' ? "bg-amber-500 text-black" : "bg-rose-500 text-white"
-                              )}>
-                                {confidence.value}% {confidence.level}
-                              </Badge>
-                            )}
-                         </div>
-
-                         {confidence?.breakdown && (
-                           <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[8px] text-white/40 uppercase font-black">Metas</span>
-                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.objectiveAdherence)}%</span>
-                                </div>
-                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                  <div className="h-full bg-emerald-500 transition-all" style={{ width: `${confidence.breakdown.objectiveAdherence}%` }} />
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[8px] text-white/40 uppercase font-black">Qualidade</span>
-                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.quality)}%</span>
-                                </div>
-                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                  <div className="h-full bg-blue-500 transition-all" style={{ width: `${confidence.breakdown.quality}%` }} />
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[8px] text-white/40 uppercase font-black">Equilíbrio</span>
-                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.consistency)}%</span>
-                                </div>
-                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                  <div className="h-full bg-amber-500 transition-all" style={{ width: `${confidence.breakdown.consistency}%` }} />
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[8px] text-white/40 uppercase font-black">Restrições</span>
-                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.restrictions)}%</span>
-                                </div>
-                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                  <div className="h-full bg-rose-500 transition-all" style={{ width: `${confidence.breakdown.restrictions}%` }} />
-                                </div>
-                              </div>
-                           </div>
-                         )}
-
-                         <div className="space-y-1 pt-2 border-t border-white/5">
-                           <p className="text-xs text-white/80 font-bold">{patientContext.name}</p>
-                           <p className="text-[9px] text-white/40 font-bold uppercase tracking-tight">Objetivo: {patientContext.goal}</p>
-                         </div>
-                       </div>
-                     </PopoverContent>
-                   </Popover>
-                 )}
-               </div>
-               <div className="flex items-center gap-6">
-                  <div className="flex flex-col">
-                    <span className="text-xl font-black text-white">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-white/40 font-bold ml-1 uppercase">kcal</span></span>
-                  </div>
-                  <div className="h-8 w-px bg-white/10" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black text-emerald-400">{Math.round(totalMacros.protein)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Prot</span></span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black text-blue-400">{Math.round(totalMacros.carbs)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Carb</span></span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black text-amber-400">{Math.round(totalMacros.fat)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Gord</span></span>
-                  </div>
-               </div>
-             </div>
-
-             {nutritionalScore && (
-               <div className="hidden lg:flex flex-col">
-                 <div className="flex items-center gap-1 mb-1">
-                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Score Nutricional</span>
-                    <span className={cn(
-                      "text-lg font-black",
-                      nutritionalScore.total >= 90 ? "text-emerald-500" : 
-                      nutritionalScore.total >= 70 ? "text-amber-500" : 
-                      "text-rose-500"
-                    )}>{nutritionalScore.total}</span>
-                    <span className="text-[8px] text-white/20 font-black uppercase ml-1">
-                      {patientContext ? `p/ ${patientContext.goal}` : 'Geral'}
-                    </span>
-                 </div>
-                 <div className="flex gap-2">
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Calorias">
-                      <div className="h-full bg-emerald-500" style={{ width: `${nutritionalScore.breakdown.calories}%` }} />
+            
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-black text-white tracking-tight">
+                  {patientContext?.name || (patientId ? "Carregando..." : "Editor V3 Elite")}
+                </h1>
+                {patientContext && (
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-black uppercase tracking-tighter rounded-lg">
+                    {patientContext.weight}kg · {patientContext.goal}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
+                    <div className="flex flex-col">
+                      <span className="text-lg font-black text-white leading-none">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-white/40 font-bold uppercase ml-0.5">kcal</span></span>
                     </div>
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Macros">
-                      <div className="h-full bg-blue-500" style={{ width: `${nutritionalScore.breakdown.macros}%` }} />
+                    <div className="h-4 w-px bg-white/10" />
+                    <div className="flex gap-4">
+                      <span className="text-xs font-black text-emerald-400">{Math.round(totalMacros.protein)}g <span className="text-[8px] text-white/30 font-bold uppercase">Prot</span></span>
+                      <span className="text-xs font-black text-blue-400">{Math.round(totalMacros.carbs)}g <span className="text-[8px] text-white/30 font-bold uppercase">Carb</span></span>
+                      <span className="text-xs font-black text-amber-400">{Math.round(totalMacros.fat)}g <span className="text-[8px] text-white/30 font-bold uppercase">Gord</span></span>
                     </div>
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Equilíbrio">
-                      <div className="h-full bg-amber-500" style={{ width: `${nutritionalScore.breakdown.distribution}%` }} />
-                    </div>
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Qualidade/Restrições">
-                      <div className="h-full bg-rose-500" style={{ width: `${nutritionalScore.breakdown.quality}%` }} />
-                    </div>
-                 </div>
-               </div>
-             )}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="h-9 border-white/5 bg-white/5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
-              <RotateCcw className="w-3.5 h-3.5 mr-2" /> Resetar
-            </Button>
-            
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-4 mr-6 pr-6 border-r border-white/5">
+              {nutritionalScore && (
+                <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Score Nutricional</span>
+                    <span className={cn(
+                      "text-lg font-black",
+                      nutritionalScore.total >= 90 ? "text-emerald-500" : 
+                      nutritionalScore.total >= 70 ? "text-amber-500" : "text-rose-500"
+                    )}>{nutritionalScore.total}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    {[
+                      { v: nutritionalScore.breakdown.calories, c: "bg-emerald-500" },
+                      { v: nutritionalScore.breakdown.macros, c: "bg-blue-500" },
+                      { v: nutritionalScore.breakdown.distribution, c: "bg-amber-500" },
+                      { v: nutritionalScore.breakdown.quality, c: "bg-rose-500" }
+                    ].map((b, i) => (
+                      <div key={i} className="w-6 h-0.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className={cn("h-full transition-all", b.c)} style={{ width: `${b.v}%` }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleGenerateFullPlan} 
               disabled={isGeneratingGlobal}
-              className="h-9 border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2"
+              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
             >
               {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
               Gerar Plano Completo
             </Button>
 
             <Button 
-              variant="outline" 
               size="sm" 
-              onClick={handleFixPlan} 
-              disabled={isGeneratingGlobal}
-              className="h-9 border-amber-500/20 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2"
+              onClick={handlePromotionRequest}
+              disabled={promoting || !draftId}
+              className="h-10 px-6 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-lg shadow-blue-500/20"
             >
-              <Activity className="w-3.5 h-3.5" /> Corrigir
+              {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Salvar e Publicar
             </Button>
 
-            <Button size="sm" onClick={handlePromotionRequest} disabled={promoting || !draftId} className="h-9 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl transition-all px-6 shadow-lg shadow-emerald-500/20">
-              <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
+            <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
+              <RotateCcw className="w-4 h-4" />
             </Button>
           </div>
         </div>
-      </div>
-
-      <header className="border-b border-emerald-500/10 bg-black/80 backdrop-blur-2xl sticky top-0 z-50 px-6 py-3 flex items-center justify-between shadow-2xl shadow-emerald-500/5">
-        <div className="flex items-center gap-5">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 transition-all active:scale-95 group">
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-          </Button>
-          <div className="flex flex-col">
-            <h1 className="text-lg font-extrabold tracking-tight bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">Editor V3 Elite</h1>
-            <p className="text-[9px] font-black text-emerald-500/80 uppercase tracking-[0.2em]">Control System Active</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleGenerateFullPlan} 
-            disabled={isGeneratingGlobal}
-            className="h-9 px-4 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 hover:text-white hover:bg-emerald-600 rounded-xl transition-all gap-2 border border-emerald-500/20"
-          >
-            {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar Plano Completo
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handlePromotionRequest}
-            disabled={promoting}
-            className="h-9 px-4 text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-500 hover:text-white hover:bg-blue-600 rounded-xl transition-all gap-2 border border-blue-500/20"
-          >
-            {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Salvar e Publicar
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setShowAddMealModal(true)} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-2">
-            <Plus className="w-3.5 h-3.5" /> Refeição
-          </Button>
-        </div>
-
-
       </header>
 
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
+
         <div className="lg:col-span-8 space-y-12">
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
           {meals.map((meal, index) => (
