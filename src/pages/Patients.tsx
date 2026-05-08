@@ -359,8 +359,8 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], isOnline = false, setExpiryTarget }: {
-  p: PatientInfo; idx: number; navigate: any;
+function PatientCard({ p, idx, onOpenResumo, onNavigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], isOnline = false, setExpiryTarget }: {
+  p: PatientInfo; idx: number; onOpenResumo: (p: PatientInfo) => void; onNavigate: (id: string) => void;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
@@ -383,7 +383,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
       transition={{ delay: idx * 0.04 }}
       whileHover={{ y: -2 }}
       className={`glass-premium rounded-xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow`}
-      onClick={() => navigate(p.patient_id)}
+      onClick={() => onOpenResumo(p)}
     >
       {isInactive && (
         <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
@@ -464,7 +464,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
                 return;
               }
               // Navigate to patient detail where they can choose the correct editor version
-              navigate(p.patient_id); 
+              onNavigate(p.patient_id); 
             }}
             size="sm"
             className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20"
@@ -474,7 +474,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           </Button>
           <div className="flex items-center gap-0.5 ml-2">
             <button
-              onClick={(e) => { e.stopPropagation(); navigate(`${p.patient_id}?section=plan`); }}
+              onClick={(e) => { e.stopPropagation(); onNavigate(`${p.patient_id}?section=plan`); }}
               className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Plano Alimentar"
             >
               <FileText className="w-4 h-4" />
@@ -543,8 +543,8 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], setExpiryTarget }: {
-  p: PatientInfo; idx: number; navigate: any;
+function PatientRow({ p, idx, onOpenResumo, onNavigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], setExpiryTarget }: {
+  p: PatientInfo; idx: number; onOpenResumo: (p: PatientInfo) => void; onNavigate: (id: string) => void;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
@@ -563,7 +563,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: idx * 0.03 }}
       className={`glass-premium rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-accent/5 transition-all metric-glow ${isInactive ? "opacity-60" : ""}`}
-      onClick={() => navigate(p.patient_id)}
+      onClick={() => onOpenResumo(p)}
     >
       <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
         <span className="text-sm font-bold text-primary">{displayName[0].toUpperCase()}</span>
@@ -633,8 +633,8 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [], onlineSet, setExpiryTarget }: {
-  patients: PatientInfo[]; navigate: any;
+function PatientGrid({ patients, onOpenResumo, onNavigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [], onlineSet, setExpiryTarget }: {
+  patients: PatientInfo[]; onOpenResumo: (p: PatientInfo) => void; onNavigate: (id: string) => void;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
@@ -669,7 +669,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
     return (
       <div className="space-y-2">
         {sorted.map((p, idx) => (
-          <PatientRow key={p.id} p={p} idx={idx} navigate={navigate}
+          <PatientRow key={p.id} p={p} idx={idx} onOpenResumo={onOpenResumo} onNavigate={onNavigate}
             toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
             setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
             onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} 
@@ -682,7 +682,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {sorted.map((p, idx) => (
-        <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
+        <PatientCard key={p.id} p={p} idx={idx} onOpenResumo={onOpenResumo} onNavigate={onNavigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
           setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
           onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans}
@@ -1330,7 +1330,8 @@ export default function Patients() {
                 {/* Client-side filtered list from current page */}
                 <PatientGrid
                   patients={filteredPatients}
-                  navigate={handleOpenResumo}
+                  onOpenResumo={handleOpenResumo}
+                  onNavigate={navigateToPatient}
                   toggleStatus={toggleStatus}
                   setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen}
