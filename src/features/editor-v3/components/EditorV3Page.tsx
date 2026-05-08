@@ -1143,7 +1143,7 @@ const EditorV3Page = () => {
                 </div>
                 <div className="flex flex-col items-start">
                   <span className="text-[10px] font-black uppercase text-white/40 leading-none mb-1">Selecionar Paciente</span>
-                  <span className="text-sm font-black tracking-tight leading-none truncate max-w-[150px]">
+                  <span className="text-sm font-black tracking-tight leading-none">
                     {patientContext?.name || "Nenhum Selecionado"}
                   </span>
                 </div>
