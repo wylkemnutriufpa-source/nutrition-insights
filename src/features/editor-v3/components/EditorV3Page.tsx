@@ -319,7 +319,27 @@ const EditorV3Page = () => {
 
           console.info(`[V3-Context] Atribuindo contexto: ${weight}kg, ${goal}, ${kcal}kcal`);
           setPatientContext(context);
+
+          // Handshake: Se a anamnese for recente (últimas 24h) e o plano estiver vazio, sugerir uso das metas
+          if (anamnesis) {
+            const anamnesisDate = new Date(anamnesis.created_at);
+            const isRecent = (Date.now() - anamnesisDate.getTime()) < 24 * 60 * 60 * 1000;
+            
+            // Verificamos se o plano atual está "vazio" (sem refeições significativas)
+            const isPlanEmpty = meals.length <= 1 && (meals[0]?.items.length === 0);
+            
+            if (isRecent && isPlanEmpty && !planId) {
+              setPendingAnamnesisData({
+                kcal: Number(anamnesis.computed_kcal_target),
+                protein: Number(anamnesis.computed_protein),
+                carbs: Number(anamnesis.computed_carbs),
+                fat: Number(anamnesis.computed_fat)
+              });
+              setShowAnamnesisHandshake(true);
+            }
+          }
         }
+
 
         if (assessment) setLastAssessment(assessment);
       }
