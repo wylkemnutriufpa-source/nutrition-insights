@@ -381,6 +381,13 @@ const EditorV3Page = () => {
   useEffect(() => {
     if (patientId) {
       console.debug('[v3-init] checking system health for patient:', patientId);
+      // 🔥 Forçar a prova clínica no localStorage para debug imediato
+      runClinicalProofTests(patientId).then(reports => {
+        localStorage.setItem('v3_proof_report', JSON.stringify({
+          timestamp: new Date().toISOString(),
+          reports
+        }));
+      });
       runV3IntegrationTests(patientId).then(res => {
         if (res.errors.length > 0) {
           console.error('[v3-health] issues detected during initialization', res.errors);
