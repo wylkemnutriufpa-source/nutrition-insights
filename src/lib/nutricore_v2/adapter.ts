@@ -1,4 +1,4 @@
-import { runEngine, EngineInput, EngineResult } from './nutrition-engine';
+import { runEngine, EngineInput, EngineResult, Goal, ActivityLevel } from './nutrition-engine';
 import { distributeMacros, MealSlot, DistributedMeal } from './meal-distribution';
 import { buildMeal, PlannedMeal } from './meal-builder';
 import { BASE_FOODS, Food } from './food-database';
