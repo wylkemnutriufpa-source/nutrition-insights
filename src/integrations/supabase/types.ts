@@ -8184,6 +8184,240 @@ export type Database = {
         }
         Relationships: []
       }
+      nc_food_library: {
+        Row: {
+          base_quantity: number | null
+          calories: number
+          carbs: number
+          category: string
+          fat: number
+          id: string
+          is_global: boolean | null
+          name: string
+          protein: number
+          unit: string | null
+        }
+        Insert: {
+          base_quantity?: number | null
+          calories: number
+          carbs: number
+          category: string
+          fat: number
+          id?: string
+          is_global?: boolean | null
+          name: string
+          protein: number
+          unit?: string | null
+        }
+        Update: {
+          base_quantity?: number | null
+          calories?: number
+          carbs?: number
+          category?: string
+          fat?: number
+          id?: string
+          is_global?: boolean | null
+          name?: string
+          protein?: number
+          unit?: string | null
+        }
+        Relationships: []
+      }
+      nc_meal_plan_items: {
+        Row: {
+          calories: number | null
+          carbs: number | null
+          fat: number | null
+          food_name: string
+          id: string
+          meal_type: string
+          plan_id: string
+          protein: number | null
+          quantity: number
+          sort_order: number | null
+          unit: string
+        }
+        Insert: {
+          calories?: number | null
+          carbs?: number | null
+          fat?: number | null
+          food_name: string
+          id?: string
+          meal_type: string
+          plan_id: string
+          protein?: number | null
+          quantity: number
+          sort_order?: number | null
+          unit: string
+        }
+        Update: {
+          calories?: number | null
+          carbs?: number | null
+          fat?: number | null
+          food_name?: string
+          id?: string
+          meal_type?: string
+          plan_id?: string
+          protein?: number | null
+          quantity?: number
+          sort_order?: number | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_meal_plan_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "nc_meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_meal_plans: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          nutritionist_id: string
+          patient_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id: string
+          patient_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id?: string
+          patient_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_meal_plans_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nc_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nc_meal_plans_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "nc_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_onboarding_data: {
+        Row: {
+          data: Json
+          id: string
+          is_complete: boolean | null
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          data?: Json
+          id?: string
+          is_complete?: boolean | null
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          id?: string
+          is_complete?: boolean | null
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_onboarding_data_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "nc_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_patients: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          is_active: boolean | null
+          nutritionist_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_patients_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nc_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["nc_app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["nc_app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["nc_app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -21695,6 +21929,7 @@ export type Database = {
         | "recovery"
         | "maintenance"
         | "recomposition"
+      nc_app_role: "nutritionist" | "patient" | "admin"
       patient_lifecycle_status:
         | "onboarding_started"
         | "onboarding_ready_for_plan"
@@ -21943,6 +22178,7 @@ export const Constants = {
         "maintenance",
         "recomposition",
       ],
+      nc_app_role: ["nutritionist", "patient", "admin"],
       patient_lifecycle_status: [
         "onboarding_started",
         "onboarding_ready_for_plan",
