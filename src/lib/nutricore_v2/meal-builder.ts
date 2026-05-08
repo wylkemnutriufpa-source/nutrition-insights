@@ -92,13 +92,13 @@ export function buildMeal(
     // Almoço e Jantar: Arroz, Feijão, Salada, Proteína
     const protein = selectFood(allowedDb, "protein", [], preferences) || selectFood(foodDb, "protein", restrictions, preferences);
     const rice = allowedDb.find(f => f.name.toLowerCase().includes("arroz")) || selectFood(allowedDb, "carb", [], preferences);
-    const beans = allowedDb.find(f => f.name.toLowerCase().includes("feijão"));
+    const beans = allowedDb.find(f => f.name.toLowerCase().includes("feijão")) || foodDb.find(f => f.name.toLowerCase().includes("feijão"));
     const salad = allowedDb.filter(f => f.category === "vegetable");
 
     if (protein) items.push(createPlannedItem(protein, 120));
     if (rice) items.push(createPlannedItem(rice, 100));
     if (beans) items.push(createPlannedItem(beans, 70));
-    if (salad.length > 0) items.push(createPlannedItem(salad[0], 100));
+    if (salad.length > 0) items.push(createPlannedItem(salad[Math.floor(Math.random() * salad.length)], 100));
 
     return finalizeMeal(type, time, items, targetMacros);
   }
