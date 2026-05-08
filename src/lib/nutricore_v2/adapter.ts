@@ -3,6 +3,7 @@ import { distributeMacros, MealSlot, DistributedMeal } from './meal-distribution
 import { buildMeal, PlannedMeal } from './meal-builder';
 import { BASE_FOODS, Food } from './food-database';
 import { MARMITA_RECIPES, Marmita } from './marmitas-database';
+import { getSubstitutions } from './substitutions';
 
 // Tipos compatíveis com o FitJourney Elite V3
 import { Meal as V3Meal, MealItem as V3MealItem, Food as V3Food, PatientContext } from '../../features/clinical-engine/types/clinical-types';
