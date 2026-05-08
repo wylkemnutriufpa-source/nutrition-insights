@@ -274,7 +274,7 @@ const EditorV3Page = () => {
           const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
           const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
           const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
-          const goal = profileAny.goal || assessment?.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
+          const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
           
           // Metas nutricionais (Priorizando o que o Nutri definiu na avaliação ou o que foi calculado na anamnese)
           const kcal = assessment?.calories_target || anamnesis?.computed_kcal_target || 2000;
@@ -290,7 +290,7 @@ const EditorV3Page = () => {
             preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || [],
             weight: Number(weight),
             height: Number(height),
-            activity_level: activity,
+            activityLevel: activity,
             calories_target: Number(kcal),
             protein_target: Number(protein),
             carbs_target: Number(carbs),
