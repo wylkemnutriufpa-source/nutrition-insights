@@ -40,6 +40,8 @@ import type { PrestigePlan } from "@/hooks/usePrestige";
 import PaginationControls from "@/components/patients/PaginationControls";
 import PatientQueueTabs from "@/components/patients/PatientQueueTabs";
 import { EngineSelector } from "@/features/editor-v3/components/EngineSelector";
+import { usePatientDetail } from "@/hooks/queries/usePatientDetail";
+import { BrainLoaderCard } from "@/components/common/BrainLoader";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
@@ -721,19 +723,13 @@ export default function Patients() {
   const handleOpenResumo = (patient: PatientInfo) => {
     setResumoPatient(patient);
   };
-  const [expiryTarget, setExpiryTarget] = useState<{ id: string, name: string, current: string | null } | null>(null);
-  const [engineSelectorTarget, setEngineSelectorTarget] = useState<{ id: string, name: string } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
 
-  // Build params for server-side query
-  const queryParams: PatientsListParams = {
-    page,
-    pageSize,
-    statusFilter: statusTab,
-    search: debouncedSearch,
-  };
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "date" | "plan">("date");
 
   // React Query hooks
   const { data, isLoading, isError, isFetching } = usePatientsList(queryParams);
