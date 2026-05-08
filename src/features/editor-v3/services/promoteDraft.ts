@@ -87,8 +87,7 @@ export interface PromoteResult {
 
 /**
  * Promove um draft para um plano clínico oficial.
- * Sempre cria o plano com `plan_status = 'draft'`. A publicação posterior
- * passa pelo fluxo clínico oficial (publish_meal_plan / Strategy Consultant).
+ * Agora publica diretamente para o paciente para garantir visibilidade imediata.
  */
 export async function promoteDraftToMealPlan(
   draft: DraftRecord,
@@ -98,7 +97,14 @@ export async function promoteDraftToMealPlan(
   const today = new Date().toISOString().slice(0, 10);
   const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
 
-  // 1) INSERT-FIRST: cria o meal_plan oficial
+  // 0) Desativa planos anteriores para este paciente para garantir unicidade do plano ativo
+  await supabase
+    .from('meal_plans')
+    .update({ is_active: false } as any)
+    .eq('patient_id', draft.patient_id)
+    .eq('is_active', true);
+
+  // 1) INSERT-FIRST: cria o meal_plan oficial já PUBLICADO
   const { data: plan, error: planErr } = await supabase
     .from('meal_plans')
     .insert({
@@ -107,8 +113,9 @@ export async function promoteDraftToMealPlan(
       tenant_id: draft.tenant_id,
       title,
       start_date: today,
-      plan_status: 'draft',
-      is_active: false,
+      plan_status: 'published_to_patient',
+      is_active: true,
+      total_target_calories: draft.meta_kcal ?? null,
       total_target_calories: draft.meta_kcal ?? null,
       total_target_protein: draft.meta_protein ?? null,
       total_target_carbs: draft.meta_carbs ?? null,

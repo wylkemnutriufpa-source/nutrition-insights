@@ -642,7 +642,7 @@ const EditorV3Page = () => {
       }
       const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1, patient_context: patientContext, nutritional_score: nutritionalScore, confidence: confidence } });
       if (result.ok) {
-        toast.success('Plano promovido com sucesso!');
+        toast.success('Plano salvo e publicado para o paciente!');
         await savePlan();
         
         // Fluxo V3: Salva e retorna para o detalhe do paciente para visualização do plano oficial
@@ -1227,7 +1227,7 @@ const EditorV3Page = () => {
             disabled={promoting}
             className="h-9 px-4 text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-500 hover:text-white hover:bg-blue-600 rounded-xl transition-all gap-2 border border-blue-500/20"
           >
-            {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Salvar Plano
+            {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Salvar e Publicar
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setShowAddMealModal(true)} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-2">
             <Plus className="w-3.5 h-3.5" /> Refeição
