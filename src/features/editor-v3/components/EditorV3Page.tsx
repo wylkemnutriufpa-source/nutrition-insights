@@ -1649,8 +1649,8 @@ const EditorV3Page = () => {
           ))}
         </div>
 
-        <aside className="lg:col-span-4 space-y-6">
-          <Card className="p-6 bg-black border-white/5 rounded-3xl overflow-hidden relative group">
+        <aside className="space-y-6 sticky top-24 h-fit">
+          <Card className="p-6 bg-neutral-900/50 border-white/5 rounded-3xl overflow-hidden relative group backdrop-blur-sm">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -mr-10 -mt-10" />
             <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-500" /> Diagnóstico do Plano
