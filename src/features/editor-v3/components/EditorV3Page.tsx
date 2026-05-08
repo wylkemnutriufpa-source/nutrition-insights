@@ -2142,13 +2142,41 @@ const EditorV3Page = () => {
                       
                       <div className="w-[140px]">
                         <Select
-                          value={selectedItem.item.measurementType || 'gram'}
+                          value={selectedItem.item.measurementType === 'unit' ? selectedItem.item.portionUnitLabel : selectedItem.item.measurementType || 'gram'}
                           onValueChange={(val) => {
                             const option = MEASURE_OPTIONS.find(o => o.unit === val || o.type === val);
                             const unitLabel = option?.label || val;
+                            const unitType = option?.type || 'unit';
+                            
+                            // Lógica de Peso para Medidas Caseiras
+                            const name = selectedItem.item.name.toLowerCase();
+                            let newQuantity = selectedItem.item.quantity;
+                            
+                            if (val === 'unid P') {
+                              if (name.includes('banana')) newQuantity = 60;
+                              else if (name.includes('maçã')) newQuantity = 80;
+                              else if (name.includes('ovo')) newQuantity = 40;
+                              else newQuantity = 50;
+                            } else if (val === 'unid M') {
+                              if (name.includes('banana')) newQuantity = 100;
+                              else if (name.includes('maçã')) newQuantity = 130;
+                              else if (name.includes('ovo')) newQuantity = 50;
+                              else newQuantity = 100;
+                            } else if (val === 'unid G') {
+                              if (name.includes('banana')) newQuantity = 150;
+                              else if (name.includes('maçã')) newQuantity = 200;
+                              else if (name.includes('ovo')) newQuantity = 65;
+                              else newQuantity = 150;
+                            } else if (val === 'colher(es)') {
+                              newQuantity = 15;
+                            } else if (val === 'g' || val === 'gram') {
+                              newQuantity = 100;
+                            }
+                            
                             updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
-                              measurementType: val as any,
-                              portionUnitLabel: unitLabel
+                              measurementType: unitType as any,
+                              portionUnitLabel: unitLabel,
+                              quantity: newQuantity
                             });
                           }}
                         >
