@@ -398,13 +398,43 @@ const EditorV3Page = () => {
       if (selectedItem) {
         setIsLoadingSmartSubs(true);
         const name = selectedItem.item.name;
-        
+
+        // V3 Logic: Use Direct NutriCore V2 Substitutions if possible
+        const currentFood = BASE_FOODS.find(f => f.id === selectedItem.item.id) || 
+                          BASE_FOODS.find(f => f.name.toLowerCase() === name.toLowerCase());
+                          
+        if (currentFood) {
+          console.log('[V3-Subs] Using NutriCore V2 Substitution Engine for:', name);
+          const v2Subs = getSubstitutions(
+            currentFood, 
+            BASE_FOODS, 
+            selectedItem.item.quantity,
+            patientContext?.restrictions || []
+          );
+          
+          const v3Subs = v2Subs.map(s => ({
+            ...s.food,
+            kcal: s.food.kcal_100g,
+            calories: s.food.kcal_100g,
+            protein: s.food.protein_100g,
+            carbs: s.food.carb_100g,
+            fat: s.food.fat_100g,
+            portionValue: 100,
+            portionLabel: '100g',
+            measurementType: 'gram' as const,
+            suggestedQuantity: s.grams 
+          }));
+          
+          setSmartSubstitutions(v3Subs as any);
+          setIsLoadingSmartSubs(false);
+          return;
+        }
+
         let category: 'protein' | 'carb' | 'fruit' | 'any' = 'any';
         if (isProtein(name)) category = 'protein';
         else if (isCarb(name)) category = 'carb';
         else if (isFruit(name)) category = 'fruit';
 
-        // Adaptative Engine: Pass restrictions to filtering
         const dbSuggestions = await getCompatibleFoods(
           category, 
           name, 
