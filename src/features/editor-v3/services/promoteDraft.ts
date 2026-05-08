@@ -200,7 +200,7 @@ export async function promoteDraftToMealPlan(
   // Log de acesso: Exportação/Promoção de draft para plano oficial
   await supabase.from('access_logs').insert({
     user_id: draft.nutritionist_id,
-    patient_id: draft.patient_id,
+    patient_id: profileId,
     action: 'export',
     resource: 'meal_plan',
     user_agent: navigator.userAgent
