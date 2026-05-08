@@ -25,6 +25,8 @@ export interface Meal {
 }
 
 export interface DailyPlan {
+  id: string;
+  templateName?: string;
   meals: Meal[];
   totalMacros: {
     calories: number;
@@ -32,6 +34,14 @@ export interface DailyPlan {
     carbs: number;
     fat: number;
   };
+}
+
+export interface PlanTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: 'hypertrophy' | 'weight-loss' | 'performance';
+  meals: Omit<Meal, 'id'>[];
 }
 
 export interface UserProfile {
