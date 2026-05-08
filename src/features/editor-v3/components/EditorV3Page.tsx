@@ -1080,7 +1080,7 @@ const EditorV3Page = () => {
   // Bloqueio de Carregamento Crucial
   if (!dataReady || (patientId && !patientContext)) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-center text-white">
         <div className={cn(
           "w-20 h-20 rounded-full flex items-center justify-center mb-6 animate-pulse",
           dbStatus.error ? "bg-rose-500/10" : "bg-emerald-500/10"
