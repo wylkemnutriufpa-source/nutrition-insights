@@ -4,7 +4,7 @@ import { MealBuilder } from '../engine/meal-builder';
 import { FoodDatabase } from '../data/food-database';
 import { PlanGenerator } from '../engine/plan-generator';
 
-describe('Nutricore Engine (v2.0)', () => {
+describe('FitJourney2 Engine (v2.0)', () => {
   it('should calculate calories correctly', () => {
     const calories = NutritionEngine.calculateCalories(100, 100, 10);
     // (100 * 4) + (100 * 4) + (10 * 9) = 400 + 400 + 90 = 890
