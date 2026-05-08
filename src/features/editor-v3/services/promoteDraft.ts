@@ -12,6 +12,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
+import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 
 type ClinicalMealType =
   | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
