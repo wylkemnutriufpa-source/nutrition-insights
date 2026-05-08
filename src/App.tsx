@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PrescriptionDashboard } from './modules/FitJourney2/components/PrescriptionDashboard';
+import Index from './pages/Index';
 
 const App = () => {
   const [mode, setMode] = useState<'V1' | 'V2'>(() => {
@@ -33,25 +34,9 @@ const App = () => {
 
   if (mode === 'V1') {
     return (
-      <div className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-        {/* Background ambient glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-        
+      <div className="relative min-h-screen">
         <Switcher />
-        
-        <div className="relative z-10 max-w-2xl space-y-6">
-          <div className="h-20 w-20 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/5 shadow-2xl">
-            <span className="text-3xl font-black italic text-slate-500">V1</span>
-          </div>
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic">Modo Produção Ativo</h1>
-          <p className="text-slate-400 leading-relaxed">
-            Você está visualizando a base do sistema legado. 
-            <br />
-            <span className="text-xs font-mono text-slate-500 uppercase mt-4 block">
-              Nota: Nesta branch as pastas físicas da V1 foram removidas para isolamento.
-            </span>
-          </p>
-        </div>
+        <Index />
       </div>
     );
   }
