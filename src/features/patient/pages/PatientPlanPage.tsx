@@ -72,6 +72,57 @@ export const PatientPlanPage = () => {
     // PDF generation logic would go here
     setTimeout(() => toast.success('PDF gerado com sucesso!'), 1500);
   };
+  
+  const handleOpenSubstitution = (item: any, mealId: string) => {
+    // Tenta encontrar o alimento correspondente no banco de dados NutriCore V2
+    const baseFood = BASE_FOODS.find(f => 
+      f.name.toLowerCase() === item.name.toLowerCase() || 
+      item.name.toLowerCase().includes(f.name.toLowerCase())
+    );
+
+    if (!baseFood) {
+      toast.error('Opções de substituição não disponíveis para este item.');
+      return;
+    }
+
+    // Calcula gramas aproximadas se não houver no item (padrão 100g se zero)
+    // No V3, item.quantity costuma ser as gramas reais.
+    const grams = item.quantity || 100;
+    
+    const subs = getSubstitutions(baseFood, BASE_FOODS, grams);
+    setSubstitutions(subs);
+    setSelectedItem({ item, mealId });
+    setShowSubModal(true);
+  };
+
+  const applySubstitution = (sub: any) => {
+    if (!plan || !selectedItem) return;
+    
+    const updatedMeals = plan.meals.map(meal => {
+      if (meal.id !== selectedItem.mealId) return meal;
+      return {
+        ...meal,
+        items: meal.items.map(item => {
+          if (item.id !== selectedItem.item.id) return item;
+          // Substitui o item mantendo as calorias equivalentes
+          return {
+            ...item,
+            name: sub.food.name,
+            quantity: sub.grams,
+            kcal: Math.round((sub.food.kcal_100g / 100) * sub.grams),
+            protein: Math.round((sub.food.protein_100g / 100) * sub.grams),
+            carbs: Math.round((sub.food.carb_100g / 100) * sub.grams),
+            fat: Math.round((sub.food.fat_100g / 100) * sub.grams),
+          };
+        })
+      };
+    });
+
+    setPlan({ ...plan, meals: updatedMeals });
+    setShowSubModal(false);
+    toast.success(`Alimento trocado por ${sub.food.name}!`);
+  };
+
 
   if (loading) return <div className="flex items-center justify-center h-screen">Carregando plano...</div>;
   if (!plan) return <div className="flex items-center justify-center h-screen">Plano não encontrado.</div>;
