@@ -810,15 +810,14 @@ const PlanAudit = () => {
 
     for (const target of targets) {
       try {
-        const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-          body: {
-            patientId: target.patient_id,
-            nutritionistId: user?.id,
-            isPipeline: false,
-          },
+        const data = await localGenerateMealPlan({
+          patientId: target.patient_id,
+          nutritionistId: user?.id || "",
+          isPipeline: false,
+          planCount: 1,
         });
 
-        if (error || !data?.success) throw new Error(data?.error || "Erro na geração");
+        if (!data?.success) throw new Error("Erro na geração local");
         
         results.success++;
       } catch (err) {
