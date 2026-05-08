@@ -1,5 +1,1 @@
-export const useRegisterSW = () => ({
-  needRefresh: [false, () => {}],
-  offlineReady: [false, () => {}],
-  updateServiceWorker: () => {},
-});
+export const useRegisterSW = () => ({ needle: false, updateServiceWorker: () => {} });
