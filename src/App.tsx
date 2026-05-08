@@ -3,43 +3,63 @@ import { PrescriptionDashboard } from './modules/FitJourney2/components/Prescrip
 
 const App = () => {
   const [mode, setMode] = useState<'V1' | 'V2'>(() => {
-    return (localStorage.getItem('fitjourney_mode') as 'V1' | 'V2') || 'V2';
+    const saved = localStorage.getItem('fitjourney_mode');
+    return (saved === 'V1' || saved === 'V2') ? saved : 'V2';
   });
 
   useEffect(() => {
     localStorage.setItem('fitjourney_mode', mode);
   }, [mode]);
 
+  // Global Switcher UI
+  const Switcher = () => (
+    <div className="fixed top-4 right-4 z-[9999] flex items-center gap-3 bg-black/50 backdrop-blur-xl p-2 rounded-2xl border border-white/10 shadow-2xl">
+      {mode === 'V2' && (
+        <span className="px-3 py-1 bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-tighter rounded-lg border border-green-500/30 animate-pulse">
+          FitJourney 2.0 Beta
+        </span>
+      )}
+      <button 
+        onClick={() => setMode(mode === 'V1' ? 'V2' : 'V1')}
+        className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase transition-all ${
+          mode === 'V2' 
+            ? 'bg-white text-black hover:bg-slate-200' 
+            : 'bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/40'
+        }`}
+      >
+        {mode === 'V2' ? 'Sair do Beta (V1)' : 'Entrar no Beta (V2)'}
+      </button>
+    </div>
+  );
+
   if (mode === 'V1') {
     return (
-      <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-8 text-center relative">
-        <div className="absolute top-4 right-4">
-          <button 
-            onClick={() => setMode('V2')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-900/20"
-          >
-            Mudar para BETA (V2)
-          </button>
+      <div className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+        {/* Background ambient glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+        
+        <Switcher />
+        
+        <div className="relative z-10 max-w-2xl space-y-6">
+          <div className="h-20 w-20 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/5 shadow-2xl">
+            <span className="text-3xl font-black italic text-slate-500">V1</span>
+          </div>
+          <h1 className="text-4xl font-black tracking-tighter uppercase italic">Modo Produção Ativo</h1>
+          <p className="text-slate-400 leading-relaxed">
+            Você está visualizando a base do sistema legado. 
+            <br />
+            <span className="text-xs font-mono text-slate-500 uppercase mt-4 block">
+              Nota: Nesta branch as pastas físicas da V1 foram removidas para isolamento.
+            </span>
+          </p>
         </div>
-        <h1 className="text-4xl font-bold mb-4">FitJourney 1.0 (PRODUÇÃO)</h1>
-        <p className="text-xl text-slate-400 max-w-2xl">
-          Você está no modo de compatibilidade. Como as pastas legadas foram removidas na branch V2, 
-          esta tela serve como placeholder para o sistema antigo.
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      <div className="fixed top-6 right-6 z-50">
-        <button 
-          onClick={() => setMode('V1')}
-          className="px-4 py-2 bg-slate-900/80 backdrop-blur-md hover:bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium transition-colors text-white"
-        >
-          Voltar para V1
-        </button>
-      </div>
+    <div className="relative min-h-screen bg-black">
+      <Switcher />
       <PrescriptionDashboard />
     </div>
   );
