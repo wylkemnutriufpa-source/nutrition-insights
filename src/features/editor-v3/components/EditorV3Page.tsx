@@ -268,6 +268,12 @@ const EditorV3Page = () => {
           .or(`id.eq.${patientId},user_id.eq.${patientId}`)
           .maybeSingle();
 
+        if (profile && profile.id !== patientId && patientId) {
+          console.info('[V3-Init] Redirecionando para ID canônico do perfil:', profile.id);
+          navigate(`/editor-v3/${profile.id}${planId ? `?planId=${planId}` : ''}`, { replace: true });
+          return;
+        }
+
         if (!profile) {
           console.warn('[V3-Init] Perfil não encontrado para ID:', patientId);
           return;
