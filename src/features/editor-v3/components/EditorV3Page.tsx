@@ -1635,17 +1635,50 @@ const EditorV3Page = () => {
                 </div>
               )}
             </div>
-            <div className="grid gap-5">
+            <div className="space-y-3">
+              {meal.items.length === 0 && (
+                <div className="py-12 border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center gap-3 text-white/10">
+                  <Utensils className="w-8 h-8 opacity-20" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">Refeição vazia</p>
+                </div>
+              )}
               {meal.items.map((item) => (
-                <Card key={item.instanceId} className="p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all rounded-2xl cursor-pointer border-emerald-500/50" onClick={() => { console.log('[V3-UI] Item clicked:', item.name); setSelectedItem({ mealId: meal.id, item }); }}>
-                  <div className="flex items-center gap-5">
-                    {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />}
+                <Card 
+                  key={item.instanceId} 
+                  className={cn(
+                    "p-4 flex items-center justify-between border-0 bg-neutral-800/40 hover:bg-neutral-800 transition-all rounded-2xl cursor-pointer group/item",
+                    activeMealId === meal.id ? "border-l-4 border-emerald-500" : "border-l-4 border-transparent"
+                  )} 
+                  onClick={() => setSelectedItem({ mealId: meal.id, item })}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-black/40 overflow-hidden flex-shrink-0 border border-white/5">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Apple className="w-6 h-6 text-white/5" />
+                        </div>
+                      )}
+                    </div>
                     <div>
-                      <p className="font-black text-[15px] tracking-tight text-white">{formatPortion(item)} {item.name}</p>
-                      <p className="text-[11px] font-bold text-white/50">{Math.round(recalculateMacros(item, item.quantity).calories)} kcal</p>
+                      <p className="font-black text-sm tracking-tight text-white group-hover/item:text-emerald-400 transition-colors">
+                        <span className="text-emerald-500 mr-1">{formatPortion(item)}</span> {item.name}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] font-bold text-white/40">{Math.round(recalculateMacros(item, item.quantity).calories)} kcal</span>
+                        <div className="flex gap-2">
+                           <span className="text-[9px] font-black text-emerald-500/40 uppercase">{Math.round(item.protein)}g P</span>
+                           <span className="text-[9px] font-black text-blue-500/40 uppercase">{Math.round(item.carbs)}g C</span>
+                           <span className="text-[9px] font-black text-amber-500/40 uppercase">{Math.round(item.fat)}g G</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); removeFood(meal.id, item.instanceId); }} className="h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setSelectedItem({ mealId: meal.id, item }); }} className="h-9 w-9 text-white/20 hover:text-white hover:bg-white/5 rounded-xl"><Edit3 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); removeFood(meal.id, item.instanceId); }} className="h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></Button>
+                  </div>
                 </Card>
               ))}
             </div>
