@@ -21,6 +21,10 @@ export const PatientPlanPage = () => {
   const [plan, setPlan] = useState<PatientPlan | null>(null);
   const [completions, setCompletions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<{ item: any, mealId: string } | null>(null);
+  const [substitutions, setSubstitutions] = useState<any[]>([]);
+  const [showSubModal, setShowSubModal] = useState(false);
+
 
   useEffect(() => {
     const fetchPlan = async () => {
