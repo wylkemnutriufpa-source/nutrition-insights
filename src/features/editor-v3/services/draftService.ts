@@ -8,6 +8,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
 import { normalizeMeals } from '../utils/normalization';
+import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 
 export interface DraftRecord {
   id: string;
@@ -63,17 +64,11 @@ function computeMacros(meals: Meal[]) {
   let kcal = 0, protein = 0, carbs = 0, fat = 0;
   for (const meal of meals) {
     for (const item of meal.items) {
-      const q = item.quantity ?? 1;
-      const baseKcal = Number(item.kcal || item.calories || 0);
-      const baseProtein = Number(item.protein || 0);
-      const baseCarbs = Number(item.carbs || 0);
-      const baseFat = Number(item.fat || 0);
-      const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') ? q / 100 : q;
-
-      kcal += baseKcal * factor;
-      protein += baseProtein * factor;
-      carbs += baseCarbs * factor;
-      fat += baseFat * factor;
+      const macros = calculateItemMacros(item, item.quantity ?? 100);
+      kcal += macros.kcal;
+      protein += macros.protein;
+      carbs += macros.carbs;
+      fat += macros.fat;
     }
   }
   return { kcal, protein, carbs, fat };

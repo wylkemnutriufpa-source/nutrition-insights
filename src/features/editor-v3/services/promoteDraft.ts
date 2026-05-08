@@ -12,6 +12,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
+import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 
 type ClinicalMealType =
   | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
@@ -68,11 +69,11 @@ function buildItemDescription(meal: Meal): string {
 function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {
-    const q = i.quantity ?? 1;
-    kcal += (i.kcal ?? i.calories ?? 0) * q;
-    p += (i.protein ?? 0) * q;
-    c += (i.carbs ?? 0) * q;
-    f += (i.fat ?? 0) * q;
+    const macros = calculateItemMacros(i, i.quantity ?? 100);
+    kcal += macros.kcal;
+    p += macros.protein;
+    c += macros.carbs;
+    f += macros.fat;
   }
   return { kcal, p, c, f };
 }
@@ -109,6 +110,7 @@ export async function promoteDraftToMealPlan(
       start_date: today,
       plan_status: 'published_to_patient',
       is_active: true,
+      plan_mode: 'single_day',
       total_target_calories: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || null,
       total_target_protein: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || null,
       total_target_carbs: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || null,
