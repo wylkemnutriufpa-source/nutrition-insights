@@ -53,14 +53,21 @@ export function buildMeal(
 
   // 2. REGRAS ESPECÍFICAS DE ESTRUTURA
   if (isBreakfast) {
-    // Café da Manhã: Pão, Tapioca ou Cuscuz + Ovo ou Queijo
-    const breadOptions = allowedDb.filter(f => ["pão", "tapioca", "cuscuz"].some(opt => f.name.toLowerCase().includes(opt)));
-    const proteinOptions = allowedDb.filter(f => ["ovo", "queijo"].some(opt => f.name.toLowerCase().includes(opt)));
-    const fruitOptions = allowedDb.filter(f => f.category === "fruit");
+    // Café da Manhã: Pão, Tapioca ou Cuscuz + Ovo ou Queijo + Fruta
+    const options = [
+      { bread: "pão", protein: "ovo" },
+      { bread: "tapioca", protein: "queijo" },
+      { bread: "cuscuz", protein: "ovo" },
+      { bread: "pão", protein: "queijo" },
+      { bread: "tapioca", protein: "ovo" },
+      { bread: "cuscuz", protein: "queijo" }
+    ];
 
-    const carb = breadOptions[Math.floor(Math.random() * breadOptions.length)] || selectFood(allowedDb, "carb", [], preferences);
-    const protein = proteinOptions[Math.floor(Math.random() * proteinOptions.length)] || selectFood(allowedDb, "protein", [], preferences);
-    const fruit = fruitOptions[Math.floor(Math.random() * fruitOptions.length)] || selectFood(allowedDb, "fruit", [], preferences);
+    const combo = options[Math.floor(Math.random() * options.length)];
+
+    const carb = allowedDb.find(f => f.name.toLowerCase().includes(combo.bread)) || selectFood(allowedDb, "carb", [], preferences);
+    const protein = allowedDb.find(f => f.name.toLowerCase().includes(combo.protein)) || selectFood(allowedDb, "protein", [], preferences);
+    const fruit = allowedDb.find(f => f.category === "fruit") || selectFood(allowedDb, "fruit", [], preferences);
 
     if (carb) {
       const g = carb.name.toLowerCase().includes("pão") ? 50 : 80;
@@ -71,18 +78,17 @@ export function buildMeal(
       items.push(createPlannedItem(protein, g));
     }
     if (fruit) {
-      items.push(createPlannedItem(fruit, 100));
+      items.push(createPlannedItem(fruit, 120));
     }
     
-    // Recalcular macros totais baseados no que foi adicionado (simplificado para café)
     return finalizeMeal(type, time, items, targetMacros);
   }
 
   if (isSnack) {
-    // Lanches: SOMENTE Frutas e suas substituições
+    // Lanches: SOMENTE Frutas
     const fruits = allowedDb.filter(f => f.category === "fruit");
     if (fruits.length > 0) {
-      const fruit = fruits[0];
+      const fruit = fruits[Math.floor(Math.random() * fruits.length)];
       items.push(createPlannedItem(fruit, 150));
     }
     return finalizeMeal(type, time, items, targetMacros);
@@ -93,12 +99,12 @@ export function buildMeal(
     const protein = selectFood(allowedDb, "protein", [], preferences) || selectFood(foodDb, "protein", restrictions, preferences);
     const rice = allowedDb.find(f => f.name.toLowerCase().includes("arroz")) || selectFood(allowedDb, "carb", [], preferences);
     const beans = allowedDb.find(f => f.name.toLowerCase().includes("feijão")) || foodDb.find(f => f.name.toLowerCase().includes("feijão"));
-    const salad = allowedDb.filter(f => f.category === "vegetable");
+    const salad = allowedDb.find(f => f.category === "vegetable") || selectFood(allowedDb, "vegetable", [], preferences);
 
-    if (protein) items.push(createPlannedItem(protein, 120));
-    if (rice) items.push(createPlannedItem(rice, 100));
-    if (beans) items.push(createPlannedItem(beans, 70));
-    if (salad.length > 0) items.push(createPlannedItem(salad[Math.floor(Math.random() * salad.length)], 100));
+    if (protein) items.push(createPlannedItem(protein, 150));
+    if (rice) items.push(createPlannedItem(rice, 120));
+    if (beans) items.push(createPlannedItem(beans, 80));
+    if (salad) items.push(createPlannedItem(salad, 100));
 
     return finalizeMeal(type, time, items, targetMacros);
   }
