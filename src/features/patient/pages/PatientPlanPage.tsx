@@ -242,9 +242,22 @@ export const PatientPlanPage = () => {
                             <p className="text-xs text-gray-500">Medida caseira recomendada</p>
                           </div>
                         </div>
-                        <span className="text-emerald-500/80 font-medium text-sm">
-                          {item.kcal} kcal
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-emerald-500/80 font-medium text-sm whitespace-nowrap">
+                            {Math.round(item.kcal)} kcal
+                          </span>
+                          {!isCompleted && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-gray-500 hover:text-emerald-500"
+                              onClick={() => handleOpenSubstitution(item, meal.id)}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
+
                       </li>
                     ))}
                   </ul>
