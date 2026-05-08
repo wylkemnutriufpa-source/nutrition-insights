@@ -13,23 +13,22 @@ const App = () => {
 
   // Global Switcher UI
   const Switcher = () => (
-    <div className="fixed top-4 right-4 z-[9999] flex items-center gap-3 bg-black/50 backdrop-blur-xl p-2 rounded-2xl border border-white/10 shadow-2xl">
-      {mode === 'V2' && (
-        <span className="px-3 py-1 bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-tighter rounded-lg border border-green-500/30 animate-pulse">
-          FitJourney 2.0 Beta
-        </span>
-      )}
-      <button 
-        onClick={() => setMode(mode === 'V1' ? 'V2' : 'V1')}
-        className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase transition-all ${
-          mode === 'V2' 
-            ? 'bg-white text-black hover:bg-slate-200' 
-            : 'bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/40'
-        }`}
-      >
-        {mode === 'V2' ? 'Sair do Beta (V1)' : 'Entrar no Beta (V2)'}
-      </button>
-    </div>
+    <button 
+      onClick={() => setMode(mode === 'V1' ? 'V2' : 'V1')}
+      className={`fixed top-4 right-4 z-[9999] px-6 py-2.5 rounded-full text-xs font-bold uppercase transition-all shadow-2xl border flex items-center gap-3 ${
+        mode === 'V2' 
+          ? 'bg-green-600 text-white border-green-400 hover:bg-green-700' 
+          : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+      }`}
+    >
+      <div className={`w-2.5 h-2.5 rounded-full ${mode === 'V2' ? 'bg-white animate-pulse' : 'bg-slate-500'}`} />
+      <span>
+        {mode === 'V2' ? 'FitJourney 2.0 (Beta)' : 'FitJourney 1.0'}
+      </span>
+      <span className="opacity-50 text-[10px] border-l border-white/20 pl-3">
+        Clique para Alternar
+      </span>
+    </button>
   );
 
   if (mode === 'V1') {
