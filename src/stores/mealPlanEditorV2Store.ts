@@ -34,6 +34,7 @@ interface EditorV2State {
   planId: string | null;
   plan: MealPlan | null;
   patientName: string;
+  patientGoal: string;
   items: MealPlanItem[];
   substitutionCount: number; // 0, 1, 2, 3, 4
 
