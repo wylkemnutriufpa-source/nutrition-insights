@@ -2142,9 +2142,9 @@ const EditorV3Page = () => {
                       
                       <div className="w-[140px]">
                         <Select
-                          value={selectedItem.item.measurementType === 'unit' ? selectedItem.item.portionUnitLabel : selectedItem.item.measurementType || 'gram'}
+                          value={selectedItem.item.portionUnitLabel || (selectedItem.item.measurementType === 'gram' ? 'Gramas' : 'Porção')}
                           onValueChange={(val) => {
-                            const option = MEASURE_OPTIONS.find(o => o.unit === val || o.type === val);
+                            const option = MEASURE_OPTIONS.find(o => o.unit === val || o.label === val);
                             const unitLabel = option?.label || val;
                             const unitType = option?.type || 'unit';
                             
@@ -2152,25 +2152,26 @@ const EditorV3Page = () => {
                             const name = selectedItem.item.name.toLowerCase();
                             let newQuantity = selectedItem.item.quantity;
                             
-                            if (val === 'unid P') {
+                            if (val === 'Unid. P') {
                               if (name.includes('banana')) newQuantity = 60;
                               else if (name.includes('maçã')) newQuantity = 80;
                               else if (name.includes('ovo')) newQuantity = 40;
                               else newQuantity = 50;
-                            } else if (val === 'unid M') {
+                            } else if (val === 'Unid. M') {
                               if (name.includes('banana')) newQuantity = 100;
                               else if (name.includes('maçã')) newQuantity = 130;
                               else if (name.includes('ovo')) newQuantity = 50;
                               else newQuantity = 100;
-                            } else if (val === 'unid G') {
+                            } else if (val === 'Unid. G') {
                               if (name.includes('banana')) newQuantity = 150;
                               else if (name.includes('maçã')) newQuantity = 200;
                               else if (name.includes('ovo')) newQuantity = 65;
                               else newQuantity = 150;
                             } else if (val === 'colher(es)') {
                               newQuantity = 15;
-                            } else if (val === 'g' || val === 'gram') {
-                              newQuantity = 100;
+                            } else if (val === 'Gramas' || val === 'g') {
+                              // Se estava em unidade e voltou para gramas, mantemos o peso atual
+                              // mas garantimos que o tipo mude
                             }
                             
                             updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
