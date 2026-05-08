@@ -5,8 +5,9 @@ import { isFeatureEnabled } from '../../security/services/featureFlags';
 import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
-import { loadOrCreateDraft } from '../services/draftService';
+import { loadOrCreateDraft, saveDraft } from '../services/draftService';
 import { runV3IntegrationTests } from '../services/v3Tests';
+import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
