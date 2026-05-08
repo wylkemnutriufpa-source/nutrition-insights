@@ -64,11 +64,12 @@ function computeMacros(meals: Meal[]) {
   let kcal = 0, protein = 0, carbs = 0, fat = 0;
   for (const meal of meals) {
     for (const item of meal.items) {
-      const macros = calculateItemMacros(item, item.quantity ?? 100);
-      kcal += macros.kcal;
-      protein += macros.protein;
-      carbs += macros.carbs;
-      fat += macros.fat;
+      // 🛡️ REGRA DE OURO: Usar macros entregues pelo motor ou editados manualmente.
+      // Evita o loop de distorção (ex: 25.000 kcal) ao salvar.
+      kcal += item.kcal ?? 0;
+      protein += item.protein ?? 0;
+      carbs += item.carbs ?? 0;
+      fat += item.fat ?? 0;
     }
   }
   return { kcal, protein, carbs, fat };
