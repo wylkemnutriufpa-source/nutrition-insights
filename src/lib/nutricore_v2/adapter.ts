@@ -96,7 +96,17 @@ export class NutriCoreV2Adapter {
     const finalDb = foodDb.length > 5 ? foodDb : BASE_FOODS;
 
     return distributed.map(slot => {
-      const mealName = slot.type.charAt(0).toUpperCase() + slot.type.slice(1).replace(/_/g, ' ');
+      // Mapeamento robusto de nomes para o Editor V3
+      const nameMap: Record<string, string> = {
+        'cafe_da_manha': 'Café da Manhã',
+        'lanche_da_manha': 'Lanche da Manhã',
+        'almoço': 'Almoço',
+        'lanche_da_tarde': 'Lanche da Tarde',
+        'jantar': 'Jantar',
+        'ceia': 'Ceia'
+      };
+      
+      const mealName = nameMap[slot.type] || slot.type.charAt(0).toUpperCase() + slot.type.slice(1).replace(/_/g, ' ');
       
       const plannedMeal = buildMeal(
         slot.type,
@@ -119,23 +129,30 @@ export class NutriCoreV2Adapter {
         id: Math.random().toString(36).substring(2, 9),
         name: mealName,
         time: slot.time,
-        items: plannedMeal.items.map(item => ({
-          id: item.foodId,
-          name: item.name,
-          kcal: item.macros.kcal,
-          calories: item.macros.kcal,
-          protein: item.macros.protein_g,
-          carbs: item.macros.carb_g,
-          fat: item.macros.fat_g,
-          portionValue: 100,
-          portionUnitLabel: 'g',
-          portionUnit: 'g',
-          portionLabel: 'g',
-          measurementType: 'gram',
-          instanceId: Math.random().toString(36).substring(2, 10),
-          quantity: item.grams,
-          substitutions: []
-        }))
+        items: plannedMeal.items.map(item => {
+          // CORREÇÃO CRÍTICA: Macros devem ser por 100g (portionValue)
+          // para evitar efeito cascata de multiplicação no Editor V3
+          const factor = item.grams / 100;
+          
+          return {
+            id: item.foodId,
+            name: item.name,
+            // Valores normalizados para 100g (base do Editor)
+            kcal: Math.round(item.macros.kcal / (factor || 1)),
+            calories: Math.round(item.macros.kcal / (factor || 1)),
+            protein: Number((item.macros.protein_g / (factor || 1)).toFixed(1)),
+            carbs: Number((item.macros.carb_g / (factor || 1)).toFixed(1)),
+            fat: Number((item.macros.fat_g / (factor || 1)).toFixed(1)),
+            portionValue: 100,
+            portionUnitLabel: 'g',
+            portionUnit: 'g',
+            portionLabel: 'g',
+            measurementType: 'gram',
+            instanceId: Math.random().toString(36).substring(2, 10),
+            quantity: item.grams, // Quantidade total em gramas
+            substitutions: []
+          };
+        })
       };
     });
   }
