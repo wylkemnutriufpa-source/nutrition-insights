@@ -413,37 +413,8 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Quick Access: Other Views — PRO+ ── */}
-      {minMode("pro") && (
-      <div className="flex flex-wrap items-center gap-2">
-        {[
-          { key: "analytics", icon: BarChart3, label: "Analytics", desc: "Visão estratégica" },
-          { key: "strategy", icon: Brain, label: "IA Estratégica", desc: "Diagnóstico com IA" },
-          { key: "risk", icon: Shield, label: "Risco Clínico", desc: "Monitoramento de alertas" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(activeTab === tab.key ? "clinical" : tab.key)}
-            className={`flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg border transition-all duration-200 ${
-              activeTab === tab.key
-                ? "border-primary/40 bg-primary/10 text-foreground shadow-sm"
-                : "border-border/50 bg-card/50 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-muted/30"
-            }`}
-          >
-            <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.key ? "text-primary" : ""}`} />
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      )}
+      {/* ── Dashboard Content ── */}
 
-      {minMode("pro") && activeTab === "analytics" ? (
-        <AnalyticsDashboard />
-      ) : minMode("pro") && activeTab === "strategy" ? (
-        <AIStrategyCenter />
-      ) : minMode("pro") && activeTab === "risk" ? (
-        <ClinicalRiskDashboardContent />
-      ) : null}
 
       {/* ── Clinical Dashboard — Always visible as main content ── */}
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
@@ -491,166 +462,28 @@ function NutritionistDashboardContent() {
         ))}
       </motion.div>
 
-      {/* ── Setup Wizard & Focus — BASIC+ ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* ── Setup Wizard ── */}
+      <div className="w-full">
         <motion.div variants={item}>
           <SetupWizard />
         </motion.div>
-        {minMode("pro") && (
-          <motion.div variants={item} className="glass-premium rounded-xl p-5 shimmer-sweep flex flex-col justify-center">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="font-display font-bold">Foco Clínico</h2>
-                <p className="text-xs text-muted-foreground">Prioridades automáticas para hoje</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-                  <span className="text-xs font-medium">Pacientes Críticos</span>
-                </div>
-                <span className="text-xs font-bold">{riskPatients.filter(p => p.score < 30).length}</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-warning" />
-                  <span className="text-xs font-medium">Check-ins Pendentes</span>
-                </div>
-                <span className="text-xs font-bold">{pendingCheckins}</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-info" />
-                  <span className="text-xs font-medium">Consultas Agendadas</span>
-                </div>
-                <span className="text-xs font-bold">{appointmentsToday}</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
 
-      {/* FitJourney Intelligence — PRO+ (Removed for MVP cleanup) */}
-
-      {/* ── Premium Control Tower Banner — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <PremiumControlTowerBanner />
-        </motion.div>
-      )}
-
-      {/* Portfolio Intelligence — PRO+ (Removed for MVP cleanup) */}
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
       <motion.div variants={item} className={`grid grid-cols-2 sm:grid-cols-3 ${isBasic ? "lg:grid-cols-4" : "lg:grid-cols-6"} gap-3`}>
         <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/patients")} />
         <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/appointments")} />
-        {minMode("pro") && <DailyMetricCard label="Programas Ativos" value={programCount} icon={Rocket} color="accent" onClick={() => navigate("/programs")} />}
-        {minMode("pro") && <DailyMetricCard label="Protocolos" value={protocolCount} icon={FileText} color="warning" onClick={() => navigate("/protocols")} />}
         <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
-        {minMode("pro") && <OnlinePatientsWidget variant="card" showPremiumTag={true} />}
+        <OnlinePatientsWidget variant="card" showPremiumTag={false} />
         <ChatDashboardWidget />
       </motion.div>
 
-      {/* ── 3️⃣ AI Daily Briefing — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <BriefingExpandable
-            aiSummary={aiSummary}
-            aiLoading={aiLoading}
-            aiInsights={aiInsights}
-            attentionPatients={attentionPatients}
-            pendingCheckins={pendingCheckins}
-            appointmentsToday={appointmentsToday}
-            riskPatients={riskPatients}
-          />
-        </motion.div>
-      )}
 
-      {/* ── Nutrition Copilot — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <NutritionCopilot
-            patients={riskPatients.map(p => ({
-              id: p.id,
-              name: p.name,
-              score: p.score,
-              risks: p.risks,
-              lastActivity: p.lastActivity,
-            }))}
-            attentionPatients={attentionPatients}
-            aiInsights={aiInsights}
-            aiSummary={aiSummary}
-            aiLoading={aiLoading}
-            appointmentsToday={appointmentsToday}
-            pendingCheckins={pendingCheckins}
-            patientCount={patientCount}
-            evolutionData={evolutionData}
-          />
-        </motion.div>
-      )}
+      <motion.div variants={item}>
+        <PatientGridDashboard />
+      </motion.div>
 
-      {/* ── Main Grid: Attention + Insights + Risk — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
-          <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
-          <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* ── Momentum dos Pacientes — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Momentum dos Pacientes">
-            <PatientMomentumSummary />
-          </ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* Insights Comportamentais — PRO+ (Removed for MVP cleanup) */}
-
-      {/* ── Patient Retention Risk — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Risco de Abandono">
-            <ChurnRiskPanel
-              patients={riskPatients.map(p => ({
-                id: p.id,
-                name: p.name,
-                score: p.score,
-                risks: p.risks,
-                lastActivity: p.lastActivity,
-              }))}
-              loading={aiLoading}
-            />
-          </ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* ── Stagnation Alerts — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Alertas de Estagnação">
-            <StagnationAlerts />
-          </ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* Patient Progress Simulation — ADVANCED (Removed for MVP cleanup) */}
-
-      {/* ── Simulador de Faturamento — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Simulador de Faturamento — Pacientes">
-            <PatientRevenueSimulator />
-          </ExpandablePanel>
-        </motion.div>
-      )}
 
       {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
