@@ -435,7 +435,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         toast.success("Plano revisado pelo motor clínico. Abrindo versão corrigida...");
       }
 
-      navigate(`/meal-plans/${resolvedPlanId}`);
+      navigate(`/editor-v3/${pipeline.patient_id}?planId=${resolvedPlanId}`);
     } catch (err: any) {
       toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
     } finally {
