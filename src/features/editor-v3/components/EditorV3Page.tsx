@@ -1415,7 +1415,7 @@ const EditorV3Page = () => {
         </div>
       </header>
 
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
 
         <div className="lg:col-span-8 space-y-12">
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
