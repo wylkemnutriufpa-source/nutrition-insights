@@ -51,84 +51,75 @@ export function buildMeal(
   // 1. FILTRAGEM POR REFEIÇÃO (REGRAS CLÍNICAS)
   let allowedDb = foodDb.filter(f => !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase())));
 
+  // 2. REGRAS ESPECÍFICAS DE ESTRUTURA
   if (isBreakfast) {
-    // Café da Manhã: Pão, Ovo, Queijo, Iogurte, Fruta (Sem arroz/feijão/carne pesada)
-    allowedDb = allowedDb.filter(f => 
-      f.category === "fruit" || 
-      f.name.toLowerCase().includes("pão") || 
-      f.name.toLowerCase().includes("ovo") || 
-      f.name.toLowerCase().includes("queijo") || 
-      f.name.toLowerCase().includes("iogurte") ||
-      f.name.toLowerCase().includes("manteiga") ||
-      f.name.toLowerCase().includes("aveia")
-    );
-  } else if (isSnack) {
-    // Lanches: Frutas, Iogurtes, Whey, Queijos leves
-    allowedDb = allowedDb.filter(f => 
-      f.category === "fruit" || 
-      f.name.toLowerCase().includes("iogurte") || 
-      f.name.toLowerCase().includes("whey") || 
-      f.name.toLowerCase().includes("queijo") ||
-      f.name.toLowerCase().includes("aveia") ||
-      f.name.toLowerCase().includes("castanha")
-    );
-  }
+    // Café da Manhã: Pão, Tapioca ou Cuscuz + Ovo ou Queijo
+    const breadOptions = allowedDb.filter(f => ["pão", "tapioca", "cuscuz"].some(opt => f.name.toLowerCase().includes(opt)));
+    const proteinOptions = allowedDb.filter(f => ["ovo", "queijo"].some(opt => f.name.toLowerCase().includes(opt)));
+    const fruitOptions = allowedDb.filter(f => f.category === "fruit");
 
-  // 2. PROTEÍNA PRIMEIRO (Em todas as refeições)
-  const proteinFood = selectFood(allowedDb, "protein", [], preferences) || selectFood(foodDb, "protein", restrictions, preferences);
-  let proteinGrams = 0;
+    const carb = breadOptions[0] || selectFood(allowedDb, "carb", [], preferences);
+    const protein = proteinOptions[0] || selectFood(allowedDb, "protein", [], preferences);
+    const fruit = fruitOptions[0] || selectFood(allowedDb, "fruit", [], preferences);
 
-  if (proteinFood) {
-    proteinGrams = (targetMacros.protein_g / (proteinFood.protein_100g / 100));
-    // Limites de gramas baseados no tipo de refeição
-    const minG = isSnack ? 30 : 80;
-    const maxG = isSnack ? 150 : 250;
-    proteinGrams = roundTo5(Math.min(Math.max(proteinGrams, minG), maxG));
+    if (carb) {
+      const g = carb.name.toLowerCase().includes("pão") ? 50 : 80;
+      items.push(createPlannedItem(carb, g));
+    }
+    if (protein) {
+      const g = protein.name.toLowerCase().includes("ovo") ? 50 : 30;
+      items.push(createPlannedItem(protein, g));
+    }
+    if (fruit) {
+      items.push(createPlannedItem(fruit, 100));
+    }
     
-    const item = createPlannedItem(proteinFood, proteinGrams);
-    items.push(item);
+    // Recalcular macros totais baseados no que foi adicionado (simplificado para café)
+    return finalizeMeal(type, time, items, targetMacros);
   }
 
-  // 3. VEGETAIS E FRUTAS (Componentes fixos)
+  if (isSnack) {
+    // Lanches: SOMENTE Frutas e suas substituições
+    const fruits = allowedDb.filter(f => f.category === "fruit");
+    if (fruits.length > 0) {
+      const fruit = fruits[0];
+      items.push(createPlannedItem(fruit, 150));
+    }
+    return finalizeMeal(type, time, items, targetMacros);
+  }
+
   if (isLunchOrDinner) {
-    const vegFood = selectFood(allowedDb, "vegetable", [], preferences) || selectFood(foodDb, "vegetable", restrictions, preferences);
-    if (vegFood) {
-      items.push(createPlannedItem(vegFood, 100)); // 100g fixos
-    }
+    // Almoço e Jantar: Arroz, Feijão, Salada, Proteína
+    const protein = selectFood(allowedDb, "protein", [], preferences) || selectFood(foodDb, "protein", restrictions, preferences);
+    const rice = allowedDb.find(f => f.name.toLowerCase().includes("arroz")) || selectFood(allowedDb, "carb", [], preferences);
+    const beans = allowedDb.find(f => f.name.toLowerCase().includes("feijão"));
+    const salad = allowedDb.filter(f => f.category === "vegetable");
+
+    if (protein) items.push(createPlannedItem(protein, 120));
+    if (rice) items.push(createPlannedItem(rice, 100));
+    if (beans) items.push(createPlannedItem(beans, 70));
+    if (salad.length > 0) items.push(createPlannedItem(salad[0], 100));
+
+    return finalizeMeal(type, time, items, targetMacros);
   }
 
-  if (isBreakfast || isSnack) {
-    const fruitFood = selectFood(allowedDb, "fruit", [], preferences) || selectFood(foodDb, "fruit", restrictions, preferences);
-    if (fruitFood) {
-      const grams = type === "ceia" ? 80 : 120; // Fruta menor na ceia
-      items.push(createPlannedItem(fruitFood, grams));
-    }
-  }
+  // Fallback para outras refeições
+  return finalizeMeal(type, time, items, targetMacros);
+}
 
-  // 4. GORDURA (Foco em Almoço/Jantar ou Café)
-  const currentFat = items.reduce((acc, i) => acc + i.macros.fat_g, 0);
-  const remainingFat = targetMacros.fat_g - currentFat;
-  if (remainingFat > 2 && (isLunchOrDinner || isBreakfast)) {
-    const fatFood = selectFood(allowedDb, "fat", [], preferences) || selectFood(foodDb, "fat", restrictions, preferences);
-    if (fatFood) {
-      let fatGrams = remainingFat / (fatFood.fat_100g / 100);
-      fatGrams = Math.min(Math.max(fatGrams, 5), 15);
-      items.push(createPlannedItem(fatFood, fatGrams));
-    }
-  }
+function finalizeMeal(type: MealType, time: string, items: PlannedItem[], targetMacros: any): PlannedMeal {
+  const totalMacros = items.reduce(
+    (acc, item) => ({
+      protein_g: round(acc.protein_g + item.macros.protein_g),
+      carb_g: round(acc.carb_g + item.macros.carb_g),
+      fat_g: round(acc.fat_g + item.macros.fat_g),
+      kcal: round(acc.kcal + item.macros.kcal),
+    }),
+    { protein_g: 0, carb_g: 0, fat_g: 0, kcal: 0 }
+  );
 
-  // 5. CARBOIDRATO (Completa as calorias)
-  const currentKcal = items.reduce((acc, i) => acc + i.macros.kcal, 0);
-  const remainingKcal = targetMacros.kcal - currentKcal;
-  const carbFood = selectFood(allowedDb, "carb", [], preferences) || selectFood(foodDb, "carb", restrictions, preferences);
-  
-  if (carbFood && remainingKcal > 15) {
-    let carbGrams = remainingKcal / (carbFood.kcal_100g / 100);
-    // Limites de carbo
-    const maxCarb = isLunchOrDinner ? 300 : 150;
-    carbGrams = roundTo5(Math.min(Math.max(carbGrams, 20), maxCarb));
-    items.push(createPlannedItem(carbFood, carbGrams));
-  }
+  return { type, time, items, totalMacros };
+}
 
   // Calcular totais finais
   const totalMacros = items.reduce(
