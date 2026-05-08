@@ -2110,15 +2110,60 @@ const EditorV3Page = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                    <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3 block">Quantidade</Label>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block">Quantidade</Label>
+                      <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block">Medida</Label>
+                    </div>
                     <div className="flex items-center gap-4">
-                      <Input 
-                        type="number" 
-                        value={selectedItem.item.quantity} 
-                        onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
-                        className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50"
-                      />
-                      <span className="text-lg font-black text-white/60 uppercase">{selectedItem.item.portionUnitLabel}</span>
+                      <div className="flex-1 flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
+                          onClick={() => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Math.max(0, selectedItem.item.quantity - 10))}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <Input 
+                          type="number" 
+                          value={selectedItem.item.quantity} 
+                          onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
+                          className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50 text-center"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
+                          onClick={() => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, selectedItem.item.quantity + 10)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="w-[140px]">
+                        <Select
+                          value={selectedItem.item.measurementType || 'gram'}
+                          onValueChange={(val) => {
+                            const option = MEASURE_OPTIONS.find(o => o.unit === val || o.type === val);
+                            const unitLabel = option?.label || val;
+                            updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
+                              measurementType: val as any,
+                              portionUnitLabel: unitLabel
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-xl font-black focus:border-emerald-500/50">
+                            <SelectValue placeholder="Unidade" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black border-white/10 text-white">
+                            {MEASURE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.unit} value={opt.unit} className="font-bold">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="mt-4 flex gap-4">
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
