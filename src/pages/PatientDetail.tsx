@@ -1846,7 +1846,7 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Curiosidades & Dicas</DialogTitle></DialogHeader>
                   <div className="space-y-4">
-                    <Curiosidades />
+                    <Curiosidades embedded />
                   </div>
                 </DialogContent>
               </Dialog>
