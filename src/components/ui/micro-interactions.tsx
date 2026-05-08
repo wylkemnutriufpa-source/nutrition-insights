@@ -81,7 +81,7 @@ export function CognitiveHover({
           ? undefined
           : {
               y: -4,
-              transition: { duration: 0.14, ease: EASE_PREMIUM as unknown as any },
+              transition: { duration: 0.14, ease: EASE_PREMIUM as any },
             }
       }
       style={{
@@ -112,7 +112,96 @@ export function ProgressPulse({
       initial={{ scale: 1 }}
       animate={{ scale: [1, 1.04, 1] }}
       transition={{ duration: 0.3, ease: EASE_PREMIUM as any }}
-...
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * IntelligentButton — premium CTA button with internal glow animation.
+ * Has a slow shimmer pulse every 6s.
+ */
+export function IntelligentButton({
+  children,
+  onClick,
+  disabled,
+  className,
+  variant = "primary",
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
+  variant?: "primary" | "confirm";
+}) {
+  const reduced = useReducedMotion();
+
+  return (
+    <motion.button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "relative overflow-hidden rounded-xl font-semibold transition-all duration-200",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+        variant === "primary"
+          ? "bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
+          : "bg-gradient-to-r from-primary to-accent text-primary-foreground",
+        className
+      )}
+      whileHover={reduced ? undefined : { scale: 1.02 }}
+      whileTap={reduced ? undefined : { scale: 0.97 }}
+    >
+      {/* Internal shimmer */}
+      {!reduced && !disabled && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(110deg, transparent 25%, hsl(var(--primary-foreground) / 0.08) 37%, hsl(var(--primary-foreground) / 0.12) 50%, hsl(var(--primary-foreground) / 0.08) 63%, transparent 75%)",
+            backgroundSize: "200% 100%",
+          }}
+          animate={{ backgroundPosition: ["-200% center", "200% center"] }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            repeatDelay: 4,
+            ease: "easeInOut",
+          }}
+        />
+      )}
+      <span className="relative z-10">{children}</span>
+    </motion.button>
+  );
+}
+
+/**
+ * DecisionConfirm — visual feedback when a decision is registered.
+ * Shows a quick energy ripple + golden glow on confirm.
+ */
+export function DecisionConfirm({
+  children,
+  confirmed,
+  className,
+}: {
+  children: ReactNode;
+  confirmed: boolean;
+  className?: string;
+}) {
+  return (
+    <motion.div
+      className={cn("relative", className)}
+      animate={
+        confirmed
+          ? {
+              boxShadow: [
+                "0 0 0 0 hsl(var(--accent) / 0)",
+                "0 0 16px 4px hsl(var(--accent) / 0.2)",
+                "0 0 0 0 hsl(var(--accent) / 0)",
+              ],
+            }
+          : {}
+      }
       transition={{ duration: 0.6, ease: EASE_PREMIUM as any }}
     >
       {children}
