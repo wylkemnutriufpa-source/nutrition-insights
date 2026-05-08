@@ -1511,35 +1511,60 @@ const EditorV3Page = () => {
 
                 {activeTab === 'template' && (
                   templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
-                    templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => {
-                          if (activeMealId) {
-                            applyTemplateToMeal(activeMealId, t);
-                            toast.success(`Template ${t.name} aplicado!`);
-                          } else {
-                            addMealWithHeader(t.name, "08:00");
-                            setTimeout(() => {
-                              const state = useEditorState.getState();
-                              const lastMeal = state.meals[state.meals.length - 1];
-                              if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
-                            }, 50);
-                            toast.success(`Refeição criada com template ${t.name}`);
-                          }
-                        }}
-                        className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left overflow-hidden shadow-sm"
-                      >
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-500/20 transition-all">
-                          <Layers className="w-5 h-5 text-amber-500" />
+                    <div className="grid grid-cols-1 gap-3">
+                      {templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
+                        <div
+                          key={t.id}
+                          className="w-full group relative flex flex-col gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left shadow-sm"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-500/20 transition-all shrink-0">
+                              <Layers className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
+                              <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
+                            </div>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => {
+                                if (activeMealId) {
+                                  applyTemplateToMeal(activeMealId, t);
+                                  toast.success(`Template ${t.name} aplicado!`);
+                                } else {
+                                  addMealWithHeader(t.name, "08:00");
+                                  setTimeout(() => {
+                                    const state = useEditorState.getState();
+                                    const lastMeal = state.meals[state.meals.length - 1];
+                                    if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
+                                  }, 50);
+                                  toast.success(`Refeição criada com template ${t.name}`);
+                                }
+                              }}
+                              className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black transition-all shadow-inner"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1 mt-1 border-t border-white/5 pt-3">
+                            {t.items.slice(0, 5).map((item, idx) => (
+                              <Badge 
+                                key={idx} 
+                                variant="outline" 
+                                className="text-[7px] font-bold bg-white/5 border-white/5 text-white/40 group-hover:text-white/60 transition-colors py-0 px-1.5 h-4"
+                              >
+                                {item.name}
+                              </Badge>
+                            ))}
+                            {t.items.length > 5 && (
+                              <span className="text-[7px] font-bold text-white/20">+{t.items.length - 5}</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
-                          <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
-                        </div>
-                        <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
-                      </button>
-                    ))
+                      ))}
+                    </div>
                   ) : (
                     <div className="py-12 flex flex-col items-center justify-center gap-3 text-white/10">
                       <LayoutDashboard className="w-8 h-8 opacity-20" />
