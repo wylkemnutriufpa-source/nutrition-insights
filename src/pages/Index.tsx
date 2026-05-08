@@ -462,48 +462,13 @@ function NutritionistDashboardContent() {
         ))}
       </motion.div>
 
-      {/* ── Setup Wizard & Focus — BASIC+ ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* ── Setup Wizard ── */}
+      <div className="w-full">
         <motion.div variants={item}>
           <SetupWizard />
         </motion.div>
-        {minMode("pro") && (
-          <motion.div variants={item} className="glass-premium rounded-xl p-5 shimmer-sweep flex flex-col justify-center">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="font-display font-bold">Foco Clínico</h2>
-                <p className="text-xs text-muted-foreground">Prioridades automáticas para hoje</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-                  <span className="text-xs font-medium">Pacientes Críticos</span>
-                </div>
-                <span className="text-xs font-bold">{riskPatients.filter(p => p.score < 30).length}</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-warning" />
-                  <span className="text-xs font-medium">Check-ins Pendentes</span>
-                </div>
-                <span className="text-xs font-bold">{pendingCheckins}</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-info" />
-                  <span className="text-xs font-medium">Consultas Agendadas</span>
-                </div>
-                <span className="text-xs font-bold">{appointmentsToday}</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
+
 
       {/* ── Patient List Focus ── */}
       <motion.div variants={item}>
