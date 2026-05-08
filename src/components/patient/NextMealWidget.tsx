@@ -64,13 +64,14 @@ export default function NextMealWidget() {
       if (!plan) { setLoading(false); return; }
       setTotalsStatus(plan.totals_status || "ok");
 
-      const dayOfWeek = (new Date().getDay() + 6) % 7;
+      // Get current day of week (0=Sunday, 5=Friday)
+      const now_dow = new Date().getDay();
 
       const { data: items } = await supabase
         .from("meal_plan_items")
-        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target")
+        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week")
         .eq("meal_plan_id", plan.id)
-        .eq("day_of_week", dayOfWeek);
+        .or(`day_of_week.eq.${now_dow},day_of_week.is.null`);
 
       if (!items || items.length === 0) { setLoading(false); return; }
 
