@@ -279,6 +279,8 @@ const EditorV3Page = () => {
           // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
           const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
           const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
+          const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
+          const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
           const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
           const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
           
