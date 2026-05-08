@@ -55,7 +55,7 @@ export function NeuralStepTransition({
         }
         transition={{
           duration: 0.48,
-          ease: EASE_PREMIUM as unknown as number[],
+          ease: EASE_PREMIUM as any,
         }}
       >
         {children}
@@ -122,7 +122,7 @@ export function StaggerItem({
       transition={{
         duration: 0.5,
         delay,
-        ease: EASE_PREMIUM as unknown as number[],
+        ease: EASE_PREMIUM as any,
       }}
     >
       {children}
@@ -177,7 +177,7 @@ export function ModalMaterialize({
             }
             transition={{
               duration: 0.4,
-              ease: EASE_PREMIUM as unknown as number[],
+              ease: EASE_PREMIUM as any,
             }}
           >
             <div className="pointer-events-auto">{children}</div>
@@ -221,7 +221,7 @@ export function TabSlideTransition({
             ? { opacity: 0 }
             : { opacity: 0, x: -20 * direction, filter: "blur(2px)" }
         }
-        transition={{ duration: 0.32, ease: EASE_PREMIUM as unknown as number[] }}
+        transition={{ duration: 0.32, ease: EASE_PREMIUM as any }}
       >
         {children}
       </motion.div>
