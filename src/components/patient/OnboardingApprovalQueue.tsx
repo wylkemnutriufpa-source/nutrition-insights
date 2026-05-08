@@ -355,7 +355,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             ? "Plano gerado, corrigido pelo motor clínico e pronto para revisão."
             : `Plano gerado com ${data.items_count} itens! Revise e aprove.`
         );
-        navigate(`/meal-plans/${reviewPlanId}`);
+        navigate(`/editor-v3/${pipeline.patient_id}?planId=${reviewPlanId}`);
       }
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
