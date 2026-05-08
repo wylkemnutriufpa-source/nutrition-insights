@@ -1530,14 +1530,19 @@ const EditorV3Page = () => {
       <Dialog open={showClinicalDecision} onOpenChange={setShowClinicalDecision}>
         <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
           <div className="p-8">
-            <div className="flex items-center gap-4 mb-8">
-               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
-                  <AlertTriangle className="w-8 h-8 text-rose-500" />
-               </div>
-               <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Decisão Clínica Necessária</h2>
-                  <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">O plano atual possui inconsistências críticas para este paciente.</p>
-               </div>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                 <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+                    <AlertTriangle className="w-8 h-8 text-rose-500" />
+                 </div>
+                 <div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Decisão Clínica Necessária</h2>
+                    <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">O plano atual possui inconsistências críticas para este paciente.</p>
+                 </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowClinicalDecision(false)} className="text-white/40 hover:text-white rounded-full">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
 
             <div className="space-y-6">
@@ -1625,14 +1630,19 @@ const EditorV3Page = () => {
       <Dialog open={showClinicalHistory} onOpenChange={setShowClinicalHistory}>
         <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
           <div className="p-8">
-            <div className="flex items-center gap-4 mb-8">
-               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                  <History className="w-8 h-8 text-emerald-500" />
-               </div>
-               <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Histórico Clínico</h2>
-                  <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Audit Trail das decisões tomadas para este rascunho.</p>
-               </div>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                    <History className="w-8 h-8 text-emerald-500" />
+                 </div>
+                 <div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Histórico Clínico</h2>
+                    <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Audit Trail das decisões tomadas para este rascunho.</p>
+                 </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowClinicalHistory(false)} className="text-white/40 hover:text-white rounded-full">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
 
             <ScrollArea className="h-[400px] pr-4">
@@ -1679,7 +1689,10 @@ const EditorV3Page = () => {
 
       <Dialog open={showRefineOptions} onOpenChange={setShowRefineOptions}>
         <DialogContent className="max-w-md bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
-          <div className="p-8 text-center">
+          <div className="p-8 text-center relative">
+            <Button variant="ghost" size="icon" onClick={() => setShowRefineOptions(false)} className="absolute top-4 right-4 text-white/40 hover:text-white rounded-full">
+              <X className="w-6 h-6" />
+            </Button>
             <div className="w-20 h-20 rounded-3xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 mx-auto mb-6">
                <Sparkles className="w-10 h-10 text-blue-500" />
             </div>
