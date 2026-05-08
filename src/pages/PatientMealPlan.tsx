@@ -361,6 +361,7 @@ export default function PatientMealPlan() {
         patientName,
         nutritionistName,
         startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
+        planMode: plan.plan_mode || "weekly",
         items: allItems.map(i => ({
           mealType: i.meal_type || "lunch",
           title: i.title || "Refeição",
