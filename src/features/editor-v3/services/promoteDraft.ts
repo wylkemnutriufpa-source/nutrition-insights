@@ -101,14 +101,15 @@ export async function promoteDraftToMealPlan(
   const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
 
 
-  // 0) Resolve o ID real do Auth (auth.users.id) a partir do patient_id (que pode ser profile.id)
+  // 0) Resolve o ID real do Auth (auth.users.id) e do Perfil (profiles.id)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('user_id')
+    .select('id, user_id')
     .or(`id.eq.${draft.patient_id},user_id.eq.${draft.patient_id}`)
     .maybeSingle();
 
   const authUserId = profile?.user_id || draft.patient_id;
+  const profileId = profile?.id || draft.patient_id;
 
   // 1) INSERT-FIRST: cria o meal_plan oficial já PUBLICADO
   const { data: plan, error: planErr } = await supabase
