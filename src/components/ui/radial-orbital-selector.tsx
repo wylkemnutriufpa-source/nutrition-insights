@@ -332,8 +332,8 @@ function DesktopOrbital({
                     rotate: selected
                       ? { type: "spring", stiffness: 45, damping: 14, mass: 1.2 }
                       : { duration: 0.1, ease: "linear" },
-                    opacity: { duration: 0.4, ease: EASE_PREMIUM },
-                    scale: { duration: 0.4, ease: EASE_PREMIUM },
+                    opacity: { duration: 0.4, ease: EASE_PREMIUM as any },
+                    scale: { duration: 0.4, ease: EASE_PREMIUM as any },
                   }}
                   className={cn(
                     "relative flex flex-col items-center gap-1.5 rounded-2xl px-4 py-3 transition-colors duration-300 cursor-pointer border",
@@ -456,7 +456,7 @@ function MobileSelector({
                 y: 0,
                 scale: isActive ? 1 : selected ? 0.97 : 1,
               }}
-              transition={{ delay: i * 0.06, duration: 0.35, ease: EASE_PREMIUM }}
+              transition={{ delay: i * 0.06, duration: 0.35, ease: EASE_PREMIUM as any }}
               whileTap={{ scale: 0.96 }}
             >
               {isActive && !reduced && (
@@ -517,7 +517,7 @@ function MobileSelector({
             initial={{ opacity: 0, y: 8, height: 0 }}
             animate={{ opacity: 1, y: 0, height: "auto" }}
             exit={{ opacity: 0, y: -8, height: 0 }}
-            transition={{ duration: 0.3, ease: EASE_PREMIUM }}
+            transition={{ duration: 0.3, ease: EASE_PREMIUM as any }}
             className="overflow-hidden"
           >
             <div
@@ -581,7 +581,7 @@ function CenterPanel({
             initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-            transition={{ duration: 0.35, ease: EASE_PREMIUM }}
+            transition={{ duration: 0.35, ease: EASE_PREMIUM as any }}
             className="relative z-10 flex flex-col items-center gap-2"
           >
             <div
