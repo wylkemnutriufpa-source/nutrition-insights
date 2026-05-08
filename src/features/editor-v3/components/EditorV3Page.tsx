@@ -32,6 +32,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -72,9 +79,9 @@ const MEASURE_OPTIONS = [
   { label: 'Prato Raso', unit: 'prato raso', type: 'unit' as const },
   { label: 'Prato Fundo', unit: 'prato fundo', type: 'unit' as const },
   { label: 'Prato Médio', unit: 'prato médio', type: 'unit' as const },
-  { label: 'Unid. P', unit: 'unid P', type: 'unit' as const },
-  { label: 'Unid. M', unit: 'unid M', type: 'unit' as const },
-  { label: 'Unid. G', unit: 'unid G', type: 'unit' as const },
+  { label: 'Unid. P', unit: 'Unid. P', type: 'unit' as const },
+  { label: 'Unid. M', unit: 'Unid. M', type: 'unit' as const },
+  { label: 'Unid. G', unit: 'Unid. G', type: 'unit' as const },
 ];
 
 const formatPortion = (item: MealItem) => {
@@ -151,7 +158,24 @@ const EditorV3Page = () => {
   const [editAntroValues, setEditAntroValues] = useState({ weight: 0, height: 0, goal: 'Manutenção' });
   const [isSavingAntro, setIsSavingAntro] = useState(false);
   
-  const [selectedItem, setSelectedItem] = useState<{ mealId: string, item: MealItem } | null>(null);
+  const [selectedItemState, setSelectedItemState] = useState<{ mealId: string, instanceId: string } | null>(null);
+  
+  const selectedItem = useMemo(() => {
+    if (!selectedItemState) return null;
+    const meal = meals.find(m => m.id === selectedItemState.mealId);
+    if (!meal) return null;
+    const item = meal.items.find(i => i.instanceId === selectedItemState.instanceId);
+    if (!item) return null;
+    return { mealId: selectedItemState.mealId, item };
+  }, [selectedItemState, meals]);
+
+  const setSelectedItem = (data: { mealId: string, item: MealItem } | null) => {
+    if (!data) {
+      setSelectedItemState(null);
+    } else {
+      setSelectedItemState({ mealId: data.mealId, instanceId: data.item.instanceId });
+    }
+  };
   const [substitutionSearch, setSubstitutionSearch] = useState('');
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
   const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
@@ -642,16 +666,9 @@ const EditorV3Page = () => {
   }, [meals, auditLog, draftId, scheduleSave]);
 
   const handlePromotionRequest = () => {
-    // Sistema de Decisão Clínica (Pré-Salvamento)
-    const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
-    const hasViolations = criticalIssues.length > 0;
-    const isLowConfidence = confidence && confidence.value < 70;
-
-    if (hasViolations || isLowConfidence) {
-      setShowClinicalDecision(true);
-    } else {
-      handleConfirmPromotion();
-    }
+    // Sistema de Decisão Clínica (Pré-Salvamento) - DESATIVADO POR SOLICITAÇÃO DO USUÁRIO
+    // O Nutricionista agora tem liberdade total para salvar mesmo com inconsistências clínicas.
+    handleConfirmPromotion();
   };
 
   const handleConfirmPromotion = async () => {
@@ -2093,15 +2110,89 @@ const EditorV3Page = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                    <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3 block">Quantidade</Label>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block">Quantidade</Label>
+                      <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block">Medida</Label>
+                    </div>
                     <div className="flex items-center gap-4">
-                      <Input 
-                        type="number" 
-                        value={selectedItem.item.quantity} 
-                        onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
-                        className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50"
-                      />
-                      <span className="text-lg font-black text-white/60 uppercase">{selectedItem.item.portionUnitLabel}</span>
+                      <div className="flex-1 flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
+                          onClick={() => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Math.max(0, selectedItem.item.quantity - 10))}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <Input 
+                          type="number" 
+                          value={selectedItem.item.quantity} 
+                          onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
+                          className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50 text-center"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
+                          onClick={() => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, selectedItem.item.quantity + 10)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="w-[140px]">
+                        <Select
+                          value={selectedItem.item.portionUnitLabel || (selectedItem.item.measurementType === 'gram' ? 'Gramas' : 'Porção')}
+                          onValueChange={(val) => {
+                            const option = MEASURE_OPTIONS.find(o => o.unit === val || o.label === val);
+                            const unitLabel = option?.label || val;
+                            const unitType = option?.type || 'unit';
+                            
+                            // Lógica de Peso para Medidas Caseiras
+                            const name = selectedItem.item.name.toLowerCase();
+                            let newQuantity = selectedItem.item.quantity;
+                            
+                            if (val === 'Unid. P') {
+                              if (name.includes('banana')) newQuantity = 60;
+                              else if (name.includes('maçã')) newQuantity = 80;
+                              else if (name.includes('ovo')) newQuantity = 40;
+                              else newQuantity = 50;
+                            } else if (val === 'Unid. M') {
+                              if (name.includes('banana')) newQuantity = 100;
+                              else if (name.includes('maçã')) newQuantity = 130;
+                              else if (name.includes('ovo')) newQuantity = 50;
+                              else newQuantity = 100;
+                            } else if (val === 'Unid. G') {
+                              if (name.includes('banana')) newQuantity = 150;
+                              else if (name.includes('maçã')) newQuantity = 200;
+                              else if (name.includes('ovo')) newQuantity = 65;
+                              else newQuantity = 150;
+                            } else if (val === 'colher(es)') {
+                              newQuantity = 15;
+                            } else if (val === 'Gramas' || val === 'g') {
+                              // Se estava em unidade e voltou para gramas, mantemos o peso atual
+                              // mas garantimos que o tipo mude
+                            }
+                            
+                            updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
+                              measurementType: unitType as any,
+                              portionUnitLabel: unitLabel,
+                              quantity: newQuantity
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-xl font-black focus:border-emerald-500/50">
+                            <SelectValue placeholder="Unidade" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black border-white/10 text-white">
+                            {MEASURE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.unit} value={opt.unit} className="font-bold">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="mt-4 flex gap-4">
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">

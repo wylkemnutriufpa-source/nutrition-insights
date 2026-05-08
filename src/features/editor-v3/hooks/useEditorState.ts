@@ -539,9 +539,25 @@ export const useEditorState = create<EditorState>()(
             m.id === mealId
               ? {
                   ...m,
-                  items: m.items.map((i) =>
-                    i.instanceId === instanceId ? { ...i, ...updates } : i
-                  ),
+                  items: m.items.map((i) => {
+                    if (i.instanceId === instanceId) {
+                      const updatedItem = { ...i, ...updates };
+                      // Se a quantidade mudou, recalculamos os macros do item
+                      if (updates.quantity !== undefined) {
+                        const newMacros = calculateItemMacros(updatedItem, updatedItem.quantity);
+                        return {
+                          ...updatedItem,
+                          kcal: newMacros.kcal,
+                          calories: newMacros.kcal,
+                          protein: newMacros.protein,
+                          carbs: newMacros.carbs,
+                          fat: newMacros.fat
+                        };
+                      }
+                      return updatedItem;
+                    }
+                    return i;
+                  }),
                 }
               : m
           ),
