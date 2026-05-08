@@ -1,0 +1,20 @@
+{
+  "summary": "Summary:\nColumns:\n+ meal_plans.is_sharing_enabled",
+  "details": {
+    "timestamp": "2026-05-08T02:06:16.742Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260508000520_b0d2d384-fb57-4548-a66f-2dd09bcb0894.sql",
+    "lastActualMigration": "20260508015307_7cd662d9-2702-4b8b-a9d1-33eaf7e9a70b.sql",
+    "missingMigrations": [
+      "20260508015217_aba35fac-01e0-427a-a298-55d45479365c.sql",
+      "20260508015307_7cd662d9-2702-4b8b-a9d1-33eaf7e9a70b.sql"
+    ],
+    "diffResults": [
+      {
+        "table": "meal_plans",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "is_sharing_enabled"
+      }
+    ]
+  }
+}
