@@ -786,7 +786,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           'border-green-700/10 bg-background/80'
         }`} style={{ left: collapsed ? 72 : 260 }}>
           <div className="flex justify-end items-center gap-2">
+            <BetaSwitcher />
             <SyncButton />
+
             <SystemHealthBadge />
             <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))} title="Buscar (Ctrl+K)">
