@@ -9,8 +9,11 @@ export interface Food {
   kcal: number;
   calories: number; // Keep for backward compatibility
   protein: number;
+  protein_g?: number; // Keep for backward compatibility
   carbs: number;
+  carbs_g?: number; // Keep for backward compatibility
   fat: number;
+  fat_g?: number; // Keep for backward compatibility
   portionValue: number;
   portionUnitLabel: string;
   portionUnit: string; // Keep for backward compatibility
