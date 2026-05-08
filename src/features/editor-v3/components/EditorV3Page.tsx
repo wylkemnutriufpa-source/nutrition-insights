@@ -378,8 +378,12 @@ const EditorV3Page = () => {
           console.info('[v3-health] all systems operational');
           // Rodar prova clínica
           runClinicalProofTests(patientId).then(reports => {
-            console.log('--- RELATÓRIO DE PROVA CLÍNICA ---');
-            reports.forEach(r => console.log(r));
+            console.group('--- RELATÓRIO DE PROVA CLÍNICA ---');
+            reports.forEach(r => {
+              if (r.startsWith('✅')) console.info(r);
+              else console.warn(r);
+            });
+            console.groupEnd();
           });
         }
       });
