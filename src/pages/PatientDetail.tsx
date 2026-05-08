@@ -67,7 +67,7 @@ import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceTogg
 import PatientLabExams from "@/components/patient/PatientLabExams";
 import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
 import { deactivateMealPlan } from "@/lib/serverTransitions";
-import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
+import Curiosidades from "./Curiosidades";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
 
