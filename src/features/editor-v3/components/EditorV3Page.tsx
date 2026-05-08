@@ -1830,18 +1830,19 @@ const EditorV3Page = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAnamnesisHandshake(false)}>Manter Atual</Button>
             <Button onClick={() => {
-              if (pendingAnamnesisData) {
-                setPatientContext(prev => prev ? {
-                  ...prev,
+              if (pendingAnamnesisData && patientContext) {
+                setPatientContext({
+                  ...patientContext,
                   calories_target: pendingAnamnesisData.kcal,
                   protein_target: pendingAnamnesisData.protein,
                   carbs_target: pendingAnamnesisData.carbs,
                   fat_target: pendingAnamnesisData.fat
-                } : null);
+                });
                 toast.success('Metas da anamnese aplicadas!');
               }
               setShowAnamnesisHandshake(false);
             }}>Usar Metas</Button>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
