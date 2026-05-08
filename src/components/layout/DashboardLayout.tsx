@@ -32,6 +32,8 @@ import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitch
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import SystemHealthBadge from "./SystemHealthBadge";
 import { StabilityZone } from "@/components/common/StabilityZone";
+import { BetaSwitcher } from "./BetaSwitcher";
+
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "fj_sidebar_collapsed";
 
