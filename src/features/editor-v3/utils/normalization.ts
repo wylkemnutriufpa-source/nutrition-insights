@@ -40,11 +40,13 @@ export function normalizeFood(food: any): Food {
   // Garantir portionValue seguro e clinicamente coerente
   if (!f.portionValue || f.portionValue <= 0) {
     if (f.measurementType === 'gram' || f.measurementType === 'ml') {
-      f.portionValue = 1; // 1g ou 1ml é a base
+      // No FitJourney V3, a base de macros (kcal_100g) é SEMPRE por 100g/100ml
+      // para evitar o erro de multiplicação 25.000kcal (165kcal * 150g)
+      f.portionValue = 100; 
     } else if (f.measurementType === 'spoon') {
-      f.portionValue = 15; // média colher de sopa
+      f.portionValue = 15; // média colher de sopa em gramas
     } else {
-      f.portionValue = 50; // peso médio de unidade (ex: ovo)
+      f.portionValue = 1; // unidade é base 1
     }
   }
 
