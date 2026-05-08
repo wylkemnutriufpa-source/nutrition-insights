@@ -20849,6 +20849,14 @@ export type Database = {
         Args: { _patient_id: string }
         Returns: undefined
       }
+      complete_invitation: {
+        Args: { _code: string; _patient_user_id: string }
+        Returns: {
+          id: string
+          patient_email: string
+          professional_id: string
+        }[]
+      }
       complete_patient_onboarding: {
         Args: {
           _nutritionist_id: string
