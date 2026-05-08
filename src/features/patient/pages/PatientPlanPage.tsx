@@ -4,8 +4,17 @@ import { patientService } from '../services/patientService';
 import { PatientPlan } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Share2, Download, Flame, Trophy, Calendar } from 'lucide-react';
+import { 
+  CheckCircle2, Share2, Download, Flame, Trophy, Calendar, 
+  RefreshCw, ChevronRight, Scale, Info, Sparkles
+} from 'lucide-react';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
+} from '@/components/ui/dialog';
+import { getSubstitutions } from '@/lib/nutricore_v2/substitutions';
+import { BASE_FOODS, Food } from '@/lib/nutricore_v2/food-database';
 import { toast } from 'sonner';
+
 
 export const PatientPlanPage = () => {
   const { id, token } = useParams<{ id?: string, token?: string }>();
