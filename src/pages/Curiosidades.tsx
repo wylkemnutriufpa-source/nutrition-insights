@@ -265,7 +265,15 @@ export default function Curiosidades({ embedded = false }: { embedded?: boolean 
             )}
           </>
         )}
-      </div>
+    </div>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <DashboardLayout>
+      {content}
     </DashboardLayout>
   );
 }
+
