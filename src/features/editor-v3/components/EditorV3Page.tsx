@@ -116,7 +116,8 @@ const EditorV3Page = () => {
     duplicateMeal, reorderMeal, updateMealImage, setMeals,
 
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
-    patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry
+    patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
+    initialMeals: initialMealsInStore
   } = useEditorState();
 
   if (!isFeatureEnabled('editorV3')) {
@@ -135,7 +136,7 @@ const EditorV3Page = () => {
   const {
     draftId, syncState, initialMeals, initialAuditLog, lastSavedAt, sharingToken: draftSharingToken,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
-  } = useDraftSync(patientId ?? null, meals, meals, planId);
+  } = useDraftSync(patientId ?? null, initialMealsInStore, initialMealsInStore, planId);
 
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);

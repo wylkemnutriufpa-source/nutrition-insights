@@ -34,6 +34,7 @@ interface EditorState {
   patientContext: PatientContext | null;
   sharingToken: string | null;
   confidence: PlanConfidence | null;
+  initialMeals: Meal[]; // Track initial meals separate from current meals
 
   // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
   dispatch: (action: string, updateFn: (state: EditorState) => Partial<EditorState>) => void;
@@ -89,6 +90,7 @@ export const useEditorState = create<EditorState>()(
       goalMetadata: {},
       patientContext: null,
       confidence: null, sharingToken: null,
+      initialMeals: initialMeals,
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
 
@@ -178,6 +180,7 @@ export const useEditorState = create<EditorState>()(
         get().addAuditEntry({
           type: 'system_action',
           description: `Patient ${id} selected (State Reset)`,
+          initialMeals: initialMeals,
           source: 'system'
         });
       },
@@ -330,7 +333,7 @@ export const useEditorState = create<EditorState>()(
             })
           }));
 
-          set({ meals: sanitizedMeals, auditLog, sharingToken: token, planStatus: 'saved' });
+          set({ meals: sanitizedMeals, initialMeals: JSON.parse(JSON.stringify(sanitizedMeals)), auditLog, sharingToken: token, planStatus: 'saved' });
           get().recalculateScore();
         } catch (error) {
           console.error('[V3 Hydrate Error] Failed to hydrate meals, recovering...', error);
