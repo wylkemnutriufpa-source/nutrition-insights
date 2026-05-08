@@ -1491,59 +1491,77 @@ const EditorV3Page = () => {
                   </button>
                 ))}
 
-                {activeTab === 'marmita' && marmitas.filter(m => m.name.toLowerCase().includes(foodSearch.toLowerCase())).map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => {
-                      if (activeMealId) {
-                        addMarmitaToMeal(activeMealId, m);
-                        toast.success(`${m.name} adicionada!`);
-                      } else {
-                        toast.info("Selecione uma refeição primeiro.");
-                      }
-                    }}
-                    className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left overflow-hidden shadow-sm"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
-                      <Package className="w-5 h-5 text-blue-500" />
+                {activeTab === 'marmita' && (
+                  marmitas.filter(m => m.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
+                    marmitas.filter(m => m.name.toLowerCase().includes(foodSearch.toLowerCase())).map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            addMarmitaToMeal(activeMealId, m);
+                            toast.success(`${m.name} adicionada!`);
+                          } else {
+                            toast.info("Selecione uma refeição primeiro.");
+                          }
+                        }}
+                        className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left overflow-hidden shadow-sm"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
+                          <Package className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-blue-400 transition-colors">{m.name}</p>
+                          <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{m.kcal} kcal • Marmita</span>
+                        </div>
+                        <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-blue-500 transition-colors" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-12 flex flex-col items-center justify-center gap-3 text-white/10">
+                      <Utensils className="w-8 h-8 opacity-20" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma marmita pronta</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-blue-400 transition-colors">{m.name}</p>
-                      <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{m.kcal} kcal • Marmita</span>
-                    </div>
-                    <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-blue-500 transition-colors" />
-                  </button>
-                ))}
+                  )
+                )}
 
-                {activeTab === 'template' && templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      if (activeMealId) {
-                        applyTemplateToMeal(activeMealId, t);
-                        toast.success(`Template ${t.name} aplicado!`);
-                      } else {
-                        addMealWithHeader(t.name, "08:00");
-                        setTimeout(() => {
-                          const state = useEditorState.getState();
-                          const lastMeal = state.meals[state.meals.length - 1];
-                          if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
-                        }, 50);
-                        toast.success(`Refeição criada com template ${t.name}`);
-                      }
-                    }}
-                    className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left overflow-hidden shadow-sm"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-500/20 transition-all">
-                      <Layers className="w-5 h-5 text-amber-500" />
+                {activeTab === 'template' && (
+                  templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
+                    templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            applyTemplateToMeal(activeMealId, t);
+                            toast.success(`Template ${t.name} aplicado!`);
+                          } else {
+                            addMealWithHeader(t.name, "08:00");
+                            setTimeout(() => {
+                              const state = useEditorState.getState();
+                              const lastMeal = state.meals[state.meals.length - 1];
+                              if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
+                            }, 50);
+                            toast.success(`Refeição criada com template ${t.name}`);
+                          }
+                        }}
+                        className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left overflow-hidden shadow-sm"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-500/20 transition-all">
+                          <Layers className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
+                          <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
+                        </div>
+                        <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-12 flex flex-col items-center justify-center gap-3 text-white/10">
+                      <LayoutDashboard className="w-8 h-8 opacity-20" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">Nenhum template salvo</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
-                      <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
-                    </div>
-                    <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
-                  </button>
-                ))}
+                  )
+                )}
 
                 {activeTab === 'visual' && (
                   <div className="space-y-4">
