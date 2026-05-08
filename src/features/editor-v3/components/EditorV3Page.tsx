@@ -151,7 +151,24 @@ const EditorV3Page = () => {
   const [editAntroValues, setEditAntroValues] = useState({ weight: 0, height: 0, goal: 'Manutenção' });
   const [isSavingAntro, setIsSavingAntro] = useState(false);
   
-  const [selectedItem, setSelectedItem] = useState<{ mealId: string, item: MealItem } | null>(null);
+  const [selectedItemState, setSelectedItemState] = useState<{ mealId: string, instanceId: string } | null>(null);
+  
+  const selectedItem = useMemo(() => {
+    if (!selectedItemState) return null;
+    const meal = meals.find(m => m.id === selectedItemState.mealId);
+    if (!meal) return null;
+    const item = meal.items.find(i => i.instanceId === selectedItemState.instanceId);
+    if (!item) return null;
+    return { mealId: selectedItemState.mealId, item };
+  }, [selectedItemState, meals]);
+
+  const setSelectedItem = (data: { mealId: string, item: MealItem } | null) => {
+    if (!data) {
+      setSelectedItemState(null);
+    } else {
+      setSelectedItemState({ mealId: data.mealId, instanceId: data.item.instanceId });
+    }
+  };
   const [substitutionSearch, setSubstitutionSearch] = useState('');
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
   const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
