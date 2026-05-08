@@ -116,7 +116,6 @@ export async function promoteDraftToMealPlan(
       plan_status: 'published_to_patient',
       is_active: true,
       total_target_calories: draft.meta_kcal ?? null,
-      total_target_calories: draft.meta_kcal ?? null,
       total_target_protein: draft.meta_protein ?? null,
       total_target_carbs: draft.meta_carbs ?? null,
       total_target_fat: draft.meta_fat ?? null,
