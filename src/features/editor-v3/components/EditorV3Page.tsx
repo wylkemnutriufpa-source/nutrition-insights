@@ -17,6 +17,12 @@ import {
   calculateNutritionalScore, validatePlanClinically, calculateItemMacros 
 } from '../../clinical-engine';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
+
+// Direct NutriCore V2 Imports
+import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
+import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
+import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+import { MealSlot } from "@/lib/nutricore_v2/meal-distribution";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -273,6 +279,8 @@ const EditorV3Page = () => {
           // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
           const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
           const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
+          const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
+          const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
           const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
           const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
           
@@ -290,6 +298,8 @@ const EditorV3Page = () => {
             preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || [],
             weight: Number(weight),
             height: Number(height),
+            age: Number(age),
+            gender: sex,
             activityLevel: activity,
             calories_target: Number(kcal),
             protein_target: Number(protein),
@@ -684,37 +694,133 @@ const EditorV3Page = () => {
   };
 
   const handleExecuteGeneration = async (calories: number) => {
+    if (!patientContext) {
+      toast.error('Selecione um paciente para gerar o plano');
+      return;
+    }
+
     setIsGeneratingGlobal(true);
     setShowCalorieModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const sanitized = sanitizeFoods(baseFoods);
-    
-    generatePlan(selectedDietType || 'muscle-gain', calories, sanitized, replaceExistingFlag);
-    
-    // Atualiza metas no estado para o Score
-    setGoalMetadata({
-      goalCalories: calories,
-      goalProtein: selectedDietType === 'muscle-gain' ? (calories * 0.3) / 4 : (calories * 0.25) / 4,
-      goalCarbs: selectedDietType === 'low-carb' ? (calories * 0.2) / 4 : (calories * 0.5) / 4,
-      goalFat: (calories * 0.25) / 9
-    });
+    try {
+      console.log('[Direct V2] Iniciando geração direta no NutriCore V2');
+      
+      const mealTypeMap: Record<string, string> = {
+        'cafe_da_manha': 'Café da Manhã',
+        'lanche_da_manha': 'Lanche da Manhã',
+        'almoço': 'Almoço',
+        'lanche_da_tarde': 'Lanche da Tarde',
+        'jantar': 'Jantar',
+        'ceia': 'Ceia'
+      };
 
-    setIsGeneratingGlobal(false);
-    toast.success('Motor V3: Plano gerado com sucesso!');
+      const mapGoal = (v3Goal: string): any => {
+        const goalMap: Record<string, string> = {
+          'lose_weight': 'emagrecimento',
+          'gain_muscle': 'hipertrofia',
+          'maintain': 'manutencao',
+          'health': 'saude',
+          'performance': 'performance',
+          'lose-weight': 'emagrecimento',
+          'muscle-gain': 'hipertrofia',
+          'Emagrecimento': 'emagrecimento',
+          'Hipertrofia': 'hipertrofia',
+          'Manutenção': 'manutencao'
+        };
+        return goalMap[v3Goal] || 'manutencao';
+      };
+
+      const mapActivity = (v3Activity: string): any => {
+        const activityMap: Record<string, string> = {
+          'sedentary': 'sedentario',
+          'light': 'leve',
+          'moderate': 'moderado',
+          'intense': 'intenso',
+          'very_active': 'muito_intenso',
+          'sedentario': 'sedentario',
+          'leve': 'leve',
+          'moderado': 'moderado',
+          'intenso': 'intenso'
+        };
+        return activityMap[v3Activity] || 'moderado';
+      };
+
+      const engineInput = {
+        weight_kg: patientContext.weight || 75,
+        height_cm: patientContext.height || 175,
+        age_years: patientContext.age || 30,
+        sex: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'feminino' : 'masculino' as any,
+        activity_level: mapActivity(patientContext.activityLevel || 'moderado'),
+        goal: mapGoal(patientContext.goal || 'manutencao'),
+        restrictions: patientContext.restrictions || [],
+        preferences: patientContext.preferences || []
+      };
+
+      const mealSlots: MealSlot[] = [
+        { type: 'cafe_da_manha', time: '08:00' },
+        { type: 'lanche_da_manha', time: '10:30' },
+        { type: 'almoço', time: '13:00' },
+        { type: 'lanche_da_tarde', time: '16:00' },
+        { type: 'jantar', time: '19:30' },
+        { type: 'ceia', time: '22:00' }
+      ];
+
+      const dailyPlan = generateDailyPlan(engineInput, mealSlots, BASE_FOODS);
+      
+      const v3Meals = dailyPlan.meals.map(v2Meal => {
+        const mealName = mealTypeMap[v2Meal.type] || v2Meal.type;
+        return {
+          id: Math.random().toString(36).substring(2, 9),
+          name: mealName,
+          time: v2Meal.time,
+          items: v2Meal.items.map(item => {
+            const factor = item.grams / 100;
+            return {
+              id: item.foodId,
+              name: item.name,
+              kcal: Math.round(item.macros.kcal / (factor || 1)),
+              calories: Math.round(item.macros.kcal / (factor || 1)),
+              protein: Number((item.macros.protein_g / (factor || 1)).toFixed(1)),
+              carbs: Number((item.macros.carb_g / (factor || 1)).toFixed(1)),
+              fat: Number((item.macros.fat_g / (factor || 1)).toFixed(1)),
+              portionValue: 100,
+              portionUnitLabel: 'g',
+              portionUnit: 'g',
+              portionLabel: 'g',
+              measurementType: 'gram' as const,
+              instanceId: Math.random().toString(36).substring(2, 10),
+              quantity: item.grams,
+              substitutions: []
+            };
+          })
+        };
+      });
+
+      hydrateMeals(v3Meals);
+      
+      setGoalMetadata({
+        goalCalories: dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal,
+        goalProtein: dailyPlan.daily_totals.protein_g,
+        goalCarbs: dailyPlan.daily_totals.carb_g,
+        goalFat: dailyPlan.daily_totals.fat_g
+      });
+
+      toast.success('NutriCore V2: Plano gerado com sucesso!');
+    } catch (error) {
+      console.error('[Direct V2 Error]', error);
+      toast.error('Erro ao gerar plano direto no NutriCore V2');
+    } finally {
+      setIsGeneratingGlobal(false);
+    }
   };
 
   const handleMealGenerate = async (mealId: string) => {
-    setGeneratingMealId(mealId);
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    const sanitized = sanitizeFoods(baseFoods);
-    // Motor Adaptativo: Usa o objetivo do paciente se disponível, fallback para muscle-gain
-    const goal = patientContext?.goal || 'muscle-gain';
-    const targetCals = patientContext?.calories_target || 2000;
-    
-    generateMeal(mealId, goal, sanitized, targetCals);
-    setGeneratingMealId(null);
+    // Para simplificar a geração de uma única refeição direto na fonte
+    // vamos regenerar o plano todo ou apenas injetar uma nova refeição se necessário.
+    // Como o usuário pediu "CHEGA DE ADAPTER", vamos desativar essa função temporariamente 
+    // ou redirecionar para a global.
+    toast.info('Use a geração global para garantir o equilíbrio do NutriCore V2');
   };
 
   const executeSwap = (mealId: string, instanceId: string, target: Food, autoAdjust = false) => {
