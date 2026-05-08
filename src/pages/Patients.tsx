@@ -102,7 +102,7 @@ function PatientResumoModal({ patient, onOpenChange, onFullProfile }: { patient:
   const displayName = patient.profile?.full_name || patient.email || "Paciente";
   const plan = detail?.mealPlans?.find(p => p.is_active) || detail?.mealPlans?.[0];
   const lastDietEvent = detail?.timeline?.find(e => 
-    ['meal_plan', 'plan_published', 'plan_delivered', 'plan_approved_published', 'plan_simplified', 'plan_auto_fixed'].includes(e.event_type)
+    ['meal_plan', 'plan_published', 'plan_delivered', 'plan_approved_published', 'plan_simplified', 'plan_auto_fixed', 'protocol_manual_adjustment'].includes(e.event_type)
   );
   const lastUpdate = lastDietEvent?.created_at || plan?.updated_at || plan?.created_at;
   
