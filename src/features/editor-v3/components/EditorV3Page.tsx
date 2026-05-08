@@ -59,7 +59,7 @@ import {
   Sparkles, Save, Package, ChefHat, Clock,
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
-  Zap, Activity, PieChart, Minus, Users, Search,
+  Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
   User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown
 } from 'lucide-react';
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
