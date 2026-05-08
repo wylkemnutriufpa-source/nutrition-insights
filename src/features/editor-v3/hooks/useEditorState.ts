@@ -525,7 +525,7 @@ export const useEditorState = create<EditorState>()(
         });
         set((state) => ({
           meals: state.meals.map((m) =>
-            m.id === mealId ? { ...m, items: [...m.items, ...newItems] } : m
+            m.id === mealId ? { ...m, items: newItems } : m
           ),
           planStatus: 'draft',
         }));
