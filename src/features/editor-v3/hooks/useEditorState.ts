@@ -62,7 +62,9 @@ interface EditorState {
   generateMeal: (mealId: string, goal: string, availableFoods: Food[], baseCalories?: number) => void;
   savePlan: () => Promise<void>;
   resetEditor: () => void;
+  setMeals: (meals: Meal[]) => void;
 }
+
 
 const initialMeals: Meal[] = [
   { id: '1', name: 'Café da Manhã', items: [], time: '08:00' },
@@ -680,6 +682,12 @@ export const useEditorState = create<EditorState>()(
       resetEditor: () => {
         set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [], sharingToken: null });
       },
+
+      setMeals: (meals) => {
+        set({ meals, planStatus: 'draft' });
+        get().recalculateScore();
+      },
+
     }),
     {
       name: 'fitjourney-editor-v3-storage',
