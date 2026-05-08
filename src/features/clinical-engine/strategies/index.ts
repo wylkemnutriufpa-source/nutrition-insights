@@ -1,6 +1,7 @@
 import { Meal, Food, MealItem } from '../types/clinical-types';
 import { toast } from 'sonner';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
+import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
 
 export interface ClinicalStrategy {
   id: string;
@@ -142,8 +143,6 @@ export class DefaultV3Strategy implements ClinicalStrategy {
   name = 'Engine NutriCore V2';
 
   generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
-    const { NutriCoreV2Adapter } = require('@/lib/nutricore_v2/adapter');
-    
     // Mock do contexto se não disponível
     const context = {
       weight: 75,

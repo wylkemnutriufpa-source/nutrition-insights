@@ -1516,27 +1516,26 @@ export default function PatientDetail() {
                           if (pd?.generated_plan_id && pd?.plan_generated) {
                             const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", pd.generated_plan_id).single();
                             const isV3 = planData?.editor_version === "v3";
-                            const path = isV3 ? `/editor-v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}` : `/editor-v2/plan/${pd.generated_plan_id}`;
+                            const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}`;
                             navigate(path);
                             return;
                           }
                           // No onboarding plan — generate one
                           toast.info("Gerando plano a partir do onboarding...");
-                          const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
-                            body: { patientId: patientIdentity.canonicalId, nutritionistId: user?.id, isPipeline: true },
-                          });
-                          if (genError || !genData?.success) {
-                            toast.error(genData?.error || "Erro ao gerar plano");
+                          const { generateAndSaveLocalPlan } = await import("../features/editor-v3/services/localPlanGenerator");
+                          const genResult = await generateAndSaveLocalPlan(
+                            patientIdentity.canonicalId,
+                            user?.id || "",
+                            tenantId || ""
+                          );
+
+                          if (!genResult.success || !genResult.mealPlanId) {
+                            toast.error(genResult.error || "Erro ao gerar plano localmente");
                             return;
                           }
-                          if (genData.mealPlanId) {
-                            const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
-                            const isV3 = planData?.editor_version === "v3";
-                            const path = isV3 ? `/editor-v3/${patientIdentity.canonicalId}?planId=${genData.mealPlanId}` : `/editor-v2/plan/${genData.mealPlanId}`;
+                          if (genResult.mealPlanId) {
+                            const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${genResult.mealPlanId}`;
                             
-                            if (genData.is_fallback_template) {
-                              toast.info(`Nota: Usamos template padrão como fallback.`);
-                            }
                             toast.success("Plano gerado com sucesso!");
                             navigate(path);
                           }
@@ -1567,7 +1566,7 @@ export default function PatientDetail() {
                           if (newPlan?.id && resolvedPatientId) {
                             toast.success("Plano criado! Abrindo Builder...");
                             const isV3 = newPlan.editor_version === "v3";
-                            const path = isV3 ? `/editor-v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}` : `/editor-v2/plan/${newPlan.id}`;
+                            const path = `/editor-v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}`;
                             navigate(path, { replace: true });
                           }
                         } catch (err: any) {
@@ -1583,7 +1582,7 @@ export default function PatientDetail() {
                             if (!activePlan) return;
                             setOpenSection(null);
                             const isV3 = activePlan.editor_version === "v3";
-                            const path = isV3 ? `/editor-v3/${patientId}?planId=${activePlan.id}` : `/editor-v2/plan/${activePlan.id}`;
+                            const path = `/editor-v3/${patientId}?planId=${activePlan.id}`;
                             navigate(path);
                           }}>
                             <Pencil className="w-3 h-3" /> Editar Ativo
@@ -1715,9 +1714,7 @@ export default function PatientDetail() {
                                       className="gradient-primary shadow-glow gap-1.5"
                                       onClick={() => {
                                         setOpenSection(null);
-                                        const path = plan.editor_version === "v3" 
-                                          ? `/meal-plans/editor/v3?patientId=${resolvedPatientId}&planId=${plan.id}`
-                                          : `/meal-plans/${plan.id}`;
+                                        const path = `/editor-v3/${resolvedPatientId}?planId=${plan.id}`;
                                         navigate(path);
                                       }}
                                     >
@@ -1730,9 +1727,7 @@ export default function PatientDetail() {
                                     className="gap-1.5"
                                     onClick={() => {
                                       setOpenSection(null);
-                                      const path = plan.editor_version === "v3" 
-                                        ? `/meal-plans/editor/v3?patientId=${resolvedPatientId}&planId=${plan.id}`
-                                        : `/meal-plans/${plan.id}`;
+                                      const path = `/editor-v3/${resolvedPatientId}?planId=${plan.id}`;
                                       navigate(path);
                                     }}
                                   >

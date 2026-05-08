@@ -16,6 +16,7 @@ import {
   NutritionalScore, 
   ValidationIssue 
 } from '../../clinical-engine';
+import { calculateItemMacros as calcMacrosV2 } from '../../clinical-engine/services/v3Motor';
 import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 import { logClinicalEvent } from '../../audit/services/auditLogger';
@@ -204,8 +205,6 @@ export const useEditorState = create<EditorState>()(
         }
         
         // Integração com Motor V2 para avaliação de macros
-        const { calculateItemMacros: calcMacrosV2 } = require('@/features/clinical-engine/services/v3Motor');
-        
         const totals = meals.reduce((acc, meal) => {
           meal.items.forEach(item => {
             const macros = calcMacrosV2(item, item.quantity);

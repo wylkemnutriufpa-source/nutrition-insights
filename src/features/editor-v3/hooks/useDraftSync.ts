@@ -28,7 +28,8 @@ interface UseDraftSyncReturn {
 export function useDraftSync(
   patientId: string | null, 
   seedMeals: Meal[], 
-  currentMeals: Meal[]
+  currentMeals: Meal[],
+  planId?: string | null
 ): UseDraftSyncReturn {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('idle');
@@ -69,7 +70,7 @@ export function useDraftSync(
     }
     setSyncState('loading');
 
-    const draft: DraftRecord | null = await loadOrCreateDraft(patientId, seedMeals);
+    const draft: DraftRecord | null = await loadOrCreateDraft(patientId, seedMeals, planId);
 
     if (draft) {
       setDraftId(draft.id);
