@@ -867,7 +867,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                 className="gap-2"
                 onClick={() => {
                   const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
-                  if (planId) navigate(`/meal-plans/${planId}`);
+                  if (planId) navigate(`/editor-v3/${patientId}?planId=${planId}`);
                 }}
               >
                 <FileText className="w-4 h-4" />
