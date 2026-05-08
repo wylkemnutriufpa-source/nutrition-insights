@@ -12,9 +12,30 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
   const name = item.name.toLowerCase();
   let grams = (item as MealItem).quantity || (item as Food).portionValue || 100;
   
-  // Basic unit mapping
+  // Se já temos uma unidade de exibição definida no item (V3), usamos ela
+  if ((item as MealItem).portionUnitLabel) {
+    const label = (item as MealItem).portionUnitLabel!;
+    if (label.includes('Unid.') || label.includes('unid')) {
+      // Para unidades P, M, G, calculamos quantas "unidades" isso representa
+      // Mas geralmente no V3 o usuário quer ver "1 Unid. P"
+      return {
+        displayUnit: label,
+        displayQuantity: 1,
+        normalizedGrams: grams
+      };
+    }
+    if (label.includes('colher')) {
+      const units = Math.round(grams / 15);
+      return {
+        displayUnit: label,
+        displayQuantity: units || 1,
+        normalizedGrams: grams
+      };
+    }
+  }
+
+  // Basic unit mapping (Fallback)
   if (name.includes('pão') || name.includes('fatia')) {
-    // Standard slice is approx 25g
     const sliceWeight = 25;
     const slices = Math.round(grams / sliceWeight);
     return {
@@ -25,7 +46,6 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
   }
 
   if (name.includes('ovo') || name.includes('unidade')) {
-    // Standard egg is approx 50g
     const eggWeight = 50;
     const units = Math.round(grams / eggWeight);
     return {
@@ -35,18 +55,6 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
     };
   }
 
-  if (name.includes('queijo')) {
-    // Standard slice is approx 15g
-    const sliceWeight = 15;
-    const slices = Math.round(grams / sliceWeight);
-    return {
-      displayUnit: slices === 1 ? 'fatia' : 'fatias',
-      displayQuantity: slices || 1,
-      normalizedGrams: (slices || 1) * sliceWeight
-    };
-  }
-
-  // Default to grams for everything else (rice, beans, etc.)
   return {
     displayUnit: 'g',
     displayQuantity: grams,
