@@ -1,4 +1,4 @@
-import { Meal, Food, MealItem } from '../types/clinical-types';
+import { Meal, Food, MealItem, PatientContext } from '../types/clinical-types';
 import { PlanMetadata, validatePlanClinically } from './nutritionalEvaluator';
 import { ValidationIssue } from '../types/nutritionalScoreTypes';
 import { isProtein } from './v3Motor';
@@ -15,10 +15,11 @@ export const generateMealWithEngine = (
   goal: string, 
   baseCalories: number = 2000, 
   availableFoods: Food[] = [],
-  protocolType: string = 'default_v3'
+  protocolType: string = 'default_v3',
+  context?: PatientContext
 ): MealItem[] => {
   const strategy = ClinicalEngineFactory.getStrategy(protocolType);
-  return strategy.generateMeal(meal, goal, baseCalories, availableFoods);
+  return strategy.generateMeal(meal, goal, baseCalories, availableFoods, context);
 };
 
 /**
@@ -29,7 +30,8 @@ export const generatePlanWithEngine = (
   goal: string, 
   baseCalories: number = 2000, 
   availableFoods: Food[],
-  protocolType: string = 'default_v3'
+  protocolType: string = 'default_v3',
+  context?: PatientContext
 ): Meal[] => {
   if (!availableFoods || availableFoods.length < 10) {
     console.error('[Clinical Engine] Bloqueio: Base insuficiente.');
@@ -41,7 +43,7 @@ export const generatePlanWithEngine = (
 
   return currentMeals.map(meal => {
     if (meal.items.length === 0) {
-      const newItems = strategy.generateMeal(meal, goal, baseCalories, availableFoods);
+      const newItems = strategy.generateMeal(meal, goal, baseCalories, availableFoods, context);
       
       // Log audível da decisão clínica
       logAudit(

@@ -1,4 +1,4 @@
-import { Meal, Food, MealItem } from '../types/clinical-types';
+import { Meal, Food, MealItem, PatientContext } from '../types/clinical-types';
 import { toast } from 'sonner';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
 import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
@@ -6,7 +6,7 @@ import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
 export interface ClinicalStrategy {
   id: string;
   name: string;
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[];
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[];
   explainDecision(meal: Meal, items: MealItem[]): string;
 }
 
@@ -44,7 +44,7 @@ export class FitJourneyStrategy implements ClinicalStrategy {
   id = 'fitjourney_protocol';
   name = 'Protocolo FitJourney';
 
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] {
     const mealName = meal.name.toLowerCase();
     const type = meal.type; // Assumindo que Meal tem 'type' do tipo meal_types definido no prompt
     const scale = baseCalories / 2000;
@@ -100,7 +100,7 @@ export class BiquiniBrancoStrategy implements ClinicalStrategy {
   id = 'biquini_branco_protocol';
   name = 'Protocolo Biquini Branco';
 
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] {
     const mealName = meal.name.toLowerCase();
     const scale = baseCalories / 2000;
     let newItems: (MealItem | null)[] = [];
@@ -142,19 +142,21 @@ export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
   name = 'Engine NutriCore V2';
 
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
-    // Mock do contexto se não disponível
-    const context = {
-      weight: 75,
-      height: 175,
-      age: 30,
-      gender: 'male',
-      goal: goal === 'lose-weight' ? 'lose_weight' : (goal === 'muscle-gain' ? 'gain_muscle' : 'maintain'),
-      restrictions: [],
-      preferences: []
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] {
+    // Usar contexto real se disponível, caso contrário usar fallback seguro
+    const finalContext = {
+      weight: context?.weight || 75,
+      height: context?.height || 175,
+      age: context?.age || 30,
+      gender: context?.gender || 'male',
+      goal: context?.goal || (goal === 'lose-weight' ? 'lose_weight' : (goal === 'muscle-gain' ? 'gain_muscle' : 'maintain')),
+      restrictions: context?.restrictions || [],
+      preferences: context?.preferences || []
     };
 
-    const fullPlan = NutriCoreV2Adapter.generateElitePlan(context as any, availableFoods);
+    console.info(`[V3-Engine] Gerando refeição "${meal.name}" para ${finalContext.weight}kg, Objetivo: ${finalContext.goal}`);
+
+    const fullPlan = NutriCoreV2Adapter.generateElitePlan(finalContext as any, availableFoods);
     const generatedMeal = fullPlan.find((m: any) => m.name.toLowerCase() === meal.name.toLowerCase());
     
     return generatedMeal ? generatedMeal.items : [];
