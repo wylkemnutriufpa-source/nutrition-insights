@@ -1417,7 +1417,134 @@ const EditorV3Page = () => {
 
       <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
 
-        <div className="lg:col-span-8 space-y-12">
+        {/* Coluna Esquerda: Biblioteca (Library) */}
+        <aside className="hidden lg:flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
+          <Card className="flex-1 bg-neutral-900/50 border-white/5 rounded-3xl flex flex-col overflow-hidden backdrop-blur-sm shadow-xl">
+            <div className="p-5 pb-2">
+              <h3 className="text-xs font-black text-white/60 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-emerald-500" /> Biblioteca Clínica
+              </h3>
+              <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+                <TabsList className="bg-white/5 w-full justify-start p-1 rounded-xl h-auto flex-wrap gap-1 mb-4 border border-white/5">
+                  <TabsTrigger value="food" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Alimentos</TabsTrigger>
+                  <TabsTrigger value="marmita" className="data-[state=active]:bg-blue-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Prontas</TabsTrigger>
+                  <TabsTrigger value="template" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Templates</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                <Input 
+                  placeholder={activeTab === 'food' ? "Buscar alimentos..." : activeTab === 'marmita' ? "Buscar marmitas..." : "Buscar templates..."}
+                  value={foodSearch} 
+                  onChange={(e) => setFoodSearch(e.target.value)} 
+                  className="pl-9 h-10 bg-white/5 border-white/10 text-white rounded-xl text-xs placeholder:text-white/20 focus:border-emerald-500/50 transition-all shadow-inner" 
+                />
+                {(isSearchingFoods) && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-500 animate-spin" />}
+              </div>
+            </div>
+
+            <ScrollArea className="flex-1 px-5 pb-6">
+              <div className="space-y-3 pb-10">
+                {activeTab === 'food' && (foodSearch.length > 0 ? foods : baseFoods).map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => {
+                      if (activeMealId) {
+                        addFoodToMeal(activeMealId, f);
+                        toast.success(`${f.name} adicionado!`);
+                      } else {
+                        toast.info("Selecione uma refeição primeiro ou use o '+' em uma refeição.");
+                      }
+                    }}
+                    className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                      {f.imageUrl ? (
+                        <img src={f.imageUrl} alt={f.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Apple className="w-5 h-5 text-white/10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-emerald-400 transition-colors">{f.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                         <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{f.kcal} kcal</span>
+                         <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">• {f.portionLabel}</span>
+                      </div>
+                    </div>
+                    <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-emerald-500 transition-colors" />
+                  </button>
+                ))}
+
+                {activeTab === 'marmita' && marmitas.filter(m => m.name.toLowerCase().includes(foodSearch.toLowerCase())).map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      if (activeMealId) {
+                        addMarmitaToMeal(activeMealId, m);
+                        toast.success(`${m.name} adicionada!`);
+                      } else {
+                        toast.info("Selecione uma refeição primeiro.");
+                      }
+                    }}
+                    className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left overflow-hidden shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
+                      <Package className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-blue-400 transition-colors">{m.name}</p>
+                      <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{m.kcal} kcal • Marmita</span>
+                    </div>
+                    <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-blue-500 transition-colors" />
+                  </button>
+                ))}
+
+                {activeTab === 'template' && templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      if (activeMealId) {
+                        applyTemplateToMeal(activeMealId, t);
+                        toast.success(`Template ${t.name} aplicado!`);
+                      } else {
+                        addMealWithHeader(t.name, "08:00");
+                        setTimeout(() => {
+                          const state = useEditorState.getState();
+                          const lastMeal = state.meals[state.meals.length - 1];
+                          if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
+                        }, 50);
+                        toast.success(`Refeição criada com template ${t.name}`);
+                      }
+                    }}
+                    className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left overflow-hidden shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-500/20 transition-all">
+                      <Layers className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
+                      <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
+                    </div>
+                    <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                  </button>
+                ))}
+
+                {activeTab === 'food' && foodSearch.length === 0 && baseFoods.length === 0 && (
+                  <div className="py-10 text-center flex flex-col items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
+                    <p className="text-[10px] font-black uppercase text-white/20">Carregando base...</p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </Card>
+        </aside>
+
+        <div className="space-y-12">
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
           {meals.map((meal, index) => (
 
