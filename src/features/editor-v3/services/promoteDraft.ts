@@ -14,7 +14,7 @@ import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
 
 type ClinicalMealType =
-  | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'supper';
+  | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
 
 const NAME_TO_MEAL_TYPE: Record<string, ClinicalMealType> = {
   'café da manhã': 'breakfast',
@@ -25,7 +25,7 @@ const NAME_TO_MEAL_TYPE: Record<string, ClinicalMealType> = {
   'almoco': 'lunch',
   'lanche da tarde': 'afternoon_snack',
   'jantar': 'dinner',
-  'ceia': 'supper',
+  'ceia': 'evening_snack',
 };
 
 function mealNameToType(name: string): ClinicalMealType {
