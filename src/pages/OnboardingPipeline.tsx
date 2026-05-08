@@ -23,6 +23,9 @@ import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
   ChefHat, Heart, Zap, ThumbsUp, Shield, RefreshCw
 } from "lucide-react";
+import { generatePlanWithEngine } from "@/features/clinical-engine";
+import type { Meal, Food } from "@/features/clinical-engine/types/clinical-types";
+import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import SmartNumericInput from "@/components/ui/SmartNumericInput";
@@ -416,73 +419,48 @@ export default function OnboardingPipeline() {
     setJobError(null);
     
     try {
-      const payload = {
+      console.log("[OnboardingPipeline] Iniciando geração LOCAL via NutriCore V2...");
+      
+      // NutriCore V2 Engine — Chamada LOCAL (TypeScript Puro)
+      // Substitui a chamada à Edge Function antiga para evitar timeouts e erros de infra
+      const data = await localGenerateMealPlan({
         patientId: user.id,
         nutritionistId: pipeline.nutritionist_id,
         weight: pipeline.weight,
         height: pipeline.height,
-        wakeTime: pipeline.wake_time,
-        sleepTime: pipeline.sleep_time,
         mealCount: pipeline.meal_count,
         cookingPreference: pipeline.cooking_preference,
-        foodPreferences: pipeline.food_preferences,
         isPipeline: true,
-        planCount: 3,
-      };
-
-      // Insert Job instead of direct invocation
-      // This will trigger the backend check and fail stuck jobs
-      const { data: job, error } = await supabase
-        .from("meal_plan_jobs")
-        .insert({
-          patient_id: user.id,
-          payload,
-          status: "pending",
-          current_step: "iniciando",
-          engine_version: "2.0.0",
-          plan_version: "1.0.0"
-        })
-        .select()
-        .single();
-
-      if (error) {
-        // Handle the trigger exception
-        if (error.message.includes("Já existe um processamento")) {
-          toast.warning("Um processamento já está ativo. Aguarde a conclusão.");
-          // Refresh job status to sync UI
-          const { data: existing } = await supabase
-            .from("meal_plan_jobs")
-            .select("*")
-            .eq("patient_id", user.id)
-            .in("status", ["pending", "processing"])
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (existing) setActiveJob(existing);
-          return;
-        }
-        throw error;
-      }
-
-      setActiveJob(job);
-      toast.info("Protocolo FitJourney iniciado! Acompanhe o progresso.");
-      
-      // Call the Edge Function to trigger the worker
-      // (Even if it fails, the job is 'pending' and could be picked up by a separate worker if we had a cron)
-      // For now, the Edge Function starts the process.
-      const { error: invokeError } = await supabase.functions.invoke("process-meal-plan-jobs", {
-        body: { jobId: job.id }
+        planCount: 1, // Paciente gera 1 opção base
       });
+
+      if (!data?.success) throw new Error("O motor local não retornou sucesso.");
+
+      const newPlanId = data.mealPlanId;
+
+      // Atualiza o pipeline com o ID do plano gerado
+      const { error: updateError } = await supabase
+        .from("onboarding_pipelines" as any)
+        .update({
+          plan_generated: true,
+          generated_plan_id: newPlanId,
+          generated_plan_data: data,
+          status: "pending_approval",
+        } as any)
+        .eq("id", pipeline.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Plano gerado com sucesso! Aguarde a revisão do seu nutricionista.");
       
-      if (invokeError) {
-        console.error("Invoke error:", invokeError);
-        // We don't throw here because the job is already created and Realtime/Polling will catch updates
-        // if the function actually started processing despite the response error.
-      }
+      // Invalida o status para atualizar a UI do paciente
+      queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+      fetchPipeline();
 
     } catch (err: any) {
-      console.error("Error creating job:", err);
-      toast.error("Erro ao iniciar geração: " + (err.message || "Tente novamente"));
+      console.error("[OnboardingPipeline] Erro na geração local:", err);
+      toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
+    } finally {
       setGenerating(false);
     }
   }
