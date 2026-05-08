@@ -57,8 +57,7 @@ import { usePatientDetail, useTogglePatientDetailStatus, useDeletePatientLink } 
 import { queryKeys } from "@/hooks/queries/queryKeys";
 // Gamification removed from MVP
 
-// Removed EditorVersionPicker to maintain absolute independence between V2 and V3 flows
-import { EditorMatrixModal } from "@/components/diet/EditorMatrixModal";
+// V2 Editor removed as per NutriCore V3 unifications
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
@@ -149,7 +148,6 @@ export default function PatientDetail() {
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
-  const [matrixOpen, setMatrixOpen] = useState(false);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
@@ -645,25 +643,14 @@ export default function PatientDetail() {
             </Button>
             <Button
               variant="outline"
-              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-              disabled={!resolvedPatientId}
-              onClick={() => {
-                if (!resolvedPatientId) return;
-                navigate(`/editor-v2/${resolvedPatientId}`);
-              }}
-            >
-              <UtensilsCrossed className="w-4 h-4" /> Plano V2 (legado)
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2 border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
+              className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
                 navigate(`/editor-v3/${resolvedPatientId}`);
               }}
             >
-              <Sparkles className="w-4 h-4" /> Editor V3 (Beta)
+              <Sparkles className="w-4 h-4" /> NutriCore V3 (Editor Premium)
             </Button>
             {patientId && (
               <UnblockPatientDialog
@@ -971,7 +958,7 @@ export default function PatientDetail() {
                           });
                         }
                         if (s.key === "meal-plans") {
-                          setMatrixOpen(true);
+                          setOpenSection("meal-plans");
                           return;
                         }
                         setOpenSection(s.key);
@@ -1124,7 +1111,7 @@ export default function PatientDetail() {
                     </h3>
                     <Button 
                       size="sm" 
-                      onClick={() => navigate(`/meal-plans?patientId=${resolvedPatientId}`)}
+                      onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
                       className="gradient-primary h-8"
                     >
                       <Plus className="w-4 h-4 mr-1" /> Novo Plano
@@ -1154,10 +1141,7 @@ export default function PatientDetail() {
                               size="sm" 
                               className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
                               onClick={() => {
-                                const path = plan.editor_version === 'v3' 
-                                  ? `/v3/${resolvedPatientId}?planId=${plan.id}` 
-                                  : `/meal-plans/${plan.id}`;
-                                navigate(path);
+                                navigate(`/v3/${resolvedPatientId}?planId=${plan.id}`);
                               }}
                             >
                               <PencilLine className="w-4 h-4 mr-1" /> Editar
@@ -1479,19 +1463,7 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Editor Matrix Modal */}
-              <EditorMatrixModal 
-                isOpen={matrixOpen} patientId={resolvedPatientId}
-                onClose={() => setMatrixOpen(false)}
-                onSelect={(version) => {
-                  setMatrixOpen(false);
-                  if (version === "v2") {
-                    setOpenSection("meal-plans");
-                  } else {
-                    navigate(`/editor-v3/${resolvedPatientId}`);
-                  }
-                }}
-              />
+              {/* Editor Matrix Modal Removed */}
 
               {/* Meal Plans Modal */}
               <Dialog open={openSection === "meal-plans"} onOpenChange={(v) => !v && setOpenSection(null)}>

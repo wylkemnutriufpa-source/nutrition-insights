@@ -781,7 +781,16 @@ const EditorV3Page = () => {
     <div className="min-h-screen bg-black flex flex-col font-sans selection:bg-emerald-500/30">
       <div className="bg-black border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate(`/patients/${patientId || ''}`)}
+              className="text-white/40 hover:text-white rounded-full hover:bg-white/5"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-8">
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
@@ -933,6 +942,7 @@ const EditorV3Page = () => {
                  </div>
                </div>
              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -1190,7 +1200,7 @@ const EditorV3Page = () => {
       </main>
 
       <Dialog open={showMainAddModal} onOpenChange={setShowMainAddModal}>
-        <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black flex flex-col rounded-none backdrop-blur-2xl">
+        <DialogContent className="sm:max-w-[95vw] max-w-full h-[90vh] p-0 overflow-hidden border border-white/10 bg-black/95 flex flex-col rounded-3xl backdrop-blur-3xl shadow-2xl">
           <DialogHeader className="p-8 pb-4">
             <div className="flex items-center justify-between w-full">
               <div>
@@ -1300,7 +1310,7 @@ const EditorV3Page = () => {
             )}
           </div>
 
-          <ScrollArea className="flex-1 px-8">
+          <ScrollArea className="flex-1 px-8 min-h-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
               {activeTab === 'food' && (foodSearch.length > 0 ? foods : baseFoods).map((f) => (
                 <button
@@ -1520,14 +1530,19 @@ const EditorV3Page = () => {
       <Dialog open={showClinicalDecision} onOpenChange={setShowClinicalDecision}>
         <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
           <div className="p-8">
-            <div className="flex items-center gap-4 mb-8">
-               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
-                  <AlertTriangle className="w-8 h-8 text-rose-500" />
-               </div>
-               <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Decisão Clínica Necessária</h2>
-                  <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">O plano atual possui inconsistências críticas para este paciente.</p>
-               </div>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                 <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+                    <AlertTriangle className="w-8 h-8 text-rose-500" />
+                 </div>
+                 <div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Decisão Clínica Necessária</h2>
+                    <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">O plano atual possui inconsistências críticas para este paciente.</p>
+                 </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowClinicalDecision(false)} className="text-white/40 hover:text-white rounded-full">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
 
             <div className="space-y-6">
@@ -1615,14 +1630,19 @@ const EditorV3Page = () => {
       <Dialog open={showClinicalHistory} onOpenChange={setShowClinicalHistory}>
         <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
           <div className="p-8">
-            <div className="flex items-center gap-4 mb-8">
-               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                  <History className="w-8 h-8 text-emerald-500" />
-               </div>
-               <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Histórico Clínico</h2>
-                  <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Audit Trail das decisões tomadas para este rascunho.</p>
-               </div>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                    <History className="w-8 h-8 text-emerald-500" />
+                 </div>
+                 <div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Histórico Clínico</h2>
+                    <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Audit Trail das decisões tomadas para este rascunho.</p>
+                 </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowClinicalHistory(false)} className="text-white/40 hover:text-white rounded-full">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
 
             <ScrollArea className="h-[400px] pr-4">
@@ -1669,7 +1689,10 @@ const EditorV3Page = () => {
 
       <Dialog open={showRefineOptions} onOpenChange={setShowRefineOptions}>
         <DialogContent className="max-w-md bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
-          <div className="p-8 text-center">
+          <div className="p-8 text-center relative">
+            <Button variant="ghost" size="icon" onClick={() => setShowRefineOptions(false)} className="absolute top-4 right-4 text-white/40 hover:text-white rounded-full">
+              <X className="w-6 h-6" />
+            </Button>
             <div className="w-20 h-20 rounded-3xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 mx-auto mb-6">
                <Sparkles className="w-10 h-10 text-blue-500" />
             </div>
