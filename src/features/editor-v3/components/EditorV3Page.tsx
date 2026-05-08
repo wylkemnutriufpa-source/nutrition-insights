@@ -686,6 +686,13 @@ const EditorV3Page = () => {
     setShowCalorieModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
 
+    // Guard: se baseFoods está vazio, o motor não tem ingredientes para distribuir
+    if (baseFoods.length === 0) {
+      toast.error('Base de alimentos vazia. Aguarde o carregamento ou recarregue a página.');
+      setIsGeneratingGlobal(false);
+      return;
+    }
+
     const sanitized = sanitizeFoods(baseFoods);
     
     generatePlan(selectedDietType || 'muscle-gain', calories, sanitized, replaceExistingFlag);
@@ -703,6 +710,12 @@ const EditorV3Page = () => {
   };
 
   const handleMealGenerate = async (mealId: string) => {
+    // Guard: se baseFoods está vazio, o motor não tem ingredientes para distribuir
+    if (baseFoods.length === 0) {
+      toast.error('Base de alimentos vazia. Aguarde o carregamento ou recarregue a página.');
+      return;
+    }
+
     setGeneratingMealId(mealId);
     await new Promise(resolve => setTimeout(resolve, 600));
     
