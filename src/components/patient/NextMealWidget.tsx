@@ -18,14 +18,14 @@ interface MealSlot {
   fat_g: number;
 }
 
-const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "supper"];
+const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
 const MEAL_LABELS: Record<string, string> = {
   breakfast: "Café da Manhã",
   morning_snack: "Lanche da Manhã",
   lunch: "Almoço",
   afternoon_snack: "Lanche da Tarde",
   dinner: "Jantar",
-  supper: "Ceia",
+  evening_snack: "Ceia",
 };
 const MEAL_TIMES: Record<string, string> = {
   breakfast: "07:00",
@@ -33,7 +33,7 @@ const MEAL_TIMES: Record<string, string> = {
   lunch: "12:30",
   afternoon_snack: "15:30",
   dinner: "19:00",
-  supper: "21:00",
+  evening_snack: "21:00",
 };
 
 export default function NextMealWidget() {
@@ -64,13 +64,14 @@ export default function NextMealWidget() {
       if (!plan) { setLoading(false); return; }
       setTotalsStatus(plan.totals_status || "ok");
 
-      const dayOfWeek = (new Date().getDay() + 6) % 7;
+      // Get current day of week (0=Sunday, 5=Friday)
+      const now_dow = new Date().getDay();
 
       const { data: items } = await supabase
         .from("meal_plan_items")
-        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target")
+        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week")
         .eq("meal_plan_id", plan.id)
-        .eq("day_of_week", dayOfWeek);
+        .or(`day_of_week.eq.${now_dow},day_of_week.is.null`);
 
       if (!items || items.length === 0) { setLoading(false); return; }
 

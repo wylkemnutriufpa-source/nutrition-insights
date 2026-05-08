@@ -14,7 +14,7 @@ import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
 
 type ClinicalMealType =
-  | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'supper';
+  | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
 
 const NAME_TO_MEAL_TYPE: Record<string, ClinicalMealType> = {
   'café da manhã': 'breakfast',
@@ -25,7 +25,7 @@ const NAME_TO_MEAL_TYPE: Record<string, ClinicalMealType> = {
   'almoco': 'lunch',
   'lanche da tarde': 'afternoon_snack',
   'jantar': 'dinner',
-  'ceia': 'supper',
+  'ceia': 'evening_snack',
 };
 
 function mealNameToType(name: string): ClinicalMealType {
@@ -109,10 +109,10 @@ export async function promoteDraftToMealPlan(
       start_date: today,
       plan_status: 'published_to_patient',
       is_active: true,
-      total_target_calories: draft.meta_kcal ?? null,
-      total_target_protein: draft.meta_protein ?? null,
-      total_target_carbs: draft.meta_carbs ?? null,
-      total_target_fat: draft.meta_fat ?? null,
+      total_target_calories: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || null,
+      total_target_protein: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || null,
+      total_target_carbs: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || null,
+      total_target_fat: draft.meta_fat || draft.payload?.nutritional_score?.totals?.fat || null,
       generation_source: 'manual',
       editor_version: 'v3',
       generation_metadata: {
