@@ -116,7 +116,8 @@ const EditorV3Page = () => {
     duplicateMeal, reorderMeal, updateMealImage, setMeals,
 
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
-    patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry
+    patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
+    initialMeals: initialMealsInStore
   } = useEditorState();
 
   if (!isFeatureEnabled('editorV3')) {
@@ -135,7 +136,7 @@ const EditorV3Page = () => {
   const {
     draftId, syncState, initialMeals, initialAuditLog, lastSavedAt, sharingToken: draftSharingToken,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
-  } = useDraftSync(patientId ?? null, meals, meals, planId);
+  } = useDraftSync(patientId ?? null, initialMealsInStore, initialMealsInStore, planId);
 
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
@@ -270,32 +271,33 @@ const EditorV3Page = () => {
   useEffect(() => {
     const fetchClinicalData = async () => {
       if (patientId) {
-        console.debug('[V3-Init] Carregando dados clínicos para:', patientId);
+        console.debug('[V3-Init] Loading clinical data for patientId from URL:', patientId);
         
-        // 1. Carregar Perfil do Paciente (FONTE ÚNICA DA VERDADE)
-        // Buscamos tanto por id quanto por user_id para garantir compatibilidade
+        // 1. Load Patient Profile (SINGLE SOURCE OF TRUTH)
+        // We look up by both profile.id and user_id to ensure consistency
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .or(`id.eq.${patientId},user_id.eq.${patientId}`)
           .maybeSingle();
 
-        if (profile && profile.id !== patientId && patientId) {
-          console.info('[V3-Init] Redirecionando para ID canônico do perfil:', profile.id);
-          navigate(`/editor-v3/${profile.id}${planId ? `?planId=${planId}` : ''}`, { replace: true });
-          return;
-        }
-
         if (!profile) {
-          console.warn('[V3-Init] Perfil não encontrado para ID:', patientId);
+          console.warn('[V3-Init] Profile not found for ID:', patientId);
           return;
         }
 
-        // Importante: A partir daqui, usamos o ID REAL do perfil (profiles.id)
-        // para garantir que queries em outras tabelas (que usam patient_id FK) funcionem.
+        // 🛡️ CRITICAL FIX: Use the REAL canonical ID from the profile (profiles.id)
+        // This ensures queries to other tables (using patient_id FK) work and sync across components.
         const profileId = profile.id;
+
+        // Verify if we are currently using a different ID in the store (stale state)
+        // If the current patientId in store is different from the canonical one from URL, 
+        // it means we switched patients but the global store still has the old one.
+        // We MUST prioritize the URL ID as the intent of the user.
         
-        // 2. Carregar Avaliação Física (Fallback 1) - Usando profileId
+        console.info(`[V3-Init] Canonical profile found: ${profile.full_name} (${profileId})`);
+
+        // 2. Load Physical Assessment (Fallback 1) - Use profileId (which is user_id/auth.users.id in FKs)
         const { data: assessment } = await supabase
           .from('physical_assessments')
           .select('*')
@@ -304,7 +306,7 @@ const EditorV3Page = () => {
           .limit(1)
           .maybeSingle();
 
-        // 3. Carregar Anamnese (Fallback 2) - Usando profileId ou user_id
+        // 3. Load Anamnesis (Fallback 2)
         const { data: anamnesis } = await supabase
           .from('patient_anamnesis')
           .select('*')
@@ -349,7 +351,11 @@ const EditorV3Page = () => {
           protocol_type: profileAny.protocol_type || 'default_v3',
         };
 
-        console.info(`[V3-Context] Atribuindo contexto para ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        console.info(`[V3-Context] Assigning context for ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        
+        // Sincroniza o patientId na store com o ID REAL do perfil ANTES de qualquer hidratação
+        setPatientId(profileId);
+
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
         setGoalMetadata({
           goalCalories: Number(kcal),
@@ -361,9 +367,6 @@ const EditorV3Page = () => {
           preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || []
         });
         setPatientContext(context);
-        
-        // Sincroniza o patientId na store com o ID REAL do perfil
-        setPatientId(profileId);
         
         // Auto-select first meal if none is active
         if (meals.length > 0 && !activeMealId) {
