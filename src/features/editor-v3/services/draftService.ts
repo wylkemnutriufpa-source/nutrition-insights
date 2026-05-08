@@ -88,13 +88,16 @@ export async function loadOrCreateDraft(
   const nutritionistId = userRes.user?.id;
   if (!nutritionistId) return null;
 
-  await supabase.from('access_logs').insert({
-    user_id: nutritionistId,
-    patient_id: patientId,
-    action: 'view',
-    resource: 'draft',
-    user_agent: navigator.userAgent
-  } as any);
+  // Fire-and-forget: não bloquear o fluxo principal com erros de log
+  try {
+    await supabase.from('access_logs').insert({
+      user_id: nutritionistId,
+      patient_id: patientId,
+      action: 'view',
+      resource: 'draft',
+      user_agent: navigator.userAgent
+    } as any);
+  } catch { /* fire-and-forget */ }
 
   // 1. Tentar encontrar rascunho ativo
   const { data: existing, error: findErr } = await supabase
@@ -252,13 +255,16 @@ export async function saveDraft(
   const { data: userRes } = await supabase.auth.getUser();
   if (userRes.user) {
     const record = data as unknown as DraftRecord;
-    await supabase.from('access_logs').insert({
-      user_id: userRes.user.id,
-      patient_id: record.patient_id,
-      action: 'edit',
-      resource: 'draft',
-      user_agent: navigator.userAgent
-    } as any);
+    // Fire-and-forget: não bloquear o fluxo principal com erros de log
+    try {
+      await supabase.from('access_logs').insert({
+        user_id: userRes.user.id,
+        patient_id: record.patient_id,
+        action: 'edit',
+        resource: 'draft',
+        user_agent: navigator.userAgent
+      } as any);
+    } catch { /* fire-and-forget */ }
   }
 
   return data as unknown as DraftRecord;
@@ -274,12 +280,15 @@ export async function discardDraft(draftId: string): Promise<void> {
 
   const { data: userRes } = await supabase.auth.getUser();
   if (userRes.user && draft) {
-    await supabase.from('access_logs').insert({
-      user_id: userRes.user.id,
-      patient_id: (draft as any).patient_id,
-      action: 'delete',
-      resource: 'draft',
-      user_agent: navigator.userAgent
-    } as any);
+    // Fire-and-forget: não bloquear o fluxo principal com erros de log
+    try {
+      await supabase.from('access_logs').insert({
+        user_id: userRes.user.id,
+        patient_id: (draft as any).patient_id,
+        action: 'delete',
+        resource: 'draft',
+        user_agent: navigator.userAgent
+      } as any);
+    } catch { /* fire-and-forget */ }
   }
 }

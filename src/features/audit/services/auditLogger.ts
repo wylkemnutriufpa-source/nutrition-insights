@@ -36,8 +36,12 @@ export const logClinicalEvent = async (params: LogParams) => {
       user_agent: navigator.userAgent
     });
 
-    if (error && error.code !== '42P01') { // 42P01 is table not found
-      console.error(`Error logging to ${table}:`, error);
+    if (error && error.code !== '42P01' && error.code !== '23505' && error.code !== 'PGRST204') {
+      // Suprimir erros de schema (400), conflito (409/23505), e tabela inexistente (42P01)
+      // Apenas logar em dev para não poluir console em produção
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[AuditLogger] Non-critical error logging to ${table}:`, error.code);
+      }
     }
   } catch (e) {
     // Fail gracefully to not block the main flow (ANTI-CASCATA)
