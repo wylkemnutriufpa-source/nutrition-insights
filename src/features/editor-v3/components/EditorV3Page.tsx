@@ -23,6 +23,7 @@ import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
 import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
 import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
 import { MealSlot } from "@/lib/nutricore_v2/meal-distribution";
+import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
