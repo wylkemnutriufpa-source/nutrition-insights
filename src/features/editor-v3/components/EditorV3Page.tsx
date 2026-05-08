@@ -878,7 +878,7 @@ const EditorV3Page = () => {
     toast.info('Use a geração global ou o botão "Corrigir" para garantir o equilíbrio do NutriCore V2');
   };
 
-  const executeSwap = (mealId: string, instanceId: string, target: Food, autoAdjust = false) => {
+  const executeSwap = (mealId: string, instanceId: string, target: Food & { suggestedQuantity?: number }, autoAdjust = false) => {
     const meal = meals.find(m => m.id === mealId);
     const currentItem = meal?.items.find(i => i.instanceId === instanceId);
     
@@ -886,7 +886,10 @@ const EditorV3Page = () => {
 
     let newQuantity = 1;
 
-    if (autoAdjust) {
+    // Se temos uma quantidade sugerida pelo motor de substituição, usamos ela prioritariamente
+    if (target.suggestedQuantity) {
+      newQuantity = target.suggestedQuantity;
+    } else if (autoAdjust) {
       const currentMacros = recalculateMacros(currentItem, currentItem.quantity);
       const targetKcalPerUnit = target.kcal || target.calories || 0; 
       
