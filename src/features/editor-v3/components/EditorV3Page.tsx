@@ -298,6 +298,8 @@ const EditorV3Page = () => {
             preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || [],
             weight: Number(weight),
             height: Number(height),
+            age: Number(age),
+            gender: sex,
             activityLevel: activity,
             calories_target: Number(kcal),
             protein_target: Number(protein),
