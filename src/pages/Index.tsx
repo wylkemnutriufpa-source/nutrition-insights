@@ -470,7 +470,16 @@ function NutritionistDashboardContent() {
       </div>
 
 
-      {/* ── Patient List Focus ── */}
+      {/* ── 1️⃣ Daily Overview Cards ── */}
+      <motion.div variants={item} className={`grid grid-cols-2 sm:grid-cols-3 ${isBasic ? "lg:grid-cols-4" : "lg:grid-cols-6"} gap-3`}>
+        <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/patients")} />
+        <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/appointments")} />
+        <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
+        <OnlinePatientsWidget variant="card" showPremiumTag={false} />
+        <ChatDashboardWidget />
+      </motion.div>
+
+
       <motion.div variants={item}>
         <PatientGridDashboard />
       </motion.div>
