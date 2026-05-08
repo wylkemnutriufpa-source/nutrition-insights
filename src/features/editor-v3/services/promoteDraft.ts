@@ -110,6 +110,7 @@ export async function promoteDraftToMealPlan(
       start_date: today,
       plan_status: 'published_to_patient',
       is_active: true,
+      plan_mode: 'single_day',
       total_target_calories: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || null,
       total_target_protein: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || null,
       total_target_carbs: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || null,
