@@ -1534,7 +1534,29 @@ const EditorV3Page = () => {
                   </button>
                 ))}
 
-                {activeTab === 'food' && foodSearch.length === 0 && baseFoods.length === 0 && (
+                {activeTab === 'visual' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {visualLibraryResults.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            updateMealImage(activeMealId, v.imageUrl!, 'manual');
+                            toast.success(`Imagem atualizada!`);
+                          } else {
+                            toast.info("Selecione uma refeição primeiro.");
+                          }
+                        }}
+                        className="group relative rounded-xl bg-white/5 border border-white/5 overflow-hidden aspect-square hover:border-rose-500/50 transition-all"
+                      >
+                        <img src={v.imageUrl} alt={v.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <ImageIcon className="w-4 h-4 text-white" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
                   <div className="py-10 text-center flex flex-col items-center gap-3">
                     <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
                     <p className="text-[10px] font-black uppercase text-white/20">Carregando base...</p>
