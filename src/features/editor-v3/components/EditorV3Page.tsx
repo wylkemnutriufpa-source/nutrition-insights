@@ -93,10 +93,10 @@ const formatPortion = (item: MealItem) => {
 
 const EditorV3Page = () => {
   const { user } = useAuth();
-  const { patientId } = useParams();
+  const { patientId, planId: urlPlanId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const planId = searchParams.get('planId');
+  const planId = urlPlanId || searchParams.get('planId');
   const isSandbox = !patientId && !planId;
 
   const {
