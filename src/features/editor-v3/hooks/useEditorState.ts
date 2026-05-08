@@ -157,10 +157,27 @@ export const useEditorState = create<EditorState>()(
       },
 
       setPatientId: (id) => {
-        set({ patientId: id });
+        const currentId = get().patientId;
+        if (currentId === id) return; // Prevent redundant updates
+        
+        console.log(`[EditorState] Switching patientId from ${currentId} to ${id}`);
+        
+        // Reset local state for the new patient to prevent "Deborah's diet showing for Nathalia"
+        set({ 
+          patientId: id,
+          meals: initialMeals, // Start with a clean slate for the new patient
+          auditLog: [],
+          sharingToken: null,
+          planStatus: 'draft',
+          nutritionalScore: null,
+          validationIssues: [],
+          confidence: null,
+          patientContext: null
+        });
+        
         get().addAuditEntry({
           type: 'system_action',
-          description: `Paciente ${id} selecionado`,
+          description: `Patient ${id} selected (State Reset)`,
           source: 'system'
         });
       },
