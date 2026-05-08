@@ -10,30 +10,42 @@ export async function generateAndSaveLocalPlan(
   tenantId: string
 ) {
   try {
-    // 1. Get patient context
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', patientId)
-      .single();
+    // 1. Get patient context and anamnesis targets
+    const [{ data: profile }, { data: anamnesis }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', patientId)
+        .single(),
+      supabase
+        .from('patient_anamnesis')
+        .select('*')
+        .eq('user_id', patientId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    ]);
 
     if (!profile) throw new Error("Paciente não encontrado");
+
+    // Get answers from anamnesis to extract more details if available
+    const answers = (anamnesis?.answers || {}) as any;
 
     const context: PatientContext = {
       id: profile.id,
       name: profile.full_name || 'Paciente',
-      goal: (profile as any).goal || 'maintain',
-      restrictions: (profile as any).restrictions || [],
-      preferences: (profile as any).preferences || [],
-      weight: (profile as any).current_weight_kg || 70,
-      height: (profile as any).current_height_cm || 170,
-      age: 30, // Default if not found
-      gender: (profile as any).gender || 'male',
-      activityLevel: (profile as any).activity_level || 'moderate',
-      calories_target: 2000,
-      protein_target: 150,
-      carbs_target: 200,
-      fat_target: 60
+      goal: profile.goal || answers.goal || 'maintain',
+      restrictions: profile.restrictions || answers.restrictions || [],
+      preferences: profile.preferences || (answers.food_preferences ? [answers.food_preferences] : []),
+      weight: profile.current_weight_kg || answers.weight || 70,
+      height: profile.current_height_cm || answers.height || 170,
+      age: answers.age || 30,
+      gender: answers.sex || 'male',
+      activityLevel: profile.activity_level || answers.activity_level || 'moderate',
+      calories_target: Number(anamnesis?.computed_kcal_target) || 2000,
+      protein_target: Number(anamnesis?.computed_protein) || 150,
+      carbs_target: Number(anamnesis?.computed_carbs) || 200,
+      fat_target: Number(anamnesis?.computed_fat) || 60
     };
 
     // 2. Generate plan using NutriCore V2 Adapter (LOCAL)
