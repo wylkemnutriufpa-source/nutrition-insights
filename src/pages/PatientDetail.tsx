@@ -864,22 +864,22 @@ export default function PatientDetail() {
           <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
             <Scale className="w-5 h-5 text-primary mb-1" />
             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Peso Atual</span>
-            <span className="text-xl font-display font-bold">{(profile as any)?.current_weight_kg || anamnesis?.answers?.weight || "—"} <span className="text-xs font-normal">kg</span></span>
+            <span className="text-xl font-display font-bold">{(profile as any)?.current_weight_kg || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs font-normal">kg</span></span>
           </div>
           <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
             <Ruler className="w-5 h-5 text-primary mb-1" />
             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Altura</span>
-            <span className="text-xl font-display font-bold">{(profile as any)?.current_height_cm || anamnesis?.answers?.height || "—"} <span className="text-xs font-normal">cm</span></span>
+            <span className="text-xl font-display font-bold">{(profile as any)?.current_height_cm || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs font-normal">cm</span></span>
           </div>
           <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
             <Target className="w-5 h-5 text-primary mb-1" />
             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Objetivo</span>
-            <span className="text-sm font-display font-bold">{(profile as any)?.goal || anamnesis?.answers?.goal || "Não definido"}</span>
+            <span className="text-sm font-display font-bold">{(profile as any)?.goal || (anamnesis?.answers as any)?.goal || "Não definido"}</span>
           </div>
           <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
             <Activity className="w-5 h-5 text-primary mb-1" />
             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Atividade</span>
-            <span className="text-sm font-display font-bold">{(profile as any)?.activity_level || anamnesis?.answers?.activity_level || "Não definido"}</span>
+            <span className="text-sm font-display font-bold">{(profile as any)?.activity_level || (anamnesis?.answers as any)?.activity_level || "Não definido"}</span>
           </div>
           <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm md:col-span-2 lg:col-span-2">
             <Heart className="w-5 h-5 text-primary mb-1" />
