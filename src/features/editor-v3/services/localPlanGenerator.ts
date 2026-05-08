@@ -65,7 +65,7 @@ export async function generateAndSaveLocalPlan(
     const { data: mealPlan, error: promoteError } = await supabase
       .from('meal_plans')
       .insert({
-        patient_id: patientId,
+        patient_id: profile.user_id || patientId,
         nutritionist_id: nutritionistId,
         tenant_id: tenantId,
         title: `Plano NutriCore V2 — ${new Date().toLocaleDateString('pt-BR')}`,
