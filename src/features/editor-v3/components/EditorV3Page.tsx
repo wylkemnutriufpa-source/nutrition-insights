@@ -1118,7 +1118,7 @@ const EditorV3Page = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-neutral-950 flex flex-col font-sans selection:bg-emerald-500/30 text-white">
       <header className="bg-black/90 border-b border-white/5 py-4 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-5">
