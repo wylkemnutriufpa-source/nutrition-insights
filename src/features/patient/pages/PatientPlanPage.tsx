@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   CheckCircle2, Share2, Download, Flame, Trophy, Calendar, 
-  RefreshCw, ChevronRight, Scale, Info, Sparkles
+  RefreshCw, ChevronRight, Scale, Info, Sparkles, Utensils
 } from 'lucide-react';
+
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
 } from '@/components/ui/dialog';
