@@ -44,7 +44,7 @@ export class FitJourneyStrategy implements ClinicalStrategy {
   id = 'fitjourney_protocol';
   name = 'Protocolo FitJourney';
 
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] {
     const mealName = meal.name.toLowerCase();
     const type = meal.type; // Assumindo que Meal tem 'type' do tipo meal_types definido no prompt
     const scale = baseCalories / 2000;
