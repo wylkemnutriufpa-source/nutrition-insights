@@ -754,7 +754,12 @@ const EditorV3Page = () => {
 
   const handleGenerateFullPlan = async () => {
     if (!patientContext) {
-      toast.error('Selecione um paciente para gerar o plano');
+      toast.error('Carregando dados do paciente... Aguarde.');
+      return;
+    }
+
+    if (!patientContext.weight || !patientContext.height) {
+      toast.error('O paciente está sem Peso ou Altura. Preencha os dados antropométricos antes de gerar o plano.');
       return;
     }
 
