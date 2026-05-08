@@ -24,12 +24,11 @@ const handleChunkLoadError = (msg: string) => {
   if (Date.now() - lastAttempt < 10_000) return; // avoid reload loop
   sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
   console.warn("[FJ] Stale chunk detected — clearing caches and reloading…");
+  const doReload = () => { (window as Window).location.reload(); };
   if ("caches" in window) {
-    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).finally(() => {
-      window.location.reload();
-    });
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).finally(doReload);
   } else {
-    window.location.reload();
+    doReload();
   }
 };
 
