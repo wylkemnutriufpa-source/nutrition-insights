@@ -116,6 +116,17 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
         if (insErr) throw insErr;
       }
 
+      // Update Central Source of Truth (profiles)
+      await supabase
+        .from("profiles")
+        .update({
+          goal: current.objective,
+          activity_level: current.activity_level,
+          restrictions: current.allergies ? [current.allergies, current.intolerances].filter(Boolean) : [],
+          preferences: current.food_preferences ? [current.food_preferences] : [],
+        })
+        .eq("user_id", patientId);
+
       await supabase
         .from("in_office_sessions" as any)
         .update({ anamnesis_completed: true } as any)
