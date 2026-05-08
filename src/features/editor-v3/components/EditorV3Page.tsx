@@ -1103,7 +1103,7 @@ const EditorV3Page = () => {
             </div>
             <div className="grid gap-5">
               {meal.items.map((item) => (
-                <Card key={item.instanceId} className="p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all rounded-2xl cursor-pointer border-emerald-500/50" onClick={() => setSelectedItem({ mealId: meal.id, item })}>
+                <Card key={item.instanceId} className="p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all rounded-2xl cursor-pointer border-emerald-500/50" onClick={() => { console.log('[V3-UI] Item clicked:', item.name); setSelectedItem({ mealId: meal.id, item }); }}>
                   <div className="flex items-center gap-5">
                     {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />}
                     <div>
