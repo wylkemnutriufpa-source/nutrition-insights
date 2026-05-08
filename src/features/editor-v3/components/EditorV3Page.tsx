@@ -1797,7 +1797,55 @@ const EditorV3Page = () => {
                       </Badge>
                     )}
                   </div>
-                  
+      <Dialog open={showAnamnesisHandshake} onOpenChange={setShowAnamnesisHandshake}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Metas da Anamnese Disponíveis
+            </DialogTitle>
+            <DialogDescription>
+              Detectamos uma anamnese recente para este paciente com metas calculadas. 
+              Deseja carregar as metas de {pendingAnamnesisData?.kcal} kcal automaticamente no editor?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-4 gap-4 py-4">
+            <div className="flex flex-col items-center p-2 bg-muted rounded-lg">
+              <span className="text-xs font-medium">Kcal</span>
+              <span className="text-lg font-bold">{pendingAnamnesisData?.kcal}</span>
+            </div>
+            <div className="flex flex-col items-center p-2 bg-muted rounded-lg">
+              <span className="text-xs font-medium">Prot</span>
+              <span className="text-lg font-bold">{pendingAnamnesisData?.protein}g</span>
+            </div>
+            <div className="flex flex-col items-center p-2 bg-muted rounded-lg">
+              <span className="text-xs font-medium">Carb</span>
+              <span className="text-lg font-bold">{pendingAnamnesisData?.carbs}g</span>
+            </div>
+            <div className="flex flex-col items-center p-2 bg-muted rounded-lg">
+              <span className="text-xs font-medium">Gord</span>
+              <span className="text-lg font-bold">{pendingAnamnesisData?.fat}g</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAnamnesisHandshake(false)}>Manter Atual</Button>
+            <Button onClick={() => {
+              if (pendingAnamnesisData) {
+                setPatientContext(prev => prev ? {
+                  ...prev,
+                  calories_target: pendingAnamnesisData.kcal,
+                  protein_target: pendingAnamnesisData.protein,
+                  carbs_target: pendingAnamnesisData.carbs,
+                  fat_target: pendingAnamnesisData.fat
+                } : null);
+                toast.success('Metas da anamnese aplicadas!');
+              }
+              setShowAnamnesisHandshake(false);
+            }}>Usar Metas</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
                   <div className="space-y-3">
                     {validationIssues.filter(i => i.severity === 'critical').map((issue, idx) => (
                       <div key={idx} className="flex items-start gap-3 bg-rose-500/5 p-3 rounded-xl border border-rose-500/10">
