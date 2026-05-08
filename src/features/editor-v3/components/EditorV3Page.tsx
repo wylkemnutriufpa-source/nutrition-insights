@@ -59,7 +59,7 @@ import {
   Sparkles, Save, Package, ChefHat, Clock,
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
-  Zap, Activity, PieChart, Minus, Users, Search,
+  Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
   User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown
 } from 'lucide-react';
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
@@ -1125,13 +1125,100 @@ const EditorV3Page = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => navigate(`/patients/${patientId || ''}`)}
+              onClick={() => navigate('/dashboard')}
               className="text-white/40 hover:text-white rounded-2xl hover:bg-white/5 border border-white/5"
+              title="Voltar ao Dashboard"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <LayoutDashboard className="w-5 h-5" />
             </Button>
             
-            <div className="flex flex-col gap-1">
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                onClick={() => setShowPatientSelector(!showPatientSelector)}
+                className="text-white/80 hover:text-white flex items-center gap-3 px-4 py-2 rounded-2xl hover:bg-white/5 border border-white/5 transition-all group"
+              >
+                <div className="h-8 w-8 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500/20 transition-colors">
+                  <Users size={18} />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-[10px] font-black uppercase text-white/40 leading-none mb-1">Selecionar Paciente</span>
+                  <span className="text-sm font-black tracking-tight leading-none truncate max-w-[150px]">
+                    {patientContext?.name || "Nenhum Selecionado"}
+                  </span>
+                </div>
+                <ChevronDown className={cn("w-4 h-4 text-white/20 transition-transform", showPatientSelector && "rotate-180")} />
+              </Button>
+
+              {showPatientSelector && (
+                <div className="absolute left-0 top-full mt-3 w-80 bg-black/95 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-4 border-b border-white/5">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={14} />
+                      <input 
+                        type="text" 
+                        placeholder="Buscar paciente..."
+                        value={patientSearch}
+                        onChange={(e) => setPatientSearch(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto p-2">
+                    {isLoadingPatients ? (
+                      <div className="p-8 flex flex-col items-center gap-3">
+                        <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
+                        <span className="text-[10px] font-black uppercase text-white/20">Buscando Base...</span>
+                      </div>
+                    ) : (patientsData?.patients?.length ?? 0) > 0 ? (
+                      patientsData?.patients?.map(p => (
+                        <button
+                          key={p.patient_id}
+                          onClick={() => {
+                            navigate(`/editor-v3/${p.patient_id}`);
+                            setShowPatientSelector(false);
+                          }}
+                          className={cn(
+                            "w-full p-3 flex items-center gap-3 rounded-2xl transition-all text-left group",
+                            p.patient_id === patientId ? "bg-emerald-500/10 border border-emerald-500/20" : "hover:bg-white/5 border border-transparent"
+                          )}
+                        >
+                          <div className={cn(
+                            "h-10 w-10 rounded-xl flex items-center justify-center text-xs font-black transition-colors",
+                            p.patient_id === patientId ? "bg-emerald-500 text-black" : "bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white"
+                          )}>
+                            {p.profile?.full_name ? p.profile.full_name[0] : 'P'}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-white">{p.profile?.full_name || 'Paciente'}</span>
+                            <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Acessar Prontuário</span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-8 text-center flex flex-col items-center gap-2">
+                        <UserX className="w-6 h-6 text-white/10" />
+                        <p className="text-[10px] font-black uppercase text-white/20">Nenhum paciente encontrado</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 bg-white/5 border-t border-white/5">
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => navigate('/patients')}
+                      className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white rounded-xl"
+                    >
+                      Gerenciar Todos os Pacientes
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="h-8 w-px bg-white/5 hidden md:block mx-2" />
+            
+            <div className="flex flex-col gap-1 hidden sm:flex">
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-black text-white tracking-tight">
                   {patientContext?.name || (patientId ? "Carregando..." : "Editor V3 Elite")}
