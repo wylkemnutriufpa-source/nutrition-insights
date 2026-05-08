@@ -1,4 +1,4 @@
-import { Meal, Food, MealItem } from '../types/clinical-types';
+import { Meal, Food, MealItem, PatientContext } from '../types/clinical-types';
 import { toast } from 'sonner';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
 import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
@@ -6,7 +6,7 @@ import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
 export interface ClinicalStrategy {
   id: string;
   name: string;
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[];
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[];
   explainDecision(meal: Meal, items: MealItem[]): string;
 }
 
