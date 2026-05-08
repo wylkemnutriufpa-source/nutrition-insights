@@ -859,16 +859,18 @@ const EditorV3Page = () => {
           name: mealName,
           time: v2Meal.time,
           items: v2Meal.items.map(item => {
-            const factor = item.grams / 100;
+            // 🛡️ BLINDAGEM NUTRICORE V2:
+            // Usamos o macro TOTAL direto do motor para evitar distorções de 25.000 kcal.
+            // Definimos portionValue = item.grams para que factor seja sempre 1.
             return {
               id: item.foodId,
               name: item.name,
-              kcal: Math.round(item.macros.kcal / (factor || 1)),
-              calories: Math.round(item.macros.kcal / (factor || 1)),
-              protein: Number((item.macros.protein_g / (factor || 1)).toFixed(1)),
-              carbs: Number((item.macros.carb_g / (factor || 1)).toFixed(1)),
-              fat: Number((item.macros.fat_g / (factor || 1)).toFixed(1)),
-              portionValue: 100,
+              kcal: Math.round(item.macros.kcal),
+              calories: Math.round(item.macros.kcal),
+              protein: Number(item.macros.protein_g.toFixed(1)),
+              carbs: Number(item.macros.carb_g.toFixed(1)),
+              fat: Number(item.macros.fat_g.toFixed(1)),
+              portionValue: item.grams, 
               portionUnitLabel: 'g',
               portionUnit: 'g',
               portionLabel: 'g',
