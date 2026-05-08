@@ -183,7 +183,7 @@ export async function promoteDraftToMealPlan(
   await supabase
     .from('meal_plans')
     .update({ is_active: false } as any)
-    .eq('patient_id', draft.patient_id)
+    .eq('patient_id', authUserId)
     .neq('id', plan.id)
     .eq('is_active', true);
 
