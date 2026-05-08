@@ -60,8 +60,10 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown
 } from 'lucide-react';
+import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
+
 
 
 import { toast } from 'sonner';
@@ -1272,7 +1274,54 @@ const EditorV3Page = () => {
               Salvar e Publicar
             </Button>
 
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={async () => {
+                if (!meals.length) {
+                  toast.error("Nenhum item para exportar");
+                  return;
+                }
+                const toastId = toast.loading("Gerando PDF...");
+                try {
+                  const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
+                  const pdfData: PremiumMealPlanPDFData = {
+                    planTitle: "Plano Alimentar V3",
+                    patientName: patientContext?.name || "Paciente",
+                    nutritionistName: prof?.full_name || "Seu Nutricionista",
+                    startDate: new Date().toLocaleDateString("pt-BR"),
+                    items: meals.map(m => ({
+                      mealType: m.name.toLowerCase().includes('café') ? 'breakfast' : 
+                                m.name.toLowerCase().includes('almoço') ? 'lunch' : 
+                                m.name.toLowerCase().includes('jantar') ? 'dinner' : 'snack',
+                      title: m.name,
+                      description: m.items.map(i => `${i.name} — ${i.quantity}${i.measurementType === 'gram' ? 'g' : i.measurementType === 'ml' ? 'ml' : ' un.'}`).join('\n'),
+                      calories_target: m.items.reduce((acc, i) => acc + (i.kcal || 0), 0),
+                      protein_target: m.items.reduce((acc, i) => acc + (i.protein || 0), 0),
+                      carbs_target: m.items.reduce((acc, i) => acc + (i.carbs || 0), 0),
+                      fat_target: m.items.reduce((acc, i) => acc + (i.fat || 0), 0),
+                    })),
+                    targetCalories: (nutritionalScore as any)?.total?.kcal || 0,
+                    targetProtein: (nutritionalScore as any)?.total?.protein || 0,
+                    targetCarbs: (nutritionalScore as any)?.total?.carbs || 0,
+                    targetFat: (nutritionalScore as any)?.total?.fat || 0,
+
+                    goal: patientContext?.goal,
+                  };
+                  generatePremiumMealPlanPDF(pdfData);
+                  toast.success("PDF pronto para imprimir!", { id: toastId });
+                } catch (err) {
+                  toast.error("Erro ao gerar PDF", { id: toastId });
+                }
+              }}
+              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              Exportar PDF
+            </Button>
+
             <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
+
               <RotateCcw className="w-4 h-4" />
             </Button>
           </div>
