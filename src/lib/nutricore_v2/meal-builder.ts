@@ -45,80 +45,88 @@ export function buildMeal(
   const { restrictions = [], preferences = [] } = options;
 
   const isLunchOrDinner = type === "almoço" || type === "jantar";
-  const isBreakfastOrSnack = type === "cafe_da_manha" || type.includes("lanche");
+  const isBreakfast = type === "cafe_da_manha";
+  const isSnack = type.includes("lanche") || type === "ceia";
 
-  // 1. PROTEÍNA PRIMEIRO
-  const proteinFood = selectFood(foodDb, "protein", restrictions, preferences);
+  // 1. FILTRAGEM POR REFEIÇÃO (REGRAS CLÍNICAS)
+  let allowedDb = foodDb.filter(f => !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase())));
+
+  if (isBreakfast) {
+    // Café da Manhã: Pão, Ovo, Queijo, Iogurte, Fruta (Sem arroz/feijão/carne pesada)
+    allowedDb = allowedDb.filter(f => 
+      f.category === "fruit" || 
+      f.name.toLowerCase().includes("pão") || 
+      f.name.toLowerCase().includes("ovo") || 
+      f.name.toLowerCase().includes("queijo") || 
+      f.name.toLowerCase().includes("iogurte") ||
+      f.name.toLowerCase().includes("manteiga") ||
+      f.name.toLowerCase().includes("aveia")
+    );
+  } else if (isSnack) {
+    // Lanches: Frutas, Iogurtes, Whey, Queijos leves
+    allowedDb = allowedDb.filter(f => 
+      f.category === "fruit" || 
+      f.name.toLowerCase().includes("iogurte") || 
+      f.name.toLowerCase().includes("whey") || 
+      f.name.toLowerCase().includes("queijo") ||
+      f.name.toLowerCase().includes("aveia") ||
+      f.name.toLowerCase().includes("castanha")
+    );
+  }
+
+  // 2. PROTEÍNA PRIMEIRO (Em todas as refeições)
+  const proteinFood = selectFood(allowedDb, "protein", [], preferences) || selectFood(foodDb, "protein", restrictions, preferences);
   let proteinGrams = 0;
-  let proteinKcal = 0;
 
   if (proteinFood) {
-    // meta_proteina / (proteína_por_100g / 100)
     proteinGrams = (targetMacros.protein_g / (proteinFood.protein_100g / 100));
-    // Arredondar para 5g e Clamping razoável
-    proteinGrams = roundTo5(Math.min(Math.max(proteinGrams, 80), 250));
+    // Limites de gramas baseados no tipo de refeição
+    const minG = isSnack ? 30 : 80;
+    const maxG = isSnack ? 150 : 250;
+    proteinGrams = roundTo5(Math.min(Math.max(proteinGrams, minG), maxG));
     
     const item = createPlannedItem(proteinFood, proteinGrams);
     items.push(item);
-    proteinKcal = item.macros.kcal;
   }
 
-  // 2. GORDURA E VEGETAIS/FRUTAS
-  let fixedKcal = 0;
-  let currentFat = items.reduce((acc, i) => acc + i.macros.fat_g, 0);
-
-  // Vegetais (100g fixos em almoço/jantar)
+  // 3. VEGETAIS E FRUTAS (Componentes fixos)
   if (isLunchOrDinner) {
-    const vegFood = selectFood(foodDb, "vegetable", restrictions, preferences);
+    const vegFood = selectFood(allowedDb, "vegetable", [], preferences) || selectFood(foodDb, "vegetable", restrictions, preferences);
     if (vegFood) {
-      const item = createPlannedItem(vegFood, 100);
-      items.push(item);
-      fixedKcal += item.macros.kcal;
-    }
-    
-    // Ajuste de Gordura: Tenta atingir a meta da refeição
-    const remainingFat = targetMacros.fat_g - currentFat;
-    if (remainingFat > 0) {
-      const fatFood = selectFood(foodDb, "fat", restrictions, preferences);
-      if (fatFood) {
-        // grams = remaining_fat / (fat_per_100g / 100)
-        let fatGrams = remainingFat / (fatFood.fat_100g / 100);
-        // Limite razoável para gordura adicionada (ex: 5g a 30g)
-        fatGrams = Math.min(Math.max(fatGrams, 5), 30);
-        const item = createPlannedItem(fatFood, fatGrams);
-        items.push(item);
-        fixedKcal += item.macros.kcal;
-      }
+      items.push(createPlannedItem(vegFood, 100)); // 100g fixos
     }
   }
 
-  // Frutas/Laticínios em lanches
-  if (isBreakfastOrSnack) {
-    const fruitFood = selectFood(foodDb, "fruit", restrictions, preferences);
+  if (isBreakfast || isSnack) {
+    const fruitFood = selectFood(allowedDb, "fruit", [], preferences) || selectFood(foodDb, "fruit", restrictions, preferences);
     if (fruitFood) {
-      const item = createPlannedItem(fruitFood, 120);
-      items.push(item);
-      fixedKcal += item.macros.kcal;
-    }
-    
-    if (type === "cafe_da_manha") {
-      const butter = foodDb.find(f => f.name.toLowerCase().includes("manteiga") || f.name.toLowerCase().includes("azeite"));
-      if (butter) {
-        const item = createPlannedItem(butter, 8);
-        items.push(item);
-        fixedKcal += item.macros.kcal;
-      }
+      const grams = type === "ceia" ? 80 : 120; // Fruta menor na ceia
+      items.push(createPlannedItem(fruitFood, grams));
     }
   }
 
-  // 3. CARBOIDRATO COM O RESTANTE
+  // 4. GORDURA (Foco em Almoço/Jantar ou Café)
+  const currentFat = items.reduce((acc, i) => acc + i.macros.fat_g, 0);
+  const remainingFat = targetMacros.fat_g - currentFat;
+  if (remainingFat > 2 && (isLunchOrDinner || isBreakfast)) {
+    const fatFood = selectFood(allowedDb, "fat", [], preferences) || selectFood(foodDb, "fat", restrictions, preferences);
+    if (fatFood) {
+      let fatGrams = remainingFat / (fatFood.fat_100g / 100);
+      fatGrams = Math.min(Math.max(fatGrams, 5), 15);
+      items.push(createPlannedItem(fatFood, fatGrams));
+    }
+  }
+
+  // 5. CARBOIDRATO (Completa as calorias)
   const currentKcal = items.reduce((acc, i) => acc + i.macros.kcal, 0);
   const remainingKcal = targetMacros.kcal - currentKcal;
-  const carbFood = selectFood(foodDb, "carb", restrictions, preferences);
+  const carbFood = selectFood(allowedDb, "carb", [], preferences) || selectFood(foodDb, "carb", restrictions, preferences);
   
-  if (carbFood && remainingKcal > 0) {
+  if (carbFood && remainingKcal > 15) {
     let carbGrams = remainingKcal / (carbFood.kcal_100g / 100);
-    carbGrams = roundTo5(Math.min(Math.max(carbGrams, 30), 500));
+    // Limites de carbo
+    const maxCarb = isLunchOrDinner ? 300 : 150;
+    carbGrams = roundTo5(Math.min(Math.max(carbGrams, 20), maxCarb));
     items.push(createPlannedItem(carbFood, carbGrams));
   }
 
@@ -140,6 +148,7 @@ export function buildMeal(
     totalMacros,
   };
 }
+
 
 function selectFood(
   db: Food[],
