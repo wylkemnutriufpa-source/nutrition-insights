@@ -617,10 +617,14 @@ export const useEditorState = create<EditorState>()(
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
 
+        // No V3, se tivermos contexto do paciente, priorizamos as metas calculadas pelo NutriCore
+        const finalCalories = patientContext?.calories_target || baseCalories;
+        const finalGoal = patientContext?.goal || goal;
+
         const newItems = generateMealWithEngine(
           meal, 
-          goal, 
-          baseCalories, 
+          finalGoal, 
+          finalCalories, 
           availableFoods, 
           patientContext?.protocol_type || 'default_v3',
           patientContext || undefined
@@ -633,7 +637,7 @@ export const useEditorState = create<EditorState>()(
           planStatus: 'draft'
         }));
         get().recalculateScore();
-        toast.success(`Refeição "${meal.name}" otimizada!`);
+        toast.success(`Refeição "${meal.name}" otimizada para ${finalGoal}!`);
       },
 
       savePlan: async () => {
