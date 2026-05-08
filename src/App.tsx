@@ -15,15 +15,19 @@ const App = () => {
   const Switcher = () => (
     <button 
       onClick={() => setMode(mode === 'V1' ? 'V2' : 'V1')}
-      className={`fixed top-4 right-4 z-[9999] px-4 py-2 rounded-full text-xs font-bold uppercase transition-all shadow-xl border flex items-center gap-2 ${
+      className={`fixed top-4 right-4 z-[9999] px-6 py-2.5 rounded-full text-xs font-bold uppercase transition-all shadow-2xl border flex items-center gap-3 ${
         mode === 'V2' 
-          ? 'bg-green-600 text-white border-green-500 hover:bg-green-700' 
-          : 'bg-white text-black border-slate-200 hover:bg-slate-100'
+          ? 'bg-green-600 text-white border-green-400 hover:bg-green-700' 
+          : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
       }`}
     >
-      <div className={`w-2 h-2 rounded-full ${mode === 'V2' ? 'bg-white animate-pulse' : 'bg-slate-400'}`} />
-      {mode === 'V2' ? 'FitJourney 2.0 (Beta)' : 'Mudar para FitJourney 2.0'}
-      {mode === 'V2' && <span className="opacity-60 ml-1">| Voltar V1</span>}
+      <div className={`w-2.5 h-2.5 rounded-full ${mode === 'V2' ? 'bg-white animate-pulse' : 'bg-slate-500'}`} />
+      <span>
+        {mode === 'V2' ? 'FitJourney 2.0 (Beta)' : 'FitJourney 1.0'}
+      </span>
+      <span className="opacity-50 text-[10px] border-l border-white/20 pl-3">
+        Clique para Alternar
+      </span>
     </button>
   );
 
