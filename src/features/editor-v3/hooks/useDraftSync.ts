@@ -28,7 +28,8 @@ interface UseDraftSyncReturn {
 export function useDraftSync(
   patientId: string | null, 
   seedMeals: Meal[], 
-  currentMeals: Meal[]
+  currentMeals: Meal[],
+  planId?: string | null
 ): UseDraftSyncReturn {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('idle');
