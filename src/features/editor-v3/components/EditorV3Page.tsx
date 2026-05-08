@@ -1111,12 +1111,28 @@ const EditorV3Page = () => {
             <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="h-9 border-white/5 bg-white/5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               <RotateCcw className="w-3.5 h-3.5 mr-2" /> Resetar
             </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowRefineOptions(true)} className="h-9 border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
-              <Sparkles className="w-3.5 h-3.5" /> Corrigir Plano
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleGenerateFullPlan} 
+              disabled={isGeneratingGlobal}
+              className="h-9 border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2"
+            >
+              {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              Gerar Plano Completo
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowClinicalHistory(true)} className="h-9 border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
-              <History className="w-3.5 h-3.5" /> Histórico Clínico
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleFixPlan} 
+              disabled={isGeneratingGlobal}
+              className="h-9 border-amber-500/20 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2"
+            >
+              <Activity className="w-3.5 h-3.5" /> Corrigir
             </Button>
+
             <Button size="sm" onClick={handlePromotionRequest} disabled={promoting || !draftId} className="h-9 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl transition-all px-6 shadow-lg shadow-emerald-500/20">
               <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
             </Button>
