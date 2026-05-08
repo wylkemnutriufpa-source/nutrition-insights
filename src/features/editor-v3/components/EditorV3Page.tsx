@@ -1141,7 +1141,7 @@ const EditorV3Page = () => {
                 <div className="h-8 w-8 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500/20 transition-colors">
                   <Users size={18} />
                 </div>
-                <div className="flex flex-col items-start">
+                <div className="flex flex-col items-start min-w-[120px]">
                   <span className="text-[10px] font-black uppercase text-white/40 leading-none mb-1">Selecionar Paciente</span>
                   <span className="text-sm font-black tracking-tight leading-none">
                     {patientContext?.name || "Nenhum Selecionado"}
