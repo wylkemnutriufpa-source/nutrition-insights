@@ -170,7 +170,7 @@ const CURIOSIDADES: Curiosidade[] = [
 
 const CATEGORIES = ["Todas", ...Array.from(new Set(CURIOSIDADES.map((c) => c.category)))];
 
-export default function Curiosidades() {
+export default function Curiosidades({ embedded = false }: { embedded?: boolean }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Todas");
   const [selected, setSelected] = useState<Curiosidade | null>(null);
@@ -181,9 +181,9 @@ export default function Curiosidades() {
     return matchSearch && matchCat;
   });
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
+
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
             <Sparkles className="w-5 h-5 text-primary-foreground" />
@@ -265,7 +265,15 @@ export default function Curiosidades() {
             )}
           </>
         )}
-      </div>
+    </div>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <DashboardLayout>
+      {content}
     </DashboardLayout>
   );
 }
+
