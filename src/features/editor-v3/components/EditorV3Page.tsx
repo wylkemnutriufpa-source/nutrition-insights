@@ -379,6 +379,11 @@ const EditorV3Page = () => {
         
         // Sincroniza o patientId na store com o ID REAL do perfil
         setPatientId(profileId);
+        
+        // Auto-select first meal if none is active
+        if (meals.length > 0 && !activeMealId) {
+          setActiveMealId(meals[0].id);
+        }
 
         // Handshake: Se a anamnese for recente (últimas 24h) e o plano estiver vazio, sugerir uso das metas
         if (anamnesis) {
