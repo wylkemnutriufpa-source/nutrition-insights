@@ -727,7 +727,7 @@ export default function DietTemplates() {
 
       toast.success(`Plano alimentar gerado com ${itemsCount} refeições! 🎉`);
       setPreviewOpen(false);
-      navigate(`/meal-plans/${targetPlanId}`);
+      navigate(`/editor-v3/${patientId}?planId=${targetPlanId}`);
     } catch (e: any) {
       toast.error("Erro ao aplicar modelo: " + e.message);
     }

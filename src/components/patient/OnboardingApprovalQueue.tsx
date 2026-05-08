@@ -355,7 +355,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             ? "Plano gerado, corrigido pelo motor clínico e pronto para revisão."
             : `Plano gerado com ${data.items_count} itens! Revise e aprove.`
         );
-        navigate(`/meal-plans/${reviewPlanId}`);
+        navigate(`/editor-v3/${pipeline.patient_id}?planId=${reviewPlanId}`);
       }
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
@@ -435,7 +435,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         toast.success("Plano revisado pelo motor clínico. Abrindo versão corrigida...");
       }
 
-      navigate(`/meal-plans/${resolvedPlanId}`);
+      navigate(`/editor-v3/${pipeline.patient_id}?planId=${resolvedPlanId}`);
     } catch (err: any) {
       toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
     } finally {
@@ -867,7 +867,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                 className="gap-2"
                 onClick={() => {
                   const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
-                  if (planId) navigate(`/meal-plans/${planId}`);
+                  if (planId) navigate(`/editor-v3/${patientId}?planId=${planId}`);
                 }}
               >
                 <FileText className="w-4 h-4" />

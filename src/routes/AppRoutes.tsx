@@ -321,6 +321,8 @@ export const AppRoutes = () => {
       <Route path="/analyze-meal" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/meal-plans/:planId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/diet-templates" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietTemplates /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/editor" element={<Navigate to="/editor-v3" replace />} />
       <Route path="/editor-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/editor-v3/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
