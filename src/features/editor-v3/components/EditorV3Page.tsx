@@ -752,7 +752,9 @@ const EditorV3Page = () => {
         age_years: patientContext.age || 30,
         sex: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'feminino' : 'masculino' as any,
         activity_level: mapActivity(patientContext.activityLevel || 'moderado'),
-        goal: mapGoal(patientContext.goal || 'manutencao')
+        goal: mapGoal(patientContext.goal || 'manutencao'),
+        restrictions: patientContext.restrictions || [],
+        preferences: patientContext.preferences || []
       };
 
       const mealSlots: MealSlot[] = [
