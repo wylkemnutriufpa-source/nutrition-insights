@@ -659,16 +659,9 @@ const EditorV3Page = () => {
   }, [meals, auditLog, draftId, scheduleSave]);
 
   const handlePromotionRequest = () => {
-    // Sistema de Decisão Clínica (Pré-Salvamento)
-    const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
-    const hasViolations = criticalIssues.length > 0;
-    const isLowConfidence = confidence && confidence.value < 70;
-
-    if (hasViolations || isLowConfidence) {
-      setShowClinicalDecision(true);
-    } else {
-      handleConfirmPromotion();
-    }
+    // Sistema de Decisão Clínica (Pré-Salvamento) - DESATIVADO POR SOLICITAÇÃO DO USUÁRIO
+    // O Nutricionista agora tem liberdade total para salvar mesmo com inconsistências clínicas.
+    handleConfirmPromotion();
   };
 
   const handleConfirmPromotion = async () => {
