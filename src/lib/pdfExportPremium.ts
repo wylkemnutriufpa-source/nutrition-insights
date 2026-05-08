@@ -30,6 +30,7 @@ export interface PremiumMealPlanPDFData {
   targetFat?: number;
   goal?: string;
   notes?: string;
+  planMode?: string;
 }
 
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
