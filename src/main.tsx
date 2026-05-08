@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { CoreProviders } from "./providers/CoreProviders";
 
 // Hard Clear no Boot: Se a URL contiver ?clear, limpa tudo e recomeça
 if (window.location.search.includes('clear')) {
@@ -41,5 +42,9 @@ window.addEventListener("unhandledrejection", (e) => {
 const rootElement = document.getElementById("root");
 if (rootElement) {
   const reactRoot = createRoot(rootElement);
-  reactRoot.render(<App />);
+  reactRoot.render(
+    <CoreProviders>
+      <App />
+    </CoreProviders>
+  );
 }
