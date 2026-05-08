@@ -1,5 +1,5 @@
 
-import { NutriCoreV2Adapter } from "../adapter";
+import { NutriCoreV2Adapter } from "./adapter";
 import { PatientContext, Food } from "../../features/clinical-engine/types/clinical-types";
 
 /**
