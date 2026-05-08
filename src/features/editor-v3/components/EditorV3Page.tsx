@@ -1301,10 +1301,11 @@ const EditorV3Page = () => {
                       carbs_target: m.items.reduce((acc, i) => acc + (i.carbs || 0), 0),
                       fat_target: m.items.reduce((acc, i) => acc + (i.fat || 0), 0),
                     })),
-                    targetCalories: nutritionalScore?.totals?.kcal || 0,
-                    targetProtein: nutritionalScore?.totals?.protein || 0,
-                    targetCarbs: nutritionalScore?.totals?.carbs || 0,
-                    targetFat: nutritionalScore?.totals?.fat || 0,
+                    targetCalories: (nutritionalScore as any)?.total?.kcal || 0,
+                    targetProtein: (nutritionalScore as any)?.total?.protein || 0,
+                    targetCarbs: (nutritionalScore as any)?.total?.carbs || 0,
+                    targetFat: (nutritionalScore as any)?.total?.fat || 0,
+
                     goal: patientContext?.goal,
                   };
                   generatePremiumMealPlanPDF(pdfData);
