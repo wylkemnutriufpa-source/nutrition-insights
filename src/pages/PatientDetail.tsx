@@ -1583,7 +1583,7 @@ export default function PatientDetail() {
                             if (!activePlan) return;
                             setOpenSection(null);
                             const isV3 = activePlan.editor_version === "v3";
-                            const path = isV3 ? `/editor-v3/${patientId}?planId=${activePlan.id}` : `/editor-v2/plan/${activePlan.id}`;
+                            const path = `/editor-v3/${patientId}?planId=${activePlan.id}`;
                             navigate(path);
                           }}>
                             <Pencil className="w-3 h-3" /> Editar Ativo
