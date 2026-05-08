@@ -18,14 +18,14 @@ interface MealSlot {
   fat_g: number;
 }
 
-const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "supper"];
+const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
 const MEAL_LABELS: Record<string, string> = {
   breakfast: "Café da Manhã",
   morning_snack: "Lanche da Manhã",
   lunch: "Almoço",
   afternoon_snack: "Lanche da Tarde",
   dinner: "Jantar",
-  supper: "Ceia",
+  evening_snack: "Ceia",
 };
 const MEAL_TIMES: Record<string, string> = {
   breakfast: "07:00",
@@ -33,7 +33,7 @@ const MEAL_TIMES: Record<string, string> = {
   lunch: "12:30",
   afternoon_snack: "15:30",
   dinner: "19:00",
-  supper: "21:00",
+  evening_snack: "21:00",
 };
 
 export default function NextMealWidget() {
