@@ -590,14 +590,18 @@ export const useEditorState = create<EditorState>()(
         let currentMeals = get().meals;
         const { patientContext } = get();
         
+        // No V3, se tivermos contexto do paciente, priorizamos as metas calculadas pelo NutriCore
+        const finalCalories = patientContext?.calories_target || baseCalories;
+        const finalGoal = patientContext?.goal || goal;
+
         if (replaceExisting) {
           currentMeals = initialMeals.map(m => ({ ...m, items: [] }));
         }
 
         const newMeals = generatePlanWithEngine(
           currentMeals, 
-          goal, 
-          baseCalories, 
+          finalGoal, 
+          finalCalories, 
           availableFoods, 
           patientContext?.protocol_type || 'default_v3',
           patientContext || undefined
@@ -605,7 +609,7 @@ export const useEditorState = create<EditorState>()(
         
         set({ meals: newMeals, planStatus: 'draft' });
         get().recalculateScore();
-        toast.success(`Plano estruturado para ${goal} com ${baseCalories}kcal`);
+        toast.success(`Plano estruturado para ${finalGoal} com ${Math.round(finalCalories)}kcal`);
       },
 
       generateMeal: (mealId, goal, availableFoods, baseCalories = 2000) => {
