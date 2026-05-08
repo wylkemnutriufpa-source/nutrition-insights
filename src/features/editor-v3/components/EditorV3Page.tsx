@@ -942,6 +942,7 @@ const EditorV3Page = () => {
                  </div>
                </div>
              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
