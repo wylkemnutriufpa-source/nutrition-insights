@@ -203,21 +203,6 @@ const EditorV3Page = () => {
   const [newMealTime, setNewMealTime] = useState('00:00');
 
   // Helper functions for modal management
-  const setShowFoodsModal = (val: boolean) => {
-    setActiveTab('food');
-    setShowMainAddModal(val);
-  };
-  const setShowTemplatesModal = (val: boolean) => {
-    setActiveTab('template');
-    setShowMainAddModal(val);
-  };
-  const setShowMarmitasModal = (val: boolean) => {
-    setActiveTab('marmita');
-    setShowMainAddModal(val);
-  };
-  const showFoodsModal = showMainAddModal && activeTab === 'food';
-  const showTemplatesModal = showMainAddModal && activeTab === 'template';
-  const showMarmitasModal = showMainAddModal && activeTab === 'marmita';
   const showVisualLibraryModal = showMainAddModal && activeTab === 'visual';
 
   const [visualLibrarySearch, setVisualLibrarySearch] = useState('');
@@ -379,6 +364,11 @@ const EditorV3Page = () => {
         
         // Sincroniza o patientId na store com o ID REAL do perfil
         setPatientId(profileId);
+        
+        // Auto-select first meal if none is active
+        if (meals.length > 0 && !activeMealId) {
+          setActiveMealId(meals[0].id);
+        }
 
         // Handshake: Se a anamnese for recente (últimas 24h) e o plano estiver vazio, sugerir uso das metas
         if (anamnesis) {
@@ -432,6 +422,12 @@ const EditorV3Page = () => {
       });
     }
   }, [patientId]);
+
+  useEffect(() => {
+    if (meals.length > 0 && !activeMealId) {
+      setActiveMealId(meals[0].id);
+    }
+  }, [meals, activeMealId]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -1080,7 +1076,7 @@ const EditorV3Page = () => {
   // Bloqueio de Carregamento Crucial
   if (!dataReady || (patientId && !patientContext)) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-center text-white">
         <div className={cn(
           "w-20 h-20 rounded-full flex items-center justify-center mb-6 animate-pulse",
           dbStatus.error ? "bg-rose-500/10" : "bg-emerald-500/10"
@@ -1104,7 +1100,7 @@ const EditorV3Page = () => {
 
   if (!patientId && !planId && !isSandbox) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-center text-white">
         <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-6">
           <UserX className="w-10 h-10 text-rose-500" />
         </div>
@@ -1118,8 +1114,8 @@ const EditorV3Page = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col font-sans selection:bg-emerald-500/30">
-      <header className="bg-black/90 border-b border-white/5 py-4 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
+    <div className="min-h-screen bg-neutral-950 flex flex-col font-sans selection:bg-emerald-500/30 text-white">
+      <header className="bg-neutral-950/80 border-b border-white/5 py-3 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <Button 
@@ -1151,7 +1147,7 @@ const EditorV3Page = () => {
               </Button>
 
               {showPatientSelector && (
-                <div className="absolute left-0 top-full mt-3 w-80 bg-black/95 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute left-0 top-full mt-3 w-80 bg-neutral-900/95 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-4 border-b border-white/5">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={14} />
@@ -1415,16 +1411,209 @@ const EditorV3Page = () => {
         </div>
       </header>
 
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
 
-        <div className="lg:col-span-8 space-y-12">
+        {/* Coluna Esquerda: Biblioteca (Library) */}
+        <aside className="hidden lg:flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
+          <Card className="flex-1 bg-neutral-900/50 border-white/5 rounded-3xl flex flex-col overflow-hidden backdrop-blur-sm shadow-xl">
+            <div className="p-5 pb-2">
+              <h3 className="text-xs font-black text-white/60 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-emerald-500" /> Biblioteca Clínica
+              </h3>
+              <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+                <TabsList className="bg-white/5 w-full justify-start p-1 rounded-xl h-auto flex-wrap gap-1 mb-4 border border-white/5">
+                  <TabsTrigger value="food" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Alimentos</TabsTrigger>
+                  <TabsTrigger value="marmita" className="data-[state=active]:bg-blue-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Prontas</TabsTrigger>
+                  <TabsTrigger value="template" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Templates</TabsTrigger>
+                  <TabsTrigger value="visual" className="data-[state=active]:bg-rose-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Imagens</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                <Input 
+                  placeholder={activeTab === 'food' ? "Buscar alimentos..." : activeTab === 'marmita' ? "Buscar marmitas..." : "Buscar templates..."}
+                  value={foodSearch} 
+                  onChange={(e) => setFoodSearch(e.target.value)} 
+                  className="pl-9 h-10 bg-white/5 border-white/10 text-white rounded-xl text-xs placeholder:text-white/20 focus:border-emerald-500/50 transition-all shadow-inner" 
+                />
+                {(isSearchingFoods) && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-500 animate-spin" />}
+              </div>
+            </div>
+
+            <ScrollArea className="flex-1 px-5 pb-6">
+              <div className="space-y-3 pb-10">
+                {activeTab === 'food' && (foodSearch.length > 0 ? foods : baseFoods).map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => {
+                      if (activeMealId) {
+                        addFoodToMeal(activeMealId, f);
+                        toast.success(`${f.name} adicionado!`);
+                      } else {
+                        toast.info("Selecione uma refeição primeiro ou use o '+' em uma refeição.");
+                      }
+                    }}
+                    className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                      {f.imageUrl ? (
+                        <img src={f.imageUrl} alt={f.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Apple className="w-5 h-5 text-white/10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-emerald-400 transition-colors">{f.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                         <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{f.kcal} kcal</span>
+                         <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">• {f.portionLabel}</span>
+                      </div>
+                    </div>
+                    <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-emerald-500 transition-colors" />
+                  </button>
+                ))}
+
+                {activeTab === 'marmita' && (
+                  marmitas.filter(m => m.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
+                    marmitas.filter(m => m.name.toLowerCase().includes(foodSearch.toLowerCase())).map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            addMarmitaToMeal(activeMealId, m);
+                            toast.success(`${m.name} adicionada!`);
+                          } else {
+                            toast.info("Selecione uma refeição primeiro.");
+                          }
+                        }}
+                        className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left overflow-hidden shadow-sm"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
+                          <Package className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-blue-400 transition-colors">{m.name}</p>
+                          <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{m.kcal} kcal • Marmita</span>
+                        </div>
+                        <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-blue-500 transition-colors" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-12 flex flex-col items-center justify-center gap-3 text-white/10">
+                      <Utensils className="w-8 h-8 opacity-20" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma marmita pronta</p>
+                    </div>
+                  )
+                )}
+
+                {activeTab === 'template' && (
+                  templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
+                    templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            applyTemplateToMeal(activeMealId, t);
+                            toast.success(`Template ${t.name} aplicado!`);
+                          } else {
+                            addMealWithHeader(t.name, "08:00");
+                            setTimeout(() => {
+                              const state = useEditorState.getState();
+                              const lastMeal = state.meals[state.meals.length - 1];
+                              if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
+                            }, 50);
+                            toast.success(`Refeição criada com template ${t.name}`);
+                          }
+                        }}
+                        className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left overflow-hidden shadow-sm"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-500/20 transition-all">
+                          <Layers className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
+                          <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
+                        </div>
+                        <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-12 flex flex-col items-center justify-center gap-3 text-white/10">
+                      <LayoutDashboard className="w-8 h-8 opacity-20" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">Nenhum template salvo</p>
+                    </div>
+                  )
+                )}
+
+                {activeTab === 'visual' && (
+                  <div className="space-y-4">
+                    <ScrollArea className="w-full pb-2">
+                      <div className="flex gap-1">
+                        {visualLibraryCategories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setSelectedVisualCategory(cat.id)}
+                            className={cn(
+                              "px-3 h-7 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all whitespace-nowrap border",
+                              selectedVisualCategory === cat.id 
+                                ? "bg-rose-500 text-black border-rose-500" 
+                                : "bg-white/5 text-white/40 border-white/5 hover:border-white/20 hover:text-white/60"
+                            )}
+                          >
+                            {cat.label}
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    <div className="grid grid-cols-2 gap-2">
+                    {visualLibraryResults.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            updateMealImage(activeMealId, v.imageUrl!, 'manual');
+                            toast.success(`Imagem atualizada!`);
+                          } else {
+                            toast.info("Selecione uma refeição primeiro.");
+                          }
+                        }}
+                        className="group relative rounded-xl bg-white/5 border border-white/5 overflow-hidden aspect-square hover:border-rose-500/50 transition-all"
+                      >
+                        <img src={v.imageUrl} alt={v.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <ImageIcon className="w-4 h-4 text-white" />
+                        </div>
+                      </button>
+                    ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'food' && foodSearch.length === 0 && baseFoods.length === 0 && (
+                  <div className="py-10 text-center flex flex-col items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
+                    <p className="text-[10px] font-black uppercase text-white/20">Carregando base...</p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </Card>
+        </aside>
+
+        <div className="space-y-12">
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
           {meals.map((meal, index) => (
 
-          <section key={meal.id} className="group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
+          <section key={meal.id} className={cn(
+            "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-6 rounded-[32px] border transition-all",
+            activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-[0_0_40px_-15px_rgba(16,185,129,0.1)]" : "bg-neutral-900/30 border-white/5 hover:border-white/10"
+          )} style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex flex-col mb-6">
               {meal.imageUrl && (
-                <div className="relative w-full h-48 mb-6 rounded-3xl overflow-hidden group/img">
+                <div className="relative w-full h-56 mb-6 rounded-2xl overflow-hidden group/img shadow-2xl">
                   <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                     <Button 
@@ -1435,86 +1624,120 @@ const EditorV3Page = () => {
                       <ImageIcon className="w-4 h-4" /> Alterar Imagem
                     </Button>
                   </div>
-                  {meal.imageSource === 'manual' && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Badge className="absolute top-4 left-4 bg-emerald-500 text-black font-black uppercase tracking-tighter text-[9px] border-0 cursor-help shadow-lg">
-                          Imagem Personalizada
-                        </Badge>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl">
-                        <div className="space-y-3">
-                          <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Histórico de Alterações</p>
-                          <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                            {auditLog
-                              .filter(log => log.mealId === meal.id)
-                              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                              .map((log, i) => (
-                                <div key={i} className="flex flex-col gap-1 border-l border-emerald-500/30 pl-3 py-1">
-                                  <p className="text-[10px] text-white font-bold leading-tight">Imagem alterada manualmente</p>
-                                  <p className="text-[8px] text-white/40 uppercase font-black">{new Date(log.created_at).toLocaleString()}</p>
-                                </div>
-                              ))}
-                            {auditLog.filter(log => log.mealId === meal.id).length === 0 && (
-                              <p className="text-[9px] text-white/20 italic">Nenhum registro encontrado</p>
-                            )}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
                 </div>
               )}
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500 relative">
-                    <ChefHat className="w-6 h-6 text-emerald-500" />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={cn(
+                    "w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner transition-all duration-500 relative",
+                    activeMealId === meal.id ? "bg-emerald-500 text-black scale-110" : "bg-neutral-800 text-white/40 border border-white/5"
+                  )}>
+                    <ChefHat className="w-7 h-7" />
                     {!meal.imageUrl && (
                       <button 
                         onClick={() => openVisualLibraryForMeal(meal.id)}
-                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-black border border-white/10 flex items-center justify-center text-white/40 hover:text-emerald-500 hover:border-emerald-500/50 transition-all shadow-xl"
-                        title="Adicionar imagem à refeição"
+                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-neutral-950 border border-white/10 flex items-center justify-center text-white/40 hover:text-emerald-500 hover:border-emerald-500/50 transition-all shadow-xl"
+                        title="Adicionar imagem"
                       >
                         <ImageIcon className="w-3 h-3" />
                       </button>
                     )}
                   </div>
                   <div className="flex-1">
-                    <input className="bg-transparent border-none font-black text-xl tracking-tight text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-full max-w-[300px]" value={meal.name} onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')} />
-                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider mt-1">
-                      <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
-                      <input type="time" className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-20" value={meal.time || '00:00'} onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)} />
+                    <input 
+                      className="bg-transparent border-none font-black text-2xl tracking-tight text-white focus:outline-none focus:ring-0 rounded-none w-full placeholder:text-white/10" 
+                      value={meal.name} 
+                      placeholder="Nome da Refeição"
+                      onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')} 
+                    />
+                    <div className="flex items-center gap-2 text-white/30 text-[10px] font-black uppercase tracking-[0.2em] mt-1">
+                      <Clock className="w-3 h-3" />
+                      <input 
+                        type="time" 
+                        className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-0 rounded-none w-16 p-0" 
+                        value={meal.time || '00:00'} 
+                        onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)} 
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" disabled={generatingMealId === meal.id} onClick={() => handleMealGenerate(meal.id)} className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all border border-emerald-500/10">
-                    {generatingMealId === meal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar Refeição
+                
+                <div className="flex items-center gap-1.5 p-1 bg-black/20 rounded-2xl border border-white/5">
+                  <Button variant="ghost" size="sm" disabled={generatingMealId === meal.id} onClick={() => handleMealGenerate(meal.id)} className="h-10 px-4 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all">
+                    {generatingMealId === meal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar AI
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => duplicateMeal(meal.id)} className="rounded-xl h-9 w-9 text-blue-500/40 hover:text-blue-500 hover:bg-blue-500/10 transition-all border border-blue-500/10"><Layers className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="sm" onClick={() => { setActiveMealId(meal.id); setShowFoodsModal(true); }} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-1.5"><Plus className="w-3 h-3" /> Adicionar</Button>
-                  <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => duplicateMeal(meal.id)} className="rounded-xl h-10 w-10 text-white/20 hover:text-white hover:bg-white/5"><Layers className="w-4 h-4" /></Button>
+                  <Button 
+                    variant={activeMealId === meal.id ? "secondary" : "ghost"} 
+                    size="sm" 
+                    onClick={() => { 
+                      setActiveMealId(meal.id); 
+                      setActiveTab('food');
+                      toast.info(`Editando ${meal.name}. Selecione itens na biblioteca à esquerda.`, { duration: 2000 });
+                    }} 
+                    className={cn(
+                      "h-10 px-4 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all gap-1.5",
+                      activeMealId === meal.id ? "bg-emerald-500 text-black hover:bg-emerald-400" : "text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10"
+                    )}
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Adicionar
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
+              
               {validationIssues.some(issue => issue.mealId === meal.id) && (
-                <div className="flex items-center gap-1.5 mt-2 bg-amber-500/10 w-fit px-2 py-0.5 rounded-lg border border-amber-500/20 animate-in fade-in zoom-in duration-300">
-                  <AlertTriangle className="w-3 h-3 text-amber-500" />
-                  <span className="text-[9px] font-black text-amber-500 uppercase">Ajuste Clínico Necessário</span>
+                <div className="flex items-center gap-2 mt-4 bg-amber-500/10 w-fit px-3 py-1 rounded-xl border border-amber-500/20 animate-in fade-in slide-in-from-left-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Ajuste Clínico Necessário</span>
                 </div>
               )}
             </div>
-            <div className="grid gap-5">
+            <div className="space-y-3">
+              {meal.items.length === 0 && (
+                <div className="py-12 border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center gap-3 text-white/10">
+                  <Utensils className="w-8 h-8 opacity-20" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">Refeição vazia</p>
+                </div>
+              )}
               {meal.items.map((item) => (
-                <Card key={item.instanceId} className="p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all rounded-2xl cursor-pointer border-emerald-500/50" onClick={() => { console.log('[V3-UI] Item clicked:', item.name); setSelectedItem({ mealId: meal.id, item }); }}>
-                  <div className="flex items-center gap-5">
-                    {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />}
+                <Card 
+                  key={item.instanceId} 
+                  className={cn(
+                    "p-4 flex items-center justify-between border-0 bg-neutral-800/40 hover:bg-neutral-800 transition-all rounded-2xl cursor-pointer group/item",
+                    activeMealId === meal.id ? "border-l-4 border-emerald-500" : "border-l-4 border-transparent"
+                  )} 
+                  onClick={() => setSelectedItem({ mealId: meal.id, item })}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-black/40 overflow-hidden flex-shrink-0 border border-white/5">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Apple className="w-6 h-6 text-white/5" />
+                        </div>
+                      )}
+                    </div>
                     <div>
-                      <p className="font-black text-[15px] tracking-tight text-white">{formatPortion(item)} {item.name}</p>
-                      <p className="text-[11px] font-bold text-white/50">{Math.round(recalculateMacros(item, item.quantity).calories)} kcal</p>
+                      <p className="font-black text-sm tracking-tight text-white group-hover/item:text-emerald-400 transition-colors">
+                        <span className="text-emerald-500 mr-1">{formatPortion(item)}</span> {item.name}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] font-bold text-white/40">{Math.round(recalculateMacros(item, item.quantity).calories)} kcal</span>
+                        <div className="flex gap-2">
+                           <span className="text-[9px] font-black text-emerald-500/40 uppercase">{Math.round(item.protein)}g P</span>
+                           <span className="text-[9px] font-black text-blue-500/40 uppercase">{Math.round(item.carbs)}g C</span>
+                           <span className="text-[9px] font-black text-amber-500/40 uppercase">{Math.round(item.fat)}g G</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); removeFood(meal.id, item.instanceId); }} className="h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setSelectedItem({ mealId: meal.id, item }); }} className="h-9 w-9 text-white/20 hover:text-white hover:bg-white/5 rounded-xl"><Edit3 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); removeFood(meal.id, item.instanceId); }} className="h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></Button>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -1522,8 +1745,8 @@ const EditorV3Page = () => {
           ))}
         </div>
 
-        <aside className="lg:col-span-4 space-y-6">
-          <Card className="p-6 bg-black border-white/5 rounded-3xl overflow-hidden relative group">
+        <aside className="space-y-6 sticky top-24 h-fit">
+          <Card className="p-6 bg-neutral-900/50 border-white/5 rounded-3xl overflow-hidden relative group backdrop-blur-sm">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -mr-10 -mt-10" />
             <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-500" /> Diagnóstico do Plano
@@ -1600,7 +1823,7 @@ const EditorV3Page = () => {
           )}
 
 
-          <Card className="p-6 bg-black border-white/5 rounded-3xl">
+          <Card className="p-6 bg-neutral-900/50 border-white/5 rounded-3xl backdrop-blur-sm shadow-xl">
              <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
               <PieChart className="w-4 h-4 text-blue-500" /> Insights Clínicos
             </h3>
@@ -1627,9 +1850,9 @@ const EditorV3Page = () => {
           </Card>
         </aside>
 
-        <div className="flex justify-center pb-24">
-          <Button onClick={addMeal} className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 text-emerald-500 font-black gap-4 transition-all hover:scale-105">
-            <Plus className="w-5 h-5" /> Adicionar Nova Refeição
+        <div className="flex justify-center pb-20 pt-6">
+          <Button onClick={addMeal} variant="ghost" className="h-14 px-8 rounded-2xl bg-white/5 hover:bg-emerald-500/10 border border-dashed border-white/10 hover:border-emerald-500/30 text-white/60 hover:text-emerald-500 font-black gap-3 transition-all">
+            <Plus className="w-5 h-5" /> Nova Refeição
           </Button>
         </div>
       </main>
