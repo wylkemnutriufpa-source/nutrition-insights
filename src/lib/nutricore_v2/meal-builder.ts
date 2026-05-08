@@ -58,9 +58,9 @@ export function buildMeal(
     const proteinOptions = allowedDb.filter(f => ["ovo", "queijo"].some(opt => f.name.toLowerCase().includes(opt)));
     const fruitOptions = allowedDb.filter(f => f.category === "fruit");
 
-    const carb = breadOptions[0] || selectFood(allowedDb, "carb", [], preferences);
-    const protein = proteinOptions[0] || selectFood(allowedDb, "protein", [], preferences);
-    const fruit = fruitOptions[0] || selectFood(allowedDb, "fruit", [], preferences);
+    const carb = breadOptions[Math.floor(Math.random() * breadOptions.length)] || selectFood(allowedDb, "carb", [], preferences);
+    const protein = proteinOptions[Math.floor(Math.random() * proteinOptions.length)] || selectFood(allowedDb, "protein", [], preferences);
+    const fruit = fruitOptions[Math.floor(Math.random() * fruitOptions.length)] || selectFood(allowedDb, "fruit", [], preferences);
 
     if (carb) {
       const g = carb.name.toLowerCase().includes("pão") ? 50 : 80;
