@@ -257,10 +257,11 @@ const EditorV3Page = () => {
         console.debug('[V3-Init] Carregando dados clínicos para:', patientId);
         
         // 1. Carregar Perfil do Paciente (FONTE ÚNICA DA VERDADE)
+        // Buscamos tanto por id quanto por user_id para garantir compatibilidade
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', patientId)
+          .or(`id.eq.${patientId},user_id.eq.${patientId}`)
           .maybeSingle();
 
         // 2. Carregar Avaliação Física (Fallback 1)
