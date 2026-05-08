@@ -128,7 +128,9 @@ const EditorV3Page = () => {
         </div>
         <h2 className="text-2xl font-bold">Módulo em Blindagem</h2>
         <p className="text-muted-foreground max-w-md">O Editor V3 está temporariamente desativado para garantir a estabilidade do sistema principal. Por favor, utilize a versão estável.</p>
-        <Button onClick={() => navigate('/dashboard')} variant="outline">Voltar ao Dashboard</Button>
+        <Button onClick={() => navigate(patientId ? `/patients/${patientId}` : '/dashboard')} variant="outline">
+          {patientId ? 'Voltar ao Perfil' : 'Voltar ao Dashboard'}
+        </Button>
       </div>
     );
   }
@@ -1124,11 +1126,11 @@ const EditorV3Page = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(patientId ? `/patients/${patientId}` : '/dashboard')}
               className="text-white/40 hover:text-white rounded-2xl hover:bg-white/5 border border-white/5"
-              title="Voltar ao Dashboard"
+              title={patientId ? "Voltar ao Perfil do Paciente" : "Voltar ao Dashboard"}
             >
-              <LayoutDashboard className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5" />
             </Button>
             
             <div className="relative">
