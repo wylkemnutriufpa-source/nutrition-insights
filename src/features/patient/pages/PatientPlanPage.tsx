@@ -190,7 +190,55 @@ export const PatientPlanPage = () => {
               <h2 className="font-semibold text-gray-200 text-lg">Progresso do Dia</h2>
             </div>
             <span className="text-emerald-500 font-bold text-xl">{progress}%</span>
+      </div>
+
+      <Dialog open={showSubModal} onOpenChange={setShowSubModal}>
+        <DialogContent className="bg-gray-950 border-gray-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-500">
+              <Sparkles className="w-5 h-5" />
+              Opções de Substituição
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Escolha uma opção equivalente em proteína para substituir <strong>{selectedItem?.item.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            {substitutions.map((sub, idx) => (
+              <button
+                key={idx}
+                onClick={() => applySubstitution(sub)}
+                className="w-full flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500">
+                    <Utensils className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-200 block">{sub.food.name}</span>
+                    <span className="text-sm text-emerald-500/80 font-semibold">{sub.unit_label}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1 justify-end">
+                    <Scale className="w-3 h-3 text-gray-500" />
+                    <span className="text-xs text-gray-500">Equivalente</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-emerald-500 ml-auto" />
+                </div>
+              </button>
+            ))}
           </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowSubModal(false)} className="text-gray-400">
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
           <div className="h-3 w-full bg-gray-900 rounded-full overflow-hidden">
             <div 
               className="h-full bg-emerald-500 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
