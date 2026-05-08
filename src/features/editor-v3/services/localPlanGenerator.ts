@@ -69,15 +69,16 @@ export async function generateAndSaveLocalPlan(
     // Insert items
     for (const meal of meals) {
       for (const item of meal.items) {
+        // 🛡️ Usamos os macros diretamente conforme gerado pelo motor Elite
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
           meal_type: meal.name.toLowerCase().replace(/ /g, '_') as any,
-          calories_target: item.kcal,
+          calories_target: Math.round(item.kcal),
           protein_target: item.protein,
           carbs_target: item.carbs,
           fat_target: item.fat,
-          description: item.portionLabel,
+          description: item.portionLabel || `${item.quantity}g`,
           tenant_id: tenantId
         } as any);
       }

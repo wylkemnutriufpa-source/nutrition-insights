@@ -56,21 +56,24 @@ export const getFoodCategory = (food: any): string => {
 };
 
 export const calculateItemMacros = (item: any, quantity: number) => {
-  const kcal100g = item.kcal_100g || item.calories || item.kcal || 0;
-  const protein100g = item.protein_100g || item.protein || 0;
-  const carbs100g = item.carb_100g || item.carbs || 0;
-  const fat100g = item.fat_100g || item.fat || 0;
+  // 🛡️ BLINDAGEM ANTI-DISTORÇÃO:
+  // Priorizamos campos que explicitamente representam o valor por 100g.
+  // Se usarmos 'kcal' ou 'calories' como base, corremos o risco de re-multiplicar um valor que já é total.
+  const kcalBase = item.kcal_100g !== undefined ? item.kcal_100g : (item.calories_100g || item.kcal || 0);
+  const proteinBase = item.protein_100g !== undefined ? item.protein_100g : (item.protein || 0);
+  const carbsBase = item.carb_100g !== undefined ? item.carb_100g : (item.carbs || 0);
+  const fatBase = item.fat_100g !== undefined ? item.fat_100g : (item.fat || 0);
 
-  // No V3, a base de cálculo é dinâmica baseada no portionValue (geralmente 100g para alimentos da Tabela TACO/USDA)
-  // Se for unidade, portionValue é 1, resultando em fator = quantity
+  // No FitJourney V3, a base é definida por portionValue.
+  // Se o motor NutriCore V2 gerou o item, portionValue = quantity, logo factor = 1.
   const base = item.portionValue || 100;
-  const factor = quantity / base;
+  const factor = quantity / (base || 1);
 
   return {
-    kcal: Math.round((kcal100g * factor) * 10) / 10,
-    protein: Math.round((protein100g * factor) * 10) / 10,
-    carbs: Math.round((carbs100g * factor) * 10) / 10,
-    fat: Math.round((fat100g * factor) * 10) / 10
+    kcal: Math.round((kcalBase * factor) * 10) / 10,
+    protein: Math.round((proteinBase * factor) * 10) / 10,
+    carbs: Math.round((carbsBase * factor) * 10) / 10,
+    fat: Math.round((fatBase * factor) * 10) / 10
   };
 };
 
@@ -109,7 +112,7 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
   const { base_item, base_grams, available_foods, image_bank, max_suggestions = 5 } = request;
   
   const baseCategory = getFoodCategory(base_item);
-  const baseKcalPerGram = (base_item.kcal_100g || base_item.kcal) / 100;
+  const baseKcalPerGram = (base_item.kcal_100g || base_item.kcal) / (base_item.portionValue || 100);
   const caloriesBase = baseKcalPerGram * base_grams;
 
   const imageMap = new Map(image_bank?.map((i: any) => [i.food_id, i.image_url]) || []);
@@ -123,7 +126,7 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
     })
     .map((candidate: any) => {
       const candKcal = candidate.kcal_100g || candidate.kcal;
-      const candidateKcalPerGram = candKcal / 100;
+      const candidateKcalPerGram = candKcal / (candidate.portionValue || 100);
       
       let equivalentGrams = candidateKcalPerGram > 0 
         ? caloriesBase / candidateKcalPerGram 
@@ -142,7 +145,7 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
         unidade = `${spoons} colheres (${equivalentGrams}g)`;
       }
 
-      const ratio = equivalentGrams / 100;
+      const ratio = equivalentGrams / (candidate.portionValue || 100);
       const calEquiv = candKcal * ratio;
 
       return {

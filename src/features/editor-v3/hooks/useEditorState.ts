@@ -577,9 +577,26 @@ export const useEditorState = create<EditorState>()(
             m.id === mealId
               ? {
                   ...m,
-                  items: m.items.map((i) =>
-                    i.instanceId === instanceId ? { ...i, quantity } : i
-                  ),
+                  items: m.items.map((i) => {
+                    if (i.instanceId === instanceId) {
+                      // 🛡️ Ao alterar a quantidade manualmente, recalculamos os macros 
+                      // e os salvamos de volta no item para que promoteDraft/draftService
+                      // os encontre prontos e não distorça nada.
+                      const newMacros = calculateItemMacros(i, quantity);
+                      return { 
+                        ...i, 
+                        quantity,
+                        kcal: newMacros.kcal,
+                        calories: newMacros.kcal,
+                        protein: newMacros.protein,
+                        carbs: newMacros.carbs,
+                        fat: newMacros.fat,
+                        // MUITO IMPORTANTE: Ao editar manualmente, a base volta a ser o portionValue original
+                        // ou 100g se for gram/ml, para que o cálculo proporcional funcione.
+                      };
+                    }
+                    return i;
+                  }),
                 }
               : m
           ),
