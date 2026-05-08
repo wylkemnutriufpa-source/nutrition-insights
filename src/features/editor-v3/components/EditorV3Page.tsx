@@ -159,6 +159,9 @@ const EditorV3Page = () => {
     target: Food,
     mealId: string
   } | null>(null);
+  const [showAnamnesisHandshake, setShowAnamnesisHandshake] = useState(false);
+  const [pendingAnamnesisData, setPendingAnamnesisData] = useState<any>(null);
+
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [showMainAddModal, setShowMainAddModal] = useState(false);
