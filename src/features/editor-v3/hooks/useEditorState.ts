@@ -205,13 +205,31 @@ export const useEditorState = create<EditorState>()(
         }
         
         // Integração com Motor V2 para avaliação de macros
+        // Guard: envolver cada item em try/catch para itens legados sem measurementType
         const totals = meals.reduce((acc, meal) => {
           meal.items.forEach(item => {
-            const macros = calcMacrosV2(item, item.quantity);
-            acc.kcal += macros.kcal;
-            acc.protein += macros.protein;
-            acc.carbs += macros.carbs;
-            acc.fat += macros.fat;
+            try {
+              const safeItem = {
+                ...item,
+                measurementType: item.measurementType || 'unit',
+                quantity: item.quantity ?? 1,
+                kcal: item.kcal ?? item.calories ?? 0,
+                protein: item.protein ?? 0,
+                carbs: item.carbs ?? 0,
+                fat: item.fat ?? 0,
+              };
+              const macros = calcMacrosV2(safeItem, safeItem.quantity);
+              acc.kcal += (isNaN(macros.kcal) ? 0 : macros.kcal);
+              acc.protein += (isNaN(macros.protein) ? 0 : macros.protein);
+              acc.carbs += (isNaN(macros.carbs) ? 0 : macros.carbs);
+              acc.fat += (isNaN(macros.fat) ? 0 : macros.fat);
+            } catch {
+              // Item legado com dados inválidos — ignorar no cálculo
+              acc.kcal += Number(item.kcal || item.calories || 0);
+              acc.protein += Number(item.protein || 0);
+              acc.carbs += Number(item.carbs || 0);
+              acc.fat += Number(item.fat || 0);
+            }
           });
           return acc;
         }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
@@ -283,6 +301,7 @@ export const useEditorState = create<EditorState>()(
       hydrateMeals: (meals, auditLog = [], token = null) => {
         try {
           // Blindagem Anti-Tela Branca: Validar e corrigir IDs nulos ou itens corrompidos
+          // Inclui sanitização completa para itens legados (V2 → V3)
           const sanitizedMeals = meals.map(meal => ({
             ...meal,
             id: meal.id || Math.random().toString(36).substring(2, 9),
@@ -290,10 +309,19 @@ export const useEditorState = create<EditorState>()(
               ...item,
               instanceId: item.instanceId || Math.random().toString(36).substring(2, 10),
               // Garantir que macros não sejam undefined
-              kcal: item.kcal || 0,
-              protein: item.protein || 0,
-              carbs: item.carbs || 0,
-              fat: item.fat || 0
+              kcal: Number(item.kcal || item.calories || 0),
+              calories: Number(item.calories || item.kcal || 0),
+              protein: Number(item.protein || 0),
+              carbs: Number(item.carbs || 0),
+              fat: Number(item.fat || 0),
+              // Garantir campos obrigatórios para o motor V3
+              quantity: item.quantity ?? 1,
+              measurementType: item.measurementType || 'unit',
+              portionValue: item.portionValue ?? 1,
+              portionUnit: item.portionUnit || item.portionUnitLabel || 'porção',
+              portionUnitLabel: item.portionUnitLabel || item.portionUnit || 'porção',
+              portionLabel: item.portionLabel || '1 porção',
+              substitutions: item.substitutions || [],
             }))
           }));
 
