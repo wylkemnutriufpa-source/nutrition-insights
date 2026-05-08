@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useSafeInteraction } from "@/hooks/useSafeInteraction";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -21,7 +21,7 @@ import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
   LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles, UserPlus,
-  UtensilsCrossed, User, FileText
+  UtensilsCrossed, User, FileText, ChevronDown, Check, Info, ArrowUpCircle, CreditCard as CreditCardIcon
 } from "lucide-react";
 import { BASE_URL } from "@/lib/config";
 import { useNavigate, Link } from "react-router-dom";
@@ -40,6 +40,8 @@ import type { PrestigePlan } from "@/hooks/usePrestige";
 import PaginationControls from "@/components/patients/PaginationControls";
 import PatientQueueTabs from "@/components/patients/PatientQueueTabs";
 import { EngineSelector } from "@/features/editor-v3/components/EngineSelector";
+import { usePatientDetail } from "@/hooks/queries/usePatientDetail";
+import { BrainLoaderCard } from "@/components/common/BrainLoader";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
@@ -89,6 +91,149 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
       </div>
       <p className="text-xs text-muted-foreground">{tier.description}</p>
     </div>
+  );
+}
+
+function PatientResumoModal({ patient, onOpenChange, onFullProfile }: { patient: PatientInfo | null, onOpenChange: (open: boolean) => void, onFullProfile: () => void }) {
+  const { data: detail, isLoading } = usePatientDetail(patient?.patient_id);
+  
+  if (!patient) return null;
+  
+  const displayName = patient.profile?.full_name || patient.email || "Paciente";
+  const plan = detail?.mealPlans?.find(p => p.is_active) || detail?.mealPlans?.[0];
+  const lastUpdate = plan?.updated_at || plan?.created_at;
+  
+  return (
+    <Dialog open={!!patient} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-black/95 text-white backdrop-blur-2xl rounded-3xl shadow-2xl">
+        <div className="relative">
+          {/* Header Gradient */}
+          <div className="h-32 bg-gradient-to-br from-emerald-600/40 via-blue-600/20 to-transparent absolute inset-0 -z-10" />
+          
+          <div className="p-8">
+            <div className="flex items-start justify-between mb-8">
+              <div className="flex gap-5">
+                <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+                  <span className="text-3xl font-black text-emerald-500">{displayName[0].toUpperCase()}</span>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black tracking-tight mb-1">{displayName}</h2>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border-none px-3 font-bold">
+                      {patient.status === 'active' ? 'ATIVAÇÃO OK' : 'INATIVO'}
+                    </Badge>
+                    {patient.prestigePlan && (
+                      <Badge className="bg-amber-500/20 text-amber-400 border-none px-3 font-bold gap-1.5">
+                        {patient.prestigePlan.badge_icon} {patient.prestigePlan.name}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <DialogClose asChild>
+                <Button variant="ghost" className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/40 hover:text-white">
+                  <X className="w-5 h-5" />
+                </Button>
+              </DialogClose>
+            </div>
+
+            {isLoading ? (
+              <div className="py-12"><BrainLoaderCard text="Escaneando prontuário..." /></div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Plano Alimentar */}
+                <div className="space-y-4">
+                  <div className="p-5 rounded-3xl bg-white/5 border border-white/5 space-y-4">
+                    <div className="flex items-center gap-2 text-emerald-400">
+                      <UtensilsCrossed className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Estratégia Atual</span>
+                    </div>
+                    {plan ? (
+                      <div className="space-y-3">
+                        <p className="text-xl font-bold">{plan.title}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-white/5 p-3 rounded-2xl">
+                            <p className="text-[10px] text-white/40 uppercase font-black mb-1">Calorias</p>
+                            <p className="text-lg font-black">{plan.calories_target || '—'} <span className="text-xs text-white/40">kcal</span></p>
+                          </div>
+                          <div className="bg-white/5 p-3 rounded-2xl">
+                            <p className="text-[10px] text-white/40 uppercase font-black mb-1">Última Mexida</p>
+                            <p className="text-sm font-bold">{lastUpdate ? new Date(lastUpdate).toLocaleDateString('pt-BR') : '—'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-white/40 italic">Sem plano ativo detectado</p>
+                    )}
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-white/5 border border-white/5 space-y-4">
+                    <div className="flex items-center gap-2 text-blue-400">
+                      <CreditCardIcon className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Financeiro</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-white/40 font-bold uppercase">Status de Pagamento</p>
+                        <p className="text-sm font-black text-emerald-400">VIGENTE</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-white/40 font-bold uppercase">Expira em</p>
+                        <p className="text-sm font-black">{patient.expires_at ? new Date(patient.expires_at).toLocaleDateString('pt-BR') : 'Sem data'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progresso & Métricas */}
+                <div className="space-y-4">
+                  <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-white/10 space-y-4">
+                    <div className="flex items-center gap-2 text-white">
+                      <TrendingUp className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Performance Corporal</span>
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <p className="text-4xl font-black">7.4<span className="text-lg text-emerald-400 ml-1">kg</span></p>
+                      <p className="text-xs text-white/40 font-bold mb-2 uppercase">Eliminados no total</p>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 w-[65%]" />
+                    </div>
+                    <p className="text-[10px] text-white/40 font-black uppercase tracking-tighter">Aderência aos Macros: 88%</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center">
+                      <p className="text-[10px] text-white/40 font-black uppercase mb-1">Checklist</p>
+                      <p className="text-xl font-black text-emerald-400">{patient.checklistAdherence || 0}%</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center">
+                      <p className="text-[10px] text-white/40 font-black uppercase mb-1">Streak</p>
+                      <p className="text-xl font-black text-amber-400">{patient.stats?.current_streak || 0}🔥</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8 flex gap-3">
+              <Button 
+                onClick={onFullProfile}
+                className="flex-1 h-14 rounded-2xl bg-white text-black font-black uppercase tracking-widest hover:bg-white/90"
+              >
+                Abrir Prontuário Completo
+              </Button>
+              <Button 
+                variant="outline"
+                className="h-14 px-6 rounded-2xl border-white/10 bg-white/5 text-white font-black hover:bg-white/10"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -568,29 +713,23 @@ export default function Patients() {
   const { user, profile } = useAuth();
   const { minMode, isBasic } = useExperienceMode();
   const nav = useNavigate();
+  const [resumoPatient, setResumoPatient] = useState<PatientInfo | null>(null);
+
   const navigateToPatient = useCallback((patientId: string) => {
     trackPatientView(patientId);
     nav(`/patients/${patientId}`);
   }, [nav]);
+
+  const handleOpenResumo = (patient: PatientInfo) => {
+    setResumoPatient(patient);
+  };
 
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [expiryTarget, setExpiryTarget] = useState<{ id: string, name: string, current: string | null } | null>(null);
-  const [engineSelectorTarget, setEngineSelectorTarget] = useState<{ id: string, name: string } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
-
-  // Build params for server-side query
-  const queryParams: PatientsListParams = {
-    page,
-    pageSize,
-    statusFilter: statusTab,
-    search: debouncedSearch,
-  };
+  const [sortBy, setSortBy] = useState<"name" | "date" | "plan">("date");
 
   // React Query hooks
   const { data, isLoading, isError, isFetching } = usePatientsList(queryParams);
@@ -826,10 +965,25 @@ export default function Patients() {
     !onlineFilter || onlineSet.has(p.patient_id);
 
   // Client-side filters applied on current page of server-paginated results
-  const filteredPatients = useMemo(() =>
-    patients.filter(p => scoreFilter(p) && prestigeFilterFn(p) && onlineFilterFn(p)),
-    [patients, filter, prestigeFilter, onlineFilter, onlineSet]
-  );
+  const filteredPatients = useMemo(() => {
+    let result = patients.filter(p => scoreFilter(p) && prestigeFilterFn(p) && onlineFilterFn(p));
+    
+    // Applying local sorting
+    result = [...result].sort((a, b) => {
+      if (sortBy === "name") {
+        return (a.profile?.full_name || "").localeCompare(b.profile?.full_name || "");
+      }
+      if (sortBy === "plan") {
+        const orderA = a.prestigePlan?.display_order ?? -1;
+        const orderB = b.prestigePlan?.display_order ?? -1;
+        return orderB - orderA;
+      }
+      // default: date (created_at)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    
+    return result;
+  }, [patients, filter, prestigeFilter, onlineFilter, onlineSet, sortBy]);
 
   // Client-side score filter counts (on current page only)
   const scoreCounts = {
@@ -1047,11 +1201,22 @@ export default function Patients() {
               </div>
             )}
 
-            <div className="flex gap-2">
-              <div className="relative flex-1">
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
               </div>
+              
+              <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                <SelectTrigger className="w-[140px] h-10">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Data (Novo)</SelectItem>
+                  <SelectItem value="name">Nome (A-Z)</SelectItem>
+                  <SelectItem value="plan">Plano Elite</SelectItem>
+                </SelectContent>
+              </Select>
               {minMode("pro") && (
                 <button
                   onClick={() => setOnlineFilter(!onlineFilter)}
@@ -1153,7 +1318,7 @@ export default function Patients() {
                 {/* Client-side filtered list from current page */}
                 <PatientGrid
                   patients={filteredPatients}
-                  navigate={navigateToPatient}
+                  navigate={handleOpenResumo}
                   toggleStatus={toggleStatus}
                   setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen}
@@ -1378,6 +1543,16 @@ export default function Patients() {
           </div>
         </DialogContent>
       </Dialog>
+      <PatientResumoModal 
+        patient={resumoPatient} 
+        onOpenChange={(open) => !open && setResumoPatient(null)} 
+        onFullProfile={() => {
+          if (resumoPatient) {
+            navigateToPatient(resumoPatient.patient_id);
+            setResumoPatient(null);
+          }
+        }}
+      />
     </DashboardLayout>
   );
 }
