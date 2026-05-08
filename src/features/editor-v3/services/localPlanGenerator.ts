@@ -29,19 +29,19 @@ export async function generateAndSaveLocalPlan(
     if (!profile) throw new Error("Paciente não encontrado");
 
     // Get answers from anamnesis to extract more details if available
-    const answers = anamnesis?.answers || {};
+    const answers = (anamnesis?.answers || {}) as any;
 
     const context: PatientContext = {
       id: profile.id,
       name: profile.full_name || 'Paciente',
-      goal: profile.goal || (answers.goal as string) || 'maintain',
-      restrictions: profile.restrictions || (answers.restrictions as string[]) || [],
-      preferences: profile.preferences || (answers.food_preferences ? [answers.food_preferences as string] : []),
-      weight: profile.current_weight_kg || (answers.weight as number) || 70,
-      height: profile.current_height_cm || (answers.height as number) || 170,
-      age: (answers.age as number) || 30,
-      gender: (answers.sex as 'male' | 'female') || 'male',
-      activityLevel: profile.activity_level || (answers.activity_level as string) || 'moderate',
+      goal: profile.goal || answers.goal || 'maintain',
+      restrictions: profile.restrictions || answers.restrictions || [],
+      preferences: profile.preferences || (answers.food_preferences ? [answers.food_preferences] : []),
+      weight: profile.current_weight_kg || answers.weight || 70,
+      height: profile.current_height_cm || answers.height || 170,
+      age: answers.age || 30,
+      gender: answers.sex || 'male',
+      activityLevel: profile.activity_level || answers.activity_level || 'moderate',
       calories_target: Number(anamnesis?.computed_kcal_target) || 2000,
       protein_target: Number(anamnesis?.computed_protein) || 150,
       carbs_target: Number(anamnesis?.computed_carbs) || 200,
