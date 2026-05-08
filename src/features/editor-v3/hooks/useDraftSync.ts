@@ -124,6 +124,11 @@ export function useDraftSync(
       const auditLogToSave = pendingAuditLogRef.current;
       if (!mealsToSave) return;
 
+      // Anti-loop: Só salvar se for diferente do snapshot carregado
+      if (snapshot && JSON.stringify(mealsToSave) === JSON.stringify(snapshot)) {
+        return;
+      }
+
       setSyncState('saving');
       const updatedRecord = await saveDraft(draftId, mealsToSave, auditLogToSave || []);
       
@@ -136,7 +141,7 @@ export function useDraftSync(
       } else {
         setSyncState('offline');
       }
-    }, 800);
+    }, 2000); // Aumentado para 2 segundos para evitar flood
   };
 
   const resetDraft = async () => {
