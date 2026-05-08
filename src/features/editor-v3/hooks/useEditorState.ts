@@ -574,23 +574,40 @@ export const useEditorState = create<EditorState>()(
 
       generatePlan: (goal, baseCalories, availableFoods, replaceExisting = false) => {
         let currentMeals = get().meals;
+        const { patientContext } = get();
         
         if (replaceExisting) {
           currentMeals = initialMeals.map(m => ({ ...m, items: [] }));
         }
 
-        const newMeals = generatePlanWithEngine(currentMeals, goal, baseCalories, availableFoods);
+        const newMeals = generatePlanWithEngine(
+          currentMeals, 
+          goal, 
+          baseCalories, 
+          availableFoods, 
+          patientContext?.protocol_type || 'default_v3',
+          patientContext || undefined
+        );
+        
         set({ meals: newMeals, planStatus: 'draft' });
         get().recalculateScore();
         toast.success(`Plano estruturado para ${goal} com ${baseCalories}kcal`);
       },
 
       generateMeal: (mealId, goal, availableFoods, baseCalories = 2000) => {
-        const meals = get().meals;
+        const { meals, patientContext } = get();
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
 
-        const newItems = generateMealWithEngine(meal, goal, baseCalories, availableFoods);
+        const newItems = generateMealWithEngine(
+          meal, 
+          goal, 
+          baseCalories, 
+          availableFoods, 
+          patientContext?.protocol_type || 'default_v3',
+          patientContext || undefined
+        );
+        
         set((state) => ({
           meals: state.meals.map(m => 
             m.id === mealId ? { ...m, items: newItems } : m
