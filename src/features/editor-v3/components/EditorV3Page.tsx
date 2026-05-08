@@ -439,6 +439,12 @@ const EditorV3Page = () => {
   }, [patientId]);
 
   useEffect(() => {
+    if (meals.length > 0 && !activeMealId) {
+      setActiveMealId(meals[0].id);
+    }
+  }, [meals, activeMealId]);
+
+  useEffect(() => {
     const timer = setTimeout(async () => {
       if (foodSearch.length >= 2 || (activeTab === 'visual' && foodSearch.length === 0) || (activeTab === 'visual' && selectedVisualCategory !== 'all')) {
         setIsSearchingFoods(true);
