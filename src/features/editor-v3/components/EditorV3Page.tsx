@@ -963,7 +963,17 @@ const EditorV3Page = () => {
   };
 
   const handleMealGenerate = async (mealId: string) => {
-    toast.info('Use a geração global ou o botão "Corrigir" para garantir o equilíbrio do NutriCore V2');
+    setGeneratingMealId(mealId);
+    try {
+      // Usar a engine via hook useEditorState
+      generateMeal(mealId, patientContext?.goal || 'manutencao', baseFoods);
+      // O hook já lida com o toast de sucesso
+    } catch (error) {
+      console.error('[V3-UI] Error generating meal:', error);
+      toast.error('Erro ao gerar refeição individual.');
+    } finally {
+      setGeneratingMealId(null);
+    }
   };
 
   const executeSwap = (mealId: string, instanceId: string, target: Food & { suggestedQuantity?: number }, autoAdjust = false) => {
