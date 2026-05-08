@@ -10,21 +10,23 @@ export async function generateAndSaveLocalPlan(
   tenantId: string
 ) {
   try {
-    // 1. Get patient context and anamnesis targets
-    const [{ data: profile }, { data: anamnesis }] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', patientId)
-        .single(),
-      supabase
-        .from('patient_anamnesis')
-        .select('*')
-        .eq('user_id', patientId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    ]);
+    // 1. Get patient profile and resolve correct IDs
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .or(`id.eq.${patientId},user_id.eq.${patientId}`)
+      .maybeSingle();
+
+    if (!profile) throw new Error("Paciente não encontrado");
+
+    // Get anamnesis targets
+    const { data: anamnesis } = await supabase
+      .from('patient_anamnesis')
+      .select('*')
+      .eq('user_id', profile.user_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (!profile) throw new Error("Paciente não encontrado");
 
