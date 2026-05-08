@@ -146,6 +146,10 @@ const EditorV3Page = () => {
   const [patientSearch, setPatientSearch] = useState('');
   
   const [debugMode, setDebugMode] = useState(false);
+  const [isEditingAntro, setIsEditingAntro] = useState(false);
+  const [editAntroValues, setEditAntroValues] = useState({ weight: 0, height: 0, goal: 'Manutenção' });
+  const [isSavingAntro, setIsSavingAntro] = useState(false);
+  
   const [selectedItem, setSelectedItem] = useState<{ mealId: string, item: MealItem } | null>(null);
   const [substitutionSearch, setSubstitutionSearch] = useState('');
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
@@ -264,90 +268,104 @@ const EditorV3Page = () => {
           .or(`id.eq.${patientId},user_id.eq.${patientId}`)
           .maybeSingle();
 
-        // 2. Carregar Avaliação Física (Fallback 1)
+        if (profile && profile.id !== patientId && patientId) {
+          console.info('[V3-Init] Redirecionando para ID canônico do perfil:', profile.id);
+          navigate(`/editor-v3/${profile.id}${planId ? `?planId=${planId}` : ''}`, { replace: true });
+          return;
+        }
+
+        if (!profile) {
+          console.warn('[V3-Init] Perfil não encontrado para ID:', patientId);
+          return;
+        }
+
+        // Importante: A partir daqui, usamos o ID REAL do perfil (profiles.id)
+        // para garantir que queries em outras tabelas (que usam patient_id FK) funcionem.
+        const profileId = profile.id;
+        
+        // 2. Carregar Avaliação Física (Fallback 1) - Usando profileId
         const { data: assessment } = await supabase
           .from('physical_assessments')
           .select('*')
-          .eq('patient_id', patientId)
+          .eq('patient_id', profileId)
           .order('assessment_date', { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        // 3. Carregar Anamnese (Fallback 2)
+        // 3. Carregar Anamnese (Fallback 2) - Usando profileId ou user_id
         const { data: anamnesis } = await supabase
           .from('patient_anamnesis')
           .select('*')
-          .eq('user_id', patientId)
+          .eq('user_id', profile.user_id || profileId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
         
-        if (profile) {
-          const profileAny = profile as any;
+        const profileAny = profile as any;
+        
+        // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
+        const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
+        const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
+        const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
+        const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
+        const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
+        const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
+        
+        // Metas nutricionais (Priorizando o que o Nutri definiu na avaliação ou o que foi calculado na anamnese)
+        const kcal = assessment?.calories_target || anamnesis?.computed_kcal_target || 2000;
+        const protein = assessment?.protein_target || anamnesis?.computed_protein || 150;
+        const carbs = assessment?.carbs_target || anamnesis?.computed_carbs || 200;
+        const fat = assessment?.fat_target || anamnesis?.computed_fat || 60;
+
+        const context = {
+          id: profile.id,
+          name: profile.full_name || 'Paciente',
+          goal,
+          restrictions: profileAny.restrictions || (anamnesis?.answers as any)?.restrictions || [],
+          preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || [],
+          weight: Number(weight),
+          height: Number(height),
+          age: Number(age),
+          gender: sex,
+          activityLevel: activity,
+          calories_target: Number(kcal),
+          protein_target: Number(protein),
+          carbs_target: Number(carbs),
+          fat_target: Number(fat),
+          consent_given: profileAny.consent_given,
+          consent_date: profileAny.consent_date,
+          protocol_type: profileAny.protocol_type || 'default_v3',
+        };
+
+        console.info(`[V3-Context] Atribuindo contexto para ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        setPatientContext(context);
+        
+        // Sincroniza o patientId na store com o ID REAL do perfil
+        setPatientId(profileId);
+
+        // Handshake: Se a anamnese for recente (últimas 24h) e o plano estiver vazio, sugerir uso das metas
+        if (anamnesis) {
+          const anamnesisDate = new Date(anamnesis.created_at);
+          const isRecent = (Date.now() - anamnesisDate.getTime()) < 24 * 60 * 60 * 1000;
           
-          // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
-          const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
-          const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
-          const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
-          const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
-          const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
-          const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
+          const isPlanEmpty = meals.length <= 1 && (meals[0]?.items.length === 0);
           
-          // Metas nutricionais (Priorizando o que o Nutri definiu na avaliação ou o que foi calculado na anamnese)
-          const kcal = assessment?.calories_target || anamnesis?.computed_kcal_target || 2000;
-          const protein = assessment?.protein_target || anamnesis?.computed_protein || 150;
-          const carbs = assessment?.carbs_target || anamnesis?.computed_carbs || 200;
-          const fat = assessment?.fat_target || anamnesis?.computed_fat || 60;
-
-          const context = {
-            id: profile.id,
-            name: profile.full_name || 'Paciente',
-            goal,
-            restrictions: profileAny.restrictions || (anamnesis?.answers as any)?.restrictions || [],
-            preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || [],
-            weight: Number(weight),
-            height: Number(height),
-            age: Number(age),
-            gender: sex,
-            activityLevel: activity,
-            calories_target: Number(kcal),
-            protein_target: Number(protein),
-            carbs_target: Number(carbs),
-            fat_target: Number(fat),
-            consent_given: profileAny.consent_given,
-            consent_date: profileAny.consent_date,
-            protocol_type: profileAny.protocol_type || 'default_v3',
-          };
-
-          console.info(`[V3-Context] Atribuindo contexto: ${weight}kg, ${goal}, ${kcal}kcal`);
-          setPatientContext(context);
-
-          // Handshake: Se a anamnese for recente (últimas 24h) e o plano estiver vazio, sugerir uso das metas
-          if (anamnesis) {
-            const anamnesisDate = new Date(anamnesis.created_at);
-            const isRecent = (Date.now() - anamnesisDate.getTime()) < 24 * 60 * 60 * 1000;
-            
-            // Verificamos se o plano atual está "vazio" (sem refeições significativas)
-            const isPlanEmpty = meals.length <= 1 && (meals[0]?.items.length === 0);
-            
-            if (isRecent && isPlanEmpty && !planId) {
-              setPendingAnamnesisData({
-                kcal: Number(anamnesis.computed_kcal_target),
-                protein: Number(anamnesis.computed_protein),
-                carbs: Number(anamnesis.computed_carbs),
-                fat: Number(anamnesis.computed_fat)
-              });
-              setShowAnamnesisHandshake(true);
-            }
+          if (isRecent && isPlanEmpty && !planId) {
+            setPendingAnamnesisData({
+              kcal: Number(anamnesis.computed_kcal_target),
+              protein: Number(anamnesis.computed_protein),
+              carbs: Number(anamnesis.computed_carbs),
+              fat: Number(anamnesis.computed_fat)
+            });
+            setShowAnamnesisHandshake(true);
           }
         }
-
 
         if (assessment) setLastAssessment(assessment);
       }
     };
     fetchClinicalData();
-  }, [patientId, setPatientContext]);
+  }, [patientId, setPatientContext, setPatientId]);
 
   useEffect(() => {
     if (patientId) {
@@ -821,6 +839,8 @@ const EditorV3Page = () => {
         preferences: patientContext.preferences || []
       };
 
+      console.log('[Direct V2] Input Engine:', engineInput);
+
       const mealSlots: MealSlot[] = [
         { type: 'cafe_da_manha', time: '08:00' },
         { type: 'lanche_da_manha', time: '10:30' },
@@ -876,6 +896,39 @@ const EditorV3Page = () => {
       toast.error('Erro ao gerar plano completo no NutriCore V2');
     } finally {
       setIsGeneratingGlobal(false);
+    }
+  };
+
+  const handleSaveAntro = async () => {
+    if (!patientId || !patientContext) return;
+    
+    setIsSavingAntro(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          current_weight_kg: editAntroValues.weight,
+          current_height_cm: editAntroValues.height,
+          goal: editAntroValues.goal
+        })
+        .eq('id', patientContext.id);
+
+      if (error) throw error;
+
+      setPatientContext({
+        ...patientContext,
+        weight: editAntroValues.weight,
+        height: editAntroValues.height,
+        goal: editAntroValues.goal
+      });
+      
+      setIsEditingAntro(false);
+      toast.success('Dados antropométricos atualizados!');
+    } catch (error: any) {
+      console.error('Error saving antro:', error);
+      toast.error('Erro ao salvar dados do paciente.');
+    } finally {
+      setIsSavingAntro(false);
     }
   };
 
@@ -1026,9 +1079,76 @@ const EditorV3Page = () => {
                   {patientContext?.name || (patientId ? "Carregando..." : "Editor V3 Elite")}
                 </h1>
                 {patientContext && (
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-black uppercase tracking-tighter rounded-lg">
-                    {patientContext.weight}kg · {patientContext.goal}
-                  </Badge>
+                  <Popover open={isEditingAntro} onOpenChange={setIsEditingAntro}>
+                    <PopoverTrigger asChild>
+                      <Badge 
+                        variant="outline" 
+                        onClick={() => setEditAntroValues({ 
+                          weight: patientContext.weight, 
+                          height: patientContext.height, 
+                          goal: patientContext.goal 
+                        })}
+                        className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-black uppercase tracking-tighter rounded-lg cursor-pointer hover:bg-emerald-500/20 transition-all gap-1.5"
+                      >
+                        {patientContext.weight > 0 ? `${patientContext.weight}kg` : 'Peso?'} · {patientContext.goal}
+                        <Edit3 className="w-2.5 h-2.5 opacity-40" />
+                      </Badge>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 bg-black/95 border-white/10 backdrop-blur-2xl p-6 rounded-3xl shadow-2xl z-[70]">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity className="w-4 h-4 text-emerald-500" />
+                          <h4 className="text-xs font-black text-white uppercase tracking-widest">Ajuste Antropométrico</h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black text-white/40 uppercase">Peso (kg)</Label>
+                            <Input 
+                              type="number" 
+                              value={editAntroValues.weight || ''} 
+                              onChange={(e) => setEditAntroValues({ ...editAntroValues, weight: Number(e.target.value) })}
+                              className="bg-white/5 border-white/10 text-white rounded-xl h-10 font-black"
+                              placeholder="0.0"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black text-white/40 uppercase">Altura (cm)</Label>
+                            <Input 
+                              type="number" 
+                              value={editAntroValues.height || ''} 
+                              onChange={(e) => setEditAntroValues({ ...editAntroValues, height: Number(e.target.value) })}
+                              className="bg-white/5 border-white/10 text-white rounded-xl h-10 font-black"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-black text-white/40 uppercase">Objetivo</Label>
+                          <select 
+                            value={editAntroValues.goal}
+                            onChange={(e) => setEditAntroValues({ ...editAntroValues, goal: e.target.value })}
+                            className="w-full bg-white/5 border-white/10 text-white rounded-xl h-10 px-3 text-sm font-black focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                          >
+                            <option value="Emagrecimento">Emagrecimento</option>
+                            <option value="Hipertrofia">Hipertrofia</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Saúde">Saúde</option>
+                            <option value="Performance">Performance</option>
+                          </select>
+                        </div>
+
+                        <Button 
+                          onClick={handleSaveAntro} 
+                          disabled={isSavingAntro}
+                          className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl h-10 text-[10px] mt-2"
+                        >
+                          {isSavingAntro ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sincronizar Dados'}
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 )}
               </div>
               <div className="flex items-center gap-4">
