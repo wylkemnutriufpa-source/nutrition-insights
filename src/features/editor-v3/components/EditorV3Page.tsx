@@ -833,6 +833,8 @@ const EditorV3Page = () => {
         preferences: patientContext.preferences || []
       };
 
+      console.log('[Direct V2] Input Engine:', engineInput);
+
       const mealSlots: MealSlot[] = [
         { type: 'cafe_da_manha', time: '08:00' },
         { type: 'lanche_da_manha', time: '10:30' },
