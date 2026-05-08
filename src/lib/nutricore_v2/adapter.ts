@@ -130,26 +130,31 @@ export class NutriCoreV2Adapter {
         name: mealName,
         time: slot.time,
         items: plannedMeal.items.map(item => {
-          // CORREÇÃO CRÍTICA: Macros devem ser por 100g (portionValue)
-          // para evitar efeito cascata de multiplicação no Editor V3
-          const factor = item.grams / 100;
+          // 🛡️ REGRA DE OURO NutriCore V2:
+          // Entregamos o macro TOTAL para a quantidade calculada.
+          // Definimos portionValue = item.grams para que qualquer recalculo posterior (factor = quantity/portionValue) resulte em 1.
+          // Isso "blinda" o valor contra distorções de camadas intermediárias.
+          const totalKcal = Math.round(item.macros.kcal);
+          const totalProtein = Number(item.macros.protein_g.toFixed(1));
+          const totalCarbs = Number(item.macros.carb_g.toFixed(1));
+          const totalFat = Number(item.macros.fat_g.toFixed(1));
           
           return {
             id: item.foodId,
             name: item.name,
-            // Valores normalizados para 100g (base do Editor)
-            kcal: Math.round(item.macros.kcal / (factor || 1)),
-            calories: Math.round(item.macros.kcal / (factor || 1)),
-            protein: Number((item.macros.protein_g / (factor || 1)).toFixed(1)),
-            carbs: Number((item.macros.carb_g / (factor || 1)).toFixed(1)),
-            fat: Number((item.macros.fat_g / (factor || 1)).toFixed(1)),
-            portionValue: 100,
+            // Valores totais para a porção gerada
+            kcal: totalKcal,
+            calories: totalKcal,
+            protein: totalProtein,
+            carbs: totalCarbs,
+            fat: totalFat,
+            portionValue: item.grams, // A base é a própria quantidade gerada
             portionUnitLabel: 'g',
             portionUnit: 'g',
             portionLabel: 'g',
-            measurementType: 'gram',
+            measurementType: 'gram' as const,
             instanceId: Math.random().toString(36).substring(2, 10),
-            quantity: item.grams, // Quantidade total em gramas
+            quantity: item.grams, 
             substitutions: []
           };
         })
