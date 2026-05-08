@@ -88,13 +88,18 @@ export async function loadOrCreateDraft(
   const nutritionistId = userRes.user?.id;
   if (!nutritionistId) return null;
 
-  await supabase.from('access_logs').insert({
-    user_id: nutritionistId,
-    patient_id: patientId,
-    action: 'view',
-    resource: 'draft',
-    user_agent: navigator.userAgent
-  } as any);
+  // Silenciar access_logs 409
+  try {
+    await supabase.from('access_logs').insert({
+      user_id: nutritionistId,
+      patient_id: patientId,
+      action: 'view',
+      resource: 'draft',
+      user_agent: navigator.userAgent
+    } as any);
+  } catch (e) {
+    // Silently ignore 409/conflicts in logs
+  }
 
   // 1. Tentar encontrar rascunho ativo
   const { data: existing, error: findErr } = await supabase
@@ -252,13 +257,17 @@ export async function saveDraft(
   const { data: userRes } = await supabase.auth.getUser();
   if (userRes.user) {
     const record = data as unknown as DraftRecord;
-    await supabase.from('access_logs').insert({
-      user_id: userRes.user.id,
-      patient_id: record.patient_id,
-      action: 'edit',
-      resource: 'draft',
-      user_agent: navigator.userAgent
-    } as any);
+    try {
+      await supabase.from('access_logs').insert({
+        user_id: userRes.user.id,
+        patient_id: record.patient_id,
+        action: 'edit',
+        resource: 'draft',
+        user_agent: navigator.userAgent
+      } as any);
+    } catch (e) {
+      // Silently ignore log conflicts
+    }
   }
 
   return data as unknown as DraftRecord;
