@@ -66,7 +66,7 @@ export default function RiskPanel({ patients }: { patients: RiskPatient[] }) {
                 {p.score}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{p.name}</p>
+                <p className="text-sm font-medium">{p.name}</p>
                 <div className="flex gap-1 mt-0.5 flex-wrap">
                   {p.risks.slice(0, 2).map((r, j) => (
                     <span key={j} className="text-[9px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive">{r}</span>

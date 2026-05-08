@@ -591,7 +591,7 @@ export default function PatientDetail() {
                     {currentPrestigePlan ? (
                       <PrestigeName name={displayName} plan={currentPrestigePlan} className="font-display text-2xl font-bold" />
                     ) : (
-                      <h1 className="font-display text-2xl font-bold truncate" title={displayName}>{displayName}</h1>
+                      <h1 className="font-display text-2xl font-bold" title={displayName}>{displayName}</h1>
                     )}
                     <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
                       {patientStatus === "active" ? "Ativo" : "Inativo"}

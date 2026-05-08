@@ -172,7 +172,7 @@ export default function PortfolioIntelligencePanel() {
                   >
                     <div className={`w-2 h-2 rounded-full ${p.riskLevel === "critical" ? "bg-destructive" : "bg-warning"}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{p.name}</p>
+                      <p className="text-sm font-medium">{p.name}</p>
                       <p className="text-xs text-muted-foreground">{p.reason}</p>
                     </div>
                     <div className="text-right shrink-0">
