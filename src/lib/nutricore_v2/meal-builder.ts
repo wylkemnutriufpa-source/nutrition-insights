@@ -63,8 +63,9 @@ export function buildMeal(
     proteinKcal = item.macros.kcal;
   }
 
-  // 2. GORDURA E VEGETAIS/FRUTAS (Por último no cálculo, mas adicionados antes para o carboidrato compensar o resto)
+  // 2. GORDURA E VEGETAIS/FRUTAS
   let fixedKcal = 0;
+  let currentFat = items.reduce((acc, i) => acc + i.macros.fat_g, 0);
 
   // Vegetais (100g fixos em almoço/jantar)
   if (isLunchOrDinner) {
@@ -75,12 +76,19 @@ export function buildMeal(
       fixedKcal += item.macros.kcal;
     }
     
-    // 8g Azeite
-    const oliveOil = foodDb.find(f => f.name.includes("Azeite"));
-    if (oliveOil) {
-      const item = createPlannedItem(oliveOil, 8);
-      items.push(item);
-      fixedKcal += item.macros.kcal;
+    // Ajuste de Gordura: Tenta atingir a meta da refeição
+    const remainingFat = targetMacros.fat_g - currentFat;
+    if (remainingFat > 0) {
+      const fatFood = selectFood(foodDb, "fat", restrictions, preferences);
+      if (fatFood) {
+        // grams = remaining_fat / (fat_per_100g / 100)
+        let fatGrams = remainingFat / (fatFood.fat_100g / 100);
+        // Limite razoável para gordura adicionada (ex: 5g a 30g)
+        fatGrams = Math.min(Math.max(fatGrams, 5), 30);
+        const item = createPlannedItem(fatFood, fatGrams);
+        items.push(item);
+        fixedKcal += item.macros.kcal;
+      }
     }
   }
 
@@ -94,9 +102,9 @@ export function buildMeal(
     }
     
     if (type === "cafe_da_manha") {
-      const butter = foodDb.find(f => f.name.includes("Manteiga"));
+      const butter = foodDb.find(f => f.name.toLowerCase().includes("manteiga") || f.name.toLowerCase().includes("azeite"));
       if (butter) {
-        const item = createPlannedItem(butter, 5);
+        const item = createPlannedItem(butter, 8);
         items.push(item);
         fixedKcal += item.macros.kcal;
       }
@@ -104,14 +112,13 @@ export function buildMeal(
   }
 
   // 3. CARBOIDRATO COM O RESTANTE
-  const remainingKcal = targetMacros.kcal - proteinKcal - fixedKcal;
+  const currentKcal = items.reduce((acc, i) => acc + i.macros.kcal, 0);
+  const remainingKcal = targetMacros.kcal - currentKcal;
   const carbFood = selectFood(foodDb, "carb", restrictions, preferences);
   
   if (carbFood && remainingKcal > 0) {
-    // grams = remaining_kcal / (kcal_per_100g / 100)
     let carbGrams = remainingKcal / (carbFood.kcal_100g / 100);
-    // Clamping: min 50g, max 400g
-    carbGrams = roundTo5(Math.min(Math.max(carbGrams, 50), 400));
+    carbGrams = roundTo5(Math.min(Math.max(carbGrams, 30), 500));
     items.push(createPlannedItem(carbFood, carbGrams));
   }
 
