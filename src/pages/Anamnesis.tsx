@@ -1035,8 +1035,6 @@ export default function Anamnesis() {
     }
 
     // Integração com o NOVO Motor NutriCore V2 (Projeto NutriCore)
-    const { runEngine } = require('@/lib/nutricore_v2/nutrition-engine');
-    
     // Mapeamento de entradas para o Motor NutriCore
     const engineResult = runEngine({
       weight_kg: weight,
