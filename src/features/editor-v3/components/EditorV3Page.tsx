@@ -2007,7 +2007,9 @@ const EditorV3Page = () => {
                           onClick={() => handleRequestSwap(selectedItem.mealId, selectedItem.item, sub)}
                           className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left group"
                         >
-                          <span className="text-xs font-bold text-white group-hover:text-blue-400">{sub.name}</span>
+                          <span className="text-xs font-bold text-white group-hover:text-blue-400">
+                            {sub.name} { (sub as any).suggestedQuantity ? `(${(sub as any).suggestedQuantity}g)` : ''}
+                          </span>
                           <span className="text-[9px] font-black text-white/30 uppercase">{sub.kcal} kcal</span>
                         </button>
                       ))}
