@@ -195,7 +195,7 @@ export const PrescriptionDashboard = () => {
                     <p className="font-bold uppercase text-sm">Configuração BETA</p>
                     <p className="text-xs text-slate-500">Ajuste de guardrails</p>
                   </div>
-                </div>
+                </button>
               </div>
 
               <div className="mt-8 p-6 bg-green-500/5 border border-green-500/10 rounded-2xl">
