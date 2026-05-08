@@ -19,18 +19,19 @@ const App = () => {
     <motion.button
       drag
       dragMomentum={false}
+      dragElastic={0}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={() => setMode(mode === 'V1' ? 'V2' : 'V1')}
-      className={`fixed top-4 left-4 z-[9999] px-4 py-2 rounded-full text-[10px] font-bold uppercase transition-colors shadow-xl border flex items-center gap-2 cursor-move select-none ${
+      className={`fixed top-4 left-4 z-[9999] px-3 py-1.5 rounded-full text-[9px] font-bold uppercase transition-colors shadow-lg border flex items-center gap-2 cursor-move select-none ${
         mode === 'V1'
           ? 'bg-blue-600 text-white border-blue-400 hover:bg-blue-700'
           : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
       }`}
       style={{ touchAction: 'none' }}
     >
-      <div className={`w-1.5 h-1.5 rounded-full ${mode === 'V1' ? 'bg-white animate-pulse' : 'bg-slate-500'}`} />
-      <span>{mode === 'V1' ? 'Ir para V2.0' : 'Voltar para V1.0'}</span>
+      <div className={`w-1 h-1 rounded-full ${mode === 'V1' ? 'bg-white animate-pulse' : 'bg-slate-500'}`} />
+      <span>{mode === 'V1' ? 'V2.0' : 'V1.0'}</span>
     </motion.button>
   );
 
