@@ -69,11 +69,11 @@ function buildItemDescription(meal: Meal): string {
 function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {
-    const q = i.quantity ?? 1;
-    kcal += (i.kcal ?? i.calories ?? 0) * q;
-    p += (i.protein ?? 0) * q;
-    c += (i.carbs ?? 0) * q;
-    f += (i.fat ?? 0) * q;
+    const macros = calculateItemMacros(i, i.quantity ?? 100);
+    kcal += macros.kcal;
+    p += macros.protein;
+    c += macros.carbs;
+    f += macros.fat;
   }
   return { kcal, p, c, f };
 }
