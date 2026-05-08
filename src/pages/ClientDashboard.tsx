@@ -385,6 +385,30 @@ export default function ClientDashboard() {
               </div>
 
               <div className="lg:col-span-4 space-y-6">
+                {/* Check-in & Photos Action */}
+                <motion.div variants={item}>
+                  <Card className="border-border/50 bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm overflow-hidden group">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                          <Camera className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-display font-bold">Check-in de Evolução</h3>
+                          <p className="text-xs text-muted-foreground">Envie fotos e seu peso atual</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => navigate("/checkin")} 
+                        className="w-full gradient-primary shadow-glow group"
+                      >
+                        Enviar Fotos e Peso
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
                 {/* Adherence & Streaks - FEATURE: performance */}
                 {isFeatureEnabled("performance") && (
                   <motion.div variants={item}>
@@ -396,8 +420,7 @@ export default function ClientDashboard() {
                   </motion.div>
                 )}
 
-                {/* Challenges & Community - HIDDEN IN BASIC */}
-                {/* Challenges & Community - FEATURE: performance (shared) */}
+                {/* Achievements - FEATURE: performance (shared) */}
                 {isFeatureEnabled("performance") && (
                   <motion.div variants={item}>
                     <AchievementBadges achievements={{
@@ -408,7 +431,6 @@ export default function ClientDashboard() {
                   </motion.div>
                 )}
 
-                {/* Smart Tips - HIDDEN IN BASIC */}
                 {/* Smart Tips - FEATURE: tips (fallback to basic mode) */}
                 {(mode !== "basic" || isFeatureEnabled("tips")) && (
                   <motion.div variants={item}>
@@ -417,6 +439,7 @@ export default function ClientDashboard() {
                 )}
               </div>
             </div>
+
 
 
             {/* Secondary Sections */}
