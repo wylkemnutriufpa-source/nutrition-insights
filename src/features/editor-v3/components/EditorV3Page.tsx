@@ -1574,6 +1574,7 @@ const EditorV3Page = () => {
                         </div>
                       </button>
                     ))}
+                    </div>
                   </div>
                 )}
 
