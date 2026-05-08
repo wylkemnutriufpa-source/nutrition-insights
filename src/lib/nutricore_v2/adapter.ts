@@ -132,30 +132,50 @@ export class NutriCoreV2Adapter {
         items: plannedMeal.items.map(item => {
           // 🛡️ REGRA DE OURO NutriCore V2:
           // Entregamos o macro TOTAL para a quantidade calculada.
-          // Definimos portionValue = item.grams para que qualquer recalculo posterior (factor = quantity/portionValue) resulte em 1.
-          // Isso "blinda" o valor contra distorções de camadas intermediárias.
           const totalKcal = Math.round(item.macros.kcal);
           const totalProtein = Number(item.macros.protein_g.toFixed(1));
           const totalCarbs = Number(item.macros.carb_g.toFixed(1));
           const totalFat = Number(item.macros.fat_g.toFixed(1));
           
+          // Encontrar o objeto food original para calcular substituições
+          const foodObj = finalDb.find(f => f.id === item.foodId);
+          let substitutions: any[] = [];
+          
+          if (foodObj) {
+            const subs = getSubstitutions(foodObj, finalDb, item.grams, context.restrictions);
+            substitutions = subs.map(s => ({
+              id: s.food.id,
+              name: s.food.name,
+              kcal: s.food.kcal_100g,
+              calories: s.food.kcal_100g,
+              protein: s.food.protein_100g,
+              carbs: s.food.carb_100g,
+              fat: s.food.fat_100g,
+              portionValue: 100,
+              portionUnitLabel: 'g',
+              portionUnit: 'g',
+              portionLabel: s.unit_label,
+              measurementType: 'gram',
+              suggestedQuantity: s.grams // Informação vital para o executeSwap
+            }));
+          }
+
           return {
             id: item.foodId,
             name: item.name,
-            // Valores totais para a porção gerada
             kcal: totalKcal,
             calories: totalKcal,
             protein: totalProtein,
             carbs: totalCarbs,
             fat: totalFat,
-            portionValue: item.grams, // A base é a própria quantidade gerada
+            portionValue: item.grams,
             portionUnitLabel: 'g',
             portionUnit: 'g',
             portionLabel: 'g',
             measurementType: 'gram' as const,
             instanceId: Math.random().toString(36).substring(2, 10),
             quantity: item.grams, 
-            substitutions: []
+            substitutions
           };
         })
       };
