@@ -339,6 +339,16 @@ const EditorV3Page = () => {
         };
 
         console.info(`[V3-Context] Atribuindo contexto para ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
+        setGoalMetadata({
+          goalCalories: Number(kcal),
+          goalProtein: Number(protein),
+          goalCarbs: Number(carbs),
+          goalFat: Number(fat),
+          goal: goal,
+          restrictions: profileAny.restrictions || (anamnesis?.answers as any)?.restrictions || [],
+          preferences: profileAny.preferences || (anamnesis?.answers as any)?.preferences || []
+        });
         setPatientContext(context);
         
         // Sincroniza o patientId na store com o ID REAL do perfil
