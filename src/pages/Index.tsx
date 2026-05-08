@@ -413,37 +413,8 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Quick Access: Other Views — PRO+ ── */}
-      {minMode("pro") && (
-      <div className="flex flex-wrap items-center gap-2">
-        {[
-          { key: "analytics", icon: BarChart3, label: "Analytics", desc: "Visão estratégica" },
-          { key: "strategy", icon: Brain, label: "IA Estratégica", desc: "Diagnóstico com IA" },
-          { key: "risk", icon: Shield, label: "Risco Clínico", desc: "Monitoramento de alertas" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(activeTab === tab.key ? "clinical" : tab.key)}
-            className={`flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg border transition-all duration-200 ${
-              activeTab === tab.key
-                ? "border-primary/40 bg-primary/10 text-foreground shadow-sm"
-                : "border-border/50 bg-card/50 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-muted/30"
-            }`}
-          >
-            <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.key ? "text-primary" : ""}`} />
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      )}
+      {/* ── Dashboard Content ── */}
 
-      {minMode("pro") && activeTab === "analytics" ? (
-        <AnalyticsDashboard />
-      ) : minMode("pro") && activeTab === "strategy" ? (
-        <AIStrategyCenter />
-      ) : minMode("pro") && activeTab === "risk" ? (
-        <ClinicalRiskDashboardContent />
-      ) : null}
 
       {/* ── Clinical Dashboard — Always visible as main content ── */}
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
