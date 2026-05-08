@@ -32,6 +32,8 @@ import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitch
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import SystemHealthBadge from "./SystemHealthBadge";
 import { StabilityZone } from "@/components/common/StabilityZone";
+import { BetaSwitcher } from "./BetaSwitcher";
+
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "fj_sidebar_collapsed";
 
@@ -734,7 +736,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <FitJourneyLogo collapsed={false} size="sm" />
           </div>
           <div className="flex items-center gap-2">
+            <BetaSwitcher />
             <SyncButton />
+
             <SystemHealthBadge />
             <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}>
@@ -782,7 +786,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           'border-green-700/10 bg-background/80'
         }`} style={{ left: collapsed ? 72 : 260 }}>
           <div className="flex justify-end items-center gap-2">
+            <BetaSwitcher />
             <SyncButton />
+
             <SystemHealthBadge />
             <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))} title="Buscar (Ctrl+K)">
