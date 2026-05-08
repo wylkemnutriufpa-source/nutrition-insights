@@ -69,11 +69,13 @@ function buildItemDescription(meal: Meal): string {
 function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {
-    const macros = calculateItemMacros(i, i.quantity ?? 100);
-    kcal += macros.kcal;
-    p += macros.protein;
-    c += macros.carbs;
-    f += macros.fat;
+    // 🛡️ REGRA DE OURO: O Motor NutriCore V2 é a fonte da verdade.
+    // Usamos os macros que já estão no item (totais para a quantidade atual).
+    // NÃO recalculamos para evitar distorções de arredondamento ou conversão.
+    kcal += i.kcal ?? 0;
+    p += i.protein ?? 0;
+    c += i.carbs ?? 0;
+    f += i.fat ?? 0;
   }
   return { kcal, p, c, f };
 }
