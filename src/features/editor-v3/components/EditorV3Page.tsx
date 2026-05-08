@@ -790,10 +790,10 @@ const EditorV3Page = () => {
           {dbStatus.error ? <CloudOff className="w-10 h-10 text-rose-500" /> : <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />}
         </div>
         <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
-          {dbStatus.error ? "Base de dados não encontrada" : "Carregando Base Clínica"}
+          {dbStatus.error ? "Base de dados não encontrada" : "Preparando seu espaço de trabalho"}
         </h1>
         <p className="text-white/40 max-w-sm mb-8">
-          {dbStatus.error || "Sincronizando tabelas essenciais para garantir precisão clínica."}
+          {dbStatus.error || "Carregando informações necessárias…"}
         </p>
         {dbStatus.error && (
           <Button onClick={() => window.location.reload()} className="bg-white text-black font-black uppercase tracking-widest px-8 h-12 rounded-xl">
