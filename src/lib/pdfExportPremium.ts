@@ -109,22 +109,27 @@ function cleanClinicalText(text: string): string {
 }
 
 function formatDescription(desc: string): string {
+  if (!desc) return "";
   const cleanedDesc = cleanClinicalText(desc);
 
   return cleanedDesc
     .split("\n")
+    .map(line => line.trim())
     .filter(l => {
-      const t = l.trim().toLowerCase();
+      const t = l.toLowerCase();
       if (!t) return false;
-      // Remove linhas redundantes de cabeçalho de substituições embutidas no description
-      if (/^substitui[çc][õo]es?\s*:?$/.test(t)) return false;
-      // Remove "x → y" lines (já são renderizadas no box de substituições)
-      if (/[→➜>]/.test(l) && !/^\d/.test(t)) return false;
+      
+      // Don't filter out lines that might be food items even if they contain arrows
+      // Only filter out lines that look like a "Substitutions:" header
+      if (/^substitui[çc][õo]es?\s*:?$/.test(t.replace(/[^\w\s]/g, "").trim())) return false;
+      
       return true;
     })
     .map(line => {
-      const cleaned = line.replace(/^[•\-●*]\s*/, "").trim();
+      // Remove leading bullets/symbols but preserve the text
+      const cleaned = line.replace(/^[•\-●*🔄]\s*/, "").trim();
       if (!cleaned) return "";
+      
       return `<div class="food-line">
         <span class="food-bullet"></span>
         <span>${escapeHtml(cleaned)}</span>
@@ -132,6 +137,7 @@ function formatDescription(desc: string): string {
     })
     .join("");
 }
+
 
 function buildPremiumCSS(): string {
   return `
