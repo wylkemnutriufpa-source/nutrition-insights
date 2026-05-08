@@ -1,4 +1,4 @@
-import { runEngine, EngineInput, EngineResult } from './nutrition-engine';
+import { runEngine, EngineInput, EngineResult, Goal, ActivityLevel } from './nutrition-engine';
 import { distributeMacros, MealSlot, DistributedMeal } from './meal-distribution';
 import { buildMeal, PlannedMeal } from './meal-builder';
 import { BASE_FOODS, Food } from './food-database';
@@ -16,31 +16,45 @@ export class NutriCoreV2Adapter {
    * Converte o contexto do paciente do FitJourney para o formato NutriCore
    */
   private static mapPatientToEngine(context: PatientContext): EngineInput {
-    // Mapeamento de objetivos
-    const goalMap: Record<string, any> = {
+    // Mapeamento de objetivos do V3 para o NutriCore V2
+    const goalMap: Record<string, Goal> = {
       'lose_weight': 'emagrecimento',
       'gain_muscle': 'hipertrofia',
       'maintain': 'manutencao',
       'health': 'saude',
-      'performance': 'performance'
+      'performance': 'performance',
+      'lose-weight': 'emagrecimento', // Suporte a hífens comuns no editor
+      'muscle-gain': 'hipertrofia',
+      'Emagrecimento': 'emagrecimento',
+      'Hipertrofia': 'hipertrofia',
+      'Manutenção': 'manutencao'
     };
 
     // Mapeamento de nível de atividade
-    const activityMap: Record<string, any> = {
+    const activityMap: Record<string, ActivityLevel> = {
       'sedentary': 'sedentario',
       'light': 'leve',
       'moderate': 'moderado',
       'intense': 'intenso',
-      'very_active': 'muito_intenso'
+      'very_active': 'muito_intenso',
+      'sedentario': 'sedentario',
+      'leve': 'leve',
+      'moderado': 'moderado',
+      'intenso': 'intenso'
     };
 
+    const goal = goalMap[context.goal || ''] || 'manutencao';
+    const activity = activityMap[context.activityLevel || ''] || 'moderado';
+
+    console.info(`[NutriCore-Adapter] Mapping Patient: Weight ${context.weight}kg, Goal ${context.goal} -> ${goal}`);
+
     return {
-      weight_kg: context.weight || 70,
-      height_cm: context.height || 170,
+      weight_kg: context.weight || 75,
+      height_cm: context.height || 175,
       age_years: context.age || 30,
       sex: context.gender === 'female' ? 'feminino' : 'masculino',
-      activity_level: activityMap[context.activityLevel || ''] || 'moderado',
-      goal: goalMap[context.goal || ''] || 'manutencao'
+      activity_level: activity,
+      goal: goal
     };
   }
 

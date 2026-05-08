@@ -208,7 +208,8 @@ export const useEditorState = create<EditorState>()(
         const totals = meals.reduce((acc, meal) => {
           (meal.items || []).forEach(item => {
             try {
-              const macros = calcMacrosV2(item, item.quantity || 100);
+              // No V3, calculateItemMacros já lida com porção vs quantidade
+              const macros = calculateItemMacros(item, item.quantity || 100);
               acc.kcal += macros.kcal || 0;
               acc.protein += macros.protein || 0;
               acc.carbs += macros.carbs || 0;
@@ -216,10 +217,10 @@ export const useEditorState = create<EditorState>()(
             } catch (error) {
               console.warn(`[V3 Score] Erro ao calcular macros para item: ${item.name}`, error);
               // Fallback para valores estáticos se o motor falhar
-              acc.kcal += (item.kcal || item.calories || 0);
-              acc.protein += (item.protein || item.protein_g || 0);
-              acc.carbs += (item.carbs || item.carbs_g || 0);
-              acc.fat += (item.fat || item.fat_g || 0);
+              acc.kcal += (item.kcal !== undefined ? item.kcal : (item.calories || 0));
+              acc.protein += (item.protein !== undefined ? item.protein : (item.protein_g || 0));
+              acc.carbs += (item.carbs !== undefined ? item.carbs : (item.carbs_g || 0));
+              acc.fat += (item.fat !== undefined ? item.fat : (item.fat_g || 0));
             }
           });
           return acc;
@@ -589,14 +590,18 @@ export const useEditorState = create<EditorState>()(
         let currentMeals = get().meals;
         const { patientContext } = get();
         
+        // No V3, se tivermos contexto do paciente, priorizamos as metas calculadas pelo NutriCore
+        const finalCalories = patientContext?.calories_target || baseCalories;
+        const finalGoal = patientContext?.goal || goal;
+
         if (replaceExisting) {
           currentMeals = initialMeals.map(m => ({ ...m, items: [] }));
         }
 
         const newMeals = generatePlanWithEngine(
           currentMeals, 
-          goal, 
-          baseCalories, 
+          finalGoal, 
+          finalCalories, 
           availableFoods, 
           patientContext?.protocol_type || 'default_v3',
           patientContext || undefined
@@ -604,7 +609,7 @@ export const useEditorState = create<EditorState>()(
         
         set({ meals: newMeals, planStatus: 'draft' });
         get().recalculateScore();
-        toast.success(`Plano estruturado para ${goal} com ${baseCalories}kcal`);
+        toast.success(`Plano estruturado para ${finalGoal} com ${Math.round(finalCalories)}kcal`);
       },
 
       generateMeal: (mealId, goal, availableFoods, baseCalories = 2000) => {
@@ -612,10 +617,14 @@ export const useEditorState = create<EditorState>()(
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
 
+        // No V3, se tivermos contexto do paciente, priorizamos as metas calculadas pelo NutriCore
+        const finalCalories = patientContext?.calories_target || baseCalories;
+        const finalGoal = patientContext?.goal || goal;
+
         const newItems = generateMealWithEngine(
           meal, 
-          goal, 
-          baseCalories, 
+          finalGoal, 
+          finalCalories, 
           availableFoods, 
           patientContext?.protocol_type || 'default_v3',
           patientContext || undefined
@@ -628,7 +637,7 @@ export const useEditorState = create<EditorState>()(
           planStatus: 'draft'
         }));
         get().recalculateScore();
-        toast.success(`Refeição "${meal.name}" otimizada!`);
+        toast.success(`Refeição "${meal.name}" otimizada para ${finalGoal}!`);
       },
 
       savePlan: async () => {
