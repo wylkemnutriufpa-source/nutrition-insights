@@ -1535,7 +1535,26 @@ const EditorV3Page = () => {
                 ))}
 
                 {activeTab === 'visual' && (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-4">
+                    <ScrollArea className="w-full pb-2">
+                      <div className="flex gap-1">
+                        {visualLibraryCategories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setSelectedVisualCategory(cat.id)}
+                            className={cn(
+                              "px-3 h-7 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all whitespace-nowrap border",
+                              selectedVisualCategory === cat.id 
+                                ? "bg-rose-500 text-black border-rose-500" 
+                                : "bg-white/5 text-white/40 border-white/5 hover:border-white/20 hover:text-white/60"
+                            )}
+                          >
+                            {cat.label}
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    <div className="grid grid-cols-2 gap-2">
                     {visualLibraryResults.map((v) => (
                       <button
                         key={v.id}
