@@ -1548,10 +1548,13 @@ const EditorV3Page = () => {
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
           {meals.map((meal, index) => (
 
-          <section key={meal.id} className="group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
+          <section key={meal.id} className={cn(
+            "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-6 rounded-[32px] border transition-all",
+            activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-[0_0_40px_-15px_rgba(16,185,129,0.1)]" : "bg-neutral-900/30 border-white/5 hover:border-white/10"
+          )} style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex flex-col mb-6">
               {meal.imageUrl && (
-                <div className="relative w-full h-48 mb-6 rounded-3xl overflow-hidden group/img">
+                <div className="relative w-full h-56 mb-6 rounded-2xl overflow-hidden group/img shadow-2xl">
                   <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                     <Button 
@@ -1562,34 +1565,6 @@ const EditorV3Page = () => {
                       <ImageIcon className="w-4 h-4" /> Alterar Imagem
                     </Button>
                   </div>
-                  {meal.imageSource === 'manual' && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Badge className="absolute top-4 left-4 bg-emerald-500 text-black font-black uppercase tracking-tighter text-[9px] border-0 cursor-help shadow-lg">
-                          Imagem Personalizada
-                        </Badge>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl">
-                        <div className="space-y-3">
-                          <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Histórico de Alterações</p>
-                          <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                            {auditLog
-                              .filter(log => log.mealId === meal.id)
-                              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                              .map((log, i) => (
-                                <div key={i} className="flex flex-col gap-1 border-l border-emerald-500/30 pl-3 py-1">
-                                  <p className="text-[10px] text-white font-bold leading-tight">Imagem alterada manualmente</p>
-                                  <p className="text-[8px] text-white/40 uppercase font-black">{new Date(log.created_at).toLocaleString()}</p>
-                                </div>
-                              ))}
-                            {auditLog.filter(log => log.mealId === meal.id).length === 0 && (
-                              <p className="text-[9px] text-white/20 italic">Nenhum registro encontrado</p>
-                            )}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
                 </div>
               )}
               
