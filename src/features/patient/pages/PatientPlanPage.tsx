@@ -4,14 +4,28 @@ import { patientService } from '../services/patientService';
 import { PatientPlan } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Share2, Download, Flame, Trophy, Calendar } from 'lucide-react';
+import { 
+  CheckCircle2, Share2, Download, Flame, Trophy, Calendar, 
+  RefreshCw, ChevronRight, Scale, Info, Sparkles, Utensils
+} from 'lucide-react';
+
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
+} from '@/components/ui/dialog';
+import { getSubstitutions } from '@/lib/nutricore_v2/substitutions';
+import { BASE_FOODS, Food } from '@/lib/nutricore_v2/food-database';
 import { toast } from 'sonner';
+
 
 export const PatientPlanPage = () => {
   const { id, token } = useParams<{ id?: string, token?: string }>();
   const [plan, setPlan] = useState<PatientPlan | null>(null);
   const [completions, setCompletions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<{ item: any, mealId: string } | null>(null);
+  const [substitutions, setSubstitutions] = useState<any[]>([]);
+  const [showSubModal, setShowSubModal] = useState(false);
+
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -59,6 +73,57 @@ export const PatientPlanPage = () => {
     // PDF generation logic would go here
     setTimeout(() => toast.success('PDF gerado com sucesso!'), 1500);
   };
+  
+  const handleOpenSubstitution = (item: any, mealId: string) => {
+    // Tenta encontrar o alimento correspondente no banco de dados NutriCore V2
+    const baseFood = BASE_FOODS.find(f => 
+      f.name.toLowerCase() === item.name.toLowerCase() || 
+      item.name.toLowerCase().includes(f.name.toLowerCase())
+    );
+
+    if (!baseFood) {
+      toast.error('Opções de substituição não disponíveis para este item.');
+      return;
+    }
+
+    // Calcula gramas aproximadas se não houver no item (padrão 100g se zero)
+    // No V3, item.quantity costuma ser as gramas reais.
+    const grams = item.quantity || 100;
+    
+    const subs = getSubstitutions(baseFood, BASE_FOODS, grams);
+    setSubstitutions(subs);
+    setSelectedItem({ item, mealId });
+    setShowSubModal(true);
+  };
+
+  const applySubstitution = (sub: any) => {
+    if (!plan || !selectedItem) return;
+    
+    const updatedMeals = plan.meals.map(meal => {
+      if (meal.id !== selectedItem.mealId) return meal;
+      return {
+        ...meal,
+        items: meal.items.map(item => {
+          if (item.id !== selectedItem.item.id) return item;
+          // Substitui o item mantendo as calorias equivalentes
+          return {
+            ...item,
+            name: sub.food.name,
+            quantity: sub.grams,
+            kcal: Math.round((sub.food.kcal_100g / 100) * sub.grams),
+            protein: Math.round((sub.food.protein_100g / 100) * sub.grams),
+            carbs: Math.round((sub.food.carb_100g / 100) * sub.grams),
+            fat: Math.round((sub.food.fat_100g / 100) * sub.grams),
+          };
+        })
+      };
+    });
+
+    setPlan({ ...plan, meals: updatedMeals });
+    setShowSubModal(false);
+    toast.success(`Alimento trocado por ${sub.food.name}!`);
+  };
+
 
   if (loading) return <div className="flex items-center justify-center h-screen">Carregando plano...</div>;
   if (!plan) return <div className="flex items-center justify-center h-screen">Plano não encontrado.</div>;
@@ -126,7 +191,55 @@ export const PatientPlanPage = () => {
               <h2 className="font-semibold text-gray-200 text-lg">Progresso do Dia</h2>
             </div>
             <span className="text-emerald-500 font-bold text-xl">{progress}%</span>
+      </div>
+
+      <Dialog open={showSubModal} onOpenChange={setShowSubModal}>
+        <DialogContent className="bg-gray-950 border-gray-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-500">
+              <Sparkles className="w-5 h-5" />
+              Opções de Substituição
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Escolha uma opção equivalente em proteína para substituir <strong>{selectedItem?.item.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            {substitutions.map((sub, idx) => (
+              <button
+                key={idx}
+                onClick={() => applySubstitution(sub)}
+                className="w-full flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500">
+                    <Utensils className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-200 block">{sub.food.name}</span>
+                    <span className="text-sm text-emerald-500/80 font-semibold">{sub.unit_label}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1 justify-end">
+                    <Scale className="w-3 h-3 text-gray-500" />
+                    <span className="text-xs text-gray-500">Equivalente</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-emerald-500 ml-auto" />
+                </div>
+              </button>
+            ))}
           </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowSubModal(false)} className="text-gray-400">
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
           <div className="h-3 w-full bg-gray-900 rounded-full overflow-hidden">
             <div 
               className="h-full bg-emerald-500 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
@@ -178,9 +291,22 @@ export const PatientPlanPage = () => {
                             <p className="text-xs text-gray-500">Medida caseira recomendada</p>
                           </div>
                         </div>
-                        <span className="text-emerald-500/80 font-medium text-sm">
-                          {item.kcal} kcal
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-emerald-500/80 font-medium text-sm whitespace-nowrap">
+                            {Math.round(item.kcal)} kcal
+                          </span>
+                          {!isCompleted && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-gray-500 hover:text-emerald-500"
+                              onClick={() => handleOpenSubstitution(item, meal.id)}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
+
                       </li>
                     ))}
                   </ul>

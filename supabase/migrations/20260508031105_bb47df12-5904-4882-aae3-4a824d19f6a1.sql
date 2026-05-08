@@ -1,0 +1,1 @@
+ALTER FUNCTION public.handle_weight_update() SET search_path = public;
