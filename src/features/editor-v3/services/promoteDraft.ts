@@ -97,12 +97,6 @@ export async function promoteDraftToMealPlan(
   const today = new Date().toISOString().slice(0, 10);
   const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
 
-  // 0) Desativa planos anteriores para este paciente para garantir unicidade do plano ativo
-  await supabase
-    .from('meal_plans')
-    .update({ is_active: false } as any)
-    .eq('patient_id', draft.patient_id)
-    .eq('is_active', true);
 
   // 1) INSERT-FIRST: cria o meal_plan oficial já PUBLICADO
   const { data: plan, error: planErr } = await supabase
@@ -171,7 +165,15 @@ export async function promoteDraftToMealPlan(
     }
   }
 
-  // 3) Só agora marca o draft como promovido
+  // 3) Desativa planos anteriores para este paciente para garantir unicidade do plano ativo
+  await supabase
+    .from('meal_plans')
+    .update({ is_active: false } as any)
+    .eq('patient_id', draft.patient_id)
+    .neq('id', plan.id)
+    .eq('is_active', true);
+
+  // 4) Só agora marca o draft como promovido
   await supabase
     .from('v3_drafts' as any)
     .update({
