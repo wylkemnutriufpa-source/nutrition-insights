@@ -1220,13 +1220,20 @@ const EditorV3Page = () => {
           >
             {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar Plano Completo
           </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handlePromotionRequest}
+            disabled={promoting}
+            className="h-9 px-4 text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-500 hover:text-white hover:bg-blue-600 rounded-xl transition-all gap-2 border border-blue-500/20"
+          >
+            {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Salvar Plano
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => setShowAddMealModal(true)} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-2">
             <Plus className="w-3.5 h-3.5" /> Refeição
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setShowTemplatesModal(true)} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all gap-2">
-            <Layers className="w-3.5 h-3.5" /> Templates
-          </Button>
         </div>
+
 
       </header>
 
