@@ -206,12 +206,21 @@ export const useEditorState = create<EditorState>()(
         
         // Integração com Motor V2 para avaliação de macros
         const totals = meals.reduce((acc, meal) => {
-          meal.items.forEach(item => {
-            const macros = calcMacrosV2(item, item.quantity);
-            acc.kcal += macros.kcal;
-            acc.protein += macros.protein;
-            acc.carbs += macros.carbs;
-            acc.fat += macros.fat;
+          (meal.items || []).forEach(item => {
+            try {
+              const macros = calcMacrosV2(item, item.quantity || 100);
+              acc.kcal += macros.kcal || 0;
+              acc.protein += macros.protein || 0;
+              acc.carbs += macros.carbs || 0;
+              acc.fat += macros.fat || 0;
+            } catch (error) {
+              console.warn(`[V3 Score] Erro ao calcular macros para item: ${item.name}`, error);
+              // Fallback para valores estáticos se o motor falhar
+              acc.kcal += (item.kcal || item.calories || 0);
+              acc.protein += (item.protein || item.protein_g || 0);
+              acc.carbs += (item.carbs || item.carbs_g || 0);
+              acc.fat += (item.fat || item.fat_g || 0);
+            }
           });
           return acc;
         }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
@@ -286,15 +295,19 @@ export const useEditorState = create<EditorState>()(
           const sanitizedMeals = meals.map(meal => ({
             ...meal,
             id: meal.id || Math.random().toString(36).substring(2, 9),
-            items: (meal.items || []).map(item => ({
-              ...item,
-              instanceId: item.instanceId || Math.random().toString(36).substring(2, 10),
-              // Garantir que macros não sejam undefined
-              kcal: item.kcal || 0,
-              protein: item.protein || 0,
-              carbs: item.carbs || 0,
-              fat: item.fat || 0
-            }))
+            items: (meal.items || []).map(item => {
+              // Normalização de itens legados (Etapa 4 - Legado)
+              return {
+                ...item,
+                instanceId: item.instanceId || Math.random().toString(36).substring(2, 10),
+                measurementType: item.measurementType || 'gram',
+                quantity: item.quantity || 100,
+                kcal: item.kcal !== undefined ? item.kcal : (item.calories || 0),
+                protein: item.protein !== undefined ? item.protein : (item.protein_g || 0),
+                carbs: item.carbs !== undefined ? item.carbs : (item.carbs_g || 0),
+                fat: item.fat !== undefined ? item.fat : (item.fat_g || 0)
+              };
+            })
           }));
 
           set({ meals: sanitizedMeals, auditLog, sharingToken: token, planStatus: 'saved' });
