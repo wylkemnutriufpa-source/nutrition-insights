@@ -14723,6 +14723,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activity_level: string | null
           adherence_momentum: string | null
           adherence_score_7d: number | null
           adherence_score_prev_7d: number | null
@@ -14735,7 +14736,9 @@ export type Database = {
           consent_given: boolean | null
           created_at: string
           current_editor_mode: string | null
+          current_height_cm: number | null
           current_weight: number | null
+          current_weight_kg: number | null
           editor_state: Json | null
           engagement_index: number | null
           engagement_level: string | null
@@ -14767,10 +14770,12 @@ export type Database = {
           patient_state: Database["public"]["Enums"]["patient_state_type"]
           phone: string | null
           plateau_probability: number | null
+          preferences: string[] | null
           preferred_editor_version: string | null
           protocol_type: string | null
           ranking_nickname: string | null
           regain_probability: number | null
+          restrictions: string[] | null
           search_vector: unknown
           show_in_ranking: boolean
           tenant_id: string
@@ -14783,6 +14788,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          activity_level?: string | null
           adherence_momentum?: string | null
           adherence_score_7d?: number | null
           adherence_score_prev_7d?: number | null
@@ -14795,7 +14801,9 @@ export type Database = {
           consent_given?: boolean | null
           created_at?: string
           current_editor_mode?: string | null
+          current_height_cm?: number | null
           current_weight?: number | null
+          current_weight_kg?: number | null
           editor_state?: Json | null
           engagement_index?: number | null
           engagement_level?: string | null
@@ -14827,10 +14835,12 @@ export type Database = {
           patient_state?: Database["public"]["Enums"]["patient_state_type"]
           phone?: string | null
           plateau_probability?: number | null
+          preferences?: string[] | null
           preferred_editor_version?: string | null
           protocol_type?: string | null
           ranking_nickname?: string | null
           regain_probability?: number | null
+          restrictions?: string[] | null
           search_vector?: unknown
           show_in_ranking?: boolean
           tenant_id: string
@@ -14843,6 +14853,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          activity_level?: string | null
           adherence_momentum?: string | null
           adherence_score_7d?: number | null
           adherence_score_prev_7d?: number | null
@@ -14855,7 +14866,9 @@ export type Database = {
           consent_given?: boolean | null
           created_at?: string
           current_editor_mode?: string | null
+          current_height_cm?: number | null
           current_weight?: number | null
+          current_weight_kg?: number | null
           editor_state?: Json | null
           engagement_index?: number | null
           engagement_level?: string | null
@@ -14887,10 +14900,12 @@ export type Database = {
           patient_state?: Database["public"]["Enums"]["patient_state_type"]
           phone?: string | null
           plateau_probability?: number | null
+          preferences?: string[] | null
           preferred_editor_version?: string | null
           protocol_type?: string | null
           ranking_nickname?: string | null
           regain_probability?: number | null
+          restrictions?: string[] | null
           search_vector?: unknown
           show_in_ranking?: boolean
           tenant_id?: string

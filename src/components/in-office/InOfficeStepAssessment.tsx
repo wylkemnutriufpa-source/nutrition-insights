@@ -112,6 +112,15 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
         });
       if (error) throw error;
 
+      // Update Central Source of Truth (profiles)
+      await supabase
+        .from("profiles")
+        .update({
+          current_weight_kg: numericPayload.weight,
+          current_height_cm: numericPayload.height,
+        })
+        .eq("user_id", patientId);
+
       await supabase
         .from("in_office_sessions" as any)
         .update({ assessment_completed: true } as any)

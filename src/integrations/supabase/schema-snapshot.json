@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260507225836_353b9952-7d09-4342-9894-be99e7fa917d.sql",
-  "migrationsCount": 687,
+  "lastMigration": "20260508000520_b0d2d384-fb57-4548-a66f-2dd09bcb0894.sql",
+  "migrationsCount": 689,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -175,6 +175,7 @@
       "updated_at"
     ],
     "profiles": [
+      "activity_level",
       "adherence_momentum",
       "adherence_score_7d",
       "adherence_score_prev_7d",
@@ -187,7 +188,9 @@
       "consent_given",
       "created_at",
       "current_editor_mode",
+      "current_height_cm",
       "current_weight",
+      "current_weight_kg",
       "editor_state",
       "engagement_index",
       "engagement_level",
@@ -219,10 +222,12 @@
       "patient_state",
       "phone",
       "plateau_probability",
+      "preferences",
       "preferred_editor_version",
       "protocol_type",
       "ranking_nickname",
       "regain_probability",
+      "restrictions",
       "search_vector",
       "show_in_ranking",
       "tenant_id",

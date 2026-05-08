@@ -1134,7 +1134,13 @@ export default function Anamnesis() {
       supabase
         .from("profiles")
         .update({ 
-          patient_state: 'collecting_profile'
+          patient_state: 'collecting_profile',
+          current_weight_kg: weight,
+          current_height_cm: height,
+          goal: answers.goal === "lose_weight" ? "Emagrecimento" : (answers.goal === "gain_muscle" ? "Ganho de massa" : "Manutenção"),
+          activity_level: answers.activity_level,
+          restrictions: answers.restrictions || [],
+          preferences: answers.food_preferences ? [answers.food_preferences] : [],
         })
         .eq("user_id", targetUserId)
     ]);

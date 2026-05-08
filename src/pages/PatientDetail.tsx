@@ -42,7 +42,7 @@ import UnblockPatientDialog from "@/components/patient/UnblockPatientDialog";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search, ShieldAlert, Timer, History, PencilLine
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search, ShieldAlert, Timer, History, PencilLine, Ruler, Target
 } from "lucide-react";
 import { Link2, Copy, RefreshCw } from "lucide-react";
 import { WhatsAppNotifyButton } from "@/components/common/WhatsAppNotifyButton";
@@ -856,6 +856,39 @@ export default function PatientDetail() {
             </Dialog>
             </>
             )}
+          </div>
+        </div>
+
+        {/* Unified Biometric Context (Fonte Única da Verdade) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
+            <Scale className="w-5 h-5 text-primary mb-1" />
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Peso Atual</span>
+            <span className="text-xl font-display font-bold">{(profile as any)?.current_weight_kg || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs font-normal">kg</span></span>
+          </div>
+          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
+            <Ruler className="w-5 h-5 text-primary mb-1" />
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Altura</span>
+            <span className="text-xl font-display font-bold">{(profile as any)?.current_height_cm || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs font-normal">cm</span></span>
+          </div>
+          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
+            <Target className="w-5 h-5 text-primary mb-1" />
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Objetivo</span>
+            <span className="text-sm font-display font-bold">{(profile as any)?.goal || (anamnesis?.answers as any)?.goal || "Não definido"}</span>
+          </div>
+          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
+            <Activity className="w-5 h-5 text-primary mb-1" />
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Atividade</span>
+            <span className="text-sm font-display font-bold">{(profile as any)?.activity_level || (anamnesis?.answers as any)?.activity_level || "Não definido"}</span>
+          </div>
+          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm md:col-span-2 lg:col-span-2">
+            <Heart className="w-5 h-5 text-primary mb-1" />
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Restrições / Alergias</span>
+            <span className="text-xs font-medium truncate w-full">
+              {Array.isArray((profile as any)?.restrictions) && (profile as any).restrictions.length > 0 
+                ? (profile as any).restrictions.join(", ") 
+                : "Nenhuma registrada"}
+            </span>
           </div>
         </div>
 
