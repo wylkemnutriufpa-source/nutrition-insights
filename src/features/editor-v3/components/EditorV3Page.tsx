@@ -891,6 +891,39 @@ const EditorV3Page = () => {
     }
   };
 
+  const handleSaveAntro = async () => {
+    if (!patientId || !patientContext) return;
+    
+    setIsSavingAntro(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          current_weight_kg: editAntroValues.weight,
+          current_height_cm: editAntroValues.height,
+          goal: editAntroValues.goal
+        })
+        .eq('id', patientContext.id);
+
+      if (error) throw error;
+
+      setPatientContext({
+        ...patientContext,
+        weight: editAntroValues.weight,
+        height: editAntroValues.height,
+        goal: editAntroValues.goal
+      });
+      
+      setIsEditingAntro(false);
+      toast.success('Dados antropométricos atualizados!');
+    } catch (error: any) {
+      console.error('Error saving antro:', error);
+      toast.error('Erro ao salvar dados do paciente.');
+    } finally {
+      setIsSavingAntro(false);
+    }
+  };
+
   const handleFixPlan = async () => {
     if (!patientContext) return;
     setIsGeneratingGlobal(true);
