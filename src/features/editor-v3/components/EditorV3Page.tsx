@@ -781,7 +781,16 @@ const EditorV3Page = () => {
     <div className="min-h-screen bg-black flex flex-col font-sans selection:bg-emerald-500/30">
       <div className="bg-black border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate(`/patients/${patientId || ''}`)}
+              className="text-white/40 hover:text-white rounded-full hover:bg-white/5"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-8">
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
@@ -1190,7 +1199,7 @@ const EditorV3Page = () => {
       </main>
 
       <Dialog open={showMainAddModal} onOpenChange={setShowMainAddModal}>
-        <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black flex flex-col rounded-none backdrop-blur-2xl">
+        <DialogContent className="sm:max-w-[95vw] max-w-full h-[90vh] p-0 overflow-hidden border border-white/10 bg-black/95 flex flex-col rounded-3xl backdrop-blur-3xl shadow-2xl">
           <DialogHeader className="p-8 pb-4">
             <div className="flex items-center justify-between w-full">
               <div>
