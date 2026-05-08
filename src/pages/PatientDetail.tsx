@@ -1516,7 +1516,7 @@ export default function PatientDetail() {
                           if (pd?.generated_plan_id && pd?.plan_generated) {
                             const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", pd.generated_plan_id).single();
                             const isV3 = planData?.editor_version === "v3";
-                            const path = isV3 ? `/editor-v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}` : `/editor-v2/plan/${pd.generated_plan_id}`;
+                            const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}`;
                             navigate(path);
                             return;
                           }
