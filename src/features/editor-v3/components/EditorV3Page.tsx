@@ -17,6 +17,12 @@ import {
   calculateNutritionalScore, validatePlanClinically, calculateItemMacros 
 } from '../../clinical-engine';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
+
+// Direct NutriCore V2 Imports
+import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
+import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
+import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+import { MealSlot } from "@/lib/nutricore_v2/meal-distribution";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
