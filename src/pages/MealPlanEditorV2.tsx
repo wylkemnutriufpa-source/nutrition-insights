@@ -219,7 +219,7 @@ export default function MealPlanEditorV2() {
         targetCarbs: plan.total_target_carbs || undefined,
         targetFat: plan.total_target_fat || undefined,
         notes: plan.description || undefined,
-        goal: (profile as any)?.goal || undefined,
+        goal: store.patientGoal || undefined,
       };
 
       generatePremiumMealPlanPDF(pdfData);
