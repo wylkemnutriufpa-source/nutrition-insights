@@ -13,9 +13,12 @@ import {
   searchVisualLibrary, uploadVisualLibraryImage 
 } from '../utils/dataFetcher';
 import { 
-  isProtein, isCarb, isFruit, getDeterministicSuggestions,
-  calculateNutritionalScore, validatePlanClinically, calculateItemMacros 
+  calculateNutritionalScore, validatePlanClinically 
 } from '../../clinical-engine';
+import { 
+  isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros 
+} from '@/lib/nutricore_v2/helpers';
+
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V2 Imports
