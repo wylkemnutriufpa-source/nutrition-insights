@@ -53,7 +53,7 @@ export default function NextMealWidget() {
       const { data: plan } = await withTenantFilter(
         supabase
           .from("meal_plans")
-          .select("id, totals_status")
+          .select("id, totals_status, plan_mode")
           .eq("patient_id", userId)
           .eq("is_active", true)
           .order("created_at", { ascending: false })
@@ -67,11 +67,17 @@ export default function NextMealWidget() {
       // Get current day of week (0=Sunday, 5=Friday)
       const now_dow = new Date().getDay();
 
-      const { data: items } = await supabase
+      const itemsQuery = supabase
         .from("meal_plan_items")
         .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week")
-        .eq("meal_plan_id", plan.id)
-        .or(`day_of_week.eq.${now_dow},day_of_week.is.null`);
+        .eq("meal_plan_id", plan.id);
+      
+      // Se não for single_day, filtra por dia
+      if (plan.plan_mode !== 'single_day') {
+        itemsQuery.or(`day_of_week.eq.${now_dow},day_of_week.is.null`);
+      }
+
+      const { data: items } = await itemsQuery;
 
       if (!items || items.length === 0) { setLoading(false); return; }
 
