@@ -412,6 +412,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     set({
       plan: normalizedPlan,
       patientName,
+      patientGoal,
       items: sortMealPlanItems(items),
       substitutionCount: (normalizedPlan as any).edit_metadata?.substitution_count ?? 4,
       hydrated: true,
