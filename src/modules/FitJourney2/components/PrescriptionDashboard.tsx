@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import { useNutritionistProfile } from '../hooks/useNutritionistProfile';
 import { usePatients } from '../hooks/usePatients';
-import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, Layout, Zap } from 'lucide-react';
+import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, Layout, Zap, Search } from 'lucide-react';
 import { TemplateSelector } from './TemplateSelector';
 import { PlanResult } from './PlanResult';
-import { DailyPlan } from '../types';
+import { DailyPlan, UserProfile } from '../types';
 
 export const PrescriptionDashboard = () => {
   const { profile, loading: loadingProfile } = useNutritionistProfile();
   const { patients, loading: loadingPatients } = usePatients(profile?.id);
   const [activePlan, setActivePlan] = useState<DailyPlan | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showPatientList, setShowPatientList] = useState(false);
 
   if (loadingProfile) {
     return <div className="flex items-center justify-center h-screen bg-black text-white">Carregando...</div>;
   }
+
+  const filteredPatients = patients.filter(p => 
+    p.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSelectPatient = (patient: any) => {
+    setSelectedPatient(patient);
+    setShowPatientList(false);
+    setShowEditor(true);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
