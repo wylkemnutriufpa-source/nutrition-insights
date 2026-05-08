@@ -960,11 +960,13 @@ export default function PatientDetail() {
             { key: "feedbacks", label: "Feedbacks", icon: MessageSquare, color: "from-amber-500/20 to-orange-500/5", iconColor: "text-amber-500", minMode: "pro" as const },
             { key: "lab-exams", label: "Exames Lab.", icon: Search, color: "from-violet-500/20 to-violet-500/5", iconColor: "text-violet-500", minMode: "pro" as const },
             // ADVANCED: full IFJ engine
+            { key: "curiosidades", label: "Curiosidades", icon: Sparkles, color: "from-amber-500/20 to-orange-500/5", iconColor: "text-amber-500", minMode: "basic" as const },
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive", minMode: "advanced" as const },
             { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive", minMode: "advanced" as const },
             { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500", minMode: "advanced" as const },
             { key: "clinical-flags", label: "Flags Clínicas", icon: Shield, color: "from-emerald-500/20 to-emerald-500/5", iconColor: "text-emerald-500", minMode: "advanced" as const },
             { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500", minMode: "advanced" as const },
+
           ];
 
           const sections = allSections.filter(s => expUI.minMode(s.minMode));
