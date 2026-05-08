@@ -98,6 +98,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
           plan_status: "draft",
           is_active: false,
           start_date: new Date().toISOString().split("T")[0],
+          plan_mode: "single_day",
         })
         .select("id")
         .single();
