@@ -281,20 +281,24 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
       id: t.id,
       name: t.name,
       description: t.goal_tags ? t.goal_tags.join(", ") : (t.meal_type || ""),
-      items: foods.map((f: any) => ({
-        id: Math.random().toString(36).substring(2, 9),
-        name: f.name,
-        kcal: f.kcal || 0,
-        calories: f.kcal || 0,
-        protein: f.protein || 0,
-        carbs: f.carbs || 0,
-        fat: f.fat || 0,
-        portionValue: f.portion?.includes("g") ? 100 : 1, // Base 100 para gramas, 1 para unidades
-        portionUnitLabel: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
-        portionUnit: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
-        portionLabel: f.portion || "100g",
-        measurementType: f.portion?.includes("g") ? "gram" : (f.portion?.includes("ml") ? "ml" : "unit") as any
-      }))
+      items: foods.map((f: any) => {
+        const itemKcal = f.kcal || f.calories || 0;
+        return {
+          id: Math.random().toString(36).substring(2, 9),
+          name: f.name,
+          kcal: itemKcal,
+          calories: itemKcal,
+          protein: f.protein || 0,
+          carbs: f.carbs || 0,
+          fat: f.fat || 0,
+          portionValue: f.portion?.includes("g") ? 100 : 1, // Base 100 para gramas, 1 para unidades
+          portionUnitLabel: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
+          portionUnit: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
+          portionLabel: f.portion || "1 porção",
+          measurementType: f.portion?.includes("g") ? "gram" : (f.portion?.includes("ml") ? "ml" : "unit") as any,
+          substitutions: [],
+        };
+      })
     };
   });
 };
