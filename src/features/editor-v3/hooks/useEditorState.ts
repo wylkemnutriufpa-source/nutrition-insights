@@ -682,6 +682,12 @@ export const useEditorState = create<EditorState>()(
       resetEditor: () => {
         set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [], sharingToken: null });
       },
+
+      setMeals: (meals) => {
+        set({ meals, planStatus: 'draft' });
+        get().recalculateScore();
+      },
+
     }),
     {
       name: 'fitjourney-editor-v3-storage',
