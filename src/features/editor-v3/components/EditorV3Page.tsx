@@ -1764,7 +1764,7 @@ const EditorV3Page = () => {
           )}
 
 
-          <Card className="p-6 bg-black border-white/5 rounded-3xl">
+          <Card className="p-6 bg-neutral-900/50 border-white/5 rounded-3xl backdrop-blur-sm shadow-xl">
              <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
               <PieChart className="w-4 h-4 text-blue-500" /> Insights Clínicos
             </h3>
