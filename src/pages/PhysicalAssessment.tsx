@@ -360,6 +360,14 @@ export default function PhysicalAssessment() {
         toast.success("Avaliação salva! 📋");
       }
 
+      // Update Central Source of Truth (profiles)
+      await supabase.from("profiles").update({
+        current_weight_kg: payload.weight,
+        current_height_cm: payload.height,
+        // Also update targets if relevant
+        notes: payload.notes || undefined,
+      }).eq("user_id", patientId);
+
       // Timeline event
       await supabase.from("patient_timeline").insert({
         patient_id: patientId,
