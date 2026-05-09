@@ -29,7 +29,7 @@ export async function runClinicalProofTests(patientId: string) {
   try {
     // TEST 1: Full Plan Generation
     console.log('--- TEST 1: GERAR PLANO COMPLETO ---');
-    const fullPlan = NutriCoreV2Adapter.generateElitePlan(mockContext, []);
+    const fullPlan = await NutriCoreV2Adapter.generateElitePlan(mockContext, []);
     
     const totalKcal = fullPlan.reduce((acc, m) => acc + m.items.reduce((sum, i) => sum + i.kcal, 0), 0);
     const hasBreakfast = fullPlan.some(m => m.name === 'Café da Manhã');
