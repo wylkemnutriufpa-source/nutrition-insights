@@ -1757,6 +1757,8 @@ const EditorV3Page = () => {
             </div>
           </section>
           ))}
+        )}
+
         </div>
 
         <aside className="space-y-6 sticky top-24 h-fit">
