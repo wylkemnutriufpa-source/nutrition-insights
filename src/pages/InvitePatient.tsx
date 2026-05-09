@@ -151,26 +151,38 @@ export default function InvitePatient() {
     return `${base}?text=${encodeURIComponent(whatsappMessage)}`;
   }, [phone, whatsappMessage]);
 
-  const copyToClipboard = (value: string, key: string, label: string) => {
+  const copyToClipboard = async (value: string, key: string, label: string) => {
     const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
     const isProductionUrl = value.includes("fitjourney.com.br") || value.includes(PRODUCTION_URL.replace("https://", ""));
     
-    // Confirmação do domínio antes de copiar
     const domainType = isProductionUrl ? "PRODUÇÃO (fitjourney.com.br)" : "PREVIEW/TESTE";
     
-    navigator.clipboard.writeText(value);
-    setCopied(key);
-    
-    if (isPreview && !isProductionUrl) {
-      toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
-        description: "Este link é apenas para testes no ambiente atual."
-      });
-    } else {
-      toast.success(`Link de ${label} copiado!`, {
-        description: `Domínio: ${domainType}`
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        setCopied(key);
+        setClipboardError(null);
+        
+        if (isPreview && !isProductionUrl) {
+          toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
+            description: "Este link é apenas para testes no ambiente atual."
+          });
+        } else {
+          toast.success(`Link de ${label} copiado!`, {
+            description: `Domínio: ${domainType}`
+          });
+        }
+        setTimeout(() => setCopied(null), 2000);
+      } else {
+        throw new Error("Clipboard API not available");
+      }
+    } catch (err) {
+      console.warn("Clipboard API blocked or failed, showing fallback input", err);
+      setClipboardError(key);
+      toast.error("Permissão de cópia bloqueada pelo navegador", {
+        description: "Selecione o texto e use Ctrl+C para copiar."
       });
     }
-    setTimeout(() => setCopied(null), 2000);
   };
 
   const handleSendOnboardingEmail = async () => {
