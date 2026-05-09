@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from './lib/auth';
 
 const App = () => {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, roles, loading } = useAuth();
   const [mode, setMode] = useState<'V1' | 'V2'>(() => {
     try {
       const saved = localStorage.getItem('fitjourney_mode');
