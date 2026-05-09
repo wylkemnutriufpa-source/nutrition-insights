@@ -196,6 +196,11 @@ export default function MealPlanEditorV2() {
 
       const nutritionistName = profProfile?.full_name || "Seu Nutricionista";
 
+      // Calculate current daily averages to use if goal is missing or suspicious
+      const weekKcal = store.items.reduce((s, i) => s + (i.calories_target || 0), 0);
+      const daysWithItems = new Set(store.items.map((i) => i.day_of_week)).size;
+      const avgKcal = daysWithItems > 0 ? Math.round(weekKcal / daysWithItems) : 0;
+
       // Prepare data for the premium export engine
       const pdfData: PremiumMealPlanPDFData = {
         planTitle: plan.title || "Plano Alimentar",
@@ -215,7 +220,7 @@ export default function MealPlanEditorV2() {
           is_primary: i.is_primary !== false,
           substitution_group_id: (i as any).substitution_group_id || null,
         })),
-        targetCalories: plan.total_target_calories || undefined,
+        targetCalories: (plan.total_target_calories && plan.total_target_calories > 0) ? plan.total_target_calories : avgKcal,
         targetProtein: plan.total_target_protein || undefined,
         targetCarbs: plan.total_target_carbs || undefined,
         targetFat: plan.total_target_fat || undefined,
