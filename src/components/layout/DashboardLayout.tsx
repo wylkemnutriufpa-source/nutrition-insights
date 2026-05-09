@@ -586,6 +586,7 @@ function DynamicSidebar({
             isProRole={effectiveProRole}
             onLinkClick={onLinkClick}
             trackClick={trackClick}
+            loading={menuLoading}
           />
         </ErrorBoundary>
       </nav>
