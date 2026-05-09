@@ -52,7 +52,7 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 export function WeeklyGrid() {
-  const { items, syncingMap, planId, plan, addItem, swapCells, clipboardItems, copyCell, pasteToCell, substitutionCount } = useMealPlanEditorV2Store();
+  const { items, syncingMap, planId, plan, addItem, swapCells, clipboardItems, copyCell, pasteToCell, substitutionCount, updatePlan } = useMealPlanEditorV2Store();
 
   const isWeeklyMode = (plan as any)?.plan_mode === "weekly";
   const [selectedDay, setSelectedDay] = useState(1); // Default to Monday
@@ -108,7 +108,6 @@ export function WeeklyGrid() {
   );
 
   // Auto-sync plan totals when items change
-  const { updatePlan, plan } = useMealPlanEditorV2Store();
   const [lastSyncedTotals, setLastSyncedTotals] = useState("");
 
   const weekTotals = useCallback(() => {
