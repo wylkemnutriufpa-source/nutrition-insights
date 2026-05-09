@@ -28,38 +28,42 @@ export function RootRouter() {
     }
   }, [authStatus, roles, refreshProfile]);
 
-  // 2. Process pending invitation (only blocks if we have user and are a patient)
   useEffect(() => {
-    if (processingInvite) {
-      if (user?.id && roles && roles.includes("patient")) {
-        const pendingCode = localStorage.getItem("fitjourney_invite_code");
-        if (pendingCode) {
-          console.log("[RootRouter] Processando convite pendente:", pendingCode);
-          supabase.rpc("complete_invitation" as any, {
-            _code: pendingCode,
-            _patient_user_id: user.id,
-          }).then(({ data }) => {
-            if (data) {
-              console.log("[RootRouter] Convite vinculado com sucesso!");
-              localStorage.removeItem("fitjourney_invite_code");
-              return refreshProfile();
-            }
-          }).catch(err => {
-            console.error("[RootRouter] Erro ao vincular convite pendente:", err);
-            localStorage.removeItem("fitjourney_invite_code");
-          }).finally(() => {
-            setProcessingInvite(false);
-          });
-        } else {
+    async function processInvite() {
+      if (!processingInvite || !user?.id || !roles || !roles.includes("patient")) {
+        if (!processingInvite || (roles && !roles.includes("patient")) || authStatus === "unauthenticated") {
           setProcessingInvite(false);
         }
-      } else if (roles && !roles.includes("patient")) {
-        // Not a patient, ignore invite code
+        return;
+      }
+
+      const pendingCode = localStorage.getItem("fitjourney_invite_code");
+      if (!pendingCode) {
         setProcessingInvite(false);
-      } else if (authStatus === "unauthenticated") {
+        return;
+      }
+
+      console.log("[RootRouter] Processando convite pendente:", pendingCode);
+      try {
+        const { data } = await supabase.rpc("complete_invitation" as any, {
+          _code: pendingCode,
+          _patient_user_id: user.id,
+        });
+
+        if (data) {
+          console.log("[RootRouter] Convite vinculado com sucesso!");
+          localStorage.removeItem("fitjourney_invite_code");
+          await refreshProfile();
+        }
+      } catch (err) {
+        console.error("[RootRouter] Erro ao vincular convite pendente:", err);
+        localStorage.removeItem("fitjourney_invite_code");
+      } finally {
         setProcessingInvite(false);
       }
     }
+    
+    processInvite();
   }, [processingInvite, user?.id, roles, authStatus, refreshProfile]);
 
   // Se tem erro, exibe o fallback
