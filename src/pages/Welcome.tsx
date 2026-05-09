@@ -126,9 +126,9 @@ export default function Welcome() {
         // Se onboarding_completed é falso ou nulo, segue o fluxo de pState
         let target = "/client/dashboard";
         
-        // CORREÇÃO: Forçamos o paciente a passar pelos slides se não tiver estado
+        // CORREÇÃO DEFINITIVA: Se o estado for 'anamnesis', vai direto para a anamnese orbital
         if (!pState || pState === "onboarding_slides") target = "/onboarding/paciente";
-        else if (pState === "anamnesis") target = "/onboarding"; // OnboardingEntry redireciona conforme role
+        else if (pState === "anamnesis") target = "/anamnesis"; // Redireciona direto para a anamnese
         else if (pState === "collecting_profile" || pState === "active_plan" || pState === "plan_generated" || pState === "ready_for_plan") {
           target = "/client/dashboard";
         }

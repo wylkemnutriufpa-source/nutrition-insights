@@ -5,8 +5,8 @@ import OnboardingProfissional from "@/pages/OnboardingProfissional";
 import PageLoader from "@/components/common/PageLoader";
 
 export default function OnboardingEntry() {
-  const { isNutritionist, isPersonal, isAdmin, isPatient, authStatus } = useAuth();
-
+  const { isNutritionist, isPersonal, isAdmin, isPatient, profile, authStatus } = useAuth();
+  
   if (authStatus === "loading") return <PageLoader />;
 
   if (isAdmin || isNutritionist || isPersonal) {
@@ -14,6 +14,11 @@ export default function OnboardingEntry() {
   }
 
   if (isPatient) {
+    // Se o estado já for anamnesis, mandamos para a página de anamnese
+    // Isso evita o loop onde OnboardingEntry sempre renderiza OnboardingPaciente
+    if (profile?.patient_state === 'anamnesis') {
+      return <Navigate to="/anamnesis" replace />;
+    }
     return <OnboardingPaciente />;
   }
 
