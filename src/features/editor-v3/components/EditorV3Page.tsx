@@ -88,17 +88,15 @@ const MEASURE_OPTIONS = [
 ];
 
 const formatPortion = (item: MealItem) => {
-  // No V3, exibimos gramas diretamente para maior precisão técnica
-  if (item.measurementType === 'gram') {
+  // Para V3, sempre buscamos a medida caseira + gramas para clareza total
+  const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
+  
+  if (displayUnit === 'g') {
     return `${Math.round(item.quantity)}g`;
   }
-  if (item.measurementType === 'ml') {
-    return `${Math.round(item.quantity)}ml`;
-  }
   
-  // Para unidades e colheres, usamos a normalização
-  const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
-  return `${displayQuantity} ${displayUnit} (~${Math.round(item.quantity)}g)`;
+  // Ex: "2 unidades (100g)" ou "4 colheres (100g)"
+  return `${displayQuantity} ${displayUnit} (${Math.round(item.quantity)}g)`;
 };
 
 const EditorV3Page = () => {
