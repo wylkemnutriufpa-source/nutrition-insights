@@ -21,6 +21,8 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
 import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
+import { DayTabs } from "./DayTabs";
+import { DayContent } from "./DayContent";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
@@ -50,11 +52,14 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 export function WeeklyGrid() {
-  const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell, substitutionCount } = useMealPlanEditorV2Store();
+  const { items, syncingMap, planId, plan, addItem, swapCells, clipboardItems, copyCell, pasteToCell, substitutionCount } = useMealPlanEditorV2Store();
 
-  // Modelo single-day puro: tudo está em day=0
-  const effectiveDay = 0;
-  const effectiveDayLabel = "Template de Dia Único";
+  const isWeeklyMode = (plan as any)?.plan_mode === "weekly";
+  const [selectedDay, setSelectedDay] = useState(1); // Default to Monday
+
+  // No modo semanal, usamos o selectedDay. No modo template, usamos 0.
+  const effectiveDay = isWeeklyMode ? selectedDay : 0;
+  const effectiveDayLabel = DAYS.find(d => d.key === effectiveDay)?.label || "Template";
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
@@ -188,6 +193,16 @@ export function WeeklyGrid() {
   return (
     <>
       <div className="overflow-x-auto">
+        {isWeeklyMode && (
+          <div className="mb-6 px-4 py-3 bg-card border border-border rounded-2xl shadow-sm">
+            <DayTabs 
+              selectedDay={selectedDay} 
+              onSelectDay={setSelectedDay}
+              getDayCount={(d) => items.filter(i => i.day_of_week === d).length}
+            />
+          </div>
+        )}
+
         {/* Day headers */}
         <div className="grid grid-cols-[160px_1fr] gap-4 mb-6 sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 border-b border-primary/10">
           <div className="glass rounded-xl p-4 flex items-center bg-primary/5">
