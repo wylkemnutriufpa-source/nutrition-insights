@@ -9,7 +9,7 @@ export const isProtein = (name: string): boolean => {
          n.includes('ovo') || n.includes('whey') || n.includes('patinho') || 
          n.includes('presunto') || n.includes('queijo') || n.includes('lombo') ||
          n.includes('músculo') || n.includes('alcatra') || n.includes('tilápia') ||
-         n.includes('salmão') || n.includes('atum');
+         n.includes('salmão') || n.includes('atum') || n.includes('omelete');
 };
 
 export const isCarb = (name: string): boolean => {
@@ -137,11 +137,13 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
       let unidade = `${equivalentGrams}g`;
       if (candidate.measurementType === 'unit' && candidate.portionValue) {
         const units = Math.round((equivalentGrams / candidate.portionValue) * 10) / 10;
-        if (units >= 0.5) {
-          unidade = `${units} ${units === 1 ? 'unidade' : 'unidades'} (${equivalentGrams}g)`;
+        if (units >= 0.1) {
+          const unitLabel = candidate.name.toLowerCase().includes('ovo') ? (units === 1 ? 'unidade' : 'unidades') : (candidate.portionLabel || 'unidade');
+          unidade = `${units} ${unitLabel} (${equivalentGrams}g)`;
         }
       } else if (candidate.measurementType === 'spoon') {
-        const spoons = Math.round((equivalentGrams / 15) * 10) / 10;
+        const spoonWeight = candidate.portionValue || 15;
+        const spoons = Math.round((equivalentGrams / spoonWeight) * 10) / 10;
         unidade = `${spoons} colheres (${equivalentGrams}g)`;
       }
 
