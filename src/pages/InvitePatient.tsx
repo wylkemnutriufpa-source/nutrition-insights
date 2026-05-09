@@ -529,7 +529,7 @@ export default function InvitePatient() {
                       size="sm"
                       variant="ghost"
                       className="h-7 px-2 gap-1"
-                      onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, false), "link", "Convite Individual")}
+                      onClick={() => copyToClipboardHandler(getInvitationUrl(invitationCode || "", user?.id, false), "link", "Convite Individual")}
                     >
                       {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     </Button>
@@ -580,7 +580,7 @@ export default function InvitePatient() {
                     variant="outline"
                     size="sm"
                     className="gap-1.5"
-                    onClick={() => copyToClipboard(credentialsBlock, "creds", "Credenciais + link")}
+                    onClick={() => copyToClipboardHandler(credentialsBlock, "creds", "Credenciais + link")}
                   >
                     {copied === "creds" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied === "creds" ? "Copiado!" : "Copiar tudo (credenciais + link)"}

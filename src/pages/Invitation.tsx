@@ -107,9 +107,18 @@ export default function Invitation() {
 
   useEffect(() => {
     if (code) {
+      // Se o usuário já está logado e é um paciente, mandamos para o /welcome
+      // que saberá lidar com o estado de onboarding ou dashboard.
+      if (user && !isNutritionist) {
+        console.log("[Invitation] Usuário logado detectado. Redirecionando para /welcome...");
+        // Salvamos o código no localStorage caso o welcome precise dele para algum vínculo tardio
+        if (code) localStorage.setItem("fitjourney_invite_code", code);
+        navigate("/welcome", { replace: true });
+        return;
+      }
       fetchInvitation();
     }
-  }, [code]);
+  }, [code, user, isNutritionist, navigate]);
 
   const handleAccept = useCallback(() => {
     if (!invitation || error || isProcessingAction) return;

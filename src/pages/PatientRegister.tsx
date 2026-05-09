@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,6 +97,7 @@ const resolveRegistrationDisplay = (params: {
 
 export default function PatientRegister() {
   const navigate = useNavigate();
+  const { authStatus, user } = useAuth();
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get("ref") || "";
   const preselectedNutri = searchParams.get("nutri") || "";
@@ -105,6 +107,16 @@ export default function PatientRegister() {
   const correlationId = useMemo(() => crypto.randomUUID(), []);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [avatarError, setAvatarError] = useState(false);
+
+  // REDIRECIONAMENTO DE USUÁRIO AUTENTICADO:
+  // Se o paciente já estiver logado, não faz sentido ele ficar na tela de cadastro.
+  // Mandamos para /welcome que orquestra o destino correto (onboarding ou dashboard).
+  useEffect(() => {
+    if (authStatus === "authenticated" && user) {
+      console.log("[PatientRegister] Usuário já autenticado. Redirecionando para /welcome...");
+      navigate("/welcome", { replace: true });
+    }
+  }, [authStatus, user, navigate]);
 
   const addLog = useCallback((msg: string) => {
     const timestamp = new Date().toISOString();
