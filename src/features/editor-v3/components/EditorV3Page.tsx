@@ -1500,33 +1500,6 @@ const EditorV3Page = () => {
                         </div>
                       ))}
                     </div>
-                                  if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
-                                  toast.success(`Template ${t.name} plotado com sucesso!`);
-                                }
-                              }}
-                              className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black transition-all shadow-inner"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-1 mt-1 border-t border-white/5 pt-3">
-                            {t.items.slice(0, 5).map((item, idx) => (
-                              <Badge 
-                                key={idx} 
-                                variant="outline" 
-                                className="text-[7px] font-bold bg-white/5 border-white/5 text-white/40 group-hover:text-white/60 transition-colors py-0 px-1.5 h-4"
-                              >
-                                {item.name}
-                              </Badge>
-                            ))}
-                            {t.items.length > 5 && (
-                              <span className="text-[7px] font-bold text-white/20">+{t.items.length - 5}</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   ) : (
                     <div className="py-12 flex flex-col items-center justify-center gap-3 text-white/10">
                       <LayoutDashboard className="w-8 h-8 opacity-20" />
