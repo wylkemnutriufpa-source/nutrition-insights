@@ -259,11 +259,13 @@ export function runEngine(input: EngineInput): EngineResult {
     );
   }
 
-  // Garantia mínima (não recomendar abaixo de ~1200 kcal sem critério clínico)
+  // Garantia Parte 4 Item 8: NADA de 5000 kcal e mínimo de 1200 kcal
+  if (target > 3500) {
+    rationale.push(`⚠ Meta calculada (${round(target)} kcal) excede o limite seguro V3. Ajustada para 3500 kcal.`);
+    target = 3500;
+  }
   if (target < 1200) {
-    rationale.push(
-      `⚠ Meta calculada abaixo de 1200 kcal. Ajustada para mínimo seguro de 1200 kcal.`,
-    );
+    rationale.push(`⚠ Meta calculada abaixo de 1200 kcal. Ajustada para mínimo seguro de 1200 kcal.`);
     target = 1200;
   }
 
