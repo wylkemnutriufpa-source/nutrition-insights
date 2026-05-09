@@ -117,8 +117,9 @@ const EditorV3Page = () => {
 
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
-    initialMeals: initialMealsInStore, viewMode, setViewMode
+    initialMeals: initialMealsInStore, viewMode, setViewMode, clinicalMode
   } = useEditorState();
+
 
 
   if (!isFeatureEnabled('editorV3')) {
