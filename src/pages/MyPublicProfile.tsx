@@ -107,7 +107,6 @@ export default function MyPublicProfile() {
         throw new Error("Clipboard API not available");
       }
     } catch (err) {
-      console.warn("Clipboard API blocked, text is already in input for manual copy", err);
       toast.error("Permissão de cópia bloqueada", {
         description: "Selecione o texto no campo ao lado e copie manualmente."
       });
