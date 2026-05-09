@@ -352,11 +352,9 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
   const { isProfessionalContext } = useWorkspaceContext();
   const { loading: authLoading } = useAuth();
 
-  // Show skeleton if any critical context is still loading
   if (authLoading || (wsLoading && isProRole && isProfessionalContext) || menuLoading) {
     return <SidebarSkeleton />;
   }
-...
 
   const hasWorkspaceConfig = isProRole && isProfessionalContext && sections.length > 0;
 
