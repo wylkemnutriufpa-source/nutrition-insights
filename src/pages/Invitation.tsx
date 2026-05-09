@@ -117,7 +117,8 @@ export default function Invitation() {
     
     // Se o paciente já estiver cadastrado, mandamos para o login
     if (invitation.patient_id) {
-      navigate(`/auth?next=${encodeURIComponent(`/welcome`)}`, { replace: true });
+      console.log(`[Invitation] [CID:${correlationId}] Patient already registered (patient_id: ${invitation.patient_id}). Redirecting to /auth.`);
+      navigate(`/auth`, { replace: true });
       return;
     }
 
@@ -367,11 +368,11 @@ export default function Invitation() {
                   <RefreshCw className="w-5 h-5" /> Tentar Validar Novamente
                 </Button>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" onClick={handleSafeRegisterFallback} className="h-12 text-sm font-medium">
-                    Continuar Cadastro
+                  <Button variant="outline" onClick={() => navigate("/auth")} className="h-12 text-sm font-medium">
+                    Fazer Login
                   </Button>
-                  <Button variant="ghost" onClick={() => navigate(`/convite/${code || ""}`)} className="h-12 text-sm">
-                    Voltar ao Convite
+                  <Button variant="ghost" onClick={() => navigate("/")} className="h-12 text-sm">
+                    Ir para o Início
                   </Button>
                 </div>
               </>
