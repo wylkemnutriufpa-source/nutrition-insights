@@ -10,6 +10,7 @@ import type { PrestigePlan } from "@/hooks/usePrestige";
 const HIDDEN_MEAL_PLAN_STATUSES = new Set(["archived", "rejected"]);
 const CANONICAL_MEAL_PLAN_STATUSES = new Set(["approved", "published", "published_to_patient"]);
 const TRANSIENT_MEAL_PLAN_STATUSES = new Set([
+  "editing",
   "draft",
   "draft_auto_generated",
   "draft_auto_corrected",
