@@ -21,6 +21,8 @@ import { calculateItemMacros as calcMacrosV2 } from '../../clinical-engine/servi
 import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 import { logClinicalEvent } from '../../audit/services/auditLogger';
+import { processSmartTemplate } from '../services/templateIntelligence';
+
 
 interface EditorState {
   meals: Meal[];
