@@ -1283,16 +1283,17 @@ const EditorV3Page = () => {
             </div>
 
 
+
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={handleGenerateFullPlan} 
-              disabled={isGeneratingGlobal}
-              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
+              onClick={() => setShowAdjustmentModal(true)} 
+              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500 hover:text-black rounded-xl transition-all gap-2"
             >
-              {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              Gerar Plano Completo
+              <Settings2 className="w-3.5 h-3.5" />
+              Ajustar Plano
             </Button>
+
 
             <Button 
               size="sm" 
