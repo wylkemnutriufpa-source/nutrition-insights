@@ -211,7 +211,7 @@ function DynamicSidebar({
   setCollapsed?: (v: boolean) => void;
   onLinkClick?: () => void;
 }) {
-  const { categories, flatItems, trackClick } = useSmartMenu();
+  const { categories, flatItems, trackClick, loading: menuLoading } = useSmartMenu();
   const { minMode, mode, isFeatureEnabled } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
