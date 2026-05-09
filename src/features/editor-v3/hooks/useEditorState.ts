@@ -96,8 +96,12 @@ export const useEditorState = create<EditorState>()(
       patientContext: null,
       confidence: null, sharingToken: null,
       initialMeals: DEFAULT_MEALS,
+      viewMode: 'daily',
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
+
+      setViewMode: (mode) => set({ viewMode: mode }),
+
 
       dispatch: (action, updateFn) => {
         const state = get();
