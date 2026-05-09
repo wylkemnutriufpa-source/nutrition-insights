@@ -18,6 +18,7 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
   const [loading, setLoading] = useState<null | "link" | "email" | "whatsapp">(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [clipboardError, setClipboardError] = useState(false);
   const [contact, setContact] = useState("");
 
   const generateAndUpload = async (): Promise<string> => {
