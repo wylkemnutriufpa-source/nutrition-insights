@@ -111,15 +111,11 @@ export function WeeklyGrid() {
   const [lastSyncedTotals, setLastSyncedTotals] = useState("");
 
   const weekTotals = useCallback(() => {
-    // We calculate a "daily average" or a specific target. 
-    // Usually total_calories in meal_plans is the average or the target for one day.
-    // Let's use Monday (day 1) as the baseline or average of all days.
     let totalCals = 0;
     let totalProt = 0;
     let totalCarbs = 0;
     let totalFat = 0;
     
-    // Average of days that have items
     const daysWithItems = [0, 1, 2, 3, 4, 5, 6].filter(d => items.some(i => i.day_of_week === d));
     if (daysWithItems.length > 0) {
       daysWithItems.forEach(d => {
@@ -210,17 +206,12 @@ export function WeeklyGrid() {
           <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
             <div>
               <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">
-                {effectiveDay === 0 ? "TEMPLATE DE DIA PADRÃO" : `DIA LEGADO — ${effectiveDayLabel.toUpperCase()}`}
+                {effectiveDay === 0 ? "TEMPLATE DE DIA PADRÃO" : `${effectiveDayLabel.toUpperCase()}`}
               </span>
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 {effectiveDay === 0
                   ? `Modelo de Plano Único com ${substitutionCount} substituições disponíveis por refeição.`
-                  : `Mostrando refeições do dia legado #${effectiveDay}. Migre para dia 0 para padronizar.`}
-                {effectiveDay !== 0 && (
-                  <span className="ml-2 text-warning-foreground bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
-                    legado #{effectiveDay}
-                  </span>
-                )}
+                  : `Plano personalizado para o dia de ${effectiveDayLabel}.`}
               </p>
             </div>
             {(() => {
@@ -251,260 +242,210 @@ export function WeeklyGrid() {
 
         {/* Meal rows or Day Content */}
         {isWeeklyMode ? (
-          <DayContent day={selectedDay} />
+          <div className="px-1">
+            <DayContent day={selectedDay} />
+          </div>
         ) : (
           MEAL_TYPES.map((meal) => (
-          <div key={meal.key} className="grid grid-cols-[160px_1fr] gap-4 mb-4">
-            {/* Row label */}
-            <div className="glass rounded-xl p-4 flex flex-col justify-center border-l-4 border-primary/30 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl bg-primary/10 ${meal.color} shadow-inner`}>
-                  {meal.icon}
-                </div>
-                <div>
-                  <span className="font-display text-[13px] font-bold block text-foreground tracking-tight">{meal.label}</span>
-                  <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + {substitutionCount} Substs</span>
+            <div key={meal.key} className="grid grid-cols-[160px_1fr] gap-4 mb-4">
+              {/* Row label */}
+              <div className="glass rounded-xl p-4 flex flex-col justify-center border-l-4 border-primary/30 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl bg-primary/10 ${meal.color} shadow-inner`}>
+                    {meal.icon}
+                  </div>
+                  <div>
+                    <span className="font-display text-[13px] font-bold block text-foreground tracking-tight">{meal.label}</span>
+                    <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + {substitutionCount} Substs</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Day cell (Day 0 only) */}
-            {(() => {
-              const day = effectiveDay;
-              const cellItems = getItems(day, meal.key);
-              const cellKey = `${day}-${meal.key}`;
-              const isDragSrc = dragSource?.day === day && dragSource?.mealType === meal.key;
-              const isDragOvr = dragOver?.day === day && dragOver?.mealType === meal.key;
+              {/* Day cell (Day 0 only) */}
+              {(() => {
+                const day = effectiveDay;
+                const cellItems = getItems(day, meal.key);
+                const cellKey = `${day}-${meal.key}`;
+                const isDragSrc = dragSource?.day === day && dragSource?.mealType === meal.key;
+                const isDragOvr = dragOver?.day === day && dragOver?.mealType === meal.key;
 
-              return (
-                <div
-                  key={day}
-                  draggable={cellItems.length > 0}
-                  onDragStart={(e) => {
-                    setDragSource({ day, mealType: meal.key });
-                    e.dataTransfer.effectAllowed = "move";
-                    e.dataTransfer.setData("text/plain", cellKey);
-                  }}
-                  onDragEnd={() => { setDragSource(null); setDragOver(null); }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    const hasExternalItem = Array.from(e.dataTransfer.types).includes("application/json");
-                    e.dataTransfer.dropEffect = hasExternalItem ? "copy" : "move";
-                    if (!isDragOvr) setDragOver({ day, mealType: meal.key });
-                  }}
-                  onDragLeave={() => { if (isDragOvr) setDragOver(null); }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const draggedItem = parseDraggedVisualLibraryData(e.dataTransfer.getData("application/json"));
+                return (
+                  <div
+                    key={day}
+                    draggable={cellItems.length > 0}
+                    onDragStart={(e) => {
+                      setDragSource({ day, mealType: meal.key });
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", cellKey);
+                    }}
+                    onDragEnd={() => { setDragSource(null); setDragOver(null); }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      const hasExternalItem = Array.from(e.dataTransfer.types).includes("application/json");
+                      e.dataTransfer.dropEffect = hasExternalItem ? "copy" : "move";
+                      if (!isDragOvr) setDragOver({ day, mealType: meal.key });
+                    }}
+                    onDragLeave={() => { if (isDragOvr) setDragOver(null); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const draggedItem = parseDraggedVisualLibraryData(e.dataTransfer.getData("application/json"));
 
-                    if (draggedItem && planId) {
-                      addItem(buildVisualLibraryMealInsert({
-                        planId,
-                        day,
-                        mealType: meal.key,
-                        item: draggedItem,
-                      }));
-                    } else if (dragSource && !(dragSource.day === day && dragSource.mealType === meal.key)) {
-                      swapCells(dragSource.day, dragSource.mealType, day, meal.key);
-                    }
-                    setDragOver(null);
-                    setDragSource(null);
-                  }}
-                  className={`glass rounded-2xl p-5 min-h-[160px] flex flex-col group relative transition-all duration-300 shadow-sm border border-primary/5 bg-gradient-to-br from-background via-background to-primary/[0.03] ${
-                    isDragSrc ? "opacity-50 scale-95 border-primary/50" : ""
-                  } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.01]" : "hover:border-primary/20 hover:shadow-md"
-                  } ${cellItems.length > 0 ? "cursor-grab active:cursor-grabbing" : ""}`}
-                >
-                  {/* Drag handle */}
-                  {cellItems.length > 0 && (
-                    <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex gap-1 z-20">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); copyCell(day, meal.key); toast.success("Refeição copiada"); }}
-                        className="p-1.5 rounded-lg bg-secondary/90 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors shadow-sm"
-                        title="Copiar Refeição"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); openSaveTemplate(day, meal.key); }}
-                        className="p-1.5 rounded-lg bg-secondary/90 hover:bg-accent/50 text-muted-foreground shadow-sm"
-                        title="Salvar como modelo"
-                      >
-                        <Bookmark className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-                  {clipboardItems && clipboardItems.length > 0 && (
-                    <div className={`absolute top-2 left-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all z-20`}>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); pasteToCell(day, meal.key); toast.success("Refeição colada"); }}
-                        className="p-1.5 rounded-lg bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30 shadow-sm"
-                        title="Colar Refeição aqui"
-                      >
-                        <ClipboardPaste className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  {isDragOvr && dragSource && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-2xl z-10 pointer-events-none backdrop-blur-[1px]">
-                      <span className="text-xs font-bold text-primary flex items-center gap-1.5 bg-background/80 px-3 py-1.5 rounded-full shadow-sm">
-                        <ArrowLeftRight className="w-4 h-4" /> Trocar
-                      </span>
-                    </div>
-                  )}
+                      if (draggedItem && planId) {
+                        addItem(buildVisualLibraryMealInsert({
+                          planId,
+                          day,
+                          mealType: meal.key,
+                          item: draggedItem,
+                        }));
+                      } else if (dragSource && !(dragSource.day === day && dragSource.mealType === meal.key)) {
+                        swapCells(dragSource.day, dragSource.mealType, day, meal.key);
+                      }
+                      setDragOver(null);
+                      setDragSource(null);
+                    }}
+                    className={`glass rounded-2xl p-5 min-h-[160px] flex flex-col group relative transition-all duration-300 shadow-sm border border-primary/5 bg-gradient-to-br from-background via-background to-primary/[0.03] ${
+                      isDragSrc ? "opacity-50 scale-95 border-primary/50" : ""
+                    } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.01]" : "hover:border-primary/20 hover:shadow-md"
+                    } ${cellItems.length > 0 ? "cursor-grab active:cursor-grabbing" : ""}`}
+                  >
+                    {/* Drag handle */}
+                    {cellItems.length > 0 && (
+                      <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex gap-1 z-20">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); copyCell(day, meal.key); toast.success("Refeição copiada"); }}
+                          className="p-1.5 rounded-lg bg-secondary/90 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors shadow-sm"
+                          title="Copiar Refeição"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); openSaveTemplate(day, meal.key); }}
+                          className="p-1.5 rounded-lg bg-secondary/90 hover:bg-accent/50 text-muted-foreground shadow-sm"
+                          title="Salvar como modelo"
+                        >
+                          <Bookmark className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    {clipboardItems && clipboardItems.length > 0 && (
+                      <div className={`absolute top-2 left-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all z-20`}>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); pasteToCell(day, meal.key); toast.success("Refeição colada"); }}
+                          className="p-1.5 rounded-lg bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30 shadow-sm"
+                          title="Colar Refeição aqui"
+                        >
+                          <ClipboardPaste className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    {isDragOvr && dragSource && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-2xl z-10 pointer-events-none backdrop-blur-[1px]">
+                        <span className="text-xs font-bold text-primary flex items-center gap-1.5 bg-background/80 px-3 py-1.5 rounded-full shadow-sm">
+                          <ArrowLeftRight className="w-4 h-4" /> Trocar
+                        </span>
+                      </div>
+                    )}
 
-                  {/* Items */}
-                  <div className="flex-1 space-y-2">
-                    <AnimatePresence initial={false}>
-                      {cellItems.map((item) => (
-                        <MealItemCard
-                          key={item.id}
-                          item={item}
-                          isSyncing={!!syncingMap[item.id]}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Quick-add & Library */}
-                  <div onClick={(e) => e.stopPropagation()} className="mt-4 pt-3 border-t border-primary/5">
-                    <div className="space-y-2">
-                      {quickAddKey === cellKey && (
-                        <div className="flex gap-1.5 animate-in slide-in-from-top-1 duration-200">
-                          <Input
-                            autoFocus
-                            value={quickAddText}
-                            onChange={(e) => setQuickAddText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleQuickAdd(day, meal.key);
-                              if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
-                            }}
-                            placeholder="Ex: 2 ovos cozidos"
-                            className="h-8 text-xs rounded-xl"
+                    {/* Items */}
+                    <div className="flex-1 space-y-2">
+                      <AnimatePresence initial={false}>
+                        {cellItems.map((item) => (
+                          <MealItemCard
+                            key={item.id}
+                            item={item}
+                            isSyncing={!!syncingMap[item.id]}
                           />
-                          <Button
-                            size="icon"
-                            className="h-8 w-8 shrink-0 rounded-xl"
-                            onClick={() => handleQuickAdd(day, meal.key)}
-                            disabled={!quickAddText.trim()}
+                        ))}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Quick-add & Library */}
+                    <div onClick={(e) => e.stopPropagation()} className="mt-4 pt-3 border-t border-primary/5">
+                      <div className="space-y-2">
+                        {quickAddKey === cellKey && (
+                          <div className="flex gap-1.5 animate-in slide-in-from-top-1 duration-200">
+                            <Input
+                              autoFocus
+                              value={quickAddText}
+                              onChange={(e) => setQuickAddText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleQuickAdd(day, meal.key);
+                                if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
+                              }}
+                              placeholder="Ex: 2 ovos cozidos"
+                              className="h-8 text-xs rounded-xl"
+                            />
+                            <Button
+                              size="icon"
+                              className="h-8 w-8 shrink-0 rounded-xl"
+                              onClick={() => handleQuickAdd(day, meal.key)}
+                              disabled={!quickAddText.trim()}
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setQuickAddKey(quickAddKey === cellKey ? null : cellKey);
+                              setQuickAddText("");
+                              setFoodSearchKey(null);
+                            }}
+                            className={`flex items-center gap-1 text-[10px] py-1.5 px-3 rounded-xl border transition-all ${
+                              quickAddKey === cellKey
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-dashed border-primary/20 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5"
+                            }`}
                           >
-                            <Check className="w-3.5 h-3.5" />
-                          </Button>
+                            <Plus className="w-3 h-3" /> Manual
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFoodSearchKey(foodSearchKey === cellKey ? null : cellKey);
+                              setQuickAddKey(null);
+                              setQuickAddText("");
+                            }}
+                            className={`flex items-center gap-1 text-[10px] py-1.5 px-3 rounded-xl border transition-all ${
+                              foodSearchKey === cellKey
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-dashed border-primary/20 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5"
+                            }`}
+                          >
+                            <Search className="w-3 h-3" /> Alimento
+                          </li>
+                          <button
+                            type="button"
+                            onClick={() => openLibrary(day, meal.key)}
+                            className="flex items-center gap-1 text-[10px] py-1.5 px-3 rounded-xl border border-dashed border-primary/20 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all"
+                          >
+                            <Plus className="w-3 h-3" /> Biblioteca
+                          </button>
                         </div>
-                      )}
 
-                      <div className="grid grid-cols-3 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setQuickAddKey(quickAddKey === cellKey ? null : cellKey);
-                            setQuickAddText("");
-                            setFoodSearchKey(null);
-                          }}
-                          className={`flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border transition-all ${
-                            quickAddKey === cellKey
-                              ? "border-primary bg-primary/10 text-primary shadow-inner"
-                              : "border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5"
-                          }`}
-                        >
-                          <Plus className="w-3.5 h-3.5" /> Manual
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFoodSearchKey(foodSearchKey === cellKey ? null : cellKey);
-                            setQuickAddKey(null);
-                            setQuickAddText("");
-                          }}
-                          className={`flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border transition-all ${
-                            foodSearchKey === cellKey
-                              ? "border-primary bg-primary/10 text-primary shadow-inner"
-                              : "border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5"
-                          }`}
-                        >
-                          <Search className="w-3.5 h-3.5" /> Alimento
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openMealLibraryModal(day, meal.key)}
-                          className="flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
-                          title="Substituir pela biblioteca"
-                        >
-                          <Utensils className="w-3.5 h-3.5" /> Subst.
-                        </button>
+                        {foodSearchKey === cellKey && (
+                          <div className="animate-in slide-in-from-bottom-2 duration-300">
+                            <FoodSearchInline 
+                              day={day} 
+                              mealType={meal.key} 
+                              onClose={() => setFoodSearchKey(null)} 
+                            />
+                          </div>
+                        )}
                       </div>
-
-                      <div className="grid grid-cols-1 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openLibrary(day, meal.key)}
-                          className="flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
-                          title="Meus Modelos"
-                        >
-                          <Zap className="w-3.5 h-3.5" /> Meus Modelos
-                        </button>
-                      </div>
-
-                      {foodSearchKey === cellKey && (
-                        <FoodSearchInline day={day} mealType={meal.key} onClose={() => setFoodSearchKey(null)} />
-                      )}
                     </div>
                   </div>
-                </div>
-              );
-            })()}
-          </div>
-        ))}
-
-        {/* Global totals footer */}
-        <div className="grid grid-cols-[160px_1fr] gap-4 mt-6">
-          <div className="glass rounded-xl p-4 flex items-center bg-primary/5 shadow-sm border border-primary/10">
-            <span className="font-display text-xs font-bold text-primary tracking-wider uppercase">BALANÇO GLOBAL</span>
-          </div>
-          {(() => {
-            const t = getDayTotals(0);
-            return (
-              <div className="glass rounded-xl p-4 bg-primary/5 shadow-sm border border-primary/10">
-                <div className="flex justify-around items-center h-full">
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Flame className="w-4 h-4 text-orange-500" />
-                      <span className="text-sm font-bold text-foreground">{t.calories}</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Kcal Totais</span>
-                  </div>
-                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Beef className="w-4 h-4 text-red-500" />
-                      <span className="text-sm font-bold text-foreground">{t.protein.toFixed(0)}g</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Proteínas</span>
-                  </div>
-                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Wheat className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm font-bold text-foreground">{t.carbs.toFixed(0)}g</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Carbos</span>
-                  </div>
-                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Droplets className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm font-bold text-foreground">{t.fat.toFixed(0)}g</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Gorduras</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
+                );
+              })()}
+            </div>
+          ))
+        )}
       </div>
 
       <MealLibrarySidebar
@@ -513,19 +454,17 @@ export function WeeklyGrid() {
         targetDay={libraryTarget.day}
         targetMealType={libraryTarget.mealType}
       />
-
-      <SaveTemplateDialog
-        open={saveTemplateOpen}
-        onOpenChange={setSaveTemplateOpen}
-        items={saveTemplateItems}
-        mealType={saveTemplateMealType}
-      />
-
       <MealLibraryModal
         open={mlModalOpen}
         onOpenChange={setMlModalOpen}
         targetDay={mlModalTarget.day}
         targetMealType={mlModalTarget.mealType}
+      />
+      <SaveTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        items={saveTemplateItems}
+        mealType={saveTemplateMealType}
       />
     </>
   );
