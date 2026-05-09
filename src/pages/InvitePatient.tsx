@@ -177,7 +177,6 @@ export default function InvitePatient() {
         throw new Error("Clipboard API not available");
       }
     } catch (err) {
-      console.warn("Clipboard API blocked or failed, showing fallback input", err);
       setClipboardError(key);
       toast.error("Permissão de cópia bloqueada pelo navegador", {
         description: "Selecione o texto e use Ctrl+C para copiar."
