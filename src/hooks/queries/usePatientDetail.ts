@@ -123,6 +123,7 @@ export function usePatientDetail(patientId: string | undefined) {
         supabase.from("subscriptions").select("*").eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1),
         supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
         withTenantFilter(supabase.from("meal_plans").select("*").in("patient_id", patientIds), tenantId).order("created_at", { ascending: false }),
+        withTenantFilter(supabase.from("v3_drafts").select("id, patient_id, created_at, draft_status, payload, meta_kcal, meta_protein, meta_carbs, meta_fat").in("patient_id", patientIds), tenantId).order("created_at", { ascending: false }),
         supabase.from("recipes").select("*").eq("nutritionist_id", user!.id).eq("is_shared", true).order("created_at", { ascending: false }),
         withTenantFilter(supabase.from("nutritionist_patients").select("id, status, journey_status").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).limit(1).maybeSingle(),
         supabase.from("meal_item_completions").select("adherence_status, date").in("patient_id", patientIds).gte("date", sevenDaysAgo).lte("date", today),
