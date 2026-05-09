@@ -181,7 +181,25 @@ export function usePatientDetail(patientId: string | undefined) {
       } catch { }
 
       const uniqueDocs = dedupeById(docs);
-      const uniqueMealPlans = getVisibleMealPlans(dedupeById(mealPlansRes.data));
+      
+      // Combine canonical plans with V3 drafts for a unified view
+      const canonicalPlans = mealPlansRes.data || [];
+      const v3Drafts = (v3DraftsRes.data || []).map((draft: any) => ({
+        id: draft.id,
+        patient_id: draft.patient_id,
+        created_at: draft.created_at,
+        plan_status: draft.draft_status === 'editing' ? 'draft' : draft.draft_status,
+        title: `Rascunho V3 (${new Date(draft.created_at).toLocaleDateString()})`,
+        is_active: false,
+        editor_version: 'v3',
+        total_calories: draft.meta_kcal,
+        total_protein: draft.meta_protein,
+        total_carbs: draft.meta_carbs,
+        total_fat: draft.meta_fat
+      }));
+
+      const allPlans = [...canonicalPlans, ...v3Drafts];
+      const uniqueMealPlans = getVisibleMealPlans(dedupeById(allPlans));
       const adherenceRows = dedupeBySignature(adherenceRes.data, (row: any) => `${row.date}-${row.adherence_status}`);
 
       return {
