@@ -321,8 +321,9 @@ export default function MobileSidebar({
               collapsed={false}
               isProRole={effectiveProRole}
               onLinkClick={onLinkClick}
-              trackClick={trackClick}
-            />
+               trackClick={trackClick}
+               loading={menuLoading}
+             />
           </ErrorBoundary>
         </div>
 
