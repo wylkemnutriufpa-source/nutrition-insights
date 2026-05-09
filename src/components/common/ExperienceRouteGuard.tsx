@@ -1,6 +1,7 @@
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { ReactNode } from "react";
 import { Shield } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 /**
  * ExperienceRouteGuard simplificado.
@@ -8,7 +9,16 @@ import { Shield } from "lucide-react";
  * Serve para que componentes filhos saibam o modo atual.
  */
 export default function ExperienceRouteGuard({ children, feature }: { children: ReactNode; feature?: string }) {
-  const { isFeatureEnabled } = useExperienceMode();
+  const { isFeatureEnabled, mode } = useExperienceMode();
+  const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const isPro = isNutritionist || isPersonal || isAdmin;
+
+  // CRITICAL: Block V2/V3 features for patients if they are not specifically PRO/Advanced
+  const isV2V3Feature = feature === "editor-v2" || feature === "editor-v3";
+  if (isV2V3Feature && !isPro) {
+    console.warn(`[ExperienceMode] Feature "${feature}" is restricted to Admin/Professionals.`);
+    return null;
+  }
   
   if (feature && !isFeatureEnabled(feature)) {
     console.warn(`[ExperienceMode] Feature "${feature}" is blocked for current mode.`);
