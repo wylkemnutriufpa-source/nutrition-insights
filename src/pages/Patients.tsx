@@ -157,7 +157,7 @@ function PatientResumoModal({ patient, onOpenChange, onFullProfile }: { patient:
                         <div className="grid grid-cols-2 gap-3">
                           <div className="bg-white/5 p-3 rounded-2xl">
                             <p className="text-[10px] text-white/40 uppercase font-black mb-1">Calorias</p>
-                            <p className="text-lg font-black">{plan.calories_target || '—'} <span className="text-xs text-white/40">kcal</span></p>
+                            <p className="text-lg font-black">{Math.round(Number(plan.total_calories || plan.calories_target || 0)) || '—'} <span className="text-xs text-white/40">kcal</span></p>
                           </div>
                           <div className="bg-white/5 p-3 rounded-2xl">
                             <p className="text-[10px] text-white/40 uppercase font-black mb-1">Última Mexida</p>
