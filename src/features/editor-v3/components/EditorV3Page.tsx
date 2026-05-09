@@ -2653,6 +2653,15 @@ const EditorV3Page = () => {
           )}
         </DialogContent>
       </Dialog>
+      
+      <PlanAdjustmentModal
+        isOpen={showAdjustmentModal}
+        onClose={() => setShowAdjustmentModal(false)}
+        meals={meals}
+        onApply={(newMeals) => setMeals(newMeals)}
+        goalMetadata={goalMetadata}
+      />
+
     </div>
   );
 };
