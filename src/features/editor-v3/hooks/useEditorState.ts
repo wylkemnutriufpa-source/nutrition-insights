@@ -660,7 +660,7 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      generatePlan: (goal, baseCalories, availableFoods, replaceExisting = false) => {
+      generatePlan: async (goal, baseCalories, availableFoods, replaceExisting = false) => {
         let currentMeals = get().meals;
         const { patientContext } = get();
         
@@ -669,7 +669,7 @@ export const useEditorState = create<EditorState>()(
         const finalGoal = patientContext?.goal || goal;
 
         if (replaceExisting) {
-          currentMeals = DEFAULT_MEALS.map(m => ({ ...m, items: [] }));
+          currentMeals = DEFAULT_MEALS.map(m => ({ ...m, items: [], imageUrl: undefined }));
         }
 
         const newMeals = generatePlanWithEngine(
@@ -681,12 +681,21 @@ export const useEditorState = create<EditorState>()(
           patientContext || undefined
         );
         
-        set({ meals: newMeals, planStatus: 'draft' });
+        // PARTE 1 & 3 - Plotagem com imagens correspondentes (Lote)
+        const mealsWithImages = await Promise.all(newMeals.map(async (meal) => {
+          if (meal.items.length > 0 && !meal.imageUrl) {
+             const bestImage = await getBestMealImage(meal.name, meal.items);
+             return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
+          }
+          return meal;
+        }));
+
+        set({ meals: mealsWithImages, planStatus: 'draft' });
         get().recalculateScore();
         toast.success(`Plano estruturado para ${finalGoal} com ${Math.round(finalCalories)}kcal`);
       },
 
-      generateMeal: (mealId, goal, availableFoods, baseCalories = 2000) => {
+      generateMeal: async (mealId, goal, availableFoods, baseCalories = 2000) => {
         const { meals, patientContext } = get();
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
@@ -703,10 +712,18 @@ export const useEditorState = create<EditorState>()(
           patientContext?.protocol_type || 'default_v3',
           patientContext || undefined
         );
+
+        // PARTE 1 - Imagem correspondente para refeição avulsa
+        const bestImage = await getBestMealImage(meal.name, newItems);
         
         set((state) => ({
           meals: state.meals.map(m => 
-            m.id === mealId ? { ...m, items: newItems } : m
+            m.id === mealId ? { 
+              ...m, 
+              items: newItems,
+              imageUrl: bestImage.url,
+              imageSource: bestImage.source
+            } : m
           ),
           planStatus: 'draft'
         }));
