@@ -98,9 +98,20 @@ export default function MyPublicProfile() {
 
   const publicUrl = `${window.location.origin}/p/${settings.slug}`;
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(publicUrl);
-    toast.success("Link copiado!");
+  const copyLink = async (text: string, label: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        toast.success(`${label} copiado!`);
+      } else {
+        throw new Error("Clipboard API not available");
+      }
+    } catch (err) {
+      console.warn("Clipboard API blocked, text is already in input for manual copy", err);
+      toast.error("Permissão de cópia bloqueada", {
+        description: "Selecione o texto no campo ao lado e copie manualmente."
+      });
+    }
   };
 
   if (loading) return (
