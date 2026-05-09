@@ -76,15 +76,8 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existingGeneral) {
-        const browserOrigin = req.headers.get("origin");
-        const referer = req.headers.get("referer");
-        let origin = "https://www.fitjourney.com.br";
-        if (browserOrigin && !browserOrigin.includes("supabase")) {
-          origin = browserOrigin;
-        } else if (referer) {
-          try { origin = new URL(referer).origin; } catch { }
-        }
-        
+        const origin = BASE_URL;
+
         return new Response(JSON.stringify({ 
           success: true, 
           code: existingGeneral.code, 
@@ -153,18 +146,7 @@ Deno.serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    // Usa origin/referer do navegador (não o host do edge runtime).
-    // Fallback: domínio oficial de produção.
-    const browserOrigin = req.headers.get("origin");
-    const referer = req.headers.get("referer");
-    let origin = "https://www.fitjourney.com.br";
-    if (browserOrigin && !browserOrigin.includes("supabase")) {
-      origin = browserOrigin;
-    } else if (referer) {
-      try {
-        origin = new URL(referer).origin;
-      } catch { /* keep fallback */ }
-    }
+    const origin = BASE_URL;
     const friendlyUrl = `${origin}/cadastro?code=${encodeURIComponent(code)}`;
     const userAgent = req.headers.get("user-agent") || "unknown";
     const host = req.headers.get("host") || "unknown";
