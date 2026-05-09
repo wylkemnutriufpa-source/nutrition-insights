@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Minus, Plus, Settings2, Info } from 'lucide-react';
+import { Minus, Plus, Settings2 } from 'lucide-react';
 import { Meal } from '../types';
 import { adjustPlan, PlanAdjustmentParams } from '../services/planAdjustmentService';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
@@ -36,9 +36,12 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   onApply,
   goalMetadata
 }) => {
-  // Current totals calculation
-  const currentTotals = useMemo(() => {
-    return meals.reduce((acc, meal) => {
+  const [initialMeals, setInitialMeals] = useState<Meal[]>([]);
+  
+  // Current totals of ORIGINAL meals
+  const originalTotals = useMemo(() => {
+    if (initialMeals.length === 0) return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+    return initialMeals.reduce((acc, meal) => {
       meal.items.forEach(item => {
         const macros = calculateItemMacros(item, item.quantity);
         acc.kcal += macros.kcal;
@@ -48,42 +51,53 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
       });
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-  }, [meals]);
+  }, [initialMeals]);
 
   const [params, setParams] = useState<PlanAdjustmentParams>({
-    proteinTarget: Math.round(currentTotals.protein),
-    carbTarget: Math.round(currentTotals.carbs),
-    fatTarget: Math.round(currentTotals.fat),
+    proteinTarget: 0,
+    carbTarget: 0,
+    fatTarget: 0,
     removeCarbsIntensity: 'none',
     removeCarbsMeals: ['Almoço', 'Jantar'],
     removeBeansOption: 'none'
   });
 
-  // Sync with initial totals when opened
+  // Snapshot initial meals when opened
   useEffect(() => {
     if (isOpen) {
-      setParams(prev => ({
-        ...prev,
-        proteinTarget: Math.round(currentTotals.protein),
-        carbTarget: Math.round(currentTotals.carbs),
-        fatTarget: Math.round(currentTotals.fat)
-      }));
+      // Usar a versão atual de meals como base para o ajuste
+      const currentMealsClone = JSON.parse(JSON.stringify(meals));
+      setInitialMeals(currentMealsClone);
+      
+      const totals = currentMealsClone.reduce((acc: any, meal: Meal) => {
+        meal.items.forEach(item => {
+          const macros = calculateItemMacros(item, item.quantity);
+          acc.kcal += macros.kcal;
+          acc.protein += macros.protein;
+          acc.carbs += macros.carbs;
+          acc.fat += macros.fat;
+        });
+        return acc;
+      }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
+      setParams({
+        proteinTarget: Math.round(totals.protein),
+        carbTarget: Math.round(totals.carbs),
+        fatTarget: Math.round(totals.fat),
+        removeCarbsIntensity: 'none',
+        removeCarbsMeals: ['Almoço', 'Jantar'],
+        removeBeansOption: 'none'
+      });
     }
-  }, [isOpen, currentTotals]);
+  }, [isOpen]);
 
-  const handleApply = () => {
-    const adjustedMeals = adjustPlan(meals, params);
-    onApply(adjustedMeals);
-    onClose();
-  };
-
-  // Real-time preview: update the plan as we change params
+  // Real-time preview: apply to initial snapshot
   useEffect(() => {
-    if (isOpen) {
-      const adjustedMeals = adjustPlan(meals, params);
+    if (isOpen && initialMeals.length > 0) {
+      const adjustedMeals = adjustPlan(initialMeals, params);
       onApply(adjustedMeals);
     }
-  }, [params, isOpen]);
+  }, [params, isOpen, initialMeals]);
 
   const updateParam = (key: keyof PlanAdjustmentParams, value: any) => {
     setParams(prev => ({ ...prev, [key]: value }));
@@ -95,7 +109,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-neutral-900 border-white/10 text-white p-6 rounded-3xl shadow-2xl backdrop-blur-xl">
+      <DialogContent className="max-w-md bg-neutral-900 border-white/10 text-white p-6 rounded-3xl shadow-2xl backdrop-blur-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="mb-6">
           <div className="flex items-center gap-2 text-emerald-500 mb-1">
             <Settings2 className="w-5 h-5" />
@@ -135,7 +149,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               </Button>
             </div>
             <p className="text-[10px] text-white/20 italic">
-              Atual: {Math.round(currentTotals.protein)}g → Novo: {params.proteinTarget}g
+              Original: {Math.round(originalTotals.protein)}g → Novo: {params.proteinTarget}g
             </p>
           </div>
 
@@ -169,7 +183,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               </Button>
             </div>
             <p className="text-[10px] text-white/20 italic">
-              Atual: {Math.round(currentTotals.carbs)}g → Novo: {params.carbTarget}g
+              Original: {Math.round(originalTotals.carbs)}g → Novo: {params.carbTarget}g
             </p>
           </div>
 
@@ -203,7 +217,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               </Button>
             </div>
             <p className="text-[10px] text-white/20 italic">
-              Atual: {Math.round(currentTotals.fat)}g → Novo: {params.fatTarget}g
+              Original: {Math.round(originalTotals.fat)}g → Novo: {params.fatTarget}g
             </p>
           </div>
 
@@ -280,14 +294,17 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
 
         <DialogFooter className="mt-8 flex gap-3 sm:justify-center">
           <Button 
-            onClick={handleApply}
+            onClick={onClose}
             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl h-12"
           >
             Aplicar Ajustes
           </Button>
           <Button 
             variant="outline" 
-            onClick={onClose}
+            onClick={() => {
+              onApply(initialMeals);
+              onClose();
+            }}
             className="flex-1 border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl h-12 uppercase font-black tracking-widest text-[10px]"
           >
             Cancelar
