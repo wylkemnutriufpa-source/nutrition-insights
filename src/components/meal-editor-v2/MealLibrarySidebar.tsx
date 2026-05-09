@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { getVariedFoodName } from "@/lib/mealVariationEngine";
+import { getSubstitutionsFor } from "@/lib/mealPlanFoodRules";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
@@ -235,68 +237,90 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
   const legacyDietTemplates = useMemo(() => filteredDietTemplates.filter(t => t.template_generation !== 'official_v2'), [filteredDietTemplates]);
   const [showLegacyDiet, setShowLegacyDiet] = useState(false);
 
-  // Insert nutritionist template (1-click)
   const handleInsertTemplate = useCallback((template: TemplateRow) => {
     if (!planId) return;
 
-    const foods = Array.isArray(template.foods_structure) ? template.foods_structure : [];
+    const isWeeklyMode = (useMealPlanEditorV2Store.getState().plan as any)?.plan_mode === "weekly";
+    const daysToApply = isWeeklyMode ? [0, 1, 2, 3, 4, 5, 6] : [targetDay];
+    const substitutionCount = useMealPlanEditorV2Store.getState().substitutionCount || 0;
 
-    if (foods.length > 0) {
-      // Clear existing items in this cell
-      const existingIds = items
-        .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
-        .map((i) => i.id);
-      existingIds.forEach((id) => deleteItem(id));
+    daysToApply.forEach((day) => {
+      const foods = Array.isArray(template.foods_structure) ? template.foods_structure : [];
 
-      const inserts = foods.map((food: any) => ({
-        meal_plan_id: planId,
-        title: food.name || food.title || template.name,
-        description: food.portion || food.description || null,
-        meal_type: targetMealType,
-        day_of_week: targetDay,
-        calories_target: food.kcal || food.calories || null,
-        protein_target: food.protein || null,
-        carbs_target: food.carbs || null,
-        fat_target: food.fat || null,
-        edit_metadata: {
-          is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
-          original_recipe_id: template.is_recipe ? template.id : null,
-          portion_base: food.portion,
-          kcal_base: food.kcal || food.calories || null,
-          protein_base: food.protein || null,
-          carbs_base: food.carbs || null,
-          fat_base: food.fat || null,
-        } as any,
-      }));
-      addItems(inserts);
-    } else {
-      // Clear existing items in this cell
-      const existingIds = items
-        .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
-        .map((i) => i.id);
-      existingIds.forEach((id) => deleteItem(id));
+      if (foods.length > 0) {
+        // Clear existing items in this cell
+        const existingIds = items
+          .filter((i) => i.day_of_week === day && i.meal_type === targetMealType)
+          .map((i) => i.id);
+        existingIds.forEach((id) => deleteItem(id));
 
-      addItem({
-        meal_plan_id: planId,
-        title: template.name,
-        description: null,
-        meal_type: targetMealType,
-        day_of_week: targetDay,
-        calories_target: template.kcal_base,
-        protein_target: template.protein_base,
-        carbs_target: template.carbs_base,
-        fat_target: template.fat_base,
-        edit_metadata: {
-          is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
-          original_recipe_id: template.is_recipe ? template.id : null,
-          foods_json: template.foods_structure,
-          kcal_base: template.kcal_base,
-          protein_base: template.protein_base,
-          carbs_base: template.carbs_base,
-          fat_base: template.fat_base,
-        } as any,
-      });
-    }
+        const inserts = foods.map((food: any) => {
+          let foodName = food.name || food.title || template.name;
+          if (isWeeklyMode && day > 0) {
+            foodName = getVariedFoodName(foodName, day);
+          }
+
+          // Generate substitutions for the food
+          let alts = getSubstitutionsFor(foodName).slice(0, substitutionCount);
+          const subText = alts.length > 0 ? `\n\n🔄 Substituições:\n• ${foodName} → ${alts.join(", ")}` : "";
+
+          return {
+            meal_plan_id: planId,
+            title: foodName,
+            description: (food.portion || food.description || "") + subText,
+            meal_type: targetMealType,
+            day_of_week: day,
+            calories_target: food.kcal || food.calories || null,
+            protein_target: food.protein || null,
+            carbs_target: food.carbs || null,
+            fat_target: food.fat || null,
+            edit_metadata: {
+              is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
+              original_recipe_id: template.is_recipe ? template.id : null,
+              portion_base: food.portion,
+              kcal_base: food.kcal || food.calories || null,
+              protein_base: food.protein || null,
+              carbs_base: food.carbs || null,
+              fat_base: food.fat || null,
+              substitutions_json: alts
+            } as any,
+          };
+        });
+        addItems(inserts);
+      } else {
+        // Clear existing items in this cell
+        const existingIds = items
+          .filter((i) => i.day_of_week === day && i.meal_type === targetMealType)
+          .map((i) => i.id);
+        existingIds.forEach((id) => deleteItem(id));
+
+        let templateName = template.name;
+        if (isWeeklyMode && day > 0) {
+          templateName = getVariedFoodName(templateName, day);
+        }
+
+        addItem({
+          meal_plan_id: planId,
+          title: templateName,
+          description: null,
+          meal_type: targetMealType,
+          day_of_week: day,
+          calories_target: template.kcal_base,
+          protein_target: template.protein_base,
+          carbs_target: template.carbs_base,
+          fat_target: template.fat_base,
+          edit_metadata: {
+            is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
+            original_recipe_id: template.is_recipe ? template.id : null,
+            foods_json: template.foods_structure,
+            kcal_base: template.kcal_base,
+            protein_base: template.protein_base,
+            carbs_base: template.carbs_base,
+            fat_base: template.fat_base,
+          } as any,
+        });
+      }
+    });
 
     // Increment usage count for non-recipe templates (fire-and-forget)
     if (!template.is_recipe) {
@@ -307,7 +331,11 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
         .then();
     }
 
-    toast.success(`"${template.name}" inserido no plano`);
+    if (isWeeklyMode) {
+      toast.success(`"${template.name}" inserido nos 7 dias com variações`);
+    } else {
+      toast.success(`"${template.name}" inserido no plano`);
+    }
     onOpenChange(false);
   }, [planId, targetDay, targetMealType, addItem, addItems, deleteItem, items, onOpenChange]);
 
