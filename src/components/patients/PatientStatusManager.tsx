@@ -78,10 +78,17 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
 
   const copyOnboardingLink = async () => {
     try {
-      await navigator.clipboard.writeText(onboardingLink);
-      toast.success("Link de onboarding copiado!");
-    } catch {
-      toast.error("Não foi possível copiar o link");
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(onboardingLink);
+        toast.success("Link de onboarding copiado!");
+      } else {
+        throw new Error("Clipboard API not available");
+      }
+    } catch (err) {
+      console.warn("Clipboard API blocked, link available in tooltip or logs", err);
+      toast.error("Erro ao copiar automaticamente", {
+        description: "Use o botão de e-mail ou WhatsApp para enviar o link."
+      });
     }
   };
 
