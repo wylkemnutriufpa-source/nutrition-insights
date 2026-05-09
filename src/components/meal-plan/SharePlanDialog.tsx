@@ -7,6 +7,7 @@ import { Link2, Mail, MessageCircle, Copy, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
+import { copyToClipboard } from "@/utils/clipboard";
 
 interface Props {
   open: boolean;
@@ -51,17 +52,13 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
       const message = `Olá${data?.patientName ? `, ${data.patientName}` : ""}! Aqui está seu plano alimentar: ${url}`;
 
       if (mode === "link") {
-        try {
-          if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(url);
-            setCopied(true);
-            setClipboardError(false);
-            setTimeout(() => setCopied(false), 2500);
-            toast.success("Link copiado para a área de transferência!");
-          } else {
-            throw new Error("Clipboard API not available");
-          }
-        } catch (err) {
+        const success = await copyToClipboard(url);
+        if (success) {
+          setCopied(true);
+          setClipboardError(false);
+          setTimeout(() => setCopied(false), 2500);
+          toast.success("Link copiado para a área de transferência!");
+        } else {
           setClipboardError(true);
           toast.error("Permissão de cópia bloqueada", {
             description: "O link foi gerado abaixo para cópia manual."
@@ -177,17 +174,13 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
                   size="sm"
                   variant="ghost"
                   onClick={async () => {
-                    try {
-                      if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(shareUrl);
-                        setCopied(true);
-                        setClipboardError(false);
-                        setTimeout(() => setCopied(false), 2500);
-                        toast.success("Link copiado!");
-                      } else {
-                        throw new Error("Clipboard API not available");
-                      }
-                    } catch (err) {
+                    const success = await copyToClipboard(shareUrl);
+                    if (success) {
+                      setCopied(true);
+                      setClipboardError(false);
+                      setTimeout(() => setCopied(false), 2500);
+                      toast.success("Link copiado!");
+                    } else {
                       setClipboardError(true);
                       toast.error("Copie manualmente o link abaixo");
                     }
