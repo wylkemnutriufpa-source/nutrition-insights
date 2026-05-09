@@ -637,7 +637,8 @@ export default function MealPlans() {
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           if (!p.patient_id || !p.id) return;
-                          navigate(`/v3/${p.patient_id}?planId=${p.id}`); 
+                          navigate(`/meal-plans/${p.id}`); 
+
                         }}>
                         <Zap className="w-4 h-4 text-primary" />
                       </Button>
