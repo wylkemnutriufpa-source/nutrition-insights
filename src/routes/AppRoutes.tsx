@@ -322,10 +322,12 @@ export const AppRoutes = () => {
       
       <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/:planId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+
       <Route path="/diet-templates" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietTemplates /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/editor" element={<Navigate to="/editor-v3" replace />} />
-      <Route path="/editor-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/editor-v3/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/meal-plans/editor" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/meal-plans/editor/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+
       <Route path="/v3" element={<Navigate to="/editor-v3" replace />} />
       <Route path="/v3/:patientId" element={<RedirectWithParams to="/editor-v3/:patientId" />} />
       <Route path="/meal-plans/editor/v3" element={<Navigate to="/editor-v3" replace />} />

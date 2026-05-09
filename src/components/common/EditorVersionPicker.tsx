@@ -41,7 +41,7 @@ export function EditorVersionPicker({
     } else {
       // Prioritize patientId in path if available, otherwise use general route
       if (patientId) {
-        navigate(`/v3/${patientId}?planId=${planId}`);
+        navigate(`/meal-plans/editor/${patientId}?planId=${planId}`);
       } else {
         // Fallback safety: do not navigate if we don't have patientId for V3
         console.warn("[EditorVersionPicker] Missing patientId for V3 navigation");

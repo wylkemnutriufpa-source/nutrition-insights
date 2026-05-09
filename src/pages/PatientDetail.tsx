@@ -647,7 +647,7 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/editor-v3/${resolvedPatientId}`);
+                navigate(`/meal-plans/editor/${resolvedPatientId}`);
               }}
             >
               <Sparkles className="w-4 h-4" /> NutriCore V3 (Editor Premium)

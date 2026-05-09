@@ -621,9 +621,8 @@ export default function MealPlans() {
                   className="glass rounded-xl p-5 shadow-card cursor-pointer"
                   onClick={() => {
                     if (!p.id) return;
-                    const isV3 = p.editor_version === "v3";
-                    const path = isV3 && p.patient_id ? `/v3/${p.patient_id}?planId=${p.id}` : `/meal-plans/${p.id}`;
-                    navigate(path);
+                    navigate(`/meal-plans/${p.id}`);
+
                   }}
                 >
                   <div className="flex items-start justify-between">
@@ -638,7 +637,8 @@ export default function MealPlans() {
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           if (!p.patient_id || !p.id) return;
-                          navigate(`/v3/${p.patient_id}?planId=${p.id}`); 
+                          navigate(`/meal-plans/${p.id}`); 
+
                         }}>
                         <Zap className="w-4 h-4 text-primary" />
                       </Button>
@@ -647,7 +647,7 @@ export default function MealPlans() {
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           if (!p.patient_id || !p.id) return;
-                          navigate(`/v3/${p.patient_id}?planId=${p.id}`); 
+                          navigate(`/meal-plans/${p.id}`); 
                         }}>
                         <Sparkles className="w-4 h-4 text-purple-600" />
                       </Button>
