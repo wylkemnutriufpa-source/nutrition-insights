@@ -117,7 +117,8 @@ export default function Invitation() {
     
     // Se o paciente já estiver cadastrado, mandamos para o login
     if (invitation.patient_id) {
-      navigate(`/auth?next=${encodeURIComponent(`/welcome`)}`, { replace: true });
+      // Usamos /auth sem next para que o login flua para /welcome, que decidirá o destino
+      navigate(`/auth`, { replace: true });
       return;
     }
 
