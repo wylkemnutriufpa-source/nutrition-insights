@@ -16,7 +16,7 @@ export const copyToClipboard = async (text: string, label?: string) => {
     // We don't use document.execCommand('copy') as it's deprecated and unreliable
     throw new Error("Clipboard API not available or blocked");
   } catch (err) {
-    console.warn("Clipboard copy failed:", err);
+    // Silently catch to avoid console errors as requested
     
     // If it fails, we return false so the UI can show a fallback input
     toast.error("Erro ao copiar automaticamente", {
