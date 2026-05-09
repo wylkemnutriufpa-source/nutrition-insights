@@ -60,9 +60,10 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2
 } from 'lucide-react';
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
+import PlanAdjustmentModal from './PlanAdjustmentModal';
 
 
 
@@ -87,17 +88,15 @@ const MEASURE_OPTIONS = [
 ];
 
 const formatPortion = (item: MealItem) => {
-  // No V3, exibimos gramas diretamente para maior precisão técnica
-  if (item.measurementType === 'gram') {
+  // Para V3, sempre buscamos a medida caseira + gramas para clareza total
+  const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
+  
+  if (displayUnit === 'g') {
     return `${Math.round(item.quantity)}g`;
   }
-  if (item.measurementType === 'ml') {
-    return `${Math.round(item.quantity)}ml`;
-  }
   
-  // Para unidades e colheres, usamos a normalização
-  const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
-  return `${displayQuantity} ${displayUnit} (~${Math.round(item.quantity)}g)`;
+  // Ex: "2 unidades (100g)" ou "4 colheres (100g)"
+  return `${displayQuantity} ${displayUnit} (${Math.round(item.quantity)}g)`;
 };
 
 const EditorV3Page = () => {
@@ -199,6 +198,7 @@ const EditorV3Page = () => {
   } | null>(null);
   const [showAnamnesisHandshake, setShowAnamnesisHandshake] = useState(false);
   const [pendingAnamnesisData, setPendingAnamnesisData] = useState<any>(null);
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
 
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -1281,16 +1281,17 @@ const EditorV3Page = () => {
             </div>
 
 
+
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={handleGenerateFullPlan} 
-              disabled={isGeneratingGlobal}
-              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
+              onClick={() => setShowAdjustmentModal(true)} 
+              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500 hover:text-black rounded-xl transition-all gap-2"
             >
-              {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              Gerar Plano Completo
+              <Settings2 className="w-3.5 h-3.5" />
+              Ajustar Plano
             </Button>
+
 
             <Button 
               size="sm" 
@@ -2650,6 +2651,15 @@ const EditorV3Page = () => {
           )}
         </DialogContent>
       </Dialog>
+      
+      <PlanAdjustmentModal
+        isOpen={showAdjustmentModal}
+        onClose={() => setShowAdjustmentModal(false)}
+        meals={meals}
+        onApply={(newMeals) => setMeals(newMeals)}
+        goalMetadata={goalMetadata}
+      />
+
     </div>
   );
 };

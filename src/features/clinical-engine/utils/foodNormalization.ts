@@ -35,6 +35,32 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
   }
 
   // Basic unit mapping (Fallback)
+  if (name.includes('arroz')) {
+    const spoonWeight = 25;
+    const units = Math.round(grams / spoonWeight);
+    return {
+      displayUnit: units <= 1 ? 'colher de sopa' : 'colheres de sopa',
+      displayQuantity: units || 1,
+      normalizedGrams: grams
+    };
+  }
+
+  if (name.includes('feijão')) {
+    const spoonWeight = 30;
+    const units = Math.round(grams / spoonWeight);
+    return {
+      displayUnit: units <= 1 ? 'colher de sopa' : 'colheres de sopa',
+      displayQuantity: units || 1,
+      normalizedGrams: grams
+    };
+  }
+
+  if (name.includes('frango') || name.includes('carne') || name.includes('peixe')) {
+    // Para carnes, se for por volta de 100g, podemos chamar de "filé" ou "pedaço"
+    // Mas geralmente o usuário prefere apenas gramas se não houver unidade clara
+    // Por enquanto mantemos gramas para carnes a menos que venha do V3 com unidade
+  }
+
   if (name.includes('pão') || name.includes('fatia')) {
     const sliceWeight = 25;
     const slices = Math.round(grams / sliceWeight);
