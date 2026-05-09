@@ -29,6 +29,7 @@ export default function InvitePatient() {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [clipboardError, setClipboardError] = useState<string | null>(null);
   const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
