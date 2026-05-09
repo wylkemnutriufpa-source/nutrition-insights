@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { PRODUCTION_URL } from "@/lib/config";
+import { copyToClipboard } from "@/utils/clipboard";
 import {
   Globe, Eye, Save, Loader2, Link2, Copy, ExternalLink,
   Users, MessageSquare, TrendingUp, Palette
@@ -96,17 +98,15 @@ export default function MyPublicProfile() {
     setSettings(s => ({ ...s, specialties: s.specialties.filter((_, i) => i !== idx) }));
   };
 
-  const publicUrl = `${window.location.origin}/p/${settings.slug}`;
+  const publicUrl = `${PRODUCTION_URL}/profile/${settings.slug}`;
+  const registerUrl = `${PRODUCTION_URL}/cadastro?nutri=${user?.id}`;
+  const agendaUrl = `${PRODUCTION_URL}/booking/${settings.slug}`;
 
   const copyLink = async (text: string, label: string) => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-        toast.success(`${label} copiado!`);
-      } else {
-        throw new Error("Clipboard API not available");
-      }
-    } catch (err) {
+    const success = await copyToClipboard(text);
+    if (success) {
+      toast.success(`${label} copiado!`);
+    } else {
       toast.error("Permissão de cópia bloqueada", {
         description: "Selecione o texto no campo ao lado e copie manualmente."
       });
@@ -157,9 +157,9 @@ export default function MyPublicProfile() {
               <div className="p-4 rounded-xl bg-background border border-border shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Link Direto de Cadastro</p>
                 <div className="flex items-center gap-2">
-                  <Input value={`${window.location.origin}/cadastro?nutri=${user?.id}`} readOnly className="h-9 text-xs font-mono" />
+                  <Input value={registerUrl} readOnly className="h-9 text-xs font-mono" />
                   <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => 
-                    copyLink(`${window.location.origin}/cadastro?nutri=${user?.id}`, "Link de cadastro")
+                    copyLink(registerUrl, "Link de cadastro")
                   }><Copy className="w-3.5 h-3.5" /></Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2">Pacientes vinculados a você automaticamente.</p>
@@ -168,9 +168,9 @@ export default function MyPublicProfile() {
               <div className="p-4 rounded-xl bg-background border border-border shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Link Direto da Agenda</p>
                 <div className="flex items-center gap-2">
-                  <Input value={`${window.location.origin}/p/${settings.slug}/agenda`} readOnly className="h-9 text-xs font-mono" />
+                  <Input value={agendaUrl} readOnly className="h-9 text-xs font-mono" />
                   <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => 
-                    copyLink(`${window.location.origin}/p/${settings.slug}/agenda`, "Link da agenda")
+                    copyLink(agendaUrl, "Link da agenda")
                   }><Copy className="w-3.5 h-3.5" /></Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2">Link direto para seu calendário de agendamentos.</p>
