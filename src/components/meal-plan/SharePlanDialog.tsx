@@ -51,10 +51,23 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
       const message = `Olá${data?.patientName ? `, ${data.patientName}` : ""}! Aqui está seu plano alimentar: ${url}`;
 
       if (mode === "link") {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2500);
-        toast.success("Link copiado para a área de transferência!");
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setClipboardError(false);
+            setTimeout(() => setCopied(false), 2500);
+            toast.success("Link copiado para a área de transferência!");
+          } else {
+            throw new Error("Clipboard API not available");
+          }
+        } catch (err) {
+          console.warn("Clipboard API blocked, showing fallback", err);
+          setClipboardError(true);
+          toast.error("Permissão de cópia bloqueada", {
+            description: "O link foi gerado abaixo para cópia manual."
+          });
+        }
       } else if (mode === "email") {
         const to = encodeURIComponent(contact.trim());
         window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, "_blank");
