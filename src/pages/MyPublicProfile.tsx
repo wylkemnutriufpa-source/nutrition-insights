@@ -31,6 +31,7 @@ export default function MyPublicProfile() {
   const [newSpecialty, setNewSpecialty] = useState("");
   const [leads, setLeads] = useState<any[]>([]);
   const [leadsCount, setLeadsCount] = useState(0);
+  const [clipboardError, setClipboardError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
