@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
+import { PRODUCTION_URL } from "@/lib/config";
+import { copyToClipboard } from "@/utils/clipboard";
 
 function MarmitaSettingsCard() {
   const { user } = useAuth();
@@ -365,16 +367,16 @@ export default function Settings() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1 bg-muted/50 rounded-xl px-4 py-3 border border-border/50 flex items-center justify-between group">
                   <code className="text-xs font-mono break-all text-primary/80">
-                    {window.location.origin}/q/{user?.id}
+                    {PRODUCTION_URL}/quick-link/{user?.id}
                   </code>
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 shrink-0 hover:bg-primary/10 hover:text-primary"
-                    onClick={() => {
-                      const url = `${window.location.origin}/q/${user?.id}`;
-                      navigator.clipboard.writeText(url);
-                      toast.success("Link copiado!");
+                    onClick={async () => {
+                      const url = `${PRODUCTION_URL}/quick-link/${user?.id}`;
+                      const success = await copyToClipboard(url);
+                      toast[success ? "success" : "error"](success ? "Link copiado!" : "Copie manualmente o link exibido.");
                     }}
                   >
                     <Copy className="w-4 h-4" />
@@ -382,7 +384,7 @@ export default function Settings() {
                 </div>
                 <Button 
                   className="gradient-primary gap-2"
-                  onClick={() => window.open(`${window.location.origin}/q/${user?.id}`, '_blank')}
+                  onClick={() => window.open(`${PRODUCTION_URL}/quick-link/${user?.id}`, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4" /> Testar Link
                 </Button>
@@ -655,14 +657,18 @@ function PublicAgendaCard() {
       });
   }, [user]);
 
-  const copyLink = (url: string, label: string) => {
-    navigator.clipboard.writeText(url);
-    setCopied(label);
-    toast.success(`Link "${label}" copiado!`);
-    setTimeout(() => setCopied(null), 3000);
+  const copyLink = async (url: string, label: string) => {
+    const success = await copyToClipboard(url);
+    if (success) {
+      setCopied(label);
+      toast.success(`Link "${label}" copiado!`);
+      setTimeout(() => setCopied(null), 3000);
+    } else {
+      toast.error("Copie manualmente o link exibido.");
+    }
   };
 
-  const origin = window.location.origin;
+  const origin = PRODUCTION_URL;
   const profileUrl = slug ? `${origin}/p/${slug}` : null;
   const agendaUrl = slug ? `${origin}/p/${slug}/agendar` : null;
   const patientPlansUrl = slug ? `${origin}/p/${slug}/paciente` : null;
