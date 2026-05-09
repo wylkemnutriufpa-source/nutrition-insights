@@ -207,7 +207,7 @@ export default function Invitation() {
         invitationCode: code || "TEST-CODE"
       });
       
-      const pass = msg.includes(gUrl) && (isPreview ? gUrl.includes(window.location.hostname) : gUrl.includes(OFFICIAL_DOMAIN));
+      const pass = msg.includes(gUrl) && gUrl.includes(OFFICIAL_DOMAIN);
       setTestResult(pass ? "✅ TESTE PASSOU: URL e WhatsApp estão sincronizados!" : "❌ TESTE FALHOU: URL inconsistente.");
       
       console.log("[Self-Test]", { gUrl, msg, pass });
