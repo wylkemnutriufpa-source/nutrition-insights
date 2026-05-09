@@ -114,12 +114,19 @@ export default function Invitation() {
   const handleAccept = useCallback(() => {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
+    
+    // Se o paciente já estiver cadastrado, mandamos para o login
+    if (invitation.patient_id) {
+      navigate(`/auth?next=${encodeURIComponent(`/welcome`)}`, { replace: true });
+      return;
+    }
+
     navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
   }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
 
   // Redirecionamento automático quando o convite é válido
   useEffect(() => {
-    if (invitation && !error && !isProcessingAction) {
+    if (invitation && !error && !isProcessingAction && invitation.patient_id === null) {
       const timer = setTimeout(() => {
         handleAccept();
       }, 600);
@@ -485,7 +492,7 @@ export default function Invitation() {
               size="lg" 
               className="w-full gap-3 text-xl h-16 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
-              Cadastrar com este Profissional
+              {invitation.patient_id ? "Já sou cadastrado - Entrar" : "Cadastrar com este Profissional"}
               <ArrowRight className="w-6 h-6" />
             </Button>
             

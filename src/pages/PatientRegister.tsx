@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
 import {
   Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
-  Download, Copy, FileJson, AlertTriangle, User, RefreshCw, Check
+  Download, Copy, FileJson, AlertTriangle, User, RefreshCw, Check, LogIn
 } from "lucide-react";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
@@ -142,6 +142,8 @@ export default function PatientRegister() {
   const done = syncStatus === "success";
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
+  const [isEmailAlreadyRegistered, setIsEmailAlreadyRegistered] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
 
 
@@ -416,9 +418,47 @@ export default function PatientRegister() {
   };
 
 
+  const checkEmailExistence = async (emailToCheck: string) => {
+    if (!emailToCheck || !emailToCheck.includes("@")) return;
+    
+    setCheckingEmail(true);
+    try {
+      const { data, error } = await (supabase
+        .from("profiles") as any)
+        .select("id")
+        .eq("email", emailToCheck.toLowerCase().trim())
+        .maybeSingle();
+
+      if (data) {
+        setIsEmailAlreadyRegistered(true);
+        addLog(`Email ${emailToCheck} já está cadastrado.`);
+      } else {
+        setIsEmailAlreadyRegistered(false);
+      }
+    } catch (err) {
+      console.error("Erro ao verificar email:", err);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (email.length > 5) {
+        checkEmailExistence(email);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [email]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || checkingEmail) return;
+
+    if (isEmailAlreadyRegistered) {
+      toast.error("Este e-mail já está cadastrado.");
+      return;
+    }
     
     if ((preselectedNutri || invitationCode) && sigValid === false) {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
@@ -984,7 +1024,40 @@ export default function PatientRegister() {
               </div>
             )}
 
-            <form onSubmit={handleRegister} className="space-y-4">
+            {isEmailAlreadyRegistered ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-center space-y-4">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Email já cadastrado</h3>
+                    <p className="text-sm opacity-80 mt-1">Este endereço de e-mail já possui uma conta no sistema. Faça login para continuar o seu acompanhamento.</p>
+                  </div>
+                  <Button 
+                    className="w-full h-12 gap-2 text-md font-bold" 
+                    onClick={() => navigate(`/auth?next=${encodeURIComponent(currentCadastroPath)}`)}
+                  >
+                    <LogIn className="w-5 h-5" /> Fazer Login
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="text-amber-700 hover:text-amber-800" 
+                    onClick={() => {
+                      setIsEmailAlreadyRegistered(false);
+                      setEmail("");
+                    }}
+                  >
+                    Usar outro e-mail
+                  </Button>
+                </div>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
 
               {registrationDisplay.shouldShowInvalidCodeOnly && (
                 <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
@@ -1096,6 +1169,7 @@ export default function PatientRegister() {
                 </p>
               </div>
             </form>
+          )}
           </CardContent>
         </Card>
 

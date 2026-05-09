@@ -115,8 +115,14 @@ export default function InvitePatient() {
 
   // Links use relative URL in preview by default, but production URL for sharing/display
   const onboardingLink = useMemo(() => getOnboardingUrl(), []);
-  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id), [user?.id]);
-  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id) : "", [user?.id]);
+  const publicRegisterLink = useMemo(() => getInvitationUrl(invitationCode || undefined, user?.id), [invitationCode, user?.id]);
+  const quickLink = useMemo(() => {
+    if (!user?.id) return "";
+    const origin = (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) 
+      ? window.location.origin 
+      : PRODUCTION_URL;
+    return `${origin}/convite/${invitationCode || user.id}`;
+  }, [invitationCode, user?.id]);
   const publicProfileLink = useMemo(() => {
     if (!publicProfile?.slug) return null;
     const origin = (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) 
