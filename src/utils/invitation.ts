@@ -37,6 +37,10 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
   // Agora forceProduction é false por padrão no preview para evitar erro 412 de assets
   const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
   
+  if (code && code.length <= 12) {
+    return `${origin}/convite/${code}`;
+  }
+
   const params = new URLSearchParams();
   if (code) params.set("code", code);
   if (nutriId) params.set("nutri", nutriId);
