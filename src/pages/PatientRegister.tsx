@@ -1027,7 +1027,40 @@ export default function PatientRegister() {
               </div>
             )}
 
-            <form onSubmit={handleRegister} className="space-y-4">
+            {isEmailAlreadyRegistered ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-center space-y-4">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Email já cadastrado</h3>
+                    <p className="text-sm opacity-80 mt-1">Este endereço de e-mail já possui uma conta no sistema. Faça login para continuar o seu acompanhamento.</p>
+                  </div>
+                  <Button 
+                    className="w-full h-12 gap-2 text-md font-bold" 
+                    onClick={() => navigate(`/auth?next=${encodeURIComponent(currentCadastroPath)}`)}
+                  >
+                    <LogIn className="w-5 h-5" /> Fazer Login
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="text-amber-700 hover:text-amber-800" 
+                    onClick={() => {
+                      setIsEmailAlreadyRegistered(false);
+                      setEmail("");
+                    }}
+                  >
+                    Usar outro e-mail
+                  </Button>
+                </div>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
 
               {registrationDisplay.shouldShowInvalidCodeOnly && (
                 <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
