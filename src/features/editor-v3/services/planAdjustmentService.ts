@@ -57,13 +57,77 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
         if (removedCarbs.length > 0) {
           const caloriesToReplace = removedCarbs.reduce((acc, item) => acc + (item.kcal || 0), 0);
           
-          // Add a healthy fat or vegetable if possible
-          // For simplicity in a real-time tool, we'll just scale existing items or add a standard substitute
-          // Here we'll just return remaining for now, and maybe scale them
+          // Let's add standard substitutes: Brocolis (vegetable) and Azeite (fat)
+          const veggieId = "14"; // Brócolis Cozido
+          const fatId = "9"; // Azeite de Oliva
           
+          const veggieFood = BASE_FOODS.find(f => f.id === veggieId);
+          const fatFood = BASE_FOODS.find(f => f.id === fatId);
+          
+          const newItems = [...remainingItems];
+          
+          if (veggieFood) {
+            // Add 150g of broccoli as standard volume replacement
+            const quantity = 150;
+            const macros = {
+              kcal: Math.round((veggieFood.kcal_100g * quantity / 100)),
+              protein: Math.round((veggieFood.protein_100g * quantity / 100)),
+              carbs: Math.round((veggieFood.carb_100g * quantity / 100)),
+              fat: Math.round((veggieFood.fat_100g * quantity / 100))
+            };
+            
+            newItems.push({
+              id: veggieFood.id,
+              instanceId: Math.random().toString(36).substring(2, 10),
+              name: veggieFood.name,
+              kcal: macros.kcal,
+              calories: macros.kcal,
+              protein: macros.protein,
+              carbs: macros.carbs,
+              fat: macros.fat,
+              quantity: quantity,
+              measurementType: 'gram',
+              portionValue: 100,
+              portionLabel: '100g',
+              portionUnitLabel: 'g',
+              substitutions: []
+            } as any);
+          }
+          
+          if (fatFood) {
+            // Replace remaining calories with fat (approx)
+            const remainingKcal = caloriesToReplace - 50; // assuming brocolis took ~50kcal
+            if (remainingKcal > 0) {
+              const fatQuantity = Math.round((remainingKcal / fatFood.kcal_100g) * 100);
+              const macros = {
+                kcal: Math.round((fatFood.kcal_100g * fatQuantity / 100)),
+                protein: Math.round((fatFood.protein_100g * fatQuantity / 100)),
+                carbs: Math.round((fatFood.carb_100g * fatQuantity / 100)),
+                fat: Math.round((fatFood.fat_100g * fatQuantity / 100))
+              };
+              
+              newItems.push({
+                id: fatFood.id,
+                instanceId: Math.random().toString(36).substring(2, 10),
+                name: fatFood.name,
+                kcal: macros.kcal,
+                calories: macros.kcal,
+                protein: macros.protein,
+                carbs: macros.carbs,
+                fat: macros.fat,
+                quantity: fatQuantity,
+                measurementType: 'spoon',
+                portionValue: 13,
+                portionLabel: 'colher de sopa (13ml)',
+                portionUnitLabel: 'colher',
+                substitutions: []
+              } as any);
+            }
+          }
+
           return {
             ...meal,
-            items: remainingItems
+            items: newItems
           };
         }
       } else if (params.removeCarbsIntensity === 'parcial') {
@@ -71,7 +135,7 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
           ...meal,
           items: meal.items.map(item => {
             if (isCarb(item.name)) {
-              const newQuantity = item.quantity * 0.5;
+              const newQuantity = Math.round(item.quantity * 0.5);
               const macros = calculateItemMacros(item, newQuantity);
               return {
                 ...item,
