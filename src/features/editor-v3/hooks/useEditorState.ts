@@ -671,7 +671,7 @@ export const useEditorState = create<EditorState>()(
           currentMeals = DEFAULT_MEALS.map(m => ({ ...m, items: [], imageUrl: undefined }));
         }
 
-        const newMeals = generatePlanWithEngine(
+        const newMeals = await generatePlanWithEngine(
           currentMeals, 
           finalGoal, 
           finalCalories, 
@@ -703,7 +703,7 @@ export const useEditorState = create<EditorState>()(
         const finalCalories = patientContext?.calories_target || baseCalories;
         const finalGoal = patientContext?.goal || goal;
 
-        const newItems = generateMealWithEngine(
+        const newItems = await generateMealWithEngine(
           meal, 
           finalGoal, 
           finalCalories, 
