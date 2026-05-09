@@ -419,7 +419,7 @@ export function WeeklyGrid() {
                             }`}
                           >
                             <Search className="w-3 h-3" /> Alimento
-                          </li>
+                          </button>
                           <button
                             type="button"
                             onClick={() => openLibrary(day, meal.key)}
