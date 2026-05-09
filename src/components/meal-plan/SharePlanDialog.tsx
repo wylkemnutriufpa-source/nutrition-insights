@@ -62,7 +62,6 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
             throw new Error("Clipboard API not available");
           }
         } catch (err) {
-          console.warn("Clipboard API blocked, showing fallback", err);
           setClipboardError(true);
           toast.error("Permissão de cópia bloqueada", {
             description: "O link foi gerado abaixo para cópia manual."
