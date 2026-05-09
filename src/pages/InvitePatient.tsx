@@ -400,7 +400,16 @@ export default function InvitePatient() {
             <CardContent>
               <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
                 <Globe className="w-3.5 h-3.5 text-info shrink-0" />
-                <code className="text-[10px] md:text-xs flex-1 truncate">{publicProfileLink}</code>
+                {clipboardError === "public_profile" ? (
+                  <Input 
+                    readOnly 
+                    value={publicProfileLink} 
+                    onFocus={(e) => e.target.select()}
+                    className="h-7 text-[10px] md:text-xs flex-1 bg-transparent border-none shadow-none focus-visible:ring-0"
+                  />
+                ) : (
+                  <code className="text-[10px] md:text-xs flex-1 truncate">{publicProfileLink}</code>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
