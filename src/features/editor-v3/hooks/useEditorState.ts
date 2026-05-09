@@ -579,7 +579,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Template "${template.name}" aplicado!`);
       },
 
-      updateMealItem: (mealId, instanceId, updates) => {
+      updateMealItem: async (mealId, instanceId, updates) => {
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
@@ -588,7 +588,6 @@ export const useEditorState = create<EditorState>()(
                   items: m.items.map((i) => {
                     if (i.instanceId === instanceId) {
                       const updatedItem = { ...i, ...updates };
-                      // Se a quantidade mudou, recalculamos os macros do item
                       if (updates.quantity !== undefined) {
                         const newMacros = calculateItemMacros(updatedItem, updatedItem.quantity);
                         return {
@@ -609,8 +608,17 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Se o alimento principal mudou, a imagem deve mudar (se não for manual)
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual' && (updates.id || updates.name)) {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
       },
+
 
       removeFood: (mealId, instanceId) => {
         const meal = get().meals.find((m) => m.id === mealId);
