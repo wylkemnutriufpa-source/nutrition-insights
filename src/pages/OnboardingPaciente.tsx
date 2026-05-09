@@ -97,7 +97,7 @@ export default function OnboardingPaciente() {
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
 
-    navigate("/anamnesis", { replace: true });
+    navigate("/onboarding", { replace: true });
   }, [user?.id, navigate]);
 
   const skip = useCallback(async () => {
