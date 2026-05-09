@@ -85,7 +85,6 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
         throw new Error("Clipboard API not available");
       }
     } catch (err) {
-      console.warn("Clipboard API blocked, link available in tooltip or logs", err);
       toast.error("Erro ao copiar automaticamente", {
         description: "Use o botão de e-mail ou WhatsApp para enviar o link."
       });
