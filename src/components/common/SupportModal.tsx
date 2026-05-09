@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   ExternalLink
 } from "lucide-react";
+import { copyToClipboard } from "@/utils/clipboard";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,11 +35,15 @@ export function SupportModal({ isOpen, onClose, context, errorId }: SupportModal
   const [copied, setCopied] = React.useState(false);
   const correlationId = errorId || getSessionCorrelationId();
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success("ID copiado para a área de transferência!");
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboardHandler = async (text: string) => {
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopied(true);
+      toast.success("ID copiado para a área de transferência!");
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error("Erro ao copiar ID");
+    }
   };
 
   const supportMessage = encodeURIComponent(
@@ -69,7 +74,7 @@ export function SupportModal({ isOpen, onClose, context, errorId }: SupportModal
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Identificador da Sessão</span>
               <button 
-                onClick={() => copyToClipboard(correlationId)}
+                onClick={() => copyToClipboardHandler(correlationId)}
                 className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors"
               >
                 {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}

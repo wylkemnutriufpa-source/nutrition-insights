@@ -22,6 +22,7 @@ import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourn
 import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
 import { getWhatsAppInvitationMessage, getInvitationUrl } from "@/utils/invitation";
+import { copyToClipboard } from "@/utils/clipboard";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
 
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
@@ -77,14 +78,10 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   }, [user?.id]);
 
   const copyOnboardingLink = async () => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(onboardingLink);
-        toast.success("Link de onboarding copiado!");
-      } else {
-        throw new Error("Clipboard API not available");
-      }
-    } catch (err) {
+    const success = await copyToClipboard(onboardingLink);
+    if (success) {
+      toast.success("Link de onboarding copiado!");
+    } else {
       toast.error("Erro ao copiar automaticamente", {
         description: "Use o botão de e-mail ou WhatsApp para enviar o link."
       });

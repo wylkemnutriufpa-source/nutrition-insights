@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { QrCode, Copy, CheckCircle2, CreditCard, Smartphone } from "lucide-react";
+import { copyToClipboard } from "@/utils/clipboard";
 
 interface PixConfig {
   id: string;
@@ -33,11 +34,15 @@ export default function PixPaymentSection() {
     },
   });
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    toast.success("Código PIX copiado!");
-    setTimeout(() => setCopied(false), 3000);
+  const copyCode = async (code: string) => {
+    const success = await copyToClipboard(code);
+    if (success) {
+      setCopied(true);
+      toast.success("Código PIX copiado!");
+      setTimeout(() => setCopied(false), 3000);
+    } else {
+      toast.error("Erro ao copiar código PIX");
+    }
   };
 
   const formatCurrency = (val: number) =>
