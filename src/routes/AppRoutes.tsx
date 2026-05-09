@@ -244,7 +244,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (authStatus !== "authenticated") {
-    return <Navigate to="/auth" replace />;
+    const next = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/auth?next=${next}`} replace />;
   }
   
   return <>{children}</>;
