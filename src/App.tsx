@@ -6,13 +6,22 @@ import { motion } from 'framer-motion';
 
 const App = () => {
   const [mode, setMode] = useState<'V1' | 'V2'>(() => {
-    const saved = localStorage.getItem('fitjourney_mode');
-    return (saved === 'V1' || saved === 'V2') ? saved : 'V2';
+    try {
+      const saved = localStorage.getItem('fitjourney_mode');
+      // Default to V1 if not set or invalid
+      return (saved === 'V1' || saved === 'V2') ? saved as 'V1' | 'V2' : 'V1';
+    } catch (e) {
+      return 'V1';
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('fitjourney_mode', mode);
-    console.log(`[FitJourney] Mode switched to: ${mode}`);
+    try {
+      localStorage.setItem('fitjourney_mode', mode);
+    } catch (e) {
+      console.warn('[FitJourney] Could not save mode to localStorage');
+    }
+    console.log(`[FitJourney] Mode active: ${mode}`);
   }, [mode]);
 
   const Switcher = () => (
@@ -23,15 +32,15 @@ const App = () => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={() => setMode(mode === 'V1' ? 'V2' : 'V1')}
-      className={`fixed top-[18px] left-1/2 -translate-x-1/2 z-[9999] px-2 py-1 rounded-md text-[9px] font-bold uppercase transition-colors shadow-sm border flex items-center gap-1.5 cursor-move select-none ${
+      className={`fixed top-[18px] left-1/2 -translate-x-1/2 z-[9999] px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all shadow-xl border flex items-center gap-2 cursor-move select-none ${
         mode === 'V1'
-          ? 'bg-blue-600/10 text-blue-500 border-blue-500/30 hover:bg-blue-600/20'
-          : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700/50'
+          ? 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50'
+          : 'bg-green-600 text-white border-green-500 hover:bg-green-500 shadow-green-500/20'
       }`}
       style={{ touchAction: 'none' }}
     >
-      <div className={`w-1 h-1 rounded-full ${mode === 'V1' ? 'bg-blue-500 animate-pulse' : 'bg-slate-500'}`} />
-      <span>{mode === 'V1' ? 'V2' : 'V1'}</span>
+      <div className={`w-1.5 h-1.5 rounded-full ${mode === 'V1' ? 'bg-slate-400' : 'bg-white animate-pulse'}`} />
+      <span>{mode === 'V1' ? 'Mudar para V2' : 'Voltar para V1'}</span>
     </motion.button>
   );
 
