@@ -64,6 +64,9 @@ export class NutriCoreV2Adapter {
   static generateElitePlan(context: PatientContext, availableFoods: V3Food[]): V3Meal[] {
     const engineInput = this.mapPatientToEngine(context);
     const engineResult = runEngine(engineInput);
+    
+    // Regra Parte 4 Item 5: Se for plano completo, a base sugerida é ~2000 kcal se não houver contexto específico
+    const targetKcal = engineResult.target_kcal || 2000;
 
     // Estrutura padrão de refeições baseada no FitJourney
     const mealSlots: MealSlot[] = [
