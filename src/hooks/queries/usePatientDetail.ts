@@ -10,6 +10,7 @@ import type { PrestigePlan } from "@/hooks/usePrestige";
 const HIDDEN_MEAL_PLAN_STATUSES = new Set(["archived", "rejected"]);
 const CANONICAL_MEAL_PLAN_STATUSES = new Set(["approved", "published", "published_to_patient"]);
 const TRANSIENT_MEAL_PLAN_STATUSES = new Set([
+  "editing",
   "draft",
   "draft_auto_generated",
   "draft_auto_corrected",
@@ -113,7 +114,7 @@ export function usePatientDetail(patientId: string | undefined) {
       const today = new Date().toISOString().split("T")[0];
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
 
-      const [timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes, trainerAssessRes] = await Promise.all([
+      const [timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, v3DraftsRes, recipesRes, npRes, adherenceRes, trainerAssessRes] = await Promise.all([
         supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(50),
         supabase.from("patient_anamnesis").select("*").eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1),
         withTenantFilter(supabase.from("patient_protocols").select("*").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).order("created_at", { ascending: false }),
@@ -122,6 +123,7 @@ export function usePatientDetail(patientId: string | undefined) {
         supabase.from("subscriptions").select("*").eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1),
         supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
         withTenantFilter(supabase.from("meal_plans").select("*").in("patient_id", patientIds), tenantId).order("created_at", { ascending: false }),
+        withTenantFilter(supabase.from("v3_drafts").select("id, patient_id, created_at, draft_status, payload, meta_kcal, meta_protein, meta_carbs, meta_fat").in("patient_id", patientIds), tenantId).order("created_at", { ascending: false }),
         supabase.from("recipes").select("*").eq("nutritionist_id", user!.id).eq("is_shared", true).order("created_at", { ascending: false }),
         withTenantFilter(supabase.from("nutritionist_patients").select("id, status, journey_status").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).limit(1).maybeSingle(),
         supabase.from("meal_item_completions").select("adherence_status, date").in("patient_id", patientIds).gte("date", sevenDaysAgo).lte("date", today),
@@ -179,7 +181,25 @@ export function usePatientDetail(patientId: string | undefined) {
       } catch { }
 
       const uniqueDocs = dedupeById(docs);
-      const uniqueMealPlans = getVisibleMealPlans(dedupeById(mealPlansRes.data));
+      
+      // Combine canonical plans with V3 drafts for a unified view
+      const canonicalPlans = mealPlansRes.data || [];
+      const v3Drafts = (v3DraftsRes.data || []).map((draft: any) => ({
+        id: draft.id,
+        patient_id: draft.patient_id,
+        created_at: draft.created_at,
+        plan_status: draft.draft_status === 'editing' ? 'draft' : draft.draft_status,
+        title: `Rascunho V3 (${new Date(draft.created_at).toLocaleDateString()})`,
+        is_active: false,
+        editor_version: 'v3',
+        total_calories: draft.meta_kcal,
+        total_protein: draft.meta_protein,
+        total_carbs: draft.meta_carbs,
+        total_fat: draft.meta_fat
+      }));
+
+      const allPlans = [...canonicalPlans, ...v3Drafts];
+      const uniqueMealPlans = getVisibleMealPlans(dedupeById(allPlans));
       const adherenceRows = dedupeBySignature(adherenceRes.data, (row: any) => `${row.date}-${row.adherence_status}`);
 
       return {
