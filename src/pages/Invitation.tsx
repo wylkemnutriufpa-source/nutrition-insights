@@ -119,7 +119,7 @@ export default function Invitation() {
 
   // Redirecionamento automático quando o convite é válido
   useEffect(() => {
-    if (invitation && !error && !isProcessingAction) {
+    if (invitation && !error && !isProcessingAction && invitation.patient_id === null) {
       const timer = setTimeout(() => {
         handleAccept();
       }, 600);
