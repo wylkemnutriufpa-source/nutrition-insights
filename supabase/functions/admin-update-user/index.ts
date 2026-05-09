@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
+const BASE_URL = "https://www.fitjourney.com.br";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -134,7 +136,7 @@ Deno.serve(async (req) => {
           await adminClient.auth.admin.generateLink({
             type: "magiclink",
             email: userData.user.email,
-            options: { redirectTo: `${req.headers.get("origin") || "https://fijourney.lovable.app"}/` },
+            options: { redirectTo: `${BASE_URL}/` },
           });
         } catch (_) {
           // Magic link may fail, but we notify anyway
