@@ -69,6 +69,8 @@ import PlanAdjustmentModal from './PlanAdjustmentModal';
 
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { PRODUCTION_URL } from '@/lib/config';
+import { copyToClipboard } from '@/utils/clipboard';
 import { Meal, MealItem, Food, MealTemplate } from '../types';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
 import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
@@ -1820,8 +1822,9 @@ const EditorV3Page = () => {
                       toast.error("Salve o rascunho ou promova o plano para compartilhar.");
                       return;
                     }
-                    navigator.clipboard.writeText(`${window.location.origin}/patient/view/${token}`);
-                    toast.success("Link de compartilhamento copiado!");
+                    copyToClipboard(`${PRODUCTION_URL}/patient/view/${token}`).then((copied) => {
+                      toast[copied ? "success" : "error"](copied ? "Link oficial de compartilhamento copiado!" : "Copie manualmente o link oficial.");
+                    });
                   }}
                   variant="outline"
                   className="border-emerald-500/20 hover:bg-emerald-500/10 text-emerald-400 font-black text-[10px] uppercase rounded-xl h-10"
