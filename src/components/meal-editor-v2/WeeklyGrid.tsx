@@ -249,8 +249,11 @@ export function WeeklyGrid() {
           </div>
         </div>
 
-        {/* Meal rows */}
-        {MEAL_TYPES.map((meal) => (
+        {/* Meal rows or Day Content */}
+        {isWeeklyMode ? (
+          <DayContent day={selectedDay} />
+        ) : (
+          MEAL_TYPES.map((meal) => (
           <div key={meal.key} className="grid grid-cols-[160px_1fr] gap-4 mb-4">
             {/* Row label */}
             <div className="glass rounded-xl p-4 flex flex-col justify-center border-l-4 border-primary/30 shadow-sm">
