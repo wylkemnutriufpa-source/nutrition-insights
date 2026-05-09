@@ -14,7 +14,7 @@ function isNavigationReady(authStatus: AuthStatus, roles: string[] | null) {
 }
 
 export default function Welcome() {
-  const { roles, authStatus, loading, profile, refreshProfile } = useAuth();
+  const { roles, authStatus, loading, profile, refreshProfile, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next");
@@ -48,8 +48,35 @@ export default function Welcome() {
       return () => clearTimeout(timer);
     }
 
-    // 5. Se roles consolidado, decide destino
+    // 5. Verificação de Vínculo de Convite Pendente
+    const handlePendingInvitation = async () => {
+      const pendingCode = localStorage.getItem("fitjourney_invite_code");
+      if (pendingCode && user?.id && roles?.includes("patient")) {
+        console.log("[Welcome] Processando convite pendente:", pendingCode);
+        try {
+          // Tentamos completar o convite para o usuário logado
+          const { data: inviteRows } = await supabase.rpc("complete_invitation" as any, {
+            _code: pendingCode,
+            _patient_user_id: user.id,
+          });
+          
+          if (inviteRows) {
+            console.log("[Welcome] Convite vinculado com sucesso!");
+            localStorage.removeItem("fitjourney_invite_code");
+            // Se vinculou, talvez o perfil tenha mudado (ex: tenant_id), então atualizamos
+            await refreshProfile();
+          }
+        } catch (err) {
+          console.error("[Welcome] Erro ao vincular convite pendente:", err);
+          localStorage.removeItem("fitjourney_invite_code");
+        }
+      }
+    };
+
+    // 6. Se roles consolidado, decide destino
     if (isNavigationReady(authStatus, roles)) {
+      handlePendingInvitation();
+      
       // PROVA DE CONCEITO: Blindagem contra redirecionamento indesejado fora da página Welcome
       // Se já estamos em uma rota válida e autenticada, não forçamos a volta para o dashboard
       // a menos que estejamos explicitamente na página de Welcome ou Root.
@@ -126,7 +153,7 @@ export default function Welcome() {
       console.log("[NAV] Welcome -> Default Fallback", { roles: effectiveRoles });
       navigate(nextPath || "/client/dashboard", { replace: true });
     }
-  }, [roles, authStatus, loading, navigate, nextPath, profile, refreshProfile]);
+  }, [roles, authStatus, loading, navigate, nextPath, profile, refreshProfile, user?.id]);
 
   // Mensagens de etapa baseadas no estado real do auth/roles
   const stageMessages =
