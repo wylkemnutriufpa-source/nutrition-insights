@@ -50,7 +50,7 @@ const App = () => {
           e.stopPropagation();
           setMode(mode === 'V1' ? 'V2' : 'V1');
         }}
-        className={`fixed bottom-6 right-6 z-[9999] px-4 py-2 rounded-2xl text-[10px] font-black uppercase transition-all shadow-2xl border flex items-center gap-2 cursor-move select-none ${
+        className={`fixed bottom-4 right-4 z-[9999] px-3 py-1.5 rounded-full text-[9px] font-bold uppercase transition-all shadow-lg border flex items-center gap-2 cursor-move select-none ${
           mode === 'V1'
             ? 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50'
             : 'bg-green-600 text-white border-green-500 hover:bg-green-500 shadow-green-500/20'
