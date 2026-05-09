@@ -156,7 +156,7 @@ export class DefaultV3Strategy implements ClinicalStrategy {
 
     console.info(`[V3-Engine] Gerando refeição "${meal.name}" para ${finalContext.weight}kg, Objetivo: ${finalContext.goal}`);
 
-    const fullPlan = NutriCoreV2Adapter.generateElitePlan(finalContext as any, availableFoods);
+    const fullPlan = await NutriCoreV2Adapter.generateElitePlan(finalContext as any, availableFoods);
     const mealName = meal.name.toLowerCase();
     const generatedMeal = fullPlan.find((m: any) => {
       const gName = m.name.toLowerCase();
