@@ -350,7 +350,7 @@ function SidebarSkeleton() {
  * For professionals with workspace config → renders from workspace tables.
  * Otherwise → falls back to legacy AccordionSidebar groups.
  */
-export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick, loading: menuLoading }: Props & { loading?: boolean }) {
+export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick, loading: menuLoading }: Props) {
   const { sections, loading: wsLoading } = useWorkspace();
   const { isProfessionalContext } = useWorkspaceContext();
 
