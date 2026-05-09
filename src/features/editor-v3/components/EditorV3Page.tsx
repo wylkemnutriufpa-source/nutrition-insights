@@ -1472,19 +1472,34 @@ const EditorV3Page = () => {
                               <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
                             </div>
                             <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={async () => {
-                                if (activeMealId) {
-                                  applyTemplateToMeal(activeMealId, t);
-                                  toast.success(`Template ${t.name} aplicado!`);
-                                } else {
-                                  // PLOTAGEM DIRETA: Criar refeição e forçar aplicação
-                                  addMealWithHeader(t.name, "08:00");
-                                  // Pequeno delay para garantir que o state de meals atualizou
-                                  await new Promise(resolve => setTimeout(resolve, 50));
-                                  const state = useEditorState.getState();
-                                  const lastMeal = state.meals[state.meals.length - 1];
+                              size="sm"
+                              className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[9px] h-8 rounded-lg px-3"
+                              onClick={() => {
+                                applySmartTemplate(t, baseFoods);
+                              }}
+                            >
+                              Aplicar
+                            </Button>
+                          </div>
+                          
+                          {/* Prévia dos alimentos */}
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {t.items.slice(0, 4).map((item, idx) => (
+                              <Badge key={idx} variant="outline" className="text-[8px] border-white/5 bg-white/5 text-white/40 font-bold uppercase py-0 px-1.5 h-4">
+                                {item.name}
+                              </Badge>
+                            ))}
+                            {t.items.length > 4 && (
+                              <span className="text-[8px] text-white/20 font-bold uppercase ml-1">+{t.items.length - 4} mais</span>
+                            )}
+                          </div>
+                          
+                          <p className="text-[9px] text-white/30 italic leading-tight">
+                            {t.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                                   if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
                                   toast.success(`Template ${t.name} plotado com sucesso!`);
                                 }
