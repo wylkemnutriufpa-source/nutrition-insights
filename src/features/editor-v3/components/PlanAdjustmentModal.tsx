@@ -108,7 +108,13 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        // Clicar fora ou esc -> Cancelar (restaurar snapshot)
+        onApply(initialMeals);
+        onClose();
+      }
+    }}>
       <DialogContent className="max-w-md bg-neutral-900 border-white/10 text-white p-6 rounded-3xl shadow-2xl backdrop-blur-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="mb-6">
           <div className="flex items-center gap-2 text-emerald-500 mb-1">
@@ -294,7 +300,10 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
 
         <DialogFooter className="mt-8 flex gap-3 sm:justify-center">
           <Button 
-            onClick={onClose}
+            onClick={() => {
+              // snapshot is naturally discarded because we don't restore it
+              onClose();
+            }}
             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl h-12"
           >
             Aplicar Ajustes
