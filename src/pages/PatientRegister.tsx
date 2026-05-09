@@ -97,6 +97,7 @@ const resolveRegistrationDisplay = (params: {
 
 export default function PatientRegister() {
   const navigate = useNavigate();
+  const { authStatus, user } = useAuth();
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get("ref") || "";
   const preselectedNutri = searchParams.get("nutri") || "";
@@ -106,6 +107,16 @@ export default function PatientRegister() {
   const correlationId = useMemo(() => crypto.randomUUID(), []);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [avatarError, setAvatarError] = useState(false);
+
+  // REDIRECIONAMENTO DE USUÁRIO AUTENTICADO:
+  // Se o paciente já estiver logado, não faz sentido ele ficar na tela de cadastro.
+  // Mandamos para /welcome que orquestra o destino correto (onboarding ou dashboard).
+  useEffect(() => {
+    if (authStatus === "authenticated" && user) {
+      console.log("[PatientRegister] Usuário já autenticado. Redirecionando para /welcome...");
+      navigate("/welcome", { replace: true });
+    }
+  }, [authStatus, user, navigate]);
 
   const addLog = useCallback((msg: string) => {
     const timestamp = new Date().toISOString();
