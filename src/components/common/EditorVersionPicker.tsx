@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Zap, Sparkles, Pencil } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 interface EditorVersionPickerProps {
   planId: string;
@@ -33,6 +34,10 @@ export function EditorVersionPicker({
   icon,
 }: EditorVersionPickerProps) {
   const navigate = useNavigate();
+  const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const isPro = isNutritionist || isPersonal || isAdmin;
+
+  if (!isPro) return null;
 
   const handleNavigate = (version: "v2" | "v3") => {
     onBeforeNavigate?.();
