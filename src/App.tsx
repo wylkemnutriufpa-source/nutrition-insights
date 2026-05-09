@@ -18,13 +18,22 @@ const App = () => {
   });
 
   useEffect(() => {
+    if (loading) return;
+    
+    // Safety check: if user is not admin, they MUST stay in V1
+    if (!isAdmin && mode === 'V2') {
+      console.warn('[FitJourney] Non-admin user detected in V2, forcing V1');
+      setMode('V1');
+      return;
+    }
+
     try {
       localStorage.setItem('fitjourney_mode', mode);
     } catch (e) {
       console.warn('[FitJourney] Could not save mode to localStorage');
     }
     console.log(`[FitJourney] Mode active: ${mode}`);
-  }, [mode]);
+  }, [mode, isAdmin, loading]);
 
   const Switcher = () => {
     // Only admins can see and use the switcher
