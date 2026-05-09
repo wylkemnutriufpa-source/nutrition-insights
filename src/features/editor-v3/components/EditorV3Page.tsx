@@ -356,7 +356,8 @@ const EditorV3Page = () => {
         console.info(`[V3-Context] Assigning context for ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
         
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
-        if (get().patientId !== profileId) {
+        const currentState = useEditorState.getState();
+        if (currentState.patientId !== profileId) {
           setPatientId(profileId);
         }
 
