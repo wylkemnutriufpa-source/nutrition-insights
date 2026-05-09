@@ -58,9 +58,10 @@ interface EditorState {
   updateMealHeader: (mealId: string, name: string, time: string, description?: string, imageUrl?: string, imageSource?: 'auto' | 'manual' | 'fallback') => void;
   updateMealImage: (mealId: string, imageUrl: string, imageSource: 'auto' | 'manual' | 'fallback') => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
-  addFoodToMeal: (mealId: string, food: Food) => void;
+  addFoodToMeal: (mealId: string, food: Food) => Promise<void>;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
-  removeFood: (mealId: string, instanceId: string) => void;
+  removeFood: (mealId: string, instanceId: string) => Promise<void>;
+
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
   updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => Promise<void>;
 
@@ -516,7 +517,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`${marmita.name} adicionada!`);
       },
 
-      addFoodToMeal: (mealId, food) => {
+      addFoodToMeal: async (mealId, food) => {
         let initialQuantity = 1;
         if (food.measurementType === 'gram') initialQuantity = 100;
         if (food.measurementType === 'ml') initialQuantity = 200;
@@ -531,9 +532,18 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Atualizar imagem se necessário
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual') {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
         toast.success(`${food.name} adicionado!`);
       },
+
 
       applyTemplateToMeal: async (mealId, template) => {
         const newItems: MealItem[] = template.items.map((f) => {
@@ -620,7 +630,7 @@ export const useEditorState = create<EditorState>()(
       },
 
 
-      removeFood: (mealId, instanceId) => {
+      removeFood: async (mealId, instanceId) => {
         const meal = get().meals.find((m) => m.id === mealId);
         const item = meal?.items.find((i) => i.instanceId === instanceId);
 
@@ -637,8 +647,17 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Atualizar imagem ao remover se necessário
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual') {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
       },
+
       
       updateFoodQuantity: (mealId, instanceId, quantity) => {
         if (quantity < 0) return;
