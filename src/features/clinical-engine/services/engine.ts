@@ -10,16 +10,16 @@ import { recalculateMacros, applyClinicalSafety } from '../utils/foodNormalizati
 /**
  * Proxy para manter compatibilidade com Editor V3
  */
-export const generateMealWithEngine = (
+export const generateMealWithEngine = async (
   meal: Meal, 
   goal: string, 
   baseCalories: number = 2000, 
   availableFoods: Food[] = [],
   protocolType: string = 'default_v3',
   context?: PatientContext
-): MealItem[] => {
+): Promise<MealItem[]> => {
   const strategy = ClinicalEngineFactory.getStrategy(protocolType);
-  return strategy.generateMeal(meal, goal, baseCalories, availableFoods, context);
+  return await strategy.generateMeal(meal, goal, baseCalories, availableFoods, context);
 };
 
 /**
