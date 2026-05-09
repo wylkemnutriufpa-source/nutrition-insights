@@ -104,9 +104,10 @@ export default function Welcome() {
           target = "/client/dashboard";
         }
         
-        // Se temos um nextPath válido, ele tem prioridade, a menos que seja um path de dashboard genérico
+        // Se temos um nextPath válido, ele tem prioridade, a menos que seja um path de dashboard genérico ou administrativo
         const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index" || nextPath === "/client/dashboard";
-        const finalTarget = (nextPath && !isDefaultPath) ? nextPath : target;
+        const isAdminPath = nextPath?.startsWith("/admin/");
+        const finalTarget = (nextPath && !isDefaultPath && !isAdminPath) ? nextPath : target;
         
         console.log("[NAV] Welcome -> Patient Flow Decision", { 
           state: pState, 
