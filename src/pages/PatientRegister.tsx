@@ -423,8 +423,8 @@ export default function PatientRegister() {
     
     setCheckingEmail(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
+      const { data, error } = await (supabase
+        .from("profiles") as any)
         .select("id")
         .eq("email", emailToCheck.toLowerCase().trim())
         .maybeSingle();
