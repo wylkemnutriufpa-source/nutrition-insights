@@ -18,6 +18,7 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
   const [loading, setLoading] = useState<null | "link" | "email" | "whatsapp">(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [clipboardError, setClipboardError] = useState(false);
   const [contact, setContact] = useState("");
 
   const generateAndUpload = async (): Promise<string> => {
@@ -50,10 +51,22 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
       const message = `Olá${data?.patientName ? `, ${data.patientName}` : ""}! Aqui está seu plano alimentar: ${url}`;
 
       if (mode === "link") {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2500);
-        toast.success("Link copiado para a área de transferência!");
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setClipboardError(false);
+            setTimeout(() => setCopied(false), 2500);
+            toast.success("Link copiado para a área de transferência!");
+          } else {
+            throw new Error("Clipboard API not available");
+          }
+        } catch (err) {
+          setClipboardError(true);
+          toast.error("Permissão de cópia bloqueada", {
+            description: "O link foi gerado abaixo para cópia manual."
+          });
+        }
       } else if (mode === "email") {
         const to = encodeURIComponent(contact.trim());
         window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, "_blank");
@@ -150,18 +163,37 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
                 Link público
               </p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs truncate">{shareUrl}</code>
+                {clipboardError ? (
+                  <Input 
+                    readOnly 
+                    value={shareUrl} 
+                    onFocus={(e) => e.target.select()}
+                    className="h-8 text-xs flex-1 bg-transparent border-none shadow-none focus-visible:ring-0"
+                  />
+                ) : (
+                  <code className="flex-1 text-xs truncate">{shareUrl}</code>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={async () => {
-                    await navigator.clipboard.writeText(shareUrl);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2500);
-                    toast.success("Link copiado!");
+                    try {
+                      if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(shareUrl);
+                        setCopied(true);
+                        setClipboardError(false);
+                        setTimeout(() => setCopied(false), 2500);
+                        toast.success("Link copiado!");
+                      } else {
+                        throw new Error("Clipboard API not available");
+                      }
+                    } catch (err) {
+                      setClipboardError(true);
+                      toast.error("Copie manualmente o link abaixo");
+                    }
                   }}
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
               </div>
             </div>

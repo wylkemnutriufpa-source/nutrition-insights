@@ -29,6 +29,7 @@ export default function InvitePatient() {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [clipboardError, setClipboardError] = useState<string | null>(null);
   const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
@@ -150,26 +151,37 @@ export default function InvitePatient() {
     return `${base}?text=${encodeURIComponent(whatsappMessage)}`;
   }, [phone, whatsappMessage]);
 
-  const copyToClipboard = (value: string, key: string, label: string) => {
+  const copyToClipboard = async (value: string, key: string, label: string) => {
     const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
     const isProductionUrl = value.includes("fitjourney.com.br") || value.includes(PRODUCTION_URL.replace("https://", ""));
     
-    // Confirmação do domínio antes de copiar
     const domainType = isProductionUrl ? "PRODUÇÃO (fitjourney.com.br)" : "PREVIEW/TESTE";
     
-    navigator.clipboard.writeText(value);
-    setCopied(key);
-    
-    if (isPreview && !isProductionUrl) {
-      toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
-        description: "Este link é apenas para testes no ambiente atual."
-      });
-    } else {
-      toast.success(`Link de ${label} copiado!`, {
-        description: `Domínio: ${domainType}`
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        setCopied(key);
+        setClipboardError(null);
+        
+        if (isPreview && !isProductionUrl) {
+          toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
+            description: "Este link é apenas para testes no ambiente atual."
+          });
+        } else {
+          toast.success(`Link de ${label} copiado!`, {
+            description: `Domínio: ${domainType}`
+          });
+        }
+        setTimeout(() => setCopied(null), 2000);
+      } else {
+        throw new Error("Clipboard API not available");
+      }
+    } catch (err) {
+      setClipboardError(key);
+      toast.error("Permissão de cópia bloqueada pelo navegador", {
+        description: "Selecione o texto e use Ctrl+C para copiar."
       });
     }
-    setTimeout(() => setCopied(null), 2000);
   };
 
   const handleSendOnboardingEmail = async () => {
@@ -286,7 +298,16 @@ export default function InvitePatient() {
             <div className="space-y-3">
               <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
                 <LinkIcon className="w-3.5 h-3.5 text-primary shrink-0" />
-                <code className="text-[10px] md:text-xs flex-1 truncate">{publicRegisterLink}</code>
+                {clipboardError === "public_link" ? (
+                  <Input 
+                    readOnly 
+                    value={publicRegisterLink} 
+                    onFocus={(e) => e.target.select()}
+                    className="h-7 text-[10px] md:text-xs flex-1 bg-transparent border-none shadow-none focus-visible:ring-0"
+                  />
+                ) : (
+                  <code className="text-[10px] md:text-xs flex-1 truncate">{publicRegisterLink}</code>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
@@ -317,7 +338,16 @@ export default function InvitePatient() {
             <div className="space-y-3">
               <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
                 <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
-                <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+                {clipboardError === "quick_link" ? (
+                  <Input 
+                    readOnly 
+                    value={quickLink} 
+                    onFocus={(e) => e.target.select()}
+                    className="h-7 text-[10px] md:text-xs flex-1 bg-transparent border-none shadow-none focus-visible:ring-0"
+                  />
+                ) : (
+                  <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
@@ -369,7 +399,16 @@ export default function InvitePatient() {
             <CardContent>
               <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
                 <Globe className="w-3.5 h-3.5 text-info shrink-0" />
-                <code className="text-[10px] md:text-xs flex-1 truncate">{publicProfileLink}</code>
+                {clipboardError === "public_profile" ? (
+                  <Input 
+                    readOnly 
+                    value={publicProfileLink} 
+                    onFocus={(e) => e.target.select()}
+                    className="h-7 text-[10px] md:text-xs flex-1 bg-transparent border-none shadow-none focus-visible:ring-0"
+                  />
+                ) : (
+                  <code className="text-[10px] md:text-xs flex-1 truncate">{publicProfileLink}</code>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"

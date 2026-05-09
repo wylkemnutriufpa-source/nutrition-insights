@@ -31,6 +31,7 @@ export default function MyPublicProfile() {
   const [newSpecialty, setNewSpecialty] = useState("");
   const [leads, setLeads] = useState<any[]>([]);
   const [leadsCount, setLeadsCount] = useState(0);
+  const [clipboardError, setClipboardError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -97,9 +98,19 @@ export default function MyPublicProfile() {
 
   const publicUrl = `${window.location.origin}/p/${settings.slug}`;
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(publicUrl);
-    toast.success("Link copiado!");
+  const copyLink = async (text: string, label: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        toast.success(`${label} copiado!`);
+      } else {
+        throw new Error("Clipboard API not available");
+      }
+    } catch (err) {
+      toast.error("Permissão de cópia bloqueada", {
+        description: "Selecione o texto no campo ao lado e copie manualmente."
+      });
+    }
   };
 
   if (loading) return (
@@ -138,7 +149,7 @@ export default function MyPublicProfile() {
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Perfil Público & Agenda</p>
                 <div className="flex items-center gap-2">
                   <Input value={publicUrl} readOnly className="h-9 text-xs font-mono" />
-                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={copyLink}><Copy className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => copyLink(publicUrl, "Link do perfil")}><Copy className="w-3.5 h-3.5" /></Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2">Use este link na sua bio do Instagram ou WhatsApp.</p>
               </div>
@@ -147,10 +158,9 @@ export default function MyPublicProfile() {
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Link Direto de Cadastro</p>
                 <div className="flex items-center gap-2">
                   <Input value={`${window.location.origin}/cadastro?nutri=${user?.id}`} readOnly className="h-9 text-xs font-mono" />
-                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/cadastro?nutri=${user?.id}`);
-                    toast.success("Link de cadastro copiado!");
-                  }}><Copy className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => 
+                    copyLink(`${window.location.origin}/cadastro?nutri=${user?.id}`, "Link de cadastro")
+                  }><Copy className="w-3.5 h-3.5" /></Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2">Pacientes vinculados a você automaticamente.</p>
               </div>
@@ -159,10 +169,9 @@ export default function MyPublicProfile() {
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Link Direto da Agenda</p>
                 <div className="flex items-center gap-2">
                   <Input value={`${window.location.origin}/p/${settings.slug}/agenda`} readOnly className="h-9 text-xs font-mono" />
-                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/p/${settings.slug}/agenda`);
-                    toast.success("Link da agenda copiado!");
-                  }}><Copy className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => 
+                    copyLink(`${window.location.origin}/p/${settings.slug}/agenda`, "Link da agenda")
+                  }><Copy className="w-3.5 h-3.5" /></Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2">Link direto para seu calendário de agendamentos.</p>
               </div>
