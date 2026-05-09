@@ -78,6 +78,7 @@ interface Props {
   isProRole: boolean;
   onLinkClick?: () => void;
   trackClick: (id: string) => void;
+  loading?: boolean;
 }
 
 /**
