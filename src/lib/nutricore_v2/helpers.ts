@@ -66,7 +66,7 @@ export const calculateItemMacros = (item: any, quantity: number) => {
 
   // No FitJourney V3, a base é definida por portionValue.
   // Se o motor NutriCore V2 gerou o item, portionValue = quantity, logo factor = 1.
-  const base = item.portionValue || 100;
+  const base = item.measurementType === 'unit' ? 1 : (item.portionValue || 100);
   const factor = quantity / (base || 1);
 
   return {
