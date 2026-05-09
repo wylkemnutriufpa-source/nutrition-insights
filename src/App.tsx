@@ -21,7 +21,7 @@ const App = () => {
     if (loading) return;
     
     // Safety check: if user is not admin, they MUST stay in V1
-    if (!isAdmin && mode === 'V2') {
+    if (roles !== null && !isAdmin && mode === 'V2') {
       console.warn('[FitJourney] Non-admin user detected in V2, forcing V1');
       setMode('V1');
       return;
