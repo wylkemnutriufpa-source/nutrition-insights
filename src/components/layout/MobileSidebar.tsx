@@ -61,7 +61,7 @@ export default function MobileSidebar({
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { mode, isFeatureEnabled } = useExperienceMode();
   const { isProfessionalContext } = useWorkspaceContext();
-  const { categories, flatItems, trackClick } = useSmartMenu();
+  const { categories, flatItems, trackClick, loading: menuLoading } = useSmartMenu();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const pendingCount = usePendingApprovals();
   const location = useLocation();
