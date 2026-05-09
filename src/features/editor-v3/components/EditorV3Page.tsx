@@ -355,8 +355,11 @@ const EditorV3Page = () => {
 
         console.info(`[V3-Context] Assigning context for ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
         
-        // Sincroniza o patientId na store com o ID REAL do perfil ANTES de qualquer hidratação
-        setPatientId(profileId);
+        // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
+        const currentState = useEditorState.getState();
+        if (currentState.patientId !== profileId) {
+          setPatientId(profileId);
+        }
 
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
         setGoalMetadata({

@@ -67,7 +67,7 @@ interface EditorState {
 }
 
 
-const initialMeals: Meal[] = [
+const DEFAULT_MEALS: Meal[] = [
   { id: '1', name: 'Café da Manhã', items: [], time: '08:00' },
   { id: '2', name: 'Lanche da Manhã', items: [], time: '10:00' },
   { id: '3', name: 'Almoço', items: [], time: '12:00' },
@@ -81,7 +81,7 @@ const makeInstanceId = () => Math.random().toString(36).substring(2, 10);
 export const useEditorState = create<EditorState>()(
   persist(
     (set, get) => ({
-      meals: initialMeals,
+      meals: DEFAULT_MEALS,
       auditLog: [],
       patientId: null,
       planStatus: 'draft',
@@ -90,7 +90,7 @@ export const useEditorState = create<EditorState>()(
       goalMetadata: {},
       patientContext: null,
       confidence: null, sharingToken: null,
-      initialMeals: initialMeals,
+      initialMeals: DEFAULT_MEALS,
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
 
@@ -167,8 +167,8 @@ export const useEditorState = create<EditorState>()(
         // Reset local state for the new patient to prevent "Deborah's diet showing for Nathalia"
         set({ 
           patientId: id,
-          meals: initialMeals, // Start with a clean slate for the new patient
-          initialMeals: initialMeals,
+          meals: DEFAULT_MEALS, // Start with a clean slate for the new patient
+          initialMeals: DEFAULT_MEALS,
           auditLog: [],
           sharingToken: null,
           planStatus: 'draft',
@@ -339,7 +339,7 @@ export const useEditorState = create<EditorState>()(
           console.error('[V3 Hydrate Error] Failed to hydrate meals, recovering...', error);
           toast.error("Erro ao carregar dados do plano. Tentando recuperar...");
           // Fallback para estado inicial seguro
-          set({ meals: initialMeals, planStatus: 'draft' });
+          set({ meals: DEFAULT_MEALS, planStatus: 'draft' });
         }
       },
 
@@ -650,7 +650,7 @@ export const useEditorState = create<EditorState>()(
         const finalGoal = patientContext?.goal || goal;
 
         if (replaceExisting) {
-          currentMeals = initialMeals.map(m => ({ ...m, items: [] }));
+          currentMeals = DEFAULT_MEALS.map(m => ({ ...m, items: [] }));
         }
 
         const newMeals = generatePlanWithEngine(
@@ -733,7 +733,7 @@ export const useEditorState = create<EditorState>()(
       },
 
       resetEditor: () => {
-        set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [], sharingToken: null });
+        set({ meals: DEFAULT_MEALS, planStatus: 'draft', nutritionalScore: null, validationIssues: [], sharingToken: null });
       },
 
       setMeals: (meals) => {
@@ -748,7 +748,7 @@ export const useEditorState = create<EditorState>()(
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted: any, version) => {
         if (!persisted || version < 2) {
-          return { ...(persisted ?? {}), meals: initialMeals, planStatus: 'draft' };
+          return { ...(persisted ?? {}), meals: DEFAULT_MEALS, planStatus: 'draft' };
         }
         return persisted;
       },
