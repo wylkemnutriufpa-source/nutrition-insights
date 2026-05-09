@@ -103,7 +103,7 @@ function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemIns
     title: insert.title,
     description: insert.description ?? null,
     meal_type: insert.meal_type,
-    day_of_week: 0, // Forçado: modelo single-day 
+    day_of_week: insert.day_of_week ?? 0, // Permite múltiplos dias
     is_primary: (insert as any).is_primary ?? true,
     substitution_group_id: (insert as any).substitution_group_id ?? null,
     calories_target: insert.calories_target ?? null,
@@ -157,7 +157,7 @@ const MEAL_PLAN_ITEM_PATCH_KEYS = new Set([
 
 function sanitizeMealPlanItemPatch(patch: Partial<MealPlanItem>) {
   const next: Record<string, unknown> = { ...patch };
-  if ("day_of_week" in next) next.day_of_week = 0;
+  if ("day_of_week" in next) next.day_of_week = patch.day_of_week ?? 0;
   if ("metadata" in next && !("edit_metadata" in next)) {
     next.edit_metadata = (next as any).metadata;
   }
