@@ -72,6 +72,7 @@ interface EditorState {
   savePlan: () => Promise<void>;
   resetEditor: () => void;
   setMeals: (meals: Meal[]) => void;
+  applySmartTemplate: (template: MealTemplate, baseFoods?: Food[]) => Promise<void>;
 }
 
 
