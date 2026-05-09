@@ -3,17 +3,7 @@
  */
 
 export function copyToClipboard(text: string): Promise<boolean> {
-  // Método 1: Clipboard API (navegadores modernos com HTTPS)
-  if (navigator.clipboard && window.isSecureContext) {
-    return navigator.clipboard.writeText(text)
-      .then(() => true)
-      .catch((err) => {
-        console.warn("[clipboard] Clipboard API failed, trying fallback:", err);
-        return fallbackCopy(text);
-      });
-  } else {
-    return Promise.resolve(fallbackCopy(text));
-  }
+  return Promise.resolve(fallbackCopy(text));
 }
 
 function fallbackCopy(text: string): boolean {
