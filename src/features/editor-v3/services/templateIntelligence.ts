@@ -1,5 +1,5 @@
 import { Meal, MealItem, Food, MealTemplate } from "../types";
-import { normalizeFood, makeInstanceId } from "../utils/normalization";
+import { normalizeFood } from "../utils/normalization";
 import { calculateItemMacros } from "@/lib/nutricore_v2/helpers";
 
 /**
