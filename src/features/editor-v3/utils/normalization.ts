@@ -26,7 +26,13 @@ export function normalizeFood(food: any): Food {
   // Inferência de measurementType se ausente
   if (!f.measurementType) {
     const name = (f.name || '').toLowerCase();
-    if (name.includes('leite') || name.includes('suco') || name.includes('bebida') || name.includes('água') || name.includes('ml')) {
+    
+    // Tratamento especial para Ovo (prioridade Unidade)
+    if (name.includes('ovo') || name === 'ovo' || name.includes('omelete')) {
+      f.measurementType = 'unit';
+      f.portionValue = 1;
+      f.portionLabel = 'unidade';
+    } else if (name.includes('leite') || name.includes('suco') || name.includes('bebida') || name.includes('água') || name.includes('ml')) {
       f.measurementType = 'ml';
     } else if (name.includes('aveia') || name.includes('granola') || name.includes('pasta') || name.includes('colher')) {
       f.measurementType = 'spoon';
