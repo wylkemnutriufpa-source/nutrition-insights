@@ -313,28 +313,27 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Refeição "${name}" adicionada!`);
       },
 
-      hydrateMeals: (meals, auditLog = [], token = null) => {
+      hydrateMeals: async (meals, auditLog = [], token = null) => {
         try {
           // Blindagem Anti-Tela Branca: Validar e corrigir IDs nulos ou itens corrompidos
-          const sanitizedMeals = meals.map(meal => ({
-            ...meal,
-            id: meal.id || Math.random().toString(36).substring(2, 9),
-            items: (meal.items || []).map(item => {
-              // Normalização de itens legados (Etapa 4 - Legado)
-              return {
-                ...item,
-                instanceId: item.instanceId || Math.random().toString(36).substring(2, 10),
-                measurementType: item.measurementType || 'gram',
-                quantity: item.quantity || 100,
-                kcal: item.kcal !== undefined ? item.kcal : (item.calories || 0),
-                protein: item.protein !== undefined ? item.protein : (item.protein_g || 0),
-                carbs: item.carbs !== undefined ? item.carbs : (item.carbs_g || 0),
-                fat: item.fat !== undefined ? item.fat : (item.fat_g || 0)
-              };
-            })
+          const normalized = normalizeMeals(meals);
+          
+          // PARTE 1 & 3 - Garantir imagens ao carregar/hidratar
+          const mealsWithImages = await Promise.all(normalized.map(async (meal) => {
+            if (meal.items.length > 0 && !meal.imageUrl) {
+               const bestImage = await getBestMealImage(meal.name, meal.items);
+               return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
+            }
+            return meal;
           }));
 
-          set({ meals: sanitizedMeals, initialMeals: JSON.parse(JSON.stringify(sanitizedMeals)), auditLog, sharingToken: token, planStatus: 'saved' });
+          set({ 
+            meals: mealsWithImages, 
+            initialMeals: JSON.parse(JSON.stringify(mealsWithImages)), 
+            auditLog, 
+            sharingToken: token, 
+            planStatus: 'saved' 
+          });
           get().recalculateScore();
         } catch (error) {
           console.error('[V3 Hydrate Error] Failed to hydrate meals, recovering...', error);
