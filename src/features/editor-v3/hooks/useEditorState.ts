@@ -35,7 +35,10 @@ interface EditorState {
   patientContext: PatientContext | null;
   sharingToken: string | null;
   confidence: PlanConfidence | null;
-  initialMeals: Meal[]; // Track initial meals separate from current meals
+  initialMeals: Meal[]; 
+  viewMode: 'daily' | 'weekly';
+  setViewMode: (mode: 'daily' | 'weekly') => void;
+
 
   // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
   dispatch: (action: string, updateFn: (state: EditorState) => Partial<EditorState>) => void;
@@ -59,7 +62,8 @@ interface EditorState {
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
   removeFood: (mealId: string, instanceId: string) => void;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
-  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => void;
+  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => Promise<void>;
+
   generatePlan: (goal: string, baseCalories: number, availableFoods: Food[], replaceExisting?: boolean) => void;
   generateMeal: (mealId: string, goal: string, availableFoods: Food[], baseCalories?: number) => void;
   savePlan: () => Promise<void>;
