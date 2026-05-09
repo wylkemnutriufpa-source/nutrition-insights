@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@/utils/whatsapp";
+import { copyToClipboard } from "@/utils/clipboard";
 import { getWhatsAppInvitationMessage, WhatsAppTemplateType, getInvitationUrl, getQuickLinkUrl, getOnboardingUrl } from "@/utils/invitation";
 import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
 import WhatsAppTemplateEditor from "@/components/professional/WhatsAppTemplateEditor";
@@ -151,35 +152,31 @@ export default function InvitePatient() {
     return `${base}?text=${encodeURIComponent(whatsappMessage)}`;
   }, [phone, whatsappMessage]);
 
-  const copyToClipboard = async (value: string, key: string, label: string) => {
+  const copyToClipboardHandler = async (value: string, key: string, label: string) => {
     const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
     const isProductionUrl = value.includes("fitjourney.com.br") || value.includes(PRODUCTION_URL.replace("https://", ""));
-    
     const domainType = isProductionUrl ? "PRODUÇÃO (fitjourney.com.br)" : "PREVIEW/TESTE";
     
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(value);
-        setCopied(key);
-        setClipboardError(null);
-        
-        if (isPreview && !isProductionUrl) {
-          toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
-            description: "Este link é apenas para testes no ambiente atual."
-          });
-        } else {
-          toast.success(`Link de ${label} copiado!`, {
-            description: `Domínio: ${domainType}`
-          });
-        }
-        setTimeout(() => setCopied(null), 2000);
+    const success = await copyToClipboard(value);
+    
+    if (success) {
+      setCopied(key);
+      setClipboardError(null);
+      
+      if (isPreview && !isProductionUrl) {
+        toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
+          description: "Este link é apenas para testes no ambiente atual."
+        });
       } else {
-        throw new Error("Clipboard API not available");
+        toast.success(`Link de ${label} copiado!`, {
+          description: `Domínio: ${domainType}`
+        });
       }
-    } catch (err) {
+      setTimeout(() => setCopied(null), 2000);
+    } else {
       setClipboardError(key);
-      toast.error("Permissão de cópia bloqueada pelo navegador", {
-        description: "Selecione o texto e use Ctrl+C para copiar."
+      toast.error("Erro ao copiar link", {
+        description: "O navegador bloqueou a cópia automática. Selecione o texto abaixo e use Ctrl+C."
       });
     }
   };
@@ -312,7 +309,7 @@ export default function InvitePatient() {
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 gap-1"
-                  onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Convite")}
+                  onClick={() => copyToClipboardHandler(publicRegisterLink, "public_link", "Convite")}
                 >
                   {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
@@ -352,7 +349,7 @@ export default function InvitePatient() {
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 gap-1"
-                  onClick={() => copyToClipboard(quickLink, "quick_link", "Vínculo Rápido")}
+                  onClick={() => copyToClipboardHandler(quickLink, "quick_link", "Vínculo Rápido")}
                 >
                   {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
@@ -413,7 +410,7 @@ export default function InvitePatient() {
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 gap-1"
-                  onClick={() => copyToClipboard(publicProfileLink, "public_profile", "Link do perfil")}
+                  onClick={() => copyToClipboardHandler(publicProfileLink, "public_profile", "Link do perfil")}
                 >
                   {copied === "public_profile" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
