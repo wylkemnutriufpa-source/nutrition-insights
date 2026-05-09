@@ -23,6 +23,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { PRODUCTION_URL } from "@/lib/config";
+import { copyToClipboard } from "@/utils/clipboard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
 import PatientCalculators from "@/components/patient/PatientCalculators";
@@ -338,7 +340,7 @@ export default function PatientDetail() {
           patientName: profile?.full_name || "Paciente",
           professionalName: (window as any).PROFESSIONAL_NAME || "Seu Nutricionista",
           type: "registration_updated",
-          appUrl: `${window.location.origin}/auth`
+          appUrl: `${PRODUCTION_URL}/auth`
         });
       });
 
@@ -384,7 +386,7 @@ export default function PatientDetail() {
           patientName: profile?.full_name || "Paciente",
           professionalName: (window as any).PROFESSIONAL_NAME || "Seu Nutricionista",
           type: "protocol_activated",
-          appUrl: `${window.location.origin}/auth`
+          appUrl: `${PRODUCTION_URL}/auth`
         });
       });
     } else {
@@ -1886,9 +1888,9 @@ export default function PatientDetail() {
                               if (error) throw error;
                               const result = data as any;
                               if (result?.success && result?.token) {
-                                const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${result.token}`;
-                                await navigator.clipboard.writeText(link);
-                                toast.success("Onboarding resetado! Link copiado para a área de transferência 📋");
+                                const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${result.token}`;
+                                const copied = await copyToClipboard(link);
+                                toast[copied ? "success" : "error"](copied ? "Onboarding resetado! Link oficial copiado 📋" : "Onboarding resetado! Copie manualmente o link oficial.");
                               } else {
                                 toast.success("Onboarding resetado com sucesso!");
                               }
@@ -1935,9 +1937,9 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
-                        await navigator.clipboard.writeText(link);
-                        toast.success("Link de onboarding copiado! 📋");
+                        const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${tokenValue}`;
+                        const copied = await copyToClipboard(link);
+                        toast[copied ? "success" : "error"](copied ? "Link oficial de onboarding copiado! 📋" : "Copie manualmente o link oficial.");
                       } catch (err: any) {
                         toast.error("Erro ao gerar link: " + (err.message || "Tente novamente"));
                       }
@@ -1976,7 +1978,7 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
+                        const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${tokenValue}`;
 
                         // Send notification to patient
                         await supabase.from("notifications").insert({

@@ -15,6 +15,8 @@ import {
 import { getSubstitutions } from '@/lib/nutricore_v2/substitutions';
 import { BASE_FOODS, Food } from '@/lib/nutricore_v2/food-database';
 import { toast } from 'sonner';
+import { PRODUCTION_URL } from '@/lib/config';
+import { copyToClipboard } from '@/utils/clipboard';
 
 
 export const PatientPlanPage = () => {
@@ -59,11 +61,11 @@ export const PatientPlanPage = () => {
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!plan?.sharing_token) return;
-    const url = `${window.location.origin}/patient/view/${plan.sharing_token}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Link de compartilhamento copiado!');
+    const url = `${PRODUCTION_URL}/patient/view/${plan.sharing_token}`;
+    const success = await copyToClipboard(url);
+    toast[success ? 'success' : 'error'](success ? 'Link de compartilhamento copiado!' : 'Copie manualmente o link exibido.');
   };
 
   const handleExport = async () => {

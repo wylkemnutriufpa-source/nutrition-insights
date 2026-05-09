@@ -115,22 +115,16 @@ export default function InvitePatient() {
     fetchData();
   }, [user?.id]);
 
-  // Links use relative URL in preview by default, but production URL for sharing/display
+  // Links compartilháveis sempre usam o domínio oficial, mesmo no preview.
   const onboardingLink = useMemo(() => getOnboardingUrl(), []);
   const publicRegisterLink = useMemo(() => getInvitationUrl(invitationCode || undefined, user?.id), [invitationCode, user?.id]);
   const quickLink = useMemo(() => {
     if (!user?.id) return "";
-    const origin = (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) 
-      ? window.location.origin 
-      : PRODUCTION_URL;
-    return `${origin}/convite/${invitationCode || user.id}`;
-  }, [invitationCode, user?.id]);
+    return getQuickLinkUrl(user.id);
+  }, [user?.id]);
   const publicProfileLink = useMemo(() => {
     if (!publicProfile?.slug) return null;
-    const origin = (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) 
-      ? window.location.origin 
-      : PRODUCTION_URL;
-    return `${origin}/p/${publicProfile.slug}`;
+    return `${PRODUCTION_URL}/profile/${publicProfile.slug}`;
   }, [publicProfile]);
 
   const whatsappMessage = useMemo(() => {

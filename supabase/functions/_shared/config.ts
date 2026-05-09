@@ -5,9 +5,7 @@
 export const BASE_URL = "https://www.fitjourney.com.br";
 export const ALLOWED_DOMAINS = [
   "www.fitjourney.com.br", 
-  "fitjourney.com.br", 
-  "fijourney.lovable.app", 
-  "fitjourney-dev.lovable.app"
+  "fitjourney.com.br"
 ];
 
 /**
@@ -20,10 +18,7 @@ export function isValidDomain(url: string | null): boolean {
   try {
     const parsed = new URL(url);
     const host = parsed.hostname;
-    return ALLOWED_DOMAINS.includes(host) || 
-           host.endsWith(".lovable.app") || 
-           host.endsWith(".netlify.app") || 
-           host === "localhost";
+    return ALLOWED_DOMAINS.includes(host);
   } catch {
     return false;
   }

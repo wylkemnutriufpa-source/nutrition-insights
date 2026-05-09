@@ -1,4 +1,4 @@
-import { BASE_URL, OFFICIAL_DOMAIN, PRODUCTION_URL } from "@/lib/config";
+import { PRODUCTION_URL } from "@/lib/config";
 
 /**
  * Guard de integridade: garante que NENHUM link de convite emitido pelo app
@@ -16,11 +16,7 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
   }
   console.error(message);
   
-  const isPreview = typeof window !== "undefined" && 
-    (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
-  
-  const origin = isPreview ? window.location.origin : PRODUCTION_URL;
-  return `${origin}/cadastro?code=${encodeURIComponent(code)}`;
+  return `${PRODUCTION_URL}/cadastro?code=${encodeURIComponent(code)}`;
 };
 
 /**
@@ -31,11 +27,7 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
  * @returns A URL completa.
  */
 export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = false) => {
-  const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
-  const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
-
-  // Agora forceProduction é false por padrão no preview para evitar erro 412 de assets
-  const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
+  const origin = PRODUCTION_URL;
   
   if (code && code.length <= 12) {
     return `${origin}/convite/${code}`;
@@ -53,22 +45,14 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
  * Gera a URL de vínculo rápido.
  */
 export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
-  const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
-  const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
-  const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
-  
-  return `${origin}/vincular/${nutriId}`;
+  return `${PRODUCTION_URL}/quick-link/${nutriId}`;
 };
 
 /**
  * Gera a URL de onboarding genérica para o paciente.
  */
 export const getOnboardingUrl = (forceProduction = false) => {
-  const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
-  const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
-  const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
-  
-  return `${origin}/onboarding`;
+  return `${PRODUCTION_URL}/onboarding`;
 };
 
 

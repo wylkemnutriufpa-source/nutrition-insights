@@ -18,6 +18,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
+import { PRODUCTION_URL } from "@/lib/config";
+import { copyToClipboard } from "@/utils/clipboard";
 
 const CAREER_TIERS = [
   { name: "Bronze", min: 0, max: 19, first: 20, recurring: 5, badge: "🥉", level: 1, color: "from-amber-700 to-amber-900" },
@@ -141,19 +143,23 @@ export default function AmbassadorDashboard() {
     enabled: !!affiliate,
   });
 
-  const shareLink = affiliate ? `${window.location.origin}/auth?ref=${affiliate.referral_code}` : "";
+  const shareLink = affiliate ? `${PRODUCTION_URL}/auth?ref=${affiliate.referral_code}` : "";
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(shareLink);
-    setCopied(true);
-    toast.success("Link copiado!");
-    setTimeout(() => setCopied(false), 2000);
+  const copyLink = async () => {
+    const success = await copyToClipboard(shareLink);
+    if (success) {
+      setCopied(true);
+      toast.success("Link copiado!");
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error("Copie manualmente o link exibido.");
+    }
   };
 
   const shareWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(`Junte-se ao FitJourney! 🚀\n${shareLink}`)}`, "_blank");
   const shareTelegram = () => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareLink)}&text=${encodeURIComponent("Conheça o FitJourney! 🚀")}`, "_blank");
-  const shareInstagram = () => { navigator.clipboard.writeText(shareLink); toast.success("Link copiado! Cole na sua bio ou story do Instagram."); };
-  const copyMaterial = (text: string) => { navigator.clipboard.writeText(`${text}\n${shareLink}`); toast.success("Texto + link copiados!"); };
+  const shareInstagram = async () => { const success = await copyToClipboard(shareLink); toast[success ? "success" : "error"](success ? "Link copiado! Cole na sua bio ou story do Instagram." : "Copie manualmente o link exibido."); };
+  const copyMaterial = async (text: string) => { const success = await copyToClipboard(`${text}\n${shareLink}`); toast[success ? "success" : "error"](success ? "Texto + link copiados!" : "Copie manualmente o texto exibido."); };
 
   // Activation Screen
   if (!affiliate && !loadingAffiliate) {

@@ -18,7 +18,7 @@ describe("invitation utils", () => {
   describe("getQuickLinkUrl", () => {
     it("should generate a quick link URL", () => {
       const url = getQuickLinkUrl("NUTRI456", true);
-      expect(url).toContain("/vincular/NUTRI456");
+      expect(url).toContain("/quick-link/NUTRI456");
     });
   });
 
