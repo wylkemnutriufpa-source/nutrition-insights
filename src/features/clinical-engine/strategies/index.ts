@@ -6,7 +6,7 @@ import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
 export interface ClinicalStrategy {
   id: string;
   name: string;
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[];
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] | Promise<MealItem[]>;
   explainDecision(meal: Meal, items: MealItem[]): string;
 }
 
