@@ -529,14 +529,23 @@ export const useEditorState = create<EditorState>()(
 
       applyTemplateToMeal: (mealId, template) => {
         const newItems: MealItem[] = template.items.map((f) => {
-          let initialQuantity = 1;
-          if (f.measurementType === 'gram') initialQuantity = 100;
-          if (f.measurementType === 'ml') initialQuantity = 200;
-          if (f.measurementType === 'spoon') initialQuantity = 1;
-          if (f.measurementType === 'unit') initialQuantity = 1;
+          // Normaliza o item usando as regras de Medidas Caseiras
+          const normalized = normalizeFood(f);
+          
+          let initialQuantity = normalized.portionValue || 1;
+          if (normalized.measurementType === 'gram') initialQuantity = 100;
+          if (normalized.measurementType === 'ml') initialQuantity = 200;
+          
+          // Calcula macros exatos para a quantidade do template
+          const macros = calculateItemMacros(normalized, initialQuantity);
           
           return {
-            ...f,
+            ...normalized,
+            kcal: macros.kcal,
+            calories: macros.kcal,
+            protein: macros.protein,
+            carbs: macros.carbs,
+            fat: macros.fat,
             instanceId: makeInstanceId(),
             quantity: initialQuantity,
             locked: false,
