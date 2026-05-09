@@ -4,6 +4,7 @@ import { buildMeal, PlannedMeal } from './meal-builder';
 import { BASE_FOODS, Food } from './food-database';
 import { MARMITA_RECIPES, Marmita } from './marmitas-database';
 import { getSubstitutions } from './substitutions';
+import { getBestMealImage } from '../../features/editor-v3/utils/normalization';
 
 // Tipos compatíveis com o FitJourney Elite V3
 import { Meal as V3Meal, MealItem as V3MealItem, Food as V3Food, PatientContext } from '../../features/clinical-engine/types/clinical-types';
@@ -61,7 +62,7 @@ export class NutriCoreV2Adapter {
   /**
    * Gera um plano Elite V3 usando o novo Motor NutriCore
    */
-  static generateElitePlan(context: PatientContext, availableFoods: V3Food[]): V3Meal[] {
+  static async generateElitePlan(context: PatientContext, availableFoods: V3Food[]): Promise<V3Meal[]> {
     const engineInput = this.mapPatientToEngine(context);
     const engineResult = runEngine(engineInput);
     
@@ -98,7 +99,8 @@ export class NutriCoreV2Adapter {
     // Se a base estiver vazia, usa o BASE_FOODS do NutriCore
     const finalDb = foodDb.length > 5 ? foodDb : BASE_FOODS;
 
-    return distributed.map(slot => {
+    // Utilizar Promise.all para permitir chamadas assíncronas dentro do map (getBestMealImage)
+    return Promise.all(distributed.map(async (slot) => {
       // Mapeamento robusto de nomes para o Editor V3
       const nameMap: Record<string, string> = {
         'cafe_da_manha': 'Café da Manhã',
@@ -127,81 +129,88 @@ export class NutriCoreV2Adapter {
         }
       );
 
+      const v3Items = plannedMeal.items.map(item => {
+        // 🛡️ REGRA DE OURO NutriCore V2:
+        // Entregamos o macro TOTAL para a quantidade calculada.
+        const totalKcal = Math.round(item.macros.kcal);
+        const totalProtein = Number(item.macros.protein_g.toFixed(1));
+        const totalCarbs = Number(item.macros.carb_g.toFixed(1));
+        const totalFat = Number(item.macros.fat_g.toFixed(1));
+        
+        // Encontrar o objeto food original para calcular substituições
+        const foodObj = finalDb.find(f => f.id === item.foodId);
+        let substitutions: any[] = [];
+        
+        if (foodObj) {
+          const subs = getSubstitutions(foodObj, finalDb, item.grams, context.restrictions);
+          substitutions = subs.map(s => ({
+            id: s.food.id,
+            name: s.food.name,
+            kcal: s.food.kcal_100g,
+            calories: s.food.kcal_100g,
+            protein: s.food.protein_100g,
+            carbs: s.food.carb_100g,
+            fat: s.food.fat_100g,
+            portionValue: 100,
+            portionUnitLabel: 'g',
+            portionUnit: 'g',
+            portionLabel: s.unit_label,
+            measurementType: 'gram',
+            suggestedQuantity: s.grams // Informação vital para o executeSwap
+          }));
+        }
+
+        // Ajuste Medida Caseira Elite
+        const lowerName = item.name.toLowerCase();
+        let measurementType: any = 'gram';
+        let quantity = item.grams;
+        let portionValue = 100;
+        let portionLabel = 'g';
+
+        if (lowerName.includes('ovo')) {
+          measurementType = 'unit';
+          portionValue = 50; // M
+          quantity = Math.round(item.grams / 50);
+          portionLabel = 'unidade';
+        } else if (lowerName.includes('pão integral')) {
+          measurementType = 'unit';
+          portionValue = 25;
+          quantity = Math.round(item.grams / 25);
+          portionLabel = 'fatia';
+        }
+
+        return {
+          id: item.foodId,
+          name: item.name,
+          kcal: totalKcal,
+          calories: totalKcal,
+          protein: totalProtein,
+          carbs: totalCarbs,
+          fat: totalFat,
+          portionValue,
+          portionUnitLabel: portionLabel,
+          portionUnit: portionLabel,
+          portionLabel: portionLabel,
+          measurementType: measurementType as any,
+          instanceId: Math.random().toString(36).substring(2, 10),
+          quantity, 
+          substitutions
+        };
+      });
+
+      // PARTE 1 - Imagens Inteligentes (Elite V3)
+      const bestImage = await getBestMealImage(mealName, v3Items);
+
       // Converter PlannedMeal para V3Meal
       return {
         id: Math.random().toString(36).substring(2, 9),
         name: mealName,
         time: slot.time,
-        items: plannedMeal.items.map(item => {
-          // 🛡️ REGRA DE OURO NutriCore V2:
-          // Entregamos o macro TOTAL para a quantidade calculada.
-          const totalKcal = Math.round(item.macros.kcal);
-          const totalProtein = Number(item.macros.protein_g.toFixed(1));
-          const totalCarbs = Number(item.macros.carb_g.toFixed(1));
-          const totalFat = Number(item.macros.fat_g.toFixed(1));
-          
-          // Encontrar o objeto food original para calcular substituições
-          const foodObj = finalDb.find(f => f.id === item.foodId);
-          let substitutions: any[] = [];
-          
-          if (foodObj) {
-            const subs = getSubstitutions(foodObj, finalDb, item.grams, context.restrictions);
-            substitutions = subs.map(s => ({
-              id: s.food.id,
-              name: s.food.name,
-              kcal: s.food.kcal_100g,
-              calories: s.food.kcal_100g,
-              protein: s.food.protein_100g,
-              carbs: s.food.carb_100g,
-              fat: s.food.fat_100g,
-              portionValue: 100,
-              portionUnitLabel: 'g',
-              portionUnit: 'g',
-              portionLabel: s.unit_label,
-              measurementType: 'gram',
-              suggestedQuantity: s.grams // Informação vital para o executeSwap
-            }));
-          }
-
-          // Ajuste Medida Caseira Elite
-          const lowerName = item.name.toLowerCase();
-          let measurementType: any = 'gram';
-          let quantity = item.grams;
-          let portionValue = 100;
-          let portionLabel = 'g';
-
-          if (lowerName.includes('ovo')) {
-            measurementType = 'unit';
-            portionValue = 50; // M
-            quantity = Math.round(item.grams / 50);
-            portionLabel = 'unidade';
-          } else if (lowerName.includes('pão integral')) {
-            measurementType = 'unit';
-            portionValue = 25;
-            quantity = Math.round(item.grams / 25);
-            portionLabel = 'fatia';
-          }
-
-          return {
-            id: item.foodId,
-            name: item.name,
-            kcal: totalKcal,
-            calories: totalKcal,
-            protein: totalProtein,
-            carbs: totalCarbs,
-            fat: totalFat,
-            portionValue,
-            portionUnitLabel: portionLabel,
-            portionUnit: portionLabel,
-            portionLabel: portionLabel,
-            measurementType: measurementType as any,
-            instanceId: Math.random().toString(36).substring(2, 10),
-            quantity, 
-            substitutions
-          };
-        })
+        items: v3Items,
+        imageUrl: bestImage.url,
+        imageSource: bestImage.source
       };
-    });
+    }));
   }
 
   /**

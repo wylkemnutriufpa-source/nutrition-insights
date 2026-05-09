@@ -52,7 +52,7 @@ export async function generateAndSaveLocalPlan(
 
     // 2. Generate plan using NutriCore V2 Adapter (LOCAL)
     // We need some available foods, or it will use defaults
-    const meals = NutriCoreV2Adapter.generateElitePlan(context, []);
+    const meals = await NutriCoreV2Adapter.generateElitePlan(context, []);
 
     // 3. Save as a draft then promote, or save directly as a meal plan
     // For simplicity and to follow the current flow, we'll promote a virtual draft

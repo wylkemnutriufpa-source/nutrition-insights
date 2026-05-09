@@ -6,7 +6,7 @@ import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
 export interface ClinicalStrategy {
   id: string;
   name: string;
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[];
+  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] | Promise<MealItem[]>;
   explainDecision(meal: Meal, items: MealItem[]): string;
 }
 
@@ -142,7 +142,7 @@ export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
   name = 'Engine NutriCore V2';
 
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] {
+  async generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): Promise<MealItem[]> {
     // Usar contexto real se disponível, caso contrário usar fallback seguro
     const finalContext = {
       weight: context?.weight || 75,
@@ -156,7 +156,7 @@ export class DefaultV3Strategy implements ClinicalStrategy {
 
     console.info(`[V3-Engine] Gerando refeição "${meal.name}" para ${finalContext.weight}kg, Objetivo: ${finalContext.goal}`);
 
-    const fullPlan = NutriCoreV2Adapter.generateElitePlan(finalContext as any, availableFoods);
+    const fullPlan = await NutriCoreV2Adapter.generateElitePlan(finalContext as any, availableFoods);
     const mealName = meal.name.toLowerCase();
     const generatedMeal = fullPlan.find((m: any) => {
       const gName = m.name.toLowerCase();

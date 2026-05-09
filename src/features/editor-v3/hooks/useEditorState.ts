@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from '../types';
-import { normalizeFood } from '../utils/normalization';
+import { normalizeFood, getBestMealImage, normalizeMeals } from '../utils/normalization';
 import { 
   generatePlanWithEngine, 
   generateMealWithEngine, 
@@ -313,28 +313,27 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Refeição "${name}" adicionada!`);
       },
 
-      hydrateMeals: (meals, auditLog = [], token = null) => {
+      hydrateMeals: async (meals, auditLog = [], token = null) => {
         try {
           // Blindagem Anti-Tela Branca: Validar e corrigir IDs nulos ou itens corrompidos
-          const sanitizedMeals = meals.map(meal => ({
-            ...meal,
-            id: meal.id || Math.random().toString(36).substring(2, 9),
-            items: (meal.items || []).map(item => {
-              // Normalização de itens legados (Etapa 4 - Legado)
-              return {
-                ...item,
-                instanceId: item.instanceId || Math.random().toString(36).substring(2, 10),
-                measurementType: item.measurementType || 'gram',
-                quantity: item.quantity || 100,
-                kcal: item.kcal !== undefined ? item.kcal : (item.calories || 0),
-                protein: item.protein !== undefined ? item.protein : (item.protein_g || 0),
-                carbs: item.carbs !== undefined ? item.carbs : (item.carbs_g || 0),
-                fat: item.fat !== undefined ? item.fat : (item.fat_g || 0)
-              };
-            })
+          const normalized = normalizeMeals(meals);
+          
+          // PARTE 1 & 3 - Garantir imagens ao carregar/hidratar
+          const mealsWithImages = await Promise.all(normalized.map(async (meal) => {
+            if (meal.items.length > 0 && !meal.imageUrl) {
+               const bestImage = await getBestMealImage(meal.name, meal.items);
+               return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
+            }
+            return meal;
           }));
 
-          set({ meals: sanitizedMeals, initialMeals: JSON.parse(JSON.stringify(sanitizedMeals)), auditLog, sharingToken: token, planStatus: 'saved' });
+          set({ 
+            meals: mealsWithImages, 
+            initialMeals: JSON.parse(JSON.stringify(mealsWithImages)), 
+            auditLog, 
+            sharingToken: token, 
+            planStatus: 'saved' 
+          });
           get().recalculateScore();
         } catch (error) {
           console.error('[V3 Hydrate Error] Failed to hydrate meals, recovering...', error);
@@ -528,7 +527,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`${food.name} adicionado!`);
       },
 
-      applyTemplateToMeal: (mealId, template) => {
+      applyTemplateToMeal: async (mealId, template) => {
         const newItems: MealItem[] = template.items.map((f) => {
           // Normaliza o item usando as regras de Medidas Caseiras
           const normalized = normalizeFood(f);
@@ -553,9 +552,18 @@ export const useEditorState = create<EditorState>()(
             substitutions: []
           };
         });
+
+        // PARTE 2 - Imagens de templates (Plotagem com imagem correspondente)
+        const bestImage = await getBestMealImage(template.name, newItems);
+
         set((state) => ({
           meals: state.meals.map((m) =>
-            m.id === mealId ? { ...m, items: newItems } : m
+            m.id === mealId ? { 
+              ...m, 
+              items: newItems,
+              imageUrl: bestImage.url,
+              imageSource: bestImage.source
+            } : m
           ),
           planStatus: 'draft',
         }));
@@ -651,7 +659,7 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      generatePlan: (goal, baseCalories, availableFoods, replaceExisting = false) => {
+      generatePlan: async (goal, baseCalories, availableFoods, replaceExisting = false) => {
         let currentMeals = get().meals;
         const { patientContext } = get();
         
@@ -660,10 +668,10 @@ export const useEditorState = create<EditorState>()(
         const finalGoal = patientContext?.goal || goal;
 
         if (replaceExisting) {
-          currentMeals = DEFAULT_MEALS.map(m => ({ ...m, items: [] }));
+          currentMeals = DEFAULT_MEALS.map(m => ({ ...m, items: [], imageUrl: undefined }));
         }
 
-        const newMeals = generatePlanWithEngine(
+        const newMeals = await generatePlanWithEngine(
           currentMeals, 
           finalGoal, 
           finalCalories, 
@@ -672,12 +680,21 @@ export const useEditorState = create<EditorState>()(
           patientContext || undefined
         );
         
-        set({ meals: newMeals, planStatus: 'draft' });
+        // PARTE 1 & 3 - Plotagem com imagens correspondentes (Lote)
+        const mealsWithImages = await Promise.all(newMeals.map(async (meal) => {
+          if (meal.items.length > 0 && !meal.imageUrl) {
+             const bestImage = await getBestMealImage(meal.name, meal.items);
+             return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
+          }
+          return meal;
+        }));
+
+        set({ meals: mealsWithImages, planStatus: 'draft' });
         get().recalculateScore();
         toast.success(`Plano estruturado para ${finalGoal} com ${Math.round(finalCalories)}kcal`);
       },
 
-      generateMeal: (mealId, goal, availableFoods, baseCalories = 2000) => {
+      generateMeal: async (mealId, goal, availableFoods, baseCalories = 2000) => {
         const { meals, patientContext } = get();
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
@@ -686,7 +703,7 @@ export const useEditorState = create<EditorState>()(
         const finalCalories = patientContext?.calories_target || baseCalories;
         const finalGoal = patientContext?.goal || goal;
 
-        const newItems = generateMealWithEngine(
+        const newItems = await generateMealWithEngine(
           meal, 
           finalGoal, 
           finalCalories, 
@@ -694,10 +711,18 @@ export const useEditorState = create<EditorState>()(
           patientContext?.protocol_type || 'default_v3',
           patientContext || undefined
         );
+
+        // PARTE 1 - Imagem correspondente para refeição avulsa
+        const bestImage = await getBestMealImage(meal.name, newItems);
         
         set((state) => ({
           meals: state.meals.map(m => 
-            m.id === mealId ? { ...m, items: newItems } : m
+            m.id === mealId ? { 
+              ...m, 
+              items: newItems,
+              imageUrl: bestImage.url,
+              imageSource: bestImage.source
+            } : m
           ),
           planStatus: 'draft'
         }));

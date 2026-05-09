@@ -840,7 +840,7 @@ const EditorV3Page = () => {
       
       const { NutriCoreV2Adapter } = await import('@/lib/nutricore_v2/adapter');
       
-      const v3Meals = NutriCoreV2Adapter.generateElitePlan({
+      const v3Meals = await NutriCoreV2Adapter.generateElitePlan({
         weight: patientContext.weight || 75,
         height: patientContext.height || 175,
         age: patientContext.age || 30,
@@ -852,7 +852,7 @@ const EditorV3Page = () => {
       } as any, baseFoods);
       
       // Hydrate com os rascunhos normalizados (Regras de Ouro aplicadas no Adapter)
-      hydrateMeals(v3Meals);
+      await hydrateMeals(v3Meals);
       
       toast.success('Elite V3: Plano completo gerado com ~2000 kcal!');
     } catch (error) {

@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal } from '../types';
 
 /**
@@ -94,6 +95,69 @@ export function normalizeFood(food: any): Food {
   }
 
   return f as Food;
+}
+
+/**
+ * Busca a melhor imagem no banco meal_visual_library para um determinado nome/alimento.
+ * REGRA PARTE 1 & 4 - Imagens correspondentes e Fallbacks.
+ */
+export async function getBestMealImage(mealName: string, items: any[]): Promise<{ url: string; source: 'manual' | 'auto' | 'fallback' }> {
+  try {
+    const cleanMealName = mealName.toLowerCase();
+    
+    // 1. Identificar Alimento PRINCIPAL (Geralmente Proteína ou o que define o prato)
+    const principalItem = items.find(i => 
+      ['frango', 'carne', 'peixe', 'ovo', 'tilápia', 'marmita', 'omelete', 'escondidinho', 'massa'].some(p => i.name.toLowerCase().includes(p))
+    ) || items[0];
+
+    const searchTerm = principalItem ? principalItem.name.toLowerCase() : cleanMealName;
+    
+    // 2. Buscar por nome exato ou similar no banco
+    const { data: results } = await supabase
+      .from('meal_visual_library')
+      .select('image_url, name, category')
+      .or(`name.ilike.%${searchTerm}%,name.ilike.%${cleanMealName}%`)
+      .limit(5);
+
+    if (results && results.length > 0) {
+      // Priorizar os que têm URL válida
+      const valid = results.find(r => r.image_url);
+      if (valid) return { url: valid.image_url, source: 'auto' };
+    }
+
+    // 3. Fallbacks por Categoria (Regra Parte 4)
+    const isBreakfast = cleanMealName.includes('café') || cleanMealName.includes('desjejum');
+    const isLunch = cleanMealName.includes('almoço');
+    const isDinner = cleanMealName.includes('jantar');
+    const isSnack = cleanMealName.includes('lanche');
+
+    let fallbackTerm = 'fruta';
+    if (isBreakfast) fallbackTerm = 'pao-frances';
+    if (isLunch || isDinner) fallbackTerm = 'arroz-feijao-frango';
+    if (searchTerm.includes('frango')) fallbackTerm = 'frango';
+    if (searchTerm.includes('carne')) fallbackTerm = 'carne';
+    
+    const { data: fallbackResults } = await supabase
+      .from('meal_visual_library')
+      .select('image_url')
+      .ilike('name', `%${fallbackTerm}%`)
+      .limit(1);
+
+    if (fallbackResults?.[0]?.image_url) {
+      return { url: fallbackResults[0].image_url, source: 'fallback' };
+    }
+
+    // Último recurso: Imagem padrão segura (NutriCore V2 Standard)
+    return { 
+      url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/fruta.jpg', 
+      source: 'fallback' 
+    };
+  } catch (err) {
+    return { 
+      url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/fruta.jpg', 
+      source: 'fallback' 
+    };
+  }
 }
 
 /**
