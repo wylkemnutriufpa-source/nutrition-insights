@@ -1756,8 +1756,9 @@ const EditorV3Page = () => {
               ))}
             </div>
           </section>
-          ))
+          )
         )}
+
 
 
         </div>
