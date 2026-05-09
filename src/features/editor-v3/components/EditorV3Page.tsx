@@ -1544,7 +1544,7 @@ const EditorV3Page = () => {
                                   // PLOTAGEM DIRETA: Criar refeição e forçar aplicação
                                   addMealWithHeader(t.name, "08:00");
                                   // Pequeno delay para garantir que o state de meals atualizou
-                                  await new Promise(r => setTimeout(resolve, 50));
+                                  await new Promise(resolve => setTimeout(resolve, 50));
                                   const state = useEditorState.getState();
                                   const lastMeal = state.meals[state.meals.length - 1];
                                   if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
