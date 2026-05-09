@@ -114,7 +114,7 @@ export function usePatientDetail(patientId: string | undefined) {
       const today = new Date().toISOString().split("T")[0];
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
 
-      const [timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes, trainerAssessRes] = await Promise.all([
+      const [timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, v3DraftsRes, recipesRes, npRes, adherenceRes, trainerAssessRes] = await Promise.all([
         supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(50),
         supabase.from("patient_anamnesis").select("*").eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1),
         withTenantFilter(supabase.from("patient_protocols").select("*").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).order("created_at", { ascending: false }),
