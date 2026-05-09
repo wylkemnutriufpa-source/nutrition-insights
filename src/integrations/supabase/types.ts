@@ -6184,6 +6184,7 @@ export type Database = {
           professional_id: string
           status: string | null
           tenant_id: string | null
+          unique_code: string | null
           updated_at: string
           used_at: string | null
         }
@@ -6198,6 +6199,7 @@ export type Database = {
           professional_id: string
           status?: string | null
           tenant_id?: string | null
+          unique_code?: string | null
           updated_at?: string
           used_at?: string | null
         }
@@ -6212,6 +6214,7 @@ export type Database = {
           professional_id?: string
           status?: string | null
           tenant_id?: string | null
+          unique_code?: string | null
           updated_at?: string
           used_at?: string | null
         }
@@ -9046,6 +9049,7 @@ export type Database = {
           status: string
           tenant_id: string | null
           token: string
+          unique_code: string | null
           used_at: string | null
         }
         Insert: {
@@ -9058,6 +9062,7 @@ export type Database = {
           status?: string
           tenant_id?: string | null
           token?: string
+          unique_code?: string | null
           used_at?: string | null
         }
         Update: {
@@ -9070,6 +9075,7 @@ export type Database = {
           status?: string
           tenant_id?: string | null
           token?: string
+          unique_code?: string | null
           used_at?: string | null
         }
         Relationships: [
