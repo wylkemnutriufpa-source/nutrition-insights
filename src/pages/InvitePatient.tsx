@@ -580,7 +580,7 @@ export default function InvitePatient() {
                     variant="outline"
                     size="sm"
                     className="gap-1.5"
-                    onClick={() => copyToClipboard(credentialsBlock, "creds", "Credenciais + link")}
+                    onClick={() => copyToClipboardHandler(credentialsBlock, "creds", "Credenciais + link")}
                   >
                     {copied === "creds" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied === "creds" ? "Copiado!" : "Copiar tudo (credenciais + link)"}
