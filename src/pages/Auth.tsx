@@ -38,12 +38,12 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   // For now, keeping it simple to ensure the page renders
   const { authStatus } = useAuth();
   
-  /* useEffect(() => {
+  useEffect(() => {
     if (authStatus === "authenticated") {
-      console.log("[Auth] Usuário já autenticado. Redirecionando para /dashboard...");
-      navigate("/dashboard", { replace: true });
+      console.log(`[Auth] Usuário já autenticado. Redirecionando para ${nextPath}...`);
+      navigate(nextPath, { replace: true });
     }
-  }, [authStatus, navigate]); */
+  }, [authStatus, navigate, nextPath]);
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
