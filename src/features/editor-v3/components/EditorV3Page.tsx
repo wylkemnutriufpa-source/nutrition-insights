@@ -112,7 +112,7 @@ const EditorV3Page = () => {
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
-    duplicateMeal, reorderMeal, updateMealImage, setMeals,
+    duplicateMeal, reorderMeal, updateMealImage, setMeals, applySmartTemplate,
 
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
@@ -1472,43 +1472,31 @@ const EditorV3Page = () => {
                               <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
                             </div>
                             <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={async () => {
-                                if (activeMealId) {
-                                  applyTemplateToMeal(activeMealId, t);
-                                  toast.success(`Template ${t.name} aplicado!`);
-                                } else {
-                                  // PLOTAGEM DIRETA: Criar refeição e forçar aplicação
-                                  addMealWithHeader(t.name, "08:00");
-                                  // Pequeno delay para garantir que o state de meals atualizou
-                                  await new Promise(resolve => setTimeout(resolve, 50));
-                                  const state = useEditorState.getState();
-                                  const lastMeal = state.meals[state.meals.length - 1];
-                                  if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
-                                  toast.success(`Template ${t.name} plotado com sucesso!`);
-                                }
+                              size="sm"
+                              className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[9px] h-8 rounded-lg px-3"
+                              onClick={() => {
+                                applySmartTemplate(t, baseFoods);
                               }}
-                              className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black transition-all shadow-inner"
                             >
-                              <Plus className="w-4 h-4" />
+                              Aplicar
                             </Button>
                           </div>
                           
-                          <div className="flex flex-wrap gap-1 mt-1 border-t border-white/5 pt-3">
-                            {t.items.slice(0, 5).map((item, idx) => (
-                              <Badge 
-                                key={idx} 
-                                variant="outline" 
-                                className="text-[7px] font-bold bg-white/5 border-white/5 text-white/40 group-hover:text-white/60 transition-colors py-0 px-1.5 h-4"
-                              >
+                          {/* Prévia dos alimentos */}
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {t.items.slice(0, 4).map((item, idx) => (
+                              <Badge key={idx} variant="outline" className="text-[8px] border-white/5 bg-white/5 text-white/40 font-bold uppercase py-0 px-1.5 h-4">
                                 {item.name}
                               </Badge>
                             ))}
-                            {t.items.length > 5 && (
-                              <span className="text-[7px] font-bold text-white/20">+{t.items.length - 5}</span>
+                            {t.items.length > 4 && (
+                              <span className="text-[8px] text-white/20 font-bold uppercase ml-1">+{t.items.length - 4} mais</span>
                             )}
                           </div>
+                          
+                          <p className="text-[9px] text-white/30 italic leading-tight">
+                            {t.description}
+                          </p>
                         </div>
                       ))}
                     </div>
