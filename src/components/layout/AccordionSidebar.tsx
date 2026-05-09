@@ -78,6 +78,7 @@ interface Props {
   isProRole: boolean;
   onLinkClick?: () => void;
   trackClick: (id: string) => void;
+  loading?: boolean;
 }
 
 /**
@@ -329,15 +330,36 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
 }
 
 /**
+ * Sidebar skeleton to prevent layout shift during loading
+ */
+function SidebarSkeleton() {
+  return (
+    <div className="space-y-1 px-1 mt-2">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-lg bg-muted/5 animate-pulse mb-1">
+          <div className="w-4 h-4 rounded bg-muted/20" />
+          <div className="h-3 w-28 rounded bg-muted/20" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
  * Main sidebar component.
  * For professionals with workspace config → renders from workspace tables.
  * Otherwise → falls back to legacy AccordionSidebar groups.
  */
-export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
+export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick, loading: menuLoading }: Props) {
   const { sections, loading: wsLoading } = useWorkspace();
   const { isProfessionalContext } = useWorkspaceContext();
 
-  const hasWorkspaceConfig = isProRole && isProfessionalContext && !wsLoading && sections.length > 0;
+  // Show skeleton if either the workspace config or the smart menu is still loading
+  if ((wsLoading && isProRole && isProfessionalContext) || menuLoading) {
+    return <SidebarSkeleton />;
+  }
+
+  const hasWorkspaceConfig = isProRole && isProfessionalContext && sections.length > 0;
 
   if (hasWorkspaceConfig) {
     return <WorkspaceSidebar collapsed={collapsed} onLinkClick={onLinkClick} />;
