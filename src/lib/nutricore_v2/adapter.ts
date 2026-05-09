@@ -62,7 +62,7 @@ export class NutriCoreV2Adapter {
   /**
    * Gera um plano Elite V3 usando o novo Motor NutriCore
    */
-  static generateElitePlan(context: PatientContext, availableFoods: V3Food[]): V3Meal[] {
+  static async generateElitePlan(context: PatientContext, availableFoods: V3Food[]): Promise<V3Meal[]> {
     const engineInput = this.mapPatientToEngine(context);
     const engineResult = runEngine(engineInput);
     
