@@ -26,65 +26,65 @@ export function getSubstitutions(
   const originalCarb = food.carb_100g * originalFactor;
   const originalKcal = food.kcal_100g * originalFactor;
   
+  // PARTE 3 — SUBSTITUIÇÕES (LOGICA DE EQUIVALÊNCIA EXATA)
+  const name = food.name.toLowerCase();
+  
   const candidates = foodDb.filter(f => 
-    f.category === food.category && 
     f.id !== food.id &&
     !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase()))
   );
 
   const results: Substitution[] = candidates.map(candidate => {
     let gramsSub = 0;
+    const candName = candidate.name.toLowerCase();
     
-    // Regra: Equivalência por macro principal
-    if (food.category === "protein") {
+    // Regra de Ouro: Proteína com Proteína, Carbo com Carbo
+    const isBaseProtein = name.includes('frango') || name.includes('carne') || name.includes('peixe') || name.includes('ovo');
+    const isCandProtein = candName.includes('frango') || candName.includes('carne') || candName.includes('peixe') || candName.includes('ovo');
+    
+    const isBaseCarb = name.includes('arroz') || name.includes('batata') || name.includes('macarrão') || name.includes('pão');
+    const isCandCarb = candName.includes('arroz') || candName.includes('batata') || candName.includes('macarrão') || candName.includes('pão') || candName.includes('tapioca') || candName.includes('cuscuz');
+
+    if (isBaseProtein && isCandProtein) {
       gramsSub = (originalProtein / (candidate.protein_100g / 100));
-    } else if (food.category === "carb" || food.category === "fruit") {
+    } else if (isBaseCarb && isCandCarb) {
       gramsSub = (originalCarb / (candidate.carb_100g / 100));
-    } else {
-      // Outros: equivalência calórica como fallback
+    } else if (candidate.category === food.category) {
       gramsSub = (originalKcal / (candidate.kcal_100g / 100));
+    } else {
+      return null; // Não sugerir se categorias não baterem clinicamente
     }
 
     // Arredondamento para múltiplos de 5g
     const roundedGrams = Math.round(gramsSub / 5) * 5;
+    if (roundedGrams <= 0) return null;
     
-    // Rótulo de unidade
+    // Rótulo de unidade humanizado
     let unitLabel = `${roundedGrams}g`;
-    if (candidate.unit.includes("unidade") || candidate.unit.includes("fatias")) {
-       const unitWeight = candidate.base_grams; 
-       const units = Math.round(roundedGrams / unitWeight);
-       if (units > 0) {
-         unitLabel = `${roundedGrams}g (${units} ${candidate.unit.split(" ")[0]})`;
-       }
+    if (candName.includes('ovo')) {
+      const units = Math.round(roundedGrams / 50);
+      unitLabel = `${units} ${units === 1 ? 'unidade' : 'unidades'} (${roundedGrams}g)`;
+    } else if (candName.includes('pão integral')) {
+      const units = Math.round(roundedGrams / 25);
+      unitLabel = `${units} ${units === 1 ? 'fatia' : 'fatias'} (${roundedGrams}g)`;
+    } else if (candName.includes('pão francês')) {
+      const units = Math.round(roundedGrams / 50);
+      unitLabel = `${units} unidade (${roundedGrams}g)`;
+    } else if (candName.includes('frango') || candName.includes('carne')) {
+      const filéType = roundedGrams >= 200 ? 'G' : (roundedGrams >= 150 ? 'M' : 'P');
+      unitLabel = `1 filé ${filéType} (${roundedGrams}g)`;
     }
 
     const subKcal = (candidate.kcal_100g / 100) * roundedGrams;
     const kcalDiff = Math.round(subKcal - originalKcal);
 
-    // Sugestão de ajuste (ex: se sobrou caloria, diminuir batata doce; se faltou, aumentar)
-    // Usando 130 kcal/100g (Arroz) ou 86 kcal/100g (Batata Doce) como referência padrão de ajuste
-    let suggested_adjustment;
-    if (Math.abs(kcalDiff) > 20) {
-       const adjustmentFood = "Batata Doce Cozida";
-       const adjustmentKcalPer100g = 86;
-       // Se kcalDiff > 0 (substituição mais calórica), gramsChange deve ser negativo
-       const gramsChange = Math.round((-kcalDiff / (adjustmentKcalPer100g / 100)) / 5) * 5;
-       if (Math.abs(gramsChange) >= 5) {
-         suggested_adjustment = {
-           foodName: adjustmentFood,
-           gramsChange: gramsChange
-         };
-       }
-    }
-
     return {
       food: candidate,
       grams: roundedGrams,
       unit_label: unitLabel,
-      kcal_diff: kcalDiff,
-      suggested_adjustment
+      kcal_diff: kcalDiff
     };
-  });
+  }).filter((s): s is Substitution => s !== null);
 
-  return results.slice(0, 5);
+  return results.sort((a, b) => Math.abs(a.kcal_diff) - Math.abs(b.kcal_diff)).slice(0, 5);
 }

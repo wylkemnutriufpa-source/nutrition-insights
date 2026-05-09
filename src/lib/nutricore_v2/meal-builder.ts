@@ -48,68 +48,48 @@ export function buildMeal(
   const isBreakfast = type === "cafe_da_manha";
   const isSnack = type.includes("lanche") || type === "ceia";
 
-  // 1. FILTRAGEM POR REFEIÇÃO (REGRAS CLÍNICAS)
   let allowedDb = foodDb.filter(f => !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase())));
 
-  // 2. REGRAS ESPECÍFICAS DE ESTRUTURA
+  // PARTE 2 — TEMPLATES FUNCIONAIS (LOGICA DE PLOTAGEM DETERMINISTICA)
   if (isBreakfast) {
-    // Café da Manhã: Pão, Tapioca ou Cuscuz + Ovo ou Queijo + Fruta
-    const options = [
-      { bread: "pão", protein: "ovo" },
-      { bread: "tapioca", protein: "queijo" },
-      { bread: "cuscuz", protein: "ovo" },
-      { bread: "pão", protein: "queijo" },
-      { bread: "tapioca", protein: "ovo" },
-      { bread: "cuscuz", protein: "queijo" }
-    ];
+    // Café Fitness: Pão integral 2 fatias (50g) + Ovos mexidos 2 unid (100g) + Banana M (90g)
+    const pão = allowedDb.find(f => f.name.toLowerCase().includes("pão integral")) || allowedDb.find(f => f.name.toLowerCase().includes("pão"));
+    const ovo = allowedDb.find(f => f.name.toLowerCase().includes("ovo"));
+    const banana = allowedDb.find(f => f.name.toLowerCase().includes("banana"));
 
-    const combo = options[Math.floor(Math.random() * options.length)];
-
-    const carb = allowedDb.find(f => f.name.toLowerCase().includes(combo.bread)) || selectFood(allowedDb, "carb", [], preferences);
-    const protein = allowedDb.find(f => f.name.toLowerCase().includes(combo.protein)) || selectFood(allowedDb, "protein", [], preferences);
-    const fruit = allowedDb.find(f => f.category === "fruit") || selectFood(allowedDb, "fruit", [], preferences);
-
-    if (carb) {
-      const g = carb.name.toLowerCase().includes("pão") ? 50 : 80;
-      items.push(createPlannedItem(carb, g));
-    }
-    if (protein) {
-      const g = protein.name.toLowerCase().includes("ovo") ? 50 : 30;
-      items.push(createPlannedItem(protein, g));
-    }
-    if (fruit) {
-      items.push(createPlannedItem(fruit, 120));
-    }
+    if (pão) items.push(createPlannedItem(pão, 50));
+    if (ovo) items.push(createPlannedItem(ovo, 100));
+    if (banana) items.push(createPlannedItem(banana, 90));
     
     return finalizeMeal(type, time, items, targetMacros);
   }
 
   if (isSnack) {
-    // Lanches: SOMENTE Frutas
-    const fruits = allowedDb.filter(f => f.category === "fruit");
-    if (fruits.length > 0) {
-      const fruit = fruits[Math.floor(Math.random() * fruits.length)];
+    // Lanches: FRUTAS como base (Regra Parte 4, Item 7)
+    const fruit = allowedDb.find(f => f.category === "fruit") || foodDb.find(f => f.category === "fruit");
+    if (fruit) {
       items.push(createPlannedItem(fruit, 150));
     }
     return finalizeMeal(type, time, items, targetMacros);
   }
 
   if (isLunchOrDinner) {
-    // Almoço e Jantar: Arroz, Feijão, Salada, Proteína
-    const protein = selectFood(allowedDb, "protein", [], preferences) || selectFood(foodDb, "protein", restrictions, preferences);
-    const rice = allowedDb.find(f => f.name.toLowerCase().includes("arroz")) || selectFood(allowedDb, "carb", [], preferences);
-    const beans = allowedDb.find(f => f.name.toLowerCase().includes("feijão")) || foodDb.find(f => f.name.toLowerCase().includes("feijão"));
-    const salad = allowedDb.find(f => f.category === "vegetable") || selectFood(allowedDb, "vegetable", [], preferences);
+    // Prato Fitness: Frango 150g + Arroz 100g + Feijão 100g + Brócolis 80g + Azeite 5g
+    const frango = allowedDb.find(f => f.name.toLowerCase().includes("frango"));
+    const arroz = allowedDb.find(f => f.name.toLowerCase().includes("arroz"));
+    const feijão = allowedDb.find(f => f.name.toLowerCase().includes("feijão"));
+    const brócolis = allowedDb.find(f => f.name.toLowerCase().includes("brócolis"));
+    const azeite = allowedDb.find(f => f.name.toLowerCase().includes("azeite"));
 
-    if (protein) items.push(createPlannedItem(protein, 150));
-    if (rice) items.push(createPlannedItem(rice, 120));
-    if (beans) items.push(createPlannedItem(beans, 80));
-    if (salad) items.push(createPlannedItem(salad, 100));
+    if (frango) items.push(createPlannedItem(frango, 150));
+    if (arroz) items.push(createPlannedItem(arroz, 100));
+    if (feijão) items.push(createPlannedItem(feijão, 100));
+    if (brócolis) items.push(createPlannedItem(brócolis, 80));
+    if (azeite) items.push(createPlannedItem(azeite, 5));
 
     return finalizeMeal(type, time, items, targetMacros);
   }
 
-  // Fallback para outras refeições
   return finalizeMeal(type, time, items, targetMacros);
 }
 
