@@ -200,6 +200,7 @@ const EditorV3Page = () => {
   } | null>(null);
   const [showAnamnesisHandshake, setShowAnamnesisHandshake] = useState(false);
   const [pendingAnamnesisData, setPendingAnamnesisData] = useState<any>(null);
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
 
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
