@@ -97,18 +97,21 @@ export default function Welcome() {
         // Se onboarding_completed é falso ou nulo, segue o fluxo de pState
         let target = "/client/dashboard";
         
+        // CORREÇÃO: Forçamos o paciente a passar pelos slides se não tiver estado
         if (!pState || pState === "onboarding_slides") target = "/onboarding/paciente";
-        else if (pState === "anamnesis") target = "/anamnesis";
+        else if (pState === "anamnesis") target = "/onboarding"; // OnboardingEntry redireciona conforme role
         else if (pState === "collecting_profile" || pState === "active_plan" || pState === "plan_generated" || pState === "ready_for_plan") {
           target = "/client/dashboard";
         }
         
-        const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index";
+        // Se temos um nextPath válido, ele tem prioridade, a menos que seja um path de dashboard genérico
+        const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index" || nextPath === "/client/dashboard";
         const finalTarget = (nextPath && !isDefaultPath) ? nextPath : target;
         
-        console.log("[NAV] Welcome -> Patient Flow", { 
+        console.log("[NAV] Welcome -> Patient Flow Decision", { 
           state: pState, 
-          target: finalTarget, 
+          target: target,
+          finalTarget: finalTarget, 
           onboardingCompleted
         });
         
