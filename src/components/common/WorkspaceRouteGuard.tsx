@@ -12,7 +12,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   // [RASTREADOR]
   useEffect(() => {
     const isPro = isNutritionist || isPersonal || isAdmin;
-    const isAuthRoute = ["/auth", "/welcome", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
+    const isAuthRoute = ["/auth", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
     
     if (!loading && authStatus === "authenticated" && roles !== null && !isAuthRoute) {
       if (location.pathname.startsWith("/admin") && !isPro) {
@@ -32,7 +32,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     return null;
   }
 
-  const isAuthRoute = ["/auth", "/welcome", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
+  const isAuthRoute = ["/auth", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
   if (isAuthRoute) {
     return <>{children}</>;
   }
@@ -84,8 +84,8 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
 
   const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/checkin", "/meals"];
   if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
-    console.warn(`[RASTREADOR] Redirect para /welcome disparado por: WorkspaceRouteGuard (Patient only paths)`);
-    return <Navigate to="/welcome" replace />;
+    console.warn(`[RASTREADOR] Redirect para / disparado por: WorkspaceRouteGuard (Patient only paths)`);
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

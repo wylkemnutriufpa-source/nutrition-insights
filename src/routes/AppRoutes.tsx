@@ -23,7 +23,8 @@ import Auth from "../pages/Auth";
 import AuthConfirm from "../pages/AuthConfirm";
 import NotFound from "../pages/NotFound";
 import Index from "../pages/Index";
-import Welcome from "../pages/Welcome";
+import { RootRouter } from "@/components/auth/RootRouter";
+// Welcome removed
 
 // Lazy - Core
 const AnalyzeMeal = lazy(() => import("../pages/AnalyzeMeal"));
@@ -274,25 +275,10 @@ export const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          authStatus === "loading" ? (
-            <PageLoader />
-          ) : authStatus === "authenticated" ? (
-            (() => {
-              const search = window.location.search;
-              console.log("[NAV] Root path redirecting to /welcome", { authStatus, search });
-              return <Navigate to={`/welcome${search}`} replace />;
-            })()
-          ) : (
-            <Auth />
-          )
-        }
-      />
+      <Route path="/" element={<RootRouter />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/confirm" element={<AuthConfirm />} />
-      <Route path="/welcome" element={<Welcome />} />
+
       
       {/* Public Invitation & Registration */}
       <Route path="/invite/:code" element={<Suspense fallback={<PageLoader />}><Invitation /></Suspense>} />
@@ -463,7 +449,7 @@ export const AppRoutes = () => {
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
-      <Route path="*" element={<Navigate to="/welcome" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

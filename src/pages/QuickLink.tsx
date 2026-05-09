@@ -56,7 +56,7 @@ export default function QuickLink() {
       // Se já está logado, redireciona para Welcome para triagem
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        navigate("/welcome", { replace: true });
+        navigate("/", { replace: true });
         return;
       }
 
@@ -161,7 +161,7 @@ export default function QuickLink() {
 
       // Redirecionamento determinístico (Regra 2)
       if (authData.session) {
-        navigate("/welcome", { replace: true });
+        navigate("/", { replace: true });
       } else {
         setDone(true);
       }

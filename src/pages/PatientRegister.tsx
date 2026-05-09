@@ -113,8 +113,8 @@ export default function PatientRegister() {
   // Mandamos para /welcome que orquestra o destino correto (onboarding ou dashboard).
   useEffect(() => {
     if (authStatus === "authenticated" && user) {
-      console.log("[PatientRegister] Usuário já autenticado. Redirecionando para /welcome...");
-      navigate("/welcome", { replace: true });
+      console.log("[PatientRegister] Usuário já autenticado. Redirecionando para a raiz...");
+      navigate("/", { replace: true });
     }
   }, [authStatus, user, navigate]);
 

@@ -97,8 +97,8 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           _metadata: {},
         });
       }
-      // Após login, vai para /welcome que orquestra o destino conforme roles
-      const target = nextPath && nextPath !== "/" ? nextPath : "/welcome";
+      // Após login, vai para / que orquestra o destino conforme roles
+      const target = nextPath && nextPath !== "/" ? nextPath : "/";
       navigate(target, { replace: true });
 
     }
