@@ -1172,6 +1172,7 @@ export default function PatientRegister() {
                 </p>
               </div>
             </form>
+          )}
           </CardContent>
         </Card>
 
