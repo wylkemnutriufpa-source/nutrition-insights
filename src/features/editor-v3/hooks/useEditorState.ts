@@ -823,6 +823,41 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
+      applySmartTemplate: async (template, baseFoods = []) => {
+        const { goalMetadata, viewMode } = get();
+        
+        const smartMeals = processSmartTemplate(template, {
+          goalCalories: goalMetadata.goalCalories,
+          goalProtein: goalMetadata.goalProtein,
+          goalCarbs: goalMetadata.goalCarbs,
+          goalFat: goalMetadata.goalFat,
+          isWeeklyMode: viewMode === 'weekly'
+        }, baseFoods);
+
+        // Se for modo semanal, substituímos tudo (plotagem inteligente)
+        // Se for modo diário, podemos adicionar ou substituir. 
+        // O usuário pediu "plotar ao clicar", vamos substituir para templates de plano
+        // ou adicionar se for template de refeição única.
+        
+        if (viewMode === 'weekly') {
+          set({ meals: smartMeals, planStatus: 'draft' });
+        } else {
+          // No modo diário, se o template tiver apenas 1 refeição, tentamos acoplar ou substituir a ativa
+          if (smartMeals.length === 1) {
+             set((state) => ({
+               meals: [...state.meals, smartMeals[0]],
+               planStatus: 'draft'
+             }));
+          } else {
+             set({ meals: smartMeals, planStatus: 'draft' });
+          }
+        }
+
+        get().recalculateScore();
+        toast.success(`Template inteligente "${template.name}" aplicado!`);
+      },
+
+
     }),
     {
       name: 'fitjourney-editor-v3-storage',
