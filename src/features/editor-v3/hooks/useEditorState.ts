@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from '../types';
-import { normalizeFood } from '../utils/normalization';
+import { normalizeFood, getBestMealImage } from '../utils/normalization';
 import { 
   generatePlanWithEngine, 
   generateMealWithEngine, 
