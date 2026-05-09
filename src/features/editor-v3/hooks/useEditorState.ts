@@ -513,9 +513,18 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Atualizar imagem se necessário
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual') {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
         toast.success(`${marmita.name} adicionada!`);
       },
+
 
       addFoodToMeal: async (mealId, food) => {
         let initialQuantity = 1;
