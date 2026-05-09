@@ -45,7 +45,16 @@ import { BrainLoaderCard } from "@/components/common/BrainLoader";
 
 export default function OnboardingPaciente() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const { profile } = useAuth();
   const navigate = useNavigate();
+
+  // Se o estado já mudou para anamnesis, não mostramos os slides
+  useEffect(() => {
+    if (profile?.patient_state === 'anamnesis') {
+      console.log("[FJ:Onboarding] Estado anamnesis detectado, redirecionando...");
+      navigate("/anamnesis", { replace: true });
+    }
+  }, [profile?.patient_state, navigate]);
 
   // Hardening: Não decidimos rota aqui. Apenas limpamos a flag de teste.
   // SystemStateGuard observa journeyStatus e redireciona automaticamente
