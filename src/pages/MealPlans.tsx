@@ -647,7 +647,7 @@ export default function MealPlans() {
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           if (!p.patient_id || !p.id) return;
-                          navigate(`/v3/${p.patient_id}?planId=${p.id}`); 
+                          navigate(`/meal-plans/${p.id}`); 
                         }}>
                         <Sparkles className="w-4 h-4 text-purple-600" />
                       </Button>
