@@ -163,6 +163,25 @@ export class NutriCoreV2Adapter {
             }));
           }
 
+          // Ajuste Medida Caseira Elite
+          const lowerName = item.name.toLowerCase();
+          let measurementType: any = 'gram';
+          let quantity = item.grams;
+          let portionValue = 100;
+          let portionLabel = 'g';
+
+          if (lowerName.includes('ovo')) {
+            measurementType = 'unit';
+            portionValue = 50; // M
+            quantity = Math.round(item.grams / 50);
+            portionLabel = 'unidade';
+          } else if (lowerName.includes('pão integral')) {
+            measurementType = 'unit';
+            portionValue = 25;
+            quantity = Math.round(item.grams / 25);
+            portionLabel = 'fatia';
+          }
+
           return {
             id: item.foodId,
             name: item.name,
@@ -171,13 +190,13 @@ export class NutriCoreV2Adapter {
             protein: totalProtein,
             carbs: totalCarbs,
             fat: totalFat,
-            portionValue: item.grams,
-            portionUnitLabel: 'g',
-            portionUnit: 'g',
-            portionLabel: 'g',
-            measurementType: 'gram' as const,
+            portionValue,
+            portionUnitLabel: portionLabel,
+            portionUnit: portionLabel,
+            portionLabel: portionLabel,
+            measurementType: measurementType as any,
             instanceId: Math.random().toString(36).substring(2, 10),
-            quantity: item.grams, 
+            quantity, 
             substitutions
           };
         })
