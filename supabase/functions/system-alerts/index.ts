@@ -19,7 +19,7 @@ serve(async (req) => {
 
     // 1. Format the message for external providers
     const alertBody = {
-      text: `*${severity.toUpperCase()} ALERT*: ${message}\n*Job ID*: ${job_id}\n*Error*: ${error || 'N/A'}\n*Dashboard*: https://wannubia.lovable.app/admin/jobs`,
+      text: `*${severity.toUpperCase()} ALERT*: ${message}\n*Job ID*: ${job_id}\n*Error*: ${error || 'N/A'}\n*Dashboard*: https://www.fitjourney.com.br/admin/health`,
       severity,
       timestamp: new Date().toISOString()
     }
