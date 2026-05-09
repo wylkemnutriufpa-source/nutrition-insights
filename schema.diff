@@ -1,0 +1,13 @@
+{
+  "summary": "Summary:",
+  "details": {
+    "timestamp": "2026-05-09T16:56:34.941Z",
+    "duration": "0.1s",
+    "lastSnapshotMigration": "20260509154041_8b90cb84-a008-49ed-a2b2-c3928d9a9f20.sql",
+    "lastActualMigration": "20260509165436_455b88ce-5a6c-4902-bf4b-6ea9fe3e561c.sql",
+    "missingMigrations": [
+      "20260509165436_455b88ce-5a6c-4902-bf4b-6ea9fe3e561c.sql"
+    ],
+    "diffResults": []
+  }
+}
