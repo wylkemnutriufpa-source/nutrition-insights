@@ -25,14 +25,14 @@ export const generateMealWithEngine = async (
 /**
  * Gera um plano completo distribuindo alimentos usando a estratégia clínica selecionada.
  */
-export const generatePlanWithEngine = (
+export const generatePlanWithEngine = async (
   currentMeals: Meal[], 
   goal: string, 
   baseCalories: number = 2000, 
   availableFoods: Food[],
   protocolType: string = 'default_v3',
   context?: PatientContext
-): Meal[] => {
+): Promise<Meal[]> => {
   if (!availableFoods || availableFoods.length < 10) {
     console.error('[Clinical Engine] Bloqueio: Base insuficiente.');
     toast.error('Erro: Motor desativado por falta de dados clínicos.');
@@ -41,9 +41,9 @@ export const generatePlanWithEngine = (
 
   const strategy = ClinicalEngineFactory.getStrategy(protocolType);
 
-  return currentMeals.map(meal => {
+  const updatedMeals = await Promise.all(currentMeals.map(async (meal) => {
     if (meal.items.length === 0) {
-      const newItems = strategy.generateMeal(meal, goal, baseCalories, availableFoods, context);
+      const newItems = await strategy.generateMeal(meal, goal, baseCalories, availableFoods, context);
       
       // Log audível da decisão clínica
       logAudit(
@@ -61,7 +61,9 @@ export const generatePlanWithEngine = (
       return { ...meal, items: newItems };
     }
     return meal;
-  });
+  }));
+
+  return updatedMeals;
 };
 
 /**
