@@ -1888,9 +1888,9 @@ export default function PatientDetail() {
                               if (error) throw error;
                               const result = data as any;
                               if (result?.success && result?.token) {
-                                const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${result.token}`;
-                                await navigator.clipboard.writeText(link);
-                                toast.success("Onboarding resetado! Link copiado para a área de transferência 📋");
+                                const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${result.token}`;
+                                const copied = await copyToClipboard(link);
+                                toast[copied ? "success" : "error"](copied ? "Onboarding resetado! Link oficial copiado 📋" : "Onboarding resetado! Copie manualmente o link oficial.");
                               } else {
                                 toast.success("Onboarding resetado com sucesso!");
                               }
@@ -1937,9 +1937,9 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
-                        await navigator.clipboard.writeText(link);
-                        toast.success("Link de onboarding copiado! 📋");
+                        const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${tokenValue}`;
+                        const copied = await copyToClipboard(link);
+                        toast[copied ? "success" : "error"](copied ? "Link oficial de onboarding copiado! 📋" : "Copie manualmente o link oficial.");
                       } catch (err: any) {
                         toast.error("Erro ao gerar link: " + (err.message || "Tente novamente"));
                       }
@@ -1978,7 +1978,7 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
+                        const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${tokenValue}`;
 
                         // Send notification to patient
                         await supabase.from("notifications").insert({
