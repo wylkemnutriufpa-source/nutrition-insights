@@ -423,9 +423,6 @@ export default function PatientRegister() {
     
     setCheckingEmail(true);
     try {
-      // Usamos uma RPC ou buscamos no profiles (que deve ter o email)
-      // Como o Supabase Auth não permite listar usuários abertamente por segurança,
-      // geralmente temos uma tabela de profiles ou similar para isso.
       const { data, error } = await supabase
         .from("profiles")
         .select("id")
