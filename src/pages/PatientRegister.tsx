@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
 import {
   Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
-  Download, Copy, FileJson, AlertTriangle, User, RefreshCw, Check
+  Download, Copy, FileJson, AlertTriangle, User, RefreshCw, Check, LogIn
 } from "lucide-react";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
@@ -142,6 +142,8 @@ export default function PatientRegister() {
   const done = syncStatus === "success";
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
+  const [isEmailAlreadyRegistered, setIsEmailAlreadyRegistered] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
 
 
@@ -416,9 +418,50 @@ export default function PatientRegister() {
   };
 
 
+  const checkEmailExistence = async (emailToCheck: string) => {
+    if (!emailToCheck || !emailToCheck.includes("@")) return;
+    
+    setCheckingEmail(true);
+    try {
+      // Usamos uma RPC ou buscamos no profiles (que deve ter o email)
+      // Como o Supabase Auth não permite listar usuários abertamente por segurança,
+      // geralmente temos uma tabela de profiles ou similar para isso.
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", emailToCheck.toLowerCase().trim())
+        .maybeSingle();
+
+      if (data) {
+        setIsEmailAlreadyRegistered(true);
+        addLog(`Email ${emailToCheck} já está cadastrado.`);
+      } else {
+        setIsEmailAlreadyRegistered(false);
+      }
+    } catch (err) {
+      console.error("Erro ao verificar email:", err);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (email.length > 5) {
+        checkEmailExistence(email);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [email]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || checkingEmail) return;
+
+    if (isEmailAlreadyRegistered) {
+      toast.error("Este e-mail já está cadastrado.");
+      return;
+    }
     
     if ((preselectedNutri || invitationCode) && sigValid === false) {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
