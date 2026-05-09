@@ -329,6 +329,22 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
 }
 
 /**
+ * Sidebar skeleton to prevent layout shift during loading
+ */
+function SidebarSkeleton() {
+  return (
+    <div className="space-y-3 px-1">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+          <div className="w-4 h-4 rounded bg-muted/40 animate-pulse" />
+          <div className="h-3 w-24 rounded bg-muted/40 animate-pulse" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
  * Main sidebar component.
  * For professionals with workspace config → renders from workspace tables.
  * Otherwise → falls back to legacy AccordionSidebar groups.
@@ -337,7 +353,12 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
   const { sections, loading: wsLoading } = useWorkspace();
   const { isProfessionalContext } = useWorkspaceContext();
 
-  const hasWorkspaceConfig = isProRole && isProfessionalContext && !wsLoading && sections.length > 0;
+  // While loading workspace config for a pro, show skeleton to avoid flicker
+  if (wsLoading && isProRole && isProfessionalContext) {
+    return <SidebarSkeleton />;
+  }
+
+  const hasWorkspaceConfig = isProRole && isProfessionalContext && sections.length > 0;
 
   if (hasWorkspaceConfig) {
     return <WorkspaceSidebar collapsed={collapsed} onLinkClick={onLinkClick} />;
