@@ -339,7 +339,16 @@ export default function InvitePatient() {
             <div className="space-y-3">
               <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
                 <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
-                <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+                {clipboardError === "quick_link" ? (
+                  <Input 
+                    readOnly 
+                    value={quickLink} 
+                    onFocus={(e) => e.target.select()}
+                    className="h-7 text-[10px] md:text-xs flex-1 bg-transparent border-none shadow-none focus-visible:ring-0"
+                  />
+                ) : (
+                  <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
