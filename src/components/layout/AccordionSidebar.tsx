@@ -334,11 +334,11 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
  */
 function SidebarSkeleton() {
   return (
-    <div className="space-y-3 px-1">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="flex items-center gap-3 px-3 py-2.5">
-          <div className="w-4 h-4 rounded bg-muted/40 animate-pulse" />
-          <div className="h-3 w-24 rounded bg-muted/40 animate-pulse" />
+    <div className="space-y-1 px-1 mt-2">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-lg bg-muted/5 animate-pulse mb-1">
+          <div className="w-4 h-4 rounded bg-muted/20" />
+          <div className="h-3 w-28 rounded bg-muted/20" />
         </div>
       ))}
     </div>
