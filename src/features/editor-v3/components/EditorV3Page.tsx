@@ -117,8 +117,9 @@ const EditorV3Page = () => {
 
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
-    initialMeals: initialMealsInStore
+    initialMeals: initialMealsInStore, viewMode, setViewMode
   } = useEditorState();
+
 
   if (!isFeatureEnabled('editorV3')) {
     return (
@@ -1255,6 +1256,28 @@ const EditorV3Page = () => {
                 </div>
               )}
             </div>
+            
+            <div className="flex bg-neutral-900 border border-white/10 p-1 rounded-2xl mr-4">
+              <button 
+                onClick={() => setViewMode('daily')}
+                className={cn(
+                  "px-4 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === 'daily' ? "bg-white text-black" : "text-white/40 hover:text-white"
+                )}
+              >
+                Diário
+              </button>
+              <button 
+                onClick={() => setViewMode('weekly')}
+                className={cn(
+                  "px-4 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === 'weekly' ? "bg-white text-black" : "text-white/40 hover:text-white"
+                )}
+              >
+                Semanal
+              </button>
+            </div>
+
 
             <Button 
               variant="outline" 
