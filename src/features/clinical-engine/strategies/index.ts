@@ -142,7 +142,7 @@ export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
   name = 'Engine NutriCore V2';
 
-  generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): MealItem[] {
+  async generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): Promise<MealItem[]> {
     // Usar contexto real se disponível, caso contrário usar fallback seguro
     const finalContext = {
       weight: context?.weight || 75,
