@@ -5,7 +5,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
-  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil, Star
+  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil, Star,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 // DropdownMenu imported below with additional components
@@ -1274,15 +1275,27 @@ export default function MealPlanEditorV2() {
           }}
         />
             {/* Visual Library — always available for viewing */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setVisualLibOpen(true)}
-              className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
-            >
-              <UtensilsCrossed className="w-4 h-4" />
-              <span className="hidden sm:inline">Refeições</span>
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLibraryOpen(true)}
+                className="gap-1.5 border-orange-500/30 text-orange-600 hover:bg-orange-500/10"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">Templates</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVisualLibOpen(true)}
+                className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+              >
+                <UtensilsCrossed className="w-4 h-4" />
+                <span className="hidden sm:inline">Refeições</span>
+              </Button>
+            </div>
           </div>
         </div>
 

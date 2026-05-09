@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { DayContent } from "./DayContent";
+import { DayTabs } from "./DayTabs";
 
 /**
  * ListView (Modo Single-Day Puro)
@@ -10,11 +11,18 @@ import { DayContent } from "./DayContent";
  * Renderiza exatamente o que vem do banco.
  */
 export function ListView() {
-  const { items } = useMealPlanEditorV2Store();
+  const { items, plan } = useMealPlanEditorV2Store();
+  const isWeeklyMode = (plan as any)?.plan_mode === "weekly";
+  const [selectedDay, setSelectedDay] = useState(1);
+  const effectiveDay = isWeeklyMode ? selectedDay : 0;
+
+  const dayItems = useMemo(() => {
+    return items.filter(i => i.day_of_week === effectiveDay);
+  }, [items, effectiveDay]);
 
   const totals = useMemo(() => {
     const t = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-    for (const i of items) {
+    for (const i of dayItems) {
       t.calories += Number(i.calories_target) || 0;
       t.protein += Number(i.protein_target) || 0;
       t.carbs += Number(i.carbs_target) || 0;
@@ -25,13 +33,23 @@ export function ListView() {
 
   return (
     <div className="space-y-3 max-w-3xl mx-auto">
+      {isWeeklyMode && (
+        <div className="mb-4 px-3 py-2 bg-card border border-border rounded-xl shadow-sm">
+          <DayTabs 
+            selectedDay={selectedDay} 
+            onSelectDay={setSelectedDay}
+            getDayCount={(d) => items.filter(i => i.day_of_week === d).length}
+          />
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-            🗓️ Plano Diário
+            🗓️ {isWeeklyMode ? "Plano Semanal" : "Plano Diário"}
           </span>
           <span className="text-[11px] text-muted-foreground">
-            Dia padrão + substituições
+            {isWeeklyMode ? `Visualizando ${selectedDay === 0 ? "Domingo" : selectedDay === 1 ? "Segunda" : "dia " + selectedDay}` : "Dia padrão + substituições"}
           </span>
         </div>
         <div className="flex items-center gap-3 text-[10px] font-medium text-muted-foreground">
@@ -43,7 +61,7 @@ export function ListView() {
       </div>
 
       <AnimatePresence mode="wait">
-        <DayContent key={0} day={0} />
+        <DayContent key={effectiveDay} day={effectiveDay} />
       </AnimatePresence>
     </div>
   );
