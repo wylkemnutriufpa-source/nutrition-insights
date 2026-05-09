@@ -1093,7 +1093,7 @@ const EditorV3Page = () => {
                         <button
                           key={p.patient_id}
                           onClick={() => {
-                            navigate(`/editor-v3/${p.patient_id}`);
+                            navigate(`/meal-plans/editor/${p.patient_id}`);
                             setShowPatientSelector(false);
                           }}
                           className={cn(
