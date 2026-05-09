@@ -58,7 +58,7 @@ const App = () => {
         style={{ touchAction: 'none' }}
       >
         <div className={`w-2 h-2 rounded-full ${mode === 'V1' ? 'bg-slate-400' : 'bg-white animate-pulse'}`} />
-        <span>{mode === 'V1' ? 'Mudar para V2' : 'Voltar para V1'}</span>
+        <span>{mode === 'V1' ? 'Ver Dashboard de Prescrição' : 'Voltar para o Sistema Principal'}</span>
       </motion.button>
     );
   };
