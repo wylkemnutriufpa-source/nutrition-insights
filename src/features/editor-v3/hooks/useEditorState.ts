@@ -528,7 +528,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`${food.name} adicionado!`);
       },
 
-      applyTemplateToMeal: (mealId, template) => {
+      applyTemplateToMeal: async (mealId, template) => {
         const newItems: MealItem[] = template.items.map((f) => {
           // Normaliza o item usando as regras de Medidas Caseiras
           const normalized = normalizeFood(f);
@@ -553,9 +553,18 @@ export const useEditorState = create<EditorState>()(
             substitutions: []
           };
         });
+
+        // PARTE 2 - Imagens de templates (Plotagem com imagem correspondente)
+        const bestImage = await getBestMealImage(template.name, newItems);
+
         set((state) => ({
           meals: state.meals.map((m) =>
-            m.id === mealId ? { ...m, items: newItems } : m
+            m.id === mealId ? { 
+              ...m, 
+              items: newItems,
+              imageUrl: bestImage.url,
+              imageSource: bestImage.source
+            } : m
           ),
           planStatus: 'draft',
         }));
