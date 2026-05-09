@@ -349,12 +349,12 @@ function SidebarSkeleton() {
  * For professionals with workspace config → renders from workspace tables.
  * Otherwise → falls back to legacy AccordionSidebar groups.
  */
-export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
+export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick, loading: menuLoading }: Props & { loading?: boolean }) {
   const { sections, loading: wsLoading } = useWorkspace();
   const { isProfessionalContext } = useWorkspaceContext();
 
-  // While loading workspace config for a pro, show skeleton to avoid flicker
-  if (wsLoading && isProRole && isProfessionalContext) {
+  // Show skeleton if either the workspace config or the smart menu is still loading
+  if ((wsLoading && isProRole && isProfessionalContext) || menuLoading) {
     return <SidebarSkeleton />;
   }
 
