@@ -35,7 +35,10 @@ interface EditorState {
   patientContext: PatientContext | null;
   sharingToken: string | null;
   confidence: PlanConfidence | null;
-  initialMeals: Meal[]; // Track initial meals separate from current meals
+  initialMeals: Meal[]; 
+  viewMode: 'daily' | 'weekly';
+  setViewMode: (mode: 'daily' | 'weekly') => void;
+
 
   // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
   dispatch: (action: string, updateFn: (state: EditorState) => Partial<EditorState>) => void;
@@ -55,11 +58,13 @@ interface EditorState {
   updateMealHeader: (mealId: string, name: string, time: string, description?: string, imageUrl?: string, imageSource?: 'auto' | 'manual' | 'fallback') => void;
   updateMealImage: (mealId: string, imageUrl: string, imageSource: 'auto' | 'manual' | 'fallback') => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
-  addFoodToMeal: (mealId: string, food: Food) => void;
+  addFoodToMeal: (mealId: string, food: Food) => Promise<void>;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
-  removeFood: (mealId: string, instanceId: string) => void;
+  removeFood: (mealId: string, instanceId: string) => Promise<void>;
+
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
-  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => void;
+  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => Promise<void>;
+
   generatePlan: (goal: string, baseCalories: number, availableFoods: Food[], replaceExisting?: boolean) => void;
   generateMeal: (mealId: string, goal: string, availableFoods: Food[], baseCalories?: number) => void;
   savePlan: () => Promise<void>;
@@ -92,8 +97,12 @@ export const useEditorState = create<EditorState>()(
       patientContext: null,
       confidence: null, sharingToken: null,
       initialMeals: DEFAULT_MEALS,
+      viewMode: 'daily',
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
+
+      setViewMode: (mode) => set({ viewMode: mode }),
+
 
       dispatch: (action, updateFn) => {
         const state = get();
@@ -504,11 +513,20 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Atualizar imagem se necessário
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual') {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
         toast.success(`${marmita.name} adicionada!`);
       },
 
-      addFoodToMeal: (mealId, food) => {
+
+      addFoodToMeal: async (mealId, food) => {
         let initialQuantity = 1;
         if (food.measurementType === 'gram') initialQuantity = 100;
         if (food.measurementType === 'ml') initialQuantity = 200;
@@ -523,9 +541,18 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Atualizar imagem se necessário
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual') {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
         toast.success(`${food.name} adicionado!`);
       },
+
 
       applyTemplateToMeal: async (mealId, template) => {
         const newItems: MealItem[] = template.items.map((f) => {
@@ -571,7 +598,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Template "${template.name}" aplicado!`);
       },
 
-      updateMealItem: (mealId, instanceId, updates) => {
+      updateMealItem: async (mealId, instanceId, updates) => {
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
@@ -580,7 +607,6 @@ export const useEditorState = create<EditorState>()(
                   items: m.items.map((i) => {
                     if (i.instanceId === instanceId) {
                       const updatedItem = { ...i, ...updates };
-                      // Se a quantidade mudou, recalculamos os macros do item
                       if (updates.quantity !== undefined) {
                         const newMacros = calculateItemMacros(updatedItem, updatedItem.quantity);
                         return {
@@ -601,10 +627,19 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Se o alimento principal mudou, a imagem deve mudar (se não for manual)
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual' && (updates.id || updates.name)) {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
       },
 
-      removeFood: (mealId, instanceId) => {
+
+      removeFood: async (mealId, instanceId) => {
         const meal = get().meals.find((m) => m.id === mealId);
         const item = meal?.items.find((i) => i.instanceId === instanceId);
 
@@ -621,8 +656,17 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+
+        // REGRA: Atualizar imagem ao remover se necessário
+        const currentMeal = get().meals.find(m => m.id === mealId);
+        if (currentMeal && currentMeal.imageSource !== 'manual') {
+          const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
+          get().updateMealImage(mealId, bestImage.url, bestImage.source);
+        }
+
         get().recalculateScore();
       },
+
       
       updateFoodQuantity: (mealId, instanceId, quantity) => {
         if (quantity < 0) return;

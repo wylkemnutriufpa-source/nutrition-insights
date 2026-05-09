@@ -117,8 +117,9 @@ const EditorV3Page = () => {
 
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
-    initialMeals: initialMealsInStore
+    initialMeals: initialMealsInStore, viewMode, setViewMode
   } = useEditorState();
+
 
   if (!isFeatureEnabled('editorV3')) {
     return (
@@ -1255,6 +1256,28 @@ const EditorV3Page = () => {
                 </div>
               )}
             </div>
+            
+            <div className="flex bg-neutral-900 border border-white/10 p-1 rounded-2xl mr-4">
+              <button 
+                onClick={() => setViewMode('daily')}
+                className={cn(
+                  "px-4 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === 'daily' ? "bg-white text-black" : "text-white/40 hover:text-white"
+                )}
+              >
+                Diário
+              </button>
+              <button 
+                onClick={() => setViewMode('weekly')}
+                className={cn(
+                  "px-4 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === 'weekly' ? "bg-white text-black" : "text-white/40 hover:text-white"
+                )}
+              >
+                Semanal
+              </button>
+            </div>
+
 
             <Button 
               variant="outline" 
@@ -1551,7 +1574,52 @@ const EditorV3Page = () => {
 
         <div className="space-y-12">
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
-          {meals.map((meal, index) => (
+          
+          {viewMode === 'weekly' ? (
+            ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((day) => (
+              <div key={day} className="space-y-8 pb-12 border-b border-white/5 last:border-0">
+                <div className="flex items-center gap-4 px-2">
+                  <div className="h-10 w-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter">{day}</h2>
+                  <Badge className="bg-white/5 text-white/40 border-white/10 uppercase font-black text-[10px]">Plano Semanal Base</Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {meals.map((meal) => (
+                    <Card key={`${day}-${meal.id}`} className="bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group">
+                      {meal.imageUrl && (
+                        <div className="relative w-full h-32 overflow-hidden">
+                          <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 to-transparent opacity-60" />
+                          <div className="absolute bottom-3 left-4">
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{meal.time}</span>
+                            <h4 className="text-sm font-black text-white uppercase tracking-tight">{meal.name}</h4>
+                          </div>
+                        </div>
+                      )}
+                      {!meal.imageUrl && (
+                         <div className="p-4 bg-white/5 flex items-center justify-center h-24">
+                            <Utensils className="w-6 h-6 text-white/10" />
+                         </div>
+                      )}
+                      <div className="p-4 space-y-2">
+                        {meal.items.map(item => (
+                          <div key={item.instanceId} className="flex justify-between items-center text-[11px]">
+                            <span className="text-white/60 font-bold line-clamp-1 flex-1">{item.name}</span>
+                            <span className="text-emerald-500 font-black ml-2">{formatPortion(item)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            meals.map((meal, index) => (
+
 
           <section key={meal.id} className={cn(
             "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-6 rounded-[32px] border transition-all",
@@ -1688,7 +1756,12 @@ const EditorV3Page = () => {
               ))}
             </div>
           </section>
-          ))}
+          ))
+        )}
+
+
+
+
         </div>
 
         <aside className="space-y-6 sticky top-24 h-fit">
