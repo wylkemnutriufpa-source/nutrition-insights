@@ -836,116 +836,28 @@ const EditorV3Page = () => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     try {
-      console.log('[Direct V2] Gerando plano diário completo');
+      console.log('[Direct V2] Gerando plano diário completo V3 Elite');
       
-      const mealTypeMap: Record<string, string> = {
-        'cafe_da_manha': 'Café da Manhã',
-        'lanche_da_manha': 'Lanche da Manhã',
-        'almoço': 'Almoço',
-        'lanche_da_tarde': 'Lanche da Tarde',
-        'jantar': 'Jantar',
-        'ceia': 'Ceia'
-      };
-
-      const mapGoal = (v3Goal: string): any => {
-        const goalMap: Record<string, string> = {
-          'lose_weight': 'emagrecimento',
-          'gain_muscle': 'hipertrofia',
-          'maintain': 'manutencao',
-          'health': 'saude',
-          'performance': 'performance',
-          'lose-weight': 'emagrecimento',
-          'muscle-gain': 'hipertrofia',
-          'Emagrecimento': 'emagrecimento',
-          'Hipertrofia': 'hipertrofia',
-          'Manutenção': 'manutencao'
-        };
-        return goalMap[v3Goal] || 'manutencao';
-      };
-
-      const mapActivity = (v3Activity: string): any => {
-        const activityMap: Record<string, string> = {
-          'sedentary': 'sedentario',
-          'light': 'leve',
-          'moderate': 'moderado',
-          'intense': 'intenso',
-          'very_active': 'muito_intenso',
-          'sedentario': 'sedentario',
-          'leve': 'leve',
-          'moderado': 'moderado',
-          'intenso': 'intenso'
-        };
-        return activityMap[v3Activity] || 'moderado';
-      };
-
-      const engineInput = {
-        weight_kg: patientContext.weight || 75,
-        height_cm: patientContext.height || 175,
-        age_years: patientContext.age || 30,
-        sex: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'feminino' : 'masculino' as any,
-        activity_level: mapActivity(patientContext.activityLevel || 'moderado'),
-        goal: mapGoal(patientContext.goal || 'manutencao'),
+      const { NutriCoreV2Adapter } = await import('@/lib/nutricore_v2/adapter');
+      
+      const v3Meals = NutriCoreV2Adapter.generateElitePlan({
+        weight: patientContext.weight || 75,
+        height: patientContext.height || 175,
+        age: patientContext.age || 30,
+        gender: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'female' : 'male',
+        goal: patientContext.goal || 'maintain',
         restrictions: patientContext.restrictions || [],
-        preferences: patientContext.preferences || []
-      };
-
-      console.log('[Direct V2] Input Engine:', engineInput);
-
-      const mealSlots: MealSlot[] = [
-        { type: 'cafe_da_manha', time: '08:00' },
-        { type: 'lanche_da_manha', time: '10:30' },
-        { type: 'almoço', time: '13:00' },
-        { type: 'lanche_da_tarde', time: '16:00' },
-        { type: 'jantar', time: '19:30' },
-        { type: 'ceia', time: '22:00' }
-      ];
-
-      const dailyPlan = generateDailyPlan(engineInput, mealSlots, BASE_FOODS);
+        preferences: patientContext.preferences || [],
+        activityLevel: patientContext.activityLevel || 'moderate'
+      } as any, baseFoods);
       
-      const v3Meals = dailyPlan.meals.map(v2Meal => {
-        const mealName = mealTypeMap[v2Meal.type] || v2Meal.type;
-        return {
-          id: Math.random().toString(36).substring(2, 9),
-          name: mealName,
-          time: v2Meal.time,
-          items: v2Meal.items.map(item => {
-            // 🛡️ BLINDAGEM NUTRICORE V2:
-            // Usamos o macro TOTAL direto do motor para evitar distorções de 25.000 kcal.
-            // Definimos portionValue = item.grams para que factor seja sempre 1.
-            return {
-              id: item.foodId,
-              name: item.name,
-              kcal: Math.round(item.macros.kcal),
-              calories: Math.round(item.macros.kcal),
-              protein: Number(item.macros.protein_g.toFixed(1)),
-              carbs: Number(item.macros.carb_g.toFixed(1)),
-              fat: Number(item.macros.fat_g.toFixed(1)),
-              portionValue: item.grams, 
-              portionUnitLabel: 'g',
-              portionUnit: 'g',
-              portionLabel: 'g',
-              measurementType: 'gram' as const,
-              instanceId: Math.random().toString(36).substring(2, 10),
-              quantity: item.grams,
-              substitutions: []
-            };
-          })
-        };
-      });
-
+      // Hydrate com os rascunhos normalizados (Regras de Ouro aplicadas no Adapter)
       hydrateMeals(v3Meals);
       
-      setGoalMetadata({
-        goalCalories: dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal,
-        goalProtein: dailyPlan.daily_totals.protein_g,
-        goalCarbs: dailyPlan.daily_totals.carb_g,
-        goalFat: dailyPlan.daily_totals.fat_g
-      });
-
-      toast.success('NutriCore V2: Plano completo gerado com sucesso!');
+      toast.success('Elite V3: Plano completo gerado com ~2000 kcal!');
     } catch (error) {
       console.error('[Direct V2 Error]', error);
-      toast.error('Erro ao gerar plano completo no NutriCore V2');
+      toast.error('Erro ao gerar plano completo no NutriCore V3');
     } finally {
       setIsGeneratingGlobal(false);
     }
