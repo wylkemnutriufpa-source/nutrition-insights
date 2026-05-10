@@ -889,36 +889,113 @@ const EditorV3Page = () => {
       return;
     }
 
-    // No V3, não bloqueamos mais se não tiver peso, pois usamos o fallback de 70kg com aviso
-    const finalWeight = patientContext.weight || 70;
-    const finalHeight = patientContext.height || 170;
+    // 🛡️ REGRAS IMATUTÁVEIS: Usar peso REAL da Lynn Ohana (Source of Truth)
+    const weight = patientContext.weight;
+    if (!weight || weight <= 0) {
+      toast.error('O peso do paciente é obrigatório para gerar o plano real.');
+      return;
+    }
 
     setIsGeneratingGlobal(true);
     setShowCalorieModal(false);
-    await new Promise(resolve => setTimeout(resolve, 800));
-
+    
     try {
-      console.log(`[Direct V2] Gerando plano diário completo V3 Elite para ${finalWeight}kg`);
+      console.log(`[Elite-V3] Chamada DIRETA ao Motor NutriCore V2 para ${weight}kg`);
       
-      const { NutriCoreV2Adapter } = await import('@/lib/nutricore_v2/adapter');
+      const { generateDailyPlan } = await import("@/lib/nutricore_v2/plan-generator");
+      const { BASE_FOODS } = await import("@/lib/nutricore_v2/food-database");
       
-      const v3Meals = await NutriCoreV2Adapter.generateElitePlan({
-        ...patientContext,
-        weight: finalWeight,
-        height: finalHeight,
-        gender: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'female' : 'male',
-        goal: patientContext.goal || 'maintain',
-        activityLevel: patientContext.activityLevel || 'moderate'
-      } as any, baseFoods);
+      const mealSlots = [
+        { type: 'cafe_da_manha', time: '08:00' },
+        { type: 'lanche_da_manha', time: '10:30' },
+        { type: 'almoço', time: '13:00' },
+        { type: 'lanche_da_tarde', time: '16:00' },
+        { type: 'jantar', time: '19:30' },
+        { type: 'ceia', time: '22:00' }
+      ] as any[];
 
-      
-      // Hydrate com os rascunhos normalizados (Regras de Ouro aplicadas no Adapter)
-      await hydrateMeals(v3Meals);
-      
-      toast.success('Elite V3: Plano completo gerado com ~2000 kcal!');
+      const dailyPlan = generateDailyPlan(
+        {
+          weight_kg: weight,
+          height_cm: patientContext.height || 170,
+          age_years: patientContext.age || 30,
+          sex: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'feminino' : 'masculino',
+          activity_level: (patientContext.activityLevel as any) || 'moderado',
+          goal: (patientContext.goal as any) || 'manutencao',
+          restrictions: patientContext.restrictions,
+          preferences: patientContext.preferences
+        },
+        mealSlots,
+        BASE_FOODS
+      );
+
+      // Converter o plano do motor para o formato do Editor V3
+      const v3Meals = dailyPlan.meals.map(meal => ({
+        id: Math.random().toString(36).substring(2, 9),
+        name: meal.type === 'cafe_da_manha' ? 'Café da Manhã' : 
+              meal.type === 'lanche_da_manha' ? 'Lanche da Manhã' :
+              meal.type === 'almoço' ? 'Almoço' :
+              meal.type === 'lanche_da_tarde' ? 'Lanche da Tarde' :
+              meal.type === 'jantar' ? 'Jantar' : 'Ceia',
+        time: meal.time,
+        items: meal.items.map(item => {
+          // 🛡️ Blindagem de Medidas Caseiras (Regra de Ouro)
+          const lowerName = item.name.toLowerCase();
+          let measurementType: any = 'gram';
+          let quantity = item.grams;
+          let portionValue = 100;
+          let portionLabel = 'g';
+
+          if (lowerName.includes('pão integral')) {
+            measurementType = 'unit';
+            portionValue = 25;
+            quantity = Math.round(item.grams / 25);
+            portionLabel = 'fatia(s)';
+          } else if (lowerName.includes('ovo')) {
+            measurementType = 'unit';
+            portionValue = 50;
+            quantity = Math.round(item.grams / 50);
+            portionLabel = 'unidade(s)';
+          } else if (lowerName.includes('banana')) {
+            measurementType = 'unit';
+            portionValue = 90;
+            quantity = Math.round(item.grams / 90);
+            portionLabel = 'unidade(s) M';
+          } else if (lowerName.includes('arroz') || lowerName.includes('feijão')) {
+            measurementType = 'spoon';
+            portionValue = 25;
+            quantity = Math.round(item.grams / 25);
+            portionLabel = 'colher(es) de sopa';
+          }
+
+          return {
+            id: item.foodId,
+            instanceId: Math.random().toString(36).substring(2, 10),
+            name: item.name,
+            quantity: quantity,
+            kcal: item.macros.kcal,
+            calories: item.macros.kcal,
+            protein: item.macros.protein_g,
+            carbs: item.macros.carb_g,
+            fat: item.macros.fat_g,
+            kcal_100g: (item.macros.kcal / (item.grams / 100)),
+            protein_100g: (item.macros.protein_g / (item.grams / 100)),
+            carb_100g: (item.macros.carb_g / (item.grams / 100)),
+            fat_100g: (item.macros.fat_g / (item.grams / 100)),
+            measurementType,
+            portionValue,
+            portionUnitLabel: portionLabel,
+            portionUnit: portionLabel,
+            portionLabel: portionLabel
+          };
+        })
+      }));
+
+      await hydrateMeals(v3Meals as any);
+      toast.success(`Elite V3: Plano gerado com ${Math.round(dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal)} kcal para ${weight}kg!`);
     } catch (error) {
-      console.error('[Direct V2 Error]', error);
-      toast.error('Erro ao gerar plano completo no NutriCore V3');
+      console.error('[Elite-V3 Error]', error);
+      toast.error('Erro ao gerar plano no Motor V2');
     } finally {
       setIsGeneratingGlobal(false);
     }

@@ -35,6 +35,7 @@ export const BASE_FOODS: Food[] = [
   { id: "7", name: "Feijão Carioca Cozido", category: "carb", protein_100g: 4.8, carb_100g: 14, fat_100g: 0.5, kcal_100g: 76, base_grams: 100, unit: "g" },
   { id: "8", name: "Aveia em Flocos", category: "carb", protein_100g: 14, carb_100g: 67, fat_100g: 8, kcal_100g: 394, base_grams: 30, unit: "g" },
   { id: "18", name: "Pão Francês", category: "carb", protein_100g: 8, carb_100g: 58, fat_100g: 3, kcal_100g: 300, base_grams: 50, unit: "unid (50g)" },
+  { id: "23", name: "Pão Integral", category: "carb", protein_100g: 9, carb_100g: 48, fat_100g: 3, kcal_100g: 260, base_grams: 50, unit: "2 fatias (50g)" },
   { id: "19", name: "Tapioca (Goma)", category: "carb", protein_100g: 0, carb_100g: 54, fat_100g: 0, kcal_100g: 220, base_grams: 60, unit: "g" },
   { id: "20", name: "Cuscuz de Milho", category: "carb", protein_100g: 2.5, carb_100g: 25, fat_100g: 0.5, kcal_100g: 110, base_grams: 100, unit: "g" },
 
