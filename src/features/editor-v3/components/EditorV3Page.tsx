@@ -614,9 +614,8 @@ const EditorV3Page = () => {
   }, [user?.id]);
 
   const totalMacros = useMemo(() => {
-    return meals.reduce((acc, meal) => {
+    const totals = meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        // No V3, usamos calculateItemMacros do motor V3 para consistência
         const macros = calculateItemMacros(item, item.quantity);
         acc.kcal += macros.kcal;
         acc.protein += macros.protein;
@@ -625,6 +624,17 @@ const EditorV3Page = () => {
       });
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
+    const breakfastCount = meals.filter(m => 
+      m.name.toLowerCase().includes('café') || m.name.toLowerCase().includes('desjejum')
+    ).length || 1;
+
+    return {
+      kcal: totals.kcal / breakfastCount,
+      protein: totals.protein / breakfastCount,
+      carbs: totals.carbs / breakfastCount,
+      fat: totals.fat / breakfastCount
+    };
   }, [meals]);
 
   const validation = useMemo(() => {

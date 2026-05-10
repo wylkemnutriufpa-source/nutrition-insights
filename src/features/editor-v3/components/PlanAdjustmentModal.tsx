@@ -38,10 +38,25 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
 }) => {
   const [initialMeals, setInitialMeals] = useState<Meal[]>([]);
   
-  // Current totals of ORIGINAL meals
+  // Detect how many days the plan covers (based on repeated breakfast/meal names)
+  const dayCount = useMemo(() => {
+    if (initialMeals.length === 0) return 1;
+    const breakfastCount = initialMeals.filter(m => 
+      m.name.toLowerCase().includes('café') || 
+      m.name.toLowerCase().includes('desjejum')
+    ).length;
+    // Se não houver café da manhã, tentamos contar por outras refeições comuns ou assumimos 1
+    if (breakfastCount === 0) {
+      const lunchCount = initialMeals.filter(m => m.name.toLowerCase().includes('almoço')).length;
+      return Math.max(1, lunchCount);
+    }
+    return breakfastCount;
+  }, [initialMeals]);
+  
+  // Current totals of ORIGINAL meals (AVERAGE PER DAY)
   const originalTotals = useMemo(() => {
     if (initialMeals.length === 0) return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-    return initialMeals.reduce((acc, meal) => {
+    const totals = initialMeals.reduce((acc, meal) => {
       meal.items.forEach(item => {
         const macros = calculateItemMacros(item, item.quantity);
         acc.kcal += macros.kcal;
@@ -51,7 +66,14 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
       });
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-  }, [initialMeals]);
+
+    return {
+      kcal: totals.kcal / dayCount,
+      protein: totals.protein / dayCount,
+      carbs: totals.carbs / dayCount,
+      fat: totals.fat / dayCount
+    };
+  }, [initialMeals, dayCount]);
 
   const [params, setParams] = useState<PlanAdjustmentParams>({
     proteinTarget: 0,
@@ -80,10 +102,15 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
         return acc;
       }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
+      // Detect days for initial targets too
+      const breakfastCount = currentMealsClone.filter((m: any) => 
+        m.name.toLowerCase().includes('café') || m.name.toLowerCase().includes('desjejum')
+      ).length || 1;
+
       setParams({
-        proteinTarget: Math.round(totals.protein),
-        carbTarget: Math.round(totals.carbs),
-        fatTarget: Math.round(totals.fat),
+        proteinTarget: Math.round(totals.protein / breakfastCount),
+        carbTarget: Math.round(totals.carbs / breakfastCount),
+        fatTarget: Math.round(totals.fat / breakfastCount),
         removeCarbsIntensity: 'none',
         removeCarbsMeals: ['Almoço', 'Jantar'],
         removeBeansOption: 'none'
@@ -128,9 +155,9 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
           {/* Proteína */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Ajustar Proteína</Label>
+              <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Ajustar Proteína Diária</Label>
               <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                <span className="text-[10px] font-black text-emerald-500 uppercase">Meta: {goalMetadata.goalProtein || 0}g</span>
+                <span className="text-[10px] font-black text-emerald-500 uppercase">Meta Diária: {goalMetadata.goalProtein || 0}g</span>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -155,16 +182,16 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               </Button>
             </div>
             <p className="text-[10px] text-white/20 italic">
-              Original: {Math.round(originalTotals.protein)}g → Novo: {params.proteinTarget}g
+              Original Diário: {Math.round(originalTotals.protein)}g → Novo: {params.proteinTarget}g
             </p>
           </div>
 
           {/* Carboidrato */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Ajustar Carboidrato</Label>
+              <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Ajustar Carboidrato Diário</Label>
               <div className="flex items-center gap-1.5 bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20">
-                <span className="text-[10px] font-black text-blue-500 uppercase">Meta: {goalMetadata.goalCarbs || 0}g</span>
+                <span className="text-[10px] font-black text-blue-500 uppercase">Meta Diária: {goalMetadata.goalCarbs || 0}g</span>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -189,16 +216,16 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               </Button>
             </div>
             <p className="text-[10px] text-white/20 italic">
-              Original: {Math.round(originalTotals.carbs)}g → Novo: {params.carbTarget}g
+              Original Diário: {Math.round(originalTotals.carbs)}g → Novo: {params.carbTarget}g
             </p>
           </div>
 
           {/* Lipídeos/Gordura */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Ajustar Lipídeos/Gordura</Label>
+              <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Ajustar Lipídeos Diários</Label>
               <div className="flex items-center gap-1.5 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">
-                <span className="text-[10px] font-black text-amber-500 uppercase">Meta: {goalMetadata.goalFat || 0}g</span>
+                <span className="text-[10px] font-black text-amber-500 uppercase">Meta Diária: {goalMetadata.goalFat || 0}g</span>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -223,7 +250,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               </Button>
             </div>
             <p className="text-[10px] text-white/20 italic">
-              Original: {Math.round(originalTotals.fat)}g → Novo: {params.fatTarget}g
+              Original Diário: {Math.round(originalTotals.fat)}g → Novo: {params.fatTarget}g
             </p>
           </div>
 

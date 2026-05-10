@@ -26,9 +26,19 @@ export function getSubstitutions(
   const originalCarb = food.carb_100g * originalFactor;
   const originalKcal = food.kcal_100g * originalFactor;
   
-  // PARTE 3 — SUBSTITUIÇÕES (LOGICA DE EQUIVALÊNCIA EXATA)
   const name = food.name.toLowerCase();
   
+  // Categorias Clínicas Estritas
+  const isPaoLike = (n: string) => n.includes('pão') || n.includes('tapioca') || n.includes('cuscuz') || n.includes('torrada') || n.includes('aveia');
+  const isMainCarb = (n: string) => (n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || n.includes('mandioca') || n.includes('milho')) && !isPaoLike(n);
+  const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('tilápia') || n.includes('atum') || n.includes('whey');
+  const isLegume = (n: string) => n.includes('feijão') || n.includes('lentilha') || n.includes('grão de bico') || n.includes('ervilha');
+
+  const foodIsPao = isPaoLike(name);
+  const foodIsMainCarb = isMainCarb(name);
+  const foodIsProtein = isProtein(name);
+  const foodIsLegume = isLegume(name);
+
   const candidates = foodDb.filter(f => 
     f.id !== food.id &&
     !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase()))
@@ -38,21 +48,20 @@ export function getSubstitutions(
     let gramsSub = 0;
     const candName = candidate.name.toLowerCase();
     
-    // Regra de Ouro: Proteína com Proteína, Carbo com Carbo
-    const isBaseProtein = name.includes('frango') || name.includes('carne') || name.includes('peixe') || name.includes('ovo');
-    const isCandProtein = candName.includes('frango') || candName.includes('carne') || candName.includes('peixe') || candName.includes('ovo');
-    
-    const isBaseCarb = name.includes('arroz') || name.includes('batata') || name.includes('macarrão') || name.includes('pão');
-    const isCandCarb = candName.includes('arroz') || candName.includes('batata') || candName.includes('macarrão') || candName.includes('pão') || candName.includes('tapioca') || candName.includes('cuscuz');
-
-    if (isBaseProtein && isCandProtein) {
-      gramsSub = (originalProtein / (candidate.protein_100g / 100));
-    } else if (isBaseCarb && isCandCarb) {
+    // 1. Match Estrito de Categoria Clínica
+    if (foodIsPao && isPaoLike(candName)) {
       gramsSub = (originalCarb / (candidate.carb_100g / 100));
-    } else if (candidate.category === food.category) {
+    } else if (foodIsMainCarb && isMainCarb(candName)) {
+      gramsSub = (originalCarb / (candidate.carb_100g / 100));
+    } else if (foodIsProtein && isProtein(candName)) {
+      gramsSub = (originalProtein / (candidate.protein_100g / 100));
+    } else if (foodIsLegume && isLegume(candName)) {
+      gramsSub = (originalCarb / (candidate.carb_100g / 100)); // Equivalência por carbo/fibras
+    } else if (!foodIsPao && !foodIsMainCarb && !foodIsProtein && !foodIsLegume && candidate.category === food.category) {
+      // Outras categorias (frutas, gorduras, etc)
       gramsSub = (originalKcal / (candidate.kcal_100g / 100));
     } else {
-      return null; // Não sugerir se categorias não baterem clinicamente
+      return null; // Bloqueia Arroz <-> Pão ou Feijão <-> Pão
     }
 
     // Arredondamento para múltiplos de 5g
@@ -62,14 +71,14 @@ export function getSubstitutions(
     // Rótulo de unidade humanizado
     let unitLabel = `${roundedGrams}g`;
     if (candName.includes('ovo')) {
-      const units = Math.round(roundedGrams / 50);
+      const units = Math.max(1, Math.round(roundedGrams / 50));
       unitLabel = `${units} ${units === 1 ? 'unidade' : 'unidades'} (${roundedGrams}g)`;
-    } else if (candName.includes('pão integral')) {
-      const units = Math.round(roundedGrams / 25);
+    } else if (candName.includes('pão integral') || candName.includes('pão de forma')) {
+      const units = Math.max(1, Math.round(roundedGrams / 25));
       unitLabel = `${units} ${units === 1 ? 'fatia' : 'fatias'} (${roundedGrams}g)`;
     } else if (candName.includes('pão francês')) {
-      const units = Math.round(roundedGrams / 50);
-      unitLabel = `${units} unidade (${roundedGrams}g)`;
+      const units = Math.max(1, Math.round(roundedGrams / 50));
+      unitLabel = `${units} ${units === 1 ? 'unidade' : 'unidades'} (${roundedGrams}g)`;
     } else if (candName.includes('frango') || candName.includes('carne')) {
       const filéType = roundedGrams >= 200 ? 'G' : (roundedGrams >= 150 ? 'M' : 'P');
       unitLabel = `1 filé ${filéType} (${roundedGrams}g)`;
