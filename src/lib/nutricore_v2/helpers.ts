@@ -9,15 +9,23 @@ export const isProtein = (name: string): boolean => {
          n.includes('ovo') || n.includes('whey') || n.includes('patinho') || 
          n.includes('presunto') || n.includes('queijo') || n.includes('lombo') ||
          n.includes('músculo') || n.includes('alcatra') || n.includes('tilápia') ||
-         n.includes('salmão') || n.includes('atum') || n.includes('omelete');
+         n.includes('salmão') || n.includes('atum') || n.includes('omelete') ||
+         n.includes('suplemento de proteína');
 };
 
 export const isCarb = (name: string): boolean => {
   const n = name.toLowerCase();
+  // No V3, separamos carbos de refeição de carbos de lanche (pães)
   return n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || 
-         n.includes('feijão') || n.includes('pão') || n.includes('aveia') || 
-         n.includes('tapioca') || n.includes('cuscuz') || n.includes('mandioca') ||
-         n.includes('milho') || n.includes('grão de bico') || n.includes('lentilha');
+         n.includes('aveia') || n.includes('tapioca') || n.includes('cuscuz') || 
+         n.includes('mandioca') || n.includes('milho') || n.includes('pão') || 
+         n.includes('torrada');
+};
+
+export const isLegume = (name: string): boolean => {
+  const n = name.toLowerCase();
+  return n.includes('feijão') || n.includes('lentilha') || n.includes('grão de bico') || 
+         n.includes('ervilha') || n.includes('soja');
 };
 
 export const isFruit = (name: string): boolean => {
@@ -26,7 +34,8 @@ export const isFruit = (name: string): boolean => {
          n.includes('fruta') || n.includes('suco') || n.includes('laranja') ||
          n.includes('mamão') || n.includes('melão') || n.includes('melancia') ||
          n.includes('abacaxi') || n.includes('morango') || n.includes('manga') ||
-         n.includes('pera') || n.includes('goiaba') || n.includes('tangerina');
+         n.includes('pera') || n.includes('goiaba') || n.includes('tangerina') ||
+         n.includes('kiwi') || n.includes('ameixa');
 };
 
 export const isVegetable = (name: string): boolean => {
@@ -45,9 +54,10 @@ export const isFat = (name: string): boolean => {
 };
 
 export const getFoodCategory = (food: any): string => {
-  if (food.category) return food.category.toLowerCase();
+  if (food.category && food.category !== 'any') return food.category.toLowerCase();
   const name = food.name.toLowerCase();
   if (isProtein(name)) return 'proteína';
+  if (isLegume(name)) return 'leguminosa';
   if (isCarb(name)) return 'carboidrato';
   if (isFruit(name)) return 'fruta';
   if (isVegetable(name)) return 'legume';
@@ -56,26 +66,47 @@ export const getFoodCategory = (food: any): string => {
 };
 
 export const calculateItemMacros = (item: any, quantity: number) => {
-  // 🛡️ BLINDAGEM ANTI-DISTORÇÃO:
-  // Priorizamos campos que explicitamente representam o valor por 100g.
-  // Se usarmos 'kcal' ou 'calories' como base, corremos o risco de re-multiplicar um valor que já é total.
-  const kcalBase = item.kcal_100g !== undefined ? item.kcal_100g : (item.calories_100g || item.kcal || 0);
-  const proteinBase = item.protein_100g !== undefined ? item.protein_100g : (item.protein || 0);
-  const carbsBase = item.carb_100g !== undefined ? item.carb_100g : (item.carbs || 0);
-  const fatBase = item.fat_100g !== undefined ? item.fat_100g : (item.fat || 0);
+  // 🛡️ BLINDAGEM V3: Priorizar valores por 100g para evitar distorção
+  const kcal100 = item.kcal_100g ?? item.calories_100g;
+  const protein100 = item.protein_100g ?? item.protein_g;
+  const carbs100 = item.carb_100g ?? item.carbs_g;
+  const fat100 = item.fat_100g ?? item.fat_g;
 
-  // No FitJourney V3, a base é definida por portionValue.
-  // Se o motor NutriCore V2 gerou o item, portionValue = quantity, logo factor = 1.
-  // No FitJourney V3, a base é definida por portionValue para Unidade.
-  // Se for Ovo e Unidade, portionValue é 50g (M). Se quantity = 2, factor = 2.
-  const base = (item.measurementType === 'unit' && item.portionValue) ? 1 : (item.portionValue || 100);
-  const factor = (item.measurementType === 'unit' && item.portionValue) ? quantity : quantity / (base || 1);
+  let factor = 0;
+  
+  if (kcal100 !== undefined || protein100 !== undefined) {
+    // Temos base de 100g. Calculamos o total de gramas primeiro.
+    const totalGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
+      ? (quantity * (item.portionValue || 1))
+      : quantity;
+    factor = totalGrams / 100;
+    
+    return {
+      kcal: Math.round((kcal100 || 0) * factor * 10) / 10,
+      protein: Math.round((protein100 || 0) * factor * 10) / 10,
+      carbs: Math.round((carbs100 || 0) * factor * 10) / 10,
+      fat: Math.round((fat100 || 0) * factor * 10) / 10
+    };
+  }
+
+  // Fallback para valores por porção (Legado ou Custom)
+  const kcalPortion = item.kcal ?? item.calories ?? 0;
+  const proteinPortion = item.protein ?? 0;
+  const carbsPortion = item.carbs ?? 0;
+  const fatPortion = item.fat ?? 0;
+
+  if (item.measurementType === 'unit' || item.measurementType === 'spoon') {
+    factor = quantity;
+  } else {
+    // Se for gramas e não temos kcal_100g, assumimos que kcalPortion é para portionValue gramas
+    factor = quantity / (item.portionValue || 100);
+  }
 
   return {
-    kcal: Math.round((kcalBase * factor) * 10) / 10,
-    protein: Math.round((proteinBase * factor) * 10) / 10,
-    carbs: Math.round((carbsBase * factor) * 10) / 10,
-    fat: Math.round((fatBase * factor) * 10) / 10
+    kcal: Math.round(kcalPortion * factor * 10) / 10,
+    protein: Math.round(proteinPortion * factor * 10) / 10,
+    carbs: Math.round(carbsPortion * factor * 10) / 10,
+    fat: Math.round(fatPortion * factor * 10) / 10
   };
 };
 
