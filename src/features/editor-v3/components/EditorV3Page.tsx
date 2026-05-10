@@ -749,6 +749,26 @@ const EditorV3Page = () => {
       return;
     }
 
+    // 🛡️ Safety Net - Verificações Obrigatórias
+    const safetyNet = validatePlanBeforePublish({
+      meals,
+      patientContext,
+      totalMacros,
+      isWeeklyMode: viewMode === 'weekly'
+    });
+
+    if (safetyNet.errors.length > 0) {
+      safetyNet.errors.forEach(err => toast.error(err));
+      return;
+    }
+
+    if (safetyNet.warnings.length > 0 && !warningsConfirmed) {
+      safetyNet.warnings.forEach(warn => toast.warning(warn));
+      toast.info("Clique novamente para confirmar e publicar com estes alertas.");
+      setWarningsConfirmed(true);
+      return;
+    }
+
     if (!validation.isValid) {
       toast.error("Corrija os erros antes de salvar.");
       return;
