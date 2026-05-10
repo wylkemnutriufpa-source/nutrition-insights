@@ -171,12 +171,27 @@ export class NutriCoreV2Adapter {
           measurementType = 'unit';
           portionValue = 50; // M
           quantity = Math.round(item.grams / 50);
-          portionLabel = 'unidade';
-        } else if (lowerName.includes('pão integral')) {
+          portionLabel = 'unidade(s)';
+        } else if (lowerName.includes('pão integral') || lowerName.includes('pão de forma')) {
           measurementType = 'unit';
           portionValue = 25;
           quantity = Math.round(item.grams / 25);
-          portionLabel = 'fatia';
+          portionLabel = 'fatia(s)';
+        } else if (lowerName.includes('pão francês')) {
+          measurementType = 'unit';
+          portionValue = 50;
+          quantity = Math.round(item.grams / 50);
+          portionLabel = 'unidade(s)';
+        } else if (lowerName.includes('banana')) {
+          measurementType = 'unit';
+          portionValue = 90;
+          quantity = Math.round(item.grams / 90);
+          portionLabel = 'unidade(s) M';
+        } else if (lowerName.includes('arroz') || lowerName.includes('feijão')) {
+          measurementType = 'spoon';
+          portionValue = 25;
+          quantity = Math.round(item.grams / 25);
+          portionLabel = 'colher(es) de sopa';
         }
 
         return {
