@@ -216,7 +216,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               </Button>
             </div>
             <p className="text-[10px] text-white/20 italic">
-              Original: {Math.round(originalTotals.carbs)}g → Novo: {params.carbTarget}g
+              Original Diário: {Math.round(originalTotals.carbs)}g → Novo: {params.carbTarget}g
             </p>
           </div>
 
