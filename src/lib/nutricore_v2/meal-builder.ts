@@ -65,11 +65,28 @@ export function buildMeal(
   }
 
   if (isSnack) {
-    // Lanches: FRUTAS como base (Regra Parte 4, Item 7)
+    // Lanches: FRUTAS + LATICÍNIO (se couber nos macros)
+    const isMorningSnack = type === "lanche_da_manha";
+    const isAfternoonSnack = type === "lanche_da_tarde";
+    const isSupper = type === "ceia";
+
     const fruit = allowedDb.find(f => f.category === "fruit") || foodDb.find(f => f.category === "fruit");
-    if (fruit) {
-      items.push(createPlannedItem(fruit, 150));
+    const dairy = allowedDb.find(f => f.category === "dairy") || foodDb.find(f => f.category === "dairy");
+    const nut = allowedDb.find(f => f.category === "fat" && (f.name.toLowerCase().includes("castanha") || f.name.toLowerCase().includes("amendoim")));
+
+    if (isMorningSnack) {
+      if (fruit) items.push(createPlannedItem(fruit, 150));
+    } else if (isAfternoonSnack) {
+      if (dairy) items.push(createPlannedItem(dairy, 170));
+      if (fruit) items.push(createPlannedItem(fruit, 100));
+    } else if (isSupper) {
+      if (dairy) items.push(createPlannedItem(dairy, 100));
+      if (nut) items.push(createPlannedItem(nut, 15));
+    } else {
+      // Fallback genérico para lanche
+      if (fruit) items.push(createPlannedItem(fruit, 150));
     }
+
     return finalizeMeal(type, time, items, targetMacros);
   }
 
