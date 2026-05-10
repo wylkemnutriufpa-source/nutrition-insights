@@ -258,9 +258,9 @@ export default function Checkin() {
             .update({ current_weight_kg: weightValue })
             .eq("id", user.id);
             
-          // Add to weight_history for tracking
-          await supabase
-            .from("weight_history")
+          // Add to patient_weight_history for tracking
+          await (supabase as any)
+            .from("patient_weight_history")
             .insert({
               patient_id: user.id,
               weight: weightValue,
