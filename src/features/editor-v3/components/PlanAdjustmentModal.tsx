@@ -38,24 +38,32 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
 }) => {
   const [initialMeals, setInitialMeals] = useState<Meal[]>([]);
   
-  // Detect how many days the plan covers
+  // 🛡️ DETECTOR DE ESCOPO (DIÁRIO VS SEMANAL)
   const dayCount = useMemo(() => {
-    // Se tivermos mais de 10 refeições, assumimos plano semanal (7 dias)
-    // Caso contrário, plano diário (1 dia)
-    if (initialMeals.length > 10) return 7;
+    if (meals.length === 0) return 1;
+    
+    // Se tivermos mais de 10 refeições totais, é altamente provável ser um plano semanal (6-7 por dia)
+    if (meals.length > 10) return 7;
+    
+    // Verificação secundária por nome de refeição duplicado (ex: dois "Almoços")
+    const names = meals.map(m => m.name.toLowerCase());
+    const uniqueNames = new Set(names);
+    if (names.length > uniqueNames.size) return Math.ceil(names.length / uniqueNames.size);
+    
     return 1;
-  }, [initialMeals]);
+  }, [meals]);
   
   // Current totals of ORIGINAL meals (AVERAGE PER DAY)
   const originalTotals = useMemo(() => {
-    if (initialMeals.length === 0) return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-    const totals = initialMeals.reduce((acc, meal) => {
-      meal.items.forEach(item => {
-        const macros = calculateItemMacros(item, item.quantity);
-        acc.kcal += macros.kcal;
-        acc.protein += macros.protein;
-        acc.carbs += macros.carbs;
-        acc.fat += macros.fat;
+    if (meals.length === 0) return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+    const totals = meals.reduce((acc, meal) => {
+      (meal.items || []).forEach(item => {
+        // Usamos o motor de cálculo do V3 (calcMacrosV2) que é mais resiliente
+        const macros = calculateItemMacros(item, item.quantity || 100);
+        acc.kcal += macros.kcal || 0;
+        acc.protein += macros.protein || 0;
+        acc.carbs += macros.carbs || 0;
+        acc.fat += macros.fat || 0;
       });
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
@@ -66,7 +74,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
       carbs: totals.carbs / dayCount,
       fat: totals.fat / dayCount
     };
-  }, [initialMeals, dayCount]);
+  }, [meals, dayCount]);
 
   const [params, setParams] = useState<PlanAdjustmentParams>({
     proteinTarget: 0,
@@ -77,36 +85,24 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
     removeBeansOption: 'none'
   });
 
-  // Snapshot initial meals when opened
+  // Snapshot initial meals when opened and INITIALIZE TARGETS
   useEffect(() => {
     if (isOpen) {
-      // Usar a versão atual de meals como base para o ajuste
       const currentMealsClone = JSON.parse(JSON.stringify(meals));
       setInitialMeals(currentMealsClone);
       
-      const totals = currentMealsClone.reduce((acc: any, meal: Meal) => {
-        meal.items.forEach(item => {
-          const macros = calculateItemMacros(item, item.quantity);
-          acc.kcal += macros.kcal;
-          acc.protein += macros.protein;
-          acc.carbs += macros.carbs;
-          acc.fat += macros.fat;
-        });
-        return acc;
-      }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-
-      const detectionDayCount = currentMealsClone.length > 10 ? 7 : 1;
-
+      // Inicializar com os totais atuais calculados (média diária)
+      // Isso evita que comece em 0g ou 14.000g
       setParams({
-        proteinTarget: Math.round(totals.protein / detectionDayCount),
-        carbTarget: Math.round(totals.carbs / detectionDayCount),
-        fatTarget: Math.round(totals.fat / detectionDayCount),
+        proteinTarget: Math.round(originalTotals.protein) || Math.round(goalMetadata.goalProtein || 120),
+        carbTarget: Math.round(originalTotals.carbs) || Math.round(goalMetadata.goalCarbs || 150),
+        fatTarget: Math.round(originalTotals.fat) || Math.round(goalMetadata.goalFat || 50),
         removeCarbsIntensity: 'none',
         removeCarbsMeals: ['Almoço', 'Jantar'],
         removeBeansOption: 'none'
       });
     }
-  }, [isOpen]);
+  }, [isOpen, originalTotals, goalMetadata]);
 
   // Real-time preview: apply to initial snapshot
   useEffect(() => {
