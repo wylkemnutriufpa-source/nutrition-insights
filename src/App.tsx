@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from './lib/auth';
 
 const App = () => {
-  const { isAdmin, roles, loading } = useAuth();
+  const { isAdmin, isNutritionist, isPersonal, roles, loading } = useAuth();
   const [mode, setMode] = useState<'V1' | 'V2'>(() => {
     try {
       const saved = localStorage.getItem('fitjourney_mode');
@@ -20,9 +20,10 @@ const App = () => {
   useEffect(() => {
     if (loading) return;
     
-    // Safety check: if user is not admin, they MUST stay in V1
-    if (roles !== null && !isAdmin && mode === 'V2') {
-      console.warn('[FitJourney] Non-admin user detected in V2, forcing V1');
+    // Safety check: if user is not a professional, they MUST stay in V1
+    const isProfessional = isAdmin || isNutritionist || isPersonal;
+    if (roles !== null && !isProfessional && mode === 'V2') {
+      console.warn('[FitJourney] Non-professional user detected in V2, forcing V1');
       setMode('V1');
       return;
     }
@@ -36,8 +37,10 @@ const App = () => {
   }, [mode, isAdmin, loading]);
 
   const Switcher = () => {
-    // Only admins can see and use the switcher
-    if (!isAdmin || loading) return null;
+    // Professionals can see the switcher, and it's ALWAYS visible if stuck in V2
+    const isProfessional = isAdmin || isNutritionist || isPersonal;
+    if (loading && mode === 'V1') return null;
+    if (!isProfessional && mode === 'V1') return null;
 
     return (
       <motion.button
