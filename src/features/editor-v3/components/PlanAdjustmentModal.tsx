@@ -104,14 +104,23 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
       }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
       // Detect days for initial targets too
-      const breakfastCount = currentMealsClone.filter((m: any) => 
-        m.name.toLowerCase().includes('café') || m.name.toLowerCase().includes('desjejum')
-      ).length || 1;
+      const breakfasts = currentMealsClone.filter((m: any) => 
+        m.name.toLowerCase().includes('café') || 
+        m.name.toLowerCase().includes('desjejum') ||
+        m.name.includes('(Segunda)') || 
+        m.name.includes('(Terça)') ||
+        m.name.includes('(Quarta)') ||
+        m.name.includes('(Quinta)') ||
+        m.name.includes('(Sexta)') ||
+        m.name.includes('(Sábado)') ||
+        m.name.includes('(Domingo)')
+      );
+      const detectionDayCount = Math.max(1, breakfasts.length);
 
       setParams({
-        proteinTarget: Math.round(totals.protein / breakfastCount),
-        carbTarget: Math.round(totals.carbs / breakfastCount),
-        fatTarget: Math.round(totals.fat / breakfastCount),
+        proteinTarget: Math.round(totals.protein / detectionDayCount),
+        carbTarget: Math.round(totals.carbs / detectionDayCount),
+        fatTarget: Math.round(totals.fat / detectionDayCount),
         removeCarbsIntensity: 'none',
         removeCarbsMeals: ['Almoço', 'Jantar'],
         removeBeansOption: 'none'
