@@ -187,6 +187,11 @@ export class NutriCoreV2Adapter {
           protein: totalProtein,
           carbs: totalCarbs,
           fat: totalFat,
+          // 🛡️ Blindagem: Salvar também os valores por 100g para o Motor V3 não se perder
+          kcal_100g: foodObj?.kcal_100g || totalKcal,
+          protein_100g: foodObj?.protein_100g || totalProtein,
+          carb_100g: foodObj?.carb_100g || totalCarbs,
+          fat_100g: foodObj?.fat_100g || totalFat,
           portionValue,
           portionUnitLabel: portionLabel,
           portionUnit: portionLabel,
