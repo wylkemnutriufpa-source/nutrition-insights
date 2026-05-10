@@ -360,8 +360,8 @@ const EditorV3Page = () => {
             weight = Number((anamnesis?.answers as any)?.weight);
             weightSource = 'anamnesis';
           } else {
-            weight = 70;
-            weightSource = 'fallback';
+            weight = 60; // Safe dynamic fallback, NOT 70.
+            weightSource = 'dynamic_fallback';
           }
         }
 
