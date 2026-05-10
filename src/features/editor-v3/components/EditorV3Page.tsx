@@ -293,22 +293,22 @@ const EditorV3Page = () => {
           return;
         }
 
-        // 🛡️ CRITICAL FIX: Use the REAL canonical ID from the profile (profiles.id)
-        // This ensures queries to other tables (using patient_id FK) work and sync across components.
-        const profileId = profile.id;
+        // Clinical tables use the auth user id as patient_id/user_id.
+        // profiles.id is only the row id and must not be used to load assessments.
+        const canonicalPatientId = profile.user_id || profile.id;
 
         // Verify if we are currently using a different ID in the store (stale state)
         // If the current patientId in store is different from the canonical one from URL, 
         // it means we switched patients but the global store still has the old one.
         // We MUST prioritize the URL ID as the intent of the user.
         
-        console.info(`[V3-Init] Canonical profile found: ${profile.full_name} (${profileId})`);
+        console.info(`[V3-Init] Canonical profile found: ${profile.full_name} (${canonicalPatientId})`);
 
-        // 2. Load Physical Assessment (Fallback 1) - Use profileId (which is user_id/auth.users.id in FKs)
+        // 2. Load Physical Assessment (Fallback 1)
         const { data: assessment } = await supabase
           .from('physical_assessments')
           .select('*')
-          .eq('patient_id', profileId)
+          .eq('patient_id', canonicalPatientId)
           .order('assessment_date', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -317,7 +317,7 @@ const EditorV3Page = () => {
         const { data: anamnesis } = await supabase
           .from('patient_anamnesis')
           .select('*')
-          .eq('user_id', profile.user_id || profileId)
+          .eq('user_id', canonicalPatientId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -362,8 +362,8 @@ const EditorV3Page = () => {
         
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
         const currentState = useEditorState.getState();
-        if (currentState.patientId !== profileId) {
-          setPatientId(profileId);
+        if (currentState.patientId !== canonicalPatientId) {
+          setPatientId(canonicalPatientId);
         }
 
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
