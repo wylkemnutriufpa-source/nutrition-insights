@@ -6,6 +6,7 @@ import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
 import { loadOrCreateDraft, saveDraft } from '../services/draftService';
+import { validatePlanBeforePublish } from '@/lib/planSafetyNet';
 import { runV3IntegrationTests } from '../services/v3Tests';
 import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
@@ -151,6 +152,7 @@ const EditorV3Page = () => {
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const [warningsConfirmed, setWarningsConfirmed] = useState(false);
   const [showClinicalDecision, setShowClinicalDecision] = useState(false);
   const [showClinicalHistory, setShowClinicalHistory] = useState(false);
   const [showRefineOptions, setShowRefineOptions] = useState(false);
@@ -731,6 +733,8 @@ const EditorV3Page = () => {
     if (hydratedRef.current && draftId) {
       console.debug('[V3-UI] Scheduling sync save for updated meals');
       scheduleSave(meals, auditLog);
+      // Reset warnings confirmation if meals changed
+      setWarningsConfirmed(false);
     }
   }, [meals, auditLog, draftId, scheduleSave]);
 
@@ -744,6 +748,26 @@ const EditorV3Page = () => {
     if (isSandbox) {
       toast.info("No modo Sandbox, as alterações são salvas apenas localmente no seu navegador.");
       setShowValidation(false);
+      return;
+    }
+
+    // 🛡️ Safety Net - Verificações Obrigatórias
+    const safetyNet = validatePlanBeforePublish({
+      meals,
+      patientContext,
+      totalMacros,
+      isWeeklyMode: viewMode === 'weekly'
+    });
+
+    if (safetyNet.errors.length > 0) {
+      safetyNet.errors.forEach(err => toast.error(err));
+      return;
+    }
+
+    if (safetyNet.warnings.length > 0 && !warningsConfirmed) {
+      safetyNet.warnings.forEach(warn => toast.warning(warn));
+      toast.info("Clique novamente para confirmar e publicar com estes alertas.");
+      setWarningsConfirmed(true);
       return;
     }
 
