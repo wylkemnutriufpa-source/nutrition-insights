@@ -40,17 +40,18 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   
   // Detect how many days the plan covers (based on repeated breakfast/meal names)
   const dayCount = useMemo(() => {
-    if (initialMeals.length === 0) return 1;
-    const breakfastCount = initialMeals.filter(m => 
+    const breakfasts = initialMeals.filter(m => 
       m.name.toLowerCase().includes('café') || 
-      m.name.toLowerCase().includes('desjejum')
-    ).length;
-    // Se não houver café da manhã, tentamos contar por outras refeições comuns ou assumimos 1
-    if (breakfastCount === 0) {
-      const lunchCount = initialMeals.filter(m => m.name.toLowerCase().includes('almoço')).length;
-      return Math.max(1, lunchCount);
-    }
-    return breakfastCount;
+      m.name.toLowerCase().includes('desjejum') ||
+      m.name.includes('(Segunda)') || 
+      m.name.includes('(Terça)') ||
+      m.name.includes('(Quarta)') ||
+      m.name.includes('(Quinta)') ||
+      m.name.includes('(Sexta)') ||
+      m.name.includes('(Sábado)') ||
+      m.name.includes('(Domingo)')
+    );
+    return Math.max(1, breakfasts.length);
   }, [initialMeals]);
   
   // Current totals of ORIGINAL meals (AVERAGE PER DAY)
