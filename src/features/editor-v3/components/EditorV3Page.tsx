@@ -324,9 +324,43 @@ const EditorV3Page = () => {
         
         const profileAny = profile as any;
         
-        // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
-        const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
-        const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
+        // 🧪 Motor de Priorização Antropométrica (Regra de Ouro)
+        // 1. Profile (Source of Truth)
+        // 2. Anamnese (Self-reported)
+        // 3. Avaliação Física (Measured)
+        // 4. Fallback 70kg (Estimated)
+        
+        let weight = Number(profileAny.current_weight_kg || 0);
+        let height = Number(profileAny.current_height_cm || 0);
+        let weightSource = 'profile';
+
+        if (weight <= 0) {
+          const anamnesisWeight = Number((anamnesis?.answers as any)?.weight || 0);
+          if (anamnesisWeight > 0) {
+            weight = anamnesisWeight;
+            weightSource = 'anamnesis';
+          }
+        }
+
+        if (weight <= 0 && assessment?.weight) {
+          weight = Number(assessment.weight);
+          weightSource = 'assessment';
+        }
+
+        if (weight <= 0) {
+          weight = 70;
+          weightSource = 'fallback';
+          console.warn(`[V3-Init] Peso não encontrado para ${profile.full_name}, usando valor estimado de 70kg`);
+        }
+
+        // Similar para altura
+        if (height <= 0) {
+          const anamnesisHeight = Number((anamnesis?.answers as any)?.height || 0);
+          if (anamnesisHeight > 0) height = anamnesisHeight;
+          else if (assessment?.height) height = Number(assessment.height);
+          else height = 170;
+        }
+
         const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
         const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
         const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
@@ -358,7 +392,16 @@ const EditorV3Page = () => {
           protocol_type: profileAny.protocol_type || 'default_v3',
         };
 
-        console.info(`[V3-Context] Assigning context for ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        if (weightSource === 'fallback') {
+          toast.warning("Peso não encontrado, usando valor estimado de 70kg", {
+            description: "Atualize os dados do paciente para maior precisão.",
+            duration: 5000
+          });
+        } else if (weightSource !== 'profile') {
+          console.info(`[V3-Init] Peso carregado via ${weightSource}: ${weight}kg`);
+        }
+
+        console.info(`[V3-Context] Assigning context for ${profile.full_name}: ${weight}kg via ${weightSource}`);
         
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
         const currentState = useEditorState.getState();
