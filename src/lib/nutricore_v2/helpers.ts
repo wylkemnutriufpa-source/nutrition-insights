@@ -13,13 +13,20 @@ export const isProtein = (name: string): boolean => {
          n.includes('suplemento de proteína');
 };
 
-export const isCarb = (name: string): boolean => {
+export const isComplexCarb = (name: string): boolean => {
   const n = name.toLowerCase();
-  // No V3, separamos carbos de refeição de carbos de lanche (pães)
-  return n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || 
-         n.includes('aveia') || n.includes('tapioca') || n.includes('cuscuz') || 
-         n.includes('mandioca') || n.includes('milho') || n.includes('pão') || 
-         n.includes('torrada');
+  return (n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || 
+         n.includes('mandioca') || n.includes('milho')) && !isBreadLike(n);
+};
+
+export const isBreadLike = (name: string): boolean => {
+  const n = name.toLowerCase();
+  return n.includes('pão') || n.includes('tapioca') || n.includes('cuscuz') || 
+         n.includes('torrada') || n.includes('aveia');
+};
+
+export const isCarb = (name: string): boolean => {
+  return isComplexCarb(name) || isBreadLike(name);
 };
 
 export const isLegume = (name: string): boolean => {
@@ -58,7 +65,8 @@ export const getFoodCategory = (food: any): string => {
   const name = food.name.toLowerCase();
   if (isProtein(name)) return 'proteína';
   if (isLegume(name)) return 'leguminosa';
-  if (isCarb(name)) return 'carboidrato';
+  if (isBreadLike(name)) return 'pão/substituto';
+  if (isComplexCarb(name)) return 'carboidrato';
   if (isFruit(name)) return 'fruta';
   if (isVegetable(name)) return 'legume';
   if (isFat(name)) return 'gordura';
@@ -116,10 +124,14 @@ export const getDeterministicSuggestions = (baseItemName: string, availableFoods
 
   if (isProtein(name)) {
     suggestions = availableFoods.filter(f => isProtein(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-  } else if (isCarb(name)) {
-    suggestions = availableFoods.filter(f => isCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+  } else if (isBreadLike(name)) {
+    suggestions = availableFoods.filter(f => isBreadLike(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+  } else if (isComplexCarb(name)) {
+    suggestions = availableFoods.filter(f => isComplexCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
   } else if (isFruit(name)) {
     suggestions = availableFoods.filter(f => isFruit(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+  } else if (isLegume(name)) {
+    suggestions = availableFoods.filter(f => isLegume(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
   }
 
   if (suggestions.length < 3) {

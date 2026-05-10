@@ -155,25 +155,46 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
 };
 
 const scaleMacronutrient = (meals: Meal[], category: string, targetTotal: number): Meal[] => {
+  // Detectar quantos dias o plano cobre para calcular a média diária atual
+  const breakfasts = meals.filter(m => 
+    m.name.toLowerCase().includes('café') || 
+    m.name.toLowerCase().includes('desjejum') ||
+    m.name.includes('(Segunda)') || 
+    m.name.includes('(Terça)') ||
+    m.name.includes('(Quarta)') ||
+    m.name.includes('(Quinta)') ||
+    m.name.includes('(Sexta)') ||
+    m.name.includes('(Sábado)') ||
+    m.name.includes('(Domingo)')
+  );
+  const dayCount = Math.max(1, breakfasts.length);
+
   const currentTotal = meals.reduce((acc, meal) => {
     return acc + meal.items.reduce((mAcc, item) => {
       if (getFoodCategory(item) === category) {
         const macros = calculateItemMacros(item, item.quantity);
-        return mAcc + (category === 'proteína' ? macros.protein : category === 'carboidrato' ? macros.carbs : macros.fat);
+        return mAcc + (category === 'proteína' ? (macros.protein || 0) : category === 'carboidrato' ? (macros.carbs || 0) : (macros.fat || 0));
       }
       return mAcc;
     }, 0);
   }, 0);
 
-  if (currentTotal === 0 || Math.abs(currentTotal - targetTotal) < 1) return meals;
+  // Média diária atual
+  const currentDailyAverage = currentTotal / dayCount;
 
-  const scale = targetTotal / currentTotal;
+  if (currentDailyAverage === 0 || Math.abs(currentDailyAverage - targetTotal) < 1) return meals;
+
+  // O fator de escala deve ser baseado na diferença entre a média diária atual e o alvo diário
+  const scale = targetTotal / currentDailyAverage;
+  
+  // 🛡️ Segurança clínica: Nunca escalar mais que 5x ou menos que 0.1x para evitar "explosão" de macros
+  const safeScale = Math.max(0.1, Math.min(5, scale));
 
   return meals.map(meal => ({
     ...meal,
     items: meal.items.map(item => {
       if (getFoodCategory(item) === category) {
-        const newQuantity = Math.round(item.quantity * scale);
+        const newQuantity = Math.round(item.quantity * safeScale);
         const macros = calculateItemMacros(item, newQuantity);
         return {
           ...item,

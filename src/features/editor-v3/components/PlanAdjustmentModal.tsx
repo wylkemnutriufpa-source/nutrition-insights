@@ -40,17 +40,18 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   
   // Detect how many days the plan covers (based on repeated breakfast/meal names)
   const dayCount = useMemo(() => {
-    if (initialMeals.length === 0) return 1;
-    const breakfastCount = initialMeals.filter(m => 
+    const breakfasts = initialMeals.filter(m => 
       m.name.toLowerCase().includes('café') || 
-      m.name.toLowerCase().includes('desjejum')
-    ).length;
-    // Se não houver café da manhã, tentamos contar por outras refeições comuns ou assumimos 1
-    if (breakfastCount === 0) {
-      const lunchCount = initialMeals.filter(m => m.name.toLowerCase().includes('almoço')).length;
-      return Math.max(1, lunchCount);
-    }
-    return breakfastCount;
+      m.name.toLowerCase().includes('desjejum') ||
+      m.name.includes('(Segunda)') || 
+      m.name.includes('(Terça)') ||
+      m.name.includes('(Quarta)') ||
+      m.name.includes('(Quinta)') ||
+      m.name.includes('(Sexta)') ||
+      m.name.includes('(Sábado)') ||
+      m.name.includes('(Domingo)')
+    );
+    return Math.max(1, breakfasts.length);
   }, [initialMeals]);
   
   // Current totals of ORIGINAL meals (AVERAGE PER DAY)
@@ -103,14 +104,23 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
       }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
       // Detect days for initial targets too
-      const breakfastCount = currentMealsClone.filter((m: any) => 
-        m.name.toLowerCase().includes('café') || m.name.toLowerCase().includes('desjejum')
-      ).length || 1;
+      const breakfasts = currentMealsClone.filter((m: any) => 
+        m.name.toLowerCase().includes('café') || 
+        m.name.toLowerCase().includes('desjejum') ||
+        m.name.includes('(Segunda)') || 
+        m.name.includes('(Terça)') ||
+        m.name.includes('(Quarta)') ||
+        m.name.includes('(Quinta)') ||
+        m.name.includes('(Sexta)') ||
+        m.name.includes('(Sábado)') ||
+        m.name.includes('(Domingo)')
+      );
+      const detectionDayCount = Math.max(1, breakfasts.length);
 
       setParams({
-        proteinTarget: Math.round(totals.protein / breakfastCount),
-        carbTarget: Math.round(totals.carbs / breakfastCount),
-        fatTarget: Math.round(totals.fat / breakfastCount),
+        proteinTarget: Math.round(totals.protein / detectionDayCount),
+        carbTarget: Math.round(totals.carbs / detectionDayCount),
+        fatTarget: Math.round(totals.fat / detectionDayCount),
         removeCarbsIntensity: 'none',
         removeCarbsMeals: ['Almoço', 'Jantar'],
         removeBeansOption: 'none'

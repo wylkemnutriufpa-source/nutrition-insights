@@ -130,12 +130,19 @@ export async function getBestMealImage(mealName: string, items: any[]): Promise<
     const isLunch = cleanMealName.includes('almoço');
     const isDinner = cleanMealName.includes('jantar');
     const isSnack = cleanMealName.includes('lanche');
+    const isSupper = cleanMealName.includes('ceia');
 
     let fallbackTerm = 'fruta';
     if (isBreakfast) fallbackTerm = 'pao-frances';
     if (isLunch || isDinner) fallbackTerm = 'arroz-feijao-frango';
+    if (isSnack) fallbackTerm = 'iogurte-natural';
+    if (isSupper) fallbackTerm = 'banana-com-canela';
+    
+    // Se o termo de busca tiver proteína, tenta o fallback da proteína
     if (searchTerm.includes('frango')) fallbackTerm = 'frango';
     if (searchTerm.includes('carne')) fallbackTerm = 'carne';
+    if (searchTerm.includes('peixe')) fallbackTerm = 'peixe';
+    if (searchTerm.includes('ovo')) fallbackTerm = 'pao-com-ovo';
     
     const { data: fallbackResults } = await supabase
       .from('meal_visual_library')
