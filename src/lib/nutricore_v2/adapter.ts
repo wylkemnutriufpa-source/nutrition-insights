@@ -50,8 +50,8 @@ export class NutriCoreV2Adapter {
     console.info(`[NutriCore-Adapter] Mapping Patient: Weight ${context.weight}kg, Goal ${context.goal} -> ${goal}`);
 
     return {
-      weight_kg: context.weight || 75,
-      height_cm: context.height || 175,
+      weight_kg: context.weight || 70,
+      height_cm: context.height || 170,
       age_years: context.age || 30,
       sex: context.gender === 'female' ? 'feminino' : 'masculino',
       activity_level: activity,
