@@ -253,18 +253,21 @@ export default function Checkin() {
         const weightValue = normalizeWeightInput(weight).value;
         if (weightValue) {
           console.log(`[CHECKIN] Updating profile weight to ${weightValue}kg for user ${user.id}`);
+          
+          // Update profile weight (Source of Truth)
           await supabase
             .from("profiles")
             .update({ current_weight_kg: weightValue })
-            .eq("id", user.id);
+            .eq("user_id", user.id);
             
-          // Add to patient_weight_history for tracking
+          // Add to patient_weight_history for tracking (ensure column name is correct)
           await (supabase as any)
             .from("patient_weight_history")
             .insert({
               patient_id: user.id,
               weight: weightValue,
-              recorded_at: new Date().toISOString()
+              measurement_date: new Date().toISOString().split('T')[0],
+              measurement_source: 'checkin'
             });
         }
       }

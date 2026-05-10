@@ -319,6 +319,15 @@ const EditorV3Page = () => {
           .limit(1)
           .maybeSingle();
 
+        // 2.5 Load Weight History (Check-ins)
+        const { data: weightHistory } = await supabase
+          .from('patient_weight_history')
+          .select('weight')
+          .eq('patient_id', canonicalPatientId)
+          .order('measurement_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
         // 3. Load Anamnesis (Fallback 2)
         const { data: anamnesis } = await supabase
           .from('patient_anamnesis')
@@ -331,34 +340,34 @@ const EditorV3Page = () => {
         const profileAny = profile as any;
         
         // 🧪 Motor de Priorização Antropométrica (Regra de Ouro)
-        // 1. Profile (Source of Truth) -> SE NÃO ESTIVER VAZIO (0 ou 70kg de fallback antigo)
-        // 2. Anamnese (Self-reported)
+        // 1. Profile (Source of Truth)
+        // 2. Histórico de Peso (Check-ins/Feedbacks)
         // 3. Avaliação Física (Measured)
-        // 4. Fallback 70kg (Estimated)
+        // 4. Anamnese (Self-reported)
+        // 5. Fallback 70kg (Safety)
         
         let weight = Number(profileAny.current_weight_kg || 0);
-        let height = Number(profileAny.current_height_cm || 0);
         let weightSource = 'profile';
 
-        // Se o peso no perfil for 70 (fallback comum) ou 0, tentamos buscar dados mais frescos na anamnese ou avaliação
-        if (weight <= 0 || weight === 70) {
-          const anamnesisWeight = Number((anamnesis?.answers as any)?.weight || 0);
-          const assessmentWeight = Number(assessment?.weight || 0);
-          
-          if (anamnesisWeight > 0 && anamnesisWeight !== 70) {
-            weight = anamnesisWeight;
-            weightSource = 'anamnesis';
-          } else if (assessmentWeight > 0 && assessmentWeight !== 70) {
-            weight = assessmentWeight;
+        if (weight <= 0) {
+          if (weightHistory?.weight) {
+            weight = Number(weightHistory.weight);
+            weightSource = 'weight_history';
+          } else if (assessment?.weight) {
+            weight = Number(assessment.weight);
             weightSource = 'assessment';
-          } else if (weight === 0) {
-            weight = 70; // Hard fallback only if everything is 0
+          } else if ((anamnesis?.answers as any)?.weight) {
+            weight = Number((anamnesis?.answers as any)?.weight);
+            weightSource = 'anamnesis';
+          } else {
+            weight = 70;
             weightSource = 'fallback';
           }
         }
 
-        console.info(`[V3-Init] Peso final decidido: ${weight}kg (Fonte: ${weightSource})`);
+        console.info(`[V3-Init] Initial weight (${weight}kg) used. Source: ${weightSource}`);
 
+        let height = Number(profileAny.current_height_cm || 0);
         // Similar para altura
         if (height <= 0 || height === 170) {
           const anamnesisHeight = Number((anamnesis?.answers as any)?.height || 0);

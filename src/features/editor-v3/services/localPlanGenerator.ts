@@ -28,24 +28,54 @@ export async function generateAndSaveLocalPlan(
       .limit(1)
       .maybeSingle();
 
-    const { data: assessment } = await supabase
-      .from('physical_assessments')
-      .select('*')
-      .eq('patient_id', profile.user_id)
-      .order('assessment_date', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const [{ data: assessment }, { data: weightHistory }] = await Promise.all([
+      supabase
+        .from('physical_assessments')
+        .select('*')
+        .eq('patient_id', profile.user_id)
+        .order('assessment_date', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('patient_weight_history')
+        .select('weight')
+        .eq('patient_id', profile.user_id)
+        .order('measurement_date', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    ]);
 
     const answers = (anamnesis?.answers || {}) as any;
     
-    // 🛡️ Motor de Priorização Antropométrica
+    // 🛡️ Motor de Priorização Antropométrica (Regra de Ouro)
+    // 1. Profile (Source of Truth)
+    // 2. Histórico de Peso (Check-ins/Feedbacks)
+    // 3. Avaliação Física (Medido)
+    // 4. Anamnese (Auto-reportado)
+    // 5. Fallback 70kg (Segurança final)
+    
     let weight = Number(profile.current_weight_kg || 0);
+    let weightSource = 'profile';
+
+    if (weight <= 0) {
+      if (weightHistory?.weight) {
+        weight = Number(weightHistory.weight);
+        weightSource = 'weight_history';
+      } else if (assessment?.weight) {
+        weight = Number(assessment.weight);
+        weightSource = 'assessment';
+      } else if (answers.weight) {
+        weight = Number(answers.weight);
+        weightSource = 'anamnesis';
+      } else {
+        weight = 70;
+        weightSource = 'fallback_safety';
+      }
+    }
+
+    console.log(`[localPlanGenerator] Initial weight (${weight}kg) used. Source: ${weightSource}`);
+
     let height = Number(profile.current_height_cm || 0);
-
-    if (weight <= 0) weight = Number(answers.weight || 0);
-    if (weight <= 0 && assessment?.weight) weight = Number(assessment.weight);
-    if (weight <= 0) weight = 70; // Fallback final
-
     if (height <= 0) height = Number(answers.height || 0);
     if (height <= 0 && assessment?.height) height = Number(assessment.height);
     if (height <= 0) height = 170; // Fallback final

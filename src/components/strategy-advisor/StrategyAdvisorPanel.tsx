@@ -72,7 +72,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         .eq("id", patientId)
         .maybeSingle();
 
-      const weight = parseFloat(String(bodyAssessment?.weight_kg || answers.weight || 70));
+      const weight = parseFloat(String(bodyAssessment?.weight_kg || answers.weight || 0)) || 70;
       let height = parseFloat(String(bodyAssessment?.height_m ? (Number(bodyAssessment.height_m) * 100) : (answers.height || 170)));
 
       const profile: PatientProfile = {
