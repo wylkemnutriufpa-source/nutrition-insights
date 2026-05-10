@@ -367,6 +367,7 @@ const EditorV3Page = () => {
 
         console.info(`[V3-Init] Initial weight (${weight}kg) used. Source: ${weightSource}`);
 
+        let height = Number(profileAny.current_height_cm || 0);
         // Similar para altura
         if (height <= 0 || height === 170) {
           const anamnesisHeight = Number((anamnesis?.answers as any)?.height || 0);
