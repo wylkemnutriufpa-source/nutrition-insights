@@ -625,17 +625,29 @@ const EditorV3Page = () => {
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
-    const breakfastCount = meals.filter(m => 
-      m.name.toLowerCase().includes('café') || m.name.toLowerCase().includes('desjejum')
-    ).length || 1;
+    // 🛡️ CORREÇÃO URGENTE: Detecção de plano semanal para evitar soma acumulada
+    // Se estivermos em modo semanal ou tivermos muitos cafés da manhã, dividimos pelo número de dias
+    const breakfasts = meals.filter(m => 
+      m.name.toLowerCase().includes('café') || 
+      m.name.toLowerCase().includes('desjejum') ||
+      m.name.includes('(Segunda)') || 
+      m.name.includes('(Terça)') ||
+      m.name.includes('(Quarta)') ||
+      m.name.includes('(Quinta)') ||
+      m.name.includes('(Sexta)') ||
+      m.name.includes('(Sábado)') ||
+      m.name.includes('(Domingo)')
+    );
+
+    const totalDays = viewMode === 'weekly' ? 7 : (breakfasts.length || 1);
 
     return {
-      kcal: totals.kcal / breakfastCount,
-      protein: totals.protein / breakfastCount,
-      carbs: totals.carbs / breakfastCount,
-      fat: totals.fat / breakfastCount
+      kcal: totals.kcal / totalDays,
+      protein: totals.protein / totalDays,
+      carbs: totals.carbs / totalDays,
+      fat: totals.fat / totalDays
     };
-  }, [meals]);
+  }, [meals, viewMode]);
 
   const validation = useMemo(() => {
     const errors: string[] = [];
