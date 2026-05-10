@@ -64,7 +64,6 @@ import {
 } from 'lucide-react';
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
 import PlanAdjustmentModal from './PlanAdjustmentModal';
-import { useMealTemplates } from '@/hooks/queries/useMealTemplates';
 
 
 
@@ -250,7 +249,6 @@ const EditorV3Page = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [marmitas, setMarmitas] = useState<Food[]>([]);
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
-  const { data: dbTemplates } = useMealTemplates();
   const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
   const [visualLibraryInfo, setVisualLibraryInfo] = useState<{ count: number, incomplete: boolean }>({ count: 0, incomplete: false });
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
@@ -570,15 +568,14 @@ const EditorV3Page = () => {
       
       const startTime = performance.now();
       try {
-        const [marmitasData, baseData] = await Promise.all([
+        const [marmitasData, templatesData, baseData] = await Promise.all([
           searchMarmitas(user.id),
+          searchTemplates(),
           getBaseFoods()
         ]);
 
-        const templatesData = (dbTemplates as any[]) || [];
-
         setMarmitas(marmitasData);
-        setTemplates(templatesData as any);
+        setTemplates(templatesData);
         setBaseFoods(baseData);
         
         setDbStatus({
