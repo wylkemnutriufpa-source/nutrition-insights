@@ -101,6 +101,23 @@ export async function promoteDraftToMealPlan(
   const today = new Date().toISOString().slice(0, 10);
   const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
 
+  // 🛡️ Safety Net - Verificações Obrigatórias (Hard Lock no Backend)
+  const safetyNet = validatePlanBeforePublish({
+    meals,
+    patientContext: draft.payload?.patient_context ?? null,
+    totalMacros: {
+      kcal: draft.meta_kcal ?? 0,
+      protein: draft.meta_protein ?? 0,
+      carbs: draft.meta_carbs ?? 0,
+      fat: draft.meta_fat ?? 0
+    },
+    isWeeklyMode: draft.payload?.meals?.some(m => m.selectionMode === 'week')
+  });
+
+  if (safetyNet.errors.length > 0) {
+    return { ok: false, error: `Bloqueio Safety Net: ${safetyNet.errors.join('; ')}` };
+  }
+
 
   // 0) Resolve o ID real do Auth (auth.users.id) e do Perfil (profiles.id)
   const { data: profile } = await supabase
