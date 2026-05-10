@@ -124,13 +124,13 @@ export default function PhysicalAssessment() {
     if (!patientId) return;
 
     // Patient name
-    supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle()
+    supabase.from("profiles").select("full_name").or(`id.eq.${patientId},user_id.eq.${patientId}`).maybeSingle()
       .then(({ data }) => setPatientName(data?.full_name || "Paciente"));
 
     // Anamnesis
     supabase.from("patient_anamnesis")
       .select("answers, computed_tmb, computed_kcal_target, computed_protein, computed_carbs, computed_fat")
-      .eq("user_id", patientId).eq("status", "completed")
+      .or(`user_id.eq.${patientId}`).eq("status", "completed")
       .order("created_at", { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => {
         if (data) {
