@@ -123,10 +123,14 @@ export const getDeterministicSuggestions = (baseItemName: string, availableFoods
 
   if (isProtein(name)) {
     suggestions = availableFoods.filter(f => isProtein(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-  } else if (isCarb(name)) {
-    suggestions = availableFoods.filter(f => isCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+  } else if (isBreadLike(name)) {
+    suggestions = availableFoods.filter(f => isBreadLike(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+  } else if (isComplexCarb(name)) {
+    suggestions = availableFoods.filter(f => isComplexCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
   } else if (isFruit(name)) {
     suggestions = availableFoods.filter(f => isFruit(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+  } else if (isLegume(name)) {
+    suggestions = availableFoods.filter(f => isLegume(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
   }
 
   if (suggestions.length < 3) {
