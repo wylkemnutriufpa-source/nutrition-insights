@@ -16,7 +16,7 @@ export const isProtein = (name: string): boolean => {
 export const isComplexCarb = (name: string): boolean => {
   const n = name.toLowerCase();
   return (n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || 
-         n.includes('mandioca') || n.includes('milho')) && !isBreadLike(n);
+         n.includes('mandioca') || n.includes('milho') || n.includes('inhame')) && !isBreadLike(n);
 };
 
 export const isBreadLike = (name: string): boolean => {
