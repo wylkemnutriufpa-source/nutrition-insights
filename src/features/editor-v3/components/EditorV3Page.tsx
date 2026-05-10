@@ -368,8 +368,8 @@ const EditorV3Page = () => {
           else if (height === 0) height = 170;
         }
 
-        const age = profileAny.age || (anamnesis?.answers as any)?.age || (assessment?.age) || 30;
-        const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || (assessment?.gender) || 'female';
+        const age = profileAny.age || (anamnesis?.answers as any)?.age || (assessment as any)?.age || 30;
+        const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || (assessment as any)?.gender || 'female';
         const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
         const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
         
