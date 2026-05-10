@@ -1284,16 +1284,28 @@ const EditorV3Page = () => {
 
 
 
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowAdjustmentModal(true)} 
-              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500 hover:text-black rounded-xl transition-all gap-2"
-            >
-              <Settings2 className="w-3.5 h-3.5" />
-              Ajustar Plano
-            </Button>
-
+            <div className="flex bg-neutral-900 border border-white/10 p-1 rounded-2xl mr-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAdjustmentModal(true)} 
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider text-blue-400 hover:text-white hover:bg-blue-500/20 rounded-xl transition-all gap-2"
+              >
+                <Settings2 className="w-3.5 h-3.5" />
+                Ajustar Plano
+              </Button>
+              <div className="w-px h-6 bg-white/10 mx-1 self-center" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleGenerateFullPlan}
+                disabled={isGeneratingGlobal}
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all gap-2"
+              >
+                {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                Gerar Plano Completo
+              </Button>
+            </div>
 
             <Button 
               size="sm" 
@@ -1671,7 +1683,13 @@ const EditorV3Page = () => {
                 </div>
                 
                 <div className="flex items-center gap-1.5 p-1 bg-black/20 rounded-2xl border border-white/5">
-                  <Button variant="ghost" size="sm" disabled={generatingMealId === meal.id} onClick={() => handleMealGenerate(meal.id)} className="h-10 px-4 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    disabled={generatingMealId === meal.id} 
+                    onClick={() => handleMealGenerate(meal.id)} 
+                    className="h-10 px-4 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all"
+                  >
                     {generatingMealId === meal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar AI
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => duplicateMeal(meal.id)} className="rounded-xl h-10 w-10 text-white/20 hover:text-white hover:bg-white/5"><Layers className="w-4 h-4" /></Button>
