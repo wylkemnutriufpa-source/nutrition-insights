@@ -65,7 +65,8 @@ export const getFoodCategory = (food: any): string => {
   const name = food.name.toLowerCase();
   if (isProtein(name)) return 'proteína';
   if (isLegume(name)) return 'leguminosa';
-  if (isCarb(name)) return 'carboidrato';
+  if (isBreadLike(name)) return 'pão/substituto';
+  if (isComplexCarb(name)) return 'carboidrato';
   if (isFruit(name)) return 'fruta';
   if (isVegetable(name)) return 'legume';
   if (isFat(name)) return 'gordura';
