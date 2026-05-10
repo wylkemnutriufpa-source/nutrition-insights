@@ -93,12 +93,16 @@ const formatPortion = (item: MealItem) => {
   // Para V3, sempre buscamos a medida caseira + gramas para clareza total
   const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
   
-  if (displayUnit === 'g') {
-    return `${Math.round(item.quantity)}g`;
+  const totalGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
+    ? Math.round(item.quantity * (item.portionValue || 1))
+    : Math.round(item.quantity);
+
+  if (displayUnit === 'g' || displayUnit === 'gramas') {
+    return `${totalGrams}g`;
   }
   
-  // Ex: "2 unidades (100g)" ou "4 colheres (100g)"
-  return `${displayQuantity} ${displayUnit} (${Math.round(item.quantity)}g)`;
+  // Ex: "2 fatias (50g)" ou "4 colheres (100g)"
+  return `${item.quantity} ${displayUnit} (${totalGrams}g)`;
 };
 
 const EditorV3Page = () => {
