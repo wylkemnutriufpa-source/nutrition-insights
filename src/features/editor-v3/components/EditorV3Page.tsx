@@ -733,6 +733,8 @@ const EditorV3Page = () => {
     if (hydratedRef.current && draftId) {
       console.debug('[V3-UI] Scheduling sync save for updated meals');
       scheduleSave(meals, auditLog);
+      // Reset warnings confirmation if meals changed
+      setWarningsConfirmed(false);
     }
   }, [meals, auditLog, draftId, scheduleSave]);
 
