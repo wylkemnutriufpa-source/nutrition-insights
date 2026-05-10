@@ -980,11 +980,16 @@ const EditorV3Page = () => {
           let portionValue = 100;
           let portionLabel = 'g';
 
-          if (lowerName.includes('pão integral')) {
+          if (lowerName.includes('pão integral') || lowerName.includes('pão de forma')) {
             measurementType = 'unit';
             portionValue = 25;
             quantity = Math.round(item.grams / 25);
             portionLabel = 'fatia(s)';
+          } else if (lowerName.includes('pão francês')) {
+            measurementType = 'unit';
+            portionValue = 50;
+            quantity = Math.round(item.grams / 50);
+            portionLabel = 'unidade(s)';
           } else if (lowerName.includes('ovo')) {
             measurementType = 'unit';
             portionValue = 50;
@@ -995,11 +1000,21 @@ const EditorV3Page = () => {
             portionValue = 90;
             quantity = Math.round(item.grams / 90);
             portionLabel = 'unidade(s) M';
-          } else if (lowerName.includes('arroz') || lowerName.includes('feijão')) {
+          } else if (lowerName.includes('frango') || lowerName.includes('carne') || lowerName.includes('peixe') || lowerName.includes('tilápia')) {
+            measurementType = 'unit';
+            portionValue = 150;
+            quantity = Math.round(item.grams / 150 * 10) / 10;
+            portionLabel = 'filé(s) M';
+          } else if (lowerName.includes('arroz') || lowerName.includes('feijão') || lowerName.includes('purê') || lowerName.includes('macarrão') || lowerName.includes('cuscuz') || lowerName.includes('tapioca')) {
             measurementType = 'spoon';
             portionValue = 25;
             quantity = Math.round(item.grams / 25);
             portionLabel = 'colher(es) de sopa';
+          } else if (lowerName.includes('iogurte') || lowerName.includes('leite')) {
+            measurementType = 'unit';
+            portionValue = 170;
+            quantity = Math.round(item.grams / 170 * 10) / 10;
+            portionLabel = 'unidade(s)/pote(s)';
           }
 
           return {
