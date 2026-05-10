@@ -68,7 +68,7 @@ export function buildMeal(
   }
 
   if (isSnack) {
-    // Lanches: FRUTAS + LATICÍNIO
+    // Lanches: FRUTAS + PROTEÍNA LEVE (Iogurte, Whey, Ovo, Queijo)
     const isMorningSnack = type === "lanche_da_manha";
     const isAfternoonSnack = type === "lanche_da_tarde";
     const isSupper = type === "ceia";
@@ -76,17 +76,22 @@ export function buildMeal(
     const fruit = allowedDb.find(f => f.category === "fruit") || foodDb.find(f => f.category === "fruit");
     const dairy = allowedDb.find(f => f.category === "dairy") || foodDb.find(f => f.category === "dairy");
     const nut = allowedDb.find(f => f.category === "fat" && (f.name.toLowerCase().includes("castanha") || f.name.toLowerCase().includes("amendoim")));
+    const yogurt = allowedDb.find(f => f.name.toLowerCase().includes("iogurte")) || dairy;
+    const protein = allowedDb.find(f => f.name.toLowerCase().includes("whey")) || allowedDb.find(f => f.name.toLowerCase().includes("ovo")) || dairy;
 
     if (isMorningSnack) {
       if (fruit) items.push(createPlannedItem(fruit, roundTo5(150 * scale)));
+      if (yogurt) items.push(createPlannedItem(yogurt, roundTo5(170 * scale)));
     } else if (isAfternoonSnack) {
-      if (dairy) items.push(createPlannedItem(dairy, roundTo5(170 * scale)));
+      if (yogurt) items.push(createPlannedItem(yogurt, roundTo5(170 * scale)));
       if (fruit) items.push(createPlannedItem(fruit, roundTo5(100 * scale)));
     } else if (isSupper) {
-      if (dairy) items.push(createPlannedItem(dairy, roundTo5(100 * scale)));
+      if (protein) items.push(createPlannedItem(protein, roundTo5(type === 'ceia' && protein?.name.toLowerCase().includes('ovo') ? 50 : 100 * scale)));
+      if (fruit && !protein?.name.toLowerCase().includes('ovo')) items.push(createPlannedItem(fruit, roundTo5(80 * scale)));
       if (nut) items.push(createPlannedItem(nut, roundTo5(15 * scale)));
     } else {
       if (fruit) items.push(createPlannedItem(fruit, roundTo5(150 * scale)));
+      if (yogurt) items.push(createPlannedItem(yogurt, roundTo5(100 * scale)));
     }
 
     return finalizeMeal(type, time, items, targetMacros);
