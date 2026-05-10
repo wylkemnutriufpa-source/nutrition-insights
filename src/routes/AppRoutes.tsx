@@ -315,6 +315,11 @@ export const AppRoutes = () => {
       <Route path="/meal-plans/editor" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/editor/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
 
+      {/* 🛡️ Rotas canônicas do Editor V3 (destino real dos redirects abaixo) */}
+      <Route path="/editor-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v3/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/editor-v3/:patientId/:planId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+
       <Route path="/v3" element={<Navigate to="/editor-v3" replace />} />
       <Route path="/v3/:patientId" element={<RedirectWithParams to="/editor-v3/:patientId" />} />
       <Route path="/meal-plans/editor/v3" element={<Navigate to="/editor-v3" replace />} />
