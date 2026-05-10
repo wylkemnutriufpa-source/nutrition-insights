@@ -366,7 +366,7 @@ export default function PhysicalAssessment() {
         current_height_cm: payload.height,
         // Also update targets if relevant
         notes: payload.notes || undefined,
-      }).eq("user_id", patientId);
+      }).or(`id.eq.${patientId},user_id.eq.${patientId}`);
 
       // Timeline event
       await supabase.from("patient_timeline").insert({
