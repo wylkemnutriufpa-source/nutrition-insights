@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import OnboardingPaciente from "@/pages/OnboardingPaciente";
 import OnboardingProfissional from "@/pages/OnboardingProfissional";
 import PageLoader from "@/components/common/PageLoader";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function OnboardingEntry() {
   const { isNutritionist, isPersonal, isAdmin, isPatient, profile, authStatus } = useAuth();
