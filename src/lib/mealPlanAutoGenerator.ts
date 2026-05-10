@@ -672,7 +672,7 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
       .maybeSingle();
 
     if (assessment?.weight) {
-      const weight = Number(assessment.weight) || 70;
+      const weight = Number(assessment.weight);
       const baseCal = Math.round(weight * 26);
       return {
         patientId,
