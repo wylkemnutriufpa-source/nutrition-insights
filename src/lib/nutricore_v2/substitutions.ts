@@ -31,7 +31,7 @@ export function getSubstitutions(
   // Categorias Clínicas Estritas
   const isPaoLike = (n: string) => n.includes('pão') || n.includes('tapioca') || n.includes('cuscuz') || n.includes('torrada') || n.includes('aveia');
   const isMainCarb = (n: string) => (n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || n.includes('mandioca') || n.includes('milho')) && !isPaoLike(n);
-  const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('tilápia') || n.includes('atum') || n.includes('whey');
+  const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('tilápia') || n.includes('atum') || n.includes('whey') || n.includes('patinho');
   const isLegume = (n: string) => n.includes('feijão') || n.includes('lentilha') || n.includes('grão de bico') || n.includes('ervilha');
 
   const foodIsPao = isPaoLike(name);

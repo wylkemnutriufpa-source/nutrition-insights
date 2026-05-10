@@ -171,12 +171,27 @@ export class NutriCoreV2Adapter {
           measurementType = 'unit';
           portionValue = 50; // M
           quantity = Math.round(item.grams / 50);
-          portionLabel = 'unidade';
-        } else if (lowerName.includes('pão integral')) {
+          portionLabel = 'unidade(s)';
+        } else if (lowerName.includes('pão integral') || lowerName.includes('pão de forma')) {
           measurementType = 'unit';
           portionValue = 25;
           quantity = Math.round(item.grams / 25);
-          portionLabel = 'fatia';
+          portionLabel = 'fatia(s)';
+        } else if (lowerName.includes('pão francês')) {
+          measurementType = 'unit';
+          portionValue = 50;
+          quantity = Math.round(item.grams / 50);
+          portionLabel = 'unidade(s)';
+        } else if (lowerName.includes('banana')) {
+          measurementType = 'unit';
+          portionValue = 90;
+          quantity = Math.round(item.grams / 90);
+          portionLabel = 'unidade(s) M';
+        } else if (lowerName.includes('arroz') || lowerName.includes('feijão')) {
+          measurementType = 'spoon';
+          portionValue = 25;
+          quantity = Math.round(item.grams / 25);
+          portionLabel = 'colher(es) de sopa';
         }
 
         return {
@@ -187,6 +202,11 @@ export class NutriCoreV2Adapter {
           protein: totalProtein,
           carbs: totalCarbs,
           fat: totalFat,
+          // 🛡️ Blindagem: Salvar também os valores por 100g para o Motor V3 não se perder
+          kcal_100g: foodObj?.kcal_100g || totalKcal,
+          protein_100g: foodObj?.protein_100g || totalProtein,
+          carb_100g: foodObj?.carb_100g || totalCarbs,
+          fat_100g: foodObj?.fat_100g || totalFat,
           portionValue,
           portionUnitLabel: portionLabel,
           portionUnit: portionLabel,

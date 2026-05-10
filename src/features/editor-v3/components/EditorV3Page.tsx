@@ -93,12 +93,16 @@ const formatPortion = (item: MealItem) => {
   // Para V3, sempre buscamos a medida caseira + gramas para clareza total
   const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
   
-  if (displayUnit === 'g') {
-    return `${Math.round(item.quantity)}g`;
+  const totalGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
+    ? Math.round(item.quantity * (item.portionValue || 1))
+    : Math.round(item.quantity);
+
+  if (displayUnit === 'g' || displayUnit === 'gramas') {
+    return `${totalGrams}g`;
   }
   
-  // Ex: "2 unidades (100g)" ou "4 colheres (100g)"
-  return `${displayQuantity} ${displayUnit} (${Math.round(item.quantity)}g)`;
+  // Ex: "2 fatias (50g)" ou "4 colheres (100g)"
+  return `${item.quantity} ${displayUnit} (${totalGrams}g)`;
 };
 
 const EditorV3Page = () => {
@@ -668,27 +672,16 @@ const EditorV3Page = () => {
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
-    // 🛡️ CORREÇÃO URGENTE: Detecção de plano semanal para evitar soma acumulada
-    // Se estivermos em modo semanal ou tivermos muitos cafés da manhã, dividimos pelo número de dias
-    const breakfasts = meals.filter(m => 
-      m.name.toLowerCase().includes('café') || 
-      m.name.toLowerCase().includes('desjejum') ||
-      m.name.includes('(Segunda)') || 
-      m.name.includes('(Terça)') ||
-      m.name.includes('(Quarta)') ||
-      m.name.includes('(Quinta)') ||
-      m.name.includes('(Sexta)') ||
-      m.name.includes('(Sábado)') ||
-      m.name.includes('(Domingo)')
-    );
-
-    const totalDays = viewMode === 'weekly' ? 7 : (breakfasts.length || 1);
+    // 🛡️ CORREÇÃO MOTOR: Garantir que macros mostrem a média diária ou o dia atual
+    // No V3, se tivermos um plano semanal, as refeições têm o dia no nome ou metadata
+    const isWeekly = viewMode === 'weekly' || meals.length > 10;
+    const divisor = isWeekly ? 7 : 1;
 
     return {
-      kcal: totals.kcal / totalDays,
-      protein: totals.protein / totalDays,
-      carbs: totals.carbs / totalDays,
-      fat: totals.fat / totalDays
+      kcal: totals.kcal / divisor,
+      protein: totals.protein / divisor,
+      carbs: totals.carbs / divisor,
+      fat: totals.fat / divisor
     };
   }, [meals, viewMode]);
 
