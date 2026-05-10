@@ -896,30 +896,28 @@ const EditorV3Page = () => {
       return;
     }
 
-    if (!patientContext.weight || !patientContext.height) {
-      toast.error('O paciente está sem Peso ou Altura. Preencha os dados antropométricos antes de gerar o plano.');
-      return;
-    }
+    // No V3, não bloqueamos mais se não tiver peso, pois usamos o fallback de 70kg com aviso
+    const finalWeight = patientContext.weight || 70;
+    const finalHeight = patientContext.height || 170;
 
     setIsGeneratingGlobal(true);
     setShowCalorieModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
 
     try {
-      console.log('[Direct V2] Gerando plano diário completo V3 Elite');
+      console.log(`[Direct V2] Gerando plano diário completo V3 Elite para ${finalWeight}kg`);
       
       const { NutriCoreV2Adapter } = await import('@/lib/nutricore_v2/adapter');
       
       const v3Meals = await NutriCoreV2Adapter.generateElitePlan({
-        weight: patientContext.weight || 75,
-        height: patientContext.height || 175,
-        age: patientContext.age || 30,
+        ...patientContext,
+        weight: finalWeight,
+        height: finalHeight,
         gender: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'female' : 'male',
         goal: patientContext.goal || 'maintain',
-        restrictions: patientContext.restrictions || [],
-        preferences: patientContext.preferences || [],
         activityLevel: patientContext.activityLevel || 'moderate'
       } as any, baseFoods);
+
       
       // Hydrate com os rascunhos normalizados (Regras de Ouro aplicadas no Adapter)
       await hydrateMeals(v3Meals);
