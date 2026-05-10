@@ -13,13 +13,20 @@ export const isProtein = (name: string): boolean => {
          n.includes('suplemento de proteína');
 };
 
-export const isCarb = (name: string): boolean => {
+export const isComplexCarb = (name: string): boolean => {
   const n = name.toLowerCase();
-  // No V3, separamos carbos de refeição de carbos de lanche (pães)
-  return n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || 
-         n.includes('aveia') || n.includes('tapioca') || n.includes('cuscuz') || 
-         n.includes('mandioca') || n.includes('milho') || n.includes('pão') || 
-         n.includes('torrada');
+  return (n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || 
+         n.includes('mandioca') || n.includes('milho')) && !isBreadLike(n);
+};
+
+export const isBreadLike = (name: string): boolean => {
+  const n = name.toLowerCase();
+  return n.includes('pão') || n.includes('tapioca') || n.includes('cuscuz') || 
+         n.includes('torrada') || n.includes('aveia');
+};
+
+export const isCarb = (name: string): boolean => {
+  return isComplexCarb(name) || isBreadLike(name);
 };
 
 export const isLegume = (name: string): boolean => {
