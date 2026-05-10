@@ -50,6 +50,9 @@ export function buildMeal(
 
   let allowedDb = foodDb.filter(f => !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase())));
 
+  // Fator de escala baseado na meta calórica da refeição (Base ~400kcal por refeição média)
+  const scale = targetMacros.kcal / 400;
+
   // PARTE 2 — TEMPLATES FUNCIONAIS (LOGICA DE PLOTAGEM DETERMINISTICA)
   if (isBreakfast) {
     // Café Fitness: Pão integral 2 fatias (50g) + Ovos mexidos 2 unid (100g) + Banana M (90g)
@@ -57,15 +60,15 @@ export function buildMeal(
     const ovo = allowedDb.find(f => f.name.toLowerCase().includes("ovo"));
     const banana = allowedDb.find(f => f.name.toLowerCase().includes("banana"));
 
-    if (pão) items.push(createPlannedItem(pão, 50));
-    if (ovo) items.push(createPlannedItem(ovo, 100));
-    if (banana) items.push(createPlannedItem(banana, 90));
+    if (pão) items.push(createPlannedItem(pão, roundTo5(50 * scale)));
+    if (ovo) items.push(createPlannedItem(ovo, roundTo5(100 * scale)));
+    if (banana) items.push(createPlannedItem(banana, roundTo5(90 * scale)));
     
     return finalizeMeal(type, time, items, targetMacros);
   }
 
   if (isSnack) {
-    // Lanches: FRUTAS + LATICÍNIO (se couber nos macros)
+    // Lanches: FRUTAS + LATICÍNIO
     const isMorningSnack = type === "lanche_da_manha";
     const isAfternoonSnack = type === "lanche_da_tarde";
     const isSupper = type === "ceia";
@@ -75,16 +78,15 @@ export function buildMeal(
     const nut = allowedDb.find(f => f.category === "fat" && (f.name.toLowerCase().includes("castanha") || f.name.toLowerCase().includes("amendoim")));
 
     if (isMorningSnack) {
-      if (fruit) items.push(createPlannedItem(fruit, 150));
+      if (fruit) items.push(createPlannedItem(fruit, roundTo5(150 * scale)));
     } else if (isAfternoonSnack) {
-      if (dairy) items.push(createPlannedItem(dairy, 170));
-      if (fruit) items.push(createPlannedItem(fruit, 100));
+      if (dairy) items.push(createPlannedItem(dairy, roundTo5(170 * scale)));
+      if (fruit) items.push(createPlannedItem(fruit, roundTo5(100 * scale)));
     } else if (isSupper) {
-      if (dairy) items.push(createPlannedItem(dairy, 100));
-      if (nut) items.push(createPlannedItem(nut, 15));
+      if (dairy) items.push(createPlannedItem(dairy, roundTo5(100 * scale)));
+      if (nut) items.push(createPlannedItem(nut, roundTo5(15 * scale)));
     } else {
-      // Fallback genérico para lanche
-      if (fruit) items.push(createPlannedItem(fruit, 150));
+      if (fruit) items.push(createPlannedItem(fruit, roundTo5(150 * scale)));
     }
 
     return finalizeMeal(type, time, items, targetMacros);
@@ -98,11 +100,11 @@ export function buildMeal(
     const brócolis = allowedDb.find(f => f.name.toLowerCase().includes("brócolis"));
     const azeite = allowedDb.find(f => f.name.toLowerCase().includes("azeite"));
 
-    if (frango) items.push(createPlannedItem(frango, 150));
-    if (arroz) items.push(createPlannedItem(arroz, 100));
-    if (feijão) items.push(createPlannedItem(feijão, 100));
-    if (brócolis) items.push(createPlannedItem(brócolis, 80));
-    if (azeite) items.push(createPlannedItem(azeite, 5));
+    if (frango) items.push(createPlannedItem(frango, roundTo5(150 * scale)));
+    if (arroz) items.push(createPlannedItem(arroz, roundTo5(100 * scale)));
+    if (feijão) items.push(createPlannedItem(feijão, roundTo5(100 * scale)));
+    if (brócolis) items.push(createPlannedItem(brócolis, roundTo5(80 * scale)));
+    if (azeite) items.push(createPlannedItem(azeite, roundTo5(5 * scale)));
 
     return finalizeMeal(type, time, items, targetMacros);
   }
