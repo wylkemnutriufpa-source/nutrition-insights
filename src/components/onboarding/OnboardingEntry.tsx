@@ -14,9 +14,16 @@ export default function OnboardingEntry() {
   }
 
   if (isPatient) {
-    // Se o estado já for anamnesis, mandamos para a página de anamnese
-    // Isso evita o loop onde OnboardingEntry sempre renderiza OnboardingPaciente
-    if (profile?.patient_state === 'anamnesis') {
+    const skipSlides = new URLSearchParams(window.location.search).get('skip_slides');
+    
+    // Se o estado já for anamnesis ou se o link for para pular slides, mandamos para a página de anamnese
+    if (profile?.patient_state === 'anamnesis' || skipSlides === 'true') {
+      // Se estamos pulando slides mas o estado no banco ainda é slides, atualizamos
+      if (profile?.patient_state === 'onboarding_slides' && skipSlides === 'true') {
+        supabase.from("profiles").update({ patient_state: 'anamnesis' }).eq("user_id", user?.id).then(() => {
+          console.log("[FJ:Onboarding] Estado atualizado para anamnesis via skip_slides");
+        });
+      }
       return <Navigate to="/anamnesis" replace />;
     }
     return <OnboardingPaciente />;
