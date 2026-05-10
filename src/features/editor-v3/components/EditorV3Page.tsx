@@ -331,7 +331,7 @@ const EditorV3Page = () => {
         const profileAny = profile as any;
         
         // 🧪 Motor de Priorização Antropométrica (Regra de Ouro)
-        // 1. Profile (Source of Truth)
+        // 1. Profile (Source of Truth) -> SE NÃO ESTIVER VAZIO (0 ou 70kg de fallback antigo)
         // 2. Anamnese (Self-reported)
         // 3. Avaliação Física (Measured)
         // 4. Fallback 70kg (Estimated)
@@ -340,43 +340,44 @@ const EditorV3Page = () => {
         let height = Number(profileAny.current_height_cm || 0);
         let weightSource = 'profile';
 
-        if (weight <= 0) {
+        // Se o peso no perfil for 70 (fallback comum) ou 0, tentamos buscar dados mais frescos na anamnese ou avaliação
+        if (weight <= 0 || weight === 70) {
           const anamnesisWeight = Number((anamnesis?.answers as any)?.weight || 0);
-          if (anamnesisWeight > 0) {
+          const assessmentWeight = Number(assessment?.weight || 0);
+          
+          if (anamnesisWeight > 0 && anamnesisWeight !== 70) {
             weight = anamnesisWeight;
             weightSource = 'anamnesis';
+          } else if (assessmentWeight > 0 && assessmentWeight !== 70) {
+            weight = assessmentWeight;
+            weightSource = 'assessment';
+          } else if (weight === 0) {
+            weight = 70; // Hard fallback only if everything is 0
+            weightSource = 'fallback';
           }
         }
 
-        if (weight <= 0 && assessment?.weight) {
-          weight = Number(assessment.weight);
-          weightSource = 'assessment';
-        }
-
-        if (weight <= 0) {
-          weight = 70;
-          weightSource = 'fallback';
-          console.warn(`[V3-Init] Peso não encontrado para ${profile.full_name}, usando valor estimado de 70kg`);
-        }
+        console.info(`[V3-Init] Peso final decidido: ${weight}kg (Fonte: ${weightSource})`);
 
         // Similar para altura
-        if (height <= 0) {
+        if (height <= 0 || height === 170) {
           const anamnesisHeight = Number((anamnesis?.answers as any)?.height || 0);
-          if (anamnesisHeight > 0) height = anamnesisHeight;
-          else if (assessment?.height) height = Number(assessment.height);
-          else height = 170;
+          const assessmentHeight = Number(assessment?.height || 0);
+          if (anamnesisHeight > 0 && anamnesisHeight !== 170) height = anamnesisHeight;
+          else if (assessmentHeight > 0 && assessmentHeight !== 170) height = assessmentHeight;
+          else if (height === 0) height = 170;
         }
 
-        const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
-        const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
+        const age = profileAny.age || (anamnesis?.answers as any)?.age || (assessment as any)?.age || 30;
+        const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || (assessment as any)?.gender || 'female';
         const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
         const goal = profileAny.goal || (anamnesis?.answers as any)?.objective || 'Manutenção';
         
         // Metas nutricionais (Priorizando o que o Nutri definiu na avaliação ou o que foi calculado na anamnese)
         const kcal = assessment?.calories_target || anamnesis?.computed_kcal_target || 2000;
-        const protein = assessment?.protein_target || anamnesis?.computed_protein || 150;
+        const protein = assessment?.protein_target || anamnesis?.computed_protein || 120;
         const carbs = assessment?.carbs_target || anamnesis?.computed_carbs || 200;
-        const fat = assessment?.fat_target || anamnesis?.computed_fat || 60;
+        const fat = assessment?.fat_target || anamnesis?.computed_fat || 50;
 
         const context = {
           id: profile.id,
