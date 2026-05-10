@@ -362,8 +362,8 @@ const EditorV3Page = () => {
         
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
         const currentState = useEditorState.getState();
-        if (currentState.patientId !== profileId) {
-          setPatientId(profileId);
+        if (currentState.patientId !== canonicalPatientId) {
+          setPatientId(canonicalPatientId);
         }
 
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
