@@ -19,7 +19,7 @@ export async function generateAndSaveLocalPlan(
 
     if (!profile) throw new Error("Paciente não encontrado");
 
-    // Get anamnesis targets
+    // 2. Get clinical data (Prioritized Fallback)
     const { data: anamnesis } = await supabase
       .from('patient_anamnesis')
       .select('*')
@@ -28,10 +28,27 @@ export async function generateAndSaveLocalPlan(
       .limit(1)
       .maybeSingle();
 
-    if (!profile) throw new Error("Paciente não encontrado");
+    const { data: assessment } = await supabase
+      .from('physical_assessments')
+      .select('*')
+      .eq('patient_id', profile.user_id)
+      .order('assessment_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    // Get answers from anamnesis to extract more details if available
     const answers = (anamnesis?.answers || {}) as any;
+    
+    // 🛡️ Motor de Priorização Antropométrica
+    let weight = Number(profile.current_weight_kg || 0);
+    let height = Number(profile.current_height_cm || 0);
+
+    if (weight <= 0) weight = Number(answers.weight || 0);
+    if (weight <= 0 && assessment?.weight) weight = Number(assessment.weight);
+    if (weight <= 0) weight = 70; // Fallback final
+
+    if (height <= 0) height = Number(answers.height || 0);
+    if (height <= 0 && assessment?.height) height = Number(assessment.height);
+    if (height <= 0) height = 170; // Fallback final
 
     const context: PatientContext = {
       id: profile.id,
@@ -39,15 +56,15 @@ export async function generateAndSaveLocalPlan(
       goal: profile.goal || answers.goal || 'maintain',
       restrictions: profile.restrictions || answers.restrictions || [],
       preferences: profile.preferences || (answers.food_preferences ? [answers.food_preferences] : []),
-      weight: profile.current_weight_kg || answers.weight || 70,
-      height: profile.current_height_cm || answers.height || 170,
+      weight,
+      height,
       age: answers.age || 30,
       gender: answers.sex || 'male',
       activityLevel: profile.activity_level || answers.activity_level || 'moderate',
-      calories_target: Number(anamnesis?.computed_kcal_target) || 2000,
-      protein_target: Number(anamnesis?.computed_protein) || 150,
-      carbs_target: Number(anamnesis?.computed_carbs) || 200,
-      fat_target: Number(anamnesis?.computed_fat) || 60
+      calories_target: Number(anamnesis?.computed_kcal_target) || Number(assessment?.calories_target) || 2000,
+      protein_target: Number(anamnesis?.computed_protein) || Number(assessment?.protein_target) || 150,
+      carbs_target: Number(anamnesis?.computed_carbs) || Number(assessment?.carbs_target) || 200,
+      fat_target: Number(anamnesis?.computed_fat) || Number(assessment?.fat_target) || 60
     };
 
     // 2. Generate plan using NutriCore V2 Adapter (LOCAL)
