@@ -50,7 +50,12 @@ export class NutriCoreV2Adapter {
     console.info(`[NutriCore-Adapter] Mapping Patient: Weight ${context.weight}kg, Goal ${context.goal} -> ${goal}`);
 
     return {
-      weight_kg: context.weight || 70, // Fallback final se o motor de priorização falhar totalmente
+      weight_kg: context.weight && context.weight > 0
+        ? context.weight
+        : (() => {
+            console.warn('[NutriCore-Adapter] ⚠ context.weight ausente — usando fallback dinâmico 60kg. Verifique a cadeia de priorização (profile → history → assessment → anamnese).');
+            return 60;
+          })(),
       height_cm: context.height || 170,
       age_years: context.age || 30,
       sex: context.gender === 'female' ? 'feminino' : 'masculino',

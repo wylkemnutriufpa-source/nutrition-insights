@@ -52,7 +52,7 @@ export async function generateAndSaveLocalPlan(
     // 2. Histórico de Peso (Check-ins/Feedbacks)
     // 3. Avaliação Física (Medido)
     // 4. Anamnese (Auto-reportado)
-    // 5. Fallback 70kg (Segurança final)
+    // 5. Fallback dinâmico 60kg (último recurso, com warn)
     
     let weight = Number(profile.current_weight_kg || 0);
     let weightSource = 'profile';
@@ -68,8 +68,9 @@ export async function generateAndSaveLocalPlan(
         weight = Number(answers.weight);
         weightSource = 'anamnesis';
       } else {
-        weight = 70;
-        weightSource = 'fallback_safety';
+        weight = 60;
+        weightSource = 'dynamic_fallback';
+        console.warn('[localPlanGenerator] ⚠ Nenhum peso encontrado em profile/history/assessment/anamnese — usando fallback dinâmico 60kg.');
       }
     }
 
