@@ -324,9 +324,43 @@ const EditorV3Page = () => {
         
         const profileAny = profile as any;
         
-        // Lógica de Prioridade: Profile -> Assessment -> Anamnesis -> Default
-        const weight = profileAny.current_weight_kg || assessment?.weight || (anamnesis?.answers as any)?.weight || 0;
-        const height = profileAny.current_height_cm || assessment?.height || (anamnesis?.answers as any)?.height || 0;
+        // 🧪 Motor de Priorização Antropométrica (Regra de Ouro)
+        // 1. Profile (Source of Truth)
+        // 2. Anamnese (Self-reported)
+        // 3. Avaliação Física (Measured)
+        // 4. Fallback 70kg (Estimated)
+        
+        let weight = Number(profileAny.current_weight_kg || 0);
+        let height = Number(profileAny.current_height_cm || 0);
+        let weightSource = 'profile';
+
+        if (weight <= 0) {
+          const anamnesisWeight = Number((anamnesis?.answers as any)?.weight || 0);
+          if (anamnesisWeight > 0) {
+            weight = anamnesisWeight;
+            weightSource = 'anamnesis';
+          }
+        }
+
+        if (weight <= 0 && assessment?.weight) {
+          weight = Number(assessment.weight);
+          weightSource = 'assessment';
+        }
+
+        if (weight <= 0) {
+          weight = 70;
+          weightSource = 'fallback';
+          console.warn(`[V3-Init] Peso não encontrado para ${profile.full_name}, usando valor estimado de 70kg`);
+        }
+
+        // Similar para altura
+        if (height <= 0) {
+          const anamnesisHeight = Number((anamnesis?.answers as any)?.height || 0);
+          if (anamnesisHeight > 0) height = anamnesisHeight;
+          else if (assessment?.height) height = Number(assessment.height);
+          else height = 170;
+        }
+
         const age = profileAny.age || (anamnesis?.answers as any)?.age || 30;
         const sex = profileAny.gender || (anamnesis?.answers as any)?.gender || 'male';
         const activity = profileAny.activity_level || (assessment?.activity_factor ? String(assessment.activity_factor) : null) || (anamnesis?.answers as any)?.activity_level || 'moderado';
@@ -358,7 +392,16 @@ const EditorV3Page = () => {
           protocol_type: profileAny.protocol_type || 'default_v3',
         };
 
-        console.info(`[V3-Context] Assigning context for ${profile.full_name}: ${weight}kg, ${goal}, ${kcal}kcal`);
+        if (weightSource === 'fallback') {
+          toast.warning("Peso não encontrado, usando valor estimado de 70kg", {
+            description: "Atualize os dados do paciente para maior precisão.",
+            duration: 5000
+          });
+        } else if (weightSource !== 'profile') {
+          console.info(`[V3-Init] Peso carregado via ${weightSource}: ${weight}kg`);
+        }
+
+        console.info(`[V3-Context] Assigning context for ${profile.full_name}: ${weight}kg via ${weightSource}`);
         
         // 🛡️ Blindagem de Urgência: Forçar metas da anamnese/avaliação para o Editor
         const currentState = useEditorState.getState();
@@ -853,30 +896,28 @@ const EditorV3Page = () => {
       return;
     }
 
-    if (!patientContext.weight || !patientContext.height) {
-      toast.error('O paciente está sem Peso ou Altura. Preencha os dados antropométricos antes de gerar o plano.');
-      return;
-    }
+    // No V3, não bloqueamos mais se não tiver peso, pois usamos o fallback de 70kg com aviso
+    const finalWeight = patientContext.weight || 70;
+    const finalHeight = patientContext.height || 170;
 
     setIsGeneratingGlobal(true);
     setShowCalorieModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
 
     try {
-      console.log('[Direct V2] Gerando plano diário completo V3 Elite');
+      console.log(`[Direct V2] Gerando plano diário completo V3 Elite para ${finalWeight}kg`);
       
       const { NutriCoreV2Adapter } = await import('@/lib/nutricore_v2/adapter');
       
       const v3Meals = await NutriCoreV2Adapter.generateElitePlan({
-        weight: patientContext.weight || 75,
-        height: patientContext.height || 175,
-        age: patientContext.age || 30,
+        ...patientContext,
+        weight: finalWeight,
+        height: finalHeight,
         gender: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'female' : 'male',
         goal: patientContext.goal || 'maintain',
-        restrictions: patientContext.restrictions || [],
-        preferences: patientContext.preferences || [],
         activityLevel: patientContext.activityLevel || 'moderate'
       } as any, baseFoods);
+
       
       // Hydrate com os rascunhos normalizados (Regras de Ouro aplicadas no Adapter)
       await hydrateMeals(v3Meals);
