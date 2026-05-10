@@ -247,6 +247,27 @@ export default function Checkin() {
       });
 
       if (error) throw error;
+      
+      // Update profile weight if provided
+      if (weight) {
+        const weightValue = normalizeWeightInput(weight).value;
+        if (weightValue) {
+          console.log(`[CHECKIN] Updating profile weight to ${weightValue}kg for user ${user.id}`);
+          await supabase
+            .from("profiles")
+            .update({ current_weight_kg: weightValue })
+            .eq("id", user.id);
+            
+          // Add to patient_weight_history for tracking
+          await (supabase as any)
+            .from("patient_weight_history")
+            .insert({
+              patient_id: user.id,
+              weight: weightValue,
+              recorded_at: new Date().toISOString()
+            });
+        }
+      }
 
       toast.success("Check-in enviado! Seu nutricionista irá revisar.");
       clearDraft();
