@@ -152,6 +152,7 @@ const EditorV3Page = () => {
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const [warningsConfirmed, setWarningsConfirmed] = useState(false);
   const [showClinicalDecision, setShowClinicalDecision] = useState(false);
   const [showClinicalHistory, setShowClinicalHistory] = useState(false);
   const [showRefineOptions, setShowRefineOptions] = useState(false);
