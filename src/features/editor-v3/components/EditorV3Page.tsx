@@ -67,6 +67,7 @@ import {
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
 import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 import PlanAdjustmentModal from './PlanAdjustmentModal';
+import TemplateEditorModal from './TemplateEditorModal';
 
 
 
