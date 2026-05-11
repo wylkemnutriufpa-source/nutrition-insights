@@ -1030,7 +1030,7 @@ const EditorV3Page = () => {
         });
 
         // Só inclui substituições no modo Diário, como solicitado
-        if (!isWeekly && item.substitutions && item.substitutions.length > 0) {
+        if (item.substitutions && item.substitutions.length > 0) {
           item.substitutions.forEach(sub => {
             mealItems.push({
               mealType: mType,
