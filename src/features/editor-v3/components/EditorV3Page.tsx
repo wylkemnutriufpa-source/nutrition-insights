@@ -1554,15 +1554,44 @@ const EditorV3Page = () => {
                     nutritionistName: prof?.full_name || "Seu Nutricionista",
                     startDate: new Date().toLocaleDateString("pt-BR"),
                     planMode: 'single_day',
-                    items: meals.map(m => ({
-                      mealType: m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any,
-                      title: m.name,
-                      description: m.items.map(i => `${i.name} — ${formatPortion(i)}`).join('\n'),
-                      calories_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.kcal) || 0), 0)),
-                      protein_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.protein) || 0), 0)),
-                      carbs_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.carbs) || 0), 0)),
-                      fat_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.fat) || 0), 0)),
-                    })),
+                    items: meals.flatMap(m => {
+                      const mealItems: PremiumMealPlanPDFData['items'] = [];
+                      const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any;
+                      
+                      m.items.forEach(item => {
+                        const groupId = item.instanceId;
+                        // Primary item
+                        mealItems.push({
+                          mealType: mType,
+                          title: m.name,
+                          description: `${item.name} — ${formatPortion(item)}`,
+                          calories_target: Math.round(Number(item.kcal) || 0),
+                          protein_target: Math.round(Number(item.protein) || 0),
+                          carbs_target: Math.round(Number(item.carbs) || 0),
+                          fat_target: Math.round(Number(item.fat) || 0),
+                          is_primary: true,
+                          substitution_group_id: groupId
+                        });
+
+                        // Substitutions
+                        if (item.substitutions && item.substitutions.length > 0) {
+                          item.substitutions.forEach(sub => {
+                            mealItems.push({
+                              mealType: mType,
+                              title: sub.name,
+                              description: `${sub.name}`,
+                              calories_target: Math.round(Number(sub.kcal) || 0),
+                              protein_target: Math.round(Number(sub.protein) || 0),
+                              carbs_target: Math.round(Number(sub.carbs) || 0),
+                              fat_target: Math.round(Number(sub.fat) || 0),
+                              is_primary: false,
+                              substitution_group_id: groupId
+                            });
+                          });
+                        }
+                      });
+                      return mealItems;
+                    }),
                     targetCalories: Math.round(totalKcal),
                     targetProtein: Math.round(totalProtein),
                     targetCarbs: Math.round(totalCarbs),
