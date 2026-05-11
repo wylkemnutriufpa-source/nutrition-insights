@@ -10,7 +10,10 @@ interface MealPhotoUploadProps {
   onRemoved: () => void;
   className?: string;
   compact?: boolean;
+  label?: string;
 }
+
+export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, compact, label }: MealPhotoUploadProps) {
 
 export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, compact }: MealPhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
