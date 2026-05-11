@@ -35,14 +35,20 @@ export interface PremiumMealPlanPDFData {
 
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   breakfast: { label: "Café da Manhã", color: "#6366f1" },
+  cafe_da_manha: { label: "Café da Manhã", color: "#6366f1" },
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
+  lanche_da_manha: { label: "Lanche da Manhã", color: "#10b981" },
   lunch: { label: "Almoço", color: "#f59e0b" },
+  almoço: { label: "Almoço", color: "#f59e0b" },
   afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
+  lanche_da_tarde: { label: "Lanche da Tarde", color: "#ec4899" },
   snack: { label: "Lanche", color: "#ec4899" },
   pre_workout: { label: "Pré-Treino", color: "#ef4444" },
   post_workout: { label: "Pós-Treino", color: "#3b82f6" },
   dinner: { label: "Jantar", color: "#6366f1" },
+  jantar: { label: "Jantar", color: "#6366f1" },
   evening_snack: { label: "Ceia", color: "#8b5cf6" },
+  ceia: { label: "Ceia", color: "#8b5cf6" },
 };
 
 const DAY_NAMES: Record<number, string> = {
@@ -478,7 +484,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           </div>
           <div class="meal-body">
             <div class="food-list">
-              ${primary.description ? formatDescription(primary.description) : ""}
+              ${primary.description && !primary.description.includes('(') ? formatDescription(primary.description) : (primary.description ? `<div class="food-line"><span class="food-bullet"></span><span>${escapeHtml(primary.description)}</span></div>` : "")}
             </div>
 
             ${substitutions.length > 0 ? `
@@ -518,7 +524,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return order.indexOf(a) - order.indexOf(b);
   });
 
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "snack", "afternoon_snack", "pre_workout", "post_workout", "dinner", "evening_snack"];
+  const mealOrder = ["breakfast", "cafe_da_manha", "morning_snack", "lanche_da_manha", "lunch", "almoço", "snack", "afternoon_snack", "lanche_da_tarde", "pre_workout", "post_workout", "dinner", "jantar", "evening_snack", "ceia"];
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
