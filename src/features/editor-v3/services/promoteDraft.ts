@@ -70,7 +70,7 @@ function buildItemDescription(meal: Meal): string {
 function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {
-    // 🛡️ REGRA DE OURO: O Motor NutriCore V2 é a fonte da verdade.
+    // 🛡️ REGRA DE OURO: O Motor NutriCore V3 é a fonte da verdade.
     // Usamos os macros que já estão no item (totais para a quantidade atual).
     // NÃO recalculamos para evitar distorções de arredondamento ou conversão.
     kcal += i.kcal ?? 0;
