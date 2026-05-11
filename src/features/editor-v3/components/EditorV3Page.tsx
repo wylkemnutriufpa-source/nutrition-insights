@@ -3163,6 +3163,15 @@ const EditorV3Page = () => {
         goalMetadata={goalMetadata}
       />
 
+      <TemplateEditorModal
+        isOpen={isTemplateEditorOpen}
+        onClose={() => setIsTemplateEditorOpen(false)}
+        template={editingTemplate}
+        onSave={(updated) => {
+          setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t));
+          setIsTemplateEditorOpen(false);
+        }}
+      />
     </div>
   );
 };
