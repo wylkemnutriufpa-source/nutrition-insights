@@ -61,7 +61,15 @@ export const isFat = (name: string): boolean => {
 };
 
 export const getFoodCategory = (food: any): string => {
-  if (food.category && food.category !== 'any') return food.category.toLowerCase();
+  if (food.category && food.category !== 'any') {
+    const cat = food.category.toLowerCase();
+    if (cat === 'protein') return 'proteína';
+    if (cat === 'carb') return 'carboidrato';
+    if (cat === 'fruit') return 'fruta';
+    if (cat === 'fat') return 'gordura';
+    if (cat === 'vegetable') return 'legume';
+    return cat;
+  }
   const name = food.name.toLowerCase();
   if (isProtein(name)) return 'proteína';
   if (isLegume(name)) return 'leguminosa';
@@ -70,6 +78,7 @@ export const getFoodCategory = (food: any): string => {
   if (isFruit(name)) return 'fruta';
   if (isVegetable(name)) return 'legume';
   if (isFat(name)) return 'gordura';
+  if (name.includes('café') || name.includes('chá') || name.includes('água')) return 'bebida';
   return 'outro';
 };
 
