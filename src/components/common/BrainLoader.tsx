@@ -27,7 +27,8 @@ function MessageRotator({ messages, text }: { messages: string[]; text?: string 
     if (displayMessages.length <= 1) return;
     const interval = setInterval(() => {
       setIdx((prev) => (prev + 1) % displayMessages.length);
-    }, 3000);
+    }, 2000);
+
     return () => clearInterval(interval);
   }, [displayMessages.length]);
 
