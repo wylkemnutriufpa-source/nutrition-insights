@@ -1340,7 +1340,7 @@ const EditorV3Page = () => {
             
             <div className="h-8 w-px bg-white/5 hidden md:block mx-2" />
             
-            <div className="flex flex-col gap-1 hidden sm:flex">
+            <div className="flex flex-col gap-1">
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-black text-white tracking-tight">
                   {patientContext?.name || (patientId ? "Carregando..." : "Editor V3 Elite")}
