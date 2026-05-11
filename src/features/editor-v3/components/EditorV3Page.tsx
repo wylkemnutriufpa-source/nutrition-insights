@@ -567,7 +567,7 @@ const EditorV3Page = () => {
         setIsLoadingSmartSubs(true);
         const name = selectedItem.item.name;
 
-        // V3 Logic: Use Direct NutriCore V2 Substitutions if possible
+        // V3 Logic: Use Direct NutriCore V3 Substitutions if possible
         const currentFood = BASE_FOODS.find(f => f.id === selectedItem.item.id) || 
                           BASE_FOODS.find(f => f.name.toLowerCase() === name.toLowerCase());
                           
