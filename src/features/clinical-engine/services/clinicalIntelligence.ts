@@ -132,8 +132,8 @@ export const validateClinicalContext = (
   if (metadata.consent_given === false) {
     issues.push({
       type: 'compliance',
-      severity: 'critical',
-      message: 'BLOQUEIO LGPD: O paciente ainda não forneceu consentimento para o tratamento de dados sensíveis.'
+      severity: 'attention', // Alterado de 'critical' para 'attention' — não bloqueia o profissional
+      message: 'LGPD: O paciente ainda não forneceu consentimento. O trabalho clínico é permitido, mas o paciente ficará bloqueado até aceitar.'
     });
   }
 
