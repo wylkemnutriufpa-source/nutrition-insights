@@ -2848,10 +2848,13 @@ const EditorV3Page = () => {
                 <Button 
                   variant="ghost" 
                   onClick={() => {
+                    // BLOQUEIO LGPD removido para profissionais
+                    /*
                     if (patientContext && !patientContext.consent_given) {
                       toast.error('BLOQUEIO LGPD: Sem consentimento, o salvamento não pode ser forçado.');
                       return;
                     }
+                    */
                     setShowClinicalDecision(false);
                     handleConfirmPromotion();
                   }}
