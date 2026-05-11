@@ -49,6 +49,7 @@ interface MealCompletion {
 
 interface MealDetailData {
   id: string;
+  itemId?: string;
   title: string;
   description: string | null;
   meal_type: MealType;
@@ -57,6 +58,7 @@ interface MealDetailData {
   carbs_target: number | null;
   fat_target: number | null;
   metadata?: Record<string, any> | null;
+  image_url?: string | null;
 }
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; time: string }[] = [
@@ -216,7 +218,8 @@ const MealItemCard = memo(function MealItemCard({
       {resolvedImage && (
         <div
           className="relative w-full aspect-[16/9] overflow-hidden cursor-pointer bg-muted/30"
-          onClick={() => onOpenDetail({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+          onClick={() => onOpenDetail({ ...item, itemId: item.id, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+
         >
           <img src={resolvedImage} alt={item.title} className="w-full h-full object-cover object-center" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
@@ -239,7 +242,7 @@ const MealItemCard = memo(function MealItemCard({
       <div className="p-3 sm:p-4">
         <div
           className="flex items-start gap-2 sm:gap-3 cursor-pointer min-w-0"
-          onClick={() => onOpenDetail({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+          onClick={() => onOpenDetail({ ...item, itemId: item.id, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
         >
           {!resolvedImage && (
             <div className="mt-0.5">

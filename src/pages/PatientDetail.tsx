@@ -75,6 +75,8 @@ import Curiosidades from "./Curiosidades";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
 import { ClinicalConsentViewer } from "@/components/patient/ClinicalConsentViewer";
+import PatientProfileMealPlan from "@/components/patient/PatientProfileMealPlan";
+
 
 
 export default function PatientDetail() {
@@ -1121,8 +1123,12 @@ export default function PatientDetail() {
                     <div className="md:col-span-2">
                        <ClinicalFlagsSummary patientId={resolvedPatientId} />
                     </div>
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 space-y-8">
                        <MealAdherenceWidget patientId={resolvedPatientId} />
+                       <PatientProfileMealPlan 
+                         patientId={resolvedPatientId} 
+                         activeMealPlanId={activeMealPlan?.id} 
+                       />
                     </div>
                  </div>
               </TabsContent>
@@ -1335,7 +1341,7 @@ export default function PatientDetail() {
               {/* Consent Terms Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">LGPD & Consentimento</h3>
-                <ClinicalConsentViewer />
+                <ClinicalConsentViewer patientId={resolvedPatientId} />
               </div>
             </div>
           </DialogContent>
