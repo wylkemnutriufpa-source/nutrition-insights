@@ -1206,7 +1206,6 @@ export default function PatientDetail() {
           onReleased={invalidate}
         />
       </div>
-      </div>
     </DashboardLayout>
   );
 }
