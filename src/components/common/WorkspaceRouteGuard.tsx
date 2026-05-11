@@ -82,7 +82,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     return <Navigate to="/client/dashboard" replace />;
   }
 
-  const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/patient-plan", "/patient/plan", "/checkin", "/meals"];
+  const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/patient-plan", "/patient/plan", "/checkin", "/meals", "/recipes", "/water-calculator", "/weight-calculator", "/patient-overview", "/checklist", "/appointments"];
   if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
     console.warn(`[RASTREADOR] Redirect para / disparado por: WorkspaceRouteGuard (Patient only paths)`);
     return <Navigate to="/" replace />;

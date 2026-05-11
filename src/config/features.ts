@@ -1,8 +1,8 @@
 
 export const featureMap = {
   patient: {
-    basic: ["diet", "recipes", "feedback", "checklist", "water-calculator", "weight-calculator", "anamnesis"],
-    pro: ["diet", "recipes", "feedback", "progress", "tips", "checklist", "water-calculator", "weight-calculator", "anamnesis", "journey", "achievements", "challenges"],
+    basic: ["diet", "recipes", "feedback", "checklist", "water-calculator", "weight-calculator", "anamnesis", "journey", "appointments", "meals", "patient-overview"],
+    pro: ["diet", "recipes", "feedback", "progress", "tips", "checklist", "water-calculator", "weight-calculator", "anamnesis", "journey", "achievements", "challenges", "appointments", "meals", "patient-overview"],
     advanced: "all",
   },
   nutritionist: {
