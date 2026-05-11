@@ -68,8 +68,8 @@ export class NutriCoreV3Adapter {
   /**
    * Gera um plano Elite V3 usando o novo Motor NutriCore
    */
-  static async generateElitePlan(context: PatientContext, availableFoods: V3Food[]): Promise<V3Meal[]> {
-    console.info(`[NutriCore-Adapter] Starting Elite Plan Generation for ${context.name} (${context.weight}kg)`);
+  static async generateElitePlan(context: PatientContext, availableFoods: V3Food[], isWeekly: boolean = false): Promise<V3Meal[]> {
+    console.info(`[NutriCore-Adapter] Starting Elite Plan Generation for ${context.name} (${context.weight}kg) | Weekly: ${isWeekly}`);
     
     try {
       const engineInput = this.mapPatientToEngine(context);
@@ -77,10 +77,8 @@ export class NutriCoreV3Adapter {
       
       console.log(`[NutriCore-Adapter] Engine Result: ${engineResult.target_kcal} kcal calculated.`);
 
-      // Regra Parte 4 Item 5: Se for plano completo, a base sugerida é ~2000 kcal se não houver contexto específico
       const targetKcal = engineResult.target_kcal || 2000;
 
-      // Estrutura padrão de refeições baseada no FitJourney
       const mealSlots: MealSlot[] = [
         { type: 'cafe_da_manha', time: '08:00' },
         { type: 'lanche_da_manha', time: '10:30' },
@@ -90,10 +88,7 @@ export class NutriCoreV3Adapter {
         { type: 'ceia', time: '22:00' }
       ];
 
-      // Distribuição de Macros
       const distributed = distributeMacros(engineResult.macros, mealSlots);
-
-      // NutriCore usa sua própria base de alimentos, mas podemos passar a disponível
       const foodDb: Food[] = availableFoods.map(f => ({
         id: f.id,
         name: f.name,
@@ -106,13 +101,15 @@ export class NutriCoreV3Adapter {
         unit: f.portionUnitLabel || 'g'
       }));
 
-      // Se a base estiver vazia, usa o BASE_FOODS do NutriCore
       const finalDb = foodDb.length > 5 ? foodDb : BASE_FOODS;
       
-      console.log(`[NutriCore-Adapter] Using DB with ${finalDb.length} foods. Processing slots...`);
+      // Se for modo semanal, geramos variações para cada dia (7 x 6 = 42 refeições)
+      const loops = isWeekly ? 7 : 1;
+      const allGeneratedMeals: V3Meal[] = [];
 
-      // Utilizar Promise.all para permitir chamadas assíncronas dentro do map (getBestMealImage)
-      return Promise.all(distributed.map(async (slot) => {
+      for (let dayIdx = 0; dayIdx < loops; dayIdx++) {
+        const daySeed = Math.random() + dayIdx;
+        const dayMeals = await Promise.all(distributed.map(async (slot) => {
       // Mapeamento robusto de nomes para o Editor V3
       const nameMap: Record<string, string> = {
         'cafe_da_manha': 'Café da Manhã',
