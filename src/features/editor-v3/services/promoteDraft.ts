@@ -145,27 +145,56 @@ export async function promoteDraftToMealPlan(
     return { ok: false, error: planErr?.message ?? 'Falha ao criar meal_plan' };
   }
 
-  // 2) Insere meal_plan_items para cada refeição que tenha conteúdo
-  const itemsRows = meals
-    .filter((m) => m.items.length > 0)
-    .map((m) => {
-      const macros = sumMealMacros(m);
-      const isMarmita = m.items.some((i) => (i as any).isMarmita);
-      return {
+  // 2) Insere meal_plan_items explodindo itens primários e suas substituições
+  const itemsRows: any[] = [];
+  
+  for (const meal of meals) {
+    if (meal.items.length === 0) continue;
+
+    for (const item of meal.items) {
+      const groupId = crypto.randomUUID();
+      const mealType = mealNameToType(meal.name);
+      
+      // 2.1) Item Primário
+      itemsRows.push({
         meal_plan_id: plan.id,
         tenant_id: draft.tenant_id,
-        meal_type: mealNameToType(m.name),
-        title: buildItemTitle(m),
-        description: buildItemDescription(m),
-        calories_target: Math.round(macros.kcal),
-        protein_target: Number(macros.p.toFixed(2)),
-        carbs_target: Number(macros.c.toFixed(2)),
-        fat_target: Number(macros.f.toFixed(2)),
+        meal_type: mealType,
+        title: buildItemTitle(item),
+        description: buildItemDescription(item),
+        calories_target: Math.round(item.kcal || 0),
+        protein_target: Number((item.protein || 0).toFixed(1)),
+        carbs_target: Number((item.carbs || 0).toFixed(1)),
+        fat_target: Number((item.fat || 0).toFixed(1)),
         item_origin: 'manual',
         is_manually_edited: true,
-        is_locked: isMarmita, // marmita = LOCKED no plano oficial
-      } as any;
-    });
+        is_locked: (item as any).locked || false,
+        is_primary: true,
+        substitution_group_id: groupId
+      });
+
+      // 2.2) Substituições (se houver)
+      if (item.substitutions && Array.isArray(item.substitutions)) {
+        item.substitutions.forEach((sub: any) => {
+          itemsRows.push({
+            meal_plan_id: plan.id,
+            tenant_id: draft.tenant_id,
+            meal_type: mealType,
+            title: sub.name,
+            description: sub.portionLabel || `${sub.suggestedQuantity || sub.portionValue || 100}g`,
+            calories_target: Math.round(sub.kcal || sub.calories || 0),
+            protein_target: Number((sub.protein || 0).toFixed(1)),
+            carbs_target: Number((sub.carbs || 0).toFixed(1)),
+            fat_target: Number((sub.fat || 0).toFixed(1)),
+            item_origin: 'auto',
+            is_manually_edited: false,
+            is_primary: false,
+            substitution_group_id: groupId
+          });
+        });
+      }
+    }
+  }
 
   if (itemsRows.length > 0) {
     const { error: itemsErr } = await supabase
@@ -173,7 +202,7 @@ export async function promoteDraftToMealPlan(
       .insert(itemsRows);
 
     if (itemsErr) {
-      // Rollback best-effort: arquiva o plano vazio (delete flow: archive antes de delete)
+      // Rollback best-effort
       await supabase
         .from('meal_plans')
         .update({ plan_status: 'archived', is_active: false } as any)
