@@ -484,7 +484,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           </div>
           <div class="meal-body">
             <div class="food-list">
-              ${primary.description ? formatDescription(primary.description) : ""}
+              ${primary.description && !primary.description.includes('(') ? formatDescription(primary.description) : (primary.description ? `<div class="food-line"><span class="food-bullet"></span><span>${escapeHtml(primary.description)}</span></div>` : "")}
             </div>
 
             ${substitutions.length > 0 ? `
