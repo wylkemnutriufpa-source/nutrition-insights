@@ -1000,54 +1000,103 @@ const EditorV3Page = () => {
     }
     
     setSendingWhatsApp(true);
-    const toastId = toast.loading("Preparando Plano Alimentar para WhatsApp...");
+    const toastId = toast.loading("Preparando Plano Alimentar Premium para WhatsApp...");
     
     try {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
       const profName = prof?.full_name || "Seu Nutricionista";
       
       const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
+      const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
+      const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
+      const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
+
+      const { buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
+
+      const pdfData: PremiumMealPlanPDFData = {
+        planTitle: "Plano Alimentar Premium V3",
+        patientName: patientContext?.name || "Paciente",
+        nutritionistName: profName,
+        startDate: new Date().toLocaleDateString("pt-BR"),
+        planMode: 'single_day',
+        items: meals.flatMap(m => {
+          const mealItems: PremiumMealPlanPDFData['items'] = [];
+          const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any;
+          
+          m.items.forEach(item => {
+            const groupId = item.instanceId;
+            mealItems.push({
+              mealType: mType,
+              title: m.name,
+              description: `${item.name} — ${formatPortion(item)}`,
+              calories_target: Math.round(Number(item.kcal) || 0),
+              protein_target: Math.round(Number(item.protein) || 0),
+              carbs_target: Math.round(Number(item.carbs) || 0),
+              fat_target: Math.round(Number(item.fat) || 0),
+              is_primary: true,
+              substitution_group_id: groupId
+            });
+
+            if (item.substitutions && item.substitutions.length > 0) {
+              item.substitutions.forEach(sub => {
+                mealItems.push({
+                  mealType: mType,
+                  title: sub.name,
+                  description: `${sub.name}`,
+                  calories_target: Math.round(Number(sub.kcal) || 0),
+                  protein_target: Math.round(Number(sub.protein) || 0),
+                  carbs_target: Math.round(Number(sub.carbs) || 0),
+                  fat_target: Math.round(Number(sub.fat) || 0),
+                  is_primary: false,
+                  substitution_group_id: groupId
+                });
+              });
+            }
+          });
+          return mealItems;
+        }),
+        targetCalories: Math.round(totalKcal),
+        targetProtein: Math.round(totalProtein),
+        targetCarbs: Math.round(totalCarbs),
+        targetFat: Math.round(totalFat),
+        goal: patientContext?.goal,
+      };
+
+      const html = buildPremiumMealPlanHTML(pdfData);
       
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; color: #1a1a2e; padding: 30px; background: #f8fafc; }
-  .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; max-width: 600px; margin: 0 auto; }
-  .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #6d28d9; padding-bottom: 20px; }
-  .logo { font-size: 24px; font-weight: 800; color: #6d28d9; }
-  h1 { font-size: 20px; margin: 10px 0; color: #1e293b; }
-  .meal { margin-bottom: 25px; padding: 15px; border-radius: 12px; background: #fdf2f8; border-left: 5px solid #db2777; }
-  .meal-title { font-weight: 700; font-size: 16px; color: #db2777; display: flex; justify-content: space-between; }
-  .meal-time { font-size: 12px; color: #9d174d; }
-  .items { margin-top: 10px; font-size: 14px; line-height: 1.6; color: #334155; }
-  .summary { background: #6d28d9; color: white; padding: 20px; border-radius: 15px; margin-top: 30px; display: flex; justify-content: space-around; }
-  .summary-item { text-align: center; }
-  .summary-value { font-size: 18px; font-weight: 800; }
-  .summary-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; }
-  .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #94a3b8; }
-</style></head><body>
-  <div class="card">
-    <div class="header">
-      <div class="logo">FitJourney</div>
-      <h1>Plano Alimentar Personalizado</h1>
-      <p style="font-size:12px;color:#64748b">Nutricionista: ${profName}</p>
-    </div>
-    
-    ${meals.map(m => `
-      <div class="meal">
-        <div class="meal-title">
-          <span>${m.name}</span>
-          <span class="meal-time">${m.time || ''}</span>
-        </div>
-        <div class="items">
-          ${m.items.map(i => `• ${i.name} (${formatPortion(i)})`).join('<br>')}
-        </div>
-      </div>
-    `).join('')}
-    
-    <div class="summary">
-      <div class="summary-item">
+      // Upload para storage compartilhado
+      const fileName = `meal-plan-${patientId}-${Date.now()}.html`;
+      const blob = new Blob([html], { type: "text/html" });
+      
+      const { error: uploadError } = await supabase.storage
+        .from("shared-meal-plans")
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("shared-meal-plans")
+        .getPublicUrl(fileName);
+
+      // Pegar telefone do paciente
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", patientId)
+        .maybeSingle();
+
+      const message = `Olá ${patientContext?.name.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nAcabei de finalizar seu novo Plano Alimentar Premium V3. Você pode acessá-lo agora clicando no link abaixo:\n\n${publicUrl}\n\nQualquer dúvida, estou à disposição!`;
+
+      const whatsappUrl = buildWhatsAppUrl(profile?.phone || "", message);
+      window.open(whatsappUrl, "_blank");
+      toast.success("WhatsApp aberto com sucesso!", { id: toastId });
+    } catch (err: any) {
+      console.error("WhatsApp error:", err);
+      toast.error("Erro ao preparar envio via WhatsApp", { id: toastId });
+    } finally {
+      setSendingWhatsApp(false);
+    }
+  };
         <div class="summary-value">${Math.round(totalKcal)}</div>
         <div class="summary-label">Kcal/dia</div>
       </div>
