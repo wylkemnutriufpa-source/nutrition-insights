@@ -1,6 +1,7 @@
 import { Food, FoodCategory } from "./food-database";
 import { MealType } from "./meal-distribution";
 import { Marmita } from "./marmitas-database";
+import { getSubstitutions, Substitution } from "./substitutions";
 
 export interface PlannedItem {
   foodId: string;
@@ -12,6 +13,7 @@ export interface PlannedItem {
     fat_g: number;
     kcal: number;
   };
+  substitutions?: any[]; 
 }
 
 export interface PlannedMeal {
