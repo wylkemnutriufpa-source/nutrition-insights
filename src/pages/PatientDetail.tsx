@@ -1161,7 +1161,7 @@ export default function PatientDetail() {
                                 {plan.is_active ? 'Ativo' : 'Inativo'}
                               </Badge>
                               <Badge variant="outline" className="text-[10px] h-4 border-emerald-500/20 text-emerald-600">
-                                {plan.editor_version === 'v3' ? 'V3 Premium' : 'V2 Standard'}
+                                {plan.editor_version === 'v3' ? 'V3 Premium' : 'V3 Standard'}
                               </Badge>
                               <span className="text-[10px] text-muted-foreground">
                                 {new Date(plan.created_at).toLocaleDateString()}
@@ -1174,7 +1174,7 @@ export default function PatientDetail() {
                               size="sm" 
                               className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
                               onClick={() => {
-                                navigate(`/v3/${resolvedPatientId}?planId=${plan.id}`);
+                                navigate(`/editor-v3/${resolvedPatientId}?planId=${plan.id}`);
                               }}
                             >
                               <PencilLine className="w-4 h-4 mr-1" /> Editar

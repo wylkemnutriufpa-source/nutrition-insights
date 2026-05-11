@@ -941,16 +941,17 @@ const EditorV3Page = () => {
       const v3Meals = await NutriCoreV3Adapter.generateElitePlan(patientContext, []);
 
       if (!v3Meals || v3Meals.length === 0) {
-        throw new Error('O motor NutriCore retornou um plano vazio.');
+        throw new Error('O motor NutriCore retornou um plano vazio. Verifique as restrições do paciente.');
       }
 
+      console.log(`[Elite-V3] Plano gerado com ${v3Meals.length} refeições. Hidratando...`);
       await hydrateMeals(v3Meals as any);
       
       // Calcular calorias totais para o toast
       const totalKcal = v3Meals.reduce((acc, m) => acc + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
       toast.success(`Elite V3: Plano gerado com ${Math.round(totalKcal)} kcal para ${weight}kg!`);
     } catch (error: any) {
-      console.error('[Elite-V3 Error]', error);
+      console.error('[Elite-V3 Error] Falha crítica na geração:', error);
       toast.error(`Erro ao gerar plano: ${error.message || 'Falha no Motor V3'}`);
     } finally {
       setIsGeneratingGlobal(false);
