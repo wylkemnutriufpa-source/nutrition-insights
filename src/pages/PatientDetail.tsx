@@ -1361,6 +1361,15 @@ export default function PatientDetail() {
                               variant="ghost" 
                               size="sm" 
                               className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
+                              onClick={() => handlePreviewPDF(plan)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Ver PDF
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
                               onClick={() => handleSendWhatsApp(plan)}
                               disabled={sendingWhatsAppId === plan.id}
                             >
