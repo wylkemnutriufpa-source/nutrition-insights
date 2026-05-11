@@ -19,7 +19,8 @@ export function getSubstitutions(
   food: Food,
   foodDb: Food[],
   currentGrams: number,
-  restrictions: string[] = []
+  restrictions: string[] = [],
+  mealType?: string
 ): Substitution[] {
   const originalFactor = currentGrams / 100;
   const originalProtein = food.protein_100g * originalFactor;
@@ -32,6 +33,7 @@ export function getSubstitutions(
   const isPaoLike = (n: string) => n.includes('pão') || n.includes('tapioca') || n.includes('cuscuz') || n.includes('torrada') || n.includes('aveia');
   const isMainCarb = (n: string) => (n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || n.includes('mandioca') || n.includes('milho')) && !isPaoLike(n);
   const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('tilápia') || n.includes('atum') || n.includes('whey') || n.includes('patinho');
+  const isHeavyProtein = (n: string) => n.includes('carne') || n.includes('patinho') || n.includes('peixe') || n.includes('frango') || n.includes('tilápia');
   const isLegume = (n: string) => n.includes('feijão') || n.includes('lentilha') || n.includes('grão de bico') || n.includes('ervilha');
 
   const foodIsPao = isPaoLike(name);
@@ -39,10 +41,26 @@ export function getSubstitutions(
   const foodIsProtein = isProtein(name);
   const foodIsLegume = isLegume(name);
 
-  const candidates = foodDb.filter(f => 
-    f.id !== food.id &&
-    !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase()))
+  // 🛡️ BLINDAGEM CEIA/LANCHE: Bloquear carnes pesadas em refeições leves
+  const isLightMeal = mealType && (
+    mealType.toLowerCase().includes('ceia') || 
+    mealType.toLowerCase().includes('lanche') ||
+    mealType.toLowerCase().includes('cafe')
   );
+
+  const candidates = foodDb.filter(f => {
+    const candName = f.name.toLowerCase();
+    
+    // Regra de Ouro: Se for Ceia/Lanche, NÃO sugerir carnes pesadas (frango, carne, peixe) 
+    // exceto se o alimento original já for uma delas (para permitir trocas entre si se o usuário quiser, 
+    // mas o motor não deve sugerir carne se o original for ovo na ceia)
+    if (isLightMeal && !isHeavyProtein(name) && isHeavyProtein(candName)) {
+      return false;
+    }
+
+    return f.id !== food.id &&
+      !restrictions.some(r => candName.includes(r.toLowerCase()));
+  });
 
   const results: Substitution[] = candidates.map(candidate => {
     let gramsSub = 0;
