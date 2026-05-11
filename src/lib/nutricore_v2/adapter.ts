@@ -135,7 +135,7 @@ export class NutriCoreV3Adapter {
       );
 
       const v3Items = plannedMeal.items.map(item => {
-        // 🛡️ REGRA DE OURO NutriCore V2:
+        // 🛡️ REGRA DE OURO NutriCore V3:
         // Entregamos o macro TOTAL para a quantidade calculada.
         const totalKcal = Math.round(item.macros.kcal);
         const totalProtein = Number(item.macros.protein_g.toFixed(1));
