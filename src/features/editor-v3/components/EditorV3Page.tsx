@@ -573,7 +573,7 @@ const EditorV3Page = () => {
                           
         if (currentFood) {
           console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
-          const v2Subs = getSubstitutions(
+          const v3PlanSubs = getSubstitutions(
             currentFood, 
             BASE_FOODS, 
             selectedItem.item.quantity,
