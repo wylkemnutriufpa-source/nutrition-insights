@@ -983,7 +983,7 @@ export default function PatientDetail() {
                   <UserCog className="w-4 h-4 text-zinc-500" /> Opções
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-[#111] border-white/10 text-white w-48">
+              <DropdownMenuContent align="end" className="bg-[#111] border-white/10 text-white w-56">
                 <DropdownMenuItem onClick={() => setOpenSection("audit-log")}>
                   <Shield className="w-4 h-4 mr-2" /> Auditoria Motor
                 </DropdownMenuItem>
