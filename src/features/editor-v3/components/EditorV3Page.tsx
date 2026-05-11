@@ -162,6 +162,7 @@ const EditorV3Page = () => {
   const [isEditingAntro, setIsEditingAntro] = useState(false);
   const [editAntroValues, setEditAntroValues] = useState({ weight: 0, height: 0, goal: 'Manutenção' });
   const [isSavingAntro, setIsSavingAntro] = useState(false);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
   
   const [selectedItemState, setSelectedItemState] = useState<{ mealId: string, instanceId: string } | null>(null);
   
