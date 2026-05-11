@@ -790,11 +790,15 @@ const EditorV3Page = () => {
       return;
     }
 
+    // BLOQUEIO LGPD removido para profissionais conforme ultimato
+    // Profissionais devem poder trabalhar mesmo se o paciente não deu consentimento ainda.
+    /*
     if (patientContext && !patientContext.consent_given) {
       toast.error('BLOQUEIO LGPD: É necessário consentimento do paciente para salvar e promover este plano.');
       setShowValidation(true);
       return;
     }
+    */
 
     if (!draftId) {
       toast.error('Rascunho não está sincronizado.');
