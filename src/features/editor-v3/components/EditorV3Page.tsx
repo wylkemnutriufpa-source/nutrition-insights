@@ -28,6 +28,7 @@ import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from
 // Direct NutriCore V3 Imports are now handled via Adapter or direct types
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
 import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+import { convertGramsToHousehold } from "@/lib/nutricore_v2/unit-converter";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
