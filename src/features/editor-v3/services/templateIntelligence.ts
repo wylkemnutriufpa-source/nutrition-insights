@@ -59,7 +59,17 @@ export function processSmartTemplate(
     // Buscar 3 substitutos da mesma categoria
     const subs = baseFoods
       .filter(f => f.category === item.category && f.name !== item.name)
-      .slice(0, 3);
+      .slice(0, 3)
+      .map(s => {
+        // Calcular equivalência baseada no kcal do alimento (que já é normalizado na V3)
+        const ratio = (item.kcal || 0) / (s.kcal || 1); 
+        const equivGrams = Math.max(10, Math.round((s.portionValue || 100) * ratio / 5) * 5); 
+        return {
+          ...s,
+          suggestedQuantity: equivGrams,
+          portionLabel: `${equivGrams}g`
+        };
+      });
 
     return {
       ...item,
