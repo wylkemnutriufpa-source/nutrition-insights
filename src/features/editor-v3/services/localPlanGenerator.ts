@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { NutriCoreV3Adapter } from "@/lib/nutricore_v2/adapter";
 import { PatientContext, Meal } from "../types";
+import { clampItemKcal, assertSafeMacro, MACRO_SAFETY_LIMITS } from "@/lib/macroSafety";
 
 export async function generateAndSaveLocalPlan(
   patientId: string,
