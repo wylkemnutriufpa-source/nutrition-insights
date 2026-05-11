@@ -993,6 +993,111 @@ const EditorV3Page = () => {
     }
   };
 
+  const handleSendWhatsApp = async () => {
+    if (!meals.length || !patientId) {
+      toast.error("Nenhum item para enviar ou paciente não selecionado");
+      return;
+    }
+    
+    setSendingWhatsApp(true);
+    const toastId = toast.loading("Preparando Plano Alimentar para WhatsApp...");
+    
+    try {
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
+      const profName = prof?.full_name || "Seu Nutricionista";
+      
+      const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
+      
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: #1a1a2e; padding: 30px; background: #f8fafc; }
+  .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; max-width: 600px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #6d28d9; padding-bottom: 20px; }
+  .logo { font-size: 24px; font-weight: 800; color: #6d28d9; }
+  h1 { font-size: 20px; margin: 10px 0; color: #1e293b; }
+  .meal { margin-bottom: 25px; padding: 15px; border-radius: 12px; background: #fdf2f8; border-left: 5px solid #db2777; }
+  .meal-title { font-weight: 700; font-size: 16px; color: #db2777; display: flex; justify-content: space-between; }
+  .meal-time { font-size: 12px; color: #9d174d; }
+  .items { margin-top: 10px; font-size: 14px; line-height: 1.6; color: #334155; }
+  .summary { background: #6d28d9; color: white; padding: 20px; border-radius: 15px; margin-top: 30px; display: flex; justify-content: space-around; }
+  .summary-item { text-align: center; }
+  .summary-value { font-size: 18px; font-weight: 800; }
+  .summary-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; }
+  .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #94a3b8; }
+</style></head><body>
+  <div class="card">
+    <div class="header">
+      <div class="logo">FitJourney</div>
+      <h1>Plano Alimentar Personalizado</h1>
+      <p style="font-size:12px;color:#64748b">Nutricionista: ${profName}</p>
+    </div>
+    
+    ${meals.map(m => `
+      <div class="meal">
+        <div class="meal-title">
+          <span>${m.name}</span>
+          <span class="meal-time">${m.time || ''}</span>
+        </div>
+        <div class="items">
+          ${m.items.map(i => `• ${i.name} (${formatPortion(i)})`).join('<br>')}
+        </div>
+      </div>
+    `).join('')}
+    
+    <div class="summary">
+      <div class="summary-item">
+        <div class="summary-value">${Math.round(totalKcal)}</div>
+        <div class="summary-label">Kcal/dia</div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Gerado por FitJourney · ${new Date().toLocaleDateString("pt-BR")}
+    </div>
+  </div>
+</body></html>`;
+
+      const fileName = `diet-${patientId}-${Date.now()}.html`;
+      const blob = new Blob([html], { type: "text/html" });
+      
+      const { error: uploadError } = await supabase.storage
+        .from("shared-meal-plans")
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("shared-meal-plans")
+        .getPublicUrl(fileName);
+
+      // Get patient phone
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", patientId)
+        .maybeSingle();
+
+      if (!profile?.phone) {
+        toast.error("Telefone do paciente não encontrado.", { id: toastId });
+        setSendingWhatsApp(false);
+        return;
+      }
+
+      const message = `Olá ${patientContext?.name?.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nSeu novo Plano Alimentar está pronto! Você pode visualizá-lo clicando no link abaixo:\n\n${publicUrl}\n\nFoco no objetivo! Qualquer dúvida, me chama aqui.`;
+
+      const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
+      window.open(whatsappUrl, "_blank");
+      toast.success("WhatsApp aberto com sucesso!", { id: toastId });
+    } catch (err: any) {
+      console.error("WhatsApp error:", err);
+      toast.error("Erro ao preparar envio via WhatsApp", { id: toastId });
+    } finally {
+      setSendingWhatsApp(false);
+    }
+  };
+
   const handleFixPlan = async () => {
     if (!patientContext) return;
     setIsGeneratingGlobal(true);
