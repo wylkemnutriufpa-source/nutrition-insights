@@ -113,7 +113,7 @@ export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, co
           <>
             <ImagePlus className={cn(compact ? "w-4 h-4" : "w-6 h-6")} />
             <span className={cn("font-medium", compact ? "text-[9px]" : "text-xs")}>
-              {compact ? "Foto" : "Adicionar foto inspiracional"}
+              {label || (compact ? "Foto" : "Adicionar foto inspiracional")}
             </span>
           </>
         )}
