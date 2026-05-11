@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -731,1737 +733,523 @@ export default function PatientDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-8 bg-[#0a0a0a] text-white min-h-screen p-4 md:p-8 rounded-3xl">
         {/* Smart Alerts */}
         <SmartAlertsBanner patientId={resolvedPatientId} onAction={(action) => setOpenSection(action)} />
-        {/* Header */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          {(() => {
-            const displayName =
-              (profile?.full_name && profile.full_name.trim()) ||
-              (patientEmail && patientEmail.split("@")[0]) ||
-              "Paciente sem nome";
-            const initial = displayName[0]?.toUpperCase() || "P";
-            return (
-              <>
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary">{initial}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {currentPrestigePlan ? (
-                      <PrestigeName name={displayName} plan={currentPrestigePlan} className="font-display text-2xl font-bold" />
-                    ) : (
-                      <h1 className="font-display text-2xl font-bold" title={displayName}>{displayName}</h1>
-                    )}
-                    <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
-                      {patientStatus === "active" ? "Ativo" : "Inativo"}
+
+        {/* SEÇÃO 1 — CABEÇALHO (DADOS VITAIS) */}
+        <section className="bg-[#111] p-6 rounded-2xl border border-emerald-500/10 shadow-2xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/patients")} className="text-muted-foreground hover:text-white">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <span className="text-3xl font-bold text-emerald-500">
+                  {((profile?.full_name || patientEmail || "P")[0]).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold tracking-tight">
+                    {profile?.full_name || patientEmail?.split("@")[0] || "Paciente"}
+                  </h1>
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                    {patientStatus === "active" ? "Ativo" : "Inativo"}
+                  </Badge>
+                  {currentPrestigePlan && (
+                    <Badge variant="outline" className="border-amber-500/50 text-amber-500 gap-1 bg-amber-500/5">
+                      <Crown className="w-3 h-3" /> {currentPrestigePlan.name}
                     </Badge>
-                    {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
-                    {patientId && <ActiveProtocolBadge patientId={resolvedPatientId} compact />}
-                    {(data as any)?.requiresMedicalReview && (
-                      <Badge variant="destructive" className="gap-1 animate-pulse">
-                        <ShieldAlert className="w-3 h-3" /> Revisão Médica Requerida
-                      </Badge>
-                    )}
-                    {resolvedPatientId && (
-                      <PatientConsentBadge patientId={resolvedPatientId} />
-                    )}
-                  </div>
-                  {patientEmail && (
-                    <p className="text-xs text-muted-foreground/80 truncate" title={patientEmail}>
-                      {patientEmail}
-                    </p>
                   )}
-                  <p className="text-sm text-muted-foreground">
-                    Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
-                    {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
-                  </p>
                 </div>
-              </>
-            );
-          })()}
-          <HealthScoreRing
-            score={calculateHealthScore({
-              hasAnamnesis: anamnesis?.status === "completed",
-              checklistCompletion: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
-              mealsLogged: 0,
-              weightEntries: 0,
-              currentStreak: 0,
-              daysAsPatient: 30,
-            })}
-            label="Health Score"
-            size="md"
-          />
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-              disabled={!resolvedPatientId}
-              onClick={() => {
-                if (!resolvedPatientId) return;
-                navigate(`/in-office/${resolvedPatientId}`);
-              }}
+                <p className="text-emerald-500/60 text-sm mt-1 flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                   Plano: {patientSubscription?.plan_name || "Premium"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6 p-4 bg-black/40 rounded-xl border border-white/5">
+              <div className="flex flex-col items-center px-4 border-r border-white/10">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">⚖️ Peso</span>
+                <span className="text-lg font-bold">{(profile as any)?.current_weight_kg || (profile as any)?.weight || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs text-muted-foreground">kg</span></span>
+              </div>
+              <div className="flex flex-col items-center px-4 border-r border-white/10">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">📏 Altura</span>
+                <span className="text-lg font-bold">{(profile as any)?.current_height_cm || (profile as any)?.height || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs text-muted-foreground">cm</span></span>
+              </div>
+              <div className="flex flex-col items-center px-4 border-r border-white/10">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">🎯 Objetivo</span>
+                <span className="text-sm font-bold text-emerald-500">{(profile as any)?.goal || (anamnesis?.answers as any)?.goal || "Emagrecimento"}</span>
+              </div>
+              <div className="flex flex-col items-center px-4">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">🏃 Atividade</span>
+                <span className="text-sm font-bold">{(profile as any)?.activity_level || (anamnesis?.answers as any)?.activity_level || "Leve"}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SEÇÃO 2 — AÇÕES RÁPIDAS (BOTÕES GRANDES, 2 COLUNAS) */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button 
+            variant="outline" 
+            className="h-24 rounded-2xl border-emerald-500/20 bg-[#111] hover:bg-emerald-500/10 hover:border-emerald-500/40 text-white flex items-center justify-start px-6 gap-4 group transition-all"
+            onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+              <Sparkles className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="text-left">
+              <span className="block text-lg font-bold">🧬 EDITOR V3</span>
+              <span className="text-xs text-muted-foreground">Prescrição Nutricional Premium</span>
+            </div>
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-24 rounded-2xl border-emerald-500/20 bg-[#111] hover:bg-emerald-500/10 hover:border-emerald-500/40 text-white flex items-center justify-start px-6 gap-4 group transition-all"
+            onClick={() => navigate(`/in-office/${resolvedPatientId}`)}
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+              <Stethoscope className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="text-left">
+              <span className="block text-lg font-bold">🏥 MODO CONSULTÓRIO</span>
+              <span className="text-xs text-muted-foreground">Atendimento em tempo real</span>
+            </div>
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-24 rounded-2xl border-emerald-500/20 bg-[#111] hover:bg-emerald-500/10 hover:border-emerald-500/40 text-white flex items-center justify-start px-6 gap-4 group transition-all"
+            onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+              <Activity className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="text-left">
+              <span className="block text-lg font-bold">📋 AVALIAÇÃO FÍSICA</span>
+              <span className="text-xs text-muted-foreground">Antropometria e Composição</span>
+            </div>
+          </Button>
+
+          <div className="h-24 rounded-2xl border border-emerald-500/20 bg-[#111] flex items-center justify-between px-6 gap-4">
+             <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div className="text-left">
+                <span className="block text-lg font-bold text-white">📊 RELATÓRIO PDF</span>
+                <span className="text-xs text-muted-foreground">Exportação completa do perfil</span>
+              </div>
+             </div>
+             {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
+          </div>
+        </section>
+
+        {/* SEÇÃO 3 — PLANOS ALIMENTARES */}
+        <section className="bg-[#111] p-6 rounded-2xl border border-emerald-500/10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <ChefHat className="w-5 h-5 text-emerald-500" /> PLANOS ALIMENTARES
+            </h2>
+            <Button 
+              onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
+              className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold h-9"
             >
-              🏥 Modo Consultório
+              <Plus className="w-4 h-4 mr-2" /> NOVO PLANO
             </Button>
-            <Button
-              variant="outline"
-              className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
-              disabled={!resolvedPatientId}
-              onClick={() => {
-                if (!resolvedPatientId) return;
-                navigate(`/meal-plans/editor/${resolvedPatientId}`);
-              }}
-            >
-              <Sparkles className="w-4 h-4" /> NutriCore V3 (Editor Premium)
-            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {mealPlans && mealPlans.length > 0 ? (
+              mealPlans.slice(0, 3).map((plan: any) => (
+                <div key={plan.id} className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl bg-black/40 border border-white/5 hover:border-emerald-500/30 transition-all gap-4">
+                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className={`w-3 h-3 rounded-full ${plan.is_active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-600'}`} />
+                    <div>
+                      <p className="font-bold text-sm">
+                        {plan.title || "Plano Sem Título"}
+                        {plan.is_active && <span className="ml-2 text-[10px] text-emerald-500 uppercase tracking-widest">Ativo</span>}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                        {new Date(plan.created_at).toLocaleDateString("pt-BR")} • {plan.plan_mode === 'weekly' ? 'Semanal' : 'Diário'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-500"
+                      onClick={() => handlePreviewPDF(plan)}
+                    >
+                      VISUALIZAR
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 text-xs font-bold bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/20"
+                      onClick={() => navigate(`/editor-v3/${resolvedPatientId}?planId=${plan.id}`)}
+                    >
+                      EDITAR NO V3
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-[#111] border-emerald-500/20 text-white">
+                        <DropdownMenuItem onClick={() => handleSendWhatsApp(plan)} className="hover:bg-emerald-500/10">
+                          <MessageSquare className="w-4 h-4 mr-2" /> Enviar WhatsApp
+                        </DropdownMenuItem>
+                        {plan.is_active && (
+                          <DropdownMenuItem onClick={handleMarkWithoutDiet} className="text-red-500 hover:bg-red-500/10">
+                            <UtensilsCrossed className="w-4 h-4 mr-2" /> Deixar sem dieta
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-10 bg-black/20 rounded-xl border-2 border-dashed border-white/5">
+                <p className="text-muted-foreground text-sm italic">Nenhum plano alimentar criado para este paciente.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* SEÇÃO 4 — FERRAMENTAS (BOTÕES MENORES, 3-4 COLUNAS) */}
+        <section className="space-y-4">
+          <h3 className="text-xs text-muted-foreground font-bold uppercase tracking-widest px-1">Ferramentas de Suporte</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {patientId && (
               <UnblockPatientDialog
                 patientId={resolvedPatientId}
                 patientName={profile?.full_name ?? undefined}
               />
             )}
-            {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
-            {activeMealPlan && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 h-9"
-                  onClick={() => handlePreviewPDF(activeMealPlan)}
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  Visualizar PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 h-9"
-                  onClick={() => handleSendWhatsApp(activeMealPlan)}
-                  disabled={sendingWhatsAppId === activeMealPlan.id}
-                >
-                  {sendingWhatsAppId === activeMealPlan.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <MessageSquare className="w-3.5 h-3.5" />
-                  )}
-                  Enviar via WhatsApp
-                </Button>
-              </div>
-            )}
-            <Button
-              variant={patientStatus === "active" ? "outline" : "default"}
-              className="gap-2"
-              onClick={togglePatientStatus}
-              disabled={toggleStatusMutation.isPending}
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}
             >
-              <Power className="w-4 h-4" />
-              {patientStatus === "active" ? "Desativar" : "Ativar"}
+              <ChefHat className="w-4 h-4 text-emerald-500" /> Modelos
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="gap-2">
-                  <Trash2 className="w-4 h-4" /> Excluir
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}
+            >
+              <Heart className="w-4 h-4 text-emerald-500" /> Anamnese
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={handleSmartReleaseOnboarding}
+            >
+              <Rocket className="w-4 h-4 text-emerald-500" /> Liberar Onboarding
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={() => setOpenSection("projects")}
+            >
+              <FileText className="w-4 h-4 text-emerald-500" /> Protocolo
+            </Button>
+            
+            {/* Opções Secundárias em Dropdown para manter limpo */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2">
+                  <UserCog className="w-4 h-4 text-zinc-500" /> Mais Opções
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Excluir paciente?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação irá remover o vínculo com este paciente. Os dados do paciente não serão apagados, mas ele deixará de aparecer na sua lista.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={deletePatient} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Confirmar Exclusão
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            {isAdmin && (
-              <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
-                    <UserCog className="w-4 h-4" /> Upgrade para Profissional
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Promover Paciente a Profissional</DialogTitle>
-                  </DialogHeader>
-                  <p className="text-sm text-muted-foreground">
-                    Escolha o tipo de profissional para <strong>{profile?.full_name}</strong>:
-                  </p>
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <button
-                      onClick={() => setUpgradeRole("nutritionist")}
-                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
-                        upgradeRole === "nutritionist" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <UtensilsCrossed className="w-8 h-8 mx-auto text-primary" />
-                      <p className="font-semibold text-sm">Nutricionista</p>
-                    </button>
-                    <button
-                      onClick={() => setUpgradeRole("personal")}
-                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
-                        upgradeRole === "personal" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <Activity className="w-8 h-8 mx-auto text-primary" />
-                      <p className="font-semibold text-sm">Personal Trainer</p>
-                    </button>
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <Button variant="outline" onClick={() => setUpgradeOpen(false)} className="flex-1">
-                      Cancelar
-                    </Button>
-                    <Button
-                      onClick={handleUpgradePatient}
-                      disabled={!upgradeRole || upgrading}
-                      className="flex-1 gap-2"
-                    >
-                      {upgrading ? "Promovendo..." : "Confirmar Promoção"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}>
-              <Activity className="w-4 h-4" /> Avaliação Física
-            </Button>
-            <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => setOpenSection("audit-log")}>
-              <Shield className="w-4 h-4" /> Auditoria Motor
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-[#111] border-white/10 text-white w-48">
+                <DropdownMenuItem onClick={() => setOpenSection("audit-log")}>
+                  <Shield className="w-4 h-4 mr-2" /> Auditoria Motor
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActivateOpen(true)}>
+                  <Play className="w-4 h-4 mr-2" /> Ativar Protocolo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPlanOpen(true)}>
+                  <CreditCard className="w-4 h-4 mr-2" /> Gerenciar Assinatura
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={togglePatientStatus}>
+                  <Power className="w-4 h-4 mr-2" /> {patientStatus === "active" ? "Desativar" : "Ativar"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={deletePatient} className="text-red-500">
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir Paciente
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </section>
 
-              <BookOpen className="w-4 h-4" /> Modelos de Dieta
-            </Button>
-            {activeMealPlan && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10"
-                    disabled={markingWithoutDiet}
-                  >
-                    {markingWithoutDiet ? <Loader2 className="w-4 h-4 animate-spin" /> : <UtensilsCrossed className="w-4 h-4" />}
-                    Estou sem dieta
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Deixar este paciente sem dieta?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      O plano ativo {activeMealPlan.title ? `“${activeMealPlan.title}”` : "deste paciente"} será removido da rotina ativa e, se já tiver sido publicado, ficará arquivado para preservar o histórico.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleMarkWithoutDiet}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Confirmar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}>
-              <Heart className="w-4 h-4" /> {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
-            </Button>
-            {/* Confirmar Pagamento — only if not yet paid */}
-            {["invited", "awaiting_payment", "lead_created", "active"].includes(journeyStatus) && (
-              <Button
-                variant="outline"
-                className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
-                onClick={handleConfirmPayment}
-                disabled={confirmingPayment}
-              >
-                {confirmingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                Confirmar Pagamento
-              </Button>
-            )}
-            {/* Liberar Onboarding — smart/idempotent */}
-            <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={handleSmartReleaseOnboarding}>
-              <Rocket className="w-4 h-4" /> Liberar Onboarding
-            </Button>
-            {/* PRO+: Ativar Protocolo */}
-            {expUI.showProtocols && (
-            <>
-            {isAdmin && (
-              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/professionals")}>
-                <UserCog className="w-4 h-4" /> Gerenciar Profissionais
-              </Button>
-            )}
-            <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
-              <DialogTrigger asChild>
-                <Button className="gradient-primary gap-2 shadow-glow">
-                  <Play className="w-4 h-4" /> Ativar Protocolo
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="font-display">Ativar Protocolo</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={activateProtocol} className="space-y-4">
-                  <div>
-                    <Label>Protocolo</Label>
-                    <Select value={activateForm.protocol_id} onValueChange={(v) => setActivateForm({ ...activateForm, protocol_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                      <SelectContent>
-                        {protocols.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Status</Label>
-                    <Select value={activateForm.status} onValueChange={(v) => setActivateForm({ ...activateForm, status: v as "active" | "paused" | "completed" | "cancelled" })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">🟢 Ativo agora</SelectItem>
-                        <SelectItem value="scheduled">📅 Programado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Início</Label>
-                      <Input type="date" value={activateForm.start_date} onChange={(e) => setActivateForm({ ...activateForm, start_date: e.target.value })} required />
-                    </div>
-                    <div>
-                      <Label>Fim (opcional)</Label>
-                      <Input type="date" value={activateForm.end_date} onChange={(e) => setActivateForm({ ...activateForm, end_date: e.target.value })} />
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full gradient-primary" disabled={!activateForm.protocol_id}>
-                    {activateForm.status === "active" ? "Ativar e Sincronizar" : "Programar"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-            </>
-            )}
-          </div>
-        </div>
+        {/* SEÇÃO 5 — ABAS (NAVEGAÇÃO) */}
+        <section className="bg-[#111] rounded-2xl border border-white/5 overflow-hidden">
+          <Tabs defaultValue="overview" className="w-full" onValueChange={(v) => setOpenSection(v)}>
+            <TabsList className="w-full flex flex-wrap h-auto bg-black/40 border-b border-white/5 p-1">
+              <TabsTrigger value="checklist" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <ListChecks className="w-4 h-4" /> Checklist
+              </TabsTrigger>
+              <TabsTrigger value="assessment" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Activity className="w-4 h-4" /> Avaliação
+              </TabsTrigger>
+              <TabsTrigger value="agenda" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Calendar className="w-4 h-4" /> Agenda
+              </TabsTrigger>
+              <TabsTrigger value="recipes" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <ChefHat className="w-4 h-4" /> Receitas
+              </TabsTrigger>
+              <TabsTrigger value="feedbacks" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <MessageSquare className="w-4 h-4" /> Feedbacks
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Clock className="w-4 h-4" /> Timeline
+              </TabsTrigger>
+              <TabsTrigger value="protocols" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <FileText className="w-4 h-4" /> Protocolos
+              </TabsTrigger>
+              <TabsTrigger value="calculators" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Calculator className="w-4 h-4" /> Calculadoras
+              </TabsTrigger>
+              <TabsTrigger value="lab-exams" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Search className="w-4 h-4" /> Exames
+              </TabsTrigger>
+              <TabsTrigger value="onboarding" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Zap className="w-4 h-4" /> Onboarding
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Eye className="w-4 h-4" /> Visão Geral
+              </TabsTrigger>
+              <TabsTrigger value="plan" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <CreditCard className="w-4 h-4" /> Plano
+              </TabsTrigger>
+            </TabsList>
 
-        {/* Unified Biometric Context (Fonte Única da Verdade) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Scale className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Peso Atual</span>
-            <span className="text-xl font-display font-bold">{(profile as any)?.current_weight_kg || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs font-normal">kg</span></span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Ruler className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Altura</span>
-            <span className="text-xl font-display font-bold">{(profile as any)?.current_height_cm || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs font-normal">cm</span></span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Target className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Objetivo</span>
-            <span className="text-sm font-display font-bold">{(profile as any)?.goal || (anamnesis?.answers as any)?.goal || "Não definido"}</span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Activity className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Atividade</span>
-            <span className="text-sm font-display font-bold">{(profile as any)?.activity_level || (anamnesis?.answers as any)?.activity_level || "Não definido"}</span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm md:col-span-2 lg:col-span-2">
-            <Heart className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Restrições / Alergias</span>
-            <span className="text-xs font-medium truncate w-full">
-              {Array.isArray((profile as any)?.restrictions) && (profile as any).restrictions.length > 0 
-                ? (profile as any).restrictions.join(", ") 
-                : "Nenhuma registrada"}
-            </span>
-          </div>
-        </div>
-
-        {/* Últimos Planos Section */}
-        {mealPlans && mealPlans.length > 0 && (
-          <div className="mb-6 space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2 px-1">
-              <History className="w-4 h-4" /> Últimos Planos Alimentares
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {mealPlans.slice(0, 2).map((plan: any) => (
-                <div 
-                  key={plan.id}
-                  className="glass flex items-center justify-between p-4 rounded-xl border border-border/40 hover:border-primary/30 transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                      <UtensilsCrossed className="w-5 h-5 text-success" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {plan.title || `Plano #${plan.id.slice(0, 4)}`}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                        Criado em {new Date(plan.created_at).toLocaleDateString("pt-BR")}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="h-8 gap-2 text-xs font-medium hover:bg-primary/10 hover:text-primary"
-                    onClick={() => {
-                      const path = `/editor-v3/${resolvedPatientId}?planId=${plan.id}`;
-                      navigate(path);
-                    }}
-                  >
-                    Abrir no Editor V3
-                    <Rocket className="w-3 h-3" />
-                  </Button>
+            <div className="p-6">
+              <TabsContent value="checklist">
+                <PatientChecklistView patientId={resolvedPatientId} />
+              </TabsContent>
+              <TabsContent value="assessment">
+                <BodyEvolutionCard patientId={resolvedPatientId} />
+                <div className="mt-6">
+                   <ConsultationCompare patientId={resolvedPatientId} />
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Section Cards Grid */}
-        {(() => {
-          const allSections = [
-            // BASIC: essentials
-            { key: "checklist", label: "Checklist", icon: ListChecks, color: "from-warning/20 to-warning/5", iconColor: "text-warning", minMode: "basic" as const },
-            { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success", minMode: "basic" as const },
-            { key: "assessment", label: "Avaliação Física", icon: Activity, color: "from-accent/20 to-accent/5", iconColor: "text-accent", minMode: "basic" as const },
-            { key: "agenda", label: "Agenda", icon: CalendarDays, color: "from-info/20 to-info/5", iconColor: "text-info", minMode: "basic" as const },
-            { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary", minMode: "basic" as const },
-            { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info", minMode: "basic" as const },
-            { key: "plan", label: "Plano", icon: CreditCard, color: "from-primary/20 to-primary/5", iconColor: "text-primary", minMode: "basic" as const },
-            { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning", minMode: "basic" as const },
-            // PRO: clinical intelligence
-            { key: "overview", label: "Visão Geral", icon: AlertTriangle, color: "from-warning/20 to-warning/5", iconColor: "text-warning", minMode: "pro" as const },
-            { key: "ai-insights", label: "IFJ Insights", icon: Brain, color: "from-primary/20 to-primary/5", iconColor: "text-primary", minMode: "pro" as const },
-            { key: "timeline", label: "Timeline", icon: Clock, color: "from-muted-foreground/20 to-muted-foreground/5", iconColor: "text-muted-foreground", minMode: "pro" as const },
-            { key: "protocols", label: "Protocolos", icon: FileText, color: "from-accent/20 to-accent/5", iconColor: "text-accent", minMode: "pro" as const },
-            { key: "calculators", label: "Calculadoras", icon: Calculator, color: "from-success/20 to-success/5", iconColor: "text-success", minMode: "pro" as const },
-            { key: "feedbacks", label: "Feedbacks", icon: MessageSquare, color: "from-amber-500/20 to-orange-500/5", iconColor: "text-amber-500", minMode: "pro" as const },
-            { key: "lab-exams", label: "Exames Lab.", icon: Search, color: "from-violet-500/20 to-violet-500/5", iconColor: "text-violet-500", minMode: "pro" as const },
-            // ADVANCED: full IFJ engine
-            { key: "curiosidades", label: "Curiosidades", icon: Sparkles, color: "from-amber-500/20 to-orange-500/5", iconColor: "text-amber-500", minMode: "basic" as const },
-            { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive", minMode: "advanced" as const },
-            { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive", minMode: "advanced" as const },
-            { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500", minMode: "advanced" as const },
-            { key: "clinical-flags", label: "Flags Clínicas", icon: Shield, color: "from-emerald-500/20 to-emerald-500/5", iconColor: "text-emerald-500", minMode: "advanced" as const },
-            { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500", minMode: "advanced" as const },
-
-          ];
-
-          const sections = allSections.filter(s => expUI.minMode(s.minMode));
-
-          return (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {sections.map((s) => {
-                  const Icon = s.icon;
-                  const pendingPlansCount = s.key === "meal-plans" ? mealPlans.filter((p: any) => ["draft_auto_generated", "under_professional_review"].includes(p.plan_status)).length : 0;
-                  return (
-                    <motion.button
-                      key={s.key}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => {
-                        if (s.key === "edit-profile") {
-                          setEditProfileForm({
-                            full_name: profile?.full_name || "",
-                            phone: profile?.phone || "",
-                            email: patientEmail || "",
-                            goal: (profile as any)?.goal || "",
-                            notes: (profile as any)?.notes || "",
-                          });
-                        }
-                        if (s.key === "meal-plans") {
-                          setOpenSection("meal-plans");
-                          return;
-                        }
-                        setOpenSection(s.key);
-                      }}
-                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-gradient-to-br ${s.color} hover:shadow-md transition-all group cursor-pointer text-center`}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-card shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow">
-                        <Icon className={`w-5 h-5 ${s.iconColor}`} />
-                      </div>
-                      <span className="text-xs font-medium text-foreground">{s.label}</span>
-                      <Maximize2 className="absolute top-2 right-2 w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      {pendingPlansCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
-                          {pendingPlansCount}
-                        </span>
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Overview Modal — Full Clinical Summary */}
-              <Dialog open={openSection === "overview"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Visão Geral Clínica</DialogTitle></DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Plan & Payment Info */}
-                    <div className="glass rounded-xl p-5">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                        <CreditCard className="w-5 h-5 text-primary" /> Plano & Financeiro
-                      </h3>
-                      {patientSubscription ? (
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between"><span className="text-muted-foreground">Plano</span><span className="font-medium">{patientSubscription.plan_name}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Status</span>
-                            <Badge className={patientSubscription.status === "active" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}>
-                              {patientSubscription.status === "active" ? "Ativo" : patientSubscription.status}
-                            </Badge>
-                          </div>
-                          {patientSubscription.started_at && <div className="flex justify-between"><span className="text-muted-foreground">Início</span><span className="font-medium">{new Date(patientSubscription.started_at).toLocaleDateString("pt-BR")}</span></div>}
-                          {patientSubscription.expires_at && <div className="flex justify-between"><span className="text-muted-foreground">Expiração</span><span className="font-medium">{new Date(patientSubscription.expires_at).toLocaleDateString("pt-BR")}</span></div>}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Nenhum plano atribuído</p>
-                      )}
-                    </div>
-
-                    {/* Active Protocols */}
-                    <div className="glass rounded-xl p-5">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                        <FileText className="w-5 h-5 text-accent" /> Protocolos Ativos
-                      </h3>
-                      {patientProtocols.filter(p => p.status === "active").length > 0 ? (
-                        <div className="space-y-2">
-                          {patientProtocols.filter(p => p.status === "active").map((pp: any) => (
-                            <div key={pp.id} className="flex items-center gap-2 p-2 rounded-lg bg-card border border-border text-sm">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                              <span className="font-medium">{pp.protocol_title}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Nenhum protocolo ativo</p>
-                      )}
-                    </div>
-
-                    {/* Prestige & Project */}
-                    <div className="glass rounded-xl p-5">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                        <Crown className="w-5 h-5 text-amber-500" /> Prestígio & Projetos
-                      </h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between"><span className="text-muted-foreground">Prestígio</span>
-                          <span className="font-medium">{currentPrestigePlan ? `${currentPrestigePlan.badge_icon || "⭐"} ${currentPrestigePlan.name}` : "Nenhum"}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Onboarding & Meal Plan Status */}
-                    <div className="glass rounded-xl p-5">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                        <Zap className="w-5 h-5 text-warning" /> Status do Paciente
-                      </h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between"><span className="text-muted-foreground">Anamnese</span>
-                          <Badge variant={anamnesis?.status === "completed" ? "default" : "secondary"}>
-                            {anamnesis?.status === "completed" ? "✅ Completa" : "Pendente"}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Plano Alimentar</span>
-                          <Badge variant={mealPlans.some((p: any) => p.is_active) ? "default" : "secondary"}>
-                            {mealPlans.some((p: any) => p.is_active) ? "✅ Ativo" : "Inativo"}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Checklist</span>
-                          <span className="font-medium">{checklistStats.completed}/{checklistStats.total} hoje</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Risk Diagnosis */}
-                    <div className="glass rounded-xl p-5 md:col-span-2">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                        <AlertTriangle className="w-5 h-5 text-warning" /> Diagnóstico Inteligente
-                      </h3>
-                      {riskFactors.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Sem fatores de risco identificados. ✅</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {riskFactors.map((rf, i) => (
-                            <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                              <div className={`w-3 h-3 rounded-full ${rf.level === "high" ? "bg-destructive" : rf.level === "medium" ? "bg-warning" : "bg-success"}`} />
-                              <span className="text-sm font-medium">{rf.label}</span>
-                              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${rf.level === "high" ? "bg-destructive/10 text-destructive" : rf.level === "medium" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
-                                {rf.level === "high" ? "Alto" : rf.level === "medium" ? "Médio" : "Baixo"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Clinical Flags */}
-                    <div className="glass rounded-xl p-5">
-                      <ClinicalFlagsSummary patientId={resolvedPatientId} compact />
-                    </div>
-
-                    {/* Meal Adherence */}
-                    <div className="md:col-span-2">
-                      <MealAdherenceWidget patientId={resolvedPatientId} />
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* AI Insights Modal */}
-              <Dialog open={openSection === "ai-insights"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">IA Insights</DialogTitle></DialogHeader>
-                  <AnamnesisInsightsFull userId={resolvedPatientId} />
-                </DialogContent>
-              </Dialog>
-
-              {/* Meal Plans Section */}
-              <div className="md:col-span-2">
-                <div className="glass rounded-xl p-6 border-emerald-500/10 shadow-glow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-display font-semibold flex items-center gap-2">
-                      <ChefHat className="w-5 h-5 text-emerald-500" /> Planos Alimentares
+              </TabsContent>
+              <TabsContent value="agenda">
+                <PatientAgenda patientId={resolvedPatientId} />
+              </TabsContent>
+              <TabsContent value="recipes">
+                <div className="text-center py-20 text-muted-foreground italic">Seção de receitas em construção...</div>
+              </TabsContent>
+              <TabsContent value="feedbacks">
+                <PatientFeedbacksPanel patientId={resolvedPatientId} />
+              </TabsContent>
+              <TabsContent value="timeline">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-emerald-500" /> Linha do Tempo
                     </h3>
-                    <Button 
-                      size="sm" 
-                      onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
-                      className="gradient-primary h-8"
-                    >
-                      <Plus className="w-4 h-4 mr-1" /> Novo Plano
+                    <Button variant="outline" size="sm" onClick={() => setNoteOpen(true)} className="border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10">
+                      Nova Nota
                     </Button>
                   </div>
-                  <div className="space-y-3">
-                    {mealPlans && mealPlans.length > 0 ? (
-                      mealPlans.map((plan: any) => (
-                        <div key={plan.id} className="flex items-center justify-between p-3 rounded-lg bg-card border border-border hover:border-emerald-500/30 transition-all group">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm group-hover:text-emerald-500 transition-colors">{plan.title}</span>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant={plan.is_active ? "default" : "secondary"} className="text-[10px] h-4">
-                                {plan.is_active ? 'Ativo' : 'Inativo'}
-                              </Badge>
-                              <Badge variant="outline" className="text-[10px] h-4 border-emerald-500/20 text-emerald-600">
-                                {plan.editor_version === 'v3' || plan.editor_version === 'v3_premium' ? 'V3 Premium' : 'V3 Premium'}
-                              </Badge>
-                              <span className="text-[10px] text-muted-foreground">
-                                {new Date(plan.created_at).toLocaleDateString()}
-                              </span>
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-4">
+                      {timeline && timeline.length > 0 ? (
+                        timeline.map((event: any, idx: number) => {
+                          const Config = eventTypeConfig[event.event_type] || eventTypeConfig.note;
+                          return (
+                            <div key={idx} className="relative pl-6 border-l border-emerald-500/20 py-1">
+                              <div className="absolute left-[-5px] top-2 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                              <div className="p-3 bg-black/40 rounded-xl border border-white/5">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="font-bold text-sm">{event.title}</p>
+                                  <span className="text-[10px] text-muted-foreground">{new Date(event.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{event.description}</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
-                              onClick={() => handlePreviewPDF(plan)}
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              Ver PDF
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
-                              onClick={() => handleSendWhatsApp(plan)}
-                              disabled={sendingWhatsAppId === plan.id}
-                            >
-                              {sendingWhatsAppId === plan.id ? (
-                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                              ) : (
-                                <MessageSquare className="w-4 h-4 mr-1" />
-                              )}
-                              WhatsApp
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
-                              onClick={() => {
-                                navigate(`/editor-v3/${resolvedPatientId}?planId=${plan.id}`);
-                              }}
-                            >
-                              <PencilLine className="w-4 h-4 mr-1" /> Editar
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-6 border-2 border-dashed border-border rounded-xl">
-                        <UtensilsCrossed className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Nenhum plano alimentar encontrado</p>
+                          );
+                        })
+                      ) : (
+                        <p className="text-center py-10 text-muted-foreground italic">Nenhum evento registrado na timeline.</p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </TabsContent>
+              <TabsContent value="overview">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <MetabolicRadar anamnesis={anamnesis} />
+                    <HealthScoreRing
+                      score={calculateHealthScore({
+                        hasAnamnesis: anamnesis?.status === "completed",
+                        checklistCompletion: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
+                        mealsLogged: 0,
+                        weightEntries: 0,
+                        currentStreak: 0,
+                        daysAsPatient: 30,
+                      })}
+                      label="Health Score"
+                      size="lg"
+                    />
+                    <div className="md:col-span-2">
+                       <ClinicalFlagsSummary patientId={resolvedPatientId} />
+                    </div>
+                    <div className="md:col-span-2">
+                       <MealAdherenceWidget patientId={resolvedPatientId} />
+                    </div>
+                 </div>
+              </TabsContent>
+              <TabsContent value="protocols">
+                <div className="space-y-4">
+                  {patientProtocols.map((pp: any) => (
+                    <div key={pp.id} className="p-4 bg-black/20 rounded-xl border border-white/5 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold">{pp.protocol_title}</p>
+                        <p className="text-xs text-muted-foreground">Início: {new Date(pp.start_date).toLocaleDateString()}</p>
                       </div>
-                    )}
+                      <Badge variant={pp.status === "active" ? "default" : "secondary"}>{pp.status}</Badge>
+                    </div>
+                  ))}
+                  <Button className="w-full bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => setActivateOpen(true)}>
+                    Ativar Novo Protocolo
+                  </Button>
+                </div>
+              </TabsContent>
+              <TabsContent value="calculators">
+                <PatientCalculators />
+              </TabsContent>
+              <TabsContent value="lab-exams">
+                <PatientLabExams patientId={resolvedPatientId} />
+              </TabsContent>
+              <TabsContent value="onboarding">
+                <div className="glass p-6 rounded-xl border-warning/20">
+                  <h3 className="font-bold mb-4 flex items-center gap-2"><Zap className="w-5 h-5 text-warning" /> Status do Onboarding</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg">
+                      <span>Status Atual:</span>
+                      <Badge variant="outline" className="border-warning/50 text-warning">{journeyStatus}</Badge>
+                    </div>
+                    <Button variant="outline" className="w-full border-warning/30 text-warning hover:bg-warning/10" onClick={handleSmartReleaseOnboarding}>
+                      Reiniciar / Liberar Onboarding
+                    </Button>
                   </div>
                 </div>
+              </TabsContent>
+              <TabsContent value="plan">
+                <div className="glass p-6 rounded-xl border-emerald-500/20">
+                  <h3 className="font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5 text-emerald-500" /> Detalhes do Plano</h3>
+                  <div className="space-y-4">
+                    {patientSubscription ? (
+                      <>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span className="text-muted-foreground">Nome do Plano:</span>
+                          <span className="font-bold">{patientSubscription.plan_name}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span className="text-muted-foreground">Início:</span>
+                          <span>{new Date(patientSubscription.started_at).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span className="text-muted-foreground">Expiração:</span>
+                          <span>{patientSubscription.expires_at ? new Date(patientSubscription.expires_at).toLocaleDateString() : "Sem expiração"}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground italic">Nenhum plano ativo encontrado.</p>
+                    )}
+                    <Button className="w-full bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => setPlanOpen(true)}>
+                      Editar Plano / Assinatura
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </section>
+
+        {/* MODALS & DIALOGS */}
+        <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
+          <DialogContent className="bg-[#111] border-emerald-500/20 text-white">
+            <DialogHeader><DialogTitle className="text-white">Ativar Protocolo</DialogTitle></DialogHeader>
+            <form onSubmit={activateProtocol} className="space-y-4">
+              <div>
+                <Label className="text-zinc-400">Protocolo</Label>
+                <Select value={activateForm.protocol_id} onValueChange={(v) => setActivateForm({ ...activateForm, protocol_id: v })}>
+                  <SelectTrigger className="bg-black/40 border-white/10"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent className="bg-[#111] border-white/10 text-white">
+                    {protocols.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Button type="button" variant="ghost" onClick={() => setActivateOpen(false)} className="text-zinc-400">Cancelar</Button>
+                <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold">Ativar</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
-              {/* Assessment Modal */}
-              <Dialog open={openSection === "assessment"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Avaliação Física</DialogTitle></DialogHeader>
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="font-display text-xl font-bold flex items-center gap-2">
-                        <Activity className="w-6 h-6 text-primary" /> Evolução Física
-                      </h2>
-                      <Button onClick={() => { setOpenSection(null); navigate(`/physical-assessment?patientId=${patientId}`); }} className="gradient-primary gap-2 shadow-glow">
-                        <Scale className="w-4 h-4" /> Nova Avaliação
-                      </Button>
-                    </div>
-                    <BodyEvolutionCard patientId={resolvedPatientId} />
-                    <div className="border-t border-border pt-6">
-                      <h3 className="font-display text-lg font-semibold mb-4">Comparativo entre Consultas</h3>
-                      <ConsultationCompare patientId={resolvedPatientId} />
-                    </div>
-                    <div className="border-t border-border pt-6">
-                      <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Upload className="w-5 h-5 text-accent" /> Documentos da Avaliação
-                      </h3>
-                      <DocumentUpload patientId={resolvedPatientId} nutritionistId={user!.id} documentType="assessment" documents={assessmentDocs} onUploadComplete={invalidate} />
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+        <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+          <DialogContent className="bg-[#111] border-emerald-500/20 text-white">
+            <DialogHeader><DialogTitle className="text-white">Gerenciar Assinatura</DialogTitle></DialogHeader>
+            <form onSubmit={savePlan} className="space-y-4">
+              <div>
+                <Label className="text-zinc-400">Plano</Label>
+                <Input value={planForm.plan_name} onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })} className="bg-black/40 border-white/10" />
+              </div>
+              <div>
+                <Label className="text-zinc-400">Valor (R$)</Label>
+                <Input type="number" value={planForm.value} onChange={(e) => setPlanForm({ ...planForm, value: e.target.value })} className="bg-black/40 border-white/10" />
+              </div>
+              <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold">Salvar Alterações</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
 
-              {/* Agenda Modal */}
-              <Dialog open={openSection === "agenda"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Agenda</DialogTitle></DialogHeader>
-                  <PatientAgenda patientId={resolvedPatientId} />
-                </DialogContent>
-              </Dialog>
+        <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+          <DialogContent className="bg-[#111] border-emerald-500/20 text-white">
+            <DialogHeader><DialogTitle className="text-white">Adicionar Nota na Timeline</DialogTitle></DialogHeader>
+            <form onSubmit={addTimelineNote} className="space-y-4">
+              <Input placeholder="Título da nota" value={noteForm.title} onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })} className="bg-black/40 border-white/10" />
+              <Textarea placeholder="Descrição..." value={noteForm.description} onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} className="bg-black/40 border-white/10 min-h-[100px]" />
+              <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold">Salvar Nota</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
 
-              {/* Calculators Modal */}
-              <Dialog open={openSection === "calculators"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Calculadoras</DialogTitle></DialogHeader>
-                  <PatientCalculators anamnesis={anamnesis} />
-                </DialogContent>
-              </Dialog>
+        {/* Sub-modals from Sections */}
+        <Dialog open={openSection === "audit-log"} onOpenChange={(v) => !v && setOpenSection(null)}>
+          <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto bg-[#111] border-emerald-500/20 text-white">
+            <DialogHeader><DialogTitle className="text-white">Auditoria de Decisão Clínica</DialogTitle></DialogHeader>
+            {patientId && <DeterministicAuditLog patientId={resolvedPatientId} />}
+          </DialogContent>
+        </Dialog>
 
-              {/* Timeline Modal */}
-              <Dialog open={openSection === "timeline"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Timeline de Jornada</DialogTitle></DialogHeader>
-                  <div className="space-y-4">
-                    {/* Components removed for MVP cleanup */}
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* Plan Modal */}
-              <Dialog open={openSection === "plan"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Plano & Prestígio</DialogTitle></DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="glass rounded-xl p-5">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
-                        <CreditCard className="w-5 h-5 text-primary" /> Plano Atual
-                      </h3>
-                      {patientSubscription ? (
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Plano</span>
-                            <span className="font-medium text-sm">{patientSubscription.plan_name}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Status</span>
-                            <Badge className={
-                              patientSubscription.status === "active" ? "bg-emerald-500/10 text-emerald-500" :
-                              patientSubscription.status === "expired" ? "bg-red-500/10 text-red-500" :
-                              "bg-muted text-muted-foreground"
-                            }>
-                              {patientSubscription.status === "active" ? "Ativo" :
-                               patientSubscription.status === "expired" ? "Expirado" :
-                               patientSubscription.status === "trial" ? "Trial" : patientSubscription.status}
-                            </Badge>
-                          </div>
-                          <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => setPlanOpen(true)}>
-                            Editar Plano
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="text-center py-4">
-                          <CreditCard className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
-                          <p className="text-sm text-muted-foreground mb-3">Nenhum plano atribuído</p>
-                          <Button size="sm" className="gradient-primary" onClick={() => setPlanOpen(true)}>
-                            <Plus className="w-4 h-4 mr-1" /> Atribuir Plano
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {/* ═══ Prestige Card ═══ */}
-                    <div className="glass rounded-xl p-5">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
-                        <Crown className="w-5 h-5 text-amber-500" /> Prestígio
-                      </h3>
-                      {currentPrestigePlan ? (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-primary/10 border border-amber-500/20">
-                            <PrestigeBadge plan={currentPrestigePlan} size="md" />
-                            <div>
-                              <p className="font-semibold text-sm">{currentPrestigePlan.name}</p>
-                              <p className="text-xs text-muted-foreground">{currentPrestigePlan.badge_label || "Ativo"}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-2 mb-2">
-                          <Crown className="w-8 h-8 text-muted-foreground/30 mx-auto mb-1" />
-                          <p className="text-xs text-muted-foreground">Sem prestígio ativo</p>
-                        </div>
-                      )}
-                      <div className="mt-3 space-y-2">
-                        <Label className="text-xs">Alterar Prestígio</Label>
-                        <Select
-                          value={selectedPrestigePlanId || currentPrestigePlan?.id || ""}
-                          onValueChange={async (v) => {
-                            if (!patientId || !user) return;
-                            setSelectedPrestigePlanId(v);
-                            // Apply immediately
-                            await supabase.from("patient_prestige").update({ is_active: false }).eq("patient_id", patientId).eq("is_active", true);
-                            if (v && v !== "none") {
-                              await supabase.from("patient_prestige").insert({ patient_id: patientId, plan_id: v, assigned_by: user.id, is_active: true });
-                              const sp = prestigePlans.find((p: any) => p.id === v);
-                              toast.success(`${sp?.badge_icon || "👑"} Prestígio ${sp?.name || ""} aplicado!`);
-                            } else {
-                              toast.success("Prestígio removido");
-                            }
-                            invalidate();
-                          }}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Selecione um prestígio..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">❌ Sem Prestígio</SelectItem>
-                            {prestigePlans.map((p: any) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.badge_icon || "⭐"} {p.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    {/* Feedback card */}
-                    <div className="glass rounded-xl p-5 md:col-span-2">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
-                        <Send className="w-5 h-5 text-primary" /> Agendar Feedback
-                      </h3>
-                      <form onSubmit={scheduleFeedback} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-                        <div>
-                          <Label>Enviar daqui a (dias)</Label>
-                          <Select value={feedbackForm.days} onValueChange={(v) => setFeedbackForm({ ...feedbackForm, days: v })}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1">1 dia</SelectItem>
-                              <SelectItem value="2">2 dias</SelectItem>
-                              <SelectItem value="3">3 dias</SelectItem>
-                              <SelectItem value="5">5 dias</SelectItem>
-                              <SelectItem value="7">7 dias</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Mensagem</Label>
-                          <Textarea value={feedbackForm.message} onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })} rows={2} />
-                        </div>
-                        <Button type="submit" className="gradient-primary gap-2">
-                          <Send className="w-4 h-4" /> Enviar
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
-                  <Dialog open={planOpen} onOpenChange={setPlanOpen}>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle className="font-display">{patientSubscription ? "Editar Plano" : "Atribuir Plano"}</DialogTitle>
-                      </DialogHeader>
-                      <form onSubmit={savePlan} className="space-y-4">
-                        <div>
-                          <Label>Plano</Label>
-                          <Select value={planForm.plan_name} onValueChange={(v) => {
-                            const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
-                            const months = monthsMap[v];
-                            let newExpires = planForm.expires_at;
-                            if (months && planForm.started_at) {
-                              const end = new Date(planForm.started_at);
-                              end.setMonth(end.getMonth() + months);
-                              newExpires = end.toISOString().split("T")[0];
-                            }
-                            let autoValue = planForm.value;
-                            const pid = selectedPrestigePlanId && selectedPrestigePlanId !== "none" ? selectedPrestigePlanId : (currentPrestigePlan?.id || (prestigePlans.length > 0 ? prestigePlans[0].id : ""));
-                            if (pid) {
-                              const sp = prestigePlans.find(p => p.id === pid);
-                              if (sp) {
-                                const priceMap: Record<string, number | null> = { "Mensal": sp.price_monthly, "Trimestral": sp.price_quarterly, "Semestral": sp.price_semiannual, "Anual": sp.price_annual };
-                                const price = priceMap[v];
-                                if (price != null) autoValue = String(price);
-                              }
-                            }
-                            setPlanForm(f => ({ ...f, plan_name: v, expires_at: newExpires, value: autoValue }));
-                          }}>
-                            <SelectTrigger><SelectValue placeholder="Selecione o plano..." /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Mensal">Mensal</SelectItem>
-                              <SelectItem value="Trimestral">Trimestral</SelectItem>
-                              <SelectItem value="Semestral">Semestral</SelectItem>
-                              <SelectItem value="Anual">Anual</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Valor (R$)</Label>
-                          <Input type="number" step="0.01" min="0" placeholder="Ex: 150.00" value={planForm.value} onChange={(e) => setPlanForm({ ...planForm, value: e.target.value })} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => {
-                            const newStart = e.target.value;
-                            const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
-                            const months = monthsMap[planForm.plan_name];
-                            let newExpires = planForm.expires_at;
-                            if (months && newStart) {
-                              const end = new Date(newStart);
-                              end.setMonth(end.getMonth() + months);
-                              newExpires = end.toISOString().split("T")[0];
-                            }
-                            setPlanForm(f => ({ ...f, started_at: newStart, expires_at: newExpires }));
-                          }} required /></div>
-                          <div><Label>Data Fim</Label><Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} /></div>
-                        </div>
-                        {/* Prestígio inline */}
-                        <div>
-                          <Label>Prestígio</Label>
-                          <Select
-                            value={selectedPrestigePlanId || currentPrestigePlan?.id || "none"}
-                            onValueChange={(v) => setSelectedPrestigePlanId(v)}
-                          >
-                            <SelectTrigger><SelectValue placeholder="Selecione um prestígio..." /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">❌ Sem Prestígio</SelectItem>
-                              {prestigePlans.map((p: any) => (
-                                <SelectItem key={p.id} value={p.id}>
-                                  {p.badge_icon || "⭐"} {p.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
-                          {patientSubscription ? "Atualizar Plano" : "Atribuir Plano"}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                </DialogContent>
-              </Dialog>
-
-              {/* Protocols Modal */}
-              <Dialog open={openSection === "protocols"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Protocolos</DialogTitle></DialogHeader>
-                  <div className="space-y-3">
-                    {patientProtocols.length === 0 ? (
-                      <div className="glass rounded-xl p-8 text-center">
-                        <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                        <p className="text-muted-foreground">Nenhum protocolo ativado.</p>
-                      </div>
-                    ) : (
-                      patientProtocols.map((pp: any) => (
-                        <div key={pp.id} className="glass rounded-xl p-4 flex items-center gap-4">
-                          <div className={`w-3 h-3 rounded-full ${pp.status === "active" ? "bg-success" : pp.status === "scheduled" ? "bg-warning" : "bg-muted-foreground"}`} />
-                          <div className="flex-1">
-                            <h4 className="font-medium text-sm">{pp.protocol_title}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              {pp.status === "active" ? "Ativo" : pp.status === "scheduled" ? "Programado" : pp.status} •
-                              Início: {new Date(pp.start_date).toLocaleDateString("pt-BR")}
-                              {pp.end_date && ` • Fim: ${new Date(pp.end_date).toLocaleDateString("pt-BR")}`}
-                            </p>
-                          </div>
-                          {pp.status === "active" && (
-                            <Button size="sm" variant="outline" onClick={() => syncChecklist(pp.id)} className="gap-1">
-                              <Zap className="w-3 h-3" /> Sync
-                            </Button>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* Checklist Modal */}
-              <Dialog open={openSection === "checklist"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Checklist Diário</DialogTitle></DialogHeader>
-                  <PatientChecklistView patientId={resolvedPatientId} editable={true} />
-                </DialogContent>
-              </Dialog>
-
-              {/* Editor Matrix Modal Removed */}
-
-              {/* Meal Plans Modal */}
-              <Dialog open={openSection === "meal-plans"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Planos Alimentares</DialogTitle></DialogHeader>
-                  <div className="space-y-6">
-                    {/* Fast Plan Actions Panel */}
-                    <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/30 border border-border">
-                      <span className="text-xs font-medium text-muted-foreground self-center mr-2">Ações Rápidas:</span>
-                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
-                        setOpenSection(null);
-                        // Try to find existing onboarding plan, or create new and open builder
-                        try {
-                          if (!patientId) return;
-                          const patientIdentity = await resolvePatientIdentity(patientId);
-                          const pd = await resolveLatestOnboardingPipeline(patientId);
-                          if (pd?.generated_plan_id && pd?.plan_generated) {
-                            const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", pd.generated_plan_id).single();
-                            const isV3 = planData?.editor_version === "v3";
-                            const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}`;
-                            navigate(path);
-                            return;
-                          }
-                          // No onboarding plan — generate one
-                          toast.info("Gerando plano a partir do onboarding...");
-                          const { generateAndSaveLocalPlan } = await import("../features/editor-v3/services/localPlanGenerator");
-                          const genResult = await generateAndSaveLocalPlan(
-                            patientIdentity.canonicalId,
-                            user?.id || "",
-                            tenantId || ""
-                          );
-
-                          if (!genResult.success || !genResult.mealPlanId) {
-                            toast.error(genResult.error || "Erro ao gerar plano localmente");
-                            return;
-                          }
-                          if (genResult.mealPlanId) {
-                            const path = `/editor-v3/${patientIdentity.canonicalId}?planId=${genResult.mealPlanId}`;
-                            
-                            toast.success("Plano gerado com sucesso!");
-                            navigate(path);
-                          }
-                        } catch (err: any) {
-                          toast.error(err.message || "Erro ao processar onboarding");
-                        }
-                      }}>
-                        <Zap className="w-3 h-3" /> A partir do Onboarding
-                      </Button>
-                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/diet-templates?patientId=${patientId}`); }}>
-                        <BookOpen className="w-3 h-3" /> A partir de Template
-                      </Button>
-                      <Button size="sm" className="gap-1 text-xs h-7 gradient-primary" onClick={async () => {
-                        if (!resolvedPatientId) {
-                          toast.error("ID do paciente não resolvido");
-                          return;
-                        }
-                        setOpenSection(null);
-                        // Create plan directly then open builder
-                        try {
-                          const { data: newPlan, error } = await createMealPlanDraft({
-                            nutritionistId: user!.id,
-                            patientId: resolvedPatientId,
-                            tenantId,
-                          });
-                          if (error) throw error;
-                          if (!newPlan?.id) throw new Error("ID do novo plano não retornado");
-                          if (newPlan?.id && resolvedPatientId) {
-                            toast.success("Plano criado! Abrindo Builder...");
-                            const isV3 = newPlan.editor_version === "v3";
-                            const path = `/editor-v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}`;
-                            navigate(path, { replace: true });
-                          }
-                        } catch (err: any) {
-                          toast.error(err.message || "Erro ao criar plano");
-                        }
-                      }}>
-                        <Plus className="w-3 h-3" /> Do Zero
-                      </Button>
-                      {mealPlans.some((p: any) => p.is_active) && (
-                        <>
-                          <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
-                            const activePlan = mealPlans.find((p: any) => p.is_active);
-                            if (!activePlan) return;
-                            setOpenSection(null);
-                            const isV3 = activePlan.editor_version === "v3";
-                            const path = `/editor-v3/${patientId}?planId=${activePlan.id}`;
-                            navigate(path);
-                          }}>
-                            <Pencil className="w-3 h-3" /> Editar Ativo
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive" className="gap-1 text-xs h-7">
-                                <Trash2 className="w-3 h-3" /> Excluir Ativo
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir plano ativo?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Isso irá excluir permanentemente o plano alimentar ativo deste paciente. Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={async () => {
-                                  const activePlan = mealPlans.find((p: any) => p.is_active);
-                                  if (!activePlan) return;
-                                  try {
-                                    // Server-authoritative: archive → delete items → delete plan
-                                    const { error: archErr } = await supabase.from("meal_plans").update({ is_active: false, plan_status: "archived" }).eq("id", activePlan.id);
-                                    if (archErr) throw archErr;
-                                    if (!activePlan?.id || typeof activePlan.id !== 'string' || activePlan.id.trim() === "") {
-                                      console.error("[CRITICAL] DELETE bloqueado: activePlan.id inválido em PatientDetail");
-                                      throw new Error("DELETE bloqueado: planId inválido");
-                                    }
-                                    
-                                    console.info("[DELETE] Excluindo itens do plano em PatientDetail", { meal_plan_id: activePlan.id, operation: "deletePlanPatientDetail", timestamp: Date.now() });
-                                    
-                                    const { error: itemsErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
-                                    if (itemsErr) throw itemsErr;
-                                    
-                                    const { error: delErr } = await supabase.from("meal_plans").delete().eq("id", activePlan.id);
-                                    if (delErr) throw delErr;
-                                    toast.success("Plano alimentar excluído!");
-                                  } catch (e: any) {
-                                    console.error("[PatientDetail] Delete plan error:", e);
-                                    toast.error("Erro ao excluir plano: " + (e.message || "erro desconhecido"));
-                                    return;
-                                  }
-                                  // Invalidate all caches
-                                  const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
-                                  const qc = (window as any).__REACT_QUERY_CLIENT__;
-                                  if (qc) invalidateCriticalQueries(qc, activePlan.patient_id);
-                                  invalidate();
-                                }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                  Excluir Permanentemente
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </>
-                      )}
-                    </div>
-                    {mealPlans.length === 0 ? (
-                      <div className="glass rounded-xl p-12 text-center">
-                        <UtensilsCrossed className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                        <h3 className="font-display text-lg font-semibold mb-2">Nenhum plano alimentar</h3>
-                        <p className="text-sm text-muted-foreground mb-4">Crie um plano alimentar para este paciente.</p>
-                        <Button onClick={async () => {
-                          setOpenSection(null);
-                          try {
-                            const { data: newPlan, error } = await createMealPlanDraft({
-                              nutritionistId: user!.id,
-                              patientId: resolvedPatientId,
-                              tenantId,
-                            });
-                            if (error) throw error;
-                            toast.success("Plano criado! Abrindo Builder...");
-                            // Navigate to the editor matching the plan version
-                            const editorPath = newPlan.editor_version === "v3" && resolvedPatientId ? `/v3/${resolvedPatientId}?planId=${newPlan.id}` : `/meal-plans/${newPlan.id}`;
-                            navigate(editorPath, { replace: true });
-                          } catch (err: any) {
-                            toast.error(err.message || "Erro ao criar plano");
-                          }
-                        }} className="gradient-primary">
-                          <Plus className="w-4 h-4 mr-2" /> Criar Primeiro Plano
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {mealPlans.map((plan: any) => {
-                          const statusConfig: Record<string, { label: string; color: string; action?: string }> = {
-                            draft: { label: "Rascunho", color: "bg-muted text-muted-foreground" },
-                            draft_auto_generated: { label: "Pré-plano Gerado", color: "bg-amber-500/20 text-amber-600 dark:text-amber-400", action: "edit" },
-                            under_professional_review: { label: "⏳ Aguardando Aprovação", color: "bg-amber-500/20 text-amber-600 dark:text-amber-400 animate-pulse", action: "edit" },
-                            approved: { label: "✅ Aprovado", color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
-                            published_to_patient: { label: "✅ Publicado", color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
-                            rejected: { label: "❌ Rejeitado", color: "bg-destructive/20 text-destructive" },
-                            archived: { label: "Arquivado", color: "bg-muted text-muted-foreground" },
-                          };
-                          const st = statusConfig[plan.plan_status] || { label: plan.plan_status || "—", color: "bg-muted text-muted-foreground" };
-                          const isPending = ["draft", "draft_auto_generated", "draft_auto_corrected", "under_professional_review", "revision_requested"].includes(plan.plan_status);
-
-                          // Engine version governance
-                          const planEngineV = plan.generation_metadata?.engine_version || plan.engine_version || null;
-                          const isOutdatedEngine = planEngineV && planEngineV < "4.0.0";
-
-                          return (
-                          <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`glass rounded-xl overflow-hidden ${isPending ? "ring-2 ring-amber-500/40" : ""}`}>
-                            <div className="p-5 border-b border-border">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                  <div className={`w-3 h-3 rounded-full ${plan.is_active ? "bg-success animate-pulse" : isPending ? "bg-amber-500 animate-pulse" : "bg-muted-foreground"}`} />
-                                  <div>
-                                    <h3 className="font-display font-semibold">{plan.title}</h3>
-                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                      <Badge className={`text-[10px] ${st.color}`}>{st.label}</Badge>
-                                      {isOutdatedEngine && (
-                                        <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30">
-                                          ⚠ Motor v{planEngineV} (atual: v4.0.0)
-                                        </Badge>
-                                      )}
-                                      <span className="text-xs text-muted-foreground">
-                                        Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
-                                        {plan.end_date && ` • Fim: ${new Date(plan.end_date).toLocaleDateString("pt-BR")}`}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {isPending && (
-                                    <Button
-                                      size="sm"
-                                      className="gradient-primary shadow-glow gap-1.5"
-                                      onClick={() => {
-                                        setOpenSection(null);
-                                        const path = `/editor-v3/${resolvedPatientId}?planId=${plan.id}`;
-                                        navigate(path);
-                                      }}
-                                    >
-                                      <Pencil className="w-3.5 h-3.5" /> Revisar e Aprovar
-                                    </Button>
-                                  )}
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1.5"
-                                    onClick={() => {
-                                      setOpenSection(null);
-                                      const path = `/editor-v3/${resolvedPatientId}?planId=${plan.id}`;
-                                      navigate(path);
-                                    }}
-                                  >
-                                    <FileText className="w-3.5 h-3.5" /> {isPending ? "Ver" : "Ver Plano"}
-                                  </Button>
-                                </div>
-                              </div>
-                              {plan.description && <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>}
-                            </div>
-                            {!isPending && (
-                              <div className="p-5 bg-secondary/20">
-                                <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
-                                <PatientFeedbackSummary mealPlanId={plan.id} />
-                              </div>
-                            )}
-                          </motion.div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    <div className="border-t border-border pt-6">
-                      <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Upload className="w-5 h-5 text-success" /> Documentos do Plano Alimentar
-                      </h3>
-                      <DocumentUpload patientId={resolvedPatientId} nutritionistId={user!.id} documentType="meal_plan" documents={mealPlanDocs} onUploadComplete={invalidate} />
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* Radar Modal */}
-              <Dialog open={openSection === "radar"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Radar Metabólico</DialogTitle></DialogHeader>
-                  <MetabolicRadar anamnesis={anamnesis} />
-                </DialogContent>
-              </Dialog>
-
-              {/* Recipes Modal */}
-              <Dialog open={openSection === "recipes"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Receitas Compartilhadas</DialogTitle></DialogHeader>
-                  {recipes.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground">
-                      <ChefHat className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                      <p className="text-sm">Nenhuma receita compartilhada ainda.</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {recipes.map((recipe: any) => (
-                        <div key={recipe.id} className="rounded-xl border border-border bg-card p-4 hover:shadow-md transition-shadow">
-                          {recipe.image_url && <img src={recipe.image_url} alt={recipe.title} className="w-full h-32 object-cover rounded-lg mb-3" />}
-                          <h4 className="font-semibold text-sm">{recipe.title}</h4>
-                          {recipe.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>}
-                          <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                            {recipe.calories_per_serving && <span>{recipe.calories_per_serving} kcal</span>}
-                            {recipe.prep_time_minutes && <span>{recipe.prep_time_minutes} min preparo</span>}
-                            {recipe.difficulty && <Badge variant="secondary" className="text-[10px]">{recipe.difficulty}</Badge>}
-                          </div>
-                          {recipe.tags?.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {recipe.tags.map((tag: string) => (
-                                <Badge key={tag} variant="outline" className="text-[10px]">{tag}</Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </DialogContent>
-              </Dialog>
-
-              {/* Clinical Decision Support Modal (Cleaned up for MVP) */}
-              <Dialog open={openSection === "clinical-decision"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
-                  <ClinicalDecisionSupport patientId={resolvedPatientId} nutritionistId={user!.id} />
-                </DialogContent>
-              </Dialog>
-
-              {/* Clinical Flags Modal */}
-              <Dialog open={openSection === "clinical-flags"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Flags Clínicas do Paciente</DialogTitle></DialogHeader>
-                  <ClinicalFlagsSummary patientId={resolvedPatientId} />
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <PatientBehavioralManager patientId={resolvedPatientId} />
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* Lab Exams Modal */}
-              <Dialog open={openSection === "lab-exams"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Exames Laboratoriais</DialogTitle></DialogHeader>
-                  <PatientLabExams patientId={resolvedPatientId} />
-                </DialogContent>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Missões (removido para MVP)</DialogTitle></DialogHeader>
-                </DialogContent>
-              </Dialog>
-
-              {/* Body Projection Modal */}
-              <Dialog open={openSection === "body-projection"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Projeção Corporal</DialogTitle></DialogHeader>
-                  <BodyProjectionProCard patientId={resolvedPatientId} isAdmin={isAdmin} />
-                </DialogContent>
-              </Dialog>
-
-               {/* Curiosidades Modal */}
-              <Dialog open={openSection === "curiosidades"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Curiosidades & Dicas</DialogTitle></DialogHeader>
-                  <div className="space-y-4">
-                    <Curiosidades embedded />
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-
-              <Dialog open={openSection === "onboarding"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Onboarding Automático</DialogTitle></DialogHeader>
-                  
-                  {/* Onboarding Management Controls */}
-                  <div className="flex flex-wrap gap-2 mb-4 p-3 rounded-lg bg-muted/30 border border-border">
-                    <span className="text-xs font-medium text-muted-foreground self-center mr-2">Gerenciar:</span>
-                    {/* Official Reset + Generate Link */}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="gap-1 text-xs h-7 border-warning/30 text-warning hover:bg-warning/10">
-                          <RefreshCw className="w-3 h-3" /> Resetar & Gerar Link
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Resetar Onboarding e Gerar Novo Link?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Isso irá arquivar o pipeline anterior, criar um novo do zero e gerar um link seguro para o paciente preencher a anamnese. O histórico será mantido.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={async () => {
-                            if (!patientId || !user) return;
-                            try {
-                              const { data, error } = await supabase.rpc("reset_onboarding_pipeline" as any, {
-                                _patient_id: patientId,
-                                _nutritionist_id: user.id,
-                                _tenant_id: tenantId || null,
-                              });
-                              if (error) throw error;
-                              const result = data as any;
-                              if (result?.success && result?.token) {
-                                const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${result.token}`;
-                                const copied = await copyToClipboard(link);
-                                toast[copied ? "success" : "error"](copied ? "Onboarding resetado! Link oficial copiado 📋" : "Onboarding resetado! Copie manualmente o link oficial.");
-                              } else {
-                                toast.success("Onboarding resetado com sucesso!");
-                              }
-                              invalidate();
-                            } catch (err: any) {
-                              toast.error("Erro ao resetar: " + (err.message || "Tente novamente"));
-                            }
-                          }} className="bg-warning text-warning-foreground hover:bg-warning/90">
-                            Confirmar Reset
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-
-                    {/* Generate Link Only (without reset) */}
-                    <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
-                      if (!patientId || !user) return;
-                      try {
-                        // Check for existing active token
-                        const { data: existingTokens } = await supabase
-                          .from("onboarding_tokens" as any)
-                          .select("token, expires_at")
-                          .eq("patient_id", patientId)
-                          .eq("status", "active")
-                          .gt("expires_at", new Date().toISOString())
-                          .order("created_at", { ascending: false })
-                          .limit(1);
-
-                        let tokenValue: string;
-                        if (existingTokens && (existingTokens as any[]).length > 0) {
-                          tokenValue = (existingTokens as any[])[0].token;
-                        } else {
-                          // Create new token
-                          const { data: newToken, error } = await supabase
-                            .from("onboarding_tokens" as any)
-                            .insert({
-                              patient_id: patientId,
-                              nutritionist_id: user.id,
-                              tenant_id: tenantId || null,
-                            } as any)
-                            .select("token")
-                            .single();
-                          if (error) throw error;
-                          tokenValue = (newToken as any).token;
-                        }
-
-                        const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${tokenValue}`;
-                        const copied = await copyToClipboard(link);
-                        toast[copied ? "success" : "error"](copied ? "Link oficial de onboarding copiado! 📋" : "Copie manualmente o link oficial.");
-                      } catch (err: any) {
-                        toast.error("Erro ao gerar link: " + (err.message || "Tente novamente"));
-                      }
-                    }}>
-                      <Copy className="w-3 h-3" /> Copiar Link
-                    </Button>
-
-                    {/* Send Link via notification */}
-                    <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
-                      if (!patientId || !user) return;
-                      try {
-                        // Get or create token
-                        const { data: existingTokens } = await supabase
-                          .from("onboarding_tokens" as any)
-                          .select("token")
-                          .eq("patient_id", patientId)
-                          .eq("status", "active")
-                          .gt("expires_at", new Date().toISOString())
-                          .order("created_at", { ascending: false })
-                          .limit(1);
-
-                        let tokenValue: string;
-                        if (existingTokens && (existingTokens as any[]).length > 0) {
-                          tokenValue = (existingTokens as any[])[0].token;
-                        } else {
-                          const { data: newToken, error } = await supabase
-                            .from("onboarding_tokens" as any)
-                            .insert({
-                              patient_id: patientId,
-                              nutritionist_id: user.id,
-                              tenant_id: tenantId || null,
-                            } as any)
-                            .select("token")
-                            .single();
-                          if (error) throw error;
-                          tokenValue = (newToken as any).token;
-                        }
-
-                        const link = `${PRODUCTION_URL}/cadastro?nutri=${user.id}&code=${tokenValue}`;
-
-                        // Send notification to patient
-                        await supabase.from("notifications").insert({
-                          user_id: patientId,
-                          title: "📋 Link de Anamnese",
-                          message: `Seu profissional enviou um link para iniciar o onboarding. Acesse: ${link}`,
-                          type: "info",
-                          action_url: `/cadastro?nutri=${user.id}&code=${tokenValue}`,
-                        } as any);
-
-                        toast.success("Link enviado como notificação ao paciente! 📩");
-                      } catch (err: any) {
-                        toast.error("Erro ao enviar: " + (err.message || "Tente novamente"));
-                      }
-                    }}>
-                      <Send className="w-3 h-3" /> Enviar Link
-                    </Button>
-                  </div>
-                  
-                  <OnboardingApprovalQueue patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />
-                </DialogContent>
-              </Dialog>
-
-              {/* Edit Profile Modal */}
-              <Dialog open={openSection === "edit-profile"} onOpenChange={(v) => {
-                if (!v) setOpenSection(null);
-                else {
-                  setEditProfileForm({
-                    full_name: profile?.full_name || "",
-                    phone: profile?.phone || "",
-                    email: patientEmail || "",
-                    goal: (profile as any)?.goal || "",
-                    notes: (profile as any)?.notes || "",
-                  });
-                }
-              }}>
-                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="font-display flex items-center gap-2">
-                      <Pencil className="w-5 h-5 text-info" /> Editar Cadastro do Paciente
-                    </DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSaveProfile} className="space-y-4">
-                    <div>
-                      <Label>Nome Completo</Label>
-                      <Input
-                        value={editProfileForm.full_name}
-                        onChange={(e) => setEditProfileForm({ ...editProfileForm, full_name: e.target.value })}
-                        placeholder="Nome do paciente"
-                        required
-                        maxLength={100}
-                      />
-                    </div>
-                    <div>
-                      <Label>Email (autenticação)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={editProfileForm.email}
-                          onChange={(e) => setEditProfileForm({ ...editProfileForm, email: e.target.value })}
-                          placeholder="email@exemplo.com"
-                          type="email"
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={savingProfile || editProfileForm.email === patientEmail}
-                          onClick={async () => {
-                            const normalizedEmail = editProfileForm.email.trim().toLowerCase();
-                            if (!patientId || normalizedEmail === patientEmail) return;
-                            if (!confirm(`Alterar email de autenticação para ${normalizedEmail}?`)) return;
-                            try {
-                              await invokeAdminIdentityAction("update_email", { email: normalizedEmail });
-                              setEditProfileForm((prev) => ({ ...prev, email: normalizedEmail }));
-                              toast.success("Email atualizado com sucesso");
-                              invalidate();
-                            } catch (e: any) { toast.error(e?.message || "Erro ao atualizar email"); }
-                          }}
-                        >
-                          Salvar Email
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Alterar o email atualiza o login do paciente. Use com cuidado.
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Telefone</Label>
-                      <Input
-                        value={editProfileForm.phone}
-                        onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
-                        placeholder="(99) 99999-9999"
-                        maxLength={20}
-                      />
-                    </div>
-                    <div>
-                      <Label>Objetivo Principal</Label>
-                      <Input
-                        value={editProfileForm.goal}
-                        onChange={(e) => setEditProfileForm({ ...editProfileForm, goal: e.target.value })}
-                        placeholder="Ex: Emagrecimento, Hipertrofia..."
-                        maxLength={200}
-                      />
-                    </div>
-                    <div>
-                      <Label>Observações</Label>
-                      <Textarea
-                        value={editProfileForm.notes}
-                        onChange={(e) => setEditProfileForm({ ...editProfileForm, notes: e.target.value })}
-                        placeholder="Anotações sobre o paciente..."
-                        rows={3}
-                        maxLength={500}
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
-                      {savingProfile ? "Salvando..." : "Salvar Nome, Telefone e Dados"}
-                    </Button>
-
-                    {/* FitJourney Intelligence Toggle */}
-                    <div className="border-t pt-3">
-                      <FitIntelligenceToggle
-                        patientId={resolvedPatientId}
-                        enabled={(profile as any)?.fit_intelligence_enabled || false}
-                        onboarded={(profile as any)?.fit_intelligence_onboarded || false}
-                        expiresAt={(profile as any)?.fit_intelligence_expires_at || null}
-                        accessMode={(profile as any)?.fit_intelligence_access_mode || "unlimited"}
-                        onToggle={() => invalidate()}
-                      />
-                    </div>
-
-                    {/* Marmita Mode Toggles */}
-                    <div className="border-t pt-3 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-sm font-medium flex items-center gap-2">
-                            <ChefHat className="w-4 h-4 text-primary" />
-                            Modo Paciente Marmita
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            Gera planos usando apenas receitas de marmita cadastradas.
-                          </p>
-                        </div>
-                        <Switch
-                          checked={(profile as any)?.marmita_mode || false}
-                          onCheckedChange={async (checked) => {
-                            try {
-                              const { error } = await supabase
-                                .from("profiles")
-                                .update({ marmita_mode: checked } as any)
-                                .eq("user_id", resolvedPatientId);
-                              if (error) throw error;
-                              toast.success(`Modo Marmita ${checked ? "ativado" : "desativado"}!`);
-                              invalidate();
-                            } catch (e: any) {
-                              toast.error("Erro ao atualizar modo marmita");
-                            }
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-sm font-medium flex items-center gap-2">
-                            <Timer className="w-4 h-4 text-amber-500" />
-                            Modo Marmita Rápida
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            Prioriza receitas com menor tempo de preparo e instruções otimizadas.
-                          </p>
-                        </div>
-                        <Switch
-                          checked={(profile as any)?.fast_marmita_mode || false}
-                          onCheckedChange={async (checked) => {
-                            try {
-                              const { error } = await supabase
-                                .from("profiles")
-                                .update({ fast_marmita_mode: checked } as any)
-                                .eq("user_id", resolvedPatientId);
-                              if (error) throw error;
-                              toast.success(`Modo Marmita Rápida ${checked ? "ativado" : "desativado"}!`);
-                              invalidate();
-                            } catch (e: any) {
-                              toast.error("Erro ao atualizar modo marmita rápida");
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="border-t pt-3 space-y-2">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ações de Identidade (Admin)</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full gap-2 border-warning/30 text-warning hover:bg-warning/10"
-                        onClick={async () => {
-                          if (!patientId) return;
-                          const tempPassword = "Fit@2026!";
-                          if (!confirm(`Redefinir senha do paciente para ${tempPassword}?`)) return;
-                          try {
-                            try {
-                              await invokeAdminIdentityAction("reset_password", { password: tempPassword });
-                            } catch {
-                              await invokeAdminPasswordReset(tempPassword);
-                            }
-
-                            toast.success(`Senha redefinida para ${tempPassword}`);
-                          } catch (e: any) {
-                            toast.error(e?.message || "Erro ao redefinir senha");
-                          }
-                        }}
-                      >
-                        🔑 Redefinir Senha (Fit@2026!)
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full gap-2 border-info/30 text-info hover:bg-info/10"
-                        onClick={async () => {
-                          if (!patientId) return;
-                          try {
-                            await invokeAdminIdentityAction("resend_invite", {});
-                            toast.success("Convite reenviado com sucesso");
-                          } catch (e: any) {
-                            toast.error(e?.message || "Erro ao reenviar convite");
-                          }
-                        }}
-                      >
-                        📩 Reenviar Convite / Acesso
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-
-              {/* Feedbacks Modal */}
-              <Dialog open={openSection === "feedbacks"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><MessageSquare className="w-5 h-5 text-amber-500" /> Feedbacks do Paciente</DialogTitle></DialogHeader>
-                  {patientId && <PatientFeedbacksPanel patientId={resolvedPatientId} />}
-                </DialogContent>
-              </Dialog>
-
-              {/* Projects / Governance Modal */}
-              <Dialog open={openSection === "projects"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Projetos & Governança</DialogTitle></DialogHeader>
-                  {patientId && (
-                    <PatientProjectGovernance
-                      patientId={resolvedPatientId}
-                      isProfessionalView={true}
-                      onProtocolChanged={invalidate}
-                    />
-                  )}
-                </DialogContent>
-              </Dialog>
-
-              {/* Deterministic Audit Modal */}
-              <Dialog open={openSection === "audit-log"} onOpenChange={(v) => !v && setOpenSection(null)}>
-                <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="font-display flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-primary" /> Auditoria de Decisão Clínica
-                    </DialogTitle>
-                  </DialogHeader>
-                  {patientId && <DeterministicAuditLog patientId={resolvedPatientId} />}
-                </DialogContent>
-              </Dialog>
-            </>
-
-          );
-        })()}
+        <Dialog open={openSection === "projects"} onOpenChange={(v) => !v && setOpenSection(null)}>
+          <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto bg-[#111] border-emerald-500/20 text-white">
+            <DialogHeader><DialogTitle className="text-white font-display flex items-center gap-2"><Rocket className="w-5 h-5 text-emerald-500" /> Projetos & Governança</DialogTitle></DialogHeader>
+            {patientId && (
+              <PatientProjectGovernance
+                patientId={resolvedPatientId}
+                isProfessionalView={true}
+                onProtocolChanged={invalidate}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Onboarding Release Dialog */}
         <OnboardingReleaseDialog
