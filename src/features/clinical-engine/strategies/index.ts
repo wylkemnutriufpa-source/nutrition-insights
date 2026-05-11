@@ -175,6 +175,6 @@ export class DefaultV3Strategy implements ClinicalStrategy {
   }
 
   explainDecision(meal: Meal, items: MealItem[]): string {
-    return "Geração determinística via novo Motor NutriCore V2 (Orquestrador Central).";
+    return "Geração determinística via novo Motor NutriCore V3 (Orquestrador Central).";
   }
 }
