@@ -594,7 +594,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const processedMealTypes = new Set<string>();
 
     const mealTypeGroups = mealOrder.map(mType => {
-      const typeItems = dayItems.filter(i => i.mealType === mType);
+      const typeItems = dayItems.filter(i => normalizeType(i.mealType) === normalizeType(mType));
       if (typeItems.length === 0) return "";
       processedMealTypes.add(mType);
       return renderMealTypeItems(typeItems, mType);
