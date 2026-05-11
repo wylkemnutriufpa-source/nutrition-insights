@@ -1907,47 +1907,57 @@ const EditorV3Page = () => {
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
           
           {viewMode === 'weekly' ? (
-            ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((day) => (
-              <div key={day} className="space-y-8 pb-12 border-b border-white/5 last:border-0">
-                <div className="flex items-center gap-4 px-2">
-                  <div className="h-10 w-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-                    <Clock className="w-5 h-5" />
+            ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((day, dayIdx) => {
+              // Se tivermos 42 refeições (7 dias * 6 refeições), pegamos o bloco do dia
+              // Se tivermos apenas 6, repetimos o mesmo bloco (comportamento fallback)
+              const dayMeals = meals.length >= 42 
+                ? meals.slice(dayIdx * (meals.length / 7), (dayIdx + 1) * (meals.length / 7))
+                : meals;
+
+              return (
+                <div key={day} className="space-y-8 pb-12 border-b border-white/5 last:border-0">
+                  <div className="flex items-center gap-4 px-2">
+                    <div className="h-10 w-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter">{day}</h2>
+                    <Badge className="bg-white/5 text-white/40 border-white/10 uppercase font-black text-[10px]">
+                      {meals.length >= 42 ? "Variação Diária" : "Plano Semanal Base"}
+                    </Badge>
                   </div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter">{day}</h2>
-                  <Badge className="bg-white/5 text-white/40 border-white/10 uppercase font-black text-[10px]">Plano Semanal Base</Badge>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {meals.map((meal) => (
-                    <Card key={`${day}-${meal.id}`} className="bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group">
-                      {meal.imageUrl && (
-                        <div className="relative w-full h-32 overflow-hidden">
-                          <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 to-transparent opacity-60" />
-                          <div className="absolute bottom-3 left-4">
-                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{meal.time}</span>
-                            <h4 className="text-sm font-black text-white uppercase tracking-tight">{meal.name}</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {dayMeals.map((meal, mIdx) => (
+                      <Card key={`${day}-${meal.id}-${mIdx}`} className="bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group">
+                        {meal.imageUrl && (
+                          <div className="relative w-full h-32 overflow-hidden">
+                            <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 to-transparent opacity-60" />
+                            <div className="absolute bottom-3 left-4">
+                              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{meal.time}</span>
+                              <h4 className="text-sm font-black text-white uppercase tracking-tight">{meal.name}</h4>
+                            </div>
                           </div>
+                        )}
+                        {!meal.imageUrl && (
+                           <div className="p-4 bg-white/5 flex items-center justify-center h-24">
+                              <Utensils className="w-6 h-6 text-white/10" />
+                           </div>
+                        )}
+                        <div className="p-4 space-y-2">
+                          {meal.items.map(item => (
+                            <div key={item.instanceId} className="flex justify-between items-center text-[11px]">
+                              <span className="text-white/60 font-bold line-clamp-1 flex-1">{item.name}</span>
+                              <span className="text-emerald-500 font-black ml-2">{formatPortion(item)}</span>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                      {!meal.imageUrl && (
-                         <div className="p-4 bg-white/5 flex items-center justify-center h-24">
-                            <Utensils className="w-6 h-6 text-white/10" />
-                         </div>
-                      )}
-                      <div className="p-4 space-y-2">
-                        {meal.items.map(item => (
-                          <div key={item.instanceId} className="flex justify-between items-center text-[11px]">
-                            <span className="text-white/60 font-bold line-clamp-1 flex-1">{item.name}</span>
-                            <span className="text-emerald-500 font-black ml-2">{formatPortion(item)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             meals.map((meal, index) => (
 
