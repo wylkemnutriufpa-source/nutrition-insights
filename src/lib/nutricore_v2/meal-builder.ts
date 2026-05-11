@@ -63,9 +63,9 @@ export function buildMeal(
     const ovo = allowedDb.find(f => f.name.toLowerCase().includes("ovo"));
     const banana = allowedDb.find(f => f.name.toLowerCase().includes("banana"));
 
-    if (pão) items.push(createPlannedItem(pão, roundTo5(50 * scale)));
-    if (ovo) items.push(createPlannedItem(ovo, roundTo5(100 * scale)));
-    if (banana) items.push(createPlannedItem(banana, roundTo5(90 * scale)));
+    if (pão) items.push(createPlannedItem(pão, Math.min(100, Math.max(25, roundTo5(50 * scale)))));
+    if (ovo) items.push(createPlannedItem(ovo, Math.min(200, Math.max(50, roundTo5(100 * scale)))));
+    if (banana) items.push(createPlannedItem(banana, Math.min(180, Math.max(40, roundTo5(90 * scale)))));
     
     return finalizeMeal(type, time, items, targetMacros);
   }
@@ -108,11 +108,11 @@ export function buildMeal(
     const brócolis = allowedDb.find(f => f.name.toLowerCase().includes("brócolis"));
     const azeite = allowedDb.find(f => f.name.toLowerCase().includes("azeite"));
 
-    if (frango) items.push(createPlannedItem(frango, roundTo5(150 * scale)));
-    if (arroz) items.push(createPlannedItem(arroz, roundTo5(100 * scale)));
-    if (feijão) items.push(createPlannedItem(feijão, roundTo5(100 * scale)));
-    if (brócolis) items.push(createPlannedItem(brócolis, roundTo5(80 * scale)));
-    if (azeite) items.push(createPlannedItem(azeite, roundTo5(5 * scale)));
+    if (frango) items.push(createPlannedItem(frango, Math.min(250, Math.max(80, roundTo5(150 * scale)))));
+    if (arroz) items.push(createPlannedItem(arroz, Math.min(300, Math.max(50, roundTo5(100 * scale)))));
+    if (feijão) items.push(createPlannedItem(feijão, Math.min(200, Math.max(50, roundTo5(100 * scale)))));
+    if (brócolis) items.push(createPlannedItem(brócolis, Math.min(200, Math.max(30, roundTo5(80 * scale)))));
+    if (azeite) items.push(createPlannedItem(azeite, Math.min(15, Math.max(3, roundTo5(5 * scale)))));
 
     return finalizeMeal(type, time, items, targetMacros);
   }
