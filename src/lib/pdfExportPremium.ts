@@ -1,3 +1,5 @@
+import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+
 /**
  * Premium Meal Plan PDF Export — FitJourney v2.0
  */
@@ -16,6 +18,9 @@ interface MealPlanPDFItem {
   visual_image_url?: string;
   is_primary?: boolean;
   substitution_group_id?: string | null;
+  grams?: number;
+  suggestedQuantity?: number;
+  portionLabel?: string;
 }
 
 export interface PremiumMealPlanPDFData {
@@ -137,8 +142,65 @@ function isGenericSubstitutionDescription(description?: string): boolean {
   return false;
 }
 
+function getFoodKcalPer100(title?: string): number {
+  const normalized = normalizeMealTypeKey(title);
+  const match = BASE_FOODS.find(food => {
+    const candidate = normalizeMealTypeKey(food.name);
+    return candidate === normalized || candidate.includes(normalized) || normalized.includes(candidate);
+  });
+  return match?.kcal_100g || 0;
+}
+
+function parsePositiveGrams(text?: string): number {
+  const matches = [...String(text || "").matchAll(/(\d+(?:[,.]\d+)?)\s*g\b/gi)]
+    .map(match => Math.round(Number(match[1].replace(",", ".")) || 0))
+    .filter(value => value > 0);
+  return matches[0] || 0;
+}
+
+function hasInvalidZeroGramPortion(text?: string): boolean {
+  return /(?:^|[\s(—-])0\s*g\b/i.test(String(text || ""));
+}
+
+function stripDuplicatedTitle(title: string, detail: string): string {
+  const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return detail.replace(new RegExp(`^\\s*${escapedTitle}\\s*[—:-]\\s*`, "i"), "").trim();
+}
+
+function formatEquivalentPortion(title: string, grams: number): string {
+  const safeGrams = Math.max(1, Math.round(grams));
+  const normalized = normalizeMealTypeKey(title);
+  if (normalized.includes("banana")) return `1 unidade média (${safeGrams}g)`;
+  if (normalized.includes("maca") || normalized.includes("pera") || normalized.includes("laranja")) return `1 unidade média (${safeGrams}g)`;
+  if (normalized.includes("mamao")) return `1 fatia média (${safeGrams}g)`;
+  if (normalized.includes("ovo")) return `${Math.max(1, Math.round(safeGrams / 50))} unidade(s) (${safeGrams}g)`;
+  return `${safeGrams}g`;
+}
+
+function inferEquivalentPortion(item: MealPlanPDFItem): string {
+  const explicitGrams = Number(item.grams ?? item.suggestedQuantity ?? 0);
+  if (explicitGrams > 0) return formatEquivalentPortion(item.title, explicitGrams);
+
+  const descriptionGrams = parsePositiveGrams(item.description);
+  if (descriptionGrams > 0 && !isGenericSubstitutionDescription(item.description)) {
+    return formatEquivalentPortion(item.title, descriptionGrams);
+  }
+
+  const kcalPer100 = getFoodKcalPer100(item.title);
+  const kcal = Number(item.calories_target || 0);
+  if (kcalPer100 > 0 && kcal > 0) {
+    return formatEquivalentPortion(item.title, Math.round((kcal / kcalPer100) * 100));
+  }
+
+  return "";
+}
+
 function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem): string {
-  if (sub.description && !isGenericSubstitutionDescription(sub.description)) return sub.description;
+  if (sub.description && !isGenericSubstitutionDescription(sub.description) && !hasInvalidZeroGramPortion(sub.description)) {
+    return stripDuplicatedTitle(sub.title, sub.description);
+  }
+  const inferred = inferEquivalentPortion(sub);
+  if (inferred) return `Porção equivalente: ${inferred}`;
   const primaryPortion = primary.description || "";
   if (/\d/.test(primaryPortion)) return `Porção equivalente: ${primaryPortion}`;
   return "";
