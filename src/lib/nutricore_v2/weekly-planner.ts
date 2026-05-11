@@ -36,18 +36,33 @@ export function generateWeeklyPlan(
   // Determinismo: usamos o patient_id ou um hash do nome para a semente de variação
   const seedBase = patient.weight_kg + patient.height_cm + patient.age_years;
 
+  const PROTEIN_ROTATION = ["Frango", "Tilápia", "Carne", "Ovo"];
+  const CARB_ROTATION = ["Arroz", "Batata Doce", "Macarrão", "Mandioca"];
+  const BREAKFAST_ROTATION = ["Pão", "Tapioca", "Cuscuz"];
+
   for (let i = 0; i < 7; i++) {
     const currentDate = new Date(start);
     currentDate.setDate(start.getDate() + i);
     const dateStr = currentDate.toISOString().split("T")[0];
 
-    // Gerar plano base para o dia
-    let dailyPlan = generateDailyPlan(patient, meals, foodDb, dateStr, options.marmita, options.marmitaType);
+    // Criar preferências rotativas para este dia específico
+    const dayPrefs = [
+      PROTEIN_ROTATION[i % PROTEIN_ROTATION.length],
+      CARB_ROTATION[i % CARB_ROTATION.length],
+      BREAKFAST_ROTATION[i % BREAKFAST_ROTATION.length],
+      ...(patient.preferences || [])
+    ];
 
-    // Aplicar variação se habilitado
-    if (options.variation) {
-      dailyPlan = applyVariation(dailyPlan, foodDb, i, seedBase, variationLog);
-    }
+    // Gerar plano base para o dia com preferências rotativas e seed única
+    const dailyPlan = generateDailyPlan(
+      { ...patient, preferences: dayPrefs }, 
+      meals, 
+      foodDb, 
+      dateStr, 
+      options.marmita, 
+      options.marmitaType,
+      seedBase + i
+    );
 
     days.push(dailyPlan);
   }
