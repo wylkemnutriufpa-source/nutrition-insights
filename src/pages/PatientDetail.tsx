@@ -150,6 +150,7 @@ export default function PatientDetail() {
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
+  const [sendingWhatsAppId, setSendingWhatsAppId] = useState<string | null>(null);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
@@ -161,6 +162,116 @@ export default function PatientDetail() {
   // Invalidation helper — centralized
   const invalidate = () => {
     invalidateLifecycleQueries(queryClient, patientId ?? undefined);
+  };
+
+  const handleSendWhatsApp = async (plan: any) => {
+    if (!plan?.id || !patientId) return;
+    
+    setSendingWhatsAppId(plan.id);
+    const toastId = toast.loading("Preparando Plano Alimentar para WhatsApp...");
+    
+    try {
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
+      const profName = prof?.full_name || "Seu Nutricionista";
+      
+      let planItems = [];
+      
+      // Se for um draft V3, usa o payload
+      if (plan.editor_version === 'v3' && plan.payload) {
+        const meals = Array.isArray(plan.payload) ? plan.payload : (plan.payload.meals || []);
+        planItems = meals.flatMap((m: any) => {
+          const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_');
+          return (m.items || []).flatMap((item: any) => {
+            const main = {
+              mealType: mType,
+              title: m.name,
+              description: `${item.name} — ${item.display_portion || (item.quantity + (item.unit || 'g'))}`,
+              calories_target: Math.round(Number(item.kcal) || 0),
+              protein_target: Math.round(Number(item.protein) || 0),
+              carbs_target: Math.round(Number(item.carbs) || 0),
+              fat_target: Math.round(Number(item.fat) || 0),
+              is_primary: true,
+              substitution_group_id: item.instanceId
+            };
+            const subs = (item.substitutions || []).map((sub: any) => ({
+              mealType: mType,
+              title: sub.name,
+              description: sub.name,
+              calories_target: Math.round(Number(sub.kcal) || 0),
+              protein_target: Math.round(Number(sub.protein) || 0),
+              carbs_target: Math.round(Number(sub.carbs) || 0),
+              fat_target: Math.round(Number(sub.fat) || 0),
+              is_primary: false,
+              substitution_group_id: item.instanceId
+            }));
+            return [main, ...subs];
+          });
+        });
+      } else {
+        // Busca itens da tabela meal_plan_items
+        const { data: items, error: itemsError } = await supabase
+          .from("meal_plan_items")
+          .select("*")
+          .eq("meal_plan_id", plan.id)
+          .order("day_of_week", { ascending: true })
+          .order("meal_type", { ascending: true });
+          
+        if (itemsError) throw itemsError;
+        planItems = items.map((item: any) => ({
+          mealType: item.meal_type,
+          title: item.title,
+          description: item.description,
+          calories_target: item.calories_target,
+          protein_target: item.protein_target,
+          carbs_target: item.carbs_target,
+          fat_target: item.fat_target,
+          is_primary: item.is_primary,
+          substitution_group_id: item.substitution_group_id
+        }));
+      }
+
+      const { buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
+
+      const pdfData = {
+        planTitle: plan.title || "Plano Alimentar FitJourney",
+        patientName: profile?.full_name || "Paciente",
+        nutritionistName: profName,
+        startDate: new Date().toLocaleDateString("pt-BR"),
+        items: planItems,
+        targetCalories: Math.round(Number(plan.total_target_calories || plan.total_calories || 0)),
+        targetProtein: Math.round(Number(plan.total_target_protein || plan.total_protein || 0)),
+        targetCarbs: Math.round(Number(plan.total_target_carbs || plan.total_carbs || 0)),
+        targetFat: Math.round(Number(plan.total_target_fat || plan.total_fat || 0)),
+        goal: profile?.goal,
+      };
+
+      const html = buildPremiumMealPlanHTML(pdfData as any);
+      const fileName = `meal-plan-${plan.id}-${Date.now()}.html`;
+      const blob = new Blob([html], { type: "text/html" });
+      
+      const { error: uploadError } = await supabase.storage
+        .from("shared-meal-plans")
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("shared-meal-plans")
+        .getPublicUrl(fileName);
+
+      const message = `Olá ${profile?.full_name?.split(" ")[0]}! Aqui está seu plano alimentar FitJourney: ${publicUrl}`;
+      
+      const { buildWhatsAppUrl } = await import("@/utils/whatsappNotification");
+      const whatsappUrl = buildWhatsAppUrl(profile?.phone || "", message);
+      window.open(whatsappUrl, "_blank");
+      
+      toast.success("WhatsApp aberto com sucesso!", { id: toastId });
+    } catch (err: any) {
+      console.error("WhatsApp error:", err);
+      toast.error("Erro ao preparar envio via WhatsApp", { id: toastId });
+    } finally {
+      setSendingWhatsAppId(null);
+    }
   };
 
   const handleMarkWithoutDiet = async () => {
@@ -661,6 +772,22 @@ export default function PatientDetail() {
               />
             )}
             {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
+            {activeMealPlan && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-9"
+                onClick={() => handleSendWhatsApp(activeMealPlan)}
+                disabled={sendingWhatsAppId === activeMealPlan.id}
+              >
+                {sendingWhatsAppId === activeMealPlan.id ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <MessageSquare className="w-3.5 h-3.5" />
+                )}
+                Enviar via WhatsApp
+              </Button>
+            )}
             <Button
               variant={patientStatus === "active" ? "outline" : "default"}
               className="gap-2"
@@ -1169,6 +1296,20 @@ export default function PatientDetail() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-2 hover:bg-emerald-500/10 hover:text-emerald-600"
+                              onClick={() => handleSendWhatsApp(plan)}
+                              disabled={sendingWhatsAppId === plan.id}
+                            >
+                              {sendingWhatsAppId === plan.id ? (
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                              ) : (
+                                <MessageSquare className="w-4 h-4 mr-1" />
+                              )}
+                              WhatsApp
+                            </Button>
                             <Button 
                               variant="ghost" 
                               size="sm" 

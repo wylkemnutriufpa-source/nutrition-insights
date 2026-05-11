@@ -1085,7 +1085,7 @@ const EditorV3Page = () => {
         .eq("user_id", patientId)
         .maybeSingle();
 
-      const message = `Olá ${patientContext?.name.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nAcabei de finalizar seu novo Plano Alimentar Premium V3. Você pode acessá-lo agora clicando no link abaixo:\n\n${publicUrl}\n\nQualquer dúvida, estou à disposição!`;
+      const message = `Olá ${patientContext?.name.split(" ")[0]}! Aqui está seu plano alimentar FitJourney: ${publicUrl}`;
 
       const whatsappUrl = buildWhatsAppUrl(profile?.phone || "", message);
       window.open(whatsappUrl, "_blank");
