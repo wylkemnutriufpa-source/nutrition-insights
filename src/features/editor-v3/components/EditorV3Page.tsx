@@ -1016,6 +1016,17 @@ const EditorV3Page = () => {
             portionValue = 170;
             quantity = Math.round(item.grams / 170 * 10) / 10;
             portionLabel = 'unidade(s)/pote(s)';
+          } else if (lowerName.includes('pão')) {
+            measurementType = 'unit';
+            portionValue = 25;
+            quantity = Math.round(item.grams / 25);
+            portionLabel = 'fatia(s)';
+          } else if (item.grams > 0) {
+            // Fallback genérico para gramas
+            measurementType = 'gram';
+            portionValue = 100;
+            quantity = item.grams;
+            portionLabel = 'g';
           }
 
           return {
