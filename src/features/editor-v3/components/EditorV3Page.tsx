@@ -1099,42 +1099,6 @@ const EditorV3Page = () => {
     }
   };
 
-      const html = buildPremiumMealPlanHTML(pdfData);
-      
-      // Upload para storage compartilhado
-      const fileName = `meal-plan-${patientId}-${Date.now()}.html`;
-      const blob = new Blob([html], { type: "text/html" });
-      
-      const { error: uploadError } = await supabase.storage
-        .from("shared-meal-plans")
-        .upload(fileName, blob);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("shared-meal-plans")
-        .getPublicUrl(fileName);
-
-      // Pegar telefone do paciente
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("phone")
-        .eq("user_id", patientId)
-        .maybeSingle();
-
-      const message = `Olá ${patientContext?.name.split(" ")[0]}! Aqui está seu plano alimentar FitJourney: ${publicUrl}`;
-
-      const whatsappUrl = buildWhatsAppUrl(profile?.phone || "", message);
-      window.open(whatsappUrl, "_blank");
-      toast.success("WhatsApp aberto com sucesso!", { id: toastId });
-    } catch (err: any) {
-      console.error("WhatsApp error:", err);
-      toast.error("Erro ao preparar envio via WhatsApp", { id: toastId });
-    } finally {
-      setSendingWhatsApp(false);
-    }
-  };
-
   const handleFixPlan = async () => {
     if (!patientContext) return;
     setIsGeneratingGlobal(true);
