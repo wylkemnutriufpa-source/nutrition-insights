@@ -134,15 +134,13 @@ export default function Invitation() {
     navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
   }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
 
-  // Redirecionamento automático quando o convite é válido
+  // Redirecionamento INSTANTÂNEO quando o convite é válido
   useEffect(() => {
     if (invitation && !error && !isProcessingAction && invitation.patient_id === null) {
-      const timer = setTimeout(() => {
-        handleAccept();
-      }, 600);
-      return () => clearTimeout(timer);
+      handleAccept();
     }
-  }, [invitation, error, handleAccept]);
+  }, [invitation, error, handleAccept, isProcessingAction]);
+
 
   const handleSafeRegisterFallback = () => {
     const professionalId = invitation?.professional_id;
