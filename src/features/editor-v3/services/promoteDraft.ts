@@ -205,13 +205,7 @@ export async function promoteDraftToMealPlan(
     }
   }
 
-  // 3) Desativa planos anteriores para este paciente para garantir unicidade do plano ativo
-  await supabase
-    .from('meal_plans')
-    .update({ is_active: false } as any)
-    .eq('patient_id', authUserId)
-    .neq('id', plan.id)
-    .eq('is_active', true);
+  // 3) (Desativação dos anteriores já feita no passo 0.1 antes do insert)
 
   // 4) Só agora marca o draft como promovido
   await supabase
