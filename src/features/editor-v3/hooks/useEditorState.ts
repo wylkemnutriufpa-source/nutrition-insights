@@ -78,10 +78,10 @@ interface EditorState {
 
 const DEFAULT_MEALS: Meal[] = [
   { id: '1', name: 'Café da Manhã', items: [], time: '08:00' },
-  { id: '2', name: 'Lanche da Manhã', items: [], time: '10:00' },
-  { id: '3', name: 'Almoço', items: [], time: '12:00' },
+  { id: '2', name: 'Lanche da Manhã', items: [], time: '10:30' },
+  { id: '3', name: 'Almoço', items: [], time: '13:00' },
   { id: '4', name: 'Lanche da Tarde', items: [], time: '16:00' },
-  { id: '5', name: 'Jantar', items: [], time: '20:00' },
+  { id: '5', name: 'Jantar', items: [], time: '19:30' },
   { id: '6', name: 'Ceia', items: [], time: '22:00' },
 ];
 

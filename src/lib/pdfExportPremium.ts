@@ -35,14 +35,20 @@ export interface PremiumMealPlanPDFData {
 
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   breakfast: { label: "Café da Manhã", color: "#6366f1" },
+  cafe_da_manha: { label: "Café da Manhã", color: "#6366f1" },
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
+  lanche_da_manha: { label: "Lanche da Manhã", color: "#10b981" },
   lunch: { label: "Almoço", color: "#f59e0b" },
+  almoço: { label: "Almoço", color: "#f59e0b" },
   afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
+  lanche_da_tarde: { label: "Lanche da Tarde", color: "#ec4899" },
   snack: { label: "Lanche", color: "#ec4899" },
   pre_workout: { label: "Pré-Treino", color: "#ef4444" },
   post_workout: { label: "Pós-Treino", color: "#3b82f6" },
   dinner: { label: "Jantar", color: "#6366f1" },
+  jantar: { label: "Jantar", color: "#6366f1" },
   evening_snack: { label: "Ceia", color: "#8b5cf6" },
+  ceia: { label: "Ceia", color: "#8b5cf6" },
 };
 
 const DAY_NAMES: Record<number, string> = {
