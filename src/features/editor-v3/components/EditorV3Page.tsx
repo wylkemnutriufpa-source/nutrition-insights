@@ -12,7 +12,7 @@ import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
-  searchVisualLibrary, uploadVisualLibraryImage 
+  searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
 } from '../utils/dataFetcher';
 import { 
   calculateNutritionalScore, validatePlanClinically 
@@ -59,7 +59,7 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight
 } from 'lucide-react';
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
 import PlanAdjustmentModal from './PlanAdjustmentModal';
@@ -253,6 +253,7 @@ const EditorV3Page = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [marmitas, setMarmitas] = useState<Food[]>([]);
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
+  const [planTemplates, setPlanTemplates] = useState<any[]>([]);
   const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
   const [visualLibraryInfo, setVisualLibraryInfo] = useState<{ count: number, incomplete: boolean }>({ count: 0, incomplete: false });
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
@@ -626,15 +627,17 @@ const EditorV3Page = () => {
       
       const startTime = performance.now();
       try {
-        const [marmitasData, templatesData, baseData] = await Promise.all([
+        const [marmitasData, templatesData, baseData, planTemplatesData] = await Promise.all([
           searchMarmitas(user.id),
           searchTemplates(),
-          getBaseFoods()
+          getBaseFoods(),
+          searchPlanTemplates()
         ]);
 
         setMarmitas(marmitasData);
         setTemplates(templatesData);
         setBaseFoods(baseData);
+        setPlanTemplates(planTemplatesData);
         
         setDbStatus({
           foods: baseData.length,
@@ -941,16 +944,17 @@ const EditorV3Page = () => {
       const v3Meals = await NutriCoreV3Adapter.generateElitePlan(patientContext, []);
 
       if (!v3Meals || v3Meals.length === 0) {
-        throw new Error('O motor NutriCore retornou um plano vazio.');
+        throw new Error('O motor NutriCore retornou um plano vazio. Verifique as restrições do paciente.');
       }
 
+      console.log(`[Elite-V3] Plano gerado com ${v3Meals.length} refeições. Hidratando...`);
       await hydrateMeals(v3Meals as any);
       
       // Calcular calorias totais para o toast
       const totalKcal = v3Meals.reduce((acc, m) => acc + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
       toast.success(`Elite V3: Plano gerado com ${Math.round(totalKcal)} kcal para ${weight}kg!`);
     } catch (error: any) {
-      console.error('[Elite-V3 Error]', error);
+      console.error('[Elite-V3 Error] Falha crítica na geração:', error);
       toast.error(`Erro ao gerar plano: ${error.message || 'Falha no Motor V3'}`);
     } finally {
       setIsGeneratingGlobal(false);
@@ -1572,7 +1576,8 @@ const EditorV3Page = () => {
                 )}
 
                 {activeTab === 'template' && (
-                  templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
+                  <>
+                  {templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
                     <div className="grid grid-cols-1 gap-3">
                       {templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
                         <div
@@ -1621,7 +1626,34 @@ const EditorV3Page = () => {
                       <LayoutDashboard className="w-8 h-8 opacity-20" />
                       <p className="text-[10px] font-black uppercase tracking-widest">Nenhum template salvo</p>
                     </div>
-                  )
+                  )}
+
+                  {planTemplates.length > 0 && (
+                    <div className="mt-8 border-t border-white/5 pt-6">
+                      <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Zap className="w-3.5 h-3.5" /> Planos Prontos (V3 Elite)
+                      </h4>
+                      <div className="space-y-3">
+                        {planTemplates.map((pt) => (
+                          <button
+                            key={pt.id}
+                            onClick={() => navigate(`/diet-templates?patientId=${patientId}&apply=${pt.id}`)}
+                            className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-amber-500/5 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/10 transition-all text-left shadow-sm"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
+                              <span className="text-lg">{pt.icon || '🥗'}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-white text-[10px] truncate uppercase">{pt.name}</p>
+                              <p className="text-[9px] text-white/40 truncate">{pt.description}</p>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  </>
                 )}
 
                 {activeTab === 'visual' && (
@@ -2298,7 +2330,7 @@ const EditorV3Page = () => {
                     {t.items.slice(0, 2).map((item, idx) => (
                       <Badge key={idx} variant="outline" className="text-[9px] h-5 bg-white/5 border-white/10 text-white/30 font-bold">{item.name}</Badge>
                     ))}
-                    {t.items.length > 2 && <span className="text-[9px] text-white/20 font-black">+{t.items.length - 2}</span>}
+                    {t.items.length > 2 && <span className="text-[9px] text-white/20 font-bold uppercase">+{t.items.length - 2}</span>}
                   </div>
                   <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                     <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/20">
