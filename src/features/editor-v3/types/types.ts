@@ -82,6 +82,7 @@ export interface PatientContext {
   consent_given?: boolean;
   consent_date?: string;
   protocol_type?: string;
+  weight_source?: 'profile' | 'weight_history' | 'assessment' | 'anamnesis' | 'dynamic_fallback' | 'fallback' | string;
 }
 
 export interface PlanConfidence {
