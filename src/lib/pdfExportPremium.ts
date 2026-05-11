@@ -652,6 +652,7 @@ function openPremiumPrintWindow(html: string, title: string) {
   }
 
   printWindow.document.write(html);
+  printWindow.document.title = title;
   printWindow.document.close();
   
   // Wait for fonts/resources to load before printing
