@@ -224,7 +224,7 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" onClick={generate} disabled={loading || sending} className="gap-1.5">
         {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
         Relatório PDF
