@@ -29,7 +29,9 @@ export class NutriCoreV3Adapter {
       'muscle-gain': 'hipertrofia',
       'Emagrecimento': 'emagrecimento',
       'Hipertrofia': 'hipertrofia',
-      'Manutenção': 'manutencao'
+      'Manutenção': 'manutencao',
+      'recomposition': 'recomposicao',
+      'recomposicao': 'recomposicao'
     };
 
     // Mapeamento de nível de atividade
