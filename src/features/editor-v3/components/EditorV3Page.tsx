@@ -588,8 +588,8 @@ const EditorV3Page = () => {
             protein: s.food.protein_100g,
             carbs: s.food.carb_100g,
             fat: s.food.fat_100g,
-            portionValue: 100,
-            portionLabel: '100g',
+            portionValue: s.grams,
+            portionLabel: s.unit_label,
             measurementType: 'gram' as const,
             suggestedQuantity: s.grams 
           }));
