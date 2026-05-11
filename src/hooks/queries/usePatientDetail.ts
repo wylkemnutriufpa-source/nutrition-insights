@@ -195,7 +195,8 @@ export function usePatientDetail(patientId: string | undefined) {
         total_calories: draft.meta_kcal,
         total_protein: draft.meta_protein,
         total_carbs: draft.meta_carbs,
-        total_fat: draft.meta_fat
+        total_fat: draft.meta_fat,
+        payload: draft.payload
       }));
 
       const allPlans = [...canonicalPlans, ...v3Drafts];
