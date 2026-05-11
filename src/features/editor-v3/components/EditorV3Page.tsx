@@ -958,14 +958,6 @@ const EditorV3Page = () => {
       setIsGeneratingGlobal(false);
     }
   };
-      toast.success(`Elite V3: Plano gerado com ${Math.round(dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal)} kcal para ${weight}kg!`);
-    } catch (error) {
-      console.error('[Elite-V3 Error]', error);
-      toast.error('Erro ao gerar plano no Motor V3');
-    } finally {
-      setIsGeneratingGlobal(false);
-    }
-  };
 
   const handleSaveAntro = async () => {
     if (!patientId || !patientContext) return;
