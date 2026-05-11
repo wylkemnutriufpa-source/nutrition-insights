@@ -2815,11 +2815,11 @@ const EditorV3Page = () => {
                     <div className="mt-4 flex gap-4">
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
                         <p className="text-[8px] font-black text-white/30 uppercase">Calorias</p>
-                        <p className="text-sm font-black text-white">{Math.round(recalculateMacros(selectedItem.item, selectedItem.item.quantity).calories)} kcal</p>
+                        <p className="text-sm font-black text-white">{Math.round(calculateItemMacros(selectedItem.item, selectedItem.item.quantity).kcal)} kcal</p>
                       </div>
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
                         <p className="text-[8px] font-black text-white/30 uppercase">Proteína</p>
-                        <p className="text-sm font-black text-emerald-400">{Math.round(recalculateMacros(selectedItem.item, selectedItem.item.quantity).protein)}g</p>
+                        <p className="text-sm font-black text-emerald-400">{Math.round(calculateItemMacros(selectedItem.item, selectedItem.item.quantity).protein)}g</p>
                       </div>
                     </div>
                   </div>
