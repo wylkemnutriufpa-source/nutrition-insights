@@ -1760,15 +1760,29 @@ const EditorV3Page = () => {
                               <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
                               <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
                             </div>
-                            <Button
-                              size="sm"
-                              className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[9px] h-8 rounded-lg px-3"
-                              onClick={() => {
-                                applySmartTemplate(t, baseFoods);
-                              }}
-                            >
-                              Aplicar
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-white/10 hover:bg-white/5 text-white font-black uppercase text-[9px] h-8 rounded-lg px-3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTemplate(t);
+                                  setIsTemplateEditorOpen(true);
+                                }}
+                              >
+                                Personalizar
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[9px] h-8 rounded-lg px-3"
+                                onClick={() => {
+                                  applySmartTemplate(t, baseFoods);
+                                }}
+                              >
+                                Aplicar
+                              </Button>
+                            </div>
                           </div>
                           
                           {/* Prévia dos alimentos */}
