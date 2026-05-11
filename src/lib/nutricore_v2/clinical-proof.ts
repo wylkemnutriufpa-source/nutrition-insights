@@ -71,7 +71,7 @@ export async function runClinicalProofTests(patientId: string) {
       category: 'protein'
     } as any;
     
-    const subs = NutriCoreV2Adapter.getV2Substitutions(frango, 100, []);
+    const subs = NutriCoreV3Adapter.getV2Substitutions(frango, 100, []);
     const hasTilapia = subs.some(s => s.name.toLowerCase().includes('tilápia'));
     
     reports.push(hasTilapia ? '✅ Substituições Inteligentes (Tilápia encontrada) - PASSOU' : '🔴 Substituições Inteligentes - FALHOU');
