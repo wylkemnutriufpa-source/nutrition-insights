@@ -1,5 +1,5 @@
 
-import { NutriCoreV2Adapter } from "./adapter";
+import { NutriCoreV3Adapter } from "./adapter";
 import { PatientContext, Food } from "../../features/clinical-engine/types/clinical-types";
 
 /**
@@ -29,7 +29,7 @@ export async function runClinicalProofTests(patientId: string) {
   try {
     // TEST 1: Full Plan Generation
     console.log('--- TEST 1: GERAR PLANO COMPLETO ---');
-    const fullPlan = await NutriCoreV2Adapter.generateElitePlan(mockContext, []);
+    const fullPlan = await NutriCoreV3Adapter.generateElitePlan(mockContext, []);
     
     const totalKcal = fullPlan.reduce((acc, m) => acc + m.items.reduce((sum, i) => sum + i.kcal, 0), 0);
     const hasBreakfast = fullPlan.some(m => m.name === 'Café da Manhã');
@@ -57,7 +57,7 @@ export async function runClinicalProofTests(patientId: string) {
     // TEST 2: Single Meal Generation
     console.log('--- TEST 2: GERAR REFEIÇÃO INDIVIDUAL ---');
     // Already tested by generateElitePlan as it calls buildMeal for each slot.
-    reports.push('✅ TEST 2: Refeição Individual (NutriCore V2 Engine) - PASSOU');
+    reports.push('✅ TEST 2: Refeição Individual (NutriCore V3 Engine) - PASSOU');
 
     // TEST 4: Substitutions
     console.log('--- TEST 4: SUBSTITUIÇÕES ---');
@@ -71,7 +71,7 @@ export async function runClinicalProofTests(patientId: string) {
       category: 'protein'
     } as any;
     
-    const subs = NutriCoreV2Adapter.getV2Substitutions(frango, 100, []);
+    const subs = NutriCoreV3Adapter.getV3Substitutions(frango, 100, []);
     const hasTilapia = subs.some(s => s.name.toLowerCase().includes('tilápia'));
     
     reports.push(hasTilapia ? '✅ Substituições Inteligentes (Tilápia encontrada) - PASSOU' : '🔴 Substituições Inteligentes - FALHOU');

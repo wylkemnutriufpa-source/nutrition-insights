@@ -1,7 +1,7 @@
 import { Meal, Food, MealItem, PatientContext } from '../types/clinical-types';
 import { toast } from 'sonner';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
-import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
+import { NutriCoreV3Adapter } from '@/lib/nutricore_v2/adapter';
 
 export interface ClinicalStrategy {
   id: string;
@@ -140,7 +140,7 @@ export class BiquiniBrancoStrategy implements ClinicalStrategy {
 
 export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
-  name = 'Engine NutriCore V2';
+  name = 'Engine NutriCore V3';
 
   async generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): Promise<MealItem[]> {
     // Usar contexto real se disponível, caso contrário usar fallback seguro
@@ -156,7 +156,7 @@ export class DefaultV3Strategy implements ClinicalStrategy {
 
     console.info(`[V3-Engine] Gerando refeição "${meal.name}" para ${finalContext.weight}kg, Objetivo: ${finalContext.goal}`);
 
-    const fullPlan = await NutriCoreV2Adapter.generateElitePlan(finalContext as any, availableFoods);
+    const fullPlan = await NutriCoreV3Adapter.generateElitePlan(finalContext as any, availableFoods);
     const mealName = meal.name.toLowerCase();
     const generatedMeal = fullPlan.find((m: any) => {
       const gName = m.name.toLowerCase();
@@ -175,6 +175,6 @@ export class DefaultV3Strategy implements ClinicalStrategy {
   }
 
   explainDecision(meal: Meal, items: MealItem[]): string {
-    return "Geração determinística via novo Motor NutriCore V2 (Orquestrador Central).";
+    return "Geração determinística via novo Motor NutriCore V3 (Orquestrador Central).";
   }
 }

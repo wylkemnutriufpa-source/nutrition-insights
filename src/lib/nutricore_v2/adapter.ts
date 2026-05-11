@@ -10,14 +10,14 @@ import { getBestMealImage } from '../../features/editor-v3/utils/normalization';
 import { Meal as V3Meal, MealItem as V3MealItem, Food as V3Food, PatientContext } from '../../features/clinical-engine/types/clinical-types';
 
 /**
- * Orquestrador NutriCore V2 - Adaptador para FitJourney Elite V3
+ * Orquestrador NutriCore V3 - Adaptador para FitJourney Elite V3
  */
-export class NutriCoreV2Adapter {
+export class NutriCoreV3Adapter {
   /**
    * Converte o contexto do paciente do FitJourney para o formato NutriCore
    */
   private static mapPatientToEngine(context: PatientContext): EngineInput {
-    // Mapeamento de objetivos do V3 para o NutriCore V2
+    // Mapeamento de objetivos do V3 para o NutriCore V3
     const goalMap: Record<string, Goal> = {
       'lose_weight': 'emagrecimento',
       'gain_muscle': 'hipertrofia',
@@ -135,7 +135,7 @@ export class NutriCoreV2Adapter {
       );
 
       const v3Items = plannedMeal.items.map(item => {
-        // 🛡️ REGRA DE OURO NutriCore V2:
+        // 🛡️ REGRA DE OURO NutriCore V3:
         // Entregamos o macro TOTAL para a quantidade calculada.
         const totalKcal = Math.round(item.macros.kcal);
         const totalProtein = Number(item.macros.protein_g.toFixed(1));
@@ -241,7 +241,7 @@ export class NutriCoreV2Adapter {
   /**
    * Calcula substituições usando o algoritmo NutriCore
    */
-  static getV2Substitutions(food: V3Food, grams: number, availableFoods: V3Food[]): V3Food[] {
+  static getV3Substitutions(food: V3Food, grams: number, availableFoods: V3Food[]): V3Food[] {
     // Mapear para tipos NutriCore
     const coreFood: Food = {
       id: food.id,
