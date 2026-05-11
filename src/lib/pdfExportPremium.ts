@@ -456,6 +456,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
     const subGroups: Record<string, MealPlanPDFItem[]> = {};
     const orphans: MealPlanPDFItem[] = [];
+    
+    // Normalize meal type for label matching
+    const normalizedType = mType.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
     typeItems.forEach(item => {
       if (item.substitution_group_id) {
         if (!subGroups[item.substitution_group_id]) subGroups[item.substitution_group_id] = [];
@@ -465,7 +469,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       }
     });
 
-    const mealInfo = MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
+    const mealInfo = MEAL_LABELS[normalizedType] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
 
     const renderGroup = (groupItems: MealPlanPDFItem[]) => {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
