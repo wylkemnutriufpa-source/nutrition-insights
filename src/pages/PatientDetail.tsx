@@ -1123,8 +1123,12 @@ export default function PatientDetail() {
                     <div className="md:col-span-2">
                        <ClinicalFlagsSummary patientId={resolvedPatientId} />
                     </div>
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 space-y-8">
                        <MealAdherenceWidget patientId={resolvedPatientId} />
+                       <PatientProfileMealPlan 
+                         patientId={resolvedPatientId} 
+                         activeMealPlanId={activeMealPlan?.id} 
+                       />
                     </div>
                  </div>
               </TabsContent>
