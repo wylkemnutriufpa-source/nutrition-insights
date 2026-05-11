@@ -767,6 +767,9 @@ export default function PatientDetail() {
                         <ShieldAlert className="w-3 h-3" /> Revisão Médica Requerida
                       </Badge>
                     )}
+                    {resolvedPatientId && (
+                      <PatientConsentBadge patientId={resolvedPatientId} />
+                    )}
                   </div>
                   {patientEmail && (
                     <p className="text-xs text-muted-foreground/80 truncate" title={patientEmail}>
