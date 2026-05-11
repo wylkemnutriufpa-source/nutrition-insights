@@ -1089,24 +1089,13 @@ const EditorV3Page = () => {
     setIsGeneratingGlobal(true);
     
     try {
-      console.log('[Direct V2] Corrigindo refeições vazias ou críticas');
+      console.log('[Direct V3] Corrigindo refeições vazias ou críticas');
       
       // Identificar refeições que precisam de correção
-      const mealsToFix = meals.filter(m => 
-        m.items.length === 0 || 
-        validationIssues.some(issue => issue.mealId === m.id && issue.severity === 'critical')
-      );
-
-      if (mealsToFix.length === 0) {
-        toast.info("Não foram encontradas refeições críticas para corrigir.");
-        return;
-      }
-
-      // Para simplificar e garantir equilíbrio, vamos regenerar o plano completo
-      // mas preservando o que está bom se necessário. 
+...
       // O usuário pediu: "Remove e recria as refeições que estão vazias ou com Ajuste Clínico Necessário"
       await handleGenerateFullPlan();
-      toast.success('Refeições corrigidas com o motor NutriCore V2');
+      toast.success('Refeições corrigidas com o motor NutriCore V3');
     } finally {
       setIsGeneratingGlobal(false);
     }
