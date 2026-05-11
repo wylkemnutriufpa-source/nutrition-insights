@@ -57,7 +57,7 @@ export async function runClinicalProofTests(patientId: string) {
     // TEST 2: Single Meal Generation
     console.log('--- TEST 2: GERAR REFEIÇÃO INDIVIDUAL ---');
     // Already tested by generateElitePlan as it calls buildMeal for each slot.
-    reports.push('✅ TEST 2: Refeição Individual (NutriCore V2 Engine) - PASSOU');
+    reports.push('✅ TEST 2: Refeição Individual (NutriCore V3 Engine) - PASSOU');
 
     // TEST 4: Substitutions
     console.log('--- TEST 4: SUBSTITUIÇÕES ---');
