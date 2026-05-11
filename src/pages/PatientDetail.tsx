@@ -1028,6 +1028,9 @@ export default function PatientDetail() {
               <TabsTrigger value="overview" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
                 <Eye className="w-4 h-4" /> Visão Geral
               </TabsTrigger>
+              <TabsTrigger value="plan" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <CreditCard className="w-4 h-4" /> Plano
+              </TabsTrigger>
             </TabsList>
 
             <div className="p-6">
