@@ -10,9 +10,9 @@ import { getBestMealImage } from '../../features/editor-v3/utils/normalization';
 import { Meal as V3Meal, MealItem as V3MealItem, Food as V3Food, PatientContext } from '../../features/clinical-engine/types/clinical-types';
 
 /**
- * Orquestrador NutriCore V2 - Adaptador para FitJourney Elite V3
+ * Orquestrador NutriCore V3 - Adaptador para FitJourney Elite V3
  */
-export class NutriCoreV2Adapter {
+export class NutriCoreV3Adapter {
   /**
    * Converte o contexto do paciente do FitJourney para o formato NutriCore
    */
