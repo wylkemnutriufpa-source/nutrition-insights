@@ -175,14 +175,27 @@ export default function PatientDetail() {
       const profName = prof?.full_name || "Seu Nutricionista";
       
       let planItems = [];
+      const isWeekly = plan.plan_mode === 'weekly';
       
       // Se for um draft V3, usa o payload
       if (plan.editor_version === 'v3' && plan.payload) {
         const meals = Array.isArray(plan.payload) ? plan.payload : (plan.payload.meals || []);
-        planItems = meals.flatMap((m: any) => {
-          const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_');
-          return (m.items || []).flatMap((item: any) => {
-            const main = {
+        
+        // Se for semanal, geramos 7 dias diferentes baseados nos mesmos alvos
+        const daysToGenerate = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [null];
+        
+        // Se tivermos 42 refeições, usamos cada bloco para um dia.
+        // Se tivermos apenas 6, repetimos elas com variações (on-the-fly) nos IDs de dia
+        const hasVaryingDays = meals.length >= 42;
+        
+        if (hasVaryingDays) {
+          planItems = meals.flatMap((m: any, idx) => {
+            const dayIdx = Math.floor(idx / (meals.length / 7));
+            const daysOrder = [1, 2, 3, 4, 5, 6, 0];
+            const dayNum = daysOrder[dayIdx];
+            const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_');
+            
+            return (m.items || []).flatMap((item: any) => ({
               mealType: mType,
               title: m.name,
               description: `${item.name} — ${item.display_portion || (item.quantity + (item.unit || 'g'))}`,
@@ -191,22 +204,48 @@ export default function PatientDetail() {
               carbs_target: Math.round(Number(item.carbs) || 0),
               fat_target: Math.round(Number(item.fat) || 0),
               is_primary: true,
-              substitution_group_id: item.instanceId
-            };
-            const subs = (item.substitutions || []).map((sub: any) => ({
-              mealType: mType,
-              title: sub.name,
-              description: sub.name,
-              calories_target: Math.round(Number(sub.kcal) || 0),
-              protein_target: Math.round(Number(sub.protein) || 0),
-              carbs_target: Math.round(Number(sub.carbs) || 0),
-              fat_target: Math.round(Number(sub.fat) || 0),
-              is_primary: false,
-              substitution_group_id: item.instanceId
+              substitution_group_id: item.instanceId,
+              day_of_week: dayNum
             }));
-            return [main, ...subs];
           });
-        });
+        } else {
+          const daysToGenerate = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [-1];
+          planItems = daysToGenerate.flatMap((dayNum) => {
+            return meals.flatMap((m: any) => {
+              const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_');
+              
+              return (m.items || []).flatMap((item: any) => {
+                const main = {
+                  mealType: mType,
+                  title: m.name,
+                  description: `${item.name} — ${item.display_portion || (item.quantity + (item.unit || 'g'))}`,
+                  calories_target: Math.round(Number(item.kcal) || 0),
+                  protein_target: Math.round(Number(item.protein) || 0),
+                  carbs_target: Math.round(Number(item.carbs) || 0),
+                  fat_target: Math.round(Number(item.fat) || 0),
+                  is_primary: true,
+                  substitution_group_id: item.instanceId,
+                  day_of_week: dayNum
+                };
+                
+                const subs = !isWeekly ? (item.substitutions || []).map((sub: any) => ({
+                  mealType: mType,
+                  title: sub.name,
+                  description: sub.name,
+                  calories_target: Math.round(Number(sub.kcal) || 0),
+                  protein_target: Math.round(Number(sub.protein) || 0),
+                  carbs_target: Math.round(Number(sub.carbs) || 0),
+                  fat_target: Math.round(Number(sub.fat) || 0),
+                  is_primary: false,
+                  substitution_group_id: item.instanceId,
+                  day_of_week: dayNum
+                })) : [];
+                
+                return [main, ...subs];
+              });
+            });
+          });
+        }
       } else {
         // Busca itens da tabela meal_plan_items
         const { data: items, error: itemsError } = await supabase
