@@ -34,6 +34,13 @@ import {
 } from "@/components/patient/MealPlanDailyView";
 import { useEngagement } from "@/hooks/useEngagement";
 import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
+import {
+  buildDailyDisplayItems,
+  buildPdfItemsForDailyPlan,
+  buildWeeklyDisplayDays,
+  calculatePrimaryTotals,
+  selectCanonicalDayItems,
+} from "@/lib/mealPlanDisplay";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -111,6 +118,7 @@ export default function PatientMealPlan() {
   const { isStreakAtRisk, isNearCompletion, identityStatus } = useEngagement();
   const [previewData, setPreviewData] = useState<PremiumMealPlanPDFData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -198,7 +206,15 @@ export default function PatientMealPlan() {
       }
     }
 
-    setItems(resolvedItems);
+    if (planData.id && resolvedAllItems.length === resolvedItems.length) {
+      const { data: fullItemsData } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("meal_plan_id", planData.id);
+      if (fullItemsData?.length) resolvedAllItems = fullItemsData as unknown as MealPlanItem[];
+    }
+
+    setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
     setAllItems(resolvedAllItems);
 
     const { data: subsData } = await supabase
