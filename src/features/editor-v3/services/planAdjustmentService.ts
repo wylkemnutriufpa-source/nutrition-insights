@@ -185,20 +185,23 @@ const scaleMacronutrient = (meals: Meal[], category: string, targetTotal: number
   if (currentDailyAverage === 0 || Math.abs(currentDailyAverage - targetTotal) < 1) return meals;
 
   // O fator de escala deve ser baseado na diferença entre a média diária atual e o alvo diário
-  const scale = targetTotal / currentDailyAverage;
-  
-  // 🛡️ Segurança clínica: Nunca escalar mais que 5x ou menos que 0.1x para evitar "explosão" de macros
-  const safeScale = Math.max(0.1, Math.min(5, scale));
+  const rawScale = targetTotal / currentDailyAverage;
+
+  // 🛡️ Segurança clínica: clamp único e CONSERVADOR (0.4x–2.5x) para impedir loop de multiplicação.
+  // Convergência fica garantida em poucas passadas, sem nunca explodir.
+  const safeScale = clampScaleFactor(rawScale);
 
   return meals.map(meal => ({
     ...meal,
     items: meal.items.map(item => {
       if (getFoodCategory(item) === category) {
-        const newQuantity = Math.round(item.quantity * safeScale);
+        const newQuantity = clampItemGrams(Math.round(item.quantity * safeScale));
         const macros = calculateItemMacros(item, newQuantity);
         return {
           ...item,
           ...macros,
+          kcal: clampItemKcal((macros as any).kcal ?? (macros as any).calories ?? 0),
+          calories: clampItemKcal((macros as any).calories ?? (macros as any).kcal ?? 0),
           quantity: newQuantity
         };
       }
