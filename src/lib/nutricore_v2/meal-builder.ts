@@ -80,7 +80,9 @@ export function buildMeal(
     const dairy = allowedDb.find(f => f.category === "dairy") || foodDb.find(f => f.category === "dairy");
     const nut = allowedDb.find(f => f.category === "fat" && (f.name.toLowerCase().includes("castanha") || f.name.toLowerCase().includes("amendoim")));
     const yogurt = allowedDb.find(f => f.name.toLowerCase().includes("iogurte")) || dairy;
-    const protein = allowedDb.find(f => f.name.toLowerCase().includes("whey")) || allowedDb.find(f => f.name.toLowerCase().includes("ovo")) || dairy;
+    const protein = allowedDb.find(f => f.name.toLowerCase().includes("whey")) || 
+                    allowedDb.find(f => f.name.toLowerCase().includes("queijo minas")) ||
+                    allowedDb.find(f => f.name.toLowerCase().includes("ovo")) || dairy;
 
     if (isMorningSnack) {
       if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale)))));

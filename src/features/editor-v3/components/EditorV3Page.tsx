@@ -567,13 +567,15 @@ const EditorV3Page = () => {
           // 🛡️ Contrato único: substituição recebe gramas reais, corrigindo qualquer quantidade visual corrompida
           const itemTotalGrams = resolveDisplayGrams(selectedItem.item);
 
+          const meal = meals.find(m => m.id === selectedItem.mealId);
           const v3PlanSubs = getSubstitutions(
             currentFood, 
             BASE_FOODS, 
             itemTotalGrams,
-            patientContext?.restrictions || []
+            patientContext?.restrictions || [],
+            meal?.name
           );
-          
+
           const v3Subs = v3PlanSubs.map(s => ({
             ...s.food,
             kcal: s.food.kcal_100g,
