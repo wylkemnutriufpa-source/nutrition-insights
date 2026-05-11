@@ -159,7 +159,7 @@ export function BrainLoaderScreen({
                 className="h-full bg-primary/80"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 10, ease: "easeInOut" }}
+                transition={{ duration: 6, ease: "easeInOut" }}
               />
             </div>
           </motion.div>
