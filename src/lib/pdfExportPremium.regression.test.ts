@@ -97,4 +97,23 @@ describe("PDF Export Premium — Auditoria de Gramas (anti-100g fixo)", () => {
     expect(html).toContain("1 unidade pequena (40g)");
     expect(html).not.toContain("Porção equivalente: 2 fatias (50g)"); // não deve forçar fallback
   });
+
+  it("corrige substituições vindas do V3 com unidade caseira e 0g usando equivalência calórica real", () => {
+    const html = buildPremiumMealPlanHTML({
+      planTitle: "Plano Marília",
+      patientName: "Marília Costa Reis",
+      nutritionistName: "Wylkem",
+      startDate: "2026-05-11",
+      items: [
+        { mealType: "morning_snack", title: "Mamão Papaia", description: "Mamão Papaia — 70g", calories_target: 32, is_primary: true, substitution_group_id: "fruta-1" },
+        { mealType: "morning_snack", title: "Maçã", description: "Maçã — 0g", calories_target: 52, is_primary: false, substitution_group_id: "fruta-1" },
+        { mealType: "morning_snack", title: "Banana Prata", description: "Banana Prata — 1 unidade(s) M (0g)", calories_target: 98, is_primary: false, substitution_group_id: "fruta-1" },
+      ],
+    });
+
+    expect(html).not.toMatch(/\b0\s*g\b/i);
+    expect(html).not.toContain("1 unidade(s) M (0g)");
+    expect(html).toContain("Porção equivalente: 1 unidade média (62g)");
+    expect(html).toContain("Porção equivalente: 1 unidade média (33g)");
+  });
 });
