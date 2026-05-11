@@ -778,12 +778,10 @@ const EditorV3Page = () => {
       return;
     }
 
-    if (safetyNet.warnings.length > 0 && !warningsConfirmed) {
-      safetyNet.warnings.forEach(warn => toast.warning(warn));
-      toast.info("Clique novamente para confirmar e publicar com estes alertas.");
-      setWarningsConfirmed(true);
-      return;
+    if (safetyNet.warnings.length > 0) {
+      safetyNet.warnings.forEach(warn => toast.warning(warn, { duration: 5000 }));
     }
+
 
     if (!validation.isValid) {
       toast.error("Corrija os erros antes de salvar.");
