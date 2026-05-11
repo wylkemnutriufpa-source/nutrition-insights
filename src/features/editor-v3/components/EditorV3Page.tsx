@@ -1097,55 +1097,6 @@ const EditorV3Page = () => {
       setSendingWhatsApp(false);
     }
   };
-        <div class="summary-value">${Math.round(totalKcal)}</div>
-        <div class="summary-label">Kcal/dia</div>
-      </div>
-    </div>
-    
-    <div class="footer">
-      Gerado por FitJourney · ${new Date().toLocaleDateString("pt-BR")}
-    </div>
-  </div>
-</body></html>`;
-
-      const fileName = `diet-${patientId}-${Date.now()}.html`;
-      const blob = new Blob([html], { type: "text/html" });
-      
-      const { error: uploadError } = await supabase.storage
-        .from("shared-meal-plans")
-        .upload(fileName, blob);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("shared-meal-plans")
-        .getPublicUrl(fileName);
-
-      // Get patient phone
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("phone")
-        .eq("user_id", patientId)
-        .maybeSingle();
-
-      if (!profile?.phone) {
-        toast.error("Telefone do paciente não encontrado.", { id: toastId });
-        setSendingWhatsApp(false);
-        return;
-      }
-
-      const message = `Olá ${patientContext?.name?.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nSeu novo Plano Alimentar está pronto! Você pode visualizá-lo clicando no link abaixo:\n\n${publicUrl}\n\nFoco no objetivo! Qualquer dúvida, me chama aqui.`;
-
-      const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
-      window.open(whatsappUrl, "_blank");
-      toast.success("WhatsApp aberto com sucesso!", { id: toastId });
-    } catch (err: any) {
-      console.error("WhatsApp error:", err);
-      toast.error("Erro ao preparar envio via WhatsApp", { id: toastId });
-    } finally {
-      setSendingWhatsApp(false);
-    }
-  };
 
   const handleFixPlan = async () => {
     if (!patientContext) return;
