@@ -62,9 +62,10 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy
 } from 'lucide-react';
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
+import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 import PlanAdjustmentModal from './PlanAdjustmentModal';
 
 
@@ -161,6 +162,7 @@ const EditorV3Page = () => {
   const [isEditingAntro, setIsEditingAntro] = useState(false);
   const [editAntroValues, setEditAntroValues] = useState({ weight: 0, height: 0, goal: 'Manutenção' });
   const [isSavingAntro, setIsSavingAntro] = useState(false);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
   
   const [selectedItemState, setSelectedItemState] = useState<{ mealId: string, instanceId: string } | null>(null);
   
@@ -991,6 +993,111 @@ const EditorV3Page = () => {
     }
   };
 
+  const handleSendWhatsApp = async () => {
+    if (!meals.length || !patientId) {
+      toast.error("Nenhum item para enviar ou paciente não selecionado");
+      return;
+    }
+    
+    setSendingWhatsApp(true);
+    const toastId = toast.loading("Preparando Plano Alimentar para WhatsApp...");
+    
+    try {
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
+      const profName = prof?.full_name || "Seu Nutricionista";
+      
+      const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
+      
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: #1a1a2e; padding: 30px; background: #f8fafc; }
+  .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; max-width: 600px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #6d28d9; padding-bottom: 20px; }
+  .logo { font-size: 24px; font-weight: 800; color: #6d28d9; }
+  h1 { font-size: 20px; margin: 10px 0; color: #1e293b; }
+  .meal { margin-bottom: 25px; padding: 15px; border-radius: 12px; background: #fdf2f8; border-left: 5px solid #db2777; }
+  .meal-title { font-weight: 700; font-size: 16px; color: #db2777; display: flex; justify-content: space-between; }
+  .meal-time { font-size: 12px; color: #9d174d; }
+  .items { margin-top: 10px; font-size: 14px; line-height: 1.6; color: #334155; }
+  .summary { background: #6d28d9; color: white; padding: 20px; border-radius: 15px; margin-top: 30px; display: flex; justify-content: space-around; }
+  .summary-item { text-align: center; }
+  .summary-value { font-size: 18px; font-weight: 800; }
+  .summary-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; }
+  .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #94a3b8; }
+</style></head><body>
+  <div class="card">
+    <div class="header">
+      <div class="logo">FitJourney</div>
+      <h1>Plano Alimentar Personalizado</h1>
+      <p style="font-size:12px;color:#64748b">Nutricionista: ${profName}</p>
+    </div>
+    
+    ${meals.map(m => `
+      <div class="meal">
+        <div class="meal-title">
+          <span>${m.name}</span>
+          <span class="meal-time">${m.time || ''}</span>
+        </div>
+        <div class="items">
+          ${m.items.map(i => `• ${i.name} (${formatPortion(i)})`).join('<br>')}
+        </div>
+      </div>
+    `).join('')}
+    
+    <div class="summary">
+      <div class="summary-item">
+        <div class="summary-value">${Math.round(totalKcal)}</div>
+        <div class="summary-label">Kcal/dia</div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Gerado por FitJourney · ${new Date().toLocaleDateString("pt-BR")}
+    </div>
+  </div>
+</body></html>`;
+
+      const fileName = `diet-${patientId}-${Date.now()}.html`;
+      const blob = new Blob([html], { type: "text/html" });
+      
+      const { error: uploadError } = await supabase.storage
+        .from("shared-meal-plans")
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("shared-meal-plans")
+        .getPublicUrl(fileName);
+
+      // Get patient phone
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", patientId)
+        .maybeSingle();
+
+      if (!profile?.phone) {
+        toast.error("Telefone do paciente não encontrado.", { id: toastId });
+        setSendingWhatsApp(false);
+        return;
+      }
+
+      const message = `Olá ${patientContext?.name?.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nSeu novo Plano Alimentar está pronto! Você pode visualizá-lo clicando no link abaixo:\n\n${publicUrl}\n\nFoco no objetivo! Qualquer dúvida, me chama aqui.`;
+
+      const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
+      window.open(whatsappUrl, "_blank");
+      toast.success("WhatsApp aberto com sucesso!", { id: toastId });
+    } catch (err: any) {
+      console.error("WhatsApp error:", err);
+      toast.error("Erro ao preparar envio via WhatsApp", { id: toastId });
+    } finally {
+      setSendingWhatsApp(false);
+    }
+  };
+
   const handleFixPlan = async () => {
     if (!patientContext) return;
     setIsGeneratingGlobal(true);
@@ -1474,6 +1581,17 @@ const EditorV3Page = () => {
               Exportar PDF
             </Button>
 
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSendWhatsApp}
+              disabled={sendingWhatsApp || !patientId}
+              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
+            >
+              {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+              WhatsApp
+            </Button>
+
             <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
 
               <RotateCcw className="w-4 h-4" />
@@ -1919,16 +2037,16 @@ const EditorV3Page = () => {
                     <Plus className="w-3.5 h-3.5" /> Adicionar
                   </Button>
                   <Button 
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       setActiveMealId(meal.id);
                       setActiveTab('template');
                       setShowMainAddModal(true);
                     }}
-                    className="h-10 px-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all gap-1.5 text-amber-400 hover:text-black hover:bg-amber-500"
+                    className="h-10 px-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all gap-1.5 border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-black shadow-lg shadow-amber-500/10"
                   >
-                    <Layers className="w-3.5 h-3.5" /> Templates
+                    <BookCopy className="w-3.5 h-3.5" /> Templates
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
                 </div>

@@ -225,14 +225,9 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="outline" size="sm" onClick={generate} disabled={loading || sending} className="gap-1.5">
+      <Button variant="outline" size="sm" onClick={generate} disabled={loading} className="gap-1.5">
         {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
         Relatório PDF
-      </Button>
-      
-      <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={loading || sending} className="gap-1.5 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500 hover:text-white">
-        {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
-        Enviar via WhatsApp
       </Button>
     </div>
   );
