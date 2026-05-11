@@ -1063,7 +1063,7 @@ export default function PatientDetail() {
               </TabsContent>
               <TabsContent value="overview">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <MetabolicRadar patientId={resolvedPatientId} />
+                    <MetabolicRadar anamnesis={anamnesis} />
                     <HealthScoreRing
                       score={calculateHealthScore({
                         hasAnamnesis: anamnesis?.status === "completed",
