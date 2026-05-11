@@ -1084,12 +1084,6 @@ export default function PatientDetail() {
                     </div>
                  </div>
               </TabsContent>
-              {/* Additional TabsContent for other sections... */}
-            </div>
-          </Tabs>
-        </section>
-      </div>
-
               <TabsContent value="protocols">
                 <div className="space-y-4">
                   {patientProtocols.map((pp: any) => (
@@ -1101,7 +1095,9 @@ export default function PatientDetail() {
                       <Badge variant={pp.status === "active" ? "default" : "secondary"}>{pp.status}</Badge>
                     </div>
                   ))}
-                  <Button className="w-full gradient-primary" onClick={() => setActivateOpen(true)}>Ativar Novo Protocolo</Button>
+                  <Button className="w-full bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => setActivateOpen(true)}>
+                    Ativar Novo Protocolo
+                  </Button>
                 </div>
               </TabsContent>
               <TabsContent value="calculators">
