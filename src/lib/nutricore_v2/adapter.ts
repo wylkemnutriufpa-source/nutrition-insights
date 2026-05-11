@@ -172,39 +172,12 @@ export class NutriCoreV3Adapter {
           }));
         }
 
-        // Ajuste Medida Caseira Elite
-        const lowerName = item.name.toLowerCase();
-        let measurementType: any = 'gram';
-        let quantity = item.grams;
-        let portionValue = 100;
-        let portionLabel = 'g';
-
-        if (lowerName.includes('ovo')) {
-          measurementType = 'unit';
-          portionValue = 50; // M
-          quantity = Math.round(item.grams / 50);
-          portionLabel = 'unidade(s)';
-        } else if (lowerName.includes('pão integral') || lowerName.includes('pão de forma')) {
-          measurementType = 'unit';
-          portionValue = 25;
-          quantity = Math.round(item.grams / 25);
-          portionLabel = 'fatia(s)';
-        } else if (lowerName.includes('pão francês')) {
-          measurementType = 'unit';
-          portionValue = 50;
-          quantity = Math.round(item.grams / 50);
-          portionLabel = 'unidade(s)';
-        } else if (lowerName.includes('banana')) {
-          measurementType = 'unit';
-          portionValue = 90;
-          quantity = Math.round(item.grams / 90);
-          portionLabel = 'unidade(s) M';
-        } else if (lowerName.includes('arroz') || lowerName.includes('feijão')) {
-          measurementType = 'spoon';
-          portionValue = 25;
-          quantity = Math.round(item.grams / 25);
-          portionLabel = 'colher(es) de sopa';
-        }
+        // 🛡️ Ajuste Medida Caseira Elite V3 (Unificado)
+        const portion = convertGramsToHousehold(item.name, item.grams);
+        const measurementType = portion.measurementType;
+        const quantity = portion.quantity;
+        const portionValue = portion.portionValue;
+        const portionLabel = portion.portionLabel;
 
         return {
           id: item.foodId,
