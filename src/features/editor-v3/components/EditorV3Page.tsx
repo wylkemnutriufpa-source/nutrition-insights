@@ -1557,60 +1557,7 @@ const EditorV3Page = () => {
                   }
                   const toastId = toast.loading("Gerando PDF Premium...");
                   try {
-                    const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
-                    const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
-                    const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
-                    const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
-                    const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
-
-                    const pdfData: PremiumMealPlanPDFData = {
-                      planTitle: "Plano Alimentar Premium V3",
-                      patientName: patientContext?.name || "Paciente",
-                      nutritionistName: prof?.full_name || "Seu Nutricionista",
-                      startDate: new Date().toLocaleDateString("pt-BR"),
-                      planMode: 'single_day',
-                      items: meals.flatMap(m => {
-                        const mealItems: PremiumMealPlanPDFData['items'] = [];
-                        const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any;
-                        
-                        m.items.forEach(item => {
-                          const groupId = item.instanceId;
-                          mealItems.push({
-                            mealType: mType,
-                            title: m.name,
-                            description: `${item.name} — ${formatPortion(item)}`,
-                            calories_target: Math.round(Number(item.kcal) || 0),
-                            protein_target: Math.round(Number(item.protein) || 0),
-                            carbs_target: Math.round(Number(item.carbs) || 0),
-                            fat_target: Math.round(Number(item.fat) || 0),
-                            is_primary: true,
-                            substitution_group_id: groupId
-                          });
-
-                          if (item.substitutions && item.substitutions.length > 0) {
-                            item.substitutions.forEach(sub => {
-                              mealItems.push({
-                                mealType: mType,
-                                title: sub.name,
-                                description: `${sub.name}`,
-                                calories_target: Math.round(Number(sub.kcal) || 0),
-                                protein_target: Math.round(Number(sub.protein) || 0),
-                                carbs_target: Math.round(Number(sub.carbs) || 0),
-                                fat_target: Math.round(Number(sub.fat) || 0),
-                                is_primary: false,
-                                substitution_group_id: groupId
-                              });
-                            });
-                          }
-                        });
-                        return mealItems;
-                      }),
-                      targetCalories: Math.round(totalKcal),
-                      targetProtein: Math.round(totalProtein),
-                      targetCarbs: Math.round(totalCarbs),
-                      targetFat: Math.round(totalFat),
-                      goal: patientContext?.goal,
-                    };
+                    const pdfData = await preparePDFData();
                     generatePremiumMealPlanPDF(pdfData);
                     toast.success("PDF Premium pronto!", { id: toastId });
                   } catch (err) {
