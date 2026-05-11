@@ -241,7 +241,7 @@ export class NutriCoreV3Adapter {
   /**
    * Calcula substituições usando o algoritmo NutriCore
    */
-  static getV2Substitutions(food: V3Food, grams: number, availableFoods: V3Food[]): V3Food[] {
+  static getV3Substitutions(food: V3Food, grams: number, availableFoods: V3Food[]): V3Food[] {
     // Mapear para tipos NutriCore
     const coreFood: Food = {
       id: food.id,
