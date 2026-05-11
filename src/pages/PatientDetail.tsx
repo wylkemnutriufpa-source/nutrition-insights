@@ -773,11 +773,11 @@ export default function PatientDetail() {
             <div className="flex flex-wrap items-center gap-6 p-4 bg-black/40 rounded-xl border border-white/5">
               <div className="flex flex-col items-center px-4 border-r border-white/10">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">⚖️ Peso</span>
-                <span className="text-lg font-bold">{(profile as any)?.current_weight_kg || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs text-muted-foreground">kg</span></span>
+                <span className="text-lg font-bold">{(profile as any)?.current_weight_kg || (profile as any)?.weight || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs text-muted-foreground">kg</span></span>
               </div>
               <div className="flex flex-col items-center px-4 border-r border-white/10">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">📏 Altura</span>
-                <span className="text-lg font-bold">{(profile as any)?.current_height_cm || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs text-muted-foreground">cm</span></span>
+                <span className="text-lg font-bold">{(profile as any)?.current_height_cm || (profile as any)?.height || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs text-muted-foreground">cm</span></span>
               </div>
               <div className="flex flex-col items-center px-4 border-r border-white/10">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">🎯 Objetivo</span>
