@@ -39,10 +39,10 @@ export function buildMeal(
   time: string,
   targetMacros: { protein_g: number; carb_g: number; fat_g: number; kcal: number },
   foodDb: Food[],
-  options: BuildMealOptions = {}
+  options: BuildMealOptions & { seed?: number } = {}
 ): PlannedMeal {
   const items: PlannedItem[] = [];
-  const { restrictions = [], preferences = [] } = options;
+  const { restrictions = [], preferences = [], seed = Math.random() } = options;
 
   const isLunchOrDinner = type === "almoço" || type === "jantar";
   const isBreakfast = type === "cafe_da_manha";
@@ -52,7 +52,11 @@ export function buildMeal(
 
   const findRandom = (db: Food[], predicate: (f: Food) => boolean) => {
     const matches = db.filter(predicate);
-    return matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : undefined;
+    if (matches.length === 0) return undefined;
+    
+    // Usar o seed para tornar a seleção determinística para o mesmo dia/paciente
+    const index = Math.floor(Math.abs(Math.sin(seed * 10000)) * matches.length);
+    return matches[index];
   };
 
   // 🛡️ Fator de escala blindado: clamp 0.4x – 2.5x (impede grams astronômicos como 24750g de frango)
