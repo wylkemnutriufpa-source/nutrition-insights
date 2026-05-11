@@ -2009,9 +2009,18 @@ const EditorV3Page = () => {
                         )}
                         <div className="p-4 space-y-2">
                           {meal.items.map(item => (
-                            <div key={item.instanceId} className="flex justify-between items-center text-[11px]">
-                              <span className="text-white/60 font-bold line-clamp-1 flex-1">{item.name}</span>
-                              <span className="text-emerald-500 font-black ml-2">{formatPortion(item)}</span>
+                            <div 
+                              key={item.instanceId} 
+                              className="flex justify-between items-center text-[11px] p-2 hover:bg-white/5 rounded-lg cursor-pointer group/item-weekly transition-all"
+                              onClick={() => setSelectedItem({ mealId: meal.id, item })}
+                            >
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="text-white/60 font-bold line-clamp-1">{item.name}</span>
+                                {item.substitutions && item.substitutions.length > 0 && (
+                                  <RefreshCw className="w-2.5 h-2.5 text-emerald-500/40 group-hover/item-weekly:text-emerald-500 transition-colors" />
+                                )}
+                              </div>
+                              <span className="text-emerald-500 font-black ml-2 whitespace-nowrap">{formatPortion(item)}</span>
                             </div>
                           ))}
                         </div>
