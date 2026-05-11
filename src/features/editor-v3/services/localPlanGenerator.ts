@@ -125,7 +125,7 @@ export async function generateAndSaveLocalPlan(
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
-          meal_type: meal.name.toLowerCase().replace(/ /g, '_') as any,
+          meal_type: meal.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any,
           calories_target: safeKcal,
           protein_target: Math.min(500, Number(item.protein) || 0),
           carbs_target: Math.min(800, Number(item.carbs) || 0),

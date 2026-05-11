@@ -39,7 +39,7 @@ const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
   lanche_da_manha: { label: "Lanche da Manhã", color: "#10b981" },
   lunch: { label: "Almoço", color: "#f59e0b" },
-  almoço: { label: "Almoço", color: "#f59e0b" },
+  almoco: { label: "Almoço", color: "#f59e0b" },
   afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
   lanche_da_tarde: { label: "Lanche da Tarde", color: "#ec4899" },
   snack: { label: "Lanche", color: "#ec4899" },
@@ -456,6 +456,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
     const subGroups: Record<string, MealPlanPDFItem[]> = {};
     const orphans: MealPlanPDFItem[] = [];
+    
+    // Normalize meal type for label matching
+    const normalizedType = mType.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
     typeItems.forEach(item => {
       if (item.substitution_group_id) {
         if (!subGroups[item.substitution_group_id]) subGroups[item.substitution_group_id] = [];
@@ -465,7 +469,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       }
     });
 
-    const mealInfo = MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
+    const mealInfo = MEAL_LABELS[normalizedType] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
 
     const renderGroup = (groupItems: MealPlanPDFItem[]) => {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
@@ -524,7 +528,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return order.indexOf(a) - order.indexOf(b);
   });
 
-  const mealOrder = ["breakfast", "cafe_da_manha", "morning_snack", "lanche_da_manha", "lunch", "almoço", "snack", "afternoon_snack", "lanche_da_tarde", "pre_workout", "post_workout", "dinner", "jantar", "evening_snack", "ceia"];
+  const mealOrder = ["breakfast", "cafe_da_manha", "morning_snack", "lanche_da_manha", "lunch", "almoco", "snack", "afternoon_snack", "lanche_da_tarde", "pre_workout", "post_workout", "dinner", "jantar", "evening_snack", "ceia"];
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">

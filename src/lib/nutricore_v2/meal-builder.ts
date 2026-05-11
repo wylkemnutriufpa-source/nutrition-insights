@@ -83,18 +83,18 @@ export function buildMeal(
     const protein = allowedDb.find(f => f.name.toLowerCase().includes("whey")) || allowedDb.find(f => f.name.toLowerCase().includes("ovo")) || dairy;
 
     if (isMorningSnack) {
-      if (fruit) items.push(createPlannedItem(fruit, roundTo5(150 * scale)));
-      if (yogurt) items.push(createPlannedItem(yogurt, roundTo5(170 * scale)));
+      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale)))));
+      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(170 * scale)))));
     } else if (isAfternoonSnack) {
-      if (yogurt) items.push(createPlannedItem(yogurt, roundTo5(170 * scale)));
-      if (fruit) items.push(createPlannedItem(fruit, roundTo5(100 * scale)));
+      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(170 * scale)))));
+      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(100 * scale)))));
     } else if (isSupper) {
-      if (protein) items.push(createPlannedItem(protein, roundTo5(type === 'ceia' && protein?.name.toLowerCase().includes('ovo') ? 50 : 100 * scale)));
-      if (fruit && !protein?.name.toLowerCase().includes('ovo')) items.push(createPlannedItem(fruit, roundTo5(80 * scale)));
-      if (nut) items.push(createPlannedItem(nut, roundTo5(15 * scale)));
+      if (protein) items.push(createPlannedItem(protein, Math.min(250, Math.max(30, roundTo5(type === 'ceia' && protein?.name.toLowerCase().includes('ovo') ? 50 : 100 * scale)))));
+      if (fruit && !protein?.name.toLowerCase().includes('ovo')) items.push(createPlannedItem(fruit, Math.min(250, Math.max(30, roundTo5(80 * scale)))));
+      if (nut) items.push(createPlannedItem(nut, Math.min(50, Math.max(5, roundTo5(15 * scale)))));
     } else {
-      if (fruit) items.push(createPlannedItem(fruit, roundTo5(150 * scale)));
-      if (yogurt) items.push(createPlannedItem(yogurt, roundTo5(100 * scale)));
+      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale)))));
+      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(100 * scale)))));
     }
 
     return finalizeMeal(type, time, items, targetMacros);
