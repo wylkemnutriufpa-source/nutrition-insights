@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+import { NutriCoreV3Adapter } from "@/lib/nutricore_v2/adapter";
 import { PatientContext, Meal } from "../types";
 
 export async function generateAndSaveLocalPlan(
