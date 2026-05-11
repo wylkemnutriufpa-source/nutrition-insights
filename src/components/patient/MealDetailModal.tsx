@@ -40,6 +40,16 @@ interface Substitution {
   options: string[];
 }
 
+interface EquivalentSubstitutionOption {
+  id?: string;
+  title: string;
+  description?: string | null;
+  calories_target?: number | null;
+  protein_target?: number | null;
+  carbs_target?: number | null;
+  fat_target?: number | null;
+}
+
 export interface MealDetailData {
   title: string;
   description?: string | null;
@@ -522,6 +532,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const meta = meal.metadata || {};
   const foods: FoodItem[] = parseJsonField<FoodItem>(meta.foods || meta.foods_structure);
   const substitutions: Substitution[] = parseJsonField<Substitution>(meta.substitutions);
+  const equivalentSubstitutions: EquivalentSubstitutionOption[] = parseJsonField<EquivalentSubstitutionOption>(meta.substitution_options);
   const instructions: string | undefined = meta.instructions || meta.preparation;
   const prepTime: number | undefined = meta.prep_time_minutes || meta.prep_time;
   const goalTag: string | undefined = meta.goal_tag;
@@ -1601,6 +1612,42 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     Ou escrever manualmente
                   </button>
                 )}
+              </section>
+            </>
+          )}
+
+          {/* Substitutions from description */}
+          {equivalentSubstitutions.length > 0 && (
+            <>
+              <Separator />
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <Shuffle className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-base">Substituições equivalentes</h4>
+                  <Badge variant="outline" className="ml-auto text-[10px] border-primary/30 text-primary">
+                    {equivalentSubstitutions.length} opções
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {equivalentSubstitutions.map((option, idx) => (
+                    <div key={option.id || `${option.title}-${idx}`} className="rounded-lg bg-secondary/40 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground">{option.title}</p>
+                          {option.description && (
+                            <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line">{option.description}</p>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-[10px] text-muted-foreground shrink-0 text-right">
+                          <span>{fmtMacro(option.calories_target ?? 0)} kcal</span>
+                          <span>P {fmtMacro(option.protein_target ?? 0)}g</span>
+                          <span>C {fmtMacro(option.carbs_target ?? 0)}g</span>
+                          <span>G {fmtMacro(option.fat_target ?? 0)}g</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </section>
             </>
           )}
