@@ -581,18 +581,21 @@ const EditorV3Page = () => {
             meal?.name
           );
 
-          const v3Subs = v3PlanSubs.map(s => ({
-            ...s.food,
-            kcal: s.food.kcal_100g,
-            calories: s.food.kcal_100g,
-            protein: s.food.protein_100g,
-            carbs: s.food.carb_100g,
-            fat: s.food.fat_100g,
-            portionValue: s.grams,
-            portionLabel: s.unit_label,
-            measurementType: 'gram' as const,
-            suggestedQuantity: s.grams 
-          }));
+          const v3Subs = v3PlanSubs.map(s => {
+            const ratio = s.grams / 100;
+            return {
+              ...s.food,
+              kcal: Math.round(s.food.kcal_100g * ratio),
+              calories: Math.round(s.food.kcal_100g * ratio),
+              protein: Math.round(s.food.protein_100g * ratio * 10) / 10,
+              carbs: Math.round(s.food.carb_100g * ratio * 10) / 10,
+              fat: Math.round(s.food.fat_100g * ratio * 10) / 10,
+              portionValue: s.grams,
+              portionLabel: s.unit_label,
+              measurementType: 'gram' as const,
+              suggestedQuantity: s.grams 
+            };
+          });
           
           setSmartSubstitutions(v3Subs as any);
           setIsLoadingSmartSubs(false);
