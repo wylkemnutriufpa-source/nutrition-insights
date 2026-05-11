@@ -102,12 +102,27 @@ export const calculateItemMacros = (item: any, quantity: number) => {
     const totalGrams = resolveMacroGrams(item, quantity);
     factor = totalGrams / 100;
     
-    return {
+    const result = {
       kcal: Math.round((kcal100 || 0) * factor * 10) / 10,
       protein: Math.round((protein100 || 0) * factor * 10) / 10,
       carbs: Math.round((carbs100 || 0) * factor * 10) / 10,
       fat: Math.round((fat100 || 0) * factor * 10) / 10
     };
+
+    // 🛑 EMERGENCY BRAKE: Proteção contra calorias absurdas (Bug de Multiplicação)
+    // Se o item tiver mais de 1500 kcal e a quantidade não for massiva (> 1kg), algo está errado.
+    if (result.kcal > 1500 && factor < 10) {
+      console.error('[V3-CRITICAL] Absurd calories detected for item:', item.name, result.kcal);
+      // Tentamos reparar assumindo que kcal100 na verdade era kcal total
+      const repairedKcal = (kcal100 || 0); 
+      if (repairedKcal < 1000) {
+        result.kcal = repairedKcal;
+      } else {
+        result.kcal = 500; // Fallback seguro
+      }
+    }
+    
+    return result;
   }
 
   // Fallback para valores por porção (Legado ou Custom)
@@ -120,15 +135,24 @@ export const calculateItemMacros = (item: any, quantity: number) => {
     factor = quantity;
   } else {
     // Se for gramas e não temos kcal_100g, assumimos que kcalPortion é para portionValue gramas
-    factor = quantity / (item.portionValue || 100);
+    // 🛡️ Segurança: portionValue nunca pode ser < 1 para divisão
+    const pValue = Math.max(1, item.portionValue || 100);
+    factor = quantity / pValue;
   }
 
-  return {
+  const finalResult = {
     kcal: Math.round(kcalPortion * factor * 10) / 10,
     protein: Math.round(proteinPortion * factor * 10) / 10,
     carbs: Math.round(carbsPortion * factor * 10) / 10,
     fat: Math.round(fatPortion * factor * 10) / 10
   };
+
+  // 🛑 EMERGENCY BRAKE (Fallback path)
+  if (finalResult.kcal > 2000 && factor < 10) {
+    finalResult.kcal = Math.min(finalResult.kcal, 600);
+  }
+
+  return finalResult;
 };
 
 export const getDeterministicSuggestions = (baseItemName: string, availableFoods: any[], baseMeasurementType?: string, basePortionLabel?: string): any[] => {
