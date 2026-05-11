@@ -935,7 +935,7 @@ const EditorV3Page = () => {
     setShowCalorieModal(false);
     
     try {
-      console.log(`[Elite-V3] Chamada DIRETA ao Motor NutriCore V2 para ${weight}kg`);
+      console.log(`[Elite-V3] Chamada DIRETA ao Motor NutriCore V3 para ${weight}kg`);
       
       const { generateDailyPlan } = await import("@/lib/nutricore_v2/plan-generator");
       const { BASE_FOODS } = await import("@/lib/nutricore_v2/food-database");
