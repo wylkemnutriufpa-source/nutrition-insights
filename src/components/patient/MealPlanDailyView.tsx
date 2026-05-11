@@ -49,6 +49,7 @@ interface MealCompletion {
 
 interface MealDetailData {
   id: string;
+  itemId?: string;
   title: string;
   description: string | null;
   meal_type: MealType;
@@ -57,6 +58,7 @@ interface MealDetailData {
   carbs_target: number | null;
   fat_target: number | null;
   metadata?: Record<string, any> | null;
+  image_url?: string | null;
 }
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; time: string }[] = [
