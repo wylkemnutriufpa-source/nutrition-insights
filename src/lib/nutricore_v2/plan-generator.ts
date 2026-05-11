@@ -77,6 +77,7 @@ export function generateDailyPlan(
       {
         restrictions: allRestrictions,
         preferences: patient.preferences,
+        seed: seed + (meals.indexOf(meal) * 0.1) // Variação leve por refeição
       }
     );
   });
