@@ -217,6 +217,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         onOpenChange={(open) => !open && setSelectedMeal(null)}
         meal={selectedMeal}
         onUpdateItem={handleUpdateItem}
+        onChangeImage={handleChangeImage}
       />
     </div>
   );
