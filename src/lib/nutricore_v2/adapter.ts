@@ -154,7 +154,7 @@ export class NutriCoreV3Adapter {
         let substitutions: any[] = [];
         
         if (foodObj) {
-          const subs = getSubstitutions(foodObj, finalDb, item.grams, context.restrictions);
+          const subs = getSubstitutions(foodObj, finalDb, item.grams, context.restrictions, mealName);
           substitutions = subs.map(s => ({
             id: s.food.id,
             name: s.food.name,
