@@ -13,6 +13,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 
 
+import { publishMealPlan } from "@/lib/serverTransitions";
+import { useAuth } from "@/hooks/use-auth";
+
 interface Props {
   patientId: string;
   onPrev: () => void;
