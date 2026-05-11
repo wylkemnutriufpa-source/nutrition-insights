@@ -572,7 +572,7 @@ const EditorV3Page = () => {
                           BASE_FOODS.find(f => f.name.toLowerCase() === name.toLowerCase());
                           
         if (currentFood) {
-          console.log('[V3-Subs] Using NutriCore V2 Substitution Engine for:', name);
+          console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
           const v2Subs = getSubstitutions(
             currentFood, 
             BASE_FOODS, 
