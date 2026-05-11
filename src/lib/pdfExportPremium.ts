@@ -593,12 +593,12 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const templateDay = Number(distinctDays[0] || 0);
     const templateItems = originalGroupedByDay[templateDay] || originalGroupedByDay[-1] || [];
     
-    // Identificar grupos de substituição no template
+    // Identificar grupos de substituição no template sem misturar refeições de tipos diferentes
     const groups: Record<string, { primary: MealPlanPDFItem, subs: MealPlanPDFItem[] }> = {};
     templateItems.forEach(item => {
-      const gId = item.substitution_group_id || `orphan:${item.title}:${item.mealType}`;
+      const gId = getMealGroupKey(item);
       if (!groups[gId]) groups[gId] = { primary: item, subs: [] };
-      if (item.is_primary) groups[gId].primary = item;
+      if (item.is_primary !== false) groups[gId].primary = item;
       else groups[gId].subs.push(item);
     });
 
@@ -629,8 +629,9 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   } else {
     // Modo Diário ou já possui múltiplos dias: Flattening normal dos grupos para o dia atual
     printItems = getPrimaryDailyItems(data.items || []).flatMap((primary) => {
+      const primaryGroupKey = getMealGroupKey(primary);
       const relatedSubs = (data.items || [])
-        .filter(item => item.substitution_group_id && item.substitution_group_id === primary.substitution_group_id && item !== primary && item.is_primary === false)
+        .filter(item => item !== primary && item.is_primary === false && getMealGroupKey(item) === primaryGroupKey)
         .slice(0, 5);
       return [primary, ...relatedSubs];
     });
@@ -639,19 +640,18 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const subGroups: Record<string, MealPlanPDFItem[]> = {};
     const orphans: MealPlanPDFItem[] = [];
     
-    // Normalize meal type for label matching
-    const normalizedType = mType.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
     typeItems.forEach(item => {
       if (item.substitution_group_id) {
-        if (!subGroups[item.substitution_group_id]) subGroups[item.substitution_group_id] = [];
-        subGroups[item.substitution_group_id].push(item);
+        const groupKey = getMealGroupKey(item);
+        if (!subGroups[groupKey]) subGroups[groupKey] = [];
+        subGroups[groupKey].push(item);
       } else {
         orphans.push(item);
       }
     });
 
-    const mealInfo = MEAL_LABELS[normalizedType] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
+    const canonicalType = resolveCanonicalMealType(mType);
+    const mealInfo = MEAL_LABELS[String(canonicalType)] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
 
     const renderGroup = (groupItems: MealPlanPDFItem[]) => {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
