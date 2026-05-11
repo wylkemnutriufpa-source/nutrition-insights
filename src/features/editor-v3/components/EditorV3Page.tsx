@@ -580,7 +580,7 @@ const EditorV3Page = () => {
             patientContext?.restrictions || []
           );
           
-          const v3Subs = v2Subs.map(s => ({
+          const v3Subs = v3PlanSubs.map(s => ({
             ...s.food,
             kcal: s.food.kcal_100g,
             calories: s.food.kcal_100g,
