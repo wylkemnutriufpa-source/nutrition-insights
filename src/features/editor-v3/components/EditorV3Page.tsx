@@ -564,10 +564,8 @@ const EditorV3Page = () => {
         if (currentFood) {
           console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
           
-          // 🛡️ Blindagem: Converter quantidade do item para gramas REAIS antes de calcular substituição
-          const itemTotalGrams = (selectedItem.item.measurementType === 'unit' || selectedItem.item.measurementType === 'spoon')
-            ? (selectedItem.item.quantity * (selectedItem.item.portionValue || 1))
-            : selectedItem.item.quantity;
+          // 🛡️ Contrato único: substituição recebe gramas reais, corrigindo qualquer quantidade visual corrompida
+          const itemTotalGrams = resolveDisplayGrams(selectedItem.item);
 
           const v3PlanSubs = getSubstitutions(
             currentFood, 
