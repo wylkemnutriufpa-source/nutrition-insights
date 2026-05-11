@@ -242,7 +242,7 @@ const MealItemCard = memo(function MealItemCard({
       <div className="p-3 sm:p-4">
         <div
           className="flex items-start gap-2 sm:gap-3 cursor-pointer min-w-0"
-          onClick={() => onOpenDetail({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+          onClick={() => onOpenDetail({ ...item, itemId: item.id, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
         >
           {!resolvedImage && (
             <div className="mt-0.5">
