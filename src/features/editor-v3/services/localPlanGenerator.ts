@@ -144,7 +144,7 @@ export async function generateAndSaveLocalPlan(
           protein_target: item.macros.protein_g,
           carbs_target: item.macros.carb_g,
           fat_target: item.macros.fat_g,
-          description: item.portionLabel || `${item.grams}g`,
+          description: `${item.grams}g`,
           tenant_id: tenantId
         } as any);
       }
