@@ -50,18 +50,23 @@ export function buildMeal(
 
   let allowedDb = foodDb.filter(f => !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase())));
 
+  const findRandom = (db: Food[], predicate: (f: Food) => boolean) => {
+    const matches = db.filter(predicate);
+    return matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : undefined;
+  };
+
   // 🛡️ Fator de escala blindado: clamp 0.4x – 2.5x (impede grams astronômicos como 24750g de frango)
   const rawScale = (targetMacros.kcal || 0) / 400;
   const scale = Number.isFinite(rawScale) && rawScale > 0
     ? Math.max(0.4, Math.min(2.5, rawScale))
     : 1;
 
-  // PARTE 2 — TEMPLATES FUNCIONAIS (LOGICA DE PLOTAGEM DETERMINISTICA)
+  // PARTE 2 — TEMPLATES FUNCIONAIS (LOGICA DE PLOTAGEM DETERMINISTICA COM VARIEDADE)
   if (isBreakfast) {
     // Café Fitness: Pão integral 2 fatias (50g) + Ovos mexidos 2 unid (100g) + Banana M (90g)
-    const pão = allowedDb.find(f => f.name.toLowerCase().includes("pão integral")) || allowedDb.find(f => f.name.toLowerCase().includes("pão"));
-    const ovo = allowedDb.find(f => f.name.toLowerCase().includes("ovo"));
-    const banana = allowedDb.find(f => f.name.toLowerCase().includes("banana"));
+    const pão = findRandom(allowedDb, f => f.name.toLowerCase().includes("pão integral")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("pão"));
+    const ovo = findRandom(allowedDb, f => f.name.toLowerCase().includes("ovo"));
+    const banana = findRandom(allowedDb, f => f.name.toLowerCase().includes("banana"));
 
     if (pão) items.push(createPlannedItem(pão, Math.min(100, Math.max(25, roundTo5(50 * scale)))));
     if (ovo) items.push(createPlannedItem(ovo, Math.min(200, Math.max(50, roundTo5(100 * scale)))));
@@ -76,13 +81,13 @@ export function buildMeal(
     const isAfternoonSnack = type === "lanche_da_tarde";
     const isSupper = type === "ceia";
 
-    const fruit = allowedDb.find(f => f.category === "fruit") || foodDb.find(f => f.category === "fruit");
-    const dairy = allowedDb.find(f => f.category === "dairy") || foodDb.find(f => f.category === "dairy");
-    const nut = allowedDb.find(f => f.category === "fat" && (f.name.toLowerCase().includes("castanha") || f.name.toLowerCase().includes("amendoim")));
-    const yogurt = allowedDb.find(f => f.name.toLowerCase().includes("iogurte")) || dairy;
-    const protein = allowedDb.find(f => f.name.toLowerCase().includes("whey")) || 
-                    allowedDb.find(f => f.name.toLowerCase().includes("queijo minas")) ||
-                    allowedDb.find(f => f.name.toLowerCase().includes("ovo")) || dairy;
+    const fruit = findRandom(allowedDb, f => f.category === "fruit") || findRandom(foodDb, f => f.category === "fruit");
+    const dairy = findRandom(allowedDb, f => f.category === "dairy") || findRandom(foodDb, f => f.category === "dairy");
+    const nut = findRandom(allowedDb, f => f.category === "fat" && (f.name.toLowerCase().includes("castanha") || f.name.toLowerCase().includes("amendoim")));
+    const yogurt = findRandom(allowedDb, f => f.name.toLowerCase().includes("iogurte")) || dairy;
+    const protein = findRandom(allowedDb, f => f.name.toLowerCase().includes("whey")) || 
+                    findRandom(allowedDb, f => f.name.toLowerCase().includes("queijo minas")) ||
+                    findRandom(allowedDb, f => f.name.toLowerCase().includes("ovo")) || dairy;
 
     if (isMorningSnack) {
       if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale)))));
@@ -91,8 +96,10 @@ export function buildMeal(
       if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(170 * scale)))));
       if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(100 * scale)))));
     } else if (isSupper) {
-      if (protein) items.push(createPlannedItem(protein, Math.min(250, Math.max(30, roundTo5(type === 'ceia' && protein?.name.toLowerCase().includes('ovo') ? 50 : 100 * scale)))));
-      if (fruit && !protein?.name.toLowerCase().includes('ovo')) items.push(createPlannedItem(fruit, Math.min(250, Math.max(30, roundTo5(80 * scale)))));
+      // Ceia: Forçar opções leves (Iogurte ou Queijo ou Castanha). Sem carne ou excesso de ovos.
+      const lightProtein = findRandom(allowedDb, f => f.name.toLowerCase().includes("iogurte") || f.name.toLowerCase().includes("queijo minas") || f.name.toLowerCase().includes("whey")) || yogurt;
+      if (lightProtein) items.push(createPlannedItem(lightProtein, Math.min(250, Math.max(30, roundTo5(100 * scale)))));
+      if (fruit && !lightProtein) items.push(createPlannedItem(fruit, Math.min(250, Math.max(30, roundTo5(80 * scale)))));
       if (nut) items.push(createPlannedItem(nut, Math.min(50, Math.max(5, roundTo5(15 * scale)))));
     } else {
       if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale)))));
@@ -104,17 +111,17 @@ export function buildMeal(
 
   if (isLunchOrDinner) {
     // Prato Fitness: Frango 150g + Arroz 100g + Feijão 100g + Brócolis 80g + Azeite 5g
-    const frango = allowedDb.find(f => f.name.toLowerCase().includes("frango"));
-    const arroz = allowedDb.find(f => f.name.toLowerCase().includes("arroz"));
-    const feijão = allowedDb.find(f => f.name.toLowerCase().includes("feijão"));
-    const brócolis = allowedDb.find(f => f.name.toLowerCase().includes("brócolis"));
-    const azeite = allowedDb.find(f => f.name.toLowerCase().includes("azeite"));
+    const protein = findRandom(allowedDb, f => f.name.toLowerCase().includes("frango")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("carne")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("peixe"));
+    const carb = findRandom(allowedDb, f => f.name.toLowerCase().includes("arroz")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("batata")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("macarrão"));
+    const legume = findRandom(allowedDb, f => f.name.toLowerCase().includes("feijão")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("lentilha")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("grão de bico"));
+    const veg = findRandom(allowedDb, f => f.name.toLowerCase().includes("brócolis")) || findRandom(allowedDb, f => f.category === "vegetable");
+    const fat = findRandom(allowedDb, f => f.name.toLowerCase().includes("azeite"));
 
-    if (frango) items.push(createPlannedItem(frango, Math.min(250, Math.max(80, roundTo5(150 * scale)))));
-    if (arroz) items.push(createPlannedItem(arroz, Math.min(300, Math.max(50, roundTo5(100 * scale)))));
-    if (feijão) items.push(createPlannedItem(feijão, Math.min(200, Math.max(50, roundTo5(100 * scale)))));
-    if (brócolis) items.push(createPlannedItem(brócolis, Math.min(200, Math.max(30, roundTo5(80 * scale)))));
-    if (azeite) items.push(createPlannedItem(azeite, Math.min(15, Math.max(3, roundTo5(5 * scale)))));
+    if (protein) items.push(createPlannedItem(protein, Math.min(250, Math.max(80, roundTo5(150 * scale)))));
+    if (carb) items.push(createPlannedItem(carb, Math.min(300, Math.max(50, roundTo5(100 * scale)))));
+    if (legume) items.push(createPlannedItem(legume, Math.min(200, Math.max(50, roundTo5(100 * scale)))));
+    if (veg) items.push(createPlannedItem(veg, Math.min(200, Math.max(30, roundTo5(80 * scale)))));
+    if (fat) items.push(createPlannedItem(fat, Math.min(15, Math.max(3, roundTo5(5 * scale)))));
 
     return finalizeMeal(type, time, items, targetMacros);
   }
@@ -156,10 +163,10 @@ function selectFood(
     preferences.some(p => f.name.toLowerCase().includes(p.toLowerCase()))
   );
 
-  if (preferred.length > 0) return preferred[0];
+  const pool = preferred.length > 0 ? preferred : available;
 
-  // Se não houver preferência, retorna o primeiro (determinístico)
-  return available[0];
+  // 🎲 Variedade Sistêmica: Embaralha o pool para evitar planos idênticos
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function createPlannedItem(food: Food, grams: number): PlannedItem {

@@ -1000,66 +1000,72 @@ const EditorV3Page = () => {
     }
     
     setSendingWhatsApp(true);
-    const toastId = toast.loading("Preparando Plano Alimentar para WhatsApp...");
+    const toastId = toast.loading("Preparando Plano Alimentar Premium para WhatsApp...");
     
     try {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
       const profName = prof?.full_name || "Seu Nutricionista";
       
       const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
-      
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; color: #1a1a2e; padding: 30px; background: #f8fafc; }
-  .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; max-width: 600px; margin: 0 auto; }
-  .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #6d28d9; padding-bottom: 20px; }
-  .logo { font-size: 24px; font-weight: 800; color: #6d28d9; }
-  h1 { font-size: 20px; margin: 10px 0; color: #1e293b; }
-  .meal { margin-bottom: 25px; padding: 15px; border-radius: 12px; background: #fdf2f8; border-left: 5px solid #db2777; }
-  .meal-title { font-weight: 700; font-size: 16px; color: #db2777; display: flex; justify-content: space-between; }
-  .meal-time { font-size: 12px; color: #9d174d; }
-  .items { margin-top: 10px; font-size: 14px; line-height: 1.6; color: #334155; }
-  .summary { background: #6d28d9; color: white; padding: 20px; border-radius: 15px; margin-top: 30px; display: flex; justify-content: space-around; }
-  .summary-item { text-align: center; }
-  .summary-value { font-size: 18px; font-weight: 800; }
-  .summary-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; }
-  .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #94a3b8; }
-</style></head><body>
-  <div class="card">
-    <div class="header">
-      <div class="logo">FitJourney</div>
-      <h1>Plano Alimentar Personalizado</h1>
-      <p style="font-size:12px;color:#64748b">Nutricionista: ${profName}</p>
-    </div>
-    
-    ${meals.map(m => `
-      <div class="meal">
-        <div class="meal-title">
-          <span>${m.name}</span>
-          <span class="meal-time">${m.time || ''}</span>
-        </div>
-        <div class="items">
-          ${m.items.map(i => `• ${i.name} (${formatPortion(i)})`).join('<br>')}
-        </div>
-      </div>
-    `).join('')}
-    
-    <div class="summary">
-      <div class="summary-item">
-        <div class="summary-value">${Math.round(totalKcal)}</div>
-        <div class="summary-label">Kcal/dia</div>
-      </div>
-    </div>
-    
-    <div class="footer">
-      Gerado por FitJourney · ${new Date().toLocaleDateString("pt-BR")}
-    </div>
-  </div>
-</body></html>`;
+      const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
+      const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
+      const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
 
-      const fileName = `diet-${patientId}-${Date.now()}.html`;
+      const { buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
+
+      const pdfData: PremiumMealPlanPDFData = {
+        planTitle: "Plano Alimentar Premium V3",
+        patientName: patientContext?.name || "Paciente",
+        nutritionistName: profName,
+        startDate: new Date().toLocaleDateString("pt-BR"),
+        planMode: 'single_day',
+        items: meals.flatMap(m => {
+          const mealItems: PremiumMealPlanPDFData['items'] = [];
+          const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any;
+          
+          m.items.forEach(item => {
+            const groupId = item.instanceId;
+            mealItems.push({
+              mealType: mType,
+              title: m.name,
+              description: `${item.name} — ${formatPortion(item)}`,
+              calories_target: Math.round(Number(item.kcal) || 0),
+              protein_target: Math.round(Number(item.protein) || 0),
+              carbs_target: Math.round(Number(item.carbs) || 0),
+              fat_target: Math.round(Number(item.fat) || 0),
+              is_primary: true,
+              substitution_group_id: groupId
+            });
+
+            if (item.substitutions && item.substitutions.length > 0) {
+              item.substitutions.forEach(sub => {
+                mealItems.push({
+                  mealType: mType,
+                  title: sub.name,
+                  description: `${sub.name}`,
+                  calories_target: Math.round(Number(sub.kcal) || 0),
+                  protein_target: Math.round(Number(sub.protein) || 0),
+                  carbs_target: Math.round(Number(sub.carbs) || 0),
+                  fat_target: Math.round(Number(sub.fat) || 0),
+                  is_primary: false,
+                  substitution_group_id: groupId
+                });
+              });
+            }
+          });
+          return mealItems;
+        }),
+        targetCalories: Math.round(totalKcal),
+        targetProtein: Math.round(totalProtein),
+        targetCarbs: Math.round(totalCarbs),
+        targetFat: Math.round(totalFat),
+        goal: patientContext?.goal,
+      };
+
+      const html = buildPremiumMealPlanHTML(pdfData);
+      
+      // Upload para storage compartilhado
+      const fileName = `meal-plan-${patientId}-${Date.now()}.html`;
       const blob = new Blob([html], { type: "text/html" });
       
       const { error: uploadError } = await supabase.storage
@@ -1072,22 +1078,16 @@ const EditorV3Page = () => {
         .from("shared-meal-plans")
         .getPublicUrl(fileName);
 
-      // Get patient phone
+      // Pegar telefone do paciente
       const { data: profile } = await supabase
         .from("profiles")
         .select("phone")
         .eq("user_id", patientId)
         .maybeSingle();
 
-      if (!profile?.phone) {
-        toast.error("Telefone do paciente não encontrado.", { id: toastId });
-        setSendingWhatsApp(false);
-        return;
-      }
+      const message = `Olá ${patientContext?.name.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nAcabei de finalizar seu novo Plano Alimentar Premium V3. Você pode acessá-lo agora clicando no link abaixo:\n\n${publicUrl}\n\nQualquer dúvida, estou à disposição!`;
 
-      const message = `Olá ${patientContext?.name?.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nSeu novo Plano Alimentar está pronto! Você pode visualizá-lo clicando no link abaixo:\n\n${publicUrl}\n\nFoco no objetivo! Qualquer dúvida, me chama aqui.`;
-
-      const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
+      const whatsappUrl = buildWhatsAppUrl(profile?.phone || "", message);
       window.open(whatsappUrl, "_blank");
       toast.success("WhatsApp aberto com sucesso!", { id: toastId });
     } catch (err: any) {
@@ -1242,13 +1242,13 @@ const EditorV3Page = () => {
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col font-sans selection:bg-emerald-500/30 text-white">
       <header className="bg-neutral-950/80 border-b border-white/5 py-3 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full md:w-auto">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate(patientId ? `/patients/${patientId}` : '/dashboard')}
-              className="text-white/40 hover:text-white rounded-2xl hover:bg-white/5 border border-white/5"
+              className="text-white/40 hover:text-white rounded-2xl hover:bg-white/5 border border-white/5 h-10 w-10 shrink-0"
               title={patientId ? "Voltar ao Perfil do Paciente" : "Voltar ao Dashboard"}
             >
               <ArrowLeft className="w-5 h-5" />
@@ -1340,7 +1340,7 @@ const EditorV3Page = () => {
             
             <div className="h-8 w-px bg-white/5 hidden md:block mx-2" />
             
-            <div className="flex flex-col gap-1 hidden sm:flex">
+            <div className="flex flex-col gap-1">
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-black text-white tracking-tight">
                   {patientContext?.name || (patientId ? "Carregando..." : "Editor V3 Elite")}
@@ -1498,104 +1498,146 @@ const EditorV3Page = () => {
 
 
 
-            <div className="flex bg-neutral-900 border border-white/10 p-1 rounded-2xl mr-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex bg-neutral-900 border border-white/10 p-1 rounded-2xl">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowAdjustmentModal(true)} 
+                  className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-blue-400 hover:text-white hover:bg-blue-500/20 rounded-xl transition-all gap-2"
+                >
+                  <Settings2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Ajustar</span>
+                </Button>
+                <div className="w-px h-6 bg-white/10 mx-1 self-center" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleGenerateFullPlan}
+                  disabled={isGeneratingGlobal}
+                  className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all gap-2"
+                >
+                  {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  <span className="hidden sm:inline">Gerar Tudo</span>
+                </Button>
+                <div className="w-px h-6 bg-white/10 mx-1 self-center" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    setActiveTab('template');
+                    setShowMainAddModal(true);
+                  }}
+                  className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-amber-500 hover:text-white hover:bg-amber-500/20 rounded-xl transition-all gap-2"
+                >
+                  <BookCopy className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Templates</span>
+                </Button>
+              </div>
+
               <Button 
-                variant="ghost" 
                 size="sm" 
-                onClick={() => setShowAdjustmentModal(true)} 
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider text-blue-400 hover:text-white hover:bg-blue-500/20 rounded-xl transition-all gap-2"
+                onClick={handlePromotionRequest}
+                disabled={promoting || !draftId}
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-lg shadow-blue-500/20"
               >
-                <Settings2 className="w-3.5 h-3.5" />
-                Ajustar Plano
+                {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                <span className="hidden sm:inline">Salvar e Publicar</span>
+                <span className="sm:hidden">Salvar</span>
               </Button>
-              <div className="w-px h-6 bg-white/10 mx-1 self-center" />
+
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
-                onClick={handleGenerateFullPlan}
-                disabled={isGeneratingGlobal}
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all gap-2"
+                onClick={async () => {
+                  if (!meals.length) {
+                    toast.error("Nenhum item para exportar");
+                    return;
+                  }
+                  const toastId = toast.loading("Gerando PDF Premium...");
+                  try {
+                    const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
+                    const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
+                    const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
+                    const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
+                    const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
+
+                    const pdfData: PremiumMealPlanPDFData = {
+                      planTitle: "Plano Alimentar Premium V3",
+                      patientName: patientContext?.name || "Paciente",
+                      nutritionistName: prof?.full_name || "Seu Nutricionista",
+                      startDate: new Date().toLocaleDateString("pt-BR"),
+                      planMode: 'single_day',
+                      items: meals.flatMap(m => {
+                        const mealItems: PremiumMealPlanPDFData['items'] = [];
+                        const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any;
+                        
+                        m.items.forEach(item => {
+                          const groupId = item.instanceId;
+                          mealItems.push({
+                            mealType: mType,
+                            title: m.name,
+                            description: `${item.name} — ${formatPortion(item)}`,
+                            calories_target: Math.round(Number(item.kcal) || 0),
+                            protein_target: Math.round(Number(item.protein) || 0),
+                            carbs_target: Math.round(Number(item.carbs) || 0),
+                            fat_target: Math.round(Number(item.fat) || 0),
+                            is_primary: true,
+                            substitution_group_id: groupId
+                          });
+
+                          if (item.substitutions && item.substitutions.length > 0) {
+                            item.substitutions.forEach(sub => {
+                              mealItems.push({
+                                mealType: mType,
+                                title: sub.name,
+                                description: `${sub.name}`,
+                                calories_target: Math.round(Number(sub.kcal) || 0),
+                                protein_target: Math.round(Number(sub.protein) || 0),
+                                carbs_target: Math.round(Number(sub.carbs) || 0),
+                                fat_target: Math.round(Number(sub.fat) || 0),
+                                is_primary: false,
+                                substitution_group_id: groupId
+                              });
+                            });
+                          }
+                        });
+                        return mealItems;
+                      }),
+                      targetCalories: Math.round(totalKcal),
+                      targetProtein: Math.round(totalProtein),
+                      targetCarbs: Math.round(totalCarbs),
+                      targetFat: Math.round(totalFat),
+                      goal: patientContext?.goal,
+                    };
+                    generatePremiumMealPlanPDF(pdfData);
+                    toast.success("PDF Premium pronto!", { id: toastId });
+                  } catch (err) {
+                    toast.error("Erro ao gerar PDF", { id: toastId });
+                  }
+                }}
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2"
               >
-                {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                Gerar Plano Completo
+                <FileDown className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Exportar PDF</span>
+                <span className="sm:hidden">PDF</span>
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSendWhatsApp}
+                disabled={sendingWhatsApp || !patientId}
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
+              >
+                {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+                WhatsApp
+              </Button>
+
+              <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
+                <RotateCcw className="w-4 h-4" />
               </Button>
             </div>
-
-            <Button 
-              size="sm" 
-              onClick={handlePromotionRequest}
-              disabled={promoting || !draftId}
-              className="h-10 px-6 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-lg shadow-blue-500/20"
-            >
-              {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              Salvar e Publicar
-            </Button>
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={async () => {
-                if (!meals.length) {
-                  toast.error("Nenhum item para exportar");
-                  return;
-                }
-                const toastId = toast.loading("Gerando PDF...");
-                try {
-                  const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
-                  // 🛡️ Totais somados a partir dos itens reais (nunca confiar em score ausente)
-                  const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
-                  const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
-                  const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
-                  const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
-
-                  const pdfData: PremiumMealPlanPDFData = {
-                    planTitle: "Plano Alimentar V3",
-                    patientName: patientContext?.name || "Paciente",
-                    nutritionistName: prof?.full_name || "Seu Nutricionista",
-                    startDate: new Date().toLocaleDateString("pt-BR"),
-                    planMode: 'single_day',
-                    items: meals.map(m => ({
-                      mealType: m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any,
-                      title: m.name,
-                      description: m.items.map(i => `${i.name} — ${formatPortion(i)}`).join('\n'),
-                      calories_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.kcal) || 0), 0)),
-                      protein_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.protein) || 0), 0)),
-                      carbs_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.carbs) || 0), 0)),
-                      fat_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.fat) || 0), 0)),
-                    })),
-                    targetCalories: Math.round(totalKcal),
-                    targetProtein: Math.round(totalProtein),
-                    targetCarbs: Math.round(totalCarbs),
-                    targetFat: Math.round(totalFat),
-                    goal: patientContext?.goal,
-                  };
-                  generatePremiumMealPlanPDF(pdfData);
-                  toast.success("PDF pronto para imprimir!", { id: toastId });
-                } catch (err) {
-                  toast.error("Erro ao gerar PDF", { id: toastId });
-                }
-              }}
-              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2"
-            >
-              <FileDown className="w-3.5 h-3.5" />
-              Exportar PDF
-            </Button>
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSendWhatsApp}
-              disabled={sendingWhatsApp || !patientId}
-              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
-            >
-              {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
-              WhatsApp
-            </Button>
-
-            <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
-
-              <RotateCcw className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </header>
