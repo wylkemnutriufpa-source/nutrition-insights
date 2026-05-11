@@ -50,8 +50,11 @@ export function buildMeal(
 
   let allowedDb = foodDb.filter(f => !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase())));
 
-  // Fator de escala baseado na meta calórica da refeição (Base ~400kcal por refeição média)
-  const scale = targetMacros.kcal / 400;
+  // 🛡️ Fator de escala blindado: clamp 0.4x – 2.5x (impede grams astronômicos como 24750g de frango)
+  const rawScale = (targetMacros.kcal || 0) / 400;
+  const scale = Number.isFinite(rawScale) && rawScale > 0
+    ? Math.max(0.4, Math.min(2.5, rawScale))
+    : 1;
 
   // PARTE 2 — TEMPLATES FUNCIONAIS (LOGICA DE PLOTAGEM DETERMINISTICA)
   if (isBreakfast) {
