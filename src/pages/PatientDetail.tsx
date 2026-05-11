@@ -154,6 +154,7 @@ export default function PatientDetail() {
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
   const [sendingWhatsAppId, setSendingWhatsAppId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
