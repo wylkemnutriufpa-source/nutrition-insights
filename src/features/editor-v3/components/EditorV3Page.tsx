@@ -1581,6 +1581,17 @@ const EditorV3Page = () => {
               Exportar PDF
             </Button>
 
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSendWhatsApp}
+              disabled={sendingWhatsApp || !patientId}
+              className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
+            >
+              {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+              WhatsApp
+            </Button>
+
             <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
 
               <RotateCcw className="w-4 h-4" />
