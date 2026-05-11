@@ -1075,19 +1075,27 @@ const EditorV3Page = () => {
     
     try {
       const pdfData = await preparePDFData();
-      const { generatePremiumMealPlanPDF } = await import("@/lib/pdfExportPremium");
+      const { generatePremiumMealPlanPDF, buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
       
-      // Gera o PDF
+      // 1. Gera o PDF local para o profissional ver/salvar
       generatePremiumMealPlanPDF(pdfData);
       
-      // Abre o WhatsApp
-      const message = `Olá ${pdfData.patientName}! Aqui está seu plano alimentar FitJourney:`;
+      // 2. Gera HTML para compartilhamento via link
+      const html = buildPremiumMealPlanHTML(pdfData);
+      const fileName = `plan-${patientId}-${Date.now()}.html`;
+      const blob = new Blob([html], { type: "text/html" });
+      
+      await supabase.storage.from("shared-meal-plans").upload(fileName, blob);
+      const { data: { publicUrl } } = supabase.storage.from("shared-meal-plans").getPublicUrl(fileName);
+      
+      // 3. Abre o WhatsApp com a mensagem e o link
+      const message = `Olá ${pdfData.patientName}! Aqui está seu plano alimentar FitJourney: ${publicUrl}`;
       const { data: profile } = await supabase.from('profiles').select('phone').eq('user_id', patientId).maybeSingle();
       
       if (profile?.phone) {
         const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
         window.open(whatsappUrl, '_blank');
-        toast.success("WhatsApp aberto e PDF pronto!", { id: toastId });
+        toast.success("WhatsApp aberto com o link do plano!", { id: toastId });
       } else {
         toast.error("Telefone do paciente não encontrado", { id: toastId });
       }
