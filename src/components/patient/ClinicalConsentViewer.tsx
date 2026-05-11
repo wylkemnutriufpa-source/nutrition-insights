@@ -25,7 +25,7 @@ const CONSENT_SECTIONS = [
   },
 ];
 
-export function ClinicalConsentViewer() {
+export function ClinicalConsentViewer({ patientId }: { patientId?: string }) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-4">
