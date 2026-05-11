@@ -1,6 +1,7 @@
 import { Food, FoodCategory } from "./food-database";
 import { MealType } from "./meal-distribution";
 import { Marmita } from "./marmitas-database";
+import { getSubstitutions, Substitution } from "./substitutions";
 
 export interface PlannedItem {
   foodId: string;
@@ -12,6 +13,7 @@ export interface PlannedItem {
     fat_g: number;
     kcal: number;
   };
+  substitutions?: any[]; 
 }
 
 export interface PlannedMeal {
@@ -72,9 +74,9 @@ export function buildMeal(
     const ovo = findRandom(allowedDb, f => f.name.toLowerCase().includes("ovo"));
     const banana = findRandom(allowedDb, f => f.name.toLowerCase().includes("banana"));
 
-    if (pão) items.push(createPlannedItem(pão, Math.min(100, Math.max(25, roundTo5(50 * scale)))));
-    if (ovo) items.push(createPlannedItem(ovo, Math.min(200, Math.max(50, roundTo5(100 * scale)))));
-    if (banana) items.push(createPlannedItem(banana, Math.min(180, Math.max(40, roundTo5(90 * scale)))));
+    if (pão) items.push(createPlannedItem(pão, Math.min(100, Math.max(25, roundTo5(50 * scale))), foodDb, type));
+    if (ovo) items.push(createPlannedItem(ovo, Math.min(200, Math.max(50, roundTo5(100 * scale))), foodDb, type));
+    if (banana) items.push(createPlannedItem(banana, Math.min(180, Math.max(40, roundTo5(90 * scale))), foodDb, type));
     
     return finalizeMeal(type, time, items, targetMacros);
   }
@@ -94,20 +96,20 @@ export function buildMeal(
                     findRandom(allowedDb, f => f.name.toLowerCase().includes("ovo")) || dairy;
 
     if (isMorningSnack) {
-      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale)))));
-      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(170 * scale)))));
+      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale))), foodDb, type));
+      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(170 * scale))), foodDb, type));
     } else if (isAfternoonSnack) {
-      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(170 * scale)))));
-      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(100 * scale)))));
+      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(170 * scale))), foodDb, type));
+      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(100 * scale))), foodDb, type));
     } else if (isSupper) {
       // Ceia: Forçar opções leves (Iogurte ou Queijo ou Castanha). Sem carne ou excesso de ovos.
       const lightProtein = findRandom(allowedDb, f => f.name.toLowerCase().includes("iogurte") || f.name.toLowerCase().includes("queijo minas") || f.name.toLowerCase().includes("whey")) || yogurt;
-      if (lightProtein) items.push(createPlannedItem(lightProtein, Math.min(250, Math.max(30, roundTo5(100 * scale)))));
-      if (fruit && !lightProtein) items.push(createPlannedItem(fruit, Math.min(250, Math.max(30, roundTo5(80 * scale)))));
-      if (nut) items.push(createPlannedItem(nut, Math.min(50, Math.max(5, roundTo5(15 * scale)))));
+      if (lightProtein) items.push(createPlannedItem(lightProtein, Math.min(250, Math.max(30, roundTo5(100 * scale))), foodDb, type));
+      if (fruit && !lightProtein) items.push(createPlannedItem(fruit, Math.min(250, Math.max(30, roundTo5(80 * scale))), foodDb, type));
+      if (nut) items.push(createPlannedItem(nut, Math.min(50, Math.max(5, roundTo5(15 * scale))), foodDb, type));
     } else {
-      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale)))));
-      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(100 * scale)))));
+      if (fruit) items.push(createPlannedItem(fruit, Math.min(300, Math.max(50, roundTo5(150 * scale))), foodDb, type));
+      if (yogurt) items.push(createPlannedItem(yogurt, Math.min(400, Math.max(100, roundTo5(100 * scale))), foodDb, type));
     }
 
     return finalizeMeal(type, time, items, targetMacros);
@@ -121,11 +123,11 @@ export function buildMeal(
     const veg = findRandom(allowedDb, f => f.name.toLowerCase().includes("brócolis")) || findRandom(allowedDb, f => f.category === "vegetable");
     const fat = findRandom(allowedDb, f => f.name.toLowerCase().includes("azeite"));
 
-    if (protein) items.push(createPlannedItem(protein, Math.min(250, Math.max(80, roundTo5(150 * scale)))));
-    if (carb) items.push(createPlannedItem(carb, Math.min(300, Math.max(50, roundTo5(100 * scale)))));
-    if (legume) items.push(createPlannedItem(legume, Math.min(200, Math.max(50, roundTo5(100 * scale)))));
-    if (veg) items.push(createPlannedItem(veg, Math.min(200, Math.max(30, roundTo5(80 * scale)))));
-    if (fat) items.push(createPlannedItem(fat, Math.min(15, Math.max(3, roundTo5(5 * scale)))));
+    if (protein) items.push(createPlannedItem(protein, Math.min(250, Math.max(80, roundTo5(150 * scale))), foodDb, type));
+    if (carb) items.push(createPlannedItem(carb, Math.min(300, Math.max(50, roundTo5(100 * scale))), foodDb, type));
+    if (legume) items.push(createPlannedItem(legume, Math.min(200, Math.max(50, roundTo5(100 * scale))), foodDb, type));
+    if (veg) items.push(createPlannedItem(veg, Math.min(200, Math.max(30, roundTo5(80 * scale))), foodDb, type));
+    if (fat) items.push(createPlannedItem(fat, Math.min(15, Math.max(3, roundTo5(5 * scale))), foodDb, type));
 
     return finalizeMeal(type, time, items, targetMacros);
   }
@@ -175,8 +177,24 @@ function selectFood(
   return pool[index];
 }
 
-function createPlannedItem(food: Food, grams: number): PlannedItem {
+function createPlannedItem(food: Food, grams: number, foodDb: Food[] = [], mealType?: string): PlannedItem {
   const factor = grams / 100;
+  
+  // Calcular substituições automaticamente para garantir que sempre existam
+  const substitutions = foodDb.length > 0 
+    ? getSubstitutions(food, foodDb, grams, [], mealType).map(s => ({
+        id: s.food.id,
+        name: s.food.name,
+        kcal: s.food.kcal_100g * (s.grams / 100),
+        protein: s.food.protein_100g * (s.grams / 100),
+        carbs: s.food.carb_100g * (s.grams / 100),
+        fat: s.food.fat_100g * (s.grams / 100),
+        portionValue: s.grams,
+        portionLabel: s.unit_label,
+        measurementType: s.food.name.toLowerCase().includes('ovo') ? 'unit' : 'gram'
+      }))
+    : [];
+
   return {
     foodId: food.id,
     name: food.name,
@@ -187,6 +205,7 @@ function createPlannedItem(food: Food, grams: number): PlannedItem {
       fat_g: round(food.fat_100g * factor),
       kcal: round(food.kcal_100g * factor),
     },
+    substitutions
   };
 }
 
