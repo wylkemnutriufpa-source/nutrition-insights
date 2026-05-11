@@ -284,9 +284,9 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
     const patientStepsDone = !!pipeline.anamnesis_completed && !!pipeline.body_data_completed && !!pipeline.preferences_completed;
     if (!patientStepsDone) {
-      toast.error("O plano só pode ser gerado após consentimento, anamnese, dados corporais e preferências completos.");
-      return;
+      toast.warning("Atenção: O paciente ainda não completou todas as etapas, mas você pode gerar o plano mesmo assim.");
     }
+
 
     setOpeningEditor(true);
     try {
