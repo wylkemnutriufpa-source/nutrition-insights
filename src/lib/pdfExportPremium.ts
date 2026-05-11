@@ -530,6 +530,8 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
   const mealOrder = ["cafe_da_manha", "breakfast", "lanche_da_manha", "morning_snack", "almoco", "lunch", "lanche_da_tarde", "afternoon_snack", "snack", "pre_workout", "post_workout", "jantar", "dinner", "ceia", "evening_snack"];
 
+  const normalizeType = (t: string) => (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
