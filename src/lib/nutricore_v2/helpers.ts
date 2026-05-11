@@ -1,6 +1,6 @@
 
 /**
- * NutriCore V2 - Helper functions for nutrition calculation and classification
+ * NutriCore V3 - Helper functions for nutrition calculation and classification
  */
 
 export const isProtein = (name: string): boolean => {
