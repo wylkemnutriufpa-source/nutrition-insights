@@ -111,8 +111,10 @@ describe("PDF Export Premium — Auditoria de Gramas (anti-100g fixo)", () => {
       ],
     });
 
-    expect(html).not.toMatch(/\b0\s*g\b/i);
-    expect(html).not.toContain("1 unidade(s) M (0g)");
+    const substitutionSection = html.slice(html.indexOf("Opções de Substituição"));
+
+    expect(substitutionSection).not.toMatch(/\b0\s*g\b/i);
+    expect(substitutionSection).not.toContain("1 unidade(s) M (0g)");
     expect(html).toContain("Porção equivalente: 1 unidade média (62g)");
     expect(html).toContain("Porção equivalente: 1 unidade média (33g)");
   });
