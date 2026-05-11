@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { NutriCoreV3Adapter } from "@/lib/nutricore_v2/adapter";
 import { PatientContext, Meal } from "../types";
+import { clampItemKcal, assertSafeMacro, MACRO_SAFETY_LIMITS } from "@/lib/macroSafety";
 
 export async function generateAndSaveLocalPlan(
   patientId: string,
@@ -113,15 +114,22 @@ export async function generateAndSaveLocalPlan(
 
     // Insert items
     for (const meal of v3Meals) {
+      // 🛡️ Sanity check por refeição
+      const mealKcal = meal.items.reduce((sum, it) => sum + (Number(it.kcal) || 0), 0);
+      assertSafeMacro(mealKcal, `Meal "${meal.name}" total kcal`);
+
       for (const item of meal.items) {
+        const safeKcal = clampItemKcal(Math.round(Number(item.kcal) || 0));
+        assertSafeMacro(safeKcal, `Item "${item.name}" kcal`);
+
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
           meal_type: meal.name.toLowerCase().replace(/ /g, '_') as any,
-          calories_target: Math.round(item.kcal),
-          protein_target: item.protein,
-          carbs_target: item.carbs,
-          fat_target: item.fat,
+          calories_target: safeKcal,
+          protein_target: Math.min(500, Number(item.protein) || 0),
+          carbs_target: Math.min(800, Number(item.carbs) || 0),
+          fat_target: Math.min(300, Number(item.fat) || 0),
           description: item.portionUnitLabel || `${item.quantity}g`,
           tenant_id: tenantId
         } as any);

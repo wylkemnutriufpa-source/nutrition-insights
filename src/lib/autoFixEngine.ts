@@ -26,6 +26,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { clampScaleFactor, clampItemKcal, assertSafeMacro, MACRO_SAFETY_LIMITS } from "@/lib/macroSafety";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import {
   calculatePlanSimplicityScore,
@@ -709,15 +710,21 @@ export async function autoFixMealPlan(
         const totalMacro = sumMacro(finalItems, mc.key);
         const desiredTotal = mc.target * numDays;
         if (totalMacro > 0) {
-          const factor = desiredTotal / totalMacro;
+          // 🛡️ Clamp do fator de escala — IMPEDE loop de multiplicação astronômica.
+          // Se ficar fora do clamp, convergência ocorre em mais passadas, mas SEM EXPLOSÃO.
+          const rawFactor = desiredTotal / totalMacro;
+          const factor = clampScaleFactor(rawFactor);
           for (const item of finalItems) {
             if (item[mc.key]) {
               const oldValue = item[mc.key]!;
-              const newValue = Math.round(oldValue * factor);
+              let newValue = Math.round(oldValue * factor);
+              // 🛡️ Clamp absoluto por item (calorias)
+              if (mc.key === "calories_target") {
+                newValue = clampItemKcal(newValue);
+              }
               item[mc.key] = newValue;
-
-              // REGRA C: Macro correction is tracked in change log, NOT in description
-              // Annotations in descriptions break the validator's text matching
+              // 🛡️ Detecção de corrupção — aborta antes de gravar lixo no banco
+              assertSafeMacro(newValue, `${mc.label} item após escala`);
             }
           }
           macroRebalanced = true;
@@ -727,7 +734,7 @@ export async function autoFixMealPlan(
             dayOfWeek: -1,
             from: `${mc.label}: ${Math.round(mc.daily)}/${mc.target} (${diffPct > 0 ? "+" : ""}${Math.round(diffPct * 100)}%)`,
             to: `${mc.label}: ${mc.target}/${mc.target} (0%)`,
-            detail: `Rebalanceado contra meta clínica do paciente (fonte: ${targetSource}). Fator real: ×${(desiredTotal / totalMacro).toFixed(2)} aplicado a ${finalItems.filter(i => i[mc.key]).length} itens.`,
+            detail: `Rebalanceado contra meta clínica (fonte: ${targetSource}). Fator aplicado ×${factor.toFixed(2)} (raw ×${rawFactor.toFixed(2)}, clamp ${MACRO_SAFETY_LIMITS.MIN_SCALE_FACTOR}–${MACRO_SAFETY_LIMITS.MAX_SCALE_FACTOR}).`,
           });
         }
       }
@@ -736,13 +743,14 @@ export async function autoFixMealPlan(
     // Fallback: no clinical target — preserve original plan totals
     const afterCal = sumMacro(finalItems, "calories_target");
     if (beforeCal > 0 && Math.abs(afterCal - beforeCal) / beforeCal > 0.10) {
-      const factor = beforeCal / (afterCal || 1);
+      // 🛡️ Clamp do fator — impede multiplicação descontrolada
+      const factor = clampScaleFactor(beforeCal / (afterCal || 1));
       for (const item of finalItems) {
-        if (item.calories_target) item.calories_target = Math.round(item.calories_target * factor);
+        if (item.calories_target) item.calories_target = clampItemKcal(Math.round(item.calories_target * factor));
         if (item.protein_target) item.protein_target = Math.round(item.protein_target * factor);
         if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
         if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
-        // Track in change log only, not in description
+        assertSafeMacro(item.calories_target ?? 0, "calories_target fallback");
       }
       macroRebalanced = true;
       allChanges.push({
@@ -751,7 +759,7 @@ export async function autoFixMealPlan(
         dayOfWeek: -1,
         from: `${afterCal} kcal`,
         to: `${sumMacro(finalItems, "calories_target")} kcal`,
-        detail: `Fator de correção proporcional ×${factor.toFixed(2)} (sem meta clínica disponível)`,
+        detail: `Fator de correção proporcional clampeado ×${factor.toFixed(2)} (sem meta clínica disponível)`,
       });
     }
     warnings.push("Sem meta clínica do paciente — rebalanceamento proporcional ao plano original");
@@ -806,7 +814,8 @@ export async function autoFixMealPlan(
           const diffPct = Math.abs(dayTotal - targetPerDay) / targetPerDay;
           if (diffPct <= SKIP_THRESHOLD) continue; // Already close enough
           
-          const factor = targetPerDay / dayTotal;
+          // 🛡️ Clamp obrigatório — impede multiplicação descontrolada por dia
+          const factor = clampScaleFactor(targetPerDay / dayTotal);
           const dayItems = finalItems.filter(i => (i.day_of_week ?? 0) === day);
           
           // Distribute rounding residual to the largest item to ensure exact sum
@@ -819,8 +828,12 @@ export async function autoFixMealPlan(
             if (isItemProtected(item)) continue;
             const oldVal = Number(item[macroKey]) || 0;
             if (oldVal > 0) {
-              const newVal = Math.round(oldVal * factor);
+              let newVal = Math.round(oldVal * factor);
+              if (macroKey === "calories_target") {
+                newVal = clampItemKcal(newVal);
+              }
               (item as any)[macroKey] = newVal;
+              assertSafeMacro(newVal, `${macroKey} cross-day`);
               scaledSum += newVal;
               if (oldVal > largestVal) {
                 largestVal = oldVal;
