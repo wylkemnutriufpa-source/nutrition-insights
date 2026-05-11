@@ -1576,7 +1576,8 @@ const EditorV3Page = () => {
                 )}
 
                 {activeTab === 'template' && (
-                  templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
+                  <>
+                  {templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).length > 0 ? (
                     <div className="grid grid-cols-1 gap-3">
                       {templates.filter(t => t.name.toLowerCase().includes(foodSearch.toLowerCase())).map((t) => (
                         <div
@@ -1627,7 +1628,7 @@ const EditorV3Page = () => {
                     </div>
                   )}
 
-                  {planTemplates.length > 0 && activeTab === 'template' && (
+                  {planTemplates.length > 0 && (
                     <div className="mt-8 border-t border-white/5 pt-6">
                       <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Zap className="w-3.5 h-3.5" /> Planos Prontos (V3 Elite)
@@ -1652,6 +1653,7 @@ const EditorV3Page = () => {
                       </div>
                     </div>
                   )}
+                  </>
                 )}
 
                 {activeTab === 'visual' && (
@@ -2328,7 +2330,7 @@ const EditorV3Page = () => {
                     {t.items.slice(0, 2).map((item, idx) => (
                       <Badge key={idx} variant="outline" className="text-[9px] h-5 bg-white/5 border-white/10 text-white/30 font-bold">{item.name}</Badge>
                     ))}
-                    {t.items.length > 2 && <span className="text-[9px] text-white/20 font-black">+{t.items.length - 2}</span>}
+                    {t.items.length > 2 && <span className="text-[9px] text-white/20 font-bold uppercase">+{t.items.length - 2}</span>}
                   </div>
                   <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                     <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/20">
