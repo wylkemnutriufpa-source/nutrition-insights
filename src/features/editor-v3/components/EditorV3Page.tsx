@@ -1918,6 +1918,18 @@ const EditorV3Page = () => {
                   >
                     <Plus className="w-3.5 h-3.5" /> Adicionar
                   </Button>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setActiveMealId(meal.id);
+                      setActiveTab('template');
+                      setShowMainAddModal(true);
+                    }}
+                    className="h-10 px-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all gap-1.5 text-amber-400 hover:text-black hover:bg-amber-500"
+                  >
+                    <Layers className="w-3.5 h-3.5" /> Templates
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
@@ -1960,11 +1972,11 @@ const EditorV3Page = () => {
                         <span className="text-emerald-500 mr-1">{formatPortion(item)}</span> {item.name}
                       </p>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] font-bold text-white/40">{Math.round(recalculateMacros(item, item.quantity).calories)} kcal</span>
+                        <span className="text-[10px] font-bold text-white/40">{Math.round(calculateItemMacros(item, item.quantity).kcal)} kcal</span>
                         <div className="flex gap-2">
-                           <span className="text-[9px] font-black text-emerald-500/40 uppercase">{Math.round(item.protein)}g P</span>
-                           <span className="text-[9px] font-black text-blue-500/40 uppercase">{Math.round(item.carbs)}g C</span>
-                           <span className="text-[9px] font-black text-amber-500/40 uppercase">{Math.round(item.fat)}g G</span>
+                           <span className="text-[9px] font-black text-emerald-500/40 uppercase">{Math.round(calculateItemMacros(item, item.quantity).protein)}g P</span>
+                           <span className="text-[9px] font-black text-blue-500/40 uppercase">{Math.round(calculateItemMacros(item, item.quantity).carbs)}g C</span>
+                           <span className="text-[9px] font-black text-amber-500/40 uppercase">{Math.round(calculateItemMacros(item, item.quantity).fat)}g G</span>
                         </div>
                       </div>
                     </div>
@@ -2803,11 +2815,11 @@ const EditorV3Page = () => {
                     <div className="mt-4 flex gap-4">
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
                         <p className="text-[8px] font-black text-white/30 uppercase">Calorias</p>
-                        <p className="text-sm font-black text-white">{Math.round(recalculateMacros(selectedItem.item, selectedItem.item.quantity).calories)} kcal</p>
+                        <p className="text-sm font-black text-white">{Math.round(calculateItemMacros(selectedItem.item, selectedItem.item.quantity).kcal)} kcal</p>
                       </div>
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
                         <p className="text-[8px] font-black text-white/30 uppercase">Proteína</p>
-                        <p className="text-sm font-black text-emerald-400">{Math.round(recalculateMacros(selectedItem.item, selectedItem.item.quantity).protein)}g</p>
+                        <p className="text-sm font-black text-emerald-400">{Math.round(calculateItemMacros(selectedItem.item, selectedItem.item.quantity).protein)}g</p>
                       </div>
                     </div>
                   </div>

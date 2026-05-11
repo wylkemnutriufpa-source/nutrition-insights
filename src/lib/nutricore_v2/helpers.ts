@@ -73,8 +73,23 @@ export const getFoodCategory = (food: any): string => {
   return 'outro';
 };
 
+const resolveMacroGrams = (item: any, quantity: number) => {
+  const portionValue = Number(item.portionValue) || 1;
+  const rawGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
+    ? quantity * portionValue
+    : quantity;
+
+  const kcal100 = Number(item.kcal_100g ?? item.calories_100g ?? 0);
+  const totalKcal = Number(item.kcal ?? item.calories ?? 0);
+  const inferredGrams = kcal100 > 0 && totalKcal > 0 ? Math.round((totalKcal / kcal100) * 100) : 0;
+  const canTrustInference = inferredGrams >= 5 && inferredGrams <= 600;
+
+  if (canTrustInference && (rawGrams > 600 || rawGrams / inferredGrams > 3)) return inferredGrams;
+  return Math.max(0, rawGrams);
+};
+
 export const calculateItemMacros = (item: any, quantity: number) => {
-  // 🛡️ BLINDAGEM V3: Priorizar valores por 100g para evitar distorção
+  // 🛡️ BLINDAGEM V3: Priorizar valores por 100g e reparar quantidades antigas corrompidas
   const kcal100 = item.kcal_100g ?? item.calories_100g;
   const protein100 = item.protein_100g ?? item.protein_g;
   const carbs100 = item.carb_100g ?? item.carbs_g;
@@ -84,9 +99,7 @@ export const calculateItemMacros = (item: any, quantity: number) => {
   
   if (kcal100 !== undefined || protein100 !== undefined) {
     // Temos base de 100g. Calculamos o total de gramas primeiro.
-    const totalGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
-      ? (quantity * (item.portionValue || 1))
-      : quantity;
+    const totalGrams = resolveMacroGrams(item, quantity);
     factor = totalGrams / 100;
     
     return {
