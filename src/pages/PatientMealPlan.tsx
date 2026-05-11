@@ -372,13 +372,16 @@ export default function PatientMealPlan() {
         if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
       } catch { /* ignore */ }
 
+      const pdfItems = buildPdfItemsForDailyPlan(allItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[];
+      const primaryTotals = calculatePrimaryTotals(pdfItems as any);
+
       const data: PremiumMealPlanPDFData = {
         planTitle: plan.title || "Plano Alimentar",
         patientName,
         nutritionistName,
         startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
-        planMode: plan.plan_mode || "weekly",
-        items: allItems.map(i => ({
+        planMode: "single_day",
+        items: pdfItems.map(i => ({
           mealType: i.meal_type || "lunch",
           title: i.title || "Refeição",
           description: i.description || undefined,
@@ -390,10 +393,10 @@ export default function PatientMealPlan() {
           is_primary: i.is_primary !== false,
           substitution_group_id: (i as any).substitution_group_id || null,
         })),
-        targetCalories: planFull?.total_target_calories || undefined,
-        targetProtein: planFull?.total_target_protein || undefined,
-        targetCarbs: planFull?.total_target_carbs || undefined,
-        targetFat: planFull?.total_target_fat || undefined,
+        targetCalories: Math.round(primaryTotals.calories) || planFull?.total_target_calories || undefined,
+        targetProtein: Math.round(primaryTotals.protein) || planFull?.total_target_protein || undefined,
+        targetCarbs: Math.round(primaryTotals.carbs) || planFull?.total_target_carbs || undefined,
+        targetFat: Math.round(primaryTotals.fat) || planFull?.total_target_fat || undefined,
         goal,
         notes: planFull?.description || undefined,
       };
@@ -428,6 +431,8 @@ export default function PatientMealPlan() {
     })).filter(g => g.items.length > 0),
   [overlayedItems]);
 
+  const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
+
   // Memoized daily adherence
   const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
     const followed = completions.filter(c => c.adherence_status === "followed").length;
@@ -438,7 +443,7 @@ export default function PatientMealPlan() {
   }, [completions, items]);
 
   const getWeekDayAdherence = useCallback((dayDate: string, dayIdx: number) => {
-    const dayItems = allItems.filter(i => i.day_of_week === dayIdx);
+    const dayItems = buildDailyDisplayItems(allItems as any, dayIdx) as MealPlanItem[];
     const dayComps = weekCompletions.filter(c => (c as any).date === dayDate);
     if (dayItems.length === 0) return { pct: 0, total: 0, done: 0 };
     const followed = dayComps.filter(c => c.adherence_status === "followed").length;
