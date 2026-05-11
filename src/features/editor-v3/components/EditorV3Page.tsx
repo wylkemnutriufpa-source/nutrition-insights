@@ -12,7 +12,7 @@ import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
-  searchVisualLibrary, uploadVisualLibraryImage 
+  searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
 } from '../utils/dataFetcher';
 import { 
   calculateNutritionalScore, validatePlanClinically 
@@ -253,6 +253,7 @@ const EditorV3Page = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [marmitas, setMarmitas] = useState<Food[]>([]);
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
+  const [planTemplates, setPlanTemplates] = useState<any[]>([]);
   const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
   const [visualLibraryInfo, setVisualLibraryInfo] = useState<{ count: number, incomplete: boolean }>({ count: 0, incomplete: false });
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
@@ -626,15 +627,17 @@ const EditorV3Page = () => {
       
       const startTime = performance.now();
       try {
-        const [marmitasData, templatesData, baseData] = await Promise.all([
+        const [marmitasData, templatesData, baseData, planTemplatesData] = await Promise.all([
           searchMarmitas(user.id),
           searchTemplates(),
-          getBaseFoods()
+          getBaseFoods(),
+          searchPlanTemplates()
         ]);
 
         setMarmitas(marmitasData);
         setTemplates(templatesData);
         setBaseFoods(baseData);
+        setPlanTemplates(planTemplatesData);
         
         setDbStatus({
           foods: baseData.length,
