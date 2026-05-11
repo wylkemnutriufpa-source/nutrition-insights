@@ -1045,16 +1045,37 @@ const EditorV3Page = () => {
       return mealItems;
     };
 
+    const standardOrder = [
+      'cafe', 'desjejum', 'manha', 'almoco', 'tarde', 'lanche', 'jantar', 'ceia', 'pre', 'pos', 'noite'
+    ];
+
+    const getMealRank = (name: string) => {
+      const lower = name.toLowerCase();
+      if (lower.includes('cafe') || lower.includes('desjejum')) return 1;
+      if (lower.includes('lanche da manha')) return 2;
+      if (lower.includes('almoco')) return 3;
+      if (lower.includes('lanche da tarde') || lower.includes('lanche')) return 4;
+      if (lower.includes('jantar')) return 5;
+      if (lower.includes('ceia')) return 6;
+      return 10;
+    };
+
+    const sortedMeals = [...meals].sort((a, b) => {
+      // Se for modo semanal e as refeições tiverem dias, primeiro ordena pelo dia
+      // Mas se o usuário montou o plano, o getMealRank resolve a ordem das refeições
+      return getMealRank(a.name) - getMealRank(b.name);
+    });
+
     const pdfItems = isWeekly 
-      ? (meals.length >= 42 
-          ? meals.flatMap((m, idx) => {
-              const dayIdx = Math.floor(idx / (meals.length / 7));
+      ? (sortedMeals.length >= 42 
+          ? sortedMeals.flatMap((m, idx) => {
+              const dayIdx = Math.floor(idx / (sortedMeals.length / 7));
               const days = [1, 2, 3, 4, 5, 6, 0];
               return mapMealToItems(m, days[dayIdx]);
             })
-          : [1, 2, 3, 4, 5, 6, 0].flatMap(day => meals.flatMap(m => mapMealToItems(m, day)))
+          : [1, 2, 3, 4, 5, 6, 0].flatMap(day => sortedMeals.flatMap(m => mapMealToItems(m, day)))
         )
-      : meals.flatMap(m => mapMealToItems(m, -1));
+      : sortedMeals.flatMap(m => mapMealToItems(m, -1));
 
     return {
       planTitle: isWeekly ? "Plano Alimentar Semanal" : "Plano Alimentar Premium V3",
@@ -1111,6 +1132,23 @@ const EditorV3Page = () => {
       toast.error("Erro ao preparar envio", { id: toastId });
     } finally {
       setSendingWhatsApp(false);
+    }
+  };
+
+  const handleViewPDF = async () => {
+    if (!meals.length) {
+      toast.error("Nenhum item para visualizar");
+      return;
+    }
+    const toastId = toast.loading("Gerando prévia do PDF...");
+    try {
+      const pdfData = await preparePDFData();
+      const { generatePremiumMealPlanPDF } = await import("@/lib/pdfExportPremium");
+      generatePremiumMealPlanPDF(pdfData);
+      toast.success("PDF gerado com sucesso!", { id: toastId });
+    } catch (err) {
+      console.error("PDF preview error:", err);
+      toast.error("Erro ao gerar PDF", { id: toastId });
     }
   };
 
@@ -1544,58 +1582,57 @@ const EditorV3Page = () => {
                     setActiveTab('template');
                     setShowMainAddModal(true);
                   }}
-                  className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-amber-500 hover:text-white hover:bg-amber-500/20 rounded-xl transition-all gap-2"
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2 border border-amber-500/20 animate-pulse shadow-lg shadow-amber-500/10"
                 >
                   <BookCopy className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Templates</span>
+                  <span className="hidden sm:inline">Biblioteca de Templates</span>
+                  <span className="sm:hidden">Templates</span>
                 </Button>
               </div>
 
-              <Button 
-                size="sm" 
-                onClick={handlePromotionRequest}
-                disabled={promoting || !draftId}
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-lg shadow-blue-500/20"
-              >
-                {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                <span className="hidden sm:inline">Salvar e Publicar</span>
-                <span className="sm:hidden">Salvar</span>
-              </Button>
+              <div className="h-8 w-px bg-white/5 mx-2" />
 
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={async () => {
-                  if (!meals.length) {
-                    toast.error("Nenhum item para exportar");
-                    return;
-                  }
-                  const toastId = toast.loading("Gerando PDF Premium...");
-                  try {
-                    const pdfData = await preparePDFData();
-                    generatePremiumMealPlanPDF(pdfData);
-                    toast.success("PDF Premium pronto!", { id: toastId });
-                  } catch (err) {
-                    toast.error("Erro ao gerar PDF", { id: toastId });
-                  }
-                }}
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2"
-              >
-                <FileDown className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Exportar PDF</span>
-                <span className="sm:hidden">PDF</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleViewPDF}
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white rounded-xl transition-all gap-2"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Visualizar PDF</span>
+                  <span className="sm:hidden">Ver PDF</span>
+                </Button>
 
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSendWhatsApp}
-                disabled={sendingWhatsApp || !patientId}
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
-              >
-                {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
-                WhatsApp
-              </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    if (viewMode === 'weekly') {
+                      handleSendWhatsApp();
+                    } else {
+                      // Se estiver em modo diário, perguntar se quer exportar diário ou semanal
+                      // Para simplificar, vamos exportar o modo atual
+                      handleSendWhatsApp();
+                    }
+                  }}
+                  disabled={sendingWhatsApp || !patientId}
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
+                >
+                  {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+                  WhatsApp
+                </Button>
+
+                <Button 
+                  size="sm" 
+                  onClick={handlePromotionRequest}
+                  disabled={promoting || !draftId}
+                  className="h-10 px-6 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-xl shadow-blue-600/20 border-b-2 border-blue-800"
+                >
+                  {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  Salvar Plano
+                </Button>
+              </div>
 
               <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
                 <RotateCcw className="w-4 h-4" />
@@ -1605,7 +1642,7 @@ const EditorV3Page = () => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[350px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
 
         {/* Coluna Esquerda: Biblioteca (Library) */}
         <aside className="hidden lg:flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
@@ -2560,6 +2597,77 @@ const EditorV3Page = () => {
                   </div>
                 </button>
               ))}
+
+              {activeTab === 'template' && planTemplates.length > 0 && (
+                <div className="col-span-full mt-8 pt-8 border-t border-white/5">
+                   <h4 className="text-sm font-black text-amber-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-3 italic">
+                    <Zap className="w-5 h-5" /> Biblioteca de Planos Prontos (V3 Elite)
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {planTemplates.map((pt) => (
+                      <button
+                        key={pt.id}
+                        onClick={async () => {
+                          try {
+                            setIsGeneratingGlobal(true);
+                            const ptMeals = Array.isArray(pt.meals) ? pt.meals : [];
+                            const v3Meals: Meal[] = ptMeals.map((m: any) => {
+                              const mealItems: MealItem[] = (m.foods || []).map((f: any) => ({
+                                id: Math.random().toString(36).substring(2, 9),
+                                name: f.name,
+                                kcal: f.calories || 0,
+                                calories: f.calories || 0,
+                                protein: f.protein || 0,
+                                carbs: f.carbs || 0,
+                                fat: f.fat || 0,
+                                portionValue: 100,
+                                portionUnitLabel: 'g',
+                                portionUnit: 'g',
+                                portionLabel: f.portion || '100g',
+                                measurementType: 'gram',
+                                instanceId: Math.random().toString(36).substring(2, 10),
+                                quantity: 100,
+                                substitutions: []
+                              } as MealItem));
+                              
+                              return {
+                                id: Math.random().toString(36).substring(2, 9),
+                                name: m.title || m.meal_type,
+                                time: '08:00',
+                                items: mealItems,
+                                imageSource: 'auto'
+                              } as Meal;
+                            });
+
+                            if (v3Meals.length > 0) {
+                              const mealsWithImages = await Promise.all(v3Meals.map(async (meal) => {
+                                const bestImage = await getBestMealImage(meal.name, meal.items);
+                                return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
+                              }));
+                              setMeals(mealsWithImages);
+                              setShowMainAddModal(false);
+                              toast.success(`Plano "${pt.name}" aplicado!`);
+                            }
+                          } finally {
+                            setIsGeneratingGlobal(false);
+                          }
+                        }}
+                        className="group relative flex flex-col items-start p-6 rounded-3xl bg-amber-500/5 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/10 transition-all text-left shadow-2xl"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center border border-amber-500/20 mb-4 group-hover:scale-110 transition-transform">
+                          <span className="text-2xl">{pt.icon || '🥗'}</span>
+                        </div>
+                        <span className="font-black text-white text-lg uppercase tracking-tight mb-1">{pt.name}</span>
+                        <p className="text-xs font-medium text-white/40 line-clamp-2 uppercase tracking-tighter leading-relaxed mb-4">{pt.description}</p>
+                        <div className="mt-auto pt-4 border-t border-white/5 w-full flex justify-between items-center">
+                          <span className="text-[10px] font-black text-amber-500/60 uppercase">V3 Smart Engine</span>
+                          <Plus className="w-4 h-4 text-amber-500" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {activeTab === 'food' && foods.length === 0 && !isSearchingFoods && (
                 <div className="col-span-full py-40 flex flex-col items-center justify-center text-white/10 italic font-medium">
