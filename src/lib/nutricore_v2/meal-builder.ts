@@ -156,10 +156,10 @@ function selectFood(
     preferences.some(p => f.name.toLowerCase().includes(p.toLowerCase()))
   );
 
-  if (preferred.length > 0) return preferred[0];
+  const pool = preferred.length > 0 ? preferred : available;
 
-  // Se não houver preferência, retorna o primeiro (determinístico)
-  return available[0];
+  // 🎲 Variedade Sistêmica: Embaralha o pool para evitar planos idênticos
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function createPlannedItem(food: Food, grams: number): PlannedItem {
