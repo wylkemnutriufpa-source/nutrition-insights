@@ -177,8 +177,24 @@ function selectFood(
   return pool[index];
 }
 
-function createPlannedItem(food: Food, grams: number): PlannedItem {
+function createPlannedItem(food: Food, grams: number, foodDb: Food[] = [], mealType?: string): PlannedItem {
   const factor = grams / 100;
+  
+  // Calcular substituições automaticamente para garantir que sempre existam
+  const substitutions = foodDb.length > 0 
+    ? getSubstitutions(food, foodDb, grams, [], mealType).map(s => ({
+        id: s.food.id,
+        name: s.food.name,
+        kcal: s.food.kcal_100g * (s.grams / 100),
+        protein: s.food.protein_100g * (s.grams / 100),
+        carbs: s.food.carb_100g * (s.grams / 100),
+        fat: s.food.fat_100g * (s.grams / 100),
+        portionValue: s.grams,
+        portionLabel: s.unit_label,
+        measurementType: s.food.name.toLowerCase().includes('ovo') ? 'unit' : 'gram'
+      }))
+    : [];
+
   return {
     foodId: food.id,
     name: food.name,
@@ -189,6 +205,7 @@ function createPlannedItem(food: Food, grams: number): PlannedItem {
       fat_g: round(food.fat_100g * factor),
       kcal: round(food.kcal_100g * factor),
     },
+    substitutions
   };
 }
 
