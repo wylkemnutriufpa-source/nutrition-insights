@@ -924,15 +924,11 @@ export default function PatientDetail() {
                     variant="ghost" 
                     className="h-8 gap-2 text-xs font-medium hover:bg-primary/10 hover:text-primary"
                     onClick={() => {
-                      const version = plan.editor_version || "v2";
-                      if (version === "v3" && resolvedPatientId) {
-                        navigate(`/meal-plans/editor/v3?patientId=${resolvedPatientId}&planId=${plan.id}`);
-                      } else {
-                        navigate(`/meal-plans/${plan.id}`);
-                      }
+                      const path = `/editor-v3/${resolvedPatientId}?planId=${plan.id}`;
+                      navigate(path);
                     }}
                   >
-                    Abrir no Editor {((profile as any)?.last_editor_version_used || "v2").toUpperCase()}
+                    Abrir no Editor V3
                     <Rocket className="w-3 h-3" />
                   </Button>
                 </div>

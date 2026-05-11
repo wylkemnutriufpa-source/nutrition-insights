@@ -38,7 +38,7 @@ test('REGRESSÃO: O Adaptador NutriCore deve ser V3', async () => {
 test('SNAPSHOT: Lynn Ohana (63kg) deve ter ~1920 kcal', () => {
   const result = runEngine({
     weight_kg: 63,
-    height_cm: 165, // Base Lynn
+    height_cm: 165,
     age_years: 30,
     sex: 'feminino',
     activity_level: 'moderado',
@@ -59,7 +59,6 @@ test('SNAPSHOT: Ana Carla (77kg) deve ter ~2200 kcal', () => {
     goal: 'manutencao'
   });
 
-  // Base para 77kg, moderado, manutenção: ~2200kcal
   const diff = Math.abs(result.target_kcal - 2200);
   expect(diff, `Ana Carla: esperado ~2200kcal, motor gerou ${result.target_kcal}kcal`).toBeLessThan(200);
 });
