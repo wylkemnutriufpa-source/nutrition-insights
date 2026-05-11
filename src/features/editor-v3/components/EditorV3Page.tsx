@@ -24,11 +24,9 @@ import {
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V3 Imports (lib/nutricore_v2)
-import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
-import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
-import { MealSlot } from "@/lib/nutricore_v2/meal-distribution";
+// Direct NutriCore V3 Imports are now handled via Adapter or direct types
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
+import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
