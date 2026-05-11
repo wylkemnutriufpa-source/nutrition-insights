@@ -216,7 +216,8 @@ const MealItemCard = memo(function MealItemCard({
       {resolvedImage && (
         <div
           className="relative w-full aspect-[16/9] overflow-hidden cursor-pointer bg-muted/30"
-          onClick={() => onOpenDetail({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+          onClick={() => onOpenDetail({ ...item, itemId: item.id, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+
         >
           <img src={resolvedImage} alt={item.title} className="w-full h-full object-cover object-center" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
