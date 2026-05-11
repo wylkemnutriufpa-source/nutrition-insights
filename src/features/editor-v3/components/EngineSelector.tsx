@@ -19,9 +19,7 @@ interface EngineSelectorProps {
 }
 
 export const EngineSelector = ({ isOpen, onClose, onSelect, patientName }: EngineSelectorProps) => {
-  const [selected, setSelected] = React.useState<'v2' | 'v3'>(() => {
-    return (localStorage.getItem('fitjourney:last-engine-choice') as 'v2' | 'v3') || 'v3';
-  });
+  const [selected, setSelected] = React.useState<'v2' | 'v3'>('v3');
 
   const handleConfirm = () => {
     localStorage.setItem('fitjourney:last-engine-choice', selected);
