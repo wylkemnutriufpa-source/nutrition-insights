@@ -1055,13 +1055,36 @@ export default function PatientDetail() {
               <TabsContent value="timeline">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold">Linha do Tempo</h3>
-                    <Button variant="outline" size="sm" onClick={() => setNoteOpen(true)}>Nova Nota</Button>
+                    <h3 className="font-bold flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-emerald-500" /> Linha do Tempo
+                    </h3>
+                    <Button variant="outline" size="sm" onClick={() => setNoteOpen(true)} className="border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10">
+                      Nova Nota
+                    </Button>
                   </div>
-                  {/* Timeline logic would go here, reusing existing components if possible */}
-                  <div className="p-4 bg-black/20 rounded-xl border border-white/5 text-sm text-muted-foreground">
-                    Visualize o histórico completo do paciente aqui.
-                  </div>
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-4">
+                      {timeline && timeline.length > 0 ? (
+                        timeline.map((event: any, idx: number) => {
+                          const Config = eventTypeConfig[event.event_type] || eventTypeConfig.note;
+                          return (
+                            <div key={idx} className="relative pl-6 border-l border-emerald-500/20 py-1">
+                              <div className="absolute left-[-5px] top-2 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                              <div className="p-3 bg-black/40 rounded-xl border border-white/5">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="font-bold text-sm">{event.title}</p>
+                                  <span className="text-[10px] text-muted-foreground">{new Date(event.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{event.description}</p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-center py-10 text-muted-foreground italic">Nenhum evento registrado na timeline.</p>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
               </TabsContent>
               <TabsContent value="overview">
