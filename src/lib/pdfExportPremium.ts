@@ -638,7 +638,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     </div>
   </div>
   <div style="margin: -10px 0 14px; font-size: 9px; color: #64748b; text-align: right; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;">
-    <span>Total Considerado: refeições principais</span><div style="display:none">${displayTotals.calories}</div>
+    <span>(Total Considerado) refeições principais</span><div style="display:none">${displayTotals.calories}</div>
   </div>
 
   ${data.goal ? `
