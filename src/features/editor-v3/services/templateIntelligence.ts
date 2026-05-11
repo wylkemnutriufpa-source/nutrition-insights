@@ -61,9 +61,9 @@ export function processSmartTemplate(
       .filter(f => f.category === item.category && f.name !== item.name)
       .slice(0, 3)
       .map(s => {
-        // Calcular equivalência para este substituto baseado em calorias do item original
-        const ratio = (item.kcal || 0) / (s.kcal_100g || 1); 
-        const equivGrams = Math.max(10, Math.round(ratio * 100 / 5) * 5); // Arredonda para 5g
+        // Calcular equivalência baseada no kcal do alimento (que já é normalizado na V3)
+        const ratio = (item.kcal || 0) / (s.kcal || 1); 
+        const equivGrams = Math.max(10, Math.round((s.portionValue || 100) * ratio / 5) * 5); 
         return {
           ...s,
           suggestedQuantity: equivGrams,
