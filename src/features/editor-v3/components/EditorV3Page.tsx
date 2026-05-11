@@ -1435,27 +1435,33 @@ const EditorV3Page = () => {
                 const toastId = toast.loading("Gerando PDF...");
                 try {
                   const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
+                  // 🛡️ Totais somados a partir dos itens reais (nunca confiar em score ausente)
+                  const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
+                  const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
+                  const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
+                  const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
+
                   const pdfData: PremiumMealPlanPDFData = {
                     planTitle: "Plano Alimentar V3",
                     patientName: patientContext?.name || "Paciente",
                     nutritionistName: prof?.full_name || "Seu Nutricionista",
                     startDate: new Date().toLocaleDateString("pt-BR"),
-                    planMode: 'single_day', // V3 currently uses a single day representation for export
+                    planMode: 'single_day',
                     items: meals.map(m => ({
-                      mealType: m.name.toLowerCase().includes('café') ? 'breakfast' : 
-                                m.name.toLowerCase().includes('almoço') ? 'lunch' : 
+                      mealType: m.name.toLowerCase().includes('café') ? 'breakfast' :
+                                m.name.toLowerCase().includes('almoço') ? 'lunch' :
                                 m.name.toLowerCase().includes('jantar') ? 'dinner' : 'snack',
                       title: m.name,
-                      description: m.items.map(i => `${i.name} — ${i.quantity}${i.measurementType === 'gram' ? 'g' : i.measurementType === 'ml' ? 'ml' : ' un.'}`).join('\n'),
-                      calories_target: m.items.reduce((acc, i) => acc + (i.kcal || 0), 0),
-                      protein_target: m.items.reduce((acc, i) => acc + (i.protein || 0), 0),
-                      carbs_target: m.items.reduce((acc, i) => acc + (i.carbs || 0), 0),
-                      fat_target: m.items.reduce((acc, i) => acc + (i.fat || 0), 0),
+                      description: m.items.map(i => `${i.name} — ${formatPortion(i)}`).join('\n'),
+                      calories_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.kcal) || 0), 0)),
+                      protein_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.protein) || 0), 0)),
+                      carbs_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.carbs) || 0), 0)),
+                      fat_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.fat) || 0), 0)),
                     })),
-                    targetCalories: (nutritionalScore as any)?.total?.kcal || 0,
-                    targetProtein: (nutritionalScore as any)?.total?.protein || 0,
-                    targetCarbs: (nutritionalScore as any)?.total?.carbs || 0,
-                    targetFat: (nutritionalScore as any)?.total?.fat || 0,
+                    targetCalories: Math.round(totalKcal),
+                    targetProtein: Math.round(totalProtein),
+                    targetCarbs: Math.round(totalCarbs),
+                    targetFat: Math.round(totalFat),
                     goal: patientContext?.goal,
                   };
                   generatePremiumMealPlanPDF(pdfData);
