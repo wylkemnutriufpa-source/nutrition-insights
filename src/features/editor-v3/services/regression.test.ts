@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import fs from 'fs';
-import path from 'fs';
+import { runEngine } from '@/lib/nutricore_v2/nutrition-engine';
 
 test('REGRESSÃO: Motor V2 não deve ser chamado no Editor V3', () => {
   const filesToCheck = [
@@ -14,7 +14,6 @@ test('REGRESSÃO: Motor V2 não deve ser chamado no Editor V3', () => {
     const content = fs.readFileSync(file, 'utf8');
     
     // Proibir referências explícitas ao Motor V2 em contextos de execução/interface
-    // Ignoramos o path 'nutricore_v2' pois é o nome do diretório físico
     const hasV2Reference = /Motor V2|NutriCoreV2Adapter/i.test(content);
     
     if (hasV2Reference) {
@@ -34,4 +33,33 @@ test('REGRESSÃO: O Adaptador NutriCore deve ser V3', async () => {
 
   expect(hasV3Class, 'A classe NutriCoreV3Adapter deve estar definida no adaptador.').toBe(true);
   expect(hasV2Class, 'A classe NutriCoreV2Adapter NÃO deve existir.').toBe(false);
+});
+
+test('SNAPSHOT: Lynn Ohana (63kg) deve ter ~1920 kcal', () => {
+  const result = runEngine({
+    weight_kg: 63,
+    height_cm: 165, // Base Lynn
+    age_years: 30,
+    sex: 'feminino',
+    activity_level: 'moderado',
+    goal: 'manutencao'
+  });
+
+  const diff = Math.abs(result.target_kcal - 1920);
+  expect(diff, `Lynn Ohana: esperado ~1920kcal, motor gerou ${result.target_kcal}kcal`).toBeLessThan(200);
+});
+
+test('SNAPSHOT: Ana Carla (77kg) deve ter ~2200 kcal', () => {
+  const result = runEngine({
+    weight_kg: 77,
+    height_cm: 165, 
+    age_years: 35,
+    sex: 'feminino',
+    activity_level: 'moderado',
+    goal: 'manutencao'
+  });
+
+  // Base para 77kg, moderado, manutenção: ~2200kcal
+  const diff = Math.abs(result.target_kcal - 2200);
+  expect(diff, `Ana Carla: esperado ~2200kcal, motor gerou ${result.target_kcal}kcal`).toBeLessThan(200);
 });
