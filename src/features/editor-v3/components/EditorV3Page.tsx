@@ -1625,6 +1625,32 @@ const EditorV3Page = () => {
                       <LayoutDashboard className="w-8 h-8 opacity-20" />
                       <p className="text-[10px] font-black uppercase tracking-widest">Nenhum template salvo</p>
                     </div>
+                  )}
+
+                  {planTemplates.length > 0 && activeTab === 'template' && (
+                    <div className="mt-8 border-t border-white/5 pt-6">
+                      <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Zap className="w-3.5 h-3.5" /> Planos Prontos (V3 Elite)
+                      </h4>
+                      <div className="space-y-3">
+                        {planTemplates.map((pt) => (
+                          <button
+                            key={pt.id}
+                            onClick={() => navigate(`/diet-templates?patientId=${patientId}&apply=${pt.id}`)}
+                            className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-amber-500/5 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/10 transition-all text-left shadow-sm"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
+                              <span className="text-lg">{pt.icon || '🥗'}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-white text-[10px] truncate uppercase">{pt.name}</p>
+                              <p className="text-[9px] text-white/40 truncate">{pt.description}</p>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )
                 )}
 
