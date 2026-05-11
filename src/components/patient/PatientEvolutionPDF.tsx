@@ -176,52 +176,6 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
     }
   };
 
-  const sendWhatsApp = async () => {
-    setSending(true);
-    try {
-      const data = await getReportData();
-      if (!data) return;
-
-      const { html, profName } = data;
-      
-      // Upload report to shared storage
-      const fileName = `report-${patientId}-${Date.now()}.html`;
-      const blob = new Blob([html], { type: "text/html" });
-      
-      const { error: uploadError } = await supabase.storage
-        .from("shared-meal-plans")
-        .upload(fileName, blob);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("shared-meal-plans")
-        .getPublicUrl(fileName);
-
-      // Get patient phone
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("phone")
-        .eq("user_id", patientId)
-        .maybeSingle();
-
-      if (profileError || !profile?.phone) {
-        toast.error("Telefone do paciente não encontrado.");
-        return;
-      }
-
-      const message = `Olá ${patientName.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nAcabei de gerar seu Relatório de Evolução atualizado. Você pode visualizá-lo clicando no link abaixo:\n\n${publicUrl}\n\nQualquer dúvida, estou à disposição!`;
-
-      const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
-      window.open(whatsappUrl, "_blank");
-      toast.success("WhatsApp aberto!");
-    } catch (err: any) {
-      console.error("WhatsApp error:", err);
-      toast.error("Erro ao preparar envio via WhatsApp");
-    } finally {
-      setSending(false);
-    }
-  };
 
   return (
     <div className="flex flex-wrap gap-2">
