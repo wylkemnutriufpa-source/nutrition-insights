@@ -72,6 +72,7 @@ import { deactivateMealPlan } from "@/lib/serverTransitions";
 import Curiosidades from "./Curiosidades";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
+import { PatientConsentBadge } from "@/components/patient/PatientConsentBadge";
 
 
 export default function PatientDetail() {
