@@ -2,6 +2,7 @@
 import { Meal, MealItem, Food } from '../types';
 import { isProtein, isCarb, isVegetable, isFat, calculateItemMacros, getFoodCategory } from '@/lib/nutricore_v2/helpers';
 import { BASE_FOODS } from '@/lib/nutricore_v2/food-database';
+import { clampScaleFactor, clampItemGrams, clampItemKcal } from '@/lib/macroSafety';
 
 export interface PlanAdjustmentParams {
   proteinTarget: number;
