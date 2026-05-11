@@ -92,17 +92,21 @@ const MEASURE_OPTIONS = [
 const formatPortion = (item: MealItem) => {
   // Para V3, sempre buscamos a medida caseira + gramas para clareza total
   const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
-  
-  const totalGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
-    ? Math.round(item.quantity * (item.portionValue || 1))
-    : Math.round(item.quantity);
+
+  const rawTotal = (item.measurementType === 'unit' || item.measurementType === 'spoon')
+    ? Math.round((item.quantity || 0) * (item.portionValue || 1))
+    : Math.round(item.quantity || 0);
+
+  // 🛡️ Clamp anti-corrupção: nenhum item de refeição deve passar de 1000g
+  const totalGrams = Math.min(1000, Math.max(0, rawTotal));
+  const safeQty = Math.min(50, Math.max(0, Math.round(item.quantity || 0)));
 
   if (displayUnit === 'g' || displayUnit === 'gramas') {
     return `${totalGrams}g`;
   }
-  
+
   // Ex: "2 fatias (50g)" ou "4 colheres (100g)"
-  return `${item.quantity} ${displayUnit} (${totalGrams}g)`;
+  return `${safeQty} ${displayUnit} (${totalGrams}g)`;
 };
 
 const EditorV3Page = () => {
