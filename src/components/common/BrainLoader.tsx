@@ -27,7 +27,8 @@ function MessageRotator({ messages, text }: { messages: string[]; text?: string 
     if (displayMessages.length <= 1) return;
     const interval = setInterval(() => {
       setIdx((prev) => (prev + 1) % displayMessages.length);
-    }, 3000);
+    }, 2000);
+
     return () => clearInterval(interval);
   }, [displayMessages.length]);
 
@@ -158,7 +159,7 @@ export function BrainLoaderScreen({
                 className="h-full bg-primary/80"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 10, ease: "easeInOut" }}
+                transition={{ duration: 6, ease: "easeInOut" }}
               />
             </div>
           </motion.div>
