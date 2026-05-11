@@ -2,8 +2,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 
 interface Props {
   patientId: string;
@@ -13,49 +14,48 @@ interface Props {
 export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const generate = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const [assessmentsRes, checklistRes, planRes, profileRes] = await Promise.all([
-        supabase
-          .from("physical_assessments")
-          .select("weight, height, body_fat_percentage, bmi, lean_mass, fat_mass, assessment_date")
-          .eq("patient_id", patientId)
-          .order("assessment_date", { ascending: true })
-          .limit(20),
-        supabase
-          .from("checklist_tasks")
-          .select("completed, date")
-          .eq("patient_id", patientId)
-          .gte("date", new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0]),
-        supabase
-          .from("meal_plans")
-          .select("title, plan_status, total_target_calories, total_target_protein, total_target_carbs, total_target_fat")
-          .eq("patient_id", patientId)
-          .eq("plan_status", "published")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
-      ]);
+  const getReportData = async () => {
+    if (!user) return null;
+    const [assessmentsRes, checklistRes, planRes, profileRes] = await Promise.all([
+      supabase
+        .from("physical_assessments")
+        .select("weight, height, body_fat_percentage, bmi, lean_mass, fat_mass, assessment_date")
+        .eq("patient_id", patientId)
+        .order("assessment_date", { ascending: true })
+        .limit(20),
+      supabase
+        .from("checklist_tasks")
+        .select("completed, date")
+        .eq("patient_id", patientId)
+        .gte("date", new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0]),
+      supabase
+        .from("meal_plans")
+        .select("title, plan_status, total_target_calories, total_target_protein, total_target_carbs, total_target_fat")
+        .eq("patient_id", patientId)
+        .eq("plan_status", "published")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
+    ]);
 
-      const assessments = assessmentsRes.data || [];
-      const tasks = checklistRes.data || [];
-      const plan = planRes.data;
-      const profName = profileRes.data?.full_name || "Profissional";
+    const assessments = assessmentsRes.data || [];
+    const tasks = checklistRes.data || [];
+    const plan = planRes.data;
+    const profName = profileRes.data?.full_name || "Profissional";
 
-      const totalTasks = tasks.length;
-      const completedTasks = tasks.filter((t) => t.completed).length;
-      const adherence = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter((t) => t.completed).length;
+    const adherence = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-      const weightData = assessments.filter((a) => a.weight);
-      const firstWeight = weightData[0]?.weight;
-      const lastWeight = weightData[weightData.length - 1]?.weight;
-      const weightChange = firstWeight && lastWeight ? (lastWeight - firstWeight).toFixed(1) : null;
+    const weightData = assessments.filter((a) => a.weight);
+    const firstWeight = weightData[0]?.weight;
+    const lastWeight = weightData[weightData.length - 1]?.weight;
+    const weightChange = firstWeight && lastWeight ? (lastWeight - firstWeight).toFixed(1) : null;
 
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -148,6 +148,16 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
   </div>
 </body></html>`;
 
+    return { html, profName };
+  };
+
+  const generate = async () => {
+    setLoading(true);
+    try {
+      const data = await getReportData();
+      if (!data) return;
+
+      const { html } = data;
       const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -166,10 +176,64 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
     }
   };
 
+  const sendWhatsApp = async () => {
+    setSending(true);
+    try {
+      const data = await getReportData();
+      if (!data) return;
+
+      const { html, profName } = data;
+      
+      // Upload report to shared storage
+      const fileName = `report-${patientId}-${Date.now()}.html`;
+      const blob = new Blob([html], { type: "text/html" });
+      
+      const { error: uploadError } = await supabase.storage
+        .from("shared-meal-plans")
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("shared-meal-plans")
+        .getPublicUrl(fileName);
+
+      // Get patient phone
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", patientId)
+        .maybeSingle();
+
+      if (profileError || !profile?.phone) {
+        toast.error("Telefone do paciente não encontrado.");
+        return;
+      }
+
+      const message = `Olá ${patientName.split(" ")[0]}! Aqui é o(a) nutricionista ${profName}. 🎉\n\nAcabei de gerar seu Relatório de Evolução atualizado. Você pode visualizá-lo clicando no link abaixo:\n\n${publicUrl}\n\nQualquer dúvida, estou à disposição!`;
+
+      const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
+      window.open(whatsappUrl, "_blank");
+      toast.success("WhatsApp aberto!");
+    } catch (err: any) {
+      console.error("WhatsApp error:", err);
+      toast.error("Erro ao preparar envio via WhatsApp");
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
-    <Button variant="outline" size="sm" onClick={generate} disabled={loading} className="gap-1.5">
-      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-      Relatório PDF
-    </Button>
+    <div className="flex gap-2">
+      <Button variant="outline" size="sm" onClick={generate} disabled={loading || sending} className="gap-1.5">
+        {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+        Relatório PDF
+      </Button>
+      
+      <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={loading || sending} className="gap-1.5 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500 hover:text-white">
+        {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+        Enviar via WhatsApp
+      </Button>
+    </div>
   );
 }
