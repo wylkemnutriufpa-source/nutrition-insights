@@ -1582,58 +1582,57 @@ const EditorV3Page = () => {
                     setActiveTab('template');
                     setShowMainAddModal(true);
                   }}
-                  className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-amber-500 hover:text-white hover:bg-amber-500/20 rounded-xl transition-all gap-2"
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2 border border-amber-500/20 animate-pulse shadow-lg shadow-amber-500/10"
                 >
                   <BookCopy className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Templates</span>
+                  <span className="hidden sm:inline">Biblioteca de Templates</span>
+                  <span className="sm:hidden">Templates</span>
                 </Button>
               </div>
 
-              <Button 
-                size="sm" 
-                onClick={handlePromotionRequest}
-                disabled={promoting || !draftId}
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-lg shadow-blue-500/20"
-              >
-                {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                <span className="hidden sm:inline">Salvar e Publicar</span>
-                <span className="sm:hidden">Salvar</span>
-              </Button>
+              <div className="h-8 w-px bg-white/5 mx-2" />
 
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={async () => {
-                  if (!meals.length) {
-                    toast.error("Nenhum item para exportar");
-                    return;
-                  }
-                  const toastId = toast.loading("Gerando PDF Premium...");
-                  try {
-                    const pdfData = await preparePDFData();
-                    generatePremiumMealPlanPDF(pdfData);
-                    toast.success("PDF Premium pronto!", { id: toastId });
-                  } catch (err) {
-                    toast.error("Erro ao gerar PDF", { id: toastId });
-                  }
-                }}
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2"
-              >
-                <FileDown className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Exportar PDF</span>
-                <span className="sm:hidden">PDF</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleViewPDF}
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white rounded-xl transition-all gap-2"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Visualizar PDF</span>
+                  <span className="sm:hidden">Ver PDF</span>
+                </Button>
 
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSendWhatsApp}
-                disabled={sendingWhatsApp || !patientId}
-                className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
-              >
-                {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
-                WhatsApp
-              </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    if (viewMode === 'weekly') {
+                      handleSendWhatsApp();
+                    } else {
+                      // Se estiver em modo diário, perguntar se quer exportar diário ou semanal
+                      // Para simplificar, vamos exportar o modo atual
+                      handleSendWhatsApp();
+                    }
+                  }}
+                  disabled={sendingWhatsApp || !patientId}
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2"
+                >
+                  {sendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+                  WhatsApp
+                </Button>
+
+                <Button 
+                  size="sm" 
+                  onClick={handlePromotionRequest}
+                  disabled={promoting || !draftId}
+                  className="h-10 px-6 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-xl shadow-blue-600/20 border-b-2 border-blue-800"
+                >
+                  {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  Salvar Plano
+                </Button>
+              </div>
 
               <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="h-10 w-10 text-white/20 hover:text-rose-400 rounded-xl">
                 <RotateCcw className="w-4 h-4" />
