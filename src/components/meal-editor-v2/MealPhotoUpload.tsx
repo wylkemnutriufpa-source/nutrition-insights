@@ -14,8 +14,6 @@ interface MealPhotoUploadProps {
 }
 
 export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, compact, label }: MealPhotoUploadProps) {
-
-export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, compact }: MealPhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
