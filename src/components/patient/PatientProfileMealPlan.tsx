@@ -93,6 +93,10 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     }
   };
 
+  const handleChangeImage = async (itemId: string, newImageUrl: string) => {
+    await handleUpdateItem(itemId, { image_url: newImageUrl });
+  };
+
   if (!activeMealPlanId) return null;
 
   return (
