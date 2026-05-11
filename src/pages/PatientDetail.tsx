@@ -75,6 +75,8 @@ import Curiosidades from "./Curiosidades";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
 import { ClinicalConsentViewer } from "@/components/patient/ClinicalConsentViewer";
+import PatientProfileMealPlan from "@/components/patient/PatientProfileMealPlan";
+
 
 
 export default function PatientDetail() {
