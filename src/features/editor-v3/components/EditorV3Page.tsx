@@ -1637,7 +1637,78 @@ const EditorV3Page = () => {
                         {planTemplates.map((pt) => (
                           <button
                             key={pt.id}
-                            onClick={() => navigate(`/diet-templates?patientId=${patientId}&apply=${pt.id}`)}
+                            onClick={async () => {
+                              try {
+                                console.log('[V3-Templates] Applying plan template:', pt.name);
+                                setIsGeneratingGlobal(true);
+                                
+                                // Converter estrutura do diet_templates para Meal[] V3
+                                const ptMeals = Array.isArray(pt.meals) ? pt.meals : [];
+                                
+                                const v3Meals: Meal[] = ptMeals.map((m: any) => {
+                                  const mealItems: MealItem[] = (m.foods || []).map((f: any) => {
+                                    // 🛡️ Normalização robusta para V3
+                                    const foodId = Math.random().toString(36).substring(2, 9);
+                                    
+                                    // Tentar encontrar o alimento real no DB para pegar as macros por 100g
+                                    // Fallback para os valores do template
+                                    const rawKcal = f.calories || 0;
+                                    const rawProtein = f.protein || 0;
+                                    const rawCarbs = f.carbs || 0;
+                                    const rawFat = f.fat || 0;
+                                    
+                                    return {
+                                      id: foodId,
+                                      name: f.name,
+                                      kcal: rawKcal,
+                                      calories: rawKcal,
+                                      protein: rawProtein,
+                                      carbs: rawCarbs,
+                                      fat: rawFat,
+                                      // 🛡️ Blindagem: Salvar também os valores por 100g
+                                      kcal_100g: rawKcal,
+                                      protein_100g: rawProtein,
+                                      carb_100g: rawCarbs,
+                                      fat_100g: rawFat,
+                                      portionValue: 100,
+                                      portionUnitLabel: 'g',
+                                      portionUnit: 'g',
+                                      portionLabel: f.portion || '100g',
+                                      measurementType: 'gram',
+                                      instanceId: Math.random().toString(36).substring(2, 10),
+                                      quantity: 100, // Base default para templates
+                                      substitutions: []
+                                    } as MealItem;
+                                  });
+                                  
+                                  return {
+                                    id: Math.random().toString(36).substring(2, 9),
+                                    name: m.title || m.meal_type,
+                                    time: '08:00',
+                                    items: mealItems,
+                                    imageSource: 'auto'
+                                  } as Meal;
+                                });
+
+                                // Processar via Smart Template Engine para ajuste de calorias (se aplicável)
+                                // Mas aqui vamos hidratar direto para garantir a plotagem solicitada pelo usuário
+                                if (v3Meals.length > 0) {
+                                  // Garantir imagens para as refeições do template
+                                  const mealsWithImages = await Promise.all(v3Meals.map(async (meal) => {
+                                    const bestImage = await getBestMealImage(meal.name, meal.items);
+                                    return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
+                                  }));
+                                  
+                                  setMeals(mealsWithImages);
+                                  toast.success(`Plano "${pt.name}" plotado com sucesso!`);
+                                }
+                              } catch (err) {
+                                console.error('[V3-Templates] Error applying template:', err);
+                                toast.error('Erro ao aplicar plano pronto.');
+                              } finally {
+                                setIsGeneratingGlobal(false);
+                              }
+                            }}
                             className="w-full group relative flex items-center gap-3 p-3 rounded-2xl bg-amber-500/5 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/10 transition-all text-left shadow-sm"
                           >
                             <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
@@ -1647,7 +1718,7 @@ const EditorV3Page = () => {
                               <p className="font-black text-white text-[10px] truncate uppercase">{pt.name}</p>
                               <p className="text-[9px] text-white/40 truncate">{pt.description}</p>
                             </div>
-                            <ChevronRight className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                            <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-500 transition-colors" />
                           </button>
                         ))}
                       </div>
