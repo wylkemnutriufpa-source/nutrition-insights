@@ -7,7 +7,7 @@ import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
   ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
-  SlidersHorizontal,
+  SlidersHorizontal, ArrowRightLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtMacro, isMacroInconsistent, getMacroStatusColor, getMacroStatusLabel, safeNum } from "@/lib/formatMacros";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import MealSubstitutionModal from "./MealSubstitutionModal";
+import { useAuth } from "@/lib/auth";
 import {
   validatePortion,
   getPortionAutocompleteOptions,

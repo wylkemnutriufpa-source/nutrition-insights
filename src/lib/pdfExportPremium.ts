@@ -530,6 +530,8 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
   const mealOrder = ["cafe_da_manha", "breakfast", "lanche_da_manha", "morning_snack", "almoco", "lunch", "lanche_da_tarde", "afternoon_snack", "snack", "pre_workout", "post_workout", "jantar", "dinner", "ceia", "evening_snack"];
 
+  const normalizeType = (t: string) => (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -589,18 +591,17 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const isSingleDay = data.planMode === 'single_day';
     const showDayHeader = !isSingleDay && sortedDays.length > 1 && dayKey !== -1;
 
-    const processedMealTypes = new Set<string>();
+    const processedNormalized = new Set(mealOrder.map(normalizeType));
 
     const mealTypeGroups = mealOrder.map(mType => {
-      const typeItems = dayItems.filter(i => i.mealType === mType);
+      const typeItems = dayItems.filter(i => normalizeType(i.mealType) === normalizeType(mType));
       if (typeItems.length === 0) return "";
-      processedMealTypes.add(mType);
       return renderMealTypeItems(typeItems, mType);
     });
 
-    const remainingItems = dayItems.filter(i => !processedMealTypes.has(i.mealType));
+    const remainingItems = dayItems.filter(i => !processedNormalized.has(normalizeType(i.mealType)));
     const remainingGroups = [...new Set(remainingItems.map(i => i.mealType))].map(mType => {
-      const typeItems = remainingItems.filter(i => i.mealType === mType);
+      const typeItems = remainingItems.filter(i => normalizeType(i.mealType) === normalizeType(mType));
       return renderMealTypeItems(typeItems, mType);
     });
 

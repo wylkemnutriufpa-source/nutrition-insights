@@ -23,7 +23,9 @@ import {
   SlidersHorizontal,
   X,
   ClipboardCheck,
-  AlertTriangle
+  AlertTriangle,
+  ImageIcon,
+  Camera
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
@@ -31,6 +33,7 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { MEAL_TEMPLATES } from "./MealTemplatePanel";
 import { cn } from "@/lib/utils";
 import { normalizeSubstitutions, formatFinalDescription } from "./mealEditorHelpers";
+import { MealPhotoUpload } from "./MealPhotoUpload";
 
 interface MealSmartEditorModalProps {
   open: boolean;
@@ -87,7 +90,6 @@ export function MealSmartEditorModal({
       
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
       
-      // Validação aprofundada de macros base para marmitas fixas
       if (meta.is_fixed) {
         const missing = [];
         if (meta.kcal_base === undefined || meta.kcal_base === null) missing.push("kcal_base");
@@ -101,7 +103,6 @@ export function MealSmartEditorModal({
             action: {
               label: "Corrigir Agora",
               onClick: () => {
-                // Foca no campo de descrição para incentivar a correção manual se necessário
                 inputRef.current?.focus();
               }
             },
@@ -110,14 +111,12 @@ export function MealSmartEditorModal({
         }
       }
 
-      // Validação robusta com fallback para substitutions_json
       const hasValidJson = Array.isArray(meta.substitutions_json) && 
                           meta.substitutions_json.every((s: any) => typeof s === "string");
                           
       if (hasValidJson) {
         setSubstitutions(meta.substitutions_json);
       } else {
-        // Fallback: extração segura da descrição textual
         const desc = item.description || "";
         const parts = desc.split(/\n\n🔄 Substituições:\n/);
         const subsPart = parts[1] || "";
@@ -135,7 +134,6 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = async () => {
-    // Bloqueio específico para Wannubia
     if (hasBlockedSubs) {
       toast.error("Combinação proibida detectada", {
         description: "Esta paciente possui restrições severas. Remova itens como ultraprocessados ou frituras das substituições."
@@ -143,7 +141,6 @@ export function MealSmartEditorModal({
       return;
     }
 
-    // Bloqueio para Marmita Fixa sem Macros Base
     if (currentMeta?.is_fixed) {
       const missing = [];
       if (currentMeta.kcal_base === undefined || currentMeta.kcal_base === null) missing.push("kcal_base");
@@ -163,8 +160,6 @@ export function MealSmartEditorModal({
       }
     }
 
-    // Validação de macros relaxada: permite macros parciais zerados
-    // O sistema agora bloqueia apenas na publicação final se o total do dia for zero.
     if (adjustedMacros.calories < 0) {
       toast.error("Erro: Calorias não podem ser negativas.");
       return;
@@ -227,11 +222,9 @@ export function MealSmartEditorModal({
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    // Se o modal já está no estado desejado, não faz nada (evita resets duplicados)
     if (newOpen === open) return;
 
     if (!newOpen) {
-      // Reset explícito ao fechar via overlay, X ou cancelar
       setDescription(item?.description || "");
       setNotes((item as any)?.notes || "");
       
@@ -274,13 +267,45 @@ export function MealSmartEditorModal({
       >
         <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 pr-12 sm:pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b relative">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="text-lg sm:text-xl font-bold font-display tracking-tight">
-                Editar {item.title}
-              </DialogTitle>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                Ajuste os alimentos, substituições e observações clínicas
-              </p>
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {item.image_url ? (
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 group/img border border-primary/20 shadow-sm">
+                  <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                  <button 
+                    onClick={() => updateItem(itemId, { image_url: null } as any)}
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                    title="Remover Imagem"
+                  >
+                    <Trash2 className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0 border border-dashed border-primary/30">
+                  <MealPhotoUpload 
+                    compact 
+                    onUploaded={(url) => updateItem(itemId, { image_url: url } as any)} 
+                    onRemoved={() => {}}
+                  />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="text-lg sm:text-xl font-bold font-display tracking-tight flex items-center gap-2">
+                  Editar {item.title}
+                </DialogTitle>
+                <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                    Ajuste os alimentos, substituições e observações clínicas
+                  </p>
+                  {item.image_url && (
+                    <MealPhotoUpload 
+                      compact
+                      label="Trocar Foto"
+                      onUploaded={(url) => updateItem(itemId, { image_url: url } as any)} 
+                      onRemoved={() => {}}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
             <div 
               data-testid="modal-macro-summary"
@@ -451,7 +476,6 @@ export function MealSmartEditorModal({
                   />
                 </div>
 
-                {/* Portion Adjustment for Fixed Meals */}
                 {currentMeta?.is_fixed && (
                   <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
                     <div className="flex items-center justify-between">
@@ -509,7 +533,7 @@ export function MealSmartEditorModal({
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2" data-testid="substitutions-header">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                       🔄 Substituições ({substitutions.length}/{substitutionCount})
                     </h3>
                     {substitutions.length < substitutionCount && !isOverLimit && (
@@ -518,7 +542,6 @@ export function MealSmartEditorModal({
                         size="sm" 
                         className="h-7 text-[10px] gap-1 text-primary" 
                         onClick={() => setSubstitutions([...substitutions, "• Nova substituição"])}
-                        data-testid="add-substitution-button"
                       >
                         <Plus className="w-3 h-3" /> Adicionar
                       </Button>
@@ -545,14 +568,12 @@ export function MealSmartEditorModal({
                                 isBlocked && "bg-destructive/10 ring-destructive/50 text-destructive border-destructive/30"
                               )}
                               placeholder="Ex: • Pão integral → Tapioca (40g)"
-                              data-testid={`substitution-input-${idx}`}
                             />
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               className="h-9 w-9 rounded-xl opacity-0 group-hover/sub:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
                               onClick={() => setSubstitutions(substitutions.filter((_, i) => i !== idx))}
-                              data-testid={`remove-substitution-button-${idx}`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
@@ -584,11 +605,7 @@ export function MealSmartEditorModal({
                 <div className={cn(
                   "p-4 rounded-2xl border space-y-3 transition-colors",
                   isOverLimit ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/10"
-                )}
-                  role="status"
-                  aria-live="polite"
-                  data-testid="aria-live-preview"
-                >
+                )}>
                   <div className="flex gap-3">
                     {isOverLimit ? (
                       <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
@@ -618,13 +635,6 @@ export function MealSmartEditorModal({
                           {"🔄 Substituições:\n" + getNormalizedSubs().join("\n")}
                         </div>
                       </div>
-
-                      <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
-                        <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">substitutions_json:</p>
-                        <div className="text-muted-foreground break-all" data-testid="preview-substitutions-json">
-                          {JSON.stringify(getNormalizedSubs())}
-                        </div>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -634,16 +644,14 @@ export function MealSmartEditorModal({
             <div className="p-6 border-t bg-muted/5 flex gap-3">
               <Button 
                 variant="outline" 
-                className="flex-1 h-12 rounded-2xl font-bold focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
+                className="flex-1 h-12 rounded-2xl font-bold" 
                 onClick={() => handleOpenChange(false)}
-                data-testid="meal-editor-cancel-button"
               >
                 Cancelar
               </Button>
               <Button 
                 className="flex-[2] h-12 rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" 
                 onClick={handleSave}
-                data-testid="meal-editor-save-button"
               >
                 Salvar Alterações
               </Button>

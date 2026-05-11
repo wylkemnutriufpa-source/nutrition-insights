@@ -67,8 +67,25 @@ export const sendWhatsAppNotification = async (params: {
     targetPhone = profile.phone;
   }
 
-  const url = buildWhatsAppUrl(targetPhone, params.message);
-  window.open(url, "_blank");
+  const formattedPhone = formatInternationalWhatsApp(targetPhone);
+  const cleanPhone = formattedPhone.replace(/\+/g, "");
+  const encodedMsg = encodeURIComponent(params.message);
+  
+  const appUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+  const webUrl = `https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
+
+  toast("Como deseja abrir o WhatsApp?", {
+    description: "Escolha entre abrir o aplicativo ou usar a versão web.",
+    action: {
+      label: "Abrir App",
+      onClick: () => window.open(appUrl, "_blank"),
+    },
+    cancel: {
+      label: "Usar Web",
+      onClick: () => window.open(webUrl, "_blank"),
+    },
+    duration: 10000,
+  });
 };
 
 /**

@@ -10,9 +10,10 @@ interface MealPhotoUploadProps {
   onRemoved: () => void;
   className?: string;
   compact?: boolean;
+  label?: string;
 }
 
-export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, compact }: MealPhotoUploadProps) {
+export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, compact, label }: MealPhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -110,7 +111,7 @@ export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, co
           <>
             <ImagePlus className={cn(compact ? "w-4 h-4" : "w-6 h-6")} />
             <span className={cn("font-medium", compact ? "text-[9px]" : "text-xs")}>
-              {compact ? "Foto" : "Adicionar foto inspiracional"}
+              {label || (compact ? "Foto" : "Adicionar foto inspiracional")}
             </span>
           </>
         )}

@@ -20,7 +20,7 @@ export interface WeeklyOptions {
 
 
 /**
- * Gera um planejamento semanal baseado em um template diário.
+ * Gera um planejamento semanal baseado em um template diário com alta variação.
  */
 export function generateWeeklyPlan(
   patient: PatientMetrics,
@@ -33,27 +33,29 @@ export function generateWeeklyPlan(
   const variationLog: string[] = [];
   const start = new Date(startDate);
 
-  // Determinismo: usamos o patient_id ou um hash do nome para a semente de variação
-  const seedBase = patient.weight_kg + patient.height_cm + patient.age_years;
+  // Determinismo: usamos métricas do paciente para a semente de variação
+  const seedBase = (patient.weight_kg || 70) + (patient.height_cm || 170) + (patient.age_years || 30);
 
-  const PROTEIN_ROTATION = ["Frango", "Tilápia", "Carne", "Ovo"];
-  const CARB_ROTATION = ["Arroz", "Batata Doce", "Macarrão", "Mandioca"];
-  const BREAKFAST_ROTATION = ["Pão", "Tapioca", "Cuscuz"];
+  // Rotações expandidas para garantir 7 dias diferentes (Requisito: 7 dias DIFERENTES)
+  const PROTEIN_ROTATION = ["Frango", "Tilápia", "Carne Moída", "Ovo", "Patinho", "Sobrecoxa", "Atum"];
+  const CARB_ROTATION = ["Arroz", "Batata Doce", "Macarrão", "Mandioca", "Cuscuz", "Batata Inglesa", "Abóbora"];
+  const BREAKFAST_ROTATION = ["Pão Integral", "Tapioca", "Cuscuz", "Ovo Mexido", "Iogurte", "Fruta", "Aveia"];
 
   for (let i = 0; i < 7; i++) {
     const currentDate = new Date(start);
     currentDate.setDate(start.getDate() + i);
     const dateStr = currentDate.toISOString().split("T")[0];
 
-    // Criar preferências rotativas para este dia específico
+    // Criar preferências rotativas para este dia específico para garantir diversidade
+    // Usamos offsets diferentes para cada macro para maximizar as combinações (7x7x7)
     const dayPrefs = [
       PROTEIN_ROTATION[i % PROTEIN_ROTATION.length],
-      CARB_ROTATION[i % CARB_ROTATION.length],
-      BREAKFAST_ROTATION[i % BREAKFAST_ROTATION.length],
+      CARB_ROTATION[(i + 2) % CARB_ROTATION.length],
+      BREAKFAST_ROTATION[(i + 4) % BREAKFAST_ROTATION.length],
       ...(patient.preferences || [])
     ];
 
-    // Gerar plano base para o dia com preferências rotativas e seed única
+    // Gerar plano base para o dia com preferências rotativas e seed única por dia
     const dailyPlan = generateDailyPlan(
       { ...patient, preferences: dayPrefs }, 
       meals, 
@@ -61,7 +63,7 @@ export function generateWeeklyPlan(
       dateStr, 
       options.marmita, 
       options.marmitaType,
-      seedBase + i
+      seedBase + (i * 100) // Multiplicador para garantir seeds bem distintas
     );
 
     days.push(dailyPlan);
@@ -70,17 +72,11 @@ export function generateWeeklyPlan(
   const endDate = days[6].date;
 
   return {
-    patient_id: patient.id || "p1", // Usar ID do paciente se existir
+    patient_id: patient.id || "p1",
     start_date: startDate,
     end_date: endDate,
     days,
-    variation_enabled: !!options.variation,
+    variation_enabled: true, // Sempre habilitado para garantir a promessa de 7 dias diferentes
     variation_log: variationLog,
   };
 }
-
-/**
- * Aplica variações determinísticas para evitar monotonia.
- * Regras: Alternar proteínas/carbos, máx 3-4 variações, nunca consecutivas.
- */
-// Variação agora é aplicada diretamente no loop principal usando preferências rotativas e seeds determinísticas.
