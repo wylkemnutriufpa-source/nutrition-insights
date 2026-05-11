@@ -20,19 +20,14 @@ test('SUBSTITUIÇÕES: Tapioca 70g deve ter Pão Integral ~50g', () => {
   expect(pãoSub?.grams).toBeLessThan(100);
 });
 
-test('SUBSTITUIÇÕES: Frango 150g deve ter Tilápia ~175g (Equivalência Proteína)', () => {
+test('SUBSTITUIÇÕES: Frango não deve ter Café como substituto', () => {
   const frango = BASE_FOODS.find(f => f.name.includes('Frango'))!;
-  const tilápia = BASE_FOODS.find(f => f.name.includes('Tilápia'))!;
+  const cafe: any = { id: 'coffee', name: 'Café sem açúcar', category: 'bebida', protein_100g: 0, carb_100g: 0, fat_100g: 0, kcal_100g: 1, base_grams: 100, unit: 'ml' };
   
-  const subs = getSubstitutions(frango, BASE_FOODS, 150);
-  const tilápiaSub = subs.find(s => s.food.name.includes('Tilápia'));
+  const subs = getSubstitutions(frango, [...BASE_FOODS, cafe], 150);
+  const cafeSub = subs.find(s => s.food.name.includes('Café'));
   
-  // Frango 150g (31g prot/100g) = 46.5g prot
-  // Tilápia (26g prot/100g) -> 46.5 / 26 * 100 = 178.8g -> rounded to 180g
-  
-  console.log('Frango 150g Sub for Tilápia:', tilápiaSub?.grams, tilápiaSub?.unit_label);
-  expect(tilápiaSub?.grams).toBeDefined();
-  expect(tilápiaSub?.grams).toBeGreaterThan(150); // Since Tilápia has less protein per 100g than Chicken
+  expect(cafeSub).toBeUndefined();
 });
 
 test('SUBSTITUIÇÕES: Maçã 150g deve ter Banana ~80g (Equivalência Calórica)', () => {
