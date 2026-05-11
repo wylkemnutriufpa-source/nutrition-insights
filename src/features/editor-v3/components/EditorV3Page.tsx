@@ -406,6 +406,7 @@ const EditorV3Page = () => {
           consent_given: profileAny.consent_given,
           consent_date: profileAny.consent_date,
           protocol_type: profileAny.protocol_type || 'default_v3',
+          weight_source: weightSource,
         };
 
         if (weightSource === 'fallback') {
