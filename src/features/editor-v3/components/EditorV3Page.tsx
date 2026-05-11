@@ -62,9 +62,10 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy
 } from 'lucide-react';
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
+import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 import PlanAdjustmentModal from './PlanAdjustmentModal';
 
 
