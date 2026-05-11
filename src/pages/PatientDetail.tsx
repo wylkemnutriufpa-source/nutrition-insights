@@ -823,20 +823,31 @@ export default function PatientDetail() {
             )}
             {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
             {activeMealPlan && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 h-9"
-                onClick={() => handleSendWhatsApp(activeMealPlan)}
-                disabled={sendingWhatsAppId === activeMealPlan.id}
-              >
-                {sendingWhatsAppId === activeMealPlan.id ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <MessageSquare className="w-3.5 h-3.5" />
-                )}
-                Enviar via WhatsApp
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-9"
+                  onClick={() => handlePreviewPDF(activeMealPlan)}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  Visualizar PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-9"
+                  onClick={() => handleSendWhatsApp(activeMealPlan)}
+                  disabled={sendingWhatsAppId === activeMealPlan.id}
+                >
+                  {sendingWhatsAppId === activeMealPlan.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  )}
+                  Enviar via WhatsApp
+                </Button>
+              </div>
             )}
             <Button
               variant={patientStatus === "active" ? "outline" : "default"}
