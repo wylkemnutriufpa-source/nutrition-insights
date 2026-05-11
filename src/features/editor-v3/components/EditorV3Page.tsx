@@ -993,6 +993,77 @@ const EditorV3Page = () => {
     }
   };
 
+  const preparePDFData = async (): Promise<PremiumMealPlanPDFData> => {
+    const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
+    const profName = prof?.full_name || "Seu Nutricionista";
+    
+    const isWeekly = viewMode === 'weekly';
+    const divisor = isWeekly ? 7 : 1;
+    
+    const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
+    const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
+    const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
+    const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
+
+    const mapMealToItems = (m: Meal, dayNum: number | null) => {
+      const mealItems: PremiumMealPlanPDFData['items'] = [];
+      const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any;
+      
+      m.items.forEach(item => {
+        const groupId = item.instanceId;
+        mealItems.push({
+          mealType: mType,
+          title: m.name,
+          description: `${item.name} — ${formatPortion(item)}`,
+          calories_target: Math.round(Number(item.kcal) || 0),
+          protein_target: Math.round(Number(item.protein) || 0),
+          carbs_target: Math.round(Number(item.carbs) || 0),
+          fat_target: Math.round(Number(item.fat) || 0),
+          is_primary: true,
+          substitution_group_id: groupId,
+          day_of_week: dayNum !== null ? dayNum : undefined
+        });
+
+        // Só inclui substituições no modo Diário, como solicitado
+        if (!isWeekly && item.substitutions && item.substitutions.length > 0) {
+          item.substitutions.forEach(sub => {
+            mealItems.push({
+              mealType: mType,
+              title: sub.name,
+              description: `${sub.name}`,
+              calories_target: Math.round(Number(sub.kcal) || 0),
+              protein_target: Math.round(Number(sub.protein) || 0),
+              carbs_target: Math.round(Number(sub.carbs) || 0),
+              fat_target: Math.round(Number(sub.fat) || 0),
+              is_primary: false,
+              substitution_group_id: groupId,
+              day_of_week: dayNum !== null ? dayNum : undefined
+            });
+          });
+        }
+      });
+      return mealItems;
+    };
+
+    const pdfItems = isWeekly 
+      ? [1, 2, 3, 4, 5, 6, 0].flatMap(day => meals.flatMap(m => mapMealToItems(m, day)))
+      : meals.flatMap(m => mapMealToItems(m, null));
+
+    return {
+      planTitle: isWeekly ? "Plano Alimentar Semanal" : "Plano Alimentar Premium V3",
+      patientName: patientContext?.name || "Paciente",
+      nutritionistName: profName,
+      startDate: new Date().toLocaleDateString("pt-BR"),
+      planMode: isWeekly ? 'weekly' : 'single_day',
+      items: pdfItems,
+      targetCalories: Math.round(totalKcal / divisor),
+      targetProtein: Math.round(totalProtein / divisor),
+      targetCarbs: Math.round(totalCarbs / divisor),
+      targetFat: Math.round(totalFat / divisor),
+      goal: patientContext?.goal,
+    };
+  };
+
   const handleSendWhatsApp = async () => {
     if (!meals.length || !patientId) {
       toast.error("Nenhum item para enviar ou paciente não selecionado");
@@ -1003,64 +1074,30 @@ const EditorV3Page = () => {
     const toastId = toast.loading("Preparando Plano Alimentar Premium para WhatsApp...");
     
     try {
-      const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle();
-      const profName = prof?.full_name || "Seu Nutricionista";
+      const pdfData = await preparePDFData();
+      const { generatePremiumMealPlanPDF } = await import("@/lib/pdfExportPremium");
       
-      const totalKcal = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.kcal) || 0), 0), 0);
-      const totalProtein = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.protein) || 0), 0), 0);
-      const totalCarbs = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.carbs) || 0), 0), 0);
-      const totalFat = meals.reduce((s, m) => s + m.items.reduce((a, i) => a + (Number(i.fat) || 0), 0), 0);
-
-      const { buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
-
-      const pdfData: PremiumMealPlanPDFData = {
-        planTitle: "Plano Alimentar Premium V3",
-        patientName: patientContext?.name || "Paciente",
-        nutritionistName: profName,
-        startDate: new Date().toLocaleDateString("pt-BR"),
-        planMode: 'single_day',
-        items: meals.flatMap(m => {
-          const mealItems: PremiumMealPlanPDFData['items'] = [];
-          const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any;
-          
-          m.items.forEach(item => {
-            const groupId = item.instanceId;
-            mealItems.push({
-              mealType: mType,
-              title: m.name,
-              description: `${item.name} — ${formatPortion(item)}`,
-              calories_target: Math.round(Number(item.kcal) || 0),
-              protein_target: Math.round(Number(item.protein) || 0),
-              carbs_target: Math.round(Number(item.carbs) || 0),
-              fat_target: Math.round(Number(item.fat) || 0),
-              is_primary: true,
-              substitution_group_id: groupId
-            });
-
-            if (item.substitutions && item.substitutions.length > 0) {
-              item.substitutions.forEach(sub => {
-                mealItems.push({
-                  mealType: mType,
-                  title: sub.name,
-                  description: `${sub.name}`,
-                  calories_target: Math.round(Number(sub.kcal) || 0),
-                  protein_target: Math.round(Number(sub.protein) || 0),
-                  carbs_target: Math.round(Number(sub.carbs) || 0),
-                  fat_target: Math.round(Number(sub.fat) || 0),
-                  is_primary: false,
-                  substitution_group_id: groupId
-                });
-              });
-            }
-          });
-          return mealItems;
-        }),
-        targetCalories: Math.round(totalKcal),
-        targetProtein: Math.round(totalProtein),
-        targetCarbs: Math.round(totalCarbs),
-        targetFat: Math.round(totalFat),
-        goal: patientContext?.goal,
-      };
+      // Gera o PDF
+      generatePremiumMealPlanPDF(pdfData);
+      
+      // Abre o WhatsApp
+      const message = `Olá ${pdfData.patientName}! Aqui está seu plano alimentar FitJourney:`;
+      const { data: profile } = await supabase.from('profiles').select('phone').eq('user_id', patientId).maybeSingle();
+      
+      if (profile?.phone) {
+        const whatsappUrl = buildWhatsAppUrl(profile.phone, message);
+        window.open(whatsappUrl, '_blank');
+        toast.success("WhatsApp aberto e PDF pronto!", { id: toastId });
+      } else {
+        toast.error("Telefone do paciente não encontrado", { id: toastId });
+      }
+    } catch (err) {
+      console.error("WhatsApp error:", err);
+      toast.error("Erro ao preparar envio", { id: toastId });
+    } finally {
+      setSendingWhatsApp(false);
+    }
+  };
 
       const html = buildPremiumMealPlanHTML(pdfData);
       
