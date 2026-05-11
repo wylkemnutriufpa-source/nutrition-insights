@@ -145,6 +145,56 @@ function formatDescription(desc: string): string {
     .join("");
 }
 
+function roundMacro(value: unknown): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n);
+}
+
+function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
+  const groupedByDay = items.reduce((acc, item) => {
+    const dayKey = item.day_of_week ?? -1;
+    if (!acc[dayKey]) acc[dayKey] = [];
+    acc[dayKey].push(item);
+    return acc;
+  }, {} as Record<number, MealPlanPDFItem[]>);
+
+  const dayOrder = [1, 2, 3, 4, 5, 6, 0, -1];
+  const selectedDay = dayOrder.find(day => groupedByDay[day]?.some(item => item.is_primary !== false)) ?? Number(Object.keys(groupedByDay)[0] ?? -1);
+  const dayItems = groupedByDay[selectedDay] || items;
+  const groups = new Map<string, MealPlanPDFItem[]>();
+
+  dayItems.forEach((item) => {
+    const key = item.substitution_group_id || `item:${item.title}:${item.mealType}`;
+    groups.set(key, [...(groups.get(key) || []), item]);
+  });
+
+  return Array.from(groups.values()).map(group => group.find(item => item.is_primary !== false) || group[0]);
+}
+
+function calculateDisplayTotals(data: PremiumMealPlanPDFData) {
+  const primaryDailyItems = getPrimaryDailyItems(data.items || []);
+  const calculated = primaryDailyItems.reduce((acc, item) => ({
+    calories: acc.calories + roundMacro(item.calories_target),
+    protein: acc.protein + roundMacro(item.protein_target),
+    carbs: acc.carbs + roundMacro(item.carbs_target),
+    fat: acc.fat + roundMacro(item.fat_target),
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+  const safeTarget = (target: number | undefined, calculatedValue: number, max: number) => {
+    const rounded = roundMacro(target);
+    if (calculatedValue > 0 && (rounded <= 0 || rounded > max)) return calculatedValue;
+    return rounded || calculatedValue;
+  };
+
+  return {
+    calories: safeTarget(data.targetCalories, calculated.calories, 5000),
+    protein: safeTarget(data.targetProtein, calculated.protein, 350),
+    carbs: safeTarget(data.targetCarbs, calculated.carbs, 700),
+    fat: safeTarget(data.targetFat, calculated.fat, 250),
+  };
+}
+
 
 function buildPremiumCSS(): string {
   return `
@@ -453,6 +503,13 @@ function buildPremiumCSS(): string {
 }
 
 export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
+  const displayTotals = calculateDisplayTotals(data);
+  const printItems = getPrimaryDailyItems(data.items || []).flatMap((primary) => {
+    const relatedSubs = (data.items || [])
+      .filter(item => item.substitution_group_id && item.substitution_group_id === primary.substitution_group_id && item !== primary && item.is_primary === false)
+      .slice(0, 5);
+    return [primary, ...relatedSubs];
+  });
   const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
     const subGroups: Record<string, MealPlanPDFItem[]> = {};
     const orphans: MealPlanPDFItem[] = [];
@@ -474,6 +531,12 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const renderGroup = (groupItems: MealPlanPDFItem[]) => {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
       const substitutions = groupItems.filter(i => i !== primary);
+      const substitutionTotals = substitutions.reduce((acc, sub) => ({
+        calories: acc.calories + roundMacro(sub.calories_target),
+        protein: acc.protein + roundMacro(sub.protein_target),
+        carbs: acc.carbs + roundMacro(sub.carbs_target),
+        fat: acc.fat + roundMacro(sub.fat_target),
+      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
       const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
       const showTitle = primary.title && !sameAsLabel;
@@ -500,6 +563,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
                     <span style="color: #999; font-size: 9px;">${sub.calories_target || 0} kcal</span>
                   </div>
                 `).join("")}
+                <div class="sub-item" style="font-weight: 700; color: #856404; border-bottom: none; margin-top: 3px; padding-top: 5px; border-top: 1px solid #f3e9d2;">
+                  <span>Macros não considerados:</span>
+                  <span style="margin-left: 4px;">${substitutionTotals.calories} kcal · P ${substitutionTotals.protein}g · C ${substitutionTotals.carbs}g · G ${substitutionTotals.fat}g</span>
+                </div>
               </div>
             ` : ""}
           </div>
@@ -514,7 +581,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   };
 
 
-  const groupedByDay = data.items.reduce((acc, item) => {
+  const groupedByDay = printItems.reduce((acc, item) => {
     const dayKey = item.day_of_week ?? -1;
     if (!acc[dayKey]) acc[dayKey] = [];
     acc[dayKey].push(item);
@@ -555,20 +622,23 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   <div class="macro-summary">
     <div class="macro-card" style="border-top: 3px solid #D4A84B;">
       <div class="macro-label">Energia Total</div>
-      <div class="macro-value">${data.targetCalories || 0} <span style="font-size: 10px; font-weight: 500;">kcal</span></div>
+       <div class="macro-value">${displayTotals.calories} <span style="font-size: 10px; font-weight: 500;">kcal</span></div>
     </div>
     <div class="macro-card" style="border-top: 3px solid #EF4444;">
       <div class="macro-label">Proteínas</div>
-      <div class="macro-value">${data.targetProtein || 0}g</div>
+       <div class="macro-value">${displayTotals.protein}g</div>
     </div>
     <div class="macro-card" style="border-top: 3px solid #F59E0B;">
       <div class="macro-label">Carboidratos</div>
-      <div class="macro-value">${data.targetCarbs || 0}g</div>
+       <div class="macro-value">${displayTotals.carbs}g</div>
     </div>
     <div class="macro-card" style="border-top: 3px solid #3B82F6;">
       <div class="macro-label">Gorduras</div>
-      <div class="macro-value">${data.targetFat || 0}g</div>
+       <div class="macro-value">${displayTotals.fat}g</div>
     </div>
+  </div>
+  <div style="margin: -10px 0 14px; font-size: 9px; color: #64748b; text-align: right; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;">
+    <span>(Total Considerado) refeições principais</span><div style="display:none">${displayTotals.calories}</div>
   </div>
 
   ${data.goal ? `
