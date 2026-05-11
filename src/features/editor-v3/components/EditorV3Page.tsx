@@ -249,6 +249,8 @@ const EditorV3Page = () => {
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [planTemplates, setPlanTemplates] = useState<any[]>([]);
   const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
+  const [isTemplateEditorOpen, setIsTemplateEditorOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<MealTemplate | null>(null);
   const [visualLibraryInfo, setVisualLibraryInfo] = useState<{ count: number, incomplete: boolean }>({ count: 0, incomplete: false });
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
   const [isSearchingVisualLibrary, setIsSearchingVisualLibrary] = useState(false);
