@@ -814,7 +814,8 @@ export async function autoFixMealPlan(
           const diffPct = Math.abs(dayTotal - targetPerDay) / targetPerDay;
           if (diffPct <= SKIP_THRESHOLD) continue; // Already close enough
           
-          const factor = targetPerDay / dayTotal;
+          // 🛡️ Clamp obrigatório — impede multiplicação descontrolada por dia
+          const factor = clampScaleFactor(targetPerDay / dayTotal);
           const dayItems = finalItems.filter(i => (i.day_of_week ?? 0) === day);
           
           // Distribute rounding residual to the largest item to ensure exact sum
@@ -827,8 +828,12 @@ export async function autoFixMealPlan(
             if (isItemProtected(item)) continue;
             const oldVal = Number(item[macroKey]) || 0;
             if (oldVal > 0) {
-              const newVal = Math.round(oldVal * factor);
+              let newVal = Math.round(oldVal * factor);
+              if (macroKey === "calories_target") {
+                newVal = clampItemKcal(newVal);
+              }
               (item as any)[macroKey] = newVal;
+              assertSafeMacro(newVal, `${macroKey} cross-day`);
               scaledSum += newVal;
               if (oldVal > largestVal) {
                 largestVal = oldVal;
