@@ -140,7 +140,7 @@ export class BiquiniBrancoStrategy implements ClinicalStrategy {
 
 export class DefaultV3Strategy implements ClinicalStrategy {
   id = 'default_v3';
-  name = 'Engine NutriCore V2';
+  name = 'Engine NutriCore V3';
 
   async generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[], context?: PatientContext): Promise<MealItem[]> {
     // Usar contexto real se disponível, caso contrário usar fallback seguro
