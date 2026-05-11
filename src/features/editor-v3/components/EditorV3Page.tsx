@@ -1651,7 +1651,7 @@ const EditorV3Page = () => {
                         ))}
                       </div>
                     </div>
-                  )
+                  )}
                 )}
 
                 {activeTab === 'visual' && (
