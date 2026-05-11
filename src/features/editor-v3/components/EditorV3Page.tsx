@@ -28,6 +28,7 @@ import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from
 // Direct NutriCore V3 Imports are now handled via Adapter or direct types
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
 import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+import { convertGramsToHousehold } from "@/lib/nutricore_v2/unit-converter";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -577,10 +578,16 @@ const EditorV3Page = () => {
                           
         if (currentFood) {
           console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
+          
+          // 🛡️ Blindagem: Converter quantidade do item para gramas REAIS antes de calcular substituição
+          const itemTotalGrams = (selectedItem.item.measurementType === 'unit' || selectedItem.item.measurementType === 'spoon')
+            ? (selectedItem.item.quantity * (selectedItem.item.portionValue || 1))
+            : selectedItem.item.quantity;
+
           const v3PlanSubs = getSubstitutions(
             currentFood, 
             BASE_FOODS, 
-            selectedItem.item.quantity,
+            itemTotalGrams,
             patientContext?.restrictions || []
           );
           
@@ -1047,35 +1054,39 @@ const EditorV3Page = () => {
     
     if (!currentItem) return;
 
-    let newQuantity = 1;
+    let newGrams = 100;
 
     // Se temos uma quantidade sugerida pelo motor de substituição, usamos ela prioritariamente
     if (target.suggestedQuantity) {
-      newQuantity = target.suggestedQuantity;
+      newGrams = target.suggestedQuantity;
     } else if (autoAdjust) {
       const currentMacros = recalculateMacros(currentItem, currentItem.quantity);
       const targetKcalPerUnit = target.kcal || target.calories || 0; 
       
       if (targetKcalPerUnit > 0) {
         if (target.measurementType === 'gram' || target.measurementType === 'ml') {
-          newQuantity = Math.round((currentMacros.calories / targetKcalPerUnit) * 100);
+          newGrams = Math.round((currentMacros.calories / targetKcalPerUnit) * 100);
         } else {
-          newQuantity = Math.round(currentMacros.calories / targetKcalPerUnit);
+          newGrams = Math.round(currentMacros.calories / targetKcalPerUnit);
         }
       } else {
-        newQuantity = currentItem.quantity;
+        newGrams = currentItem.quantity; // Fallback
       }
     } else {
-      if (target.measurementType === 'gram') newQuantity = 100;
-      else if (target.measurementType === 'ml') newQuantity = 200;
-      else newQuantity = 1;
+      if (target.measurementType === 'gram') newGrams = 100;
+      else if (target.measurementType === 'ml') newGrams = 200;
+      else newGrams = target.portionValue || 1;
     }
 
-    const safeQuantity = applyClinicalSafety(target.name, newQuantity);
-    const macros = recalculateMacros(target, safeQuantity);
+    const safeGrams = applyClinicalSafety(target.name, newGrams);
+    const household = convertGramsToHousehold(target.name, safeGrams);
+    
+    const safeQuantity = household.quantity;
+    const macros = recalculateMacros(target, safeGrams);
 
     updateMealItem(mealId, instanceId, {
       ...target,
+      ...household,
       ...macros,
       kcal: macros.calories,
       calories: macros.calories,
