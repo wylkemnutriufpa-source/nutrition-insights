@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 
 
+import { publishMealPlan } from "@/lib/serverTransitions";
+
 interface Props {
   patientId: string;
   onPrev: () => void;
@@ -102,17 +104,15 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
       await new Promise(r => setTimeout(r, 400));
       setPublishProgress(75);
 
-      // Actual Supabase update
-      const { error } = await supabase
-        .from("meal_plans")
-        .update({ 
-          plan_status: "published_to_patient",
-          is_active: true 
-        })
-        .eq("id", mealPlanId)
-        .in("plan_status", ["draft", "draft_auto_generated", "draft_auto_corrected", "under_professional_review"]);
+      // Actual Supabase update using server-authoritative RPC
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
-      if (error) throw error;
+      const result = await publishMealPlan(mealPlanId, user.id);
+
+      if (!result.success) {
+        throw new Error(result.error || "Falha ao publicar plano");
+      }
 
       setPublishProgress(100);
       await new Promise(r => setTimeout(r, 400));
