@@ -940,7 +940,7 @@ const EditorV3Page = () => {
       const { NutriCoreV3Adapter } = await import("@/lib/nutricore_v2/adapter");
       
       // O Adaptador já lida com o mapeamento de objetivos/atividade e regras de medidas caseiras
-      const v3Meals = await NutriCoreV3Adapter.generateElitePlan(patientContext, []);
+      const v3Meals = await NutriCoreV3Adapter.generateElitePlan(patientContext, [], viewMode === 'weekly');
 
       if (!v3Meals || v3Meals.length === 0) {
         throw new Error('O motor NutriCore retornou um plano vazio. Verifique as restrições do paciente.');
