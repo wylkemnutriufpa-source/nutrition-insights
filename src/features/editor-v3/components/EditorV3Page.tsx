@@ -22,7 +22,7 @@ import {
   isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros 
 } from '@/lib/nutricore_v2/helpers';
 
-import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
+import { recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V3 Imports (lib/nutricore_v2)
 // Direct NutriCore V3 Imports are now handled via Adapter or direct types
