@@ -1341,7 +1341,7 @@ export default function PatientDetail() {
               {/* Consent Terms Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">LGPD & Consentimento</h3>
-                <ClinicalConsentViewer />
+                <ClinicalConsentViewer patientId={resolvedPatientId} />
               </div>
             </div>
           </DialogContent>
