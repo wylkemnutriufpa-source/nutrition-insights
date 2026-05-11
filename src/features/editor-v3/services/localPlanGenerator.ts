@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+import { NutriCoreV3Adapter } from "@/lib/nutricore_v2/adapter";
 import { PatientContext, Meal } from "../types";
 
 export async function generateAndSaveLocalPlan(
@@ -92,30 +91,9 @@ export async function generateAndSaveLocalPlan(
       fat_target: Number(anamnesis?.computed_fat) || Number(assessment?.fat_target) || 60
     };
 
-    // 2. Generate plan using NutriCore V3 (Direct call)
-    const mealSlots = [
-      { type: 'cafe_da_manha', time: '08:00' },
-      { type: 'lanche_da_manha', time: '10:30' },
-      { type: 'almoço', time: '13:00' },
-      { type: 'lanche_da_tarde', time: '16:00' },
-      { type: 'jantar', time: '19:30' },
-      { type: 'ceia', time: '22:00' }
-    ] as any[];
+    // 2. Generate plan using NutriCore V3 Adapter (LOCAL)
+    const v3Meals = await NutriCoreV3Adapter.generateElitePlan(context, []);
 
-    const dailyPlan = generateDailyPlan(
-      {
-        weight_kg: weight,
-        height_cm: height,
-        age_years: context.age,
-        sex: context.gender === 'female' ? 'feminino' : 'masculino',
-        activity_level: context.activityLevel as any,
-        goal: context.goal as any,
-        restrictions: context.restrictions,
-        preferences: context.preferences
-      },
-      mealSlots,
-      BASE_FOODS
-    );
 
     const { data: mealPlan, error: promoteError } = await supabase
       .from('meal_plans')
@@ -134,17 +112,17 @@ export async function generateAndSaveLocalPlan(
     if (promoteError) throw promoteError;
 
     // Insert items
-    for (const meal of dailyPlan.meals) {
+    for (const meal of v3Meals) {
       for (const item of meal.items) {
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
-          meal_type: meal.type.replace(/ /g, '_') as any,
-          calories_target: Math.round(item.macros.kcal),
-          protein_target: item.macros.protein_g,
-          carbs_target: item.macros.carb_g,
-          fat_target: item.macros.fat_g,
-          description: `${item.grams}g`,
+          meal_type: meal.name.toLowerCase().replace(/ /g, '_') as any,
+          calories_target: Math.round(item.kcal),
+          protein_target: item.protein,
+          carbs_target: item.carbs,
+          fat_target: item.fat,
+          description: item.portionUnitLabel || `${item.quantity}g`,
           tenant_id: tenantId
         } as any);
       }

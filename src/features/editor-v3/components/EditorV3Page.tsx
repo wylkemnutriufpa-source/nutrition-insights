@@ -24,11 +24,9 @@ import {
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V3 Imports (lib/nutricore_v2)
-import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
-import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
-import { MealSlot } from "@/lib/nutricore_v2/meal-distribution";
+// Direct NutriCore V3 Imports are now handled via Adapter or direct types
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
+import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -935,129 +933,25 @@ const EditorV3Page = () => {
     setShowCalorieModal(false);
     
     try {
-      console.log(`[Elite-V3] Chamada DIRETA ao Motor NutriCore V3 para ${weight}kg`);
+      console.log(`[Elite-V3] Gerando plano via Adaptador NutriCore V3 para ${weight}kg`);
       
-      const { generateDailyPlan } = await import("@/lib/nutricore_v2/plan-generator");
-      const { BASE_FOODS } = await import("@/lib/nutricore_v2/food-database");
+      const { NutriCoreV3Adapter } = await import("@/lib/nutricore_v2/adapter");
       
-      const mealSlots = [
-        { type: 'cafe_da_manha', time: '08:00' },
-        { type: 'lanche_da_manha', time: '10:30' },
-        { type: 'almoço', time: '13:00' },
-        { type: 'lanche_da_tarde', time: '16:00' },
-        { type: 'jantar', time: '19:30' },
-        { type: 'ceia', time: '22:00' }
-      ] as any[];
+      // O Adaptador já lida com o mapeamento de objetivos/atividade e regras de medidas caseiras
+      const v3Meals = await NutriCoreV3Adapter.generateElitePlan(patientContext, []);
 
-      const dailyPlan = generateDailyPlan(
-        {
-          weight_kg: weight,
-          height_cm: patientContext.height || 170,
-          age_years: patientContext.age || 30,
-          sex: (patientContext.gender === 'female' || patientContext.gender === 'feminino') ? 'feminino' : 'masculino',
-          activity_level: (patientContext.activityLevel as any) || 'moderado',
-          goal: (patientContext.goal as any) || 'manutencao',
-          restrictions: patientContext.restrictions,
-          preferences: patientContext.preferences
-        },
-        mealSlots,
-        BASE_FOODS
-      );
+      if (!v3Meals || v3Meals.length === 0) {
+        throw new Error('O motor NutriCore retornou um plano vazio.');
+      }
 
-      // Converter o plano do motor para o formato do Editor V3
-      const v3Meals = dailyPlan.meals.map(meal => ({
-        id: Math.random().toString(36).substring(2, 9),
-        name: meal.type === 'cafe_da_manha' ? 'Café da Manhã' : 
-              meal.type === 'lanche_da_manha' ? 'Lanche da Manhã' :
-              meal.type === 'almoço' ? 'Almoço' :
-              meal.type === 'lanche_da_tarde' ? 'Lanche da Tarde' :
-              meal.type === 'jantar' ? 'Jantar' : 'Ceia',
-        time: meal.time,
-        items: meal.items.map(item => {
-          // 🛡️ Blindagem de Medidas Caseiras (Regra de Ouro)
-          const lowerName = item.name.toLowerCase();
-          let measurementType: any = 'gram';
-          let quantity = item.grams;
-          let portionValue = 100;
-          let portionLabel = 'g';
-
-          if (lowerName.includes('pão integral') || lowerName.includes('pão de forma')) {
-            measurementType = 'unit';
-            portionValue = 25;
-            quantity = Math.round(item.grams / 25);
-            portionLabel = 'fatia(s)';
-          } else if (lowerName.includes('pão francês')) {
-            measurementType = 'unit';
-            portionValue = 50;
-            quantity = Math.round(item.grams / 50);
-            portionLabel = 'unidade(s)';
-          } else if (lowerName.includes('ovo')) {
-            measurementType = 'unit';
-            portionValue = 50;
-            quantity = Math.round(item.grams / 50);
-            portionLabel = 'unidade(s)';
-          } else if (lowerName.includes('banana')) {
-            measurementType = 'unit';
-            portionValue = 90;
-            quantity = Math.round(item.grams / 90);
-            portionLabel = 'unidade(s) M';
-          } else if (lowerName.includes('frango') || lowerName.includes('carne') || lowerName.includes('peixe') || lowerName.includes('tilápia')) {
-            measurementType = 'unit';
-            portionValue = 150;
-            quantity = Math.round(item.grams / 150 * 10) / 10;
-            portionLabel = 'filé(s) M';
-          } else if (lowerName.includes('arroz') || lowerName.includes('feijão') || lowerName.includes('purê') || lowerName.includes('macarrão') || lowerName.includes('cuscuz') || lowerName.includes('tapioca')) {
-            measurementType = 'spoon';
-            portionValue = 25;
-            quantity = Math.round(item.grams / 25);
-            portionLabel = 'colher(es) de sopa';
-          } else if (lowerName.includes('iogurte') || lowerName.includes('leite')) {
-            measurementType = 'unit';
-            portionValue = 170;
-            quantity = Math.round(item.grams / 170 * 10) / 10;
-            portionLabel = 'unidade(s)/pote(s)';
-          } else if (lowerName.includes('pão')) {
-            measurementType = 'unit';
-            portionValue = 25;
-            quantity = Math.round(item.grams / 25);
-            portionLabel = 'fatia(s)';
-          } else if (item.grams > 0) {
-            // Fallback genérico para gramas
-            measurementType = 'gram';
-            portionValue = 100;
-            quantity = item.grams;
-            portionLabel = 'g';
-          }
-
-          return {
-            id: item.foodId,
-            instanceId: Math.random().toString(36).substring(2, 10),
-            name: item.name,
-            quantity: quantity,
-            kcal: item.macros.kcal,
-            calories: item.macros.kcal,
-            protein: item.macros.protein_g,
-            carbs: item.macros.carb_g,
-            fat: item.macros.fat_g,
-            kcal_100g: item.grams > 0 ? (item.macros.kcal / (item.grams / 100)) : 0,
-            protein_100g: item.grams > 0 ? (item.macros.protein_g / (item.grams / 100)) : 0,
-            carb_100g: item.grams > 0 ? (item.macros.carb_g / (item.grams / 100)) : 0,
-            fat_100g: item.grams > 0 ? (item.macros.fat_g / (item.grams / 100)) : 0,
-            measurementType,
-            portionValue,
-            portionUnitLabel: portionLabel,
-            portionUnit: portionLabel,
-            portionLabel: portionLabel
-          };
-        })
-      }));
-
-      if (v3Meals.length === 0) throw new Error('O motor gerou um plano vazio');
       await hydrateMeals(v3Meals as any);
-      toast.success(`Elite V3: Plano gerado com ${Math.round(dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal)} kcal para ${weight}kg!`);
-    } catch (error) {
+      
+      // Calcular calorias totais para o toast
+      const totalKcal = v3Meals.reduce((acc, m) => acc + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
+      toast.success(`Elite V3: Plano gerado com ${Math.round(totalKcal)} kcal para ${weight}kg!`);
+    } catch (error: any) {
       console.error('[Elite-V3 Error]', error);
-      toast.error('Erro ao gerar plano no Motor V3');
+      toast.error(`Erro ao gerar plano: ${error.message || 'Falha no Motor V3'}`);
     } finally {
       setIsGeneratingGlobal(false);
     }
