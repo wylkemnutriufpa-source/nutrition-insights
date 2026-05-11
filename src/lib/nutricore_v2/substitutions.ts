@@ -101,8 +101,14 @@ export function getSubstitutions(
     } else if (candName.includes('banana')) {
       const units = Math.round((roundedGrams / 90) * 10) / 10;
       unitLabel = `${units} unidade(s) M (${roundedGrams}g)`;
+    } else if (candName.includes('laranja') || candName.includes('maçã') || candName.includes('pera')) {
+      const units = Math.round((roundedGrams / 130) * 10) / 10;
+      unitLabel = `${units} unidade(s) M (${roundedGrams}g)`;
+    } else if (candName.includes('mamão')) {
+      const units = Math.round((roundedGrams / 150) * 10) / 10;
+      unitLabel = `${units} fatia(s) média(s) (${roundedGrams}g)`;
     } else if (checkIsFruit(candName)) {
-      unitLabel = `1 unidade M (${roundedGrams}g)`;
+      unitLabel = `1 porção (${roundedGrams}g)`;
     }
 
     const subKcal = (cand.k100 / 100) * roundedGrams;
