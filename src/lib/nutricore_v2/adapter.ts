@@ -68,44 +68,50 @@ export class NutriCoreV3Adapter {
    * Gera um plano Elite V3 usando o novo Motor NutriCore
    */
   static async generateElitePlan(context: PatientContext, availableFoods: V3Food[]): Promise<V3Meal[]> {
-    const engineInput = this.mapPatientToEngine(context);
-    const engineResult = runEngine(engineInput);
+    console.info(`[NutriCore-Adapter] Starting Elite Plan Generation for ${context.name} (${context.weight}kg)`);
     
-    // Regra Parte 4 Item 5: Se for plano completo, a base sugerida é ~2000 kcal se não houver contexto específico
-    const targetKcal = engineResult.target_kcal || 2000;
+    try {
+      const engineInput = this.mapPatientToEngine(context);
+      const engineResult = runEngine(engineInput);
+      
+      console.log(`[NutriCore-Adapter] Engine Result: ${engineResult.target_kcal} kcal calculated.`);
 
-    // Estrutura padrão de refeições baseada no FitJourney
-    const mealSlots: MealSlot[] = [
-      { type: 'cafe_da_manha', time: '08:00' },
-      { type: 'lanche_da_manha', time: '10:30' },
-      { type: 'almoço', time: '13:00' },
-      { type: 'lanche_da_tarde', time: '16:00' },
-      { type: 'jantar', time: '19:30' },
-      { type: 'ceia', time: '22:00' }
-    ];
+      // Regra Parte 4 Item 5: Se for plano completo, a base sugerida é ~2000 kcal se não houver contexto específico
+      const targetKcal = engineResult.target_kcal || 2000;
 
-    // Distribuição de Macros
-    const distributed = distributeMacros(engineResult.macros, mealSlots);
+      // Estrutura padrão de refeições baseada no FitJourney
+      const mealSlots: MealSlot[] = [
+        { type: 'cafe_da_manha', time: '08:00' },
+        { type: 'lanche_da_manha', time: '10:30' },
+        { type: 'almoço', time: '13:00' },
+        { type: 'lanche_da_tarde', time: '16:00' },
+        { type: 'jantar', time: '19:30' },
+        { type: 'ceia', time: '22:00' }
+      ];
 
-    // NutriCore usa sua própria base de alimentos, mas podemos passar a disponível
-    // Mapeando V3Food para Food do NutriCore (simplificado)
-    const foodDb: Food[] = availableFoods.map(f => ({
-      id: f.id,
-      name: f.name,
-      category: (f.category as any) || 'carb',
-      protein_100g: f.protein,
-      carb_100g: f.carbs,
-      fat_100g: f.fat,
-      kcal_100g: f.kcal,
-      base_grams: 100,
-      unit: f.portionUnitLabel || 'g'
-    }));
+      // Distribuição de Macros
+      const distributed = distributeMacros(engineResult.macros, mealSlots);
 
-    // Se a base estiver vazia, usa o BASE_FOODS do NutriCore
-    const finalDb = foodDb.length > 5 ? foodDb : BASE_FOODS;
+      // NutriCore usa sua própria base de alimentos, mas podemos passar a disponível
+      const foodDb: Food[] = availableFoods.map(f => ({
+        id: f.id,
+        name: f.name,
+        category: (f.category as any) || 'carb',
+        protein_100g: f.protein || 0,
+        carb_100g: f.carbs || 0,
+        fat_100g: f.fat || 0,
+        kcal_100g: f.kcal || 0,
+        base_grams: 100,
+        unit: f.portionUnitLabel || 'g'
+      }));
 
-    // Utilizar Promise.all para permitir chamadas assíncronas dentro do map (getBestMealImage)
-    return Promise.all(distributed.map(async (slot) => {
+      // Se a base estiver vazia, usa o BASE_FOODS do NutriCore
+      const finalDb = foodDb.length > 5 ? foodDb : BASE_FOODS;
+      
+      console.log(`[NutriCore-Adapter] Using DB with ${finalDb.length} foods. Processing slots...`);
+
+      // Utilizar Promise.all para permitir chamadas assíncronas dentro do map (getBestMealImage)
+      return Promise.all(distributed.map(async (slot) => {
       // Mapeamento robusto de nomes para o Editor V3
       const nameMap: Record<string, string> = {
         'cafe_da_manha': 'Café da Manhã',
