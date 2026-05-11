@@ -980,7 +980,7 @@ export default function PatientDetail() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2">
-                  <UserCog className="w-4 h-4 text-zinc-500" /> Mais Opções
+                  <UserCog className="w-4 h-4 text-zinc-500" /> Opções
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-[#111] border-white/10 text-white w-48">
