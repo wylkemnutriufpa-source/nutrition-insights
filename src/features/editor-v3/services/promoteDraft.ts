@@ -35,44 +35,22 @@ function mealNameToType(name: string): ClinicalMealType {
   return NAME_TO_MEAL_TYPE[norm] ?? 'lunch';
 }
 
-function buildItemTitle(meal: Meal): string {
-  if (meal.items.length === 0) return meal.name;
-  const isMarmita = meal.items.some((i) => (i as any).isMarmita);
-  if (isMarmita) {
-    const m = meal.items.find((i) => (i as any).isMarmita) as MealItem;
-    return m.name;
-  }
-  return meal.items.map((i) => i.name).join(' + ');
+function buildItemTitle(item: MealItem): string {
+  return item.name;
 }
 
-function buildItemDescription(meal: Meal): string {
-  return meal.items
-    .map((i) => {
-      const unit = i.portionUnitLabel || i.portionUnit || 'unidade';
-      const quantity = i.quantity || 1;
-      let displayUnit = unit;
-      if (quantity > 1) {
-        const plurals: Record<string, string> = {
-          fatia: 'fatias', 
-          unidade: 'unidades', 
-          colher: 'colheres',
-          pote: 'potes', 
-          medida: 'medidas', 
-          marmita: 'marmitas'
-        };
-        displayUnit = plurals[unit] || unit + 's';
-      }
-      return `${i.name} — ${quantity} ${displayUnit}`;
-    })
-    .join('; ');
+function buildItemDescription(item: MealItem): string {
+  if (item.portionLabel) return item.portionLabel;
+  if (item.portionUnitLabel) return item.portionUnitLabel;
+  
+  const unit = item.portionUnit || 'g';
+  const quantity = item.quantity || 1;
+  return `${quantity}${unit}`;
 }
 
 function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {
-    // 🛡️ REGRA DE OURO: O Motor NutriCore V3 é a fonte da verdade.
-    // Usamos os macros que já estão no item (totais para a quantidade atual).
-    // NÃO recalculamos para evitar distorções de arredondamento ou conversão.
     kcal += i.kcal ?? 0;
     p += i.protein ?? 0;
     c += i.carbs ?? 0;
