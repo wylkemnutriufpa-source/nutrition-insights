@@ -39,7 +39,6 @@ import {
   buildPdfItemsForDailyPlan,
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
-  selectCanonicalDayItems,
 } from "@/lib/mealPlanDisplay";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -434,13 +433,18 @@ export default function PatientMealPlan() {
   const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
 
   // Memoized daily adherence
-  const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
-    const followed = completions.filter(c => c.adherence_status === "followed").length;
-    const partial = completions.filter(c => c.adherence_status === "partial").length;
-    const notFollowed = completions.filter(c => c.adherence_status === "not_followed").length;
-    const adherence = items.length > 0 ? ((followed * 100 + partial * 50) / (items.length * 100)) * 100 : 0;
-    return { followedCount: followed, partialCount: partial, notFollowedCount: notFollowed, dailyAdherence: adherence, allMarked: completions.length >= items.length && items.length > 0 };
+  const visibleCompletions = useMemo(() => {
+    const visibleIds = new Set(items.map((item) => item.id));
+    return completions.filter((completion) => visibleIds.has(completion.meal_plan_item_id));
   }, [completions, items]);
+
+  const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
+    const followed = visibleCompletions.filter(c => c.adherence_status === "followed").length;
+    const partial = visibleCompletions.filter(c => c.adherence_status === "partial").length;
+    const notFollowed = visibleCompletions.filter(c => c.adherence_status === "not_followed").length;
+    const adherence = items.length > 0 ? ((followed * 100 + partial * 50) / (items.length * 100)) * 100 : 0;
+    return { followedCount: followed, partialCount: partial, notFollowedCount: notFollowed, dailyAdherence: adherence, allMarked: visibleCompletions.length >= items.length && items.length > 0 };
+  }, [visibleCompletions, items]);
 
   const getWeekDayAdherence = useCallback((dayDate: string, dayIdx: number) => {
     const dayItems = buildDailyDisplayItems(allItems as any, dayIdx) as MealPlanItem[];
