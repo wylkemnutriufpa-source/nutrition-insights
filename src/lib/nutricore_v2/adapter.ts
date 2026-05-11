@@ -242,6 +242,10 @@ export class NutriCoreV3Adapter {
         imageSource: bestImage.source
       };
     }));
+    } catch (error: any) {
+      console.error('[NutriCore-Adapter] Fatal Error during generation:', error);
+      throw new Error(`Falha no Processamento Clínico: ${error.message}`);
+    }
   }
 
   /**
