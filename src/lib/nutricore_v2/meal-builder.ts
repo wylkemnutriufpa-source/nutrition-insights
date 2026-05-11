@@ -154,7 +154,8 @@ function selectFood(
   db: Food[],
   category: FoodCategory,
   restrictions: string[],
-  preferences: string[]
+  preferences: string[],
+  seed: number = Math.random()
 ): Food | undefined {
   const available = db.filter(
     f => f.category === category && !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase()))
@@ -169,8 +170,9 @@ function selectFood(
 
   const pool = preferred.length > 0 ? preferred : available;
 
-  // 🎲 Variedade Sistêmica: Embaralha o pool para evitar planos idênticos
-  return pool[Math.floor(Math.random() * pool.length)];
+  // 🎲 Variedade Sistêmica Determinística: Usa o seed para evitar planos idênticos no mesmo loop
+  const index = Math.floor(Math.abs(Math.sin(seed * 20000)) * pool.length);
+  return pool[index];
 }
 
 function createPlannedItem(food: Food, grams: number): PlannedItem {
