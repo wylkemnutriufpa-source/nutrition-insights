@@ -112,17 +112,17 @@ export async function generateAndSaveLocalPlan(
     if (promoteError) throw promoteError;
 
     // Insert items
-    for (const meal of dailyPlan.meals) {
+    for (const meal of v3Meals) {
       for (const item of meal.items) {
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
-          meal_type: meal.type.replace(/ /g, '_') as any,
-          calories_target: Math.round(item.macros.kcal),
-          protein_target: item.macros.protein_g,
-          carbs_target: item.macros.carb_g,
-          fat_target: item.macros.fat_g,
-          description: `${item.grams}g`,
+          meal_type: meal.name.toLowerCase().replace(/ /g, '_') as any,
+          calories_target: Math.round(item.kcal),
+          protein_target: item.protein,
+          carbs_target: item.carbs,
+          fat_target: item.fat,
+          description: item.portionUnitLabel || `${item.quantity}g`,
           tenant_id: tenantId
         } as any);
       }
