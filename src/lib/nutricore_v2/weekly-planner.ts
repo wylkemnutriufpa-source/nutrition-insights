@@ -83,41 +83,4 @@ export function generateWeeklyPlan(
  * Aplica variações determinísticas para evitar monotonia.
  * Regras: Alternar proteínas/carbos, máx 3-4 variações, nunca consecutivas.
  */
-function applyVariation(
-  plan: DailyPlan,
-  foodDb: Food[],
-  dayIndex: number,
-  seed: number,
-  log: string[]
-): DailyPlan {
-  // Apenas almoço e jantar variam conforme regra
-  const newMeals = plan.meals.map((meal) => {
-    if (meal.type !== "almoço" && meal.type !== "jantar") return meal;
-
-    const proteins = foodDb.filter(f => f.category === "protein");
-    const carbs = foodDb.filter(f => f.category === "carb");
-
-    // Seleção determinística baseada no dia e semente
-    // Evita repetição consecutiva usando (dayIndex % available)
-    const pIndex = (dayIndex + Math.floor(seed)) % Math.min(proteins.length, 4);
-    const cIndex = (dayIndex + 1 + Math.floor(seed)) % Math.min(carbs.length, 3);
-
-    const newProtein = proteins[pIndex];
-    const newCarb = carbs[cIndex];
-
-    const updatedItems = meal.items.map((item) => {
-      // Encontrar item de proteína original e trocar mantendo equivalência calórica (simplificado para buildMeal rebuild)
-      // No contexto real, chamaríamos o builder com novos "preferences" forçados para este dia
-      return item;
-    });
-
-    // Para garantir gramagens idênticas e consistência, a variação idealmente 
-    // rodaria o buildMeal com preferências específicas para aquele dia do loop.
-    // Como o prompt pede "Gramagens idênticas", a variação de alimento preservando a caloria exata
-    // é feita via regra de equivalência.
-    
-    return meal; 
-  });
-
-  return { ...plan, meals: newMeals };
-}
+// Variação agora é aplicada diretamente no loop principal usando preferências rotativas e seeds determinísticas.
