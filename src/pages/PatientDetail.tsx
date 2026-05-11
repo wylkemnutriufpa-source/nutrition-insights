@@ -74,7 +74,7 @@ import { deactivateMealPlan } from "@/lib/serverTransitions";
 import Curiosidades from "./Curiosidades";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
-import { PatientConsentBadge } from "@/components/patient/PatientConsentBadge";
+import { ClinicalConsentViewer } from "@/components/patient/ClinicalConsentViewer";
 
 
 export default function PatientDetail() {
@@ -154,6 +154,7 @@ export default function PatientDetail() {
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
   const [sendingWhatsAppId, setSendingWhatsAppId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
@@ -161,6 +162,18 @@ export default function PatientDetail() {
       setSelectedPrestigePlanId(data.currentPrestigePlanId);
     }
   }, [data?.currentPrestigePlanId]);
+
+  useEffect(() => {
+    if (profile) {
+      setEditProfileForm({
+        full_name: profile.full_name || "",
+        phone: profile.phone || "",
+        email: patientEmail || "",
+        goal: (profile as any).goal || "",
+        notes: (profile as any).notes || "",
+      });
+    }
+  }, [profile, patientEmail]);
 
   // Invalidation helper — centralized
   const invalidate = () => {
@@ -967,10 +980,13 @@ export default function PatientDetail() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2">
-                  <UserCog className="w-4 h-4 text-zinc-500" /> Mais Opções
+                  <UserCog className="w-4 h-4 text-zinc-500" /> Opções
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-[#111] border-white/10 text-white w-48">
+              <DropdownMenuContent align="end" className="bg-[#111] border-white/10 text-white w-56">
+                <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                  <UserCog className="w-4 h-4 mr-2 text-emerald-500" /> Configuração do Paciente
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setOpenSection("audit-log")}>
                   <Shield className="w-4 h-4 mr-2" /> Auditoria Motor
                 </DropdownMenuItem>
@@ -1252,6 +1268,78 @@ export default function PatientDetail() {
         </Dialog>
 
         {/* Onboarding Release Dialog */}
+        {/* Patient Settings Dialog */}
+        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-emerald-500/20 text-white p-0">
+            <div className="sticky top-0 z-10 bg-[#0a0a0a] p-6 border-b border-white/5">
+              <DialogHeader>
+                <DialogTitle className="text-white flex items-center gap-2">
+                  <UserCog className="w-5 h-5 text-emerald-500" /> Configuração do Paciente
+                </DialogTitle>
+              </DialogHeader>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              {/* Profile Form */}
+              <form onSubmit={handleSaveProfile} className="space-y-4">
+                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Dados Cadastrais</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-zinc-400">Nome Completo</Label>
+                    <Input 
+                      value={editProfileForm.full_name} 
+                      onChange={(e) => setEditProfileForm({ ...editProfileForm, full_name: e.target.value })} 
+                      className="bg-black/40 border-white/10" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-400">Telefone / WhatsApp</Label>
+                    <Input 
+                      value={editProfileForm.phone} 
+                      onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })} 
+                      className="bg-black/40 border-white/10" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-400">Objetivo</Label>
+                    <Input 
+                      value={editProfileForm.goal} 
+                      onChange={(e) => setEditProfileForm({ ...editProfileForm, goal: e.target.value })} 
+                      className="bg-black/40 border-white/10" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-400">E-mail</Label>
+                    <Input 
+                      value={editProfileForm.email} 
+                      disabled 
+                      className="bg-black/20 border-white/10 text-zinc-500 opacity-60 cursor-not-allowed" 
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-400">Notas Internas</Label>
+                  <Textarea 
+                    value={editProfileForm.notes} 
+                    onChange={(e) => setEditProfileForm({ ...editProfileForm, notes: e.target.value })} 
+                    className="bg-black/40 border-white/10 min-h-[100px]" 
+                  />
+                </div>
+                <Button type="submit" disabled={savingProfile} className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold">
+                  {savingProfile ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              </form>
+
+              <div className="h-px bg-white/5" />
+
+              {/* Consent Terms Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">LGPD & Consentimento</h3>
+                <ClinicalConsentViewer />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
         <OnboardingReleaseDialog
           patientId={resolvedPatientId}
           patientName={profile?.full_name || "Paciente"}
