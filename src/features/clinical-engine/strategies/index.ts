@@ -1,7 +1,7 @@
 import { Meal, Food, MealItem, PatientContext } from '../types/clinical-types';
 import { toast } from 'sonner';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
-import { NutriCoreV2Adapter } from '@/lib/nutricore_v2/adapter';
+import { NutriCoreV3Adapter } from '@/lib/nutricore_v2/adapter';
 
 export interface ClinicalStrategy {
   id: string;
