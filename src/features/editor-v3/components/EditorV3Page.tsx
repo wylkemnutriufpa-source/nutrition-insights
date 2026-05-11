@@ -1242,13 +1242,13 @@ const EditorV3Page = () => {
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col font-sans selection:bg-emerald-500/30 text-white">
       <header className="bg-neutral-950/80 border-b border-white/5 py-3 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full md:w-auto">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate(patientId ? `/patients/${patientId}` : '/dashboard')}
-              className="text-white/40 hover:text-white rounded-2xl hover:bg-white/5 border border-white/5"
+              className="text-white/40 hover:text-white rounded-2xl hover:bg-white/5 border border-white/5 h-10 w-10 shrink-0"
               title={patientId ? "Voltar ao Perfil do Paciente" : "Voltar ao Dashboard"}
             >
               <ArrowLeft className="w-5 h-5" />
