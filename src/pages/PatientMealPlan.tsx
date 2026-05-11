@@ -602,8 +602,27 @@ export default function PatientMealPlan() {
             </motion.div>
           )}
 
-          {/* MODO DIÁRIO ÚNICO — substituições inteligentes substituem a "visão semanal" */}
+          {/* Visualização diária/semanal — substituições não entram na soma de macros */}
           <div className="space-y-5 mt-4">
+            <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/60 bg-muted/20 p-1">
+              <Button
+                type="button"
+                variant={viewMode === "daily" ? "default" : "ghost"}
+                className="h-10 rounded-xl text-xs font-bold"
+                onClick={() => setViewMode("daily")}
+              >
+                Modo diário
+              </Button>
+              <Button
+                type="button"
+                variant={viewMode === "weekly" ? "default" : "ghost"}
+                className="h-10 rounded-xl text-xs font-bold"
+                onClick={() => setViewMode("weekly")}
+              >
+                Modo semanal
+              </Button>
+            </div>
+
             {isBasic ? (
               <div className="flex flex-col items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -667,42 +686,83 @@ export default function PatientMealPlan() {
 
             <MacroSummary items={items} totalsStatus={plan?.totals_status} />
 
-            <div className="space-y-6">
-              {groupedItems.length > 0 ? (
-                groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
-                  <MealGroup
-                    key={key}
-                    mealType={{ key, label, icon, time }}
-                    items={mealItems}
-                    completions={completions}
-                    justCompleted={justCompleted}
-                    focusMode={focusMode}
-                    onSetAdherence={setAdherence}
-                    onOpenDetail={setSelectedMeal}
-                    onOpenSubstitution={setSubstitutionItem}
-                  />
-                ))
-              ) : (
-                <div className="glass rounded-2xl p-8 text-center border-dashed border-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Utensils className="w-8 h-8 text-primary/40" />
+            {viewMode === "daily" ? (
+              <div className="space-y-6">
+                {groupedItems.length > 0 ? (
+                  groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
+                    <MealGroup
+                      key={key}
+                      mealType={{ key, label, icon, time }}
+                      items={mealItems}
+                      completions={completions}
+                      justCompleted={justCompleted}
+                      focusMode={focusMode}
+                      onSetAdherence={setAdherence}
+                      onOpenDetail={setSelectedMeal}
+                      onOpenSubstitution={setSubstitutionItem}
+                    />
+                  ))
+                ) : (
+                  <div className="glass rounded-2xl p-8 text-center border-dashed border-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Utensils className="w-8 h-8 text-primary/40" />
+                    </div>
+                    <h3 className="font-display font-bold text-lg mb-1">Nada planejado para este dia</h3>
+                    <p className="text-muted-foreground text-xs max-w-[200px] mx-auto mb-6">
+                      Seu nutricionista não definiu refeições para {isToday ? "hoje" : "este dia"}.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDate(new Date().toISOString().split("T")[0])}
+                      className="gap-2 text-xs"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Ver hoje
+                    </Button>
                   </div>
-                  <h3 className="font-display font-bold text-lg mb-1">Nada planejado para este dia</h3>
-                  <p className="text-muted-foreground text-xs max-w-[200px] mx-auto mb-6">
-                    Seu nutricionista não definiu refeições para {isToday ? "hoje" : "este dia"}.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setDate(new Date().toISOString().split("T")[0])}
-                    className="gap-2 text-xs"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    Ver hoje
-                  </Button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {weeklyDisplayDays.map(({ day, items: dayItems }) => {
+                  const dayDate = weekDates[day === 0 ? 0 : day] || date;
+                  const groupedDayItems = MEAL_TYPES.map(mt => ({
+                    ...mt,
+                    items: (dayItems as MealPlanItem[]).filter(i => i.meal_type === mt.key),
+                  })).filter(g => g.items.length > 0);
+
+                  if (groupedDayItems.length === 0) return null;
+
+                  return (
+                    <section key={day} className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-display font-bold text-sm">{DAYS[day]}</h3>
+                          <p className="text-[10px] text-muted-foreground">Plano montado com substituições equivalentes</p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                          Mesmas metas
+                        </Badge>
+                      </div>
+                      {groupedDayItems.map(({ key, label, icon, time, items: mealItems }) => (
+                        <MealGroup
+                          key={`${day}-${key}`}
+                          mealType={{ key, label, icon, time }}
+                          items={mealItems}
+                          completions={weekCompletions.filter(c => (c as any).date === dayDate)}
+                          justCompleted={justCompleted}
+                          focusMode={focusMode}
+                          onSetAdherence={(item, status) => setAdherence(item, status, dayDate)}
+                          onOpenDetail={setSelectedMeal}
+                          onOpenSubstitution={setSubstitutionItem}
+                        />
+                      ))}
+                    </section>
+                  );
+                })}
+              </div>
+            )}
 
 
             <div className="glass rounded-xl p-4 text-center space-y-1">
