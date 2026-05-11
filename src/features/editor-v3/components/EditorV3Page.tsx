@@ -2561,6 +2561,77 @@ const EditorV3Page = () => {
                 </button>
               ))}
 
+              {activeTab === 'template' && planTemplates.length > 0 && (
+                <div className="col-span-full mt-8 pt-8 border-t border-white/5">
+                   <h4 className="text-sm font-black text-amber-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-3 italic">
+                    <Zap className="w-5 h-5" /> Biblioteca de Planos Prontos (V3 Elite)
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {planTemplates.map((pt) => (
+                      <button
+                        key={pt.id}
+                        onClick={async () => {
+                          try {
+                            setIsGeneratingGlobal(true);
+                            const ptMeals = Array.isArray(pt.meals) ? pt.meals : [];
+                            const v3Meals: Meal[] = ptMeals.map((m: any) => {
+                              const mealItems: MealItem[] = (m.foods || []).map((f: any) => ({
+                                id: Math.random().toString(36).substring(2, 9),
+                                name: f.name,
+                                kcal: f.calories || 0,
+                                calories: f.calories || 0,
+                                protein: f.protein || 0,
+                                carbs: f.carbs || 0,
+                                fat: f.fat || 0,
+                                portionValue: 100,
+                                portionUnitLabel: 'g',
+                                portionUnit: 'g',
+                                portionLabel: f.portion || '100g',
+                                measurementType: 'gram',
+                                instanceId: Math.random().toString(36).substring(2, 10),
+                                quantity: 100,
+                                substitutions: []
+                              } as MealItem));
+                              
+                              return {
+                                id: Math.random().toString(36).substring(2, 9),
+                                name: m.title || m.meal_type,
+                                time: '08:00',
+                                items: mealItems,
+                                imageSource: 'auto'
+                              } as Meal;
+                            });
+
+                            if (v3Meals.length > 0) {
+                              const mealsWithImages = await Promise.all(v3Meals.map(async (meal) => {
+                                const bestImage = await getBestMealImage(meal.name, meal.items);
+                                return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
+                              }));
+                              setMeals(mealsWithImages);
+                              setShowMainAddModal(false);
+                              toast.success(`Plano "${pt.name}" aplicado!`);
+                            }
+                          } finally {
+                            setIsGeneratingGlobal(false);
+                          }
+                        }}
+                        className="group relative flex flex-col items-start p-6 rounded-3xl bg-amber-500/5 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/10 transition-all text-left shadow-2xl"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center border border-amber-500/20 mb-4 group-hover:scale-110 transition-transform">
+                          <span className="text-2xl">{pt.icon || '🥗'}</span>
+                        </div>
+                        <span className="font-black text-white text-lg uppercase tracking-tight mb-1">{pt.name}</span>
+                        <p className="text-xs font-medium text-white/40 line-clamp-2 uppercase tracking-tighter leading-relaxed mb-4">{pt.description}</p>
+                        <div className="mt-auto pt-4 border-t border-white/5 w-full flex justify-between items-center">
+                          <span className="text-[10px] font-black text-amber-500/60 uppercase">V3 Smart Engine</span>
+                          <Plus className="w-4 h-4 text-amber-500" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'food' && foods.length === 0 && !isSearchingFoods && (
                 <div className="col-span-full py-40 flex flex-col items-center justify-center text-white/10 italic font-medium">
                   <Apple className="w-16 h-16 mb-6 opacity-10 animate-pulse" />
