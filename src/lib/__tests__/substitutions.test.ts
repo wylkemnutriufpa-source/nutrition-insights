@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { getSubstitutions } from '../nutricore_v2/substitutions';
 import { BASE_FOODS } from '../nutricore_v2/food-database';
 import { convertGramsToHousehold } from '../nutricore_v2/unit-converter';
+import { formatDisplayPortion, resolveDisplayGrams } from '../nutricore_v2/portion-display';
 
 describe('NutriCore V3 — Substituições e Medidas Caseiras', () => {
   const bread = BASE_FOODS.find(f => f.id === '23')!; // Pão Integral, carb_100g: 48, kcal_100g: 260
@@ -41,14 +42,18 @@ describe('NutriCore V3 — Substituições e Medidas Caseiras', () => {
     expect(riceResult.measurementType).toBe('spoon');
   });
 
-  it('NÃO deve retornar substituições se a quantidade for tratada como unidade (1 ou 2g)', () => {
-    // ESTE É O CENÁRIO QUE ESTAVA QUEBRADO NA UI
-    const currentGrams = 2; // Passando "2 fatias" como "2g"
-    const subs = getSubstitutions(bread, BASE_FOODS, currentGrams);
-    
-    // No código original, 2g resultava em subs com 0g que eram filtradas.
-    // Verificamos que o motor se comporta como esperado (poucas ou nenhuma sub se a massa for irrelevante)
-    const validSubs = subs.filter(s => s.grams > 0);
-    expect(validSubs.length).toBeLessThan(subs.length || 5);
+  it('deve limpar quantidade visual corrompida no PDF sem expor 1000g ao paciente', () => {
+    const bananaCorrompida = {
+      name: 'Banana Prata',
+      quantity: 1000,
+      measurementType: 'gram',
+      portionValue: 100,
+      kcal: 95,
+      calories: 95,
+      kcal_100g: 98,
+    };
+
+    expect(resolveDisplayGrams(bananaCorrompida)).toBe(97);
+    expect(formatDisplayPortion(bananaCorrompida)).toBe('1 unidade(s) M (97g)');
   });
 });

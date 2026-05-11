@@ -22,13 +22,14 @@ import {
   isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros 
 } from '@/lib/nutricore_v2/helpers';
 
-import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
+import { recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V3 Imports (lib/nutricore_v2)
 // Direct NutriCore V3 Imports are now handled via Adapter or direct types
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
 import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
 import { convertGramsToHousehold } from "@/lib/nutricore_v2/unit-converter";
+import { formatDisplayPortion, resolveDisplayGrams } from "@/lib/nutricore_v2/portion-display";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,23 +92,7 @@ const MEASURE_OPTIONS = [
 ];
 
 const formatPortion = (item: MealItem) => {
-  // Para V3, sempre buscamos a medida caseira + gramas para clareza total
-  const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
-
-  const rawTotal = (item.measurementType === 'unit' || item.measurementType === 'spoon')
-    ? Math.round((item.quantity || 0) * (item.portionValue || 1))
-    : Math.round(item.quantity || 0);
-
-  // 🛡️ Clamp anti-corrupção: nenhum item de refeição deve passar de 1000g
-  const totalGrams = Math.min(1000, Math.max(0, rawTotal));
-  const safeQty = Math.min(50, Math.max(0, Math.round(item.quantity || 0)));
-
-  if (displayUnit === 'g' || displayUnit === 'gramas') {
-    return `${totalGrams}g`;
-  }
-
-  // Ex: "2 fatias (50g)" ou "4 colheres (100g)"
-  return `${safeQty} ${displayUnit} (${totalGrams}g)`;
+  return formatDisplayPortion(item);
 };
 
 const EditorV3Page = () => {
@@ -579,10 +564,8 @@ const EditorV3Page = () => {
         if (currentFood) {
           console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
           
-          // 🛡️ Blindagem: Converter quantidade do item para gramas REAIS antes de calcular substituição
-          const itemTotalGrams = (selectedItem.item.measurementType === 'unit' || selectedItem.item.measurementType === 'spoon')
-            ? (selectedItem.item.quantity * (selectedItem.item.portionValue || 1))
-            : selectedItem.item.quantity;
+          // 🛡️ Contrato único: substituição recebe gramas reais, corrigindo qualquer quantidade visual corrompida
+          const itemTotalGrams = resolveDisplayGrams(selectedItem.item);
 
           const v3PlanSubs = getSubstitutions(
             currentFood, 
