@@ -1046,8 +1046,15 @@ const EditorV3Page = () => {
     };
 
     const pdfItems = isWeekly 
-      ? [1, 2, 3, 4, 5, 6, 0].flatMap(day => meals.flatMap(m => mapMealToItems(m, day)))
-      : meals.flatMap(m => mapMealToItems(m, -1)); // -1 means no day specific header in single mode
+      ? (meals.length >= 42 
+          ? meals.flatMap((m, idx) => {
+              const dayIdx = Math.floor(idx / (meals.length / 7));
+              const days = [1, 2, 3, 4, 5, 6, 0];
+              return mapMealToItems(m, days[dayIdx]);
+            })
+          : [1, 2, 3, 4, 5, 6, 0].flatMap(day => meals.flatMap(m => mapMealToItems(m, day)))
+        )
+      : meals.flatMap(m => mapMealToItems(m, -1));
 
     return {
       planTitle: isWeekly ? "Plano Alimentar Semanal" : "Plano Alimentar Premium V3",
