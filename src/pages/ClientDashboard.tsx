@@ -208,7 +208,7 @@ export default function ClientDashboard() {
   }, [biquiniEnrollment]);
 
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
-  const shouldBlock = isPatient && !journeyLoading && journeyStatus && !isFluid;
+  const shouldBlock = isPatient && !journeyLoading && journeyStatus && !isFluid && !lifecycle.showPlan;
 
   if (page.isLoading) {
     return (
