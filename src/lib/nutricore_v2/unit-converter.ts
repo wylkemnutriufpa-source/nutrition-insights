@@ -21,10 +21,11 @@ export function convertGramsToHousehold(name: string, grams: number): Normalized
     portionLabel: 'g'
   };
 
-  if (lowerName.includes('ovo')) {
+  // EGGS & OMELETS - Always in units (1 unit = 50g)
+  if (lowerName.includes('ovo') || lowerName.includes('omelete')) {
     result = {
       measurementType: 'unit',
-      portionValue: 50, // M
+      portionValue: 50, // Média (M) = 50g
       quantity: Math.max(1, Math.round(grams / 50)),
       portionLabel: 'unidade(s)'
     };
@@ -56,9 +57,6 @@ export function convertGramsToHousehold(name: string, grams: number): Normalized
       quantity: Math.max(1, Math.round(grams / 25)),
       portionLabel: 'colher(es) de sopa'
     };
-  } else if (lowerName.includes('tapioca') || lowerName.includes('cuscuz')) {
-    // Tapioca e cuscuz geralmente são medidos em gramas ou colheres, mas deixamos gramas por padrão
-    // se o nutricionista quiser trocar.
   }
 
   return result;
