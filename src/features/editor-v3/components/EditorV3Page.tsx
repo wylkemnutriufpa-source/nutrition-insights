@@ -23,7 +23,7 @@ import {
 
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
-// Direct NutriCore V2 Imports
+// Direct NutriCore V3 Imports (lib/nutricore_v2)
 import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
 import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
 import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
@@ -567,20 +567,20 @@ const EditorV3Page = () => {
         setIsLoadingSmartSubs(true);
         const name = selectedItem.item.name;
 
-        // V3 Logic: Use Direct NutriCore V2 Substitutions if possible
+        // V3 Logic: Use Direct NutriCore V3 Substitutions if possible
         const currentFood = BASE_FOODS.find(f => f.id === selectedItem.item.id) || 
                           BASE_FOODS.find(f => f.name.toLowerCase() === name.toLowerCase());
                           
         if (currentFood) {
-          console.log('[V3-Subs] Using NutriCore V2 Substitution Engine for:', name);
-          const v2Subs = getSubstitutions(
+          console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
+          const v3PlanSubs = getSubstitutions(
             currentFood, 
             BASE_FOODS, 
             selectedItem.item.quantity,
             patientContext?.restrictions || []
           );
           
-          const v3Subs = v2Subs.map(s => ({
+          const v3Subs = v3PlanSubs.map(s => ({
             ...s.food,
             kcal: s.food.kcal_100g,
             calories: s.food.kcal_100g,
@@ -935,7 +935,7 @@ const EditorV3Page = () => {
     setShowCalorieModal(false);
     
     try {
-      console.log(`[Elite-V3] Chamada DIRETA ao Motor NutriCore V2 para ${weight}kg`);
+      console.log(`[Elite-V3] Chamada DIRETA ao Motor NutriCore V3 para ${weight}kg`);
       
       const { generateDailyPlan } = await import("@/lib/nutricore_v2/plan-generator");
       const { BASE_FOODS } = await import("@/lib/nutricore_v2/food-database");
@@ -1045,7 +1045,7 @@ const EditorV3Page = () => {
       toast.success(`Elite V3: Plano gerado com ${Math.round(dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal)} kcal para ${weight}kg!`);
     } catch (error) {
       console.error('[Elite-V3 Error]', error);
-      toast.error('Erro ao gerar plano no Motor V2');
+      toast.error('Erro ao gerar plano no Motor V3');
     } finally {
       setIsGeneratingGlobal(false);
     }
@@ -1089,7 +1089,7 @@ const EditorV3Page = () => {
     setIsGeneratingGlobal(true);
     
     try {
-      console.log('[Direct V2] Corrigindo refeições vazias ou críticas');
+      console.log('[Direct V3] Corrigindo refeições vazias ou críticas');
       
       // Identificar refeições que precisam de correção
       const mealsToFix = meals.filter(m => 
@@ -1098,7 +1098,7 @@ const EditorV3Page = () => {
       );
 
       if (mealsToFix.length === 0) {
-        toast.info("Não foram encontradas refeições críticas para corrigir.");
+        toast.info('Nenhuma refeição crítica encontrada para correção automática.');
         return;
       }
 
@@ -1106,7 +1106,7 @@ const EditorV3Page = () => {
       // mas preservando o que está bom se necessário. 
       // O usuário pediu: "Remove e recria as refeições que estão vazias ou com Ajuste Clínico Necessário"
       await handleGenerateFullPlan();
-      toast.success('Refeições corrigidas com o motor NutriCore V2');
+      toast.success('Refeições corrigidas com o motor NutriCore V3');
     } finally {
       setIsGeneratingGlobal(false);
     }

@@ -1,8 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { NutriCoreV2Adapter } from "@/lib/nutricore_v2/adapter";
+import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
+import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
 import { PatientContext, Meal } from "../types";
-import { promoteDraftToMealPlan } from "./promoteDraft";
 
 export async function generateAndSaveLocalPlan(
   patientId: string,
@@ -48,12 +48,6 @@ export async function generateAndSaveLocalPlan(
     const answers = (anamnesis?.answers || {}) as any;
     
     // 🛡️ Motor de Priorização Antropométrica (Regra de Ouro)
-    // 1. Profile (Source of Truth)
-    // 2. Histórico de Peso (Check-ins/Feedbacks)
-    // 3. Avaliação Física (Medido)
-    // 4. Anamnese (Auto-reportado)
-    // 5. Fallback dinâmico 60kg (último recurso, com warn)
-    
     let weight = Number(profile.current_weight_kg || 0);
     let weightSource = 'profile';
 
@@ -98,19 +92,30 @@ export async function generateAndSaveLocalPlan(
       fat_target: Number(anamnesis?.computed_fat) || Number(assessment?.fat_target) || 60
     };
 
-    // 2. Generate plan using NutriCore V2 Adapter (LOCAL)
-    // We need some available foods, or it will use defaults
-    const meals = await NutriCoreV2Adapter.generateElitePlan(context, []);
+    // 2. Generate plan using NutriCore V3 (Direct call)
+    const mealSlots = [
+      { type: 'cafe_da_manha', time: '08:00' },
+      { type: 'lanche_da_manha', time: '10:30' },
+      { type: 'almoço', time: '13:00' },
+      { type: 'lanche_da_tarde', time: '16:00' },
+      { type: 'jantar', time: '19:30' },
+      { type: 'ceia', time: '22:00' }
+    ] as any[];
 
-    // 3. Save as a draft then promote, or save directly as a meal plan
-    // For simplicity and to follow the current flow, we'll promote a virtual draft
-    const draftPayload = {
-      meals,
-      version: 1,
-      patient_context: context,
-      nutritional_score: { value: 100, label: 'Ótimo', color: 'text-green-500' },
-      confidence: { value: 100, label: 'Alta', color: 'text-green-500' }
-    };
+    const dailyPlan = generateDailyPlan(
+      {
+        weight_kg: weight,
+        height_cm: height,
+        age_years: context.age,
+        sex: context.gender === 'female' ? 'feminino' : 'masculino',
+        activity_level: context.activityLevel as any,
+        goal: context.goal as any,
+        restrictions: context.restrictions,
+        preferences: context.preferences
+      },
+      mealSlots,
+      BASE_FOODS
+    );
 
     const { data: mealPlan, error: promoteError } = await supabase
       .from('meal_plans')
@@ -118,7 +123,7 @@ export async function generateAndSaveLocalPlan(
         patient_id: profile.user_id || patientId,
         nutritionist_id: nutritionistId,
         tenant_id: tenantId,
-        title: `Plano NutriCore V2 — ${new Date().toLocaleDateString('pt-BR')}`,
+        title: `Plano NutriCore V3 — ${new Date().toLocaleDateString('pt-BR')}`,
         plan_status: 'draft',
         editor_version: 'v3',
         start_date: new Date().toISOString().split('T')[0]
@@ -129,18 +134,17 @@ export async function generateAndSaveLocalPlan(
     if (promoteError) throw promoteError;
 
     // Insert items
-    for (const meal of meals) {
+    for (const meal of dailyPlan.meals) {
       for (const item of meal.items) {
-        // 🛡️ Usamos os macros diretamente conforme gerado pelo motor Elite
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
-          meal_type: meal.name.toLowerCase().replace(/ /g, '_') as any,
-          calories_target: Math.round(item.kcal),
-          protein_target: item.protein,
-          carbs_target: item.carbs,
-          fat_target: item.fat,
-          description: item.portionLabel || `${item.quantity}g`,
+          meal_type: meal.type.replace(/ /g, '_') as any,
+          calories_target: Math.round(item.macros.kcal),
+          protein_target: item.macros.protein_g,
+          carbs_target: item.macros.carb_g,
+          fat_target: item.macros.fat_g,
+          description: `${item.grams}g`,
           tenant_id: tenantId
         } as any);
       }
