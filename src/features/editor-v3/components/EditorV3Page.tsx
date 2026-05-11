@@ -67,6 +67,7 @@ import {
 import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
 import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 import PlanAdjustmentModal from './PlanAdjustmentModal';
+import TemplateEditorModal from './TemplateEditorModal';
 
 
 
@@ -248,6 +249,8 @@ const EditorV3Page = () => {
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [planTemplates, setPlanTemplates] = useState<any[]>([]);
   const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
+  const [isTemplateEditorOpen, setIsTemplateEditorOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<MealTemplate | null>(null);
   const [visualLibraryInfo, setVisualLibraryInfo] = useState<{ count: number, incomplete: boolean }>({ count: 0, incomplete: false });
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
   const [isSearchingVisualLibrary, setIsSearchingVisualLibrary] = useState(false);
@@ -1757,15 +1760,29 @@ const EditorV3Page = () => {
                               <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-amber-400 transition-colors">{t.name}</p>
                               <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{t.items.length} Itens • Template</span>
                             </div>
-                            <Button
-                              size="sm"
-                              className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[9px] h-8 rounded-lg px-3"
-                              onClick={() => {
-                                applySmartTemplate(t, baseFoods);
-                              }}
-                            >
-                              Aplicar
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-white/10 hover:bg-white/5 text-white font-black uppercase text-[9px] h-8 rounded-lg px-3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTemplate(t);
+                                  setIsTemplateEditorOpen(true);
+                                }}
+                              >
+                                Personalizar
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[9px] h-8 rounded-lg px-3"
+                                onClick={() => {
+                                  applySmartTemplate(t, baseFoods);
+                                }}
+                              >
+                                Aplicar
+                              </Button>
+                            </div>
                           </div>
                           
                           {/* Prévia dos alimentos */}
@@ -2580,7 +2597,21 @@ const EditorV3Page = () => {
                 >
                   <div className="flex justify-between items-start w-full mb-3">
                     <span className="font-black text-white group-hover:text-amber-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{t.name}</span>
-                    <Badge className="bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase border-0">{t.items.length} Itens</Badge>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full bg-white/5 hover:bg-amber-500 hover:text-black transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTemplate(t);
+                          setIsTemplateEditorOpen(true);
+                        }}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                      <Badge className="bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase border-0">{t.items.length} Itens</Badge>
+                    </div>
                   </div>
                   <p className="text-[11px] font-medium text-white/40 line-clamp-2 mb-6 h-8 leading-relaxed uppercase tracking-tighter">{t.description}</p>
                   
@@ -3132,6 +3163,15 @@ const EditorV3Page = () => {
         goalMetadata={goalMetadata}
       />
 
+      <TemplateEditorModal
+        isOpen={isTemplateEditorOpen}
+        onClose={() => setIsTemplateEditorOpen(false)}
+        template={editingTemplate}
+        onSave={(updated) => {
+          setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t));
+          setIsTemplateEditorOpen(false);
+        }}
+      />
     </div>
   );
 };
