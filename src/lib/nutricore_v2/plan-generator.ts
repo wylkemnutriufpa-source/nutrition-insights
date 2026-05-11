@@ -30,7 +30,8 @@ export function generateDailyPlan(
   foodDb: Food[],
   date: string = new Date().toISOString().split("T")[0],
   marmita?: Marmita,
-  marmitaType: MealType = "almoço"
+  marmitaType: MealType = "almoço",
+  seed: number = Math.random()
 ): DailyPlan {
 
   // 1. Motor de cálculos (TMB, TDEE, Macros Alvo)
