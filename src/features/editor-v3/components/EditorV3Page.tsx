@@ -1041,6 +1041,7 @@ const EditorV3Page = () => {
         })
       }));
 
+      if (v3Meals.length === 0) throw new Error('O motor gerou um plano vazio');
       await hydrateMeals(v3Meals as any);
       toast.success(`Elite V3: Plano gerado com ${Math.round(dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal)} kcal para ${weight}kg!`);
     } catch (error) {
