@@ -26,6 +26,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { clampScaleFactor, clampItemKcal, assertSafeMacro, MACRO_SAFETY_LIMITS } from "@/lib/macroSafety";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import {
   calculatePlanSimplicityScore,
