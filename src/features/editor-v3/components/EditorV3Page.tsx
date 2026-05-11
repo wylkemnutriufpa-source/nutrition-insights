@@ -1135,6 +1135,23 @@ const EditorV3Page = () => {
     }
   };
 
+  const handleViewPDF = async () => {
+    if (!meals.length) {
+      toast.error("Nenhum item para visualizar");
+      return;
+    }
+    const toastId = toast.loading("Gerando prévia do PDF...");
+    try {
+      const pdfData = await preparePDFData();
+      const { generatePremiumMealPlanPDF } = await import("@/lib/pdfExportPremium");
+      generatePremiumMealPlanPDF(pdfData);
+      toast.success("PDF gerado com sucesso!", { id: toastId });
+    } catch (err) {
+      console.error("PDF preview error:", err);
+      toast.error("Erro ao gerar PDF", { id: toastId });
+    }
+  };
+
   const handleFixPlan = async () => {
     if (!patientContext) return;
     setIsGeneratingGlobal(true);
