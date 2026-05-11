@@ -23,7 +23,9 @@ import {
   SlidersHorizontal,
   X,
   ClipboardCheck,
-  AlertTriangle
+  AlertTriangle,
+  ImageIcon,
+  Camera
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
@@ -31,6 +33,7 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { MEAL_TEMPLATES } from "./MealTemplatePanel";
 import { cn } from "@/lib/utils";
 import { normalizeSubstitutions, formatFinalDescription } from "./mealEditorHelpers";
+import { MealPhotoUpload } from "./MealPhotoUpload";
 
 interface MealSmartEditorModalProps {
   open: boolean;
