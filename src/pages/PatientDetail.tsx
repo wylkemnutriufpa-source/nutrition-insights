@@ -733,360 +733,362 @@ export default function PatientDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-8 bg-[#0a0a0a] text-white min-h-screen p-4 md:p-8 rounded-3xl">
         {/* Smart Alerts */}
         <SmartAlertsBanner patientId={resolvedPatientId} onAction={(action) => setOpenSection(action)} />
-        {/* Header */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          {(() => {
-            const displayName =
-              (profile?.full_name && profile.full_name.trim()) ||
-              (patientEmail && patientEmail.split("@")[0]) ||
-              "Paciente sem nome";
-            const initial = displayName[0]?.toUpperCase() || "P";
-            return (
-              <>
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary">{initial}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {currentPrestigePlan ? (
-                      <PrestigeName name={displayName} plan={currentPrestigePlan} className="font-display text-2xl font-bold" />
-                    ) : (
-                      <h1 className="font-display text-2xl font-bold" title={displayName}>{displayName}</h1>
-                    )}
-                    <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
-                      {patientStatus === "active" ? "Ativo" : "Inativo"}
+
+        {/* SEÇÃO 1 — CABEÇALHO (DADOS VITAIS) */}
+        <section className="bg-[#111] p-6 rounded-2xl border border-emerald-500/10 shadow-2xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/patients")} className="text-muted-foreground hover:text-white">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <span className="text-3xl font-bold text-emerald-500">
+                  {((profile?.full_name || patientEmail || "P")[0]).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold tracking-tight">
+                    {profile?.full_name || patientEmail?.split("@")[0] || "Paciente"}
+                  </h1>
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                    {patientStatus === "active" ? "Ativo" : "Inativo"}
+                  </Badge>
+                  {currentPrestigePlan && (
+                    <Badge variant="outline" className="border-amber-500/50 text-amber-500 gap-1 bg-amber-500/5">
+                      <Crown className="w-3 h-3" /> {currentPrestigePlan.name}
                     </Badge>
-                    {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
-                    {patientId && <ActiveProtocolBadge patientId={resolvedPatientId} compact />}
-                    {(data as any)?.requiresMedicalReview && (
-                      <Badge variant="destructive" className="gap-1 animate-pulse">
-                        <ShieldAlert className="w-3 h-3" /> Revisão Médica Requerida
-                      </Badge>
-                    )}
-                    {resolvedPatientId && (
-                      <PatientConsentBadge patientId={resolvedPatientId} />
-                    )}
-                  </div>
-                  {patientEmail && (
-                    <p className="text-xs text-muted-foreground/80 truncate" title={patientEmail}>
-                      {patientEmail}
-                    </p>
                   )}
-                  <p className="text-sm text-muted-foreground">
-                    Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
-                    {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
-                  </p>
                 </div>
-              </>
-            );
-          })()}
-          <HealthScoreRing
-            score={calculateHealthScore({
-              hasAnamnesis: anamnesis?.status === "completed",
-              checklistCompletion: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
-              mealsLogged: 0,
-              weightEntries: 0,
-              currentStreak: 0,
-              daysAsPatient: 30,
-            })}
-            label="Health Score"
-            size="md"
-          />
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-              disabled={!resolvedPatientId}
-              onClick={() => {
-                if (!resolvedPatientId) return;
-                navigate(`/in-office/${resolvedPatientId}`);
-              }}
+                <p className="text-emerald-500/60 text-sm mt-1 flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                   Plano: {patientSubscription?.plan_name || "Premium"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6 p-4 bg-black/40 rounded-xl border border-white/5">
+              <div className="flex flex-col items-center px-4 border-r border-white/10">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">⚖️ Peso</span>
+                <span className="text-lg font-bold">{(profile as any)?.current_weight_kg || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs text-muted-foreground">kg</span></span>
+              </div>
+              <div className="flex flex-col items-center px-4 border-r border-white/10">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">📏 Altura</span>
+                <span className="text-lg font-bold">{(profile as any)?.current_height_cm || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs text-muted-foreground">cm</span></span>
+              </div>
+              <div className="flex flex-col items-center px-4 border-r border-white/10">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">🎯 Objetivo</span>
+                <span className="text-sm font-bold text-emerald-500">{(profile as any)?.goal || (anamnesis?.answers as any)?.goal || "Emagrecimento"}</span>
+              </div>
+              <div className="flex flex-col items-center px-4">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">🏃 Atividade</span>
+                <span className="text-sm font-bold">{(profile as any)?.activity_level || (anamnesis?.answers as any)?.activity_level || "Leve"}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SEÇÃO 2 — AÇÕES RÁPIDAS (BOTÕES GRANDES, 2 COLUNAS) */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button 
+            variant="outline" 
+            className="h-24 rounded-2xl border-emerald-500/20 bg-[#111] hover:bg-emerald-500/10 hover:border-emerald-500/40 text-white flex items-center justify-start px-6 gap-4 group transition-all"
+            onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+              <Sparkles className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="text-left">
+              <span className="block text-lg font-bold">🧬 EDITOR V3</span>
+              <span className="text-xs text-muted-foreground">Prescrição Nutricional Premium</span>
+            </div>
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-24 rounded-2xl border-emerald-500/20 bg-[#111] hover:bg-emerald-500/10 hover:border-emerald-500/40 text-white flex items-center justify-start px-6 gap-4 group transition-all"
+            onClick={() => navigate(`/in-office/${resolvedPatientId}`)}
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+              <Stethoscope className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="text-left">
+              <span className="block text-lg font-bold">🏥 MODO CONSULTÓRIO</span>
+              <span className="text-xs text-muted-foreground">Atendimento em tempo real</span>
+            </div>
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-24 rounded-2xl border-emerald-500/20 bg-[#111] hover:bg-emerald-500/10 hover:border-emerald-500/40 text-white flex items-center justify-start px-6 gap-4 group transition-all"
+            onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+              <Activity className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="text-left">
+              <span className="block text-lg font-bold">📋 AVALIAÇÃO FÍSICA</span>
+              <span className="text-xs text-muted-foreground">Antropometria e Composição</span>
+            </div>
+          </Button>
+
+          <div className="h-24 rounded-2xl border border-emerald-500/20 bg-[#111] flex items-center justify-between px-6 gap-4">
+             <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div className="text-left">
+                <span className="block text-lg font-bold text-white">📊 RELATÓRIO PDF</span>
+                <span className="text-xs text-muted-foreground">Exportação completa do perfil</span>
+              </div>
+             </div>
+             {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
+          </div>
+        </section>
+
+        {/* SEÇÃO 3 — PLANOS ALIMENTARES */}
+        <section className="bg-[#111] p-6 rounded-2xl border border-emerald-500/10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <ChefHat className="w-5 h-5 text-emerald-500" /> PLANOS ALIMENTARES
+            </h2>
+            <Button 
+              onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
+              className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold h-9"
             >
-              🏥 Modo Consultório
+              <Plus className="w-4 h-4 mr-2" /> NOVO PLANO
             </Button>
-            <Button
-              variant="outline"
-              className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
-              disabled={!resolvedPatientId}
-              onClick={() => {
-                if (!resolvedPatientId) return;
-                navigate(`/meal-plans/editor/${resolvedPatientId}`);
-              }}
-            >
-              <Sparkles className="w-4 h-4" /> NutriCore V3 (Editor Premium)
-            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {mealPlans && mealPlans.length > 0 ? (
+              mealPlans.slice(0, 3).map((plan: any) => (
+                <div key={plan.id} className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl bg-black/40 border border-white/5 hover:border-emerald-500/30 transition-all gap-4">
+                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className={`w-3 h-3 rounded-full ${plan.is_active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-600'}`} />
+                    <div>
+                      <p className="font-bold text-sm">
+                        {plan.title || "Plano Sem Título"}
+                        {plan.is_active && <span className="ml-2 text-[10px] text-emerald-500 uppercase tracking-widest">Ativo</span>}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                        {new Date(plan.created_at).toLocaleDateString("pt-BR")} • {plan.plan_mode === 'weekly' ? 'Semanal' : 'Diário'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-500"
+                      onClick={() => handlePreviewPDF(plan)}
+                    >
+                      VISUALIZAR
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 text-xs font-bold bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/20"
+                      onClick={() => navigate(`/editor-v3/${resolvedPatientId}?planId=${plan.id}`)}
+                    >
+                      EDITAR NO V3
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-[#111] border-emerald-500/20 text-white">
+                        <DropdownMenuItem onClick={() => handleSendWhatsApp(plan)} className="hover:bg-emerald-500/10">
+                          <MessageSquare className="w-4 h-4 mr-2" /> Enviar WhatsApp
+                        </DropdownMenuItem>
+                        {plan.is_active && (
+                          <DropdownMenuItem onClick={handleMarkWithoutDiet} className="text-red-500 hover:bg-red-500/10">
+                            <UtensilsCrossed className="w-4 h-4 mr-2" /> Deixar sem dieta
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-10 bg-black/20 rounded-xl border-2 border-dashed border-white/5">
+                <p className="text-muted-foreground text-sm italic">Nenhum plano alimentar criado para este paciente.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* SEÇÃO 4 — FERRAMENTAS (BOTÕES MENORES, 3-4 COLUNAS) */}
+        <section className="space-y-4">
+          <h3 className="text-xs text-muted-foreground font-bold uppercase tracking-widest px-1">Ferramentas de Suporte</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {patientId && (
               <UnblockPatientDialog
                 patientId={resolvedPatientId}
                 patientName={profile?.full_name ?? undefined}
               />
             )}
-            {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
-            {activeMealPlan && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 h-9"
-                  onClick={() => handlePreviewPDF(activeMealPlan)}
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  Visualizar PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 h-9"
-                  onClick={() => handleSendWhatsApp(activeMealPlan)}
-                  disabled={sendingWhatsAppId === activeMealPlan.id}
-                >
-                  {sendingWhatsAppId === activeMealPlan.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <MessageSquare className="w-3.5 h-3.5" />
-                  )}
-                  Enviar via WhatsApp
-                </Button>
-              </div>
-            )}
-            <Button
-              variant={patientStatus === "active" ? "outline" : "default"}
-              className="gap-2"
-              onClick={togglePatientStatus}
-              disabled={toggleStatusMutation.isPending}
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}
             >
-              <Power className="w-4 h-4" />
-              {patientStatus === "active" ? "Desativar" : "Ativar"}
+              <ChefHat className="w-4 h-4 text-emerald-500" /> Modelos
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="gap-2">
-                  <Trash2 className="w-4 h-4" /> Excluir
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}
+            >
+              <Heart className="w-4 h-4 text-emerald-500" /> Anamnese
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={handleSmartReleaseOnboarding}
+            >
+              <Rocket className="w-4 h-4 text-emerald-500" /> Liberar Onboarding
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2"
+              onClick={() => setOpenSection("projects")}
+            >
+              <FileText className="w-4 h-4 text-emerald-500" /> Protocolo
+            </Button>
+            
+            {/* Opções Secundárias em Dropdown para manter limpo */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-[#111] hover:bg-white/5 text-xs font-bold gap-2">
+                  <UserCog className="w-4 h-4 text-zinc-500" /> Mais Opções
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Excluir paciente?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação irá remover o vínculo com este paciente. Os dados do paciente não serão apagados, mas ele deixará de aparecer na sua lista.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={deletePatient} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Confirmar Exclusão
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            {isAdmin && (
-              <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
-                    <UserCog className="w-4 h-4" /> Upgrade para Profissional
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Promover Paciente a Profissional</DialogTitle>
-                  </DialogHeader>
-                  <p className="text-sm text-muted-foreground">
-                    Escolha o tipo de profissional para <strong>{profile?.full_name}</strong>:
-                  </p>
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <button
-                      onClick={() => setUpgradeRole("nutritionist")}
-                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
-                        upgradeRole === "nutritionist" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <UtensilsCrossed className="w-8 h-8 mx-auto text-primary" />
-                      <p className="font-semibold text-sm">Nutricionista</p>
-                    </button>
-                    <button
-                      onClick={() => setUpgradeRole("personal")}
-                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
-                        upgradeRole === "personal" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <Activity className="w-8 h-8 mx-auto text-primary" />
-                      <p className="font-semibold text-sm">Personal Trainer</p>
-                    </button>
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <Button variant="outline" onClick={() => setUpgradeOpen(false)} className="flex-1">
-                      Cancelar
-                    </Button>
-                    <Button
-                      onClick={handleUpgradePatient}
-                      disabled={!upgradeRole || upgrading}
-                      className="flex-1 gap-2"
-                    >
-                      {upgrading ? "Promovendo..." : "Confirmar Promoção"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}>
-              <Activity className="w-4 h-4" /> Avaliação Física
-            </Button>
-            <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => setOpenSection("audit-log")}>
-              <Shield className="w-4 h-4" /> Auditoria Motor
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-[#111] border-white/10 text-white w-48">
+                <DropdownMenuItem onClick={() => setOpenSection("audit-log")}>
+                  <Shield className="w-4 h-4 mr-2" /> Auditoria Motor
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActivateOpen(true)}>
+                  <Play className="w-4 h-4 mr-2" /> Ativar Protocolo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPlanOpen(true)}>
+                  <CreditCard className="w-4 h-4 mr-2" /> Gerenciar Assinatura
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={togglePatientStatus}>
+                  <Power className="w-4 h-4 mr-2" /> {patientStatus === "active" ? "Desativar" : "Ativar"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={deletePatient} className="text-red-500">
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir Paciente
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </section>
 
-              <BookOpen className="w-4 h-4" /> Modelos de Dieta
-            </Button>
-            {activeMealPlan && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10"
-                    disabled={markingWithoutDiet}
-                  >
-                    {markingWithoutDiet ? <Loader2 className="w-4 h-4 animate-spin" /> : <UtensilsCrossed className="w-4 h-4" />}
-                    Estou sem dieta
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Deixar este paciente sem dieta?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      O plano ativo {activeMealPlan.title ? `“${activeMealPlan.title}”` : "deste paciente"} será removido da rotina ativa e, se já tiver sido publicado, ficará arquivado para preservar o histórico.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleMarkWithoutDiet}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Confirmar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}>
-              <Heart className="w-4 h-4" /> {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
-            </Button>
-            {/* Confirmar Pagamento — only if not yet paid */}
-            {["invited", "awaiting_payment", "lead_created", "active"].includes(journeyStatus) && (
-              <Button
-                variant="outline"
-                className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
-                onClick={handleConfirmPayment}
-                disabled={confirmingPayment}
-              >
-                {confirmingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                Confirmar Pagamento
-              </Button>
-            )}
-            {/* Liberar Onboarding — smart/idempotent */}
-            <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={handleSmartReleaseOnboarding}>
-              <Rocket className="w-4 h-4" /> Liberar Onboarding
-            </Button>
-            {/* PRO+: Ativar Protocolo */}
-            {expUI.showProtocols && (
-            <>
-            {isAdmin && (
-              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/professionals")}>
-                <UserCog className="w-4 h-4" /> Gerenciar Profissionais
-              </Button>
-            )}
-            <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
-              <DialogTrigger asChild>
-                <Button className="gradient-primary gap-2 shadow-glow">
-                  <Play className="w-4 h-4" /> Ativar Protocolo
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="font-display">Ativar Protocolo</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={activateProtocol} className="space-y-4">
-                  <div>
-                    <Label>Protocolo</Label>
-                    <Select value={activateForm.protocol_id} onValueChange={(v) => setActivateForm({ ...activateForm, protocol_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                      <SelectContent>
-                        {protocols.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Status</Label>
-                    <Select value={activateForm.status} onValueChange={(v) => setActivateForm({ ...activateForm, status: v as "active" | "paused" | "completed" | "cancelled" })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">🟢 Ativo agora</SelectItem>
-                        <SelectItem value="scheduled">📅 Programado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Início</Label>
-                      <Input type="date" value={activateForm.start_date} onChange={(e) => setActivateForm({ ...activateForm, start_date: e.target.value })} required />
-                    </div>
-                    <div>
-                      <Label>Fim (opcional)</Label>
-                      <Input type="date" value={activateForm.end_date} onChange={(e) => setActivateForm({ ...activateForm, end_date: e.target.value })} />
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full gradient-primary" disabled={!activateForm.protocol_id}>
-                    {activateForm.status === "active" ? "Ativar e Sincronizar" : "Programar"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-            </>
-            )}
-          </div>
-        </div>
+        {/* SEÇÃO 5 — ABAS (NAVEGAÇÃO) */}
+        <section className="bg-[#111] rounded-2xl border border-white/5 overflow-hidden">
+          <Tabs defaultValue="overview" className="w-full" onValueChange={(v) => setOpenSection(v)}>
+            <TabsList className="w-full flex flex-wrap h-auto bg-black/40 border-b border-white/5 p-1">
+              <TabsTrigger value="checklist" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <ListChecks className="w-4 h-4" /> Checklist
+              </TabsTrigger>
+              <TabsTrigger value="assessment" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Activity className="w-4 h-4" /> Avaliação
+              </TabsTrigger>
+              <TabsTrigger value="agenda" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Calendar className="w-4 h-4" /> Agenda
+              </TabsTrigger>
+              <TabsTrigger value="recipes" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <ChefHat className="w-4 h-4" /> Receitas
+              </TabsTrigger>
+              <TabsTrigger value="feedbacks" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <MessageSquare className="w-4 h-4" /> Feedbacks
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Clock className="w-4 h-4" /> Timeline
+              </TabsTrigger>
+              <TabsTrigger value="protocols" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <FileText className="w-4 h-4" /> Protocolos
+              </TabsTrigger>
+              <TabsTrigger value="calculators" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Calculator className="w-4 h-4" /> Calculadoras
+              </TabsTrigger>
+              <TabsTrigger value="lab-exams" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Search className="w-4 h-4" /> Exames
+              </TabsTrigger>
+              <TabsTrigger value="onboarding" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Zap className="w-4 h-4" /> Onboarding
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="flex-1 min-w-[100px] gap-2 py-3 data-[state=active]:bg-emerald-500 data-[state=active]:text-black">
+                <Eye className="w-4 h-4" /> Visão Geral
+              </TabsTrigger>
+            </TabsList>
 
-        {/* Unified Biometric Context (Fonte Única da Verdade) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Scale className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Peso Atual</span>
-            <span className="text-xl font-display font-bold">{(profile as any)?.current_weight_kg || (anamnesis?.answers as any)?.weight || "—"} <span className="text-xs font-normal">kg</span></span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Ruler className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Altura</span>
-            <span className="text-xl font-display font-bold">{(profile as any)?.current_height_cm || (anamnesis?.answers as any)?.height || "—"} <span className="text-xs font-normal">cm</span></span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Target className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Objetivo</span>
-            <span className="text-sm font-display font-bold">{(profile as any)?.goal || (anamnesis?.answers as any)?.goal || "Não definido"}</span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm">
-            <Activity className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Atividade</span>
-            <span className="text-sm font-display font-bold">{(profile as any)?.activity_level || (anamnesis?.answers as any)?.activity_level || "Não definido"}</span>
-          </div>
-          <div className="glass rounded-xl p-4 flex flex-col items-center justify-center text-center border-primary/20 shadow-glow-sm md:col-span-2 lg:col-span-2">
-            <Heart className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Restrições / Alergias</span>
-            <span className="text-xs font-medium truncate w-full">
-              {Array.isArray((profile as any)?.restrictions) && (profile as any).restrictions.length > 0 
-                ? (profile as any).restrictions.join(", ") 
-                : "Nenhuma registrada"}
-            </span>
-          </div>
-        </div>
+            <div className="p-6">
+              <TabsContent value="checklist">
+                <PatientChecklistView patientId={resolvedPatientId} />
+              </TabsContent>
+              <TabsContent value="assessment">
+                <BodyEvolutionCard patientId={resolvedPatientId} />
+                <div className="mt-6">
+                   <ConsultationCompare patientId={resolvedPatientId} />
+                </div>
+              </TabsContent>
+              <TabsContent value="agenda">
+                <PatientAgenda patientId={resolvedPatientId} />
+              </TabsContent>
+              <TabsContent value="recipes">
+                <div className="text-center py-20 text-muted-foreground italic">Seção de receitas em construção...</div>
+              </TabsContent>
+              <TabsContent value="feedbacks">
+                <PatientFeedbacksPanel patientId={resolvedPatientId} />
+              </TabsContent>
+              <TabsContent value="timeline">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold">Linha do Tempo</h3>
+                    <Button variant="outline" size="sm" onClick={() => setNoteOpen(true)}>Nova Nota</Button>
+                  </div>
+                  {/* Timeline logic would go here, reusing existing components if possible */}
+                  <div className="p-4 bg-black/20 rounded-xl border border-white/5 text-sm text-muted-foreground">
+                    Visualize o histórico completo do paciente aqui.
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="overview">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <MetabolicRadar patientId={resolvedPatientId} />
+                    <HealthScoreRing
+                      score={calculateHealthScore({
+                        hasAnamnesis: anamnesis?.status === "completed",
+                        checklistCompletion: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
+                        mealsLogged: 0,
+                        weightEntries: 0,
+                        currentStreak: 0,
+                        daysAsPatient: 30,
+                      })}
+                      label="Health Score"
+                      size="lg"
+                    />
+                    <div className="md:col-span-2">
+                       <ClinicalFlagsSummary patientId={resolvedPatientId} />
+                    </div>
+                    <div className="md:col-span-2">
+                       <MealAdherenceWidget patientId={resolvedPatientId} />
+                    </div>
+                 </div>
+              </TabsContent>
+              {/* Additional TabsContent for other sections... */}
+            </div>
+          </Tabs>
+        </section>
+      </div>
 
         {/* Últimos Planos Section */}
         {mealPlans && mealPlans.length > 0 && (
