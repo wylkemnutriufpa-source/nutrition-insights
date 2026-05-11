@@ -559,7 +559,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
                 <div class="sub-header">Opções de Substituição</div>
                 ${substitutions.map(sub => `
                   <div class="sub-item">
-                    <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
+                    <div>
+                      <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
+                      ${sub.description ? `<span style="font-size: 9px; color: #64748b;"> — ${escapeHtml(sub.description)}</span>` : ""}
+                    </div>
                     <span style="color: #999; font-size: 9px;">${sub.calories_target || 0} kcal</span>
                   </div>
                 `).join("")}
