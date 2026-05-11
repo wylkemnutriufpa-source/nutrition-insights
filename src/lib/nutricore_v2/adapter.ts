@@ -17,7 +17,7 @@ export class NutriCoreV3Adapter {
    * Converte o contexto do paciente do FitJourney para o formato NutriCore
    */
   private static mapPatientToEngine(context: PatientContext): EngineInput {
-    // Mapeamento de objetivos do V3 para o NutriCore V2
+    // Mapeamento de objetivos do V3 para o NutriCore V3
     const goalMap: Record<string, Goal> = {
       'lose_weight': 'emagrecimento',
       'gain_muscle': 'hipertrofia',
