@@ -1161,7 +1161,7 @@ export default function PatientDetail() {
                                 {plan.is_active ? 'Ativo' : 'Inativo'}
                               </Badge>
                               <Badge variant="outline" className="text-[10px] h-4 border-emerald-500/20 text-emerald-600">
-                                {plan.editor_version === 'v3' ? 'V3 Premium' : 'V3 Standard'}
+                                {plan.editor_version === 'v3' || plan.editor_version === 'v3_premium' ? 'V3 Premium' : 'V3 Premium'}
                               </Badge>
                               <span className="text-[10px] text-muted-foreground">
                                 {new Date(plan.created_at).toLocaleDateString()}
