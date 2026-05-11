@@ -177,7 +177,7 @@ function formatEquivalentPortion(title: string, grams: number): string {
   return `${safeGrams}g`;
 }
 
-function inferEquivalentPortion(item: MealPlanPDFItem): string {
+function inferEquivalentPortion(item: MealPlanPDFItem, referenceKcal?: number): string {
   const explicitGrams = Number(item.grams ?? item.suggestedQuantity ?? 0);
   if (explicitGrams > 0) return formatEquivalentPortion(item.title, explicitGrams);
 
@@ -187,7 +187,7 @@ function inferEquivalentPortion(item: MealPlanPDFItem): string {
   }
 
   const kcalPer100 = getFoodKcalPer100(item.title);
-  const kcal = Number(item.calories_target || 0);
+  const kcal = Number(referenceKcal || item.calories_target || 0);
   if (kcalPer100 > 0 && kcal > 0) {
     return formatEquivalentPortion(item.title, Math.round((kcal / kcalPer100) * 100));
   }
@@ -199,7 +199,7 @@ function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem
   if (sub.description && !isGenericSubstitutionDescription(sub.description) && !hasInvalidZeroGramPortion(sub.description)) {
     return stripDuplicatedTitle(sub.title, sub.description);
   }
-  const inferred = inferEquivalentPortion(sub);
+  const inferred = inferEquivalentPortion(sub, primary.calories_target);
   if (inferred) return `Porção equivalente: ${inferred}`;
   const primaryPortion = primary.description || "";
   if (/\d/.test(primaryPortion)) return `Porção equivalente: ${primaryPortion}`;
