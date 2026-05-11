@@ -2597,7 +2597,21 @@ const EditorV3Page = () => {
                 >
                   <div className="flex justify-between items-start w-full mb-3">
                     <span className="font-black text-white group-hover:text-amber-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{t.name}</span>
-                    <Badge className="bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase border-0">{t.items.length} Itens</Badge>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full bg-white/5 hover:bg-amber-500 hover:text-black transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTemplate(t);
+                          setIsTemplateEditorOpen(true);
+                        }}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                      <Badge className="bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase border-0">{t.items.length} Itens</Badge>
+                    </div>
                   </div>
                   <p className="text-[11px] font-medium text-white/40 line-clamp-2 mb-6 h-8 leading-relaxed uppercase tracking-tighter">{t.description}</p>
                   
