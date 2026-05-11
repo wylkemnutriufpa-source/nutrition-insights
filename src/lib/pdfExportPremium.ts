@@ -39,7 +39,7 @@ const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
   lanche_da_manha: { label: "Lanche da Manhã", color: "#10b981" },
   lunch: { label: "Almoço", color: "#f59e0b" },
-  almoço: { label: "Almoço", color: "#f59e0b" },
+  almoco: { label: "Almoço", color: "#f59e0b" },
   afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
   lanche_da_tarde: { label: "Lanche da Tarde", color: "#ec4899" },
   snack: { label: "Lanche", color: "#ec4899" },
@@ -528,7 +528,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return order.indexOf(a) - order.indexOf(b);
   });
 
-  const mealOrder = ["breakfast", "cafe_da_manha", "morning_snack", "lanche_da_manha", "lunch", "almoço", "snack", "afternoon_snack", "lanche_da_tarde", "pre_workout", "post_workout", "dinner", "jantar", "evening_snack", "ceia"];
+  const mealOrder = ["breakfast", "cafe_da_manha", "morning_snack", "lanche_da_manha", "lunch", "almoco", "snack", "afternoon_snack", "lanche_da_tarde", "pre_workout", "post_workout", "dinner", "jantar", "evening_snack", "ceia"];
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
