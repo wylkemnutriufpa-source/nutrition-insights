@@ -503,6 +503,13 @@ function buildPremiumCSS(): string {
 }
 
 export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
+  const displayTotals = calculateDisplayTotals(data);
+  const printItems = getPrimaryDailyItems(data.items || []).flatMap((primary) => {
+    const relatedSubs = (data.items || [])
+      .filter(item => item.substitution_group_id && item.substitution_group_id === primary.substitution_group_id && item !== primary && item.is_primary === false)
+      .slice(0, 5);
+    return [primary, ...relatedSubs];
+  });
   const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
     const subGroups: Record<string, MealPlanPDFItem[]> = {};
     const orphans: MealPlanPDFItem[] = [];
@@ -564,7 +571,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   };
 
 
-  const groupedByDay = data.items.reduce((acc, item) => {
+  const groupedByDay = printItems.reduce((acc, item) => {
     const dayKey = item.day_of_week ?? -1;
     if (!acc[dayKey]) acc[dayKey] = [];
     acc[dayKey].push(item);
@@ -605,19 +612,19 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   <div class="macro-summary">
     <div class="macro-card" style="border-top: 3px solid #D4A84B;">
       <div class="macro-label">Energia Total</div>
-      <div class="macro-value">${data.targetCalories || 0} <span style="font-size: 10px; font-weight: 500;">kcal</span></div>
+       <div class="macro-value">${displayTotals.calories} <span style="font-size: 10px; font-weight: 500;">kcal</span></div>
     </div>
     <div class="macro-card" style="border-top: 3px solid #EF4444;">
       <div class="macro-label">Proteínas</div>
-      <div class="macro-value">${data.targetProtein || 0}g</div>
+       <div class="macro-value">${displayTotals.protein}g</div>
     </div>
     <div class="macro-card" style="border-top: 3px solid #F59E0B;">
       <div class="macro-label">Carboidratos</div>
-      <div class="macro-value">${data.targetCarbs || 0}g</div>
+       <div class="macro-value">${displayTotals.carbs}g</div>
     </div>
     <div class="macro-card" style="border-top: 3px solid #3B82F6;">
       <div class="macro-label">Gorduras</div>
-      <div class="macro-value">${data.targetFat || 0}g</div>
+       <div class="macro-value">${displayTotals.fat}g</div>
     </div>
   </div>
 
