@@ -1642,7 +1642,7 @@ const EditorV3Page = () => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[350px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
 
         {/* Coluna Esquerda: Biblioteca (Library) */}
         <aside className="hidden lg:flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
