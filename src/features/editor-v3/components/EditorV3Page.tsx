@@ -406,6 +406,7 @@ const EditorV3Page = () => {
           consent_given: profileAny.consent_given,
           consent_date: profileAny.consent_date,
           protocol_type: profileAny.protocol_type || 'default_v3',
+          weight_source: weightSource,
         };
 
         if (weightSource === 'fallback') {
@@ -1338,7 +1339,20 @@ const EditorV3Page = () => {
                         })}
                         className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-black uppercase tracking-tighter rounded-lg cursor-pointer hover:bg-emerald-500/20 transition-all gap-1.5"
                       >
-                        {patientContext.weight > 0 ? `${patientContext.weight}kg` : 'Peso?'} · {patientContext.goal}
+                        {patientContext.weight > 0 ? `${patientContext.weight}kg` : 'Peso?'}
+                        {patientContext.weight > 0 && patientContext.weight_source && (
+                          <span className="ml-1 opacity-60 normal-case font-semibold tracking-normal">
+                            (fonte: {({
+                              profile: 'perfil',
+                              weight_history: 'check-in',
+                              assessment: 'avaliação',
+                              anamnesis: 'anamnese',
+                              dynamic_fallback: 'estimado',
+                              fallback: 'estimado',
+                            } as Record<string, string>)[patientContext.weight_source] || patientContext.weight_source})
+                          </span>
+                        )}
+                        {' · '}{patientContext.goal}
                         <Edit3 className="w-2.5 h-2.5 opacity-40" />
                       </Badge>
                     </PopoverTrigger>
