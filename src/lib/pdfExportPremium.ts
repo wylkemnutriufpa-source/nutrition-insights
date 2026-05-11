@@ -637,6 +637,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
        <div class="macro-value">${displayTotals.fat}g</div>
     </div>
   </div>
+  <div style="margin: -10px 0 14px; font-size: 9px; color: #64748b; text-align: right; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;">Total Considerado: refeições principais</div>
 
   ${data.goal ? `
     <div style="margin-bottom: 20px; padding: 15px; background: #fdf6e3; border-radius: 12px; border-left: 4px solid #D4A84B;">
