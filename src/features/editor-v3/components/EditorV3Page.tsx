@@ -23,7 +23,7 @@ import {
 
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
-// Direct NutriCore V2 Imports
+// Direct NutriCore V3 Imports (lib/nutricore_v2)
 import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
 import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
 import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
