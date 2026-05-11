@@ -129,6 +129,14 @@ export async function promoteDraftToMealPlan(
   const authUserId = profile?.user_id || draft.patient_id;
   const profileId = profile?.id || draft.patient_id;
 
+  // 0.1) Desativa planos anteriores ativos ANTES de inserir o novo
+  // (unique partial index `idx_one_active_plan_per_patient` exige no máximo 1 is_active=true por paciente)
+  await supabase
+    .from('meal_plans')
+    .update({ is_active: false } as any)
+    .eq('patient_id', authUserId)
+    .eq('is_active', true);
+
   // 1) INSERT-FIRST: cria o meal_plan oficial já PUBLICADO
   const { data: plan, error: planErr } = await supabase
     .from('meal_plans')
@@ -197,13 +205,7 @@ export async function promoteDraftToMealPlan(
     }
   }
 
-  // 3) Desativa planos anteriores para este paciente para garantir unicidade do plano ativo
-  await supabase
-    .from('meal_plans')
-    .update({ is_active: false } as any)
-    .eq('patient_id', authUserId)
-    .neq('id', plan.id)
-    .eq('is_active', true);
+  // 3) (Desativação dos anteriores já feita no passo 0.1 antes do insert)
 
   // 4) Só agora marca o draft como promovido
   await supabase
