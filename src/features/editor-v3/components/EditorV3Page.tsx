@@ -29,6 +29,7 @@ import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
 import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
 import { convertGramsToHousehold } from "@/lib/nutricore_v2/unit-converter";
+import { formatDisplayPortion, resolveDisplayGrams } from "@/lib/nutricore_v2/portion-display";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,23 +92,7 @@ const MEASURE_OPTIONS = [
 ];
 
 const formatPortion = (item: MealItem) => {
-  // Para V3, sempre buscamos a medida caseira + gramas para clareza total
-  const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
-
-  const rawTotal = (item.measurementType === 'unit' || item.measurementType === 'spoon')
-    ? Math.round((item.quantity || 0) * (item.portionValue || 1))
-    : Math.round(item.quantity || 0);
-
-  // 🛡️ Clamp anti-corrupção: nenhum item de refeição deve passar de 1000g
-  const totalGrams = Math.min(1000, Math.max(0, rawTotal));
-  const safeQty = Math.min(50, Math.max(0, Math.round(item.quantity || 0)));
-
-  if (displayUnit === 'g' || displayUnit === 'gramas') {
-    return `${totalGrams}g`;
-  }
-
-  // Ex: "2 fatias (50g)" ou "4 colheres (100g)"
-  return `${safeQty} ${displayUnit} (${totalGrams}g)`;
+  return formatDisplayPortion(item);
 };
 
 const EditorV3Page = () => {
