@@ -14,14 +14,14 @@ describe('Integridade NutriCore V3 — 3 Pacientes Distintos', () => {
     fat_target: 60
   };
 
-  it('Paciente 1: Lynn Ohana (63kg) — Manutenção', async () => {
+  it('Paciente 1: Lynn Ohana (63kg) — Recomposição', async () => {
     const context: PatientContext = {
       ...baseContext,
       weight: 63,
       gender: 'female',
       age: 30,
       height: 165,
-      goal: 'maintain'
+      goal: 'recomposition'
     };
     const plan = await NutriCoreV3Adapter.generateElitePlan(context, []);
     const totalKcal = plan.reduce((s, m) => s + m.items.reduce((a, i) => a + i.kcal, 0), 0);
