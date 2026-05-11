@@ -298,6 +298,21 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
     };
   });
 };
+
+export const searchPlanTemplates = async (): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from("diet_templates")
+    .select("*")
+    .eq("is_active", true)
+    .order("name");
+
+  if (error) {
+    console.error("Error searching plan templates:", error);
+    return [];
+  }
+
+  return data || [];
+};
 export const getFoodMacrosByName = async (names: string[]): Promise<Record<string, { kcal: number, protein: number, carbs: number, fat: number }>> => {
   if (!names.length) return {};
   
