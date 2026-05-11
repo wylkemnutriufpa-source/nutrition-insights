@@ -1123,6 +1123,34 @@ export default function PatientDetail() {
                   </div>
                 </div>
               </TabsContent>
+              <TabsContent value="plan">
+                <div className="glass p-6 rounded-xl border-emerald-500/20">
+                  <h3 className="font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5 text-emerald-500" /> Detalhes do Plano</h3>
+                  <div className="space-y-4">
+                    {patientSubscription ? (
+                      <>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span className="text-muted-foreground">Nome do Plano:</span>
+                          <span className="font-bold">{patientSubscription.plan_name}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span className="text-muted-foreground">Início:</span>
+                          <span>{new Date(patientSubscription.started_at).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span className="text-muted-foreground">Expiração:</span>
+                          <span>{patientSubscription.expires_at ? new Date(patientSubscription.expires_at).toLocaleDateString() : "Sem expiração"}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground italic">Nenhum plano ativo encontrado.</p>
+                    )}
+                    <Button className="w-full bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => setPlanOpen(true)}>
+                      Editar Plano / Assinatura
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
             </div>
           </Tabs>
         </section>
