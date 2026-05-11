@@ -76,37 +76,7 @@ export const EngineSelector = ({ isOpen, onClose, onSelect, patientName }: Engin
             </ul>
           </button>
 
-          <button
-            onClick={() => setSelected('v2')}
-            className={cn(
-              "relative flex flex-col text-left p-4 rounded-xl border-2 transition-all group",
-              selected === 'v2' 
-                ? "border-primary bg-primary/5 ring-4 ring-primary/10" 
-                : "border-border/50 hover:border-primary/40 hover:bg-accent/5"
-            )}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className={cn(
-                  "p-2 rounded-lg",
-                  selected === 'v2' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:text-primary transition-colors"
-                )}>
-                  <History className="w-4 h-4" />
-                </div>
-                <span className="font-bold text-lg">V2 (Legado)</span>
-              </div>
-              {selected === 'v2' && <Check className="w-5 h-5 text-primary" />}
-            </div>
-            
-            <ul className="space-y-1.5 ml-10">
-              <li className="text-sm flex items-center gap-2 text-muted-foreground">
-                <div className="w-1 h-1 rounded-full bg-warning" /> ⚠️ Templates básicos
-              </li>
-              <li className="text-sm flex items-center gap-2 text-muted-foreground">
-                <div className="w-1 h-1 rounded-full bg-warning" /> ⚠️ Disponível para ajustes pontuais
-              </li>
-            </ul>
-          </button>
+          {/* V2 Removed as requested by clinical protocol */}
         </div>
 
         <DialogFooter>
