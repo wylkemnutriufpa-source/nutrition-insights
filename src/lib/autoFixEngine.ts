@@ -743,13 +743,14 @@ export async function autoFixMealPlan(
     // Fallback: no clinical target — preserve original plan totals
     const afterCal = sumMacro(finalItems, "calories_target");
     if (beforeCal > 0 && Math.abs(afterCal - beforeCal) / beforeCal > 0.10) {
-      const factor = beforeCal / (afterCal || 1);
+      // 🛡️ Clamp do fator — impede multiplicação descontrolada
+      const factor = clampScaleFactor(beforeCal / (afterCal || 1));
       for (const item of finalItems) {
-        if (item.calories_target) item.calories_target = Math.round(item.calories_target * factor);
+        if (item.calories_target) item.calories_target = clampItemKcal(Math.round(item.calories_target * factor));
         if (item.protein_target) item.protein_target = Math.round(item.protein_target * factor);
         if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
         if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
-        // Track in change log only, not in description
+        assertSafeMacro(item.calories_target ?? 0, "calories_target fallback");
       }
       macroRebalanced = true;
       allChanges.push({
@@ -758,7 +759,7 @@ export async function autoFixMealPlan(
         dayOfWeek: -1,
         from: `${afterCal} kcal`,
         to: `${sumMacro(finalItems, "calories_target")} kcal`,
-        detail: `Fator de correção proporcional ×${factor.toFixed(2)} (sem meta clínica disponível)`,
+        detail: `Fator de correção proporcional clampeado ×${factor.toFixed(2)} (sem meta clínica disponível)`,
       });
     }
     warnings.push("Sem meta clínica do paciente — rebalanceamento proporcional ao plano original");
