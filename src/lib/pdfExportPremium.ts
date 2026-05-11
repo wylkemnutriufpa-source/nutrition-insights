@@ -3,6 +3,7 @@
  */
 
 interface MealPlanPDFItem {
+  id?: string;
   mealType: string;
   title: string;
   description?: string;
@@ -69,6 +70,73 @@ const GOAL_LABELS: Record<string, string> = {
   improve_health: "Melhora da Saúde",
   athletic_performance: "Performance",
 };
+
+const FIXED_MEAL_TYPE_ORDER = [
+  "breakfast",
+  "morning_snack",
+  "lunch",
+  "afternoon_snack",
+  "dinner",
+  "evening_snack",
+] as const;
+
+type CanonicalMealType = typeof FIXED_MEAL_TYPE_ORDER[number];
+
+const MEAL_TYPE_ALIASES: Record<string, CanonicalMealType> = {
+  breakfast: "breakfast",
+  cafe: "breakfast",
+  cafe_da_manha: "breakfast",
+  cafe_manha: "breakfast",
+  desjejum: "breakfast",
+  morning_snack: "morning_snack",
+  lanche_da_manha: "morning_snack",
+  lanche_manha: "morning_snack",
+  colacao: "morning_snack",
+  lunch: "lunch",
+  almoco: "lunch",
+  afternoon_snack: "afternoon_snack",
+  lanche_da_tarde: "afternoon_snack",
+  lanche_tarde: "afternoon_snack",
+  snack: "afternoon_snack",
+  dinner: "dinner",
+  jantar: "dinner",
+  evening_snack: "evening_snack",
+  ceia: "evening_snack",
+  lanche_da_noite: "evening_snack",
+  lanche_noite: "evening_snack",
+};
+
+function normalizeMealTypeKey(type: unknown): string {
+  return String(type || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function resolveCanonicalMealType(type: unknown): CanonicalMealType | string {
+  const normalized = normalizeMealTypeKey(type);
+  return MEAL_TYPE_ALIASES[normalized] || normalized;
+}
+
+function getMealGroupKey(item: MealPlanPDFItem): string {
+  const canonicalType = resolveCanonicalMealType(item.mealType);
+  if (item.substitution_group_id) return `${canonicalType}:${item.substitution_group_id}`;
+  return `item:${canonicalType}:${item.id || `${item.title}:${item.description || ""}`}`;
+}
+
+function isGenericSubstitutionDescription(description?: string): boolean {
+  const normalized = normalizeMealTypeKey(description);
+  return !normalized || normalized === "substituicao" || normalized === "opcao_de_substituicao";
+}
+
+function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem): string {
+  if (sub.description && !isGenericSubstitutionDescription(sub.description)) return sub.description;
+  const primaryPortion = primary.description || "";
+  if (/\d/.test(primaryPortion)) return `Porção equivalente: ${primaryPortion}`;
+  return "";
+}
 
 function escapeHtml(str: string): string {
   return (str || "")
@@ -165,7 +233,7 @@ function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
   const groups = new Map<string, MealPlanPDFItem[]>();
 
   dayItems.forEach((item) => {
-    const key = item.substitution_group_id || `item:${item.title}:${item.mealType}`;
+    const key = getMealGroupKey(item);
     groups.set(key, [...(groups.get(key) || []), item]);
   });
 
