@@ -1047,7 +1047,7 @@ const EditorV3Page = () => {
 
     const pdfItems = isWeekly 
       ? [1, 2, 3, 4, 5, 6, 0].flatMap(day => meals.flatMap(m => mapMealToItems(m, day)))
-      : meals.flatMap(m => mapMealToItems(m, null));
+      : meals.flatMap(m => mapMealToItems(m, -1)); // -1 means no day specific header in single mode
 
     return {
       planTitle: isWeekly ? "Plano Alimentar Semanal" : "Plano Alimentar Premium V3",
