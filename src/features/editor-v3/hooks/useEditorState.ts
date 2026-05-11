@@ -17,7 +17,7 @@ import {
   NutritionalScore, 
   ValidationIssue 
 } from '../../clinical-engine';
-import { calculateItemMacros as calcMacrosV2 } from '../../clinical-engine/services/v3Motor';
+import { calculateItemMacros as calcMacrosV3 } from '../../clinical-engine/services/v3Motor';
 import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 import { logClinicalEvent } from '../../audit/services/auditLogger';
