@@ -35,44 +35,22 @@ function mealNameToType(name: string): ClinicalMealType {
   return NAME_TO_MEAL_TYPE[norm] ?? 'lunch';
 }
 
-function buildItemTitle(meal: Meal): string {
-  if (meal.items.length === 0) return meal.name;
-  const isMarmita = meal.items.some((i) => (i as any).isMarmita);
-  if (isMarmita) {
-    const m = meal.items.find((i) => (i as any).isMarmita) as MealItem;
-    return m.name;
-  }
-  return meal.items.map((i) => i.name).join(' + ');
+function buildItemTitle(item: MealItem): string {
+  return item.name;
 }
 
-function buildItemDescription(meal: Meal): string {
-  return meal.items
-    .map((i) => {
-      const unit = i.portionUnitLabel || i.portionUnit || 'unidade';
-      const quantity = i.quantity || 1;
-      let displayUnit = unit;
-      if (quantity > 1) {
-        const plurals: Record<string, string> = {
-          fatia: 'fatias', 
-          unidade: 'unidades', 
-          colher: 'colheres',
-          pote: 'potes', 
-          medida: 'medidas', 
-          marmita: 'marmitas'
-        };
-        displayUnit = plurals[unit] || unit + 's';
-      }
-      return `${i.name} — ${quantity} ${displayUnit}`;
-    })
-    .join('; ');
+function buildItemDescription(item: MealItem): string {
+  if (item.portionLabel) return item.portionLabel;
+  if (item.portionUnitLabel) return item.portionUnitLabel;
+  
+  const unit = item.portionUnit || 'g';
+  const quantity = item.quantity || 1;
+  return `${quantity}${unit}`;
 }
 
 function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {
-    // 🛡️ REGRA DE OURO: O Motor NutriCore V3 é a fonte da verdade.
-    // Usamos os macros que já estão no item (totais para a quantidade atual).
-    // NÃO recalculamos para evitar distorções de arredondamento ou conversão.
     kcal += i.kcal ?? 0;
     p += i.protein ?? 0;
     c += i.carbs ?? 0;
@@ -167,27 +145,56 @@ export async function promoteDraftToMealPlan(
     return { ok: false, error: planErr?.message ?? 'Falha ao criar meal_plan' };
   }
 
-  // 2) Insere meal_plan_items para cada refeição que tenha conteúdo
-  const itemsRows = meals
-    .filter((m) => m.items.length > 0)
-    .map((m) => {
-      const macros = sumMealMacros(m);
-      const isMarmita = m.items.some((i) => (i as any).isMarmita);
-      return {
+  // 2) Insere meal_plan_items explodindo itens primários e suas substituições
+  const itemsRows: any[] = [];
+  
+  for (const meal of meals) {
+    if (meal.items.length === 0) continue;
+
+    for (const item of meal.items) {
+      const groupId = crypto.randomUUID();
+      const mealType = mealNameToType(meal.name);
+      
+      // 2.1) Item Primário
+      itemsRows.push({
         meal_plan_id: plan.id,
         tenant_id: draft.tenant_id,
-        meal_type: mealNameToType(m.name),
-        title: buildItemTitle(m),
-        description: buildItemDescription(m),
-        calories_target: Math.round(macros.kcal),
-        protein_target: Number(macros.p.toFixed(2)),
-        carbs_target: Number(macros.c.toFixed(2)),
-        fat_target: Number(macros.f.toFixed(2)),
+        meal_type: mealType,
+        title: buildItemTitle(item),
+        description: buildItemDescription(item),
+        calories_target: Math.round(item.kcal || 0),
+        protein_target: Number((item.protein || 0).toFixed(1)),
+        carbs_target: Number((item.carbs || 0).toFixed(1)),
+        fat_target: Number((item.fat || 0).toFixed(1)),
         item_origin: 'manual',
         is_manually_edited: true,
-        is_locked: isMarmita, // marmita = LOCKED no plano oficial
-      } as any;
-    });
+        is_locked: (item as any).locked || false,
+        is_primary: true,
+        substitution_group_id: groupId
+      });
+
+      // 2.2) Substituições (se houver)
+      if (item.substitutions && Array.isArray(item.substitutions)) {
+        item.substitutions.forEach((sub: any) => {
+          itemsRows.push({
+            meal_plan_id: plan.id,
+            tenant_id: draft.tenant_id,
+            meal_type: mealType,
+            title: sub.name,
+            description: sub.portionLabel || `${sub.suggestedQuantity || sub.portionValue || 100}g`,
+            calories_target: Math.round(sub.kcal || sub.calories || 0),
+            protein_target: Number((sub.protein || 0).toFixed(1)),
+            carbs_target: Number((sub.carbs || 0).toFixed(1)),
+            fat_target: Number((sub.fat || 0).toFixed(1)),
+            item_origin: 'auto',
+            is_manually_edited: false,
+            is_primary: false,
+            substitution_group_id: groupId
+          });
+        });
+      }
+    }
+  }
 
   if (itemsRows.length > 0) {
     const { error: itemsErr } = await supabase
@@ -195,7 +202,7 @@ export async function promoteDraftToMealPlan(
       .insert(itemsRows);
 
     if (itemsErr) {
-      // Rollback best-effort: arquiva o plano vazio (delete flow: archive antes de delete)
+      // Rollback best-effort
       await supabase
         .from('meal_plans')
         .update({ plan_status: 'archived', is_active: false } as any)
