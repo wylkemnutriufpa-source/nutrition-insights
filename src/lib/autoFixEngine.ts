@@ -710,15 +710,21 @@ export async function autoFixMealPlan(
         const totalMacro = sumMacro(finalItems, mc.key);
         const desiredTotal = mc.target * numDays;
         if (totalMacro > 0) {
-          const factor = desiredTotal / totalMacro;
+          // 🛡️ Clamp do fator de escala — IMPEDE loop de multiplicação astronômica.
+          // Se ficar fora do clamp, convergência ocorre em mais passadas, mas SEM EXPLOSÃO.
+          const rawFactor = desiredTotal / totalMacro;
+          const factor = clampScaleFactor(rawFactor);
           for (const item of finalItems) {
             if (item[mc.key]) {
               const oldValue = item[mc.key]!;
-              const newValue = Math.round(oldValue * factor);
+              let newValue = Math.round(oldValue * factor);
+              // 🛡️ Clamp absoluto por item (calorias)
+              if (mc.key === "calories_target") {
+                newValue = clampItemKcal(newValue);
+              }
               item[mc.key] = newValue;
-
-              // REGRA C: Macro correction is tracked in change log, NOT in description
-              // Annotations in descriptions break the validator's text matching
+              // 🛡️ Detecção de corrupção — aborta antes de gravar lixo no banco
+              assertSafeMacro(newValue, `${mc.label} item após escala`);
             }
           }
           macroRebalanced = true;
@@ -728,7 +734,7 @@ export async function autoFixMealPlan(
             dayOfWeek: -1,
             from: `${mc.label}: ${Math.round(mc.daily)}/${mc.target} (${diffPct > 0 ? "+" : ""}${Math.round(diffPct * 100)}%)`,
             to: `${mc.label}: ${mc.target}/${mc.target} (0%)`,
-            detail: `Rebalanceado contra meta clínica do paciente (fonte: ${targetSource}). Fator real: ×${(desiredTotal / totalMacro).toFixed(2)} aplicado a ${finalItems.filter(i => i[mc.key]).length} itens.`,
+            detail: `Rebalanceado contra meta clínica (fonte: ${targetSource}). Fator aplicado ×${factor.toFixed(2)} (raw ×${rawFactor.toFixed(2)}, clamp ${MACRO_SAFETY_LIMITS.MIN_SCALE_FACTOR}–${MACRO_SAFETY_LIMITS.MAX_SCALE_FACTOR}).`,
           });
         }
       }
