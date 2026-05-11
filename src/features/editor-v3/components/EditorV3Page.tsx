@@ -1446,9 +1446,7 @@ const EditorV3Page = () => {
                     startDate: new Date().toLocaleDateString("pt-BR"),
                     planMode: 'single_day',
                     items: meals.map(m => ({
-                      mealType: m.name.toLowerCase().includes('café') ? 'breakfast' :
-                                m.name.toLowerCase().includes('almoço') ? 'lunch' :
-                                m.name.toLowerCase().includes('jantar') ? 'dinner' : 'snack',
+                      mealType: m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any,
                       title: m.name,
                       description: m.items.map(i => `${i.name} — ${formatPortion(i)}`).join('\n'),
                       calories_target: Math.round(m.items.reduce((acc, i) => acc + (Number(i.kcal) || 0), 0)),
