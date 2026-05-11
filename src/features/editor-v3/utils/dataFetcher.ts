@@ -505,24 +505,24 @@ export const seedBaseData = async (nutritionistId: string): Promise<boolean> => 
 
     // 3. Templates Base
     const baseTemplates = [
-      { nutritionist_id: nutritionistId, name: 'Café da Manhã Clássico', goal_tags: ['Manutenção', 'Equilíbrio'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Café da Manhã Clássico (Elite)', goal_tags: ['Manutenção', 'Equilíbrio'], foods_structure: [
         { name: 'Pão de Forma Integral', kcal: 120, protein: 9, carbs: 22, fat: 3, portion: '2 fatias' },
         { name: 'Ovo de Galinha Cozido', kcal: 150, protein: 12, carbs: 1, fat: 10, portion: '2 unidades' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Almoço Performance', goal_tags: ['Hipertrofia', 'Energia'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Almoço Performance (Elite)', goal_tags: ['Hipertrofia', 'Energia'], foods_structure: [
         { name: 'Arroz Branco Cozido', kcal: 195, protein: 4, carbs: 42, fat: 0, portion: '150g' },
         { name: 'Feijão Carioca Cozido', kcal: 76, protein: 5, carbs: 14, fat: 0, portion: '100g' },
         { name: 'Peito de Frango Grelhado', kcal: 247, protein: 46, carbs: 0, fat: 5, portion: '150g' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Lanche Prático', goal_tags: ['Praticidade', 'Saciedade'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Lanche Prático Pro', goal_tags: ['Praticidade', 'Saciedade'], foods_structure: [
         { name: 'Iogurte Natural Integral', kcal: 100, protein: 6, carbs: 8, fat: 5, portion: '170g' },
         { name: 'Aveia em Flocos', kcal: 115, protein: 5, carbs: 20, fat: 2, portion: '30g' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Jantar Leve', goal_tags: ['Cutting', 'Sono'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Jantar Leve Cutting', goal_tags: ['Cutting', 'Sono'], foods_structure: [
         { name: 'Filé de Tilápia Grelhado', kcal: 130, protein: 26, carbs: 0, fat: 3, portion: '100g' },
         { name: 'Brócolis Cozido', kcal: 35, protein: 3, carbs: 7, fat: 0, portion: '100g' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Pré-Treino Explosivo', goal_tags: ['Performance', 'Foco'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Pré-Treino Explosivo V3', goal_tags: ['Performance', 'Foco'], foods_structure: [
         { name: 'Banana Nanica', kcal: 90, protein: 1, carbs: 23, fat: 0, portion: '1 unidade' },
         { name: 'Aveia em Flocos', kcal: 115, protein: 5, carbs: 20, fat: 2, portion: '30g' }
       ]},
@@ -530,21 +530,21 @@ export const seedBaseData = async (nutritionistId: string): Promise<boolean> => 
         { name: 'Tapioca (Goma)', kcal: 240, protein: 0, carbs: 60, fat: 0, portion: '100g' },
         { name: 'Ovo de Galinha Cozido', kcal: 155, protein: 13, carbs: 1, fat: 11, portion: '2 unidades' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Shake de Whey & Aveia', goal_tags: ['Pós-Treino', 'Rápido'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Shake Elite Whey & Aveia', goal_tags: ['Pós-Treino', 'Rápido'], foods_structure: [
         { name: 'Whey Protein Isolar', kcal: 111, protein: 24, carbs: 2, fat: 1, portion: '30g' },
         { name: 'Aveia em Flocos', kcal: 115, protein: 5, carbs: 20, fat: 2, portion: '30g' },
         { name: 'Banana Nanica', kcal: 92, protein: 1, carbs: 24, fat: 0, portion: '1 unidade' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Lanche Low Carb', goal_tags: ['Low Carb', 'Saciedade'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Lanche Low Carb Elite', goal_tags: ['Low Carb', 'Saciedade'], foods_structure: [
         { name: 'Queijo Cottage', kcal: 98, protein: 11, carbs: 3, fat: 4, portion: '100g' },
         { name: 'Amendoim Torrado', kcal: 170, protein: 8, carbs: 5, fat: 15, portion: '30g' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Almoço Veggie Fit', goal_tags: ['Veggie', 'Leve'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Almoço Veggie Fit Elite', goal_tags: ['Veggie', 'Leve'], foods_structure: [
         { name: 'Feijão Carioca Cozido', kcal: 76, protein: 5, carbs: 14, fat: 0, portion: '100g' },
         { name: 'Arroz Branco Cozido', kcal: 130, protein: 2, carbs: 28, fat: 0, portion: '100g' },
         { name: 'Brócolis Cozido', kcal: 34, protein: 3, carbs: 7, fat: 0, portion: '100g' }
       ]},
-      { nutritionist_id: nutritionistId, name: 'Jantar Proteico', goal_tags: ['Massa Magra', 'Noite'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Jantar Proteico V3', goal_tags: ['Massa Magra', 'Noite'], foods_structure: [
         { name: 'Patinho Moído Grelhado', kcal: 219, protein: 36, carbs: 0, fat: 7, portion: '100g' },
         { name: 'Alface Crespa', kcal: 15, protein: 1, carbs: 3, fat: 0, portion: '100g' },
         { name: 'Tomate Italiano', kcal: 18, protein: 1, carbs: 4, fat: 0, portion: '100g' }
