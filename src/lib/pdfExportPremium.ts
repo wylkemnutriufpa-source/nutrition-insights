@@ -145,6 +145,56 @@ function formatDescription(desc: string): string {
     .join("");
 }
 
+function roundMacro(value: unknown): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n);
+}
+
+function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
+  const groupedByDay = items.reduce((acc, item) => {
+    const dayKey = item.day_of_week ?? -1;
+    if (!acc[dayKey]) acc[dayKey] = [];
+    acc[dayKey].push(item);
+    return acc;
+  }, {} as Record<number, MealPlanPDFItem[]>);
+
+  const dayOrder = [1, 2, 3, 4, 5, 6, 0, -1];
+  const selectedDay = dayOrder.find(day => groupedByDay[day]?.some(item => item.is_primary !== false)) ?? Number(Object.keys(groupedByDay)[0] ?? -1);
+  const dayItems = groupedByDay[selectedDay] || items;
+  const groups = new Map<string, MealPlanPDFItem[]>();
+
+  dayItems.forEach((item) => {
+    const key = item.substitution_group_id || `item:${item.title}:${item.mealType}`;
+    groups.set(key, [...(groups.get(key) || []), item]);
+  });
+
+  return Array.from(groups.values()).map(group => group.find(item => item.is_primary !== false) || group[0]);
+}
+
+function calculateDisplayTotals(data: PremiumMealPlanPDFData) {
+  const primaryDailyItems = getPrimaryDailyItems(data.items || []);
+  const calculated = primaryDailyItems.reduce((acc, item) => ({
+    calories: acc.calories + roundMacro(item.calories_target),
+    protein: acc.protein + roundMacro(item.protein_target),
+    carbs: acc.carbs + roundMacro(item.carbs_target),
+    fat: acc.fat + roundMacro(item.fat_target),
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+  const safeTarget = (target: number | undefined, calculatedValue: number, max: number) => {
+    const rounded = roundMacro(target);
+    if (calculatedValue > 0 && (rounded <= 0 || rounded > max)) return calculatedValue;
+    return rounded || calculatedValue;
+  };
+
+  return {
+    calories: safeTarget(data.targetCalories, calculated.calories, 5000),
+    protein: safeTarget(data.targetProtein, calculated.protein, 350),
+    carbs: safeTarget(data.targetCarbs, calculated.carbs, 700),
+    fat: safeTarget(data.targetFat, calculated.fat, 250),
+  };
+}
+
 
 function buildPremiumCSS(): string {
   return `
