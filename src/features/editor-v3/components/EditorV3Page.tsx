@@ -1045,16 +1045,37 @@ const EditorV3Page = () => {
       return mealItems;
     };
 
+    const standardOrder = [
+      'cafe', 'desjejum', 'manha', 'almoco', 'tarde', 'lanche', 'jantar', 'ceia', 'pre', 'pos', 'noite'
+    ];
+
+    const getMealRank = (name: string) => {
+      const lower = name.toLowerCase();
+      if (lower.includes('cafe') || lower.includes('desjejum')) return 1;
+      if (lower.includes('lanche da manha')) return 2;
+      if (lower.includes('almoco')) return 3;
+      if (lower.includes('lanche da tarde') || lower.includes('lanche')) return 4;
+      if (lower.includes('jantar')) return 5;
+      if (lower.includes('ceia')) return 6;
+      return 10;
+    };
+
+    const sortedMeals = [...meals].sort((a, b) => {
+      // Se for modo semanal e as refeições tiverem dias, primeiro ordena pelo dia
+      // Mas se o usuário montou o plano, o getMealRank resolve a ordem das refeições
+      return getMealRank(a.name) - getMealRank(b.name);
+    });
+
     const pdfItems = isWeekly 
-      ? (meals.length >= 42 
-          ? meals.flatMap((m, idx) => {
-              const dayIdx = Math.floor(idx / (meals.length / 7));
+      ? (sortedMeals.length >= 42 
+          ? sortedMeals.flatMap((m, idx) => {
+              const dayIdx = Math.floor(idx / (sortedMeals.length / 7));
               const days = [1, 2, 3, 4, 5, 6, 0];
               return mapMealToItems(m, days[dayIdx]);
             })
-          : [1, 2, 3, 4, 5, 6, 0].flatMap(day => meals.flatMap(m => mapMealToItems(m, day)))
+          : [1, 2, 3, 4, 5, 6, 0].flatMap(day => sortedMeals.flatMap(m => mapMealToItems(m, day)))
         )
-      : meals.flatMap(m => mapMealToItems(m, -1));
+      : sortedMeals.flatMap(m => mapMealToItems(m, -1));
 
     return {
       planTitle: isWeekly ? "Plano Alimentar Semanal" : "Plano Alimentar Premium V3",
