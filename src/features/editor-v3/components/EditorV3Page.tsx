@@ -1086,6 +1086,7 @@ const EditorV3Page = () => {
 
     updateMealItem(mealId, instanceId, {
       ...target,
+      ...household,
       ...macros,
       kcal: macros.calories,
       calories: macros.calories,
