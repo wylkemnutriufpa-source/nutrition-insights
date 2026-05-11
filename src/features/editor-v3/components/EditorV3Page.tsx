@@ -14,6 +14,7 @@ import {
   getCompatibleFoods, getBaseFoods, seedBaseData,
   searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
 } from '../utils/dataFetcher';
+import { getBestMealImage } from '../utils/normalization';
 import { 
   calculateNutritionalScore, validatePlanClinically 
 } from '../../clinical-engine';
