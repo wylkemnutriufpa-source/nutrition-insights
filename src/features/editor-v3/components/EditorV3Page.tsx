@@ -1034,9 +1034,9 @@ const EditorV3Page = () => {
           item.substitutions.forEach(sub => {
             mealItems.push({
               mealType: mType,
-              title: sub.name,
-              description: `${sub.name}`,
-              calories_target: Math.round(Number(sub.kcal) || 0),
+          title: sub.name,
+          description: `${sub.name} — ${formatPortion(sub as any)}`,
+          calories_target: Math.round(Number(sub.kcal) || 0),
               protein_target: Math.round(Number(sub.protein) || 0),
               carbs_target: Math.round(Number(sub.carbs) || 0),
               fat_target: Math.round(Number(sub.fat) || 0),
