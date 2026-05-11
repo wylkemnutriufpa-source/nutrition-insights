@@ -91,30 +91,9 @@ export async function generateAndSaveLocalPlan(
       fat_target: Number(anamnesis?.computed_fat) || Number(assessment?.fat_target) || 60
     };
 
-    // 2. Generate plan using NutriCore V3 (Direct call)
-    const mealSlots = [
-      { type: 'cafe_da_manha', time: '08:00' },
-      { type: 'lanche_da_manha', time: '10:30' },
-      { type: 'almoço', time: '13:00' },
-      { type: 'lanche_da_tarde', time: '16:00' },
-      { type: 'jantar', time: '19:30' },
-      { type: 'ceia', time: '22:00' }
-    ] as any[];
+    // 2. Generate plan using NutriCore V3 Adapter (LOCAL)
+    const v3Meals = await NutriCoreV3Adapter.generateElitePlan(context, []);
 
-    const dailyPlan = generateDailyPlan(
-      {
-        weight_kg: weight,
-        height_cm: height,
-        age_years: context.age,
-        sex: context.gender === 'female' ? 'feminino' : 'masculino',
-        activity_level: context.activityLevel as any,
-        goal: context.goal as any,
-        restrictions: context.restrictions,
-        preferences: context.preferences
-      },
-      mealSlots,
-      BASE_FOODS
-    );
 
     const { data: mealPlan, error: promoteError } = await supabase
       .from('meal_plans')
