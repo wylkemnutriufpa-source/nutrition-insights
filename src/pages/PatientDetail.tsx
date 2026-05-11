@@ -163,6 +163,18 @@ export default function PatientDetail() {
     }
   }, [data?.currentPrestigePlanId]);
 
+  useEffect(() => {
+    if (profile) {
+      setEditProfileForm({
+        full_name: profile.full_name || "",
+        phone: profile.phone || "",
+        email: patientEmail || "",
+        goal: (profile as any).goal || "",
+        notes: (profile as any).notes || "",
+      });
+    }
+  }, [profile, patientEmail]);
+
   // Invalidation helper — centralized
   const invalidate = () => {
     invalidateLifecycleQueries(queryClient, patientId ?? undefined);
