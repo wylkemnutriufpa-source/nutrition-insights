@@ -1016,6 +1016,17 @@ const EditorV3Page = () => {
             portionValue = 170;
             quantity = Math.round(item.grams / 170 * 10) / 10;
             portionLabel = 'unidade(s)/pote(s)';
+          } else if (lowerName.includes('pão')) {
+            measurementType = 'unit';
+            portionValue = 25;
+            quantity = Math.round(item.grams / 25);
+            portionLabel = 'fatia(s)';
+          } else if (item.grams > 0) {
+            // Fallback genérico para gramas
+            measurementType = 'gram';
+            portionValue = 100;
+            quantity = item.grams;
+            portionLabel = 'g';
           }
 
           return {
@@ -1028,10 +1039,10 @@ const EditorV3Page = () => {
             protein: item.macros.protein_g,
             carbs: item.macros.carb_g,
             fat: item.macros.fat_g,
-            kcal_100g: (item.macros.kcal / (item.grams / 100)),
-            protein_100g: (item.macros.protein_g / (item.grams / 100)),
-            carb_100g: (item.macros.carb_g / (item.grams / 100)),
-            fat_100g: (item.macros.fat_g / (item.grams / 100)),
+            kcal_100g: item.grams > 0 ? (item.macros.kcal / (item.grams / 100)) : 0,
+            protein_100g: item.grams > 0 ? (item.macros.protein_g / (item.grams / 100)) : 0,
+            carb_100g: item.grams > 0 ? (item.macros.carb_g / (item.grams / 100)) : 0,
+            fat_100g: item.grams > 0 ? (item.macros.fat_g / (item.grams / 100)) : 0,
             measurementType,
             portionValue,
             portionUnitLabel: portionLabel,
@@ -1041,6 +1052,7 @@ const EditorV3Page = () => {
         })
       }));
 
+      if (v3Meals.length === 0) throw new Error('O motor gerou um plano vazio');
       await hydrateMeals(v3Meals as any);
       toast.success(`Elite V3: Plano gerado com ${Math.round(dailyPlan.daily_totals.protein_kcal + dailyPlan.daily_totals.carb_kcal + dailyPlan.daily_totals.fat_kcal)} kcal para ${weight}kg!`);
     } catch (error) {
