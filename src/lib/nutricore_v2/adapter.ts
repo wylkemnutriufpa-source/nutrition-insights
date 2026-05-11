@@ -107,8 +107,20 @@ export class NutriCoreV3Adapter {
       const loops = isWeekly ? 7 : 1;
       const allGeneratedMeals: V3Meal[] = [];
 
+      const PROTEIN_ROTATION = ["Frango", "Tilápia", "Carne", "Ovo"];
+      const CARB_ROTATION = ["Arroz", "Batata Doce", "Macarrão", "Mandioca"];
+      const BREAKFAST_ROTATION = ["Pão", "Tapioca", "Cuscuz"];
+
       for (let dayIdx = 0; dayIdx < loops; dayIdx++) {
-        const daySeed = Math.random() + dayIdx;
+        // Criar preferências rotativas para este dia específico
+        const dayPrefs = [
+          PROTEIN_ROTATION[dayIdx % PROTEIN_ROTATION.length],
+          CARB_ROTATION[dayIdx % CARB_ROTATION.length],
+          BREAKFAST_ROTATION[dayIdx % BREAKFAST_ROTATION.length],
+          ...(context.preferences || [])
+        ];
+
+        const daySeed = 42 + dayIdx; // Seed fixa para determinismo por dia
         const dayMeals = await Promise.all(distributed.map(async (slot) => {
           // Mapeamento robusto de nomes para o Editor V3
           const nameMap: Record<string, string> = {
@@ -135,7 +147,7 @@ export class NutriCoreV3Adapter {
             finalDb,
             {
               restrictions: context.restrictions,
-              preferences: context.preferences,
+              preferences: dayPrefs,
               seed: daySeed
             }
           );
