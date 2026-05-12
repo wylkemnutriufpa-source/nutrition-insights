@@ -401,6 +401,42 @@ function isLossGoal(goal: string): boolean {
   return norm.includes("lose") || norm.includes("emagrecer") || norm.includes("deficit") || norm.includes("weight_loss");
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// INSERT CONTRACT RULE — meal_plan_items
+// ════════════════════════════════════════════════════════════════════════
+// "Todo bulk insert deve possuir shape homogêneo em todos os elementos."
+//
+// PostgREST, ao receber um array com chaves heterogêneas em .insert(),
+// computa a UNIÃO das chaves e injeta `null` explicitamente nas que faltam,
+// sobrescrevendo DEFAULTs do banco e violando NOT NULL constraints
+// (ex.: is_locked, is_manually_edited, was_auto_corrected).
+//
+// `sanitizeMealPlanItem` projeta TODOS os elementos no MESMO shape, com
+// defaults explícitos que respeitam a semântica atual do sistema.
+// NÃO altera lógica nutricional — apenas normaliza o payload de persistência.
+// ════════════════════════════════════════════════════════════════════════
+function sanitizeMealPlanItem(item: any, mealPlanId: string, overrides: Record<string, any> = {}): Record<string, any> {
+  // Strip campos internos (prefixados com _) e meal_time (não persistido)
+  const {
+    _image_url, _source, _category_used, _scale_factor, _template_id,
+    _recipe_id, _recipe_name, meal_time, ...rest
+  } = item;
+
+  const merged = { ...rest, ...overrides };
+
+  return {
+    ...merged,
+    meal_plan_id: mealPlanId,
+    image_url: _image_url ?? merged.image_url ?? null,
+    is_primary: merged.is_primary ?? true,
+    is_locked: merged.is_locked ?? false,
+    is_manually_edited: merged.is_manually_edited ?? false,
+    was_auto_corrected: merged.was_auto_corrected ?? false,
+    item_origin: merged.item_origin ?? 'auto',
+    substitution_group_id: merged.substitution_group_id ?? null,
+  };
+}
+
 // ── Seeded pseudo-random for patient-specific variety ──
 // Uses time-based entropy so each generation produces different results
 function seedHash(str: string): number {
