@@ -40,3 +40,11 @@ const result3 = reconcileMeal(items, targets3, profile, "lunch");
 console.log("Totals:", result3.totals);
 console.log("Events:", result3.events.map(e => e.type));
 console.log("Chicken Grams:", result3.items.find(i => i.name === "Frango")?.grams);
+
+console.log("\n--- TEST 4: FAT PIVOT (NO CARBS) ---");
+const itemsNoCarb = items.filter(i => i.macro_role !== 'carb');
+const result4 = reconcileMeal(itemsNoCarb, targets, profile, "lunch");
+console.log("Totals:", result4.totals);
+console.log("Events:", result4.events.filter(e => e.type === 'energy_reconciliation'));
+console.log("Azeite Grams:", result4.items.find(i => i.name === "Azeite")?.grams);
+
