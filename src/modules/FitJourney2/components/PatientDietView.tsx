@@ -12,11 +12,20 @@ export const PatientDietView = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Busca o plano ativo do paciente
+      // Busca o perfil para pegar o profile.id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!profile) return;
+
+      // Busca o plano ativo do paciente usando o profile.id
       const { data: plans } = await supabase
         .from('meal_plans')
         .select('*')
-        .eq('patient_id', user.id)
+        .eq('patient_id', profile.id)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1);
