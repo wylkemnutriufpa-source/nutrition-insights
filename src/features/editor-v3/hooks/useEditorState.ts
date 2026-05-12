@@ -244,19 +244,22 @@ export const useEditorState = create<EditorState>()(
         const totals = meals.reduce((acc, meal) => {
           (meal.items || []).forEach(item => {
             try {
-              // No V3, calculateItemMacros já lida com porção vs quantidade
-              const macros = calculateItemMacros(item, item.quantity || 100);
+              // 🛡️ PIPELINE PURIFICATION: Usar clinical_mass_g se disponível para evitar drift
+              const calculationQuantity = item.clinical_mass_g !== undefined 
+                ? (item.measurementType === 'gram' || item.measurementType === 'ml' ? item.clinical_mass_g : item.quantity)
+                : item.quantity;
+
+              const macros = calculateItemMacros(item, calculationQuantity || 100);
               acc.kcal += macros.kcal || 0;
               acc.protein += macros.protein || 0;
               acc.carbs += macros.carbs || 0;
               acc.fat += macros.fat || 0;
             } catch (error) {
               console.warn(`[V3 Score] Erro ao calcular macros para item: ${item.name}`, error);
-              // Fallback para valores estáticos se o motor falhar
-              acc.kcal += (item.kcal !== undefined ? item.kcal : (item.calories || 0));
-              acc.protein += (item.protein !== undefined ? item.protein : (item.protein_g || 0));
-              acc.carbs += (item.carbs !== undefined ? item.carbs : (item.carbs_g || 0));
-              acc.fat += (item.fat !== undefined ? item.fat : (item.fat_g || 0));
+              acc.kcal += (item.kcal ?? 0);
+              acc.protein += (item.protein ?? 0);
+              acc.carbs += (item.carbs ?? 0);
+              acc.fat += (item.fat ?? 0);
             }
           });
           return acc;
