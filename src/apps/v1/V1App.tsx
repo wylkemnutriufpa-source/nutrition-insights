@@ -15,11 +15,10 @@ const SimpleLoader = () => (
 const AppContent = () => {
   const { loading, authStatus } = useAuth();
   
-  // console.log("[V1App] Auth Debug:", { loading, authStatus });
+  console.log("[V1App] Current State:", { loading, authStatus, path: window.location.pathname });
 
-  // Se a sessão principal ainda está sendo recuperada do Supabase,
-  // mostramos o loader oficial em vídeo.
-  if (loading) {
+  // Forçar renderização do AppRoutes se não estiver explicitamente carregando a sessão inicial
+  if (loading && authStatus === "loading") {
     return <SimpleLoader />;
   }
 
