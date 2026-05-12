@@ -39,6 +39,6 @@ export const adminRoutes = [
   <Route key="admin-ai-usage" path="/admin/ai-usage" element={<Suspense fallback={<PageLoader />}><AIUsageDashboard /></Suspense>} />,
   <Route key="admin-experience-audit" path="/admin/experience-mode" element={<Suspense fallback={<PageLoader />}><AdminExperienceModeAudit /></Suspense>} />,
   <Route key="admin-diagnostics" path="/admin/diagnostics" element={<Suspense fallback={<PageLoader />}><AdminPlanLoadingDiagnostics /></Suspense>} />,
-  <Route key="admin-visual-library" path="/admin/visual-library" element={<StabilityZone><SectionalErrorBoundary name="VisualLibrary"><Suspense fallback={<PageLoader />}><MealVisualLibraryAdmin /></Suspense></SectionalErrorBoundary></StabilityZone>} />,
+  <Route key="admin-visual-library" path="/admin/visual-library" element={<StabilityZone name="VisualLibraryAdmin"><SectionalErrorBoundary name="VisualLibrary"><Suspense fallback={<PageLoader />}><MealVisualLibraryAdmin /></Suspense></SectionalErrorBoundary></StabilityZone>} />,
   <Route key="admin-settings" path="/admin/settings" element={<Suspense fallback={<PageLoader />}><AdminSettings /></Suspense>} />,
 ];
