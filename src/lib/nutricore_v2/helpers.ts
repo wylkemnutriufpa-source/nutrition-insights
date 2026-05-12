@@ -83,10 +83,22 @@ export const getFoodCategory = (food: any): string => {
 };
 
 const resolveMacroGrams = (item: any, quantity: number) => {
+  // 🛡️ SOBERANIA CLÍNICA: Se temos a massa congelada, usamos ela como fonte da verdade
+  if (item.clinical_mass_g !== undefined && item.clinical_mass_g !== null && !item._is_editing_quantity) {
+    return item.clinical_mass_g;
+  }
+
   const portionValue = Number(item.portionValue) || 1;
   const rawGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
     ? quantity * portionValue
     : quantity;
+
+  // Proteção contra explosão: se o cálculo resultar em algo > 1kg para um item comum, 
+  // e a quantidade for alta, pode haver drift de unidade.
+  if (rawGrams > 1000 && quantity > 100 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
+     console.warn(`[NutriCore] Unit explosion detected: ${quantity} ${item.measurementType}s of ${item.name}. Falling back to raw quantity as grams.`);
+     return quantity;
+  }
 
   const kcal100 = Number(item.kcal_100g ?? item.calories_100g ?? 0);
   const totalKcal = Number(item.kcal ?? item.calories ?? 0);
@@ -94,7 +106,7 @@ const resolveMacroGrams = (item: any, quantity: number) => {
   const canTrustInference = inferredGrams >= 5 && inferredGrams <= 800;
 
   if (canTrustInference && (rawGrams > 800 || rawGrams / inferredGrams > 2)) return inferredGrams;
-  if (rawGrams > 1000 && !canTrustInference) return 150; // Fallback de segurança clínico
+  if (rawGrams > 1500 && !canTrustInference) return 150; // Fallback de segurança clínico
   return Math.max(0, rawGrams);
 };
 
