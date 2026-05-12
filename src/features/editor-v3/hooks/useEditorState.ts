@@ -718,17 +718,30 @@ export const useEditorState = create<EditorState>()(
                     if (i.instanceId === instanceId) {
                       // 🛡️ BLINDAGEM: Se a quantidade for > 50 e o tipo for colher, 
                       // é quase certo que o usuário está digitando gramas diretamente no editor.
-                      // Forçamos o tipo para 'gram' para evitar a explosão matemática (130 colheres).
                       const isLikelyGrams = (i.measurementType === 'spoon' && quantity >= 50);
                       const correctedType = isLikelyGrams ? 'gram' : i.measurementType;
                       const correctedLabel = isLikelyGrams ? 'Gramas' : i.portionUnitLabel;
 
-                      const tempItem = { ...i, measurementType: correctedType, quantity };
+                      // Sincronizar massa clínica com a nova quantidade
+                      const pValue = i.portionValue || 1;
+                      const newClinicalMass = (correctedType === 'gram' || correctedType === 'ml')
+                        ? quantity
+                        : quantity * pValue;
+
+                      const tempItem = { 
+                        ...i, 
+                        measurementType: correctedType, 
+                        quantity,
+                        clinical_mass_g: newClinicalMass,
+                        _is_editing_quantity: true // Flag temporária para o resolveMacroGrams
+                      };
+
                       const newMacros = calculateItemMacros(tempItem, quantity);
                       
                       return { 
                         ...i, 
                         quantity,
+                        clinical_mass_g: newClinicalMass,
                         measurementType: correctedType,
                         portionUnitLabel: correctedLabel,
                         kcal: newMacros.kcal,
