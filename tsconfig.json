@@ -6,7 +6,7 @@
     "noUnusedParameters": false,
     "paths": {
       "@/*": ["./src/*"],
-      "@v1/*": ["./src/apps/v1/*"],
+      "@v1/*": ["./src/*"],
       "@v2/*": ["./src/apps/v2/*"]
     },
     "skipLibCheck": true,
