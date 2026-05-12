@@ -949,7 +949,9 @@ async function runPassiveSnapshotCompare(
   }
 }
 
+function openPremiumPrintWindow(html: string, title: string) {
   if (typeof window === 'undefined') return;
+
   
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
