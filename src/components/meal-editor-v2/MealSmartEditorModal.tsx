@@ -700,10 +700,16 @@ export function MealSmartEditorModal({
                 Cancelar
               </Button>
               <Button 
-                className="flex-[2] h-12 rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" 
+                className={cn(
+                  "flex-[2] h-12 rounded-2xl font-bold transition-all shadow-lg",
+                  isDirty 
+                    ? "bg-primary hover:bg-primary/90 shadow-primary/20" 
+                    : "bg-muted text-muted-foreground shadow-none cursor-not-allowed opacity-70"
+                )}
                 onClick={handleSave}
+                disabled={!isDirty && !hasBlockedSubs}
               >
-                Salvar Alterações
+                {isDirty ? "Confirmar e Salvar" : "Sem Alterações"}
               </Button>
             </div>
           </div>
