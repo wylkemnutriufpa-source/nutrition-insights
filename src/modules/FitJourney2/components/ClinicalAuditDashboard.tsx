@@ -25,7 +25,7 @@ export const ClinicalAuditDashboard = () => {
       if (error) {
         console.error("Error fetching audit metrics:", error);
       } else {
-        setMetrics(data || []);
+        setMetrics((data as unknown as AuditMetric[]) || []);
       }
       setLoading(false);
     };
