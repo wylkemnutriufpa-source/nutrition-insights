@@ -118,7 +118,6 @@ function buildOutcomeBreakdown(rowsForCid: AuditRow[]) {
   return breakdown;
 }
 
-export default function AdminExperienceModeAudit() {
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [outcome, setOutcome] = useState<Outcome>("all");

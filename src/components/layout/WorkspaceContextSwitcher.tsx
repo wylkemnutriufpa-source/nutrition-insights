@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { Briefcase, User, ArrowLeftRight } from "lucide-react";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { toast } from "sonner";
 
 interface Props {
@@ -10,7 +9,6 @@ interface Props {
 
 export default function WorkspaceContextSwitcher({ collapsed = false }: Props) {
   const { activeContext, setContext, isHybridUser } = useWorkspaceContext();
-  const { isBasic } = useExperienceMode();
 
   if (!isHybridUser) return null;
 

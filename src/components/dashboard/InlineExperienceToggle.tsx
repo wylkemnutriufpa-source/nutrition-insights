@@ -2,7 +2,6 @@
  * Compact inline experience mode toggle for the top of the dashboard.
  * Allows quick switching between Basic / Pro / Advanced.
  */
-import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
 import { useAuth } from "@/lib/auth";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { Zap, BarChart3, Rocket } from "lucide-react";
@@ -10,7 +9,6 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 interface ModeOption {
-  key: ExperienceMode;
   label: string;
   shortLabel: string;
   icon: typeof Zap;
@@ -29,7 +27,6 @@ const PATIENT_MODES: ModeOption[] = [
 ];
 
 export default function InlineExperienceToggle() {
-  const { mode, setMode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const isProRole = (isNutritionist || isPersonal || isAdmin) && isProfessionalContext;
@@ -37,7 +34,6 @@ export default function InlineExperienceToggle() {
 
   const currentIdx = MODES.findIndex(m => m.key === mode);
 
-  const handleSelect = async (key: ExperienceMode) => {
     if (key === mode) return;
     try {
       await setMode(key);

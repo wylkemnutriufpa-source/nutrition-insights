@@ -8,7 +8,6 @@ Este documento define os guardiões e regras para garantir que o sistema FitJour
 O `AuthProvider` agora possui um **Time-out Crítico de 12s**. Se o Supabase ou a rede falharem em inicializar a sessão, o sistema sai do estado de `loading` e entra em `error`, exibindo uma tela de recuperação clara em vez de uma tela preta infinita.
 
 ### 🛡️ Hydration Guard (Implementado)
-O `useExperienceMode` agora inicializa em `loading: true`. Isso garante que o dashboard e outras rotas protegidas aguardem a sincronização do banco de dados antes de decidirem o que renderizar, eliminando flickers de permissão negada.
 
 ### 🛡️ Critical Error Boundary (Implementado)
 A aplicação é envolvida por um `CriticalErrorBoundary` que captura falhas de renderização (React Crashes) e falhas de carregamento de Chunk (JS corrompido). Ele oferece um botão de "Limpeza e Reinício" que limpa o `sessionStorage`.

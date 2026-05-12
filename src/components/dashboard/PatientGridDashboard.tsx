@@ -14,7 +14,6 @@ import { queryKeys } from "@/hooks/queries/queryKeys";
 import { supabase } from "@/integrations/supabase/client";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
-import ExperienceModeStatusSection from "@/components/dashboard/ExperienceModeStatusSection";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
@@ -193,7 +192,6 @@ export default function PatientGridDashboard() {
 
       {!blockDashboard && (<>
 
-      <ExperienceModeStatusSection />
 
       {/* Experience Mode Toggle + Plan Request */}
       <div className="flex items-center justify-between gap-2 flex-wrap">

@@ -1,26 +1,18 @@
 import {
-  useExperienceModeRecommendation,
   dismissRecommendation,
   markRecommendationApplied,
   isRecommendationCoolingDown,
-} from "@/hooks/useExperienceModeRecommendation";
-import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
 import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 
-const MODE_LABELS: Record<ExperienceMode, string> = {
   basic: "Básico",
   pro: "Profissional",
   advanced: "Avançado",
 };
 
-const MODE_ORDER: ExperienceMode[] = ["basic", "pro", "advanced"];
 
-export default function ExperienceModeRecommendation() {
-  const { suggested, reason, confidence, loading, factors } = useExperienceModeRecommendation();
-  const { mode, setMode } = useExperienceMode();
   const [dismissed, setDismissed] = useState(() => isRecommendationCoolingDown());
 
   if (loading || suggested === mode || dismissed) return null;

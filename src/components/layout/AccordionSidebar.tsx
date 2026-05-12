@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -162,7 +161,6 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const location = useLocation();
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
-  const { isRouteAllowed, isFeatureEnabled, minMode, isBasic } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
@@ -349,7 +347,6 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isFeatureEnabled, minMode, mode, isBasic } = useExperienceMode();
   
   console.log(`[DEBUG] LegacySidebar render | mode: ${mode}`);
   console.log(`[DEBUG] Itens ANTES do filtro:`, categories.flatMap(c => c.items).map(i => ({ label: i.label, feature: i.feature, premium: i.premium_only })));

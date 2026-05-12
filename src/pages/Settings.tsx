@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +16,6 @@ import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
 import PixConfigManager from "@/components/admin/PixConfigManager";
 import { useTranslation } from "react-i18next";
-import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
@@ -103,7 +101,6 @@ function MarmitaSettingsCard() {
 
 export default function Settings() {
   const { t } = useTranslation();
-  const { minMode } = useExperienceMode();
   const { user, profile, refreshProfile, isNutritionist, isPersonal, isAdmin, subscription, checkSubscription } = useAuth();
   const navigate = useNavigate();
   const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
@@ -249,7 +246,6 @@ export default function Settings() {
         )}
 
         {/* Experience Mode */}
-        <ExperienceModeSwitcher />
 
         {/* Minha Assinatura — only for professionals */}
         {(isNutritionist || isPersonal) && (

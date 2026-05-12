@@ -7,7 +7,6 @@
  * - Enforces a max queue size and a TTL to expire stale attempts.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { ExperienceMode } from "@/hooks/useExperienceMode";
 
 const QUEUE_KEY = "fj_experience_mode_queue";
 
@@ -31,8 +30,6 @@ export type AuditOutcome =
 
 export interface AuditEntry {
   correlationId: string;
-  attemptedMode: ExperienceMode;
-  previousMode?: ExperienceMode;
   outcome: AuditOutcome;
   reason?: string;
   errorCode?: string;
@@ -42,8 +39,6 @@ export interface AuditEntry {
 
 export interface QueuedAttempt {
   correlationId: string;
-  attemptedMode: ExperienceMode;
-  previousMode: ExperienceMode;
   queuedAt: number;
   retries: number;
 }
@@ -69,7 +64,6 @@ export function logTelemetry(
   data?: Record<string, any>
 ) {
   const payload = { correlationId, ...data };
-  const prefix = `[ExperienceMode][${correlationId}]`;
   if (level === "error") console.error(prefix, message, payload);
   else if (level === "warn") console.warn(prefix, message, payload);
   else console.log(prefix, message, payload);
@@ -301,7 +295,6 @@ export async function drainQueue(
 
 /** Build a human-readable block reason for toasts. */
 export function buildBlockReason(opts: {
-  attemptedMode: ExperienceMode;
   unlockDate?: string | null;
   baseReason?: string;
 }): { title: string; description: string } {

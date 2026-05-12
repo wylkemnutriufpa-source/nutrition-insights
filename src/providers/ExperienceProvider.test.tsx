@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { ExperienceProvider, useExperienceContext } from "./ExperienceProvider";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import React, { ReactNode } from "react";
@@ -20,10 +19,8 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-describe("ExperienceProvider", () => {
   const mockUser = { id: "user-123" };
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <ExperienceProvider>{children}</ExperienceProvider>
   );
 
   beforeEach(() => {
@@ -39,7 +36,6 @@ describe("ExperienceProvider", () => {
 
   // Test 1: Provider carrega modo inicial do perfil do usuário
   it("should initialize with values from auth context", () => {
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     expect(result.current.mode).toBe("basic");
     expect(result.current.role).toBe("nutritionist");
   });
@@ -54,7 +50,6 @@ describe("ExperienceProvider", () => {
       }),
     });
 
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     
     act(() => {
       callback({ new: { experience_mode: "pro" } });
@@ -74,7 +69,6 @@ describe("ExperienceProvider", () => {
       }),
     });
 
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     
     act(() => {
       callback({ new: { experience_mode: "invalid-mode" } });
@@ -85,9 +79,7 @@ describe("ExperienceProvider", () => {
 
   // Test 4: Troca de modo → isRouteAllowed reflete nova permissão
   it("should update route permissions when mode changes", async () => {
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     
-    // In basic mode, 'analytics' is likely false for nutritionist (based on useExperienceMode logic)
     expect(result.current.isRouteAllowed("analytics")).toBe(false);
 
     await act(async () => {
@@ -101,7 +93,6 @@ describe("ExperienceProvider", () => {
   // Test 5: Troca de modo otimista
   it("should update mode state immediately (optimistic) and call auth setMode", async () => {
     const { setMode: authSetMode } = useAuth();
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     
     await act(async () => {
       await result.current.setMode("advanced");
@@ -117,8 +108,6 @@ describe("ExperienceProvider", () => {
     // is tricky. Instead, we'll verify that multiple calls to the context hook
     // in the same render cycle return the same updated state.
     const { result, rerender } = renderHook(() => {
-      const ctx1 = useExperienceContext();
-      const ctx2 = useExperienceContext();
       return { ctx1, ctx2 };
     }, { wrapper });
 
@@ -138,7 +127,6 @@ describe("ExperienceProvider", () => {
       subscribe: vi.fn(() => mockChannel),
     });
 
-    const { unmount } = renderHook(() => useExperienceContext(), { wrapper });
     unmount();
 
     expect(supabase.removeChannel).toHaveBeenCalledWith(mockChannel);
@@ -154,14 +142,12 @@ describe("ExperienceProvider", () => {
       user: mockUser,
     });
 
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     
     await expect(result.current.setMode("pro")).rejects.toThrow("DB Failure");
   });
 
   // Test 9: isRouteAllowed para rotas padrão
   it("should always allow dashboard or empty routes", () => {
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     expect(result.current.isRouteAllowed("")).toBe(true);
     expect(result.current.isRouteAllowed("/")).toBe(true);
     expect(result.current.isRouteAllowed("dashboard")).toBe(true);
@@ -176,13 +162,11 @@ describe("ExperienceProvider", () => {
       user: mockUser,
     });
 
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     expect(result.current.isLoading).toBe(true);
   });
 
   // Test 11: minMode logic integration
   it("should correctly evaluate minMode requirements", async () => {
-    const { result } = renderHook(() => useExperienceContext(), { wrapper });
     
     expect(result.current.minMode("pro")).toBe(false);
 

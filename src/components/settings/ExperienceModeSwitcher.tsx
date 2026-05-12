@@ -1,14 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
 import { useAuth } from "@/lib/auth";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { Zap, BarChart3, Rocket, RefreshCw, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import ExperienceModeRecommendation from "./ExperienceModeRecommendation";
 
-type ModeConfig = { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string };
 
 const PRO_MODES: ModeConfig[] = [
   {
@@ -64,14 +61,11 @@ const PATIENT_MODES: ModeConfig[] = [
   },
 ];
 
-export default function ExperienceModeSwitcher() {
-  const { mode, setMode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const isProRole = (isNutritionist || isPersonal || isAdmin) && isProfessionalContext;
   const MODES = isProRole ? PRO_MODES : PATIENT_MODES;
 
-  const handleSelect = async (key: ExperienceMode) => {
     if (key === mode) return;
 
     try {
@@ -119,7 +113,6 @@ export default function ExperienceModeSwitcher() {
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isProRole && <ExperienceModeRecommendation />}
         
         {failedMode && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-center justify-between gap-3 mb-2">

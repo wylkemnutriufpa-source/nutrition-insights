@@ -37,8 +37,6 @@ vi.mock("@/hooks/useOnlinePatients", () => ({
   useOnlinePatients: vi.fn(() => ({ onlineUsers: [] })),
 }));
 
-vi.mock("@/hooks/useExperienceMode", () => ({
-  useExperienceMode: vi.fn(() => ({ minMode: () => true, isBasic: false })),
 }));
 
 vi.mock("react-router-dom", async () => {

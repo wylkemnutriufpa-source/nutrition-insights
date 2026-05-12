@@ -4,7 +4,6 @@
  * blocked, failed, offline-queued) so the user does not need to rely
  * on toasts only.
  */
-import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -59,9 +58,7 @@ function CorrelationIdBadge({ id }: { id: string }) {
   );
 }
 
-export default function ExperienceModeStatusSection() {
   const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode } =
-    useExperienceMode();
 
   // If no change is in progress and everything is normal, hide the section
   if (!isLoading && !failedMode && !isOffline && pendingQueueSize === 0) {

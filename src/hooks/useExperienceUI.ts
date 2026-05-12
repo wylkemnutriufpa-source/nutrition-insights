@@ -1,12 +1,10 @@
 import { useMemo } from "react";
-import { useExperienceMode } from "./useExperienceMode";
 
 /**
  * Semantic UI helpers derived from the current experience mode.
  * Use these to conditionally render UI elements by complexity level.
  */
 export function useExperienceUI() {
-  const { mode, minMode, isBasic, isPro, isAdvanced, isFeatureEnabled } = useExperienceMode();
 
   return useMemo(() => ({
     mode,

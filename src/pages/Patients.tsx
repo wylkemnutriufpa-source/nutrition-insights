@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useExperienceMode } from "@v1/hooks/useExperienceMode";
 import { useSafeInteraction } from "@v1/hooks/useSafeInteraction";
 import { motion } from "framer-motion";
 import { useAuth } from "@v1/lib/auth";
@@ -566,7 +565,6 @@ function PatientsListSkeleton() {
 
 export default function Patients() {
   const { user, profile } = useAuth();
-  const { minMode, isBasic } = useExperienceMode();
   const nav = useNavigate();
   const navigateToPatient = useCallback((patientId: string) => {
     trackPatientView(patientId);

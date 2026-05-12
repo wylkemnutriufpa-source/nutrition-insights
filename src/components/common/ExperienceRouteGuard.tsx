@@ -1,4 +1,3 @@
-import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { ReactNode } from "react";
 import { Shield } from "lucide-react";
 
@@ -8,10 +7,8 @@ import { Shield } from "lucide-react";
  * Serve para que componentes filhos saibam o modo atual.
  */
 export default function ExperienceRouteGuard({ children, feature }: { children: ReactNode; feature?: string }) {
-  const { isFeatureEnabled } = useExperienceMode();
   
   if (feature && !isFeatureEnabled(feature)) {
-    console.warn(`[ExperienceMode] Feature "${feature}" is blocked for current mode.`);
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center space-y-4">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">

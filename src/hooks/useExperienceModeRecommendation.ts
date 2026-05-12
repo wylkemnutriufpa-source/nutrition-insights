@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import type { ExperienceMode } from "@/hooks/useExperienceMode";
 
 /**
  * IFJ Experience Mode Recommendation Engine v2
@@ -21,13 +20,11 @@ import type { ExperienceMode } from "@/hooks/useExperienceMode";
  */
 
 export interface ModeRecommendation {
-  suggested: ExperienceMode;
   reason: string;
   confidence: number;
   factors: RecommendationFactors;
   loading: boolean;
   /** Future gating: tiers that could be unlocked */
-  eligibleTiers: ExperienceMode[];
 }
 
 export interface RecommendationFactors {
@@ -67,7 +64,6 @@ export function isRecommendationCoolingDown(): boolean {
   }
 }
 
-export function useExperienceModeRecommendation(): ModeRecommendation {
   const { user } = useAuth();
   const [result, setResult] = useState<ModeRecommendation>(defaultResult);
 
@@ -261,10 +257,8 @@ function computeScore(f: RecommendationFactors): number {
 // ── Classify ──
 
 interface Classification {
-  suggested: ExperienceMode;
   reason: string;
   confidence: number;
-  eligibleTiers: ExperienceMode[];
 }
 
 function classify(score: number, f: RecommendationFactors): Classification {

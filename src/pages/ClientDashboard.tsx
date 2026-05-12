@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { usePremiumPresence } from "@/hooks/usePremiumPresence";
@@ -14,7 +13,6 @@ import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
 import { BrainLoaderCard } from "@/components/common/PageLoader";
 import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
-import ExperienceModeStatusSection from "@/components/dashboard/ExperienceModeStatusSection";
 import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
@@ -37,7 +35,6 @@ import OnboardingProgressModal from "@/components/patient/OnboardingProgressModa
 import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
-import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
 import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
@@ -86,7 +83,6 @@ const item = {
 
 export default function ClientDashboard() {
   const { user, profile, isPatient } = useAuth();
-  const { mode, isLoading, failedMode, retryLastMode, isFeatureEnabled } = useExperienceMode();
   const page = usePageState({ initialStatus: "loading" });
   
   const handleSupabaseError = (error: any, context: string) => {
@@ -246,7 +242,6 @@ export default function ClientDashboard() {
           )}
           {mode !== 'basic' && (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <ExperienceModeSwitcher />
             </div>
           )}
           <OnboardingProgressModal />

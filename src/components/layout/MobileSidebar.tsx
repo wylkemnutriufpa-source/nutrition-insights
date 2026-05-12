@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LogOut, Moon, Sun, Settings, ChevronDown, LayoutDashboard,
@@ -59,7 +58,6 @@ export default function MobileSidebar({
   onLinkClick,
 }: MobileSidebarProps) {
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
-  const { mode, isFeatureEnabled } = useExperienceMode();
   const { isProfessionalContext } = useWorkspaceContext();
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();

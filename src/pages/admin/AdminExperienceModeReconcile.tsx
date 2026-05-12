@@ -21,7 +21,6 @@ interface Inconsistency {
   delta_minutes: number | null;
 }
 
-export default function AdminExperienceModeReconcile() {
   const [rows, setRows] = useState<Inconsistency[]>([]);
   const [loading, setLoading] = useState(false);
   const [showOnlyMismatch, setShowOnlyMismatch] = useState(true);

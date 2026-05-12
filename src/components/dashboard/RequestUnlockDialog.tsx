@@ -56,7 +56,6 @@ export default function RequestUnlockDialog({
 
     // Log local audit so a record exists even if the email client fails
     try {
-      console.info("[ExperienceMode] Unlock request submitted", {
         correlationId,
         attemptedMode,
         justificationLength: trimmed.length,
