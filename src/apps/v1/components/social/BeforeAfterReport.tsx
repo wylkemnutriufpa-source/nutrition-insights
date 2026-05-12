@@ -1,0 +1,1 @@
+export default function BeforeAfterReport({ userId }: any) { return null; }

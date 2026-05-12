@@ -1,0 +1,1 @@
+export default function EmotionalFeedback({ userId }: any) { return null; }

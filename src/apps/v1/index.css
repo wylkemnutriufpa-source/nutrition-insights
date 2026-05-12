@@ -1,0 +1,72 @@
+/* DEPLOY_VERSION: 2.4.0-hotfix-deploy-check */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import './styles/premium-tokens.css';
+@import './styles/experience-themes.css';
+
+#lovable-badge {
+  display: none !important;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 220 25% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 10%;
+    --primary: 152 58% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 220 25% 10%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 36 95% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 152 58% 42%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 220 20% 4%;
+    --foreground: 220 10% 98%;
+    --card: 220 20% 6%;
+    --card-foreground: 220 10% 98%;
+    --popover: 220 20% 6%;
+    --popover-foreground: 220 10% 98%;
+    --primary: 152 58% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 10%;
+    --secondary-foreground: 220 10% 98%;
+    --muted: 220 15% 8%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 36 95% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 12%;
+    --input: 220 15% 12%;
+    --ring: 152 58% 48%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased; font-family: 'Inter', sans-serif; }
+  h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
+}
+
+@layer utilities {
+  .glass { @apply bg-card/80 backdrop-blur-xl border border-border/50; }
+  .gradient-primary { background: linear-gradient(135deg, hsl(152, 58%, 42%), hsl(170, 60%, 45%)); }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
