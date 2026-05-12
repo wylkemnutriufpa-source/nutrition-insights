@@ -37,6 +37,13 @@ export interface PremiumMealPlanPDFData {
   goal?: string;
   notes?: string;
   planMode?: string;
+  /**
+   * ── Onda 2A — opcional, MODO PASSIVO ──
+   * Se presente, o gerador dispara em background a leitura do snapshot
+   * persistido em `meal_plans.snapshot` e loga divergências no console.
+   * NUNCA bloqueia, NUNCA altera o render. Pode ser omitido sem efeito.
+   */
+  mealPlanId?: string;
 }
 
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
@@ -898,11 +905,53 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
 export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
   const html = buildPremiumMealPlanHTML(data);
+
+  // ── Onda 2A — disparo PASSIVO da comparação snapshot vs render legado.
+  // Fire-and-forget. Falhas são silenciosas. Não altera o PDF.
+  if (data.mealPlanId) {
+    void runPassiveSnapshotCompare(data.mealPlanId, data.items);
+  }
+
   openPremiumPrintWindow(html, `plano-alimentar-${data.patientName.replace(/\s+/g, '-').toLowerCase()}`);
+}
+
+/**
+ * Modo PASSIVO — apenas leitura + log de divergências estruturais.
+ * Importação dinâmica para não impactar bundle nem o caminho atual de PDF.
+ */
+async function runPassiveSnapshotCompare(
+  planId: string,
+  items: MealPlanPDFItem[],
+): Promise<void> {
+  try {
+    const [{ readMealPlanSnapshot }, { compareSnapshotVsRender, logSnapshotCompareReport }] = await Promise.all([
+      import("@/lib/snapshot/readSnapshot"),
+      import("@/lib/snapshot/compareSnapshotVsRender"),
+    ]);
+
+    const result = await readMealPlanSnapshot(planId);
+    if (!result.snapshot) {
+      console.info(
+        `[snapshot-compare] plan=${planId} skip: ${result.reason || "no_snapshot"} (legado segue como única fonte)`,
+      );
+      return;
+    }
+
+    const report = compareSnapshotVsRender(result.snapshot, items, {
+      planId,
+      engineVersion: result.engineVersion,
+      snapshotHash: result.hash,
+    });
+    logSnapshotCompareReport(report);
+  } catch (e) {
+    // PASSIVO: nunca propaga.
+    console.info("[snapshot-compare] passive_compare_failed", e);
+  }
 }
 
 function openPremiumPrintWindow(html: string, title: string) {
   if (typeof window === 'undefined') return;
+
   
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
