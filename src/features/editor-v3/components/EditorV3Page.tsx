@@ -232,7 +232,6 @@ const EditorV3Page = () => {
   const [showAnamnesisHandshake, setShowAnamnesisHandshake] = useState(false);
   const [pendingAnamnesisData, setPendingAnamnesisData] = useState<any>(null);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
-  const setSubstitutionSearch = setSubstitutionSearch; // To avoid unused variable error if it is used in the UI
 
 
 

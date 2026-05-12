@@ -738,7 +738,6 @@ export const useEditorState = create<EditorState>()(
                       return { 
                         ...updatedItem, 
                         kcal: newMacros.kcal,
-                        calories: newMacros.kcal,
                         protein: newMacros.protein,
                         carbs: newMacros.carbs,
                         fat: newMacros.fat
