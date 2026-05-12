@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260510104203_13d748a2-3cbb-464c-810e-77dfbb1f926d.sql",
-  "migrationsCount": 705,
+  "lastMigration": "20260512114315_213cdbd9-b429-4bef-86ed-40db23b9e137.sql",
+  "migrationsCount": 707,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -67,6 +67,10 @@
       "sharing_expires_at",
       "sharing_token",
       "simplicity_score",
+      "snapshot",
+      "snapshot_generated_at",
+      "snapshot_hash",
+      "snapshot_schema_version",
       "start_date",
       "template_id",
       "template_slug",

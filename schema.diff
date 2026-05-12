@@ -1,0 +1,20 @@
+{
+  "summary": "Summary:\nColumns:\n+ meal_plans.snapshot\n+ meal_plans.snapshot_generated_at\n+ meal_plans.snapshot_hash\n+ meal_plans.snapshot_schema_version",
+  "details": {
+    "timestamp": "2026-05-12T18:52:07.743Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260510104203_13d748a2-3cbb-464c-810e-77dfbb1f926d.sql",
+    "lastActualMigration": "20260512114315_213cdbd9-b429-4bef-86ed-40db23b9e137.sql",
+    "missingMigrations": [
+      "20260512023904_dc9ebfc7-4c64-423d-87b7-efeaa53dc656.sql",
+      "20260512114315_213cdbd9-b429-4bef-86ed-40db23b9e137.sql"
+    ],
+    "diffResults": [
+      {
+        "table": "meal_plans",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "snapshot, snapshot_generated_at, snapshot_hash, snapshot_schema_version"
+      }
+    ]
+  }
+}
