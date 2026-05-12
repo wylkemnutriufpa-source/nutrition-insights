@@ -1155,8 +1155,8 @@ const EditorV3Page = () => {
     const toastId = toast.loading("Gerando prévia do PDF...");
     try {
       const pdfData = await preparePDFData();
-      const { generatePremiumMealPlanPDF } = await import("@/lib/pdfExportPremium");
-      generatePremiumMealPlanPDF(pdfData);
+      await safeGeneratePDF(pdfData);
+
       toast.success("PDF gerado com sucesso!", { id: toastId });
     } catch (err) {
       console.error("PDF preview error:", err);
