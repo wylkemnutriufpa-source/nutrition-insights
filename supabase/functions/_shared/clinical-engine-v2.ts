@@ -36,49 +36,29 @@ export interface MealItem {
   calories_per_100g: number;
 }
 
-export const ACTIVITY_MULTIPLIERS: Record<string, number> = {
-  sedentary: 1.2,
-  light: 1.375,
-  moderate: 1.55,
-  active: 1.725,
-  very_active: 1.9,
-};
+export interface ClinicalEvent {
+  type: string;
+  before: number;
+  after: number;
+  meal_type?: string;
+  source_rule: string;
+  metadata?: any;
+}
 
-export const GOAL_KCAL_ADJUSTMENT: Record<string, number> = {
-  lose_weight: -500,
-  lose: -500,
-  maintain: 0,
-  gain_muscle: 300,
-  gain_weight: 500,
-  gain: 400,
-  improve_health: -200,
-  athletic_performance: 200,
-};
-
-export const CLINICAL_PROTEIN_RANGES: Record<string, { min: number; max: number; ideal: number }> = {
-  lose:                 { min: 1.6, max: 2.2, ideal: 2.0 },
-  lose_weight:          { min: 1.6, max: 2.2, ideal: 2.0 },
-  improve_health:       { min: 1.4, max: 2.0, ideal: 1.6 },
-  maintain:             { min: 1.4, max: 2.0, ideal: 1.6 },
-  gain_muscle:          { min: 1.8, max: 2.5, ideal: 2.2 },
-  gain_weight:          { min: 1.8, max: 2.5, ideal: 2.2 },
-  gain:                 { min: 1.8, max: 2.5, ideal: 2.2 },
-  athletic_performance: { min: 1.6, max: 2.2, ideal: 2.0 },
-};
-
-export const CLINICAL_FAT_RANGE = { min: 0.8, max: 1.0, ideal: 0.9 };
-
-export const PROTEIN_HARD_CLAMP_FEMALE = 150; // grams of solid protein source (e.g. 150g frango)
+export const PROTEIN_HARD_CLAMP_FEMALE = 150;
+export const PROTEIN_HARD_CLAMP_MALE = 200;
 
 /**
- * Reconciliador Soberano
+ * Reconciliador Soberano V2
  */
 export function reconcileMeal(
   items: MealItem[],
   targets: MacroTargets,
-  profile: ClinicalProfile
+  profile: ClinicalProfile,
+  mealType?: string
 ) {
   const result = JSON.parse(JSON.stringify(items)) as MealItem[];
+  const events: ClinicalEvent[] = [];
   
   // 1. FIX PROTEIN
   const proteinItems = result.filter(i => i.macro_role === 'protein');
@@ -87,10 +67,21 @@ export function reconcileMeal(
     if (density > 0) {
       const targetProtein = targets.protein / proteinItems.length;
       let targetGrams = targetProtein / density;
+      const originalGrams = targetGrams;
       
       // Clamp Clínico Rígido
-      if (profile.sex === 'female' && targetGrams > PROTEIN_HARD_CLAMP_FEMALE) {
-        targetGrams = PROTEIN_HARD_CLAMP_FEMALE;
+      const maxGrams = profile.sex === 'female' ? PROTEIN_HARD_CLAMP_FEMALE : PROTEIN_HARD_CLAMP_MALE;
+      
+      if (targetGrams > maxGrams) {
+        targetGrams = maxGrams;
+        events.push({
+          type: 'protein_clamp_applied',
+          before: originalGrams,
+          after: targetGrams,
+          meal_type: mealType,
+          source_rule: `hard_clamp_${profile.sex}`,
+          metadata: { food: item.name }
+        });
       }
       
       item.grams = Math.round(targetGrams);
@@ -129,11 +120,12 @@ export function reconcileMeal(
 
   return {
     items: result,
-    totals: calculateTotals(result)
+    totals: calculateTotals(result),
+    events
   };
 }
 
-function calculateTotals(items: MealItem[]) {
+export function calculateTotals(items: MealItem[]) {
   return items.reduce((acc, item) => {
     const f = item.grams / 100;
     return {
