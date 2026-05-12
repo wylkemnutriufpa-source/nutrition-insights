@@ -206,7 +206,8 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
   const { base_item, base_grams, available_foods, image_bank, max_suggestions = 5 } = request;
   
   const baseCategory = getFoodCategory(base_item);
-  const baseKcalPerGram = (base_item.kcal_100g || base_item.kcal) / (base_item.portionValue || 100);
+  const baseKcal = base_item.kcal_100g ?? base_item.kcal ?? 0;
+  const baseKcalPerGram = base_item.kcal_100g !== undefined ? baseKcal / 100 : baseKcal / (base_item.portionValue || 100);
   const caloriesBase = baseKcalPerGram * base_grams;
 
   const imageMap = new Map(image_bank?.map((i: any) => [i.food_id, i.image_url]) || []);
@@ -219,8 +220,8 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
       return !!img;
     })
     .map((candidate: any) => {
-      const candKcal = candidate.kcal_100g || candidate.kcal;
-      const candidateKcalPerGram = candKcal / (candidate.portionValue || 100);
+      const candKcal = candidate.kcal_100g ?? candidate.kcal ?? 0;
+      const candidateKcalPerGram = candidate.kcal_100g !== undefined ? candKcal / 100 : candKcal / (candidate.portionValue || 100);
       
       let equivalentGrams = candidateKcalPerGram > 0 
         ? caloriesBase / candidateKcalPerGram 
@@ -241,8 +242,8 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
         unidade = `${spoons} colheres (${equivalentGrams}g)`;
       }
 
-      const ratio = equivalentGrams / (candidate.portionValue || 100);
-      const calEquiv = candKcal * ratio;
+      const ratioKcal = candidate.kcal_100g !== undefined ? equivalentGrams / 100 : equivalentGrams / (candidate.portionValue || 100);
+      const calEquiv = candKcal * ratioKcal;
 
       return {
         alimento: candidate.name,
@@ -251,9 +252,9 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
         unidade,
         calorias_equivalentes: Math.round(calEquiv * 10) / 10,
         macros: {
-          proteina_g: Math.round((candidate.protein_100g || candidate.protein) * ratio * 10) / 10,
-          carboidrato_g: Math.round((candidate.carb_100g || candidate.carbs) * ratio * 10) / 10,
-          gordura_g: Math.round((candidate.fat_100g || candidate.fat) * ratio * 10) / 10,
+          proteina_g: Math.round((candidate.protein_100g ?? candidate.protein ?? 0) * ratioKcal * 10) / 10,
+          carboidrato_g: Math.round((candidate.carb_100g ?? candidate.carbs ?? 0) * ratioKcal * 10) / 10,
+          gordura_g: Math.round((candidate.fat_100g ?? candidate.fat ?? 0) * ratioKcal * 10) / 10,
         },
         imagem_url: candidate.imageUrl || imageMap.get(candidate.id) || '',
         equivalencia_calorica: Math.round((1 - Math.abs(calEquiv - caloriesBase) / (caloriesBase || 1)) * 100)
