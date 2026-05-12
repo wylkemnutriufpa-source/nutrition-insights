@@ -132,7 +132,40 @@ export const ClinicalAuditDashboard = () => {
                    </ul>
                 </div>
               </div>
+          {/* Legacy Rule Heatmap Section */}
+          <div className="mt-10 bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+            <h3 className="text-lg font-black uppercase tracking-tight mb-6 flex items-center gap-2">
+              <ShieldAlert className="text-red-500" /> Heatmap de Regras Legadas (Hacks Históricos)
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rules.map((rule) => (
+                <div key={rule.legacy_rule} className="p-4 bg-black/40 border border-slate-800 rounded-xl hover:border-red-500/30 transition-all">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] font-black uppercase text-slate-500 font-mono tracking-widest">{rule.legacy_rule}</span>
+                    <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-full">
+                      {rule.impact_count} IMPACTOS
+                    </span>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-400">Readiness Score Médio</span>
+                      <span className={rule.readiness_with_rule > 80 ? "text-green-500" : "text-yellow-500"}>{rule.readiness_with_rule}%</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-400">Falhas Críticas</span>
+                      <span className={rule.critical_failures > 0 ? "text-red-500" : "text-slate-500"}>{rule.critical_failures}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {rules.length === 0 && (
+                <div className="col-span-full text-center py-8 text-slate-600 italic text-sm">
+                  Nenhuma regra legada mapeada via shadow audit ainda.
+                </div>
+              )}
             </div>
+          </div>
+        </div>
           ))}
         </div>
       )}
