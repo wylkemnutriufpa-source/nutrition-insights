@@ -228,55 +228,85 @@ function resolveFood(item: TItem, foods: any[]): any | null {
   return null;
 }
 
-function buildPlan(metrics: any, foods: any[]) {
+function buildPlan(metrics: any, foods: any[], profile: any) {
   const goal = metrics.goal;
   const meals: any[] = [];
   const unresolved: string[] = [];
 
+  const clinicalProfile: ClinicalProfile = {
+    sex: profile.sex === 'F' ? 'female' : 'male',
+    weight: Number(profile.weight_kg),
+    height: Number(profile.height_cm),
+    age: metrics.age,
+    activityLevel: profile.activity_level || 'moderate',
+    goal: metrics.goal
+  };
+
   for (const mt of MEAL_ORDER) {
-    const targetKcal = metrics.target_kcal * MEAL_DISTRIBUTION[mt];
+    // No V2, distribuímos os macros totais proporcionalmente à kcal do slot,
+    // mas o reconciliador garante a soberania da proteína.
+    const pct = MEAL_DISTRIBUTION[mt];
+    const targets: MacroTargets = {
+      protein: metrics.protein_g * pct,
+      carbs: metrics.carb_g * pct,
+      fat: metrics.fat_g * pct,
+      calories: metrics.target_kcal * pct
+    };
+
     const tpl = MEAL_TEMPLATES[mt]?.[goal] ?? MEAL_TEMPLATES[mt]?.maintain ?? [];
-    const resolved: Array<{ food: any; baseG: number }> = [];
-    let baseKcal = 0;
+    const itemsForReconcile: CItem[] = [];
+
     for (const t of tpl) {
       const f = resolveFood(t, foods);
       if (!f) { unresolved.push(`${mt}:${t.name}`); continue; }
-      resolved.push({ food: f, baseG: t.grams });
-      baseKcal += Number(f.calories) * (t.grams / 100);
+      
+      // Determine macro role based on name or metadata if available
+      let role: 'protein' | 'carb' | 'fat' | 'fiber' | 'fixed' = 'fixed';
+      const name = f.name.toLowerCase();
+      if (name.includes("frango") || name.includes("carne") || name.includes("peixe") || name.includes("ovo") || name.includes("tilápia") || name.includes("patinho")) {
+        role = "protein";
+      } else if (name.includes("arroz") || name.includes("batata") || name.includes("macarrão") || name.includes("pão") || name.includes("aveia")) {
+        role = "carb";
+      } else if (name.includes("azeite") || name.includes("manteiga") || name.includes("pasta de amendoim")) {
+        role = "fat";
+      } else if (name.includes("alface") || name.includes("brócolis") || name.includes("tomate") || name.includes("cenoura") || name.includes("legumes")) {
+        role = "fiber";
+      }
+
+      itemsForReconcile.push({
+        id: f.id,
+        name: f.name,
+        grams: t.grams,
+        macro_role: role,
+        protein_per_100g: Number(f.protein),
+        carbs_per_100g: Number(f.carbs),
+        fat_per_100g: Number(f.fat),
+        calories_per_100g: Number(f.calories)
+      });
     }
-    let items: any[] = [];
-    if (baseKcal > 0) {
-      const scale = Math.max(0.4, Math.min(targetKcal / baseKcal, 2.0));
-      items = resolved.map(({ food, baseG }) => {
-        const grams = Math.round(baseG * scale);
-        const f = grams / 100;
-        return {
-          food_id: food.id,
-          food_name: food.name,
-          grams,
-          kcal: r1(Number(food.calories) * f),
-          protein: r2(Number(food.protein) * f),
-          carb: r2(Number(food.carbs) * f),
-          fat: r2(Number(food.fat) * f),
-          fiber: r2(Number(food.fiber ?? 0) * f),
-        };
-      }).filter((i) => i.grams > 0);
-    }
-    const totals = items.reduce(
-      (a, i) => ({
-        kcal: a.kcal + i.kcal, protein: a.protein + i.protein,
-        carb: a.carb + i.carb, fat: a.fat + i.fat, fiber: a.fiber + i.fiber,
-      }),
-      { kcal: 0, protein: 0, carb: 0, fat: 0, fiber: 0 }
-    );
+
+    const { items: reconciledItems, totals } = reconcileMeal(itemsForReconcile, targets, clinicalProfile);
+
     meals.push({
       type: mt,
       name: MEAL_LABELS[mt],
-      target_kcal: r1(targetKcal),
-      items,
+      target_kcal: r1(targets.calories),
+      items: reconciledItems.map(it => ({
+        food_id: it.id,
+        food_name: it.name,
+        grams: it.grams,
+        kcal: r1((it.grams * it.calories_per_100g) / 100),
+        protein: r2((it.grams * it.protein_per_100g) / 100),
+        carb: r2((it.grams * it.carbs_per_100g) / 100),
+        fat: r2((it.grams * it.fat_per_100g) / 100),
+        fiber: r2(0), // simplify for now
+      })),
       totals: {
-        kcal: r1(totals.kcal), protein: r1(totals.protein),
-        carb: r1(totals.carb), fat: r1(totals.fat), fiber: r1(totals.fiber),
+        kcal: r1(totals.calories),
+        protein: r1(totals.protein),
+        carb: r1(totals.carbs),
+        fat: r1(totals.fat),
+        fiber: 0
       },
     });
   }
