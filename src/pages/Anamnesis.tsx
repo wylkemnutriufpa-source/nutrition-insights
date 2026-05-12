@@ -1117,23 +1117,23 @@ export default function Anamnesis() {
         .from("onboarding_pipelines" as any)
         .update({
           anamnesis_completed: true,
-          status: "pending_body_data",
+          status: "completed", // Fechamos o pipeline aqui
           weight: weight,
           height: height,
         } as any)
         .eq("patient_id", targetUserId)
-        .in("status", ["pending_anamnesis", "in_progress"])
         .select("id")
         .maybeSingle(),
       supabase
         .from("nutritionist_patients")
-        .update({ journey_status: isPipelineMode ? "onboarding_active" : "onboarding_completed" })
+        .update({ journey_status: "onboarding_completed" })
         .eq("patient_id", targetUserId)
         .eq("status", "active"),
       supabase
         .from("profiles")
         .update({ 
-          patient_state: 'collecting_profile',
+          patient_state: 'active_plan' as any,
+          onboarding_completed: true,
           current_weight_kg: weight,
           current_height_cm: height,
           goal: answers.goal === "lose_weight" ? "Emagrecimento" : (answers.goal === "gain_muscle" ? "Ganho de massa" : "Manutenção"),
@@ -1147,13 +1147,7 @@ export default function Anamnesis() {
     if (profileRes.error) {
       console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
     } else {
-      console.log("[FJ:Anamnesis] patient_state updated to collecting_profile");
-      // Hardening: Explicitly verify and set state as active_plan (canonical for finished onboarding)
-      // This is the absolute signal for Welcome.tsx to redirect to Dashboard
-      await supabase.from("profiles").update({ 
-        patient_state: 'active_plan' as any,
-        onboarding_completed: true
-      } as any).eq("user_id", targetUserId);
+      console.log("[FJ:Anamnesis] patient_state updated to active_plan (canonical)");
     }
 
     if (pipelineRes.data && !isPipelineMode) {
@@ -1166,15 +1160,28 @@ export default function Anamnesis() {
     // In onboarding pipeline mode, never keep the patient blocked waiting for AI.
     if (isPipelineMode && !isNutritionistMode) {
       setAnalyzing(false);
-      toast.success("Anamnese salva! Indo para a próxima etapa do onboarding. ✅");
+      toast.success("Anamnese salva! Gerando seu pré-plano alimentar automaticamente... 🍎");
 
-      // Não chamamos navigate(): a edge function que conclui anamnese atualiza
-      // patient_state para 'collecting_profile' e o SystemStateGuard rota
-      // automaticamente para /body-analysis.
+      void (async () => {
+        try {
+          console.log("[FJ:Anamnesis] Triggering automatic plan generation...");
+          const { data: planData, error: planError } = await supabase.functions.invoke("generate-meal-plan-v2", {
+            body: { 
+              patient_id: targetUserId,
+              plan_title: "Plano Inicial (Gerado Automaticamente)"
+            },
+          });
+          if (planError) throw planError;
+          console.log("[FJ:Anamnesis] Automatic plan generated successfully:", planData);
+        } catch (e: any) {
+          console.error("[FJ:Anamnesis] Error generating automatic plan:", e);
+        }
+      })();
+
       setTimeout(() => {
         if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
         navigate("/client/dashboard", { replace: true });
-      }, 1500);
+      }, 2500);
 
       void (async () => {
         try {
@@ -1239,6 +1246,21 @@ export default function Anamnesis() {
     }
 
     setAnalyzing(false);
+
+    // Trigger automatic plan generation if not already done
+    void (async () => {
+      try {
+        console.log("[FJ:Anamnesis] Triggering automatic plan generation (Standard flow)...");
+        await supabase.functions.invoke("generate-meal-plan-v2", {
+          body: { 
+            patient_id: targetUserId,
+            plan_title: "Plano Inicial (Gerado Automaticamente)"
+          },
+        });
+      } catch (e: any) {
+        console.error("[FJ:Anamnesis] Error generating automatic plan:", e);
+      }
+    })();
 
     // Notify professional that everything is ready for evaluation
     try {

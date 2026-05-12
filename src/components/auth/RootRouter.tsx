@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 import { supabase } from "@/integrations/supabase/client";
 
 export function RootRouter() {
   const { roles, authStatus, loading, profile, refreshProfile, user } = useAuth();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next");
   const [error, setError] = useState<string | null>(null);
@@ -81,8 +83,8 @@ export function RootRouter() {
     );
   }
 
-  // 3. Aguarda dados ficarem prontos (Auth Status + Roles + Invite Processing)
-  if (authStatus === "loading" || loading || (authStatus === "authenticated" && roles === null) || processingInvite) {
+  // 3. Aguarda dados ficarem prontos (Auth Status + Roles + Invite Processing + Consent)
+  if (authStatus === "loading" || loading || (authStatus === "authenticated" && roles === null) || processingInvite || (authStatus === "authenticated" && consentLoading)) {
     const msgs = processingInvite ? ["Vinculando convite...", "Preparando seu espaço..."] : ["Verificando sua sessão...", "Carregando autenticação..."];
     return <BrainLoaderScreen messages={msgs} visible />;
   }
@@ -105,26 +107,33 @@ export function RootRouter() {
     return <Navigate to={target} replace />;
   }
 
-  // Flow Paciente
+  // Flow Paciente (Soberania do Onboarding Linear)
   if (effectiveRoles.includes("patient")) {
     const pState = (profile as any)?.patient_state;
     const onboardingCompleted = (profile as any)?.onboarding_completed;
     
-    console.log("[NAV] RootRouter -> Analyzing patient state", { pState, onboardingCompleted });
+    console.log("[NAV] RootRouter -> Analyzing patient state", { pState, onboardingCompleted, hasConsent });
 
+    // 1. Consentimento é a primeira barreira absoluta
+    if (!hasConsent) {
+      return <Navigate to="/consent" replace />;
+    }
+
+    // 2. Onboarding concluído → Dashboard
     if (onboardingCompleted === true) {
       return <Navigate to="/client/dashboard" replace />;
     }
 
+    // 3. Estados intermediários do Onboarding
     let target = "/client/dashboard";
     
-    // Regras unificadas, garantindo que não caia no limbo
     if (!pState || pState === "onboarding_slides") target = "/onboarding/paciente";
     else if (pState === "anamnesis") target = "/anamnesis";
     else if (pState === "collecting_profile" || pState === "active_plan" || pState === "plan_generated" || pState === "ready_for_plan") {
       target = "/client/dashboard";
     }
 
+    // Preservar deep links apenas se o onboarding estiver completo ou for uma rota pública
     const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index" || nextPath === "/client/dashboard";
     const isAdminPath = nextPath?.startsWith("/admin/");
     const finalTarget = (nextPath && !isDefaultPath && !isAdminPath) ? nextPath : target;

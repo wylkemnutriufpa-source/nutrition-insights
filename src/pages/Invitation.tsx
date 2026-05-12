@@ -124,6 +124,10 @@ export default function Invitation() {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
     
+    // Save to localStorage for redundancy across different auth pages
+    if (code) localStorage.setItem("fitjourney_invite_code", code);
+    if (invitation.professional_id) localStorage.setItem("fitjourney_nutri_id", invitation.professional_id);
+
     // Se o paciente já estiver cadastrado, mandamos para o login
     if (invitation.patient_id) {
       console.log(`[Invitation] [CID:${correlationId}] Patient already registered (patient_id: ${invitation.patient_id}). Redirecting to /auth.`);
@@ -131,6 +135,7 @@ export default function Invitation() {
       return;
     }
 
+    console.log(`[Invitation] Redirecting to canonical /cadastro for onboarding.`);
     navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
   }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
 
