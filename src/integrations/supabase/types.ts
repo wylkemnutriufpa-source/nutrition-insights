@@ -2494,6 +2494,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_event_log: {
+        Row: {
+          after: number | null
+          before: number | null
+          created_at: string | null
+          day_of_week: number | null
+          id: string
+          meal_type: string | null
+          metadata: Json | null
+          patient_id: string | null
+          source_rule: string | null
+          type: string
+        }
+        Insert: {
+          after?: number | null
+          before?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          meal_type?: string | null
+          metadata?: Json | null
+          patient_id?: string | null
+          source_rule?: string | null
+          type: string
+        }
+        Update: {
+          after?: number | null
+          before?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          meal_type?: string | null
+          metadata?: Json | null
+          patient_id?: string | null
+          source_rule?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       clinical_experiment_assignments: {
         Row: {
           assigned_at: string
@@ -3259,6 +3298,54 @@ export type Database = {
           rule_key?: string
           target_audience?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      clinical_shadow_audit: {
+        Row: {
+          analysis: Json | null
+          compatible: boolean | null
+          divergence_count: number | null
+          divergence_types: string[] | null
+          generated_at: string | null
+          id: string
+          patient_id: string | null
+          payload_diff: Json | null
+          plan_id: string | null
+          readiness_score: number | null
+          severity: string | null
+          v1_hash: string | null
+          v2_hash: string | null
+        }
+        Insert: {
+          analysis?: Json | null
+          compatible?: boolean | null
+          divergence_count?: number | null
+          divergence_types?: string[] | null
+          generated_at?: string | null
+          id?: string
+          patient_id?: string | null
+          payload_diff?: Json | null
+          plan_id?: string | null
+          readiness_score?: number | null
+          severity?: string | null
+          v1_hash?: string | null
+          v2_hash?: string | null
+        }
+        Update: {
+          analysis?: Json | null
+          compatible?: boolean | null
+          divergence_count?: number | null
+          divergence_types?: string[] | null
+          generated_at?: string | null
+          id?: string
+          patient_id?: string | null
+          payload_diff?: Json | null
+          plan_id?: string | null
+          readiness_score?: number | null
+          severity?: string | null
+          v1_hash?: string | null
+          v2_hash?: string | null
         }
         Relationships: []
       }
@@ -20801,6 +20888,37 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      clinical_divergence_ranking: {
+        Row: {
+          affected_patients: number | null
+          avg_readiness: number | null
+          clinical_severity: string | null
+          frequency_pct: number | null
+          readiness_impact: number | null
+          rule: string | null
+        }
+        Relationships: []
+      }
+      clinical_observability_dashboard: {
+        Row: {
+          audit_date: string | null
+          avg_divergence_per_plan: number | null
+          compatibility_rate: number | null
+          divergence_heatmap: Json | null
+          readiness_score: number | null
+          total_samples: number | null
+        }
+        Relationships: []
+      }
+      legacy_rule_heatmap: {
+        Row: {
+          critical_failures: number | null
+          impact_count: number | null
+          legacy_rule: string | null
+          readiness_with_rule: number | null
+        }
+        Relationships: []
       }
       meal_plan_job_metrics: {
         Row: {
