@@ -126,6 +126,25 @@ const DEFAULT_DISTRIBUTION: MealDistribution = {
   evening_snack: 0.08,
 };
 
+// Internal interface for item generation with baseline tracking
+interface GeneratedItemInput {
+  meal_plan_id: string;
+  title: string;
+  meal_type: string;
+  day_of_week: number;
+  calories_target: number;
+  protein_target: number;
+  carbs_target: number;
+  fat_target: number;
+  item_origin: string;
+  is_primary: boolean;
+  substitution_group_id: string | null;
+  library_item: MealLibraryItem;
+  sf: number;
+  _baseCaloriesTarget?: number;
+  _baseProteinTarget?: number;
+}
+
 const GOAL_COMPAT: Record<string, string[]> = {
   weight_loss: ["weight_loss", "low_carb", "metabolic", "functional"],
   hypertrophy: ["hypertrophy", "maintenance"],
