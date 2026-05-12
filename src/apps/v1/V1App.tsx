@@ -1,5 +1,6 @@
 import "./index.css";
 import "./App.css";
+console.log("[V1App] Module script executed");
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useAuth } from "./lib/auth";
