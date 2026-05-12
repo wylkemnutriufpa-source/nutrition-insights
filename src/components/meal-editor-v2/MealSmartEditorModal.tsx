@@ -93,6 +93,22 @@ export function MealSmartEditorModal({
     return substitutions.some(sub => isBlockedForWannubia(sub));
   }, [substitutions, isBlockedForWannubia]);
 
+  const reconcileDescription = useCallback((text: string, newFactor: number, oldFactor: number) => {
+    if (!text) return "";
+    const scale = newFactor / oldFactor;
+    return text.replace(/(\d+(?:[.,]\d+)?)\s*g/g, (match, grams) => {
+      const g = parseFloat(grams.replace(',', '.'));
+      if (isNaN(g)) return match;
+      return `${Math.round(g * scale)}g`;
+    });
+  }, []);
+
+  const handlePortionChange = (newVal: number) => {
+    const factor = Math.max(0.1, Math.round(newVal * 10) / 10);
+    setDescription(prev => reconcileDescription(prev, factor, portionFactor));
+    setPortionFactor(factor);
+  };
+
   useEffect(() => {
     if (item && open) {
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
