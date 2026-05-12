@@ -280,6 +280,7 @@ export const AppRoutes = () => {
         element={<Auth />}
       />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth" element={<Auth />} />
       <Route path="/auth/confirm" element={<AuthConfirm />} />
       <Route path="/welcome" element={<Welcome />} />
       
