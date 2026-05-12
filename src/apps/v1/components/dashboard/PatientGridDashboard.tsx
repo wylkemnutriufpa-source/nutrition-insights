@@ -128,6 +128,9 @@ export default function PatientGridDashboard() {
   const visibleCards = PATIENT_CARDS;
   const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
+  const showOnboardingCard = lifecycle.showOnboarding;
+  const blockDashboard = lifecycle.isBlocked;
+
   if (lifecycle.isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
@@ -135,6 +138,7 @@ export default function PatientGridDashboard() {
       </div>
     );
   }
+
 
   // Simplified basic view
   const isBasicView = false; // Always show full dashboard for restoration
