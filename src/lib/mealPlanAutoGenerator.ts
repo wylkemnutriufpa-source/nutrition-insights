@@ -126,6 +126,25 @@ const DEFAULT_DISTRIBUTION: MealDistribution = {
   evening_snack: 0.08,
 };
 
+// Internal interface for item generation with baseline tracking
+interface GeneratedItemInput {
+  meal_plan_id: string;
+  title: string;
+  meal_type: string;
+  day_of_week: number;
+  calories_target: number;
+  protein_target: number;
+  carbs_target: number;
+  fat_target: number;
+  item_origin: string;
+  is_primary: boolean;
+  substitution_group_id: string | null;
+  library_item: MealLibraryItem;
+  sf: number;
+  _baseCaloriesTarget?: number;
+  _baseProteinTarget?: number;
+}
+
 const GOAL_COMPAT: Record<string, string[]> = {
   weight_loss: ["weight_loss", "low_carb", "metabolic", "functional"],
   hypertrophy: ["hypertrophy", "maintenance"],
@@ -472,7 +491,7 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
       const storageDay = normalizeGeneratedDayForStorage(slot.day);
       const groupId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
       
-      const primaryItemsInput = {
+      const primaryItemsInput: GeneratedItemInput = {
         meal_plan_id: planId,
         title: await getClosestValidatedFood(slot.libraryItem.title) || slot.libraryItem.title,
         meal_type: mealType,
@@ -485,10 +504,12 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
         is_primary: true,
         substitution_group_id: slot.substitutions?.length > 0 ? groupId : null,
         library_item: slot.libraryItem,
-        sf: slot.scaleFactor
+        sf: slot.scaleFactor,
+        _baseCaloriesTarget: slot.targetKcal,
+        _baseProteinTarget: Math.round(slot.libraryItem.protein * slot.scaleFactor)
       };
 
-      const buildItem = async (input: any) => {
+      const buildItem = async (input: GeneratedItemInput) => {
         let foodNames = Array.isArray(input.library_item.foods) ? input.library_item.foods.map((f: any) => f.name || "") : [];
         if (input.meal_type === "breakfast") {
           foodNames = ensureBreakfastProtein(foodNames);
@@ -547,12 +568,21 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
             is_primary: false,
             substitution_group_id: groupId,
             library_item: sub.libraryItem,
-            sf: sub.scaleFactor
+            sf: sub.scaleFactor,
+            _baseCaloriesTarget: sub.targetKcal,
+            _baseProteinTarget: Math.round(sub.libraryItem.protein * sub.scaleFactor)
           });
         }
       }
 
-      const built = await Promise.all(itemsToBuild.map(buildItem));
+      const built = await Promise.all(itemsToBuild.map(async (input: any) => {
+        const item = await buildItem(input);
+        return {
+          ...item,
+          _baseCaloriesTarget: input._baseCaloriesTarget || input.calories_target,
+          _baseProteinTarget: input._baseProteinTarget || input.protein_target
+        };
+      }));
       const { items } = buildMealItems(built as any);
       return items;
     })

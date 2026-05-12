@@ -884,9 +884,13 @@ export async function autoFixMealPlan(
     const currentProtein = Number(item.protein_target) || 0;
     if (baseCalories <= 0 || currentCalories <= 0) continue;
 
-    const calorieFactor = currentCalories / baseCalories;
+    // 🛡️ CIRCUIT BREAKER: Clamp calorieFactor to prevent description explosions (max 2.5x)
+    const calorieFactor = clampScaleFactor(currentCalories / baseCalories);
     const scaledDescription = scaleDescriptionQuantities(baseDescription, calorieFactor) ?? baseDescription;
-    const scaledProteinBaseline = baseProtein > 0 ? baseProtein * calorieFactor : baseProtein;
+    
+    // Use base protein if available, otherwise default to current to maintain 1:1 ratio unless rebalanced
+    const effectiveBaseProtein = Number(item._baseProteinTarget) || baseProtein;
+    const scaledProteinBaseline = effectiveBaseProtein > 0 ? effectiveBaseProtein * calorieFactor : effectiveBaseProtein;
     const proteinSyncedDescription = syncProteinDescriptionPortions(
       scaledDescription,
       item.meal_type,
