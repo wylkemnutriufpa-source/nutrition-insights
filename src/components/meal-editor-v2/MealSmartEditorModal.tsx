@@ -95,9 +95,20 @@ export function MealSmartEditorModal({
 
   useEffect(() => {
     if (item && open) {
-      setDescription(item.description || "");
-      
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
+      const currentPortion = meta.portion_factor || 1.0;
+      
+      setDescription(item.description || "");
+      setNotes((item as any).notes || "");
+      setPortionFactor(currentPortion);
+      
+      // Store original values for dirty check
+      originalValues.current = {
+        description: item.description || "",
+        notes: (item as any).notes || "",
+        portionFactor: currentPortion,
+        substitutions: []
+      };
       
       if (meta.is_fixed) {
         const missing = [];
@@ -111,9 +122,7 @@ export function MealSmartEditorModal({
             description: `Campos ausentes no edit_metadata: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
             action: {
               label: "Corrigir Agora",
-              onClick: () => {
-                inputRef.current?.focus();
-              }
+              onClick: () => inputRef.current?.focus()
             },
             duration: 8000
           });
@@ -125,6 +134,7 @@ export function MealSmartEditorModal({
                           
       if (hasValidJson) {
         setSubstitutions(meta.substitutions_json);
+        originalValues.current.substitutions = meta.substitutions_json;
       } else {
         const desc = item.description || "";
         const parts = desc.split(/\n\n🔄 Substituições:\n/);
@@ -132,13 +142,43 @@ export function MealSmartEditorModal({
         const subLines = subsPart.split("\n")
           .filter(l => l.trim().length > 0)
           .map(l => l.trim());
-        setSubstitutions(subLines.slice(0, substitutionCount));
+        const initialSubs = subLines.slice(0, substitutionCount);
+        setSubstitutions(initialSubs);
+        originalValues.current.substitutions = initialSubs;
       }
-      
-      setNotes((item as any).notes || "");
-      setPortionFactor(meta.portion_factor || 1.0);
     }
-  }, [item, open, substitutionCount]);
+  }, [item?.id, open, substitutionCount]);
+
+  // Real-time synchronization with global draft (skip persistence)
+  useEffect(() => {
+    if (!item || !open) return;
+
+    const dirty = description !== originalValues.current.description ||
+                  notes !== originalValues.current.notes ||
+                  portionFactor !== originalValues.current.portionFactor ||
+                  JSON.stringify(substitutions) !== JSON.stringify(originalValues.current.substitutions);
+    
+    setIsDirty(dirty);
+
+    // Sync to store immediately but skip persistence
+    const cleanedSubs = normalizeSubstitutions(substitutions, substitutionCount);
+    const finalDescription = formatFinalDescription(description, cleanedSubs);
+
+    updateItem(itemId, {
+      description: finalDescription,
+      calories_target: adjustedMacros.calories,
+      protein_target: adjustedMacros.protein,
+      carbs_target: adjustedMacros.carbs,
+      fat_target: adjustedMacros.fat,
+      edit_metadata: {
+        ...currentMeta,
+        notes,
+        substitutions_json: cleanedSubs,
+        portion_factor: portionFactor,
+      }
+    } as any, true); // true = skipPersist
+
+  }, [description, notes, substitutions, portionFactor, open, itemId]);
 
   if (!item) return null;
 
