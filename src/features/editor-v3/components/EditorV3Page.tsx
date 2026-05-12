@@ -618,13 +618,19 @@ const EditorV3Page = () => {
 
           const v3Subs = v3PlanSubs.map(s => {
             const ratio = s.grams / 100;
+            // 🛡️ Usar calculateItemMacros em vez de cálculo manual para garantir sanitização
+            const computedMacros = calculateItemMacros({
+              ...s.food,
+              clinical_mass_g: s.grams
+            }, s.grams);
+
             return {
               ...s.food,
-              kcal: Math.round(s.food.kcal_100g * ratio),
-              calories: Math.round(s.food.kcal_100g * ratio),
-              protein: Math.round(s.food.protein_100g * ratio * 10) / 10,
-              carbs: Math.round(s.food.carb_100g * ratio * 10) / 10,
-              fat: Math.round(s.food.fat_100g * ratio * 10) / 10,
+              kcal: computedMacros.kcal,
+              calories: computedMacros.kcal,
+              protein: computedMacros.protein,
+              carbs: computedMacros.carbs,
+              fat: computedMacros.fat,
               portionValue: s.grams,
               portionLabel: s.unit_label,
               measurementType: 'gram' as const,
