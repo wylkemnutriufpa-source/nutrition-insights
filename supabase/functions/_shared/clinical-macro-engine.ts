@@ -1,44 +1,17 @@
 /**
  * Clinical Macro Engine v2.0 — SINGLE SOURCE OF TRUTH
- * Centralizes ALL metabolic calculations: TMB, TDEE, Macros
- * Used by: generate-meal-plan (unified engine)
- * 
- * REGRAS INVIOLÁVEIS:
- * - Proteína: 1.6–2.2 g/kg (déficit) | 1.8–2.5 g/kg (hipertrofia)
- * - Gordura: 0.8–1.0 g/kg (universal)
- * - Carboidrato: completa o restante calórico
+ * @deprecated Use constants and types from clinical-engine-v2.ts
  */
 
-// ──── Activity Multipliers (Mifflin-St Jeor) ────
-export const ACTIVITY_MULTIPLIERS: Record<string, number> = {
-  sedentary: 1.2,
-  light: 1.375,
-  moderate: 1.55,
-  active: 1.725,
-  very_active: 1.9,
-};
+export { 
+  ACTIVITY_MULTIPLIERS, 
+  GOAL_KCAL_ADJUSTMENT, 
+  CLINICAL_PROTEIN_RANGES, 
+  CLINICAL_FAT_RANGE 
+} from "./clinical-engine-v2.ts";
 
-// ──── Goal Calorie Adjustments ────
-export const GOAL_KCAL_ADJUSTMENT: Record<string, number> = {
-  lose_weight: -500,
-  maintain: 0,
-  gain_muscle: 300,
-  gain_weight: 500,
-  improve_health: -200,
-  athletic_performance: 200,
-};
+// Mantendo exportações para retrocompatibilidade
 
-// ──── Clinical Protein Ranges (g/kg) ────
-export const CLINICAL_PROTEIN_RANGES: Record<string, { min: number; max: number; ideal: number }> = {
-  lose_weight:          { min: 1.6, max: 2.2, ideal: 2.0 },
-  improve_health:       { min: 1.4, max: 2.0, ideal: 1.6 },
-  maintain:             { min: 1.4, max: 2.0, ideal: 1.6 },
-  gain_muscle:          { min: 1.8, max: 2.5, ideal: 2.2 },
-  gain_weight:          { min: 1.8, max: 2.5, ideal: 2.2 },
-  athletic_performance: { min: 1.6, max: 2.2, ideal: 2.0 },
-};
-
-export const CLINICAL_FAT_RANGE = { min: 0.8, max: 1.0, ideal: 0.9 };
 
 // ──── TMB Calculator (Mifflin-St Jeor) ────
 export function calculateTMB(weight: number, height: number, age: number, sex: string): number {
