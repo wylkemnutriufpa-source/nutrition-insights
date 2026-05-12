@@ -137,11 +137,17 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
           items: meal.items.map(item => {
             if (isCarb(item.name)) {
               const newQuantity = Math.round(item.quantity * 0.5);
-              const macros = calculateItemMacros(item, newQuantity);
+              const pValue = item.portionValue || 1;
+              const newClinicalMass = (item.measurementType === 'gram' || item.measurementType === 'ml')
+                ? newQuantity
+                : newQuantity * pValue;
+
+              const macros = calculateItemMacros({ ...item, clinical_mass_g: newClinicalMass }, newQuantity);
               return {
                 ...item,
                 ...macros,
-                quantity: newQuantity
+                quantity: newQuantity,
+                clinical_mass_g: newClinicalMass
               };
             }
             return item;
