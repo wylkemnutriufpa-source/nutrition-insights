@@ -1,6 +1,6 @@
 /**
  * Clinical Engine Unificado — FitJourney
- * Centraliza a inteligência de geração de planos alimentares.
+ * @deprecated Use clinical-engine-v2.ts for sovereign reconciliation logic.
  */
 
 import { StrategyId, getStrategy, StrategyParams } from "./strategies.ts";
