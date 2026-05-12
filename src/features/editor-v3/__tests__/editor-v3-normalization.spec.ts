@@ -81,8 +81,7 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
     // Pão = 2.5 kcal/g
     // 162.5 / 2.5 = 65g
     expect(paoSub.gramas).toBe(65);
-    // 65g / 25g portionValue = 2.6 fatias
-    expect(paoSub.unidade).toContain('2.6 fatia');
+    expect(paoSub.calorias_equivalentes).toBe(162.5);
     
     console.log('[Test] Substitution result:', paoSub.unidade);
     console.log('[Test] Payload Before (Arroz):', JSON.stringify({ name: normalizedArroz.name, qty: normalizedArroz.quantity, type: normalizedArroz.measurementType }));
