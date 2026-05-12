@@ -4138,6 +4138,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       .from("meal_plan_items")
       .delete()
       .eq("meal_plan_id", finalMealPlanId);
+
+    if (deleteErr) {
       console.error(`[generate-meal-plan] Failed to delete previous items for plan ${finalMealPlanId}:`, deleteErr);
       // Continue anyway — inserting new items is more important
     }
