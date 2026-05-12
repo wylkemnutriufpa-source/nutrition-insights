@@ -183,14 +183,14 @@ export default function ChurnRiskPanel({ patients, loading }: { patients: ChurnP
                   <div className="flex flex-col gap-1.5 flex-shrink-0">
                     <Button
                       size="sm" variant="ghost" className="h-7 w-7 p-0"
-                      onClick={(e) => { e.stopPropagation(); navigate("/chat"); }}
+                      onClick={(e) => { e.stopPropagation(); navigate("/v1/chat"); }}
                       title="Enviar mensagem"
                     >
                       <Send className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       size="sm" variant="ghost" className="h-7 w-7 p-0"
-                      onClick={(e) => { e.stopPropagation(); navigate("/appointments"); }}
+                      onClick={(e) => { e.stopPropagation(); navigate("/v1/appointments"); }}
                       title="Agendar consulta"
                     >
                       <Calendar className="w-3.5 h-3.5" />

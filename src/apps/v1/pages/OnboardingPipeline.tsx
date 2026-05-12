@@ -638,7 +638,7 @@ export default function OnboardingPipeline() {
           <p className="text-muted-foreground">
             O onboarding anterior foi encerrado automaticamente porque seu plano já está disponível no painel.
           </p>
-          <Button onClick={() => navigate("/my-diet")} className="gradient-primary">
+          <Button onClick={() => navigate("/v1/my-diet")} className="gradient-primary">
             Ver meu plano
           </Button>
         </div>
@@ -679,7 +679,7 @@ export default function OnboardingPipeline() {
           <p className="text-muted-foreground">
             Seu plano alimentar foi aprovado e está ativo. Acesse pelo menu "Minha Dieta".
           </p>
-          <Button onClick={() => navigate("/my-diet")}>
+          <Button onClick={() => navigate("/v1/my-diet")}>
             Ver Meu Plano <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -1147,7 +1147,7 @@ export default function OnboardingPipeline() {
                         toast.success("Sincronização concluída! Redirecionando...", { id: loadingToast });
                         
                         // Pequeno delay para o state atualizar e o governance re-avaliar
-                        setTimeout(() => navigate("/"), 1000);
+                        setTimeout(() => navigate("/v1/"), 1000);
                       } catch (err) {
                         console.error("Force sync error:", err);
                         toast.error("Erro na sincronização. Tente novamente.", { id: loadingToast });

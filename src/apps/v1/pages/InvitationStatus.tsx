@@ -92,7 +92,7 @@ export default function InvitationStatus() {
             <Button onClick={() => window.location.reload()} className="w-full h-12 gap-2">
               <RefreshCw className="w-4 h-4" /> Tentar Novamente
             </Button>
-            <Button variant="outline" onClick={() => navigate("/")} className="w-full h-12">Voltar ao Início</Button>
+            <Button variant="outline" onClick={() => navigate("/v1/")} className="w-full h-12">Voltar ao Início</Button>
           </CardContent>
         </Card>
       </div>

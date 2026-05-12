@@ -274,7 +274,7 @@ export default function BehavioralDropoutPanel() {
                         size="sm"
                         variant="outline"
                         className="h-7 text-[11px] gap-1"
-                        onClick={() => navigate("/chat")}
+                        onClick={() => navigate("/v1/chat")}
                       >
                         <Send className="w-3 h-3" /> Mensagem
                       </Button>
@@ -282,7 +282,7 @@ export default function BehavioralDropoutPanel() {
                         size="sm"
                         variant="outline"
                         className="h-7 text-[11px] gap-1"
-                        onClick={() => navigate("/appointments")}
+                        onClick={() => navigate("/v1/appointments")}
                       >
                         <Calendar className="w-3 h-3" /> Retorno
                       </Button>

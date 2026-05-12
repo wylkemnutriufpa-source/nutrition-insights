@@ -146,7 +146,7 @@ export default function Branding() {
           <Button
             variant="outline"
             className="gap-2"
-            onClick={() => navigate("/landing")}
+            onClick={() => navigate("/v1/landing")}
           >
             <Globe className="w-4 h-4" />
             Ver Landing Page

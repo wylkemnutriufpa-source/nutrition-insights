@@ -30,7 +30,7 @@ export default function Welcome() {
     if (authStatus === "unauthenticated") {
       console.warn(`[RASTREADOR] Redirect para /auth disparado por: Welcome page`);
       navigatedRef.current = true;
-      navigate("/auth", { replace: true });
+      navigate("/v1/auth", { replace: true });
       return;
     }
 
@@ -90,7 +90,7 @@ export default function Welcome() {
         // Adicionamos redundância verificando se o pState não é explicitamente um estado inicial bloqueante.
         if (onboardingCompleted === true) {
           console.log("[NAV] Welcome -> Onboarding confirmed as completed, going to dashboard");
-          navigate("/client/dashboard", { replace: true });
+          navigate("/v1/client/dashboard", { replace: true });
           return;
         }
 

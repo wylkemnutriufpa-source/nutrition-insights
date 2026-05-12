@@ -55,12 +55,12 @@ export default function OnboardingProfissional() {
 
   const complete = useCallback(() => {
     localStorage.setItem(ONBOARDING_KEY, "true");
-    navigate("/");
+    navigate("/v1/");
   }, [navigate]);
 
   const skip = useCallback(() => {
     localStorage.setItem(ONBOARDING_KEY, "true");
-    navigate("/");
+    navigate("/v1/");
   }, [navigate]);
 
   // Keyboard nav

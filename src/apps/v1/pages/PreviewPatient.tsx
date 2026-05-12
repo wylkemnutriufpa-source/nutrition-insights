@@ -63,7 +63,7 @@ export default function PreviewPatient() {
       if (cancelled) return;
       if (!link) {
         toast.error("Você não está vinculado a este paciente");
-        navigate("/patients", { replace: true });
+        navigate("/v1/patients", { replace: true });
         return;
       }
 

@@ -55,7 +55,7 @@ export default function CockpitPremium() {
     setCreating(true);
     try {
       // Navigate to meal plans page which has proper creation flow
-      navigate("/meal-plans?action=new");
+      navigate("/v1/meal-plans?action=new");
     } catch {
       toast.error("Erro ao iniciar criação");
     } finally {

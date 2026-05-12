@@ -169,7 +169,7 @@ export default function PatientPriorityRadar() {
                     )}>
                       R {p.risk}%
                     </Badge>
-                    <Link to={`/patients/${p.id}`}>
+                    <Link to={`/v1/patients/${p.id}`}>
                       <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
                         <Eye className="w-3 h-3" />
                       </Button>

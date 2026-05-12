@@ -224,7 +224,7 @@ export default function PersonalDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Inactive Students Alert - clickable items */}
           <Card className={`${inactiveStudents.length > 0 ? "border-warning/30" : ""} cursor-pointer`}
-                onClick={() => navigate("/personal/students")}>
+                onClick={() => navigate("/v1/personal/students")}>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <UserX className="w-4 h-4 text-warning" />
@@ -252,7 +252,7 @@ export default function PersonalDashboard() {
           </Card>
 
           {/* Top Performers - clickable */}
-          <Card className="cursor-pointer" onClick={() => navigate("/ranking")}>
+          <Card className="cursor-pointer" onClick={() => navigate("/v1/ranking")}>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Trophy className="w-4 h-4 text-warning" />
@@ -317,7 +317,7 @@ export default function PersonalDashboard() {
         </div>
 
         {/* Adherence Overview - clickable */}
-        <Card className="cursor-pointer" onClick={() => navigate("/personal/students")}>
+        <Card className="cursor-pointer" onClick={() => navigate("/v1/personal/students")}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />

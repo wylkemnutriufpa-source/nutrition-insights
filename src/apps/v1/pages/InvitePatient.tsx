@@ -555,7 +555,7 @@ export default function InvitePatient() {
                 <Button variant="outline" onClick={() => { setCreated(false); setName(""); setEmail(""); setPhone(""); setTempPassword(""); setCreatedPatientId(null); }}>
                   Convidar outro
                 </Button>
-                <Button variant="ghost" onClick={() => navigate("/patients")}>
+                <Button variant="ghost" onClick={() => navigate("/v1/patients")}>
                   Ver pacientes
                 </Button>
               </div>

@@ -122,7 +122,7 @@ export default function OnlinePatientsWidget({ variant = "card", showPremiumTag 
             {onlinePatients.slice(0, 5).map(p => (
               <Link
                 key={p.user_id}
-                to={`/chat?with=${p.user_id}`}
+                to={`/v1/chat?with=${p.user_id}`}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-primary/10 transition-colors group"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />

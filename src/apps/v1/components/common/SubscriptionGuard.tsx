@@ -58,7 +58,7 @@ export default function SubscriptionGuard({
               : `Para acessar ${featureName}, você precisa ter uma assinatura ativa. Escolha um plano para continuar.`}
           </p>
         </div>
-        <Button onClick={() => navigate("/pricing")} className="gap-2 gradient-primary shadow-glow">
+        <Button onClick={() => navigate("/v1/pricing")} className="gap-2 gradient-primary shadow-glow">
           <Crown className="w-4 h-4" /> Ver Planos <ArrowRight className="w-4 h-4" />
         </Button>
       </CardContent>

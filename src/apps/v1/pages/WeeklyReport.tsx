@@ -211,7 +211,7 @@ export default function WeeklyReportPage() {
                       {report.topPerformers.map((p, i) => (
                         <Link
                           key={p.id}
-                          to={`/patients/${p.id}`}
+                          to={`/v1/patients/${p.id}`}
                           className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                         >
                           <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
@@ -245,7 +245,7 @@ export default function WeeklyReportPage() {
                       {report.needsAttention.map((p) => (
                         <Link
                           key={p.id}
-                          to={`/patients/${p.id}`}
+                          to={`/v1/patients/${p.id}`}
                           className="flex items-center gap-3 p-3 rounded-lg bg-warning/5 border border-warning/20 hover:bg-warning/10 transition-colors"
                         >
                           <div className="w-8 h-8 rounded-full bg-warning/10 flex items-center justify-center">

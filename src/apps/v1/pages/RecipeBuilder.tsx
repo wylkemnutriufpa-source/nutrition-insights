@@ -195,7 +195,7 @@ export default function RecipeBuilder() {
       <div className="max-w-3xl mx-auto space-y-6 pb-20">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/recipes")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/v1/recipes")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1 min-w-0">
@@ -375,7 +375,7 @@ export default function RecipeBuilder() {
                 className="flex-1"
                 onClick={() => {
                   setSavedDialogOpen(false);
-                  navigate("/recipes");
+                  navigate("/v1/recipes");
                 }}
               >
                 Voltar para Receitas

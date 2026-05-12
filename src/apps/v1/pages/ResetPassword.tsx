@@ -15,7 +15,7 @@ export default function ResetPassword() {
   useEffect(() => {
     const hash = window.location.hash;
     if (!hash.includes("type=recovery")) {
-      navigate("/auth");
+      navigate("/v1/auth");
     }
   }, [navigate]);
 
@@ -28,7 +28,7 @@ export default function ResetPassword() {
       toast.error(error.message);
     } else {
       toast.success("Senha atualizada com sucesso!");
-      navigate("/");
+      navigate("/v1/");
     }
   };
 

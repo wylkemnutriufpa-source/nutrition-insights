@@ -41,7 +41,7 @@ export const V2App = () => {
     <div className="relative min-h-screen bg-black">
       <Routes>
         {/* V2 has its own sub-routes, but since it's mounted at /v2/*, these are relative */}
-        <Route path="/auth" element={user ? <Navigate to="/v2" replace /> : <div className="p-20 text-white">Tela de Login V2 Placeholder</div>} />
+        <Route path="/auth" element={user ? <Navigate to="/v2/v2" replace /> : <div className="p-20 text-white">Tela de Login V2 Placeholder</div>} />
 
         <Route
           path="/"
@@ -58,7 +58,7 @@ export const V2App = () => {
         <Route path="/dashboard" element={user ? (isPro ? <PrescriptionDashboard /> : <PatientDietView />) : <Navigate to="/v2/auth" replace />} />
         <Route path="/my-diet" element={user ? <PatientDietView /> : <Navigate to="/v2/auth" replace />} />
 
-        <Route path="*" element={<Navigate to="/v2" replace />} />
+        <Route path="*" element={<Navigate to="/v2/v2" replace />} />
       </Routes>
     </div>
   );

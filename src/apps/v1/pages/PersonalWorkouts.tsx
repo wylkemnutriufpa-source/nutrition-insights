@@ -379,7 +379,7 @@ export default function PersonalWorkouts() {
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate("/personal/dashboard")}>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate("/v1/personal/dashboard")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             {activeTab !== "dashboard" && (

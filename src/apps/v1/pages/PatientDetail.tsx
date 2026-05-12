@@ -522,7 +522,7 @@ export default function PatientDetail() {
   const deletePatient = () => {
     if (!npId) return;
     deletePatientMutation.mutate(npId, {
-      onSuccess: () => navigate("/patients"),
+      onSuccess: () => navigate("/v1/patients"),
     });
   };
 
@@ -572,7 +572,7 @@ export default function PatientDetail() {
         <SmartAlertsBanner patientId={resolvedPatientId} onAction={(action) => setOpenSection(action)} />
         {/* Header */}
         <div className="flex items-center gap-4 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/v1/patients")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           {(() => {
@@ -802,7 +802,7 @@ export default function PatientDetail() {
             {expUI.showProtocols && (
             <>
             {isAdmin && (
-              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/professionals")}>
+              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/v1/admin/professionals")}>
                 <UserCog className="w-4 h-4" /> Gerenciar Profissionais
               </Button>
             )}

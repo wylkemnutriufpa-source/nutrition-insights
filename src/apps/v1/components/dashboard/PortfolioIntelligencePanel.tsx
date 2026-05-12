@@ -165,7 +165,7 @@ export default function PortfolioIntelligencePanel() {
             {riskPatients.map((p) => {
               const config = RISK_CONFIG[p.riskLevel];
               return (
-                <Link to={`/patients/${p.id}`} key={p.id}>
+                <Link to={`/v1/patients/${p.id}`} key={p.id}>
                   <motion.div
                     whileHover={{ x: 4 }}
                     className={`flex items-center gap-3 p-3 rounded-xl border ${config.border} ${config.bg} cursor-pointer transition-all`}

@@ -103,7 +103,7 @@ export default function StoreDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/store/products")}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/v1/store/products")}>
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 rounded-xl bg-emerald-500/10">
               <Package className="h-8 w-8 text-emerald-500" />
@@ -115,7 +115,7 @@ export default function StoreDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/store/technical-sheets")}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/v1/store/technical-sheets")}>
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 rounded-xl bg-blue-500/10">
               <FileText className="h-8 w-8 text-blue-500" />

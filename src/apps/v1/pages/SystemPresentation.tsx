@@ -103,7 +103,7 @@ export default function SystemPresentation() {
     if (type === "professional") setCinematicProDone(true);
     else setCinematicPatDone(true);
     setActiveCinematic(null);
-    navigate("/");
+    navigate("/v1/");
     toast.success("Apresentação concluída! 🎉");
   };
 
@@ -138,8 +138,8 @@ export default function SystemPresentation() {
         onSkip={() => setActiveCinematic(null)}
         finalCTAs={[
           { label: "Ir para Dashboard", icon: <LayoutDashboard className="w-4 h-4 mr-2" />, onClick: () => { handleCinematicFinish("professional"); } },
-          { label: "Criar primeiro paciente", icon: <Users className="w-4 h-4 mr-2" />, onClick: () => { handleCinematicFinish("professional"); navigate("/patients"); } },
-          { label: "Explorar editor de planos", icon: <Rocket className="w-4 h-4 mr-2" />, onClick: () => { handleCinematicFinish("professional"); navigate("/editor-v2"); } },
+          { label: "Criar primeiro paciente", icon: <Users className="w-4 h-4 mr-2" />, onClick: () => { handleCinematicFinish("professional"); navigate("/v1/patients"); } },
+          { label: "Explorar editor de planos", icon: <Rocket className="w-4 h-4 mr-2" />, onClick: () => { handleCinematicFinish("professional"); navigate("/v1/editor-v2"); } },
         ]}
       />
     );
@@ -324,7 +324,7 @@ export default function SystemPresentation() {
                     <p className="text-sm text-muted-foreground">Tour contextual pelo dashboard com spotlight e tooltips.</p>
                     <span className="text-xs text-muted-foreground mt-1 block">{PROFESSIONAL_TOUR_STEPS.length} passos interativos</span>
                   </div>
-                  <Button onClick={() => { localStorage.removeItem("tour_professional_completed"); navigate("/"); toast.info("Tour será iniciado no dashboard!"); }} variant="outline" className="flex-shrink-0">
+                  <Button onClick={() => { localStorage.removeItem("tour_professional_completed"); navigate("/v1/"); toast.info("Tour será iniciado no dashboard!"); }} variant="outline" className="flex-shrink-0">
                     <Play className="w-4 h-4 mr-1" /> Iniciar Tour
                   </Button>
                 </CardContent>
@@ -340,7 +340,7 @@ export default function SystemPresentation() {
                   <p className="text-sm text-muted-foreground">Tour contextual pelo app do paciente.</p>
                   <span className="text-xs text-muted-foreground mt-1 block">{PATIENT_TOUR_STEPS.length} passos interativos</span>
                 </div>
-                <Button onClick={() => { localStorage.removeItem("tour_patient_completed"); navigate("/"); toast.info("Tour será iniciado no dashboard!"); }} variant="outline" className="flex-shrink-0">
+                <Button onClick={() => { localStorage.removeItem("tour_patient_completed"); navigate("/v1/"); toast.info("Tour será iniciado no dashboard!"); }} variant="outline" className="flex-shrink-0">
                   <Play className="w-4 h-4 mr-1" /> Iniciar Tour
                 </Button>
               </CardContent>

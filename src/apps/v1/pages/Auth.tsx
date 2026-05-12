@@ -41,7 +41,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   /* useEffect(() => {
     if (authStatus === "authenticated") {
       console.log("[Auth] Usuário já autenticado. Redirecionando para /dashboard...");
-      navigate("/dashboard", { replace: true });
+      navigate("/v1/dashboard", { replace: true });
     }
   }, [authStatus, navigate]); */
 

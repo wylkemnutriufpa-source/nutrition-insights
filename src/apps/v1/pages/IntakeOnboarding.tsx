@@ -88,7 +88,7 @@ export default function IntakeOnboarding() {
   useEffect(() => {
     if (status === "valid" && tokenData && user) {
       if (user.id === tokenData.patient_id) {
-        navigate("/onboarding", { replace: true });
+        navigate("/v1/onboarding", { replace: true });
       }
     }
   }, [status, tokenData, user, navigate]);
@@ -141,7 +141,7 @@ export default function IntakeOnboarding() {
           <Icon className="w-12 h-12 text-muted-foreground mx-auto" />
           <h2 className="text-xl font-bold">{errorConfig.title}</h2>
           <p className="text-muted-foreground text-sm">{errorConfig.description}</p>
-          <Button variant="outline" onClick={() => navigate("/")}>
+          <Button variant="outline" onClick={() => navigate("/v1/")}>
             Voltar ao início
           </Button>
         </CardContent>

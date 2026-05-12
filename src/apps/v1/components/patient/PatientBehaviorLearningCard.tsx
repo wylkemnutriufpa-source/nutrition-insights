@@ -51,7 +51,7 @@ export default function PatientBehaviorLearningCard() {
       className="glass-premium rounded-2xl overflow-hidden shimmer-sweep cursor-pointer hover:shadow-xl transition-all duration-300 ring-1 ring-white/5 hover:ring-primary/20"
       onClick={() => {
         console.log("[ACTION] Behavior card clicked");
-        navigate("/checklist");
+        navigate("/v1/checklist");
       }}
     >
       <div className="p-5 pb-3 flex items-center gap-3">

@@ -284,7 +284,7 @@ export default function ProgramDetail() {
       <DashboardLayout>
         <div className="text-center py-20">
           <p className="text-muted-foreground">Programa não encontrado.</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/programs")}>Voltar</Button>
+          <Button variant="outline" className="mt-4" onClick={() => navigate("/v1/programs")}>Voltar</Button>
         </div>
       </DashboardLayout>
     );
@@ -375,7 +375,7 @@ export default function ProgramDetail() {
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvc3ZnPg==')] opacity-50" />
               <div className="relative flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/programs")}>
+                  <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/v1/programs")}>
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                   <div>
@@ -783,7 +783,7 @@ export default function ProgramDetail() {
                 Selecione um protocolo para ativá-lo em massa para todos os {patients.length} pacientes do programa.
               </p>
               {protocols.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum protocolo criado. <button onClick={() => navigate("/protocols")} className="text-primary underline">Criar protocolo</button></p>
+                <p className="text-sm text-muted-foreground">Nenhum protocolo criado. <button onClick={() => navigate("/v1/protocols")} className="text-primary underline">Criar protocolo</button></p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {protocols.map(p => (

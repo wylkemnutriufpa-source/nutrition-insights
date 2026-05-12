@@ -25,7 +25,7 @@ export default function NutritionistStatusBanner({ patientId }: Props) {
           exit={{ opacity: 0, y: -10 }}
         >
           <Link
-            to={`/chat?with=${nutritionistId}`}
+            to={`/v1/chat?with=${nutritionistId}`}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${borderColor} bg-gradient-to-r ${bgColor} hover:scale-[1.01] transition-all cursor-pointer`}
           >
             <div className="relative">

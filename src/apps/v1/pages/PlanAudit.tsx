@@ -1345,7 +1345,7 @@ const PlanAudit = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link
-                        to={`/patients/${row.patient_id}`}
+                        to={`/v1/patients/${row.patient_id}`}
                         className="font-medium truncate hover:underline"
                       >
                         {row.patient_name ?? "Sem nome"}
@@ -1379,7 +1379,7 @@ const PlanAudit = () => {
                         size="sm"
                         className="gap-1.5"
                       >
-                        <Link to={`/meal-plans/${row.latest_plan_id}`}>
+                        <Link to={`/v1/meal-plans/${row.latest_plan_id}`}>
                           <ExternalLink className="w-3.5 h-3.5" />
                           Abrir editor
                         </Link>
@@ -1407,7 +1407,7 @@ const PlanAudit = () => {
                         variant="secondary"
                         className="gap-1.5"
                       >
-                        <Link to={`/patients/${row.patient_id}`}>
+                        <Link to={`/v1/patients/${row.patient_id}`}>
                           <Sparkles className="w-3.5 h-3.5" />
                           Gerar plano
                         </Link>
@@ -2015,7 +2015,7 @@ const PlanAudit = () => {
                         <TableRow key={row.id}>
                           <TableCell className="text-[10px]">{formatDate(row.created_at)}</TableCell>
                           <TableCell className="text-xs">
-                             <Link to={`/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
+                             <Link to={`/v1/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
                                {row.plan_id?.slice(0, 8)}
                              </Link>
                           </TableCell>
@@ -2030,7 +2030,7 @@ const PlanAudit = () => {
                           <TableCell>
                             {row.audit_run_id && (
                               <Link 
-                                to={`/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
+                                to={`/v1/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
                                 className="text-[10px] text-primary hover:underline flex items-center gap-1"
                               >
                                 <ExternalLink className="w-3 h-3" /> Snapshot
@@ -2071,7 +2071,7 @@ const PlanAudit = () => {
                         <TableRow key={row.id}>
                           <TableCell className="text-[10px]">{formatDate(row.created_at)}</TableCell>
                           <TableCell className="text-xs">
-                             <Link to={`/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
+                             <Link to={`/v1/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
                                {row.plan_id?.slice(0, 8)}
                              </Link>
                           </TableCell>
@@ -2083,7 +2083,7 @@ const PlanAudit = () => {
                           </TableCell>
                           <TableCell>
                              <Link 
-                                to={`/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
+                                to={`/v1/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
                                 className="text-[10px] text-primary hover:underline flex items-center gap-1"
                               >
                                 <ExternalLink className="w-3 h-3" /> Snapshot

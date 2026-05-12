@@ -166,7 +166,7 @@ export default function PatientGridDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card
               className="cursor-pointer border-none bg-orange-500/5 hover:bg-orange-500/10 transition-all p-5 flex items-center gap-4 group rounded-2xl"
-              onClick={() => navigate("/recipes")}
+              onClick={() => navigate("/v1/recipes")}
             >
               <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
                 <ChefHat className="w-6 h-6 text-orange-600" />
@@ -180,7 +180,7 @@ export default function PatientGridDashboard() {
 
             <Card
               className="cursor-pointer border-none bg-primary/5 hover:bg-primary/10 transition-all p-5 flex items-center gap-4 group rounded-2xl"
-              onClick={() => navigate("/checkin")}
+              onClick={() => navigate("/v1/checkin")}
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <CameraIcon className="w-6 h-6 text-primary" />
@@ -208,7 +208,7 @@ export default function PatientGridDashboard() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card
             className="relative cursor-pointer overflow-hidden border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-600/5 to-teal-500/10 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group"
-            onClick={() => navigate("/onboarding")}
+            onClick={() => navigate("/v1/onboarding")}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex items-center gap-4 p-4">
@@ -242,7 +242,7 @@ export default function PatientGridDashboard() {
           <p className="text-sm text-muted-foreground max-w-xs mx-auto">
             {lifecycle.blockReason || "Para acessar seus recursos, conclua as etapas essenciais do onboarding primeiro."}
           </p>
-          <Button onClick={() => navigate("/onboarding")} className="gap-2">
+          <Button onClick={() => navigate("/v1/onboarding")} className="gap-2">
             <Rocket className="w-4 h-4" /> Continuar Onboarding
           </Button>
         </div>

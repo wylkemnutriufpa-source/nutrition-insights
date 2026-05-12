@@ -368,13 +368,13 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
     if (data?.pendingAction) {
       navigate(data.pendingAction.route);
     } else {
-      navigate("/");
+      navigate("/v1/");
     }
     handleClose();
   };
 
   const handleDashboard = () => {
-    navigate("/");
+    navigate("/v1/");
     handleClose();
   };
 

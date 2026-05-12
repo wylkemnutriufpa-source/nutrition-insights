@@ -1173,7 +1173,7 @@ export default function Anamnesis() {
       // automaticamente para /body-analysis.
       setTimeout(() => {
         if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
-        navigate("/client/dashboard", { replace: true });
+        navigate("/v1/client/dashboard", { replace: true });
       }, 1500);
 
       void (async () => {
@@ -1396,7 +1396,7 @@ export default function Anamnesis() {
               <div className="flex flex-col gap-3">
                 {isPipelineMode && !isNutritionistMode ? (
                   <>
-                    <Button onClick={() => navigate("/", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
+                    <Button onClick={() => navigate("/v1/", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
                       <ArrowRight className="w-4 h-4" /> Ir para meu Dashboard 🚀
                     </Button>
                     <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
@@ -1409,7 +1409,7 @@ export default function Anamnesis() {
                       ✏️ Revisar / Editar Respostas
                     </Button>
                     {!isNutritionistMode && hasActivePipeline ? (
-                      <Button onClick={() => navigate("/", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
+                      <Button onClick={() => navigate("/v1/", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
                         <ArrowRight className="w-4 h-4" /> Ir para meu Dashboard 🚀
                       </Button>
                     ) : (
@@ -1615,7 +1615,7 @@ export default function Anamnesis() {
                 if (isNutritionistMode && forPatientId) {
                   navigate(`/patients/${forPatientId}`);
                 } else {
-                  navigate("/");
+                  navigate("/v1/");
                 }
               }}
               className="gap-1.5 text-muted-foreground"

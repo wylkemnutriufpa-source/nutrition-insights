@@ -128,7 +128,7 @@ export default function MyTeamTab() {
                         Desde {new Date(link.created_at).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
-                    <Link to={`/chat?contact=${link.professional_id}`}>
+                    <Link to={`/v1/chat?contact=${link.professional_id}`}>
                       <Button variant="ghost" size="icon" className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                         <MessageCircle className="w-4 h-4" />
                       </Button>

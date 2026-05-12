@@ -966,7 +966,7 @@ export default function AdminDashboard() {
               variant="outline"
               size="sm"
               className="gap-2 bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800 transition-all shadow-sm group"
-              onClick={() => navigate("/admin/health-live")}
+              onClick={() => navigate("/v1/admin/health-live")}
             >
               <Activity className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
               <span className="font-bold tracking-tighter uppercase text-[10px]">Health Control Tower</span>
@@ -996,7 +996,7 @@ export default function AdminDashboard() {
 
               {/* Quick actions */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/admin/resources")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Settings className="w-8 h-8 text-primary" />
                     <div>
@@ -1005,7 +1005,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/admin/resources")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Star className="w-8 h-8 text-amber-400" />
                     <div>
@@ -1014,7 +1014,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/import-patients")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/import-patients")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Globe className="w-8 h-8 text-blue-400" />
                     <div>
@@ -1023,7 +1023,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/professionals")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/admin/professionals")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Users className="w-8 h-8 text-primary" />
                     <div>
@@ -1032,7 +1032,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/ranking")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/ranking")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Crown className="w-8 h-8 text-yellow-400" />
                     <div>
@@ -1041,7 +1041,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/prestige")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/admin/prestige")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Sparkles className="w-8 h-8 text-purple-400" />
                     <div>
@@ -1050,7 +1050,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/menu-config")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/admin/menu-config")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <LayoutGrid className="w-8 h-8 text-emerald-400" />
                     <div>
@@ -1059,7 +1059,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/branding")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/branding")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Palette className="w-8 h-8 text-pink-400" />
                     <div>
@@ -1068,7 +1068,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/apresentacao")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/v1/apresentacao")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <GraduationCap className="w-8 h-8 text-primary" />
                     <div>
@@ -1077,7 +1077,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/20" onClick={() => navigate("/personal/workouts")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/20" onClick={() => navigate("/v1/personal/workouts")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Dumbbell className="w-8 h-8 text-orange-400" />
                     <div>
@@ -1086,7 +1086,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/20" onClick={() => navigate("/admin/meal-visual-library")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/20" onClick={() => navigate("/v1/admin/meal-visual-library")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <ImageIcon className="w-8 h-8 text-emerald-400" />
                     <div>
@@ -1144,7 +1144,7 @@ export default function AdminDashboard() {
             {/* ─── Admin Tools ─── */}
             <TabsContent value="admin" className="mt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/image-fallback")}>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/v1/admin/image-fallback")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="font-display text-lg flex items-center gap-2">
                       <ImageIcon className="w-5 h-5 text-primary" />
@@ -1159,7 +1159,7 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/mass-reformulation")}>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/v1/admin/mass-reformulation")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="font-display text-lg flex items-center gap-2">
                       <Zap className="w-5 h-5 text-primary" />
@@ -1173,7 +1173,7 @@ export default function AdminDashboard() {
                     <Button variant="link" className="p-0 h-auto mt-2 text-primary">Acessar Painel →</Button>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/invitation-audit")}>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/v1/admin/invitation-audit")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="font-display text-lg flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-primary" />
@@ -1188,7 +1188,7 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/qa-checklist")}>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/v1/admin/qa-checklist")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="font-display text-lg flex items-center gap-2">
                       <ClipboardCheck className="w-5 h-5 text-primary" />
@@ -1257,7 +1257,7 @@ export default function AdminDashboard() {
             <TabsContent value="audit" className="mt-4 space-y-4">
               <Card
                 className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-destructive/30"
-                onClick={() => navigate("/admin/template-nutrition-audit")}
+                onClick={() => navigate("/v1/admin/template-nutrition-audit")}
               >
                 <CardContent className="flex items-center gap-4 py-5">
                   <Shield className="w-8 h-8 text-destructive" />

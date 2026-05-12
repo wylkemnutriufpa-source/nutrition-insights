@@ -82,7 +82,7 @@ export default function InOfficeWizard() {
         const tenantId = np?.tenant_id;
         if (!tenantId) {
           toast.error("Paciente não vinculado");
-          navigate("/patients");
+          navigate("/v1/patients");
           return;
         }
 

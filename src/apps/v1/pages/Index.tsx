@@ -439,7 +439,7 @@ function NutritionistDashboardContent() {
             </div>
             <div className="flex items-center gap-3">
               {unreadChats > 0 && (
-                <Button variant="outline" size="sm" className="gap-2 rounded-xl" onClick={() => navigate("/chat")}>
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl" onClick={() => navigate("/v1/chat")}>
                   <MessageSquare className="w-4 h-4" />
                   {unreadChats} mensagem{unreadChats > 1 ? "s" : ""}
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -472,9 +472,9 @@ function NutritionistDashboardContent() {
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
       <motion.div variants={item} className={`grid grid-cols-2 sm:grid-cols-3 ${isBasic ? "lg:grid-cols-4" : "lg:grid-cols-6"} gap-3`}>
-        <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/patients")} />
-        <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/appointments")} />
-        <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
+        <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/v1/patients")} />
+        <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/v1/appointments")} />
+        <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/v1/checkin-panel")} />
         <OnlinePatientsWidget variant="card" showPremiumTag={false} />
         <ChatDashboardWidget />
       </motion.div>

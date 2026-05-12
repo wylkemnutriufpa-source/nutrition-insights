@@ -262,7 +262,7 @@ export default function ClinicalAIEntity() {
               )}
               {signal.patientId && (
                 <div className="flex gap-1.5 mt-2">
-                  <Link to={`/patients/${signal.patientId}`}>
+                  <Link to={`/v1/patients/${signal.patientId}`}>
                     <Button size="sm" variant="outline" className="h-6 text-[10px] border-white/20 text-white/60 hover:text-white">
                       <Eye className="w-3 h-3 mr-1" /> Revisar
                     </Button>

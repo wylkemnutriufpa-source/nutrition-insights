@@ -46,7 +46,7 @@ export default function TrialCountdown() {
 
   return (
     <button
-      onClick={() => navigate("/pricing")}
+      onClick={() => navigate("/v1/pricing")}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer hover:scale-105 ${
         isUrgent
           ? "bg-destructive/15 text-destructive border border-destructive/30 animate-pulse"

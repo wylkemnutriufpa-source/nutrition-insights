@@ -666,7 +666,7 @@ export default function PatientRegister() {
         
         setTimeout(() => {
           setSyncStatus("success", "PATIENT_REGISTER");
-          navigate("/client/dashboard", { replace: true });
+          navigate("/v1/client/dashboard", { replace: true });
         }, 1000);
         return;
       }
@@ -718,7 +718,7 @@ export default function PatientRegister() {
                   Verifique seu e-mail para confirmar a conta. Depois, faça login para iniciar sua jornada.
                 </p>
               </div>
-              <Button onClick={() => navigate("/auth")} className="w-full">
+              <Button onClick={() => navigate("/v1/auth")} className="w-full">
                 Ir para Login <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
@@ -873,7 +873,7 @@ export default function PatientRegister() {
                 <Button asChild variant="outline" className="w-full h-12">
                   <Link to="/v1/auth">{INVITATION_TEXTS.ALREADY_HAS_ACCOUNT}</Link>
                 </Button>
-                <Button variant="ghost" onClick={() => navigate("/")} className="text-xs text-muted-foreground">
+                <Button variant="ghost" onClick={() => navigate("/v1/")} className="text-xs text-muted-foreground">
                   Voltar para o Início
                 </Button>
               </div>
@@ -1092,7 +1092,7 @@ export default function PatientRegister() {
 
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">
-                  Já tem conta? <Link to={`/auth?next=${encodeURIComponent(currentCadastroPath)}`} className="text-primary hover:underline font-medium">Entrar agora</Link>
+                  Já tem conta? <Link to={`/v1/auth?next=${encodeURIComponent(currentCadastroPath)}`} className="text-primary hover:underline font-medium">Entrar agora</Link>
                 </p>
               </div>
             </form>

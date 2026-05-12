@@ -266,7 +266,7 @@ export default function BiquiniBrancoDetail() {
       <DashboardLayout>
         <div className="text-center py-20">
           <p className="text-muted-foreground">Programa não encontrado.</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/programs")}>Voltar</Button>
+          <Button variant="outline" className="mt-4" onClick={() => navigate("/v1/programs")}>Voltar</Button>
         </div>
       </DashboardLayout>
     );
@@ -299,7 +299,7 @@ export default function BiquiniBrancoDetail() {
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA4KSIvPjwvc3ZnPg==')] opacity-50" />
               <div className="relative flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => navigate("/programs")}>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => navigate("/v1/programs")}>
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                   <div>

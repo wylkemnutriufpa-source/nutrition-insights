@@ -35,7 +35,7 @@ export default function ClinicalInsightsCard() {
   if (patterns.length === 0) return null;
 
   return (
-    <Card className="glass border-border/50 hover:border-primary/30 transition-all duration-300 cursor-pointer group" onClick={() => navigate("/journey")}>
+    <Card className="glass border-border/50 hover:border-primary/30 transition-all duration-300 cursor-pointer group" onClick={() => navigate("/v1/journey")}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-display flex items-center gap-2">
           <Brain className="w-4 h-4 text-primary" />

@@ -242,7 +242,7 @@ export default function NotificationBell() {
             className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary"
             onClick={() => {
               setOpen(false);
-              navigate("/notifications");
+              navigate("/v1/notifications");
             }}
           >
             Ver Histórico Completo

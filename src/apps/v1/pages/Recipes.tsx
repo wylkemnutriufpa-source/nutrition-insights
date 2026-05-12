@@ -377,7 +377,7 @@ function PatientRecipes() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="font-display text-2xl font-bold flex items-center gap-2"><ChefHat className="w-6 h-6 text-primary" /> Receitas</h1>
-        <Button onClick={() => navigate("/recipe-builder")} className="gradient-primary gap-2">
+        <Button onClick={() => navigate("/v1/recipe-builder")} className="gradient-primary gap-2">
           <Calculator className="w-4 h-4" /> Criar Receita
         </Button>
       </div>

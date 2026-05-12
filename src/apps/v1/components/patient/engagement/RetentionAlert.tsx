@@ -94,7 +94,7 @@ export default function RetentionAlert({
             size="sm" 
             variant={config.variant === "warning" ? "outline" : "default"}
             className="whitespace-nowrap gap-2 w-full md:w-auto"
-            onClick={() => navigate("/patient-plan")}
+            onClick={() => navigate("/v1/patient-plan")}
           >
             {config.buttonText}
             <ArrowRight className="w-4 h-4" />

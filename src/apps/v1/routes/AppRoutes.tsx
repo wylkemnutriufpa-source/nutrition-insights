@@ -283,7 +283,7 @@ export const AppRoutes = () => {
             (() => {
               const search = window.location.search;
               console.log("[NAV] Root path redirecting to /welcome", { authStatus, search });
-              return <Navigate to={`/welcome${search}`} replace />;
+              return <Navigate to={`/v1/welcome${search}`} replace />;
             })()
           ) : (
             <Auth />

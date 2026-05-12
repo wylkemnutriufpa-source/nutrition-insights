@@ -191,7 +191,7 @@ export default function PublicDemo() {
       {/* Sticky top bar */}
       <div className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-background/70 border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 h-14">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm">
+          <button onClick={() => navigate("/v1/")} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm">
             <ArrowLeft className="w-4 h-4" /> Voltar
           </button>
           <div className="flex items-center gap-2">
@@ -201,10 +201,10 @@ export default function PublicDemo() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => navigate("/demo")} className="text-xs h-8 border-white/10 text-white/60 hover:text-white">
+            <Button size="sm" variant="outline" onClick={() => navigate("/v1/demo")} className="text-xs h-8 border-white/10 text-white/60 hover:text-white">
               {isPro ? "Ver visão Paciente" : "Ver visão Profissional"}
             </Button>
-            <Button size="sm" onClick={() => navigate("/auth")} className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8">
+            <Button size="sm" onClick={() => navigate("/v1/auth")} className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8">
               Começar Agora
             </Button>
           </div>
@@ -284,7 +284,7 @@ export default function PublicDemo() {
             }
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate("/auth")} className="h-14 px-10 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-base">
+            <Button size="lg" onClick={() => navigate("/v1/auth")} className="h-14 px-10 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-base">
               <Rocket className="w-5 h-5 mr-2" /> Criar Conta Grátis
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate(isPro ? "/demo/paciente" : "/demo/profissional")} className="h-14 px-10 border-white/10 text-white/70 hover:text-white rounded-xl text-base">

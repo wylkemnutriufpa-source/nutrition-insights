@@ -232,9 +232,9 @@ export default function ClientDashboard() {
                 </div>
                 <Button 
                   onClick={() => {
-                    if (journeyStatus === 'anamnesis') navigate("/anamnesis");
-                    else if (journeyStatus === 'collecting_profile') navigate("/onboarding/paciente"); // Or wherever collecting_profile goes
-                    else navigate("/onboarding/paciente");
+                    if (journeyStatus === 'anamnesis') navigate("/v1/anamnesis");
+                    else if (journeyStatus === 'collecting_profile') navigate("/v1/onboarding/paciente"); // Or wherever collecting_profile goes
+                    else navigate("/v1/onboarding/paciente");
                   }} 
                   size="sm" 
                   className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"

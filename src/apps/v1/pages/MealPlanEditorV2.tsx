@@ -388,7 +388,7 @@ export default function MealPlanEditorV2() {
             if (returnTo) {
               navigate(decodeURIComponent(returnTo));
             } else {
-              navigate("/meal-plans");
+              navigate("/v1/meal-plans");
             }
           }}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
@@ -896,7 +896,7 @@ export default function MealPlanEditorV2() {
                   } else if (plan?.patient_id) {
                     navigate(`/patients/${plan.patient_id}`);
                   } else {
-                    navigate("/meal-plans");
+                    navigate("/v1/meal-plans");
                   }
                 }
               }}

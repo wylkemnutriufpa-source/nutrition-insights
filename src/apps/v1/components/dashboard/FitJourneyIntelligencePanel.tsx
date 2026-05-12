@@ -210,7 +210,7 @@ export default function FitJourneyIntelligencePanel() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + i * 0.1 }}
                 >
-                  <Link to={`/patients/${p.id}`}>
+                  <Link to={`/v1/patients/${p.id}`}>
                     <div className="flex items-center justify-between p-2.5 rounded-lg bg-background/60 border border-border/50 hover:border-primary/30 transition-colors cursor-pointer group">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className={cn(

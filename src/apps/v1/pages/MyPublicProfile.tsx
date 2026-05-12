@@ -119,7 +119,7 @@ export default function MyPublicProfile() {
             <p className="text-muted-foreground text-sm mt-1">Configure sua página pública para atrair novos pacientes</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/branding")} className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/v1/branding")} className="gap-2">
               <Palette className="w-4 h-4" /> Customizar Cores
             </Button>
           </div>

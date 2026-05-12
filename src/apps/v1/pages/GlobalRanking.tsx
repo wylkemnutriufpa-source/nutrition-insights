@@ -522,7 +522,7 @@ export default function GlobalRanking() {
             </CardContent>
           </Card>
           {isNutritionist && (
-            <Button onClick={() => navigate("/pricing")} className="gap-2">
+            <Button onClick={() => navigate("/v1/pricing")} className="gap-2">
               <Crown className="w-4 h-4" /> Ver Planos Premium
             </Button>
           )}

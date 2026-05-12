@@ -305,7 +305,7 @@ export default function Settings() {
                     Gerenciar Assinatura <ExternalLink className="w-3 h-3" />
                   </Button>
                 ) : (
-                  <Button className="gap-2 gradient-primary shadow-glow" onClick={() => navigate("/pricing")}>
+                  <Button className="gap-2 gradient-primary shadow-glow" onClick={() => navigate("/v1/pricing")}>
                     <Crown className="w-4 h-4" /> Ver Planos e Assinar
                   </Button>
                 )}
@@ -330,7 +330,7 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground mb-3">
                 Você possui um plano alimentar ativo como paciente. Acesse para visualizar suas refeições.
               </p>
-              <Button variant="outline" className="gap-2 border-violet-500/30 hover:bg-violet-500/10" onClick={() => navigate("/my-diet")}>
+              <Button variant="outline" className="gap-2 border-violet-500/30 hover:bg-violet-500/10" onClick={() => navigate("/v1/my-diet")}>
                 <UtensilsCrossed className="w-4 h-4" /> Ver Minha Dieta
               </Button>
             </CardContent>

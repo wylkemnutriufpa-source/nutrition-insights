@@ -656,7 +656,7 @@ export default function AdminProfessionals() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/v1/admin")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <Shield className="w-7 h-7 text-primary" />

@@ -35,7 +35,7 @@ export default function TherapeuticMomentumBar() {
       whileTap={{ scale: 0.98 }}
       onClick={() => {
         console.log("[ACTION] Momentum bar clicked");
-        navigate("/journey");
+        navigate("/v1/journey");
       }}
       className={`rounded-xl border ${config.bg} p-3 flex items-center gap-3 cursor-pointer hover:shadow-md transition-all duration-300 group`}
     >

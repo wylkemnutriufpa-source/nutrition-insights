@@ -170,7 +170,7 @@ export default function HybridPlanBuilder() {
 
   const storeReady = store.planId === id && store.hydrated && !store.hydrating;
   if (!storeReady) return <DashboardLayout><div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div></DashboardLayout>;
-  if (store.hydrated && !store.plan) return <DashboardLayout><div className="text-center py-20"><p>Plano não encontrado.</p><Button onClick={() => navigate("/meal-plans")}>Voltar</Button></div></DashboardLayout>;
+  if (store.hydrated && !store.plan) return <DashboardLayout><div className="text-center py-20"><p>Plano não encontrado.</p><Button onClick={() => navigate("/v1/meal-plans")}>Voltar</Button></div></DashboardLayout>;
 
   const plan = store.plan!;
   const isImmutable = ["approved", "published", "published_to_patient"].includes(plan.plan_status);
@@ -267,7 +267,7 @@ export default function HybridPlanBuilder() {
                 if (returnTo) {
                   navigate(decodeURIComponent(returnTo));
                 } else {
-                  navigate("/meal-plans");
+                  navigate("/v1/meal-plans");
                 }
               }} 
               onSave={handleSave} 
