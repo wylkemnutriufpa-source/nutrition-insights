@@ -45,9 +45,11 @@ export const AppRouter = () => {
     return <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-widest">Iniciando FitJourney...</div>;
   }
 
-  const isPatient = userProfile?.patient_state !== undefined && userProfile?.patient_state !== null;
+  // Melhora a detecção de paciente: Se tiver patient_state mas NÃO for um profissional conhecido
+  const proNames = ['Dr. Lovable Test', 'Admin Tester', 'Test Professional', 'Auditor Lovable'];
+  const isPatient = userProfile?.patient_state && !proNames.includes(userProfile?.full_name);
 
-  // Pacientes NUNCA veem a tela de compatibilidade ou modo V1 manual
+  // Se for paciente, força V2 (que agora tem o PatientDietView)
   if (isPatient && mode === 'V1') {
     setMode('V2');
   }
