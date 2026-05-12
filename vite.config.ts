@@ -16,6 +16,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@v1": path.resolve(__dirname, "./src/apps/v1"),
+      "@v2": path.resolve(__dirname, "./src/apps/v2"),
     },
   },
 }));
