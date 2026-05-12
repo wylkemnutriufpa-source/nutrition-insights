@@ -646,18 +646,24 @@ export const useEditorState = create<EditorState>()(
                   items: m.items.map((i) => {
                     if (i.instanceId === instanceId) {
                       const updatedItem = { ...i, ...updates };
+                      
+                      // Se a quantidade mudou, recalculamos a massa clínica
                       if (updates.quantity !== undefined) {
-                        const newMacros = calculateItemMacros(updatedItem, updatedItem.quantity);
-                        return {
-                          ...updatedItem,
-                          kcal: newMacros.kcal,
-                          calories: newMacros.kcal,
-                          protein: newMacros.protein,
-                          carbs: newMacros.carbs,
-                          fat: newMacros.fat
-                        };
+                        const pValue = updatedItem.portionValue || 1;
+                        updatedItem.clinical_mass_g = (updatedItem.measurementType === 'gram' || updatedItem.measurementType === 'ml')
+                          ? updatedItem.quantity
+                          : updatedItem.quantity * pValue;
                       }
-                      return updatedItem;
+
+                      const newMacros = calculateItemMacros(updatedItem, updatedItem.quantity);
+                      return {
+                        ...updatedItem,
+                        kcal: newMacros.kcal,
+                        calories: newMacros.kcal,
+                        protein: newMacros.protein,
+                        carbs: newMacros.carbs,
+                        fat: newMacros.fat
+                      };
                     }
                     return i;
                   }),
@@ -667,7 +673,6 @@ export const useEditorState = create<EditorState>()(
           planStatus: 'draft',
         }));
 
-        // REGRA: Se o alimento principal mudou, a imagem deve mudar (se não for manual)
         const currentMeal = get().meals.find(m => m.id === mealId);
         if (currentMeal && currentMeal.imageSource !== 'manual' && (updates.id || updates.name)) {
           const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
