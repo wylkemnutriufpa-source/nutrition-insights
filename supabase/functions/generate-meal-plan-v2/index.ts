@@ -351,7 +351,7 @@ Deno.serve(async (req) => {
     const { data: foods, error: ferr } = await supabase
       .from("food_database")
       .select("id, name, calories, protein, carbs, fat, fiber")
-      .or(`nutritionist_id.is.null,nutritionist_id.eq.${userId}`);
+      .or(`nutritionist_id.is.null,nutritionist_id.eq.${nutritionistId}`);
     if (ferr) return json({ error: "Falha ao carregar alimentos", details: ferr.message }, 500);
 
     const built = buildPlan(metrics, foods ?? []);
