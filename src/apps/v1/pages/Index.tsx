@@ -1,72 +1,34 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useExperienceMode } from "@v1/hooks/useExperienceMode";
-import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@v1/components/common/GuidedTour";
-import { motion, AnimatePresence } from "framer-motion";
-import PatientGridDashboard from "@v1/components/dashboard/PatientGridDashboard";
-import FitJourneyTimeline from "@v1/components/timeline/FitJourneyTimeline";
-import ProStrategicDashboard from "@v1/components/dashboard/ProStrategicDashboard";
-import { useLayoutPreference } from "@v1/hooks/useLayoutPreference";
-import { LayoutGrid, List as ListIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@v1/lib/auth";
-import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
 import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import AIInsightsPanel from "@v1/components/dashboard/AIInsightsPanel";
-import AttentionPatientsPanel from "@v1/components/dashboard/AttentionPatientsPanel";
-import PatientEvolutionCharts from "@v1/components/dashboard/PatientEvolutionCharts";
-import RiskPanel from "@v1/components/dashboard/RiskPanel";
-import HealthScoreRing, { calculateHealthScore } from "@v1/components/dashboard/HealthScoreRing";
-import AdherenceAnalytics from "@v1/components/dashboard/AdherenceAnalytics";
-import DashboardAdvancedCharts from "@v1/components/dashboard/DashboardAdvancedCharts";
-import AnalyticsDashboard from "@v1/components/dashboard/AnalyticsDashboard";
-import AIStrategyCenter from "@v1/components/dashboard/AIStrategyCenter";
-import { Dialog, DialogContent } from "@v1/components/ui/dialog";
-import SystemUsageCard from "@v1/components/dashboard/SystemUsageCard";
-import NutritionCopilot from "@v1/components/dashboard/NutritionCopilot";
-import ChurnRiskPanel from "@v1/components/dashboard/ChurnRiskPanel";
-import StagnationAlerts from "@v1/components/dashboard/StagnationAlerts";
-import ClinicalRiskDashboardContent from "@v1/components/dashboard/ClinicalRiskDashboardContent";
-import PendingApprovalsModal, { usePendingApprovals } from "@v1/components/patient/PendingApprovalsModal";
-import CinematicIntro from "@v1/components/landing/CinematicIntro";
-import BrainLoader from "@v1/components/common/BrainLoader";
-
-// Removed legacy panels for MVP cleanup
-
-import { PremiumControlTowerBanner } from "@v1/components/premium/PremiumBanners";
-import SetupWizard from "@v1/components/professional/SetupWizard";
-import PatientRevenueSimulator from "@v1/components/dashboard/PatientRevenueSimulator";
-import OnlinePatientsWidget from "@v1/components/dashboard/OnlinePatientsWidget";
-import ChatDashboardWidget from "@v1/components/chat/ChatDashboardWidget";
-// TreatmentInsightsPanel removed due to table removal
-import ExpandablePanel from "@v1/components/common/ExpandablePanel";
-import PatientMomentumSummary from "@v1/components/dashboard/PatientMomentumSummary";
-import InlineExperienceToggle from "@v1/components/dashboard/InlineExperienceToggle";
-import {
-  UtensilsCrossed, Users, TrendingUp, Target, Plus,
-  CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
-  Calendar, ArrowRight, ClipboardList, Heart, Brain,
-  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus,
-  Link2
-} from "lucide-react";
+import { Card } from "@v1/components/ui/card";
 import { Button } from "@v1/components/ui/button";
-import { Progress } from "@v1/components/ui/progress";
-import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { 
+  Users, ClipboardList, UtensilsCrossed, MessageSquare, 
+  Settings, UserPlus, Calendar, Activity, TrendingUp
+} from "lucide-react";
+import ProStrategicDashboard from "@v1/components/dashboard/ProStrategicDashboard";
+import PatientGridDashboard from "@v1/components/dashboard/PatientGridDashboard";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0 },
-};
-
-// Legacy PatientDashboardContent removed — patients now use PatientGridDashboard exclusively
-
-// ──── Nutritionist Dashboard ────
-function NutritionistDashboardContent() {
-  const { user } = useAuth();
+export default function Index() {
+  const { user, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { isProfessionalContext } = useWorkspaceContext();
   const navigate = useNavigate();
+
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+  const effectiveProRole = isProRole && isProfessionalContext;
+
+  if (effectiveProRole) {
+    return <NutritionistDashboard />;
+  }
+
+  return <PatientDashboard />;
+}
+
+function NutritionistDashboard() {
+  const { user } = useAuth();
   const [patientCount, setPatientCount] = useState(0);
   const [mealPlanCount, setMealPlanCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -74,831 +36,118 @@ function NutritionistDashboardContent() {
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) return;
-      const [patientsRes, plansRes] = await Promise.all([
-        supabase.from("nutritionist_patients").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("status", "active"),
-        supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("is_active", true),
-      ]);
-      setPatientCount(patientsRes.count || 0);
-      setMealPlanCount(plansRes.count || 0);
-      setLoading(false);
+      try {
+        const [patientsRes, plansRes] = await Promise.all([
+          supabase.from("nutritionist_patients").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("status", "active"),
+          supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("is_active", true),
+        ]);
+        setPatientCount(patientsRes.count || 0);
+        setMealPlanCount(plansRes.count || 0);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, [user?.id]);
 
-  const quickActions = [
-    { label: "Novo Paciente", icon: UserPlus, to: "/v1/patients", color: "bg-primary/10 text-primary hover:bg-primary/20" },
-    { label: "Criar Plano", icon: UtensilsCrossed, to: "/v1/meal-plans", color: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20" },
-    { label: "Chat", icon: MessageSquare, to: "/v1/chat", color: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20" },
-    { label: "Configurações", icon: Settings, to: "/v1/settings", color: "bg-gray-100 text-gray-700 hover:bg-gray-200" },
-  ];
-
-  if (loading) return <div className="p-8">Carregando painel...</div>;
+  if (loading) return <div className="p-8">Carregando painel clínico...</div>;
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold">Olá, Profissional!</h1>
-        <p className="text-muted-foreground mt-1">Veja o resumo da sua clínica hoje.</p>
+    <div className="space-y-8 max-w-7xl mx-auto">
+      <header className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Painel Profissional</h1>
+        <p className="text-muted-foreground">Bem-vindo ao seu centro de comando clínico.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/10 rounded-xl text-primary"><Users className="w-6 h-6" /></div>
-            <div>
-              <p className="text-sm text-muted-foreground">Pacientes Ativos</p>
-              <h3 className="text-2xl font-bold">{patientCount}</h3>
-            </div>
+        <Card className="p-6 flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-xl text-primary"><Users className="w-6 h-6" /></div>
+          <div>
+            <p className="text-sm text-muted-foreground">Pacientes</p>
+            <h3 className="text-2xl font-bold">{patientCount}</h3>
           </div>
         </Card>
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 rounded-xl text-blue-600"><ClipboardList className="w-6 h-6" /></div>
-            <div>
-              <p className="text-sm text-muted-foreground">Planos Ativos</p>
-              <h3 className="text-2xl font-bold">{mealPlanCount}</h3>
-            </div>
+        <Card className="p-6 flex items-center gap-4">
+          <div className="p-3 bg-blue-500/10 rounded-xl text-blue-600"><ClipboardList className="w-6 h-6" /></div>
+          <div>
+            <p className="text-sm text-muted-foreground">Planos Ativos</p>
+            <h3 className="text-2xl font-bold">{mealPlanCount}</h3>
           </div>
         </Card>
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-bold">Acesso Rápido</h2>
+        <h2 className="text-xl font-bold">Ações Rápidas</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickActions.map((action) => (
-            <Link key={action.label} to={action.to}>
-              <Card className={`p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none transition-all ${action.color}`}>
-                <action.icon className="w-6 h-6" />
-                <span className="text-sm font-semibold">{action.label}</span>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <Card className="p-1">
-          <ProStrategicDashboard />
-        </Card>
-      </section>
-    </div>
-  );
-}
-    { label: "Link Rápido", icon: Link2, to: "/settings", color: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20" },
-    { label: "Convidar Paciente", icon: UserPlus, to: "/invite-patient", color: "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20" },
-    { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary" },
-    { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-muted/50 text-muted-foreground hover:bg-info/10 hover:text-info" },
-  ];
-
-  const timelineEventIcons: Record<string, { icon: any; color: string }> = {
-    checkin: { icon: CheckCircle2, color: "text-success" },
-    program: { icon: Rocket, color: "text-accent" },
-    appointment: { icon: Calendar, color: "text-info" },
-    assessment: { icon: Activity, color: "text-primary" },
-    note: { icon: FileText, color: "text-muted-foreground" },
-  };
-
-  const [activeTab, setActiveTab] = useState("clinical");
-
-   return (
-    <div className="space-y-6">
-      {/* FitJourney Timeline — PRO+ */}
-      {minMode("pro") && <FitJourneyTimeline maxHeight="500px" />}
-
-      {/* Pending Approvals Modal */}
-      <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={handleApprovalsModalChange} />
-
-      {/* Pending approvals banner */}
-      {pendingApprovalsCount > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 cursor-pointer"
-          onClick={() => setApprovalsModalOpen(true)}
-        >
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-500" />
-            <span className="text-sm font-medium">
-              {pendingApprovalsCount} plano{pendingApprovalsCount > 1 ? "s" : ""} pendente{pendingApprovalsCount > 1 ? "s" : ""} de aprovação
-            </span>
-          </div>
-          <Button size="sm" variant="outline">
-            Revisar agora <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
-        </motion.div>
-      )}
-
-      {/* Active Session Resume Banner */}
-      {activeSessions.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-primary shadow-lg shadow-primary/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-white"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
-              <Stethoscope className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-medium opacity-80 uppercase tracking-wider">Atendimento em andamento</p>
-              <h3 className="text-lg font-bold font-display">{sessionProfiles[activeSessions[0].patient_id] || "Paciente"}</h3>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button 
-              variant="secondary" 
-              className="w-full sm:w-auto gap-2"
-              onClick={() => navigate(`/in-office/${activeSessions[0].patient_id}`)}
-            >
-              Retomar Consulta <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── Dashboard Content ── */}
-
-
-      {/* ── Clinical Dashboard — Always visible as main content ── */}
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* ── Premium Header ── */}
-      <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
-        <div className="glass-premium rounded-2xl p-6 shimmer-sweep relative z-0">
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <motion.p
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-sm text-muted-foreground mb-1"
-              >
-                {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
-              </motion.p>
-              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">
-                {isBasic ? "Meu Painel" : "Dashboard Clínico"}
-              </h1>
-              <p className="text-muted-foreground text-sm mt-0.5">
-                {isBasic ? "Visão geral dos seus pacientes" : "Central de Comando · Inteligência Clínica"}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              {unreadChats > 0 && (
-                <Button variant="outline" size="sm" className="gap-2 rounded-xl" onClick={() => navigate("/v1/chat")}>
-                  <MessageSquare className="w-4 h-4" />
-                  {unreadChats} mensagem{unreadChats > 1 ? "s" : ""}
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── 2️⃣ Action Shortcuts ── */}
-      <motion.div variants={item} className="flex flex-wrap gap-2">
-        {quickActions.map((a) => (
-          <Link key={a.to} to={a.to}>
-            <Button variant="outline" size="sm" className={`gap-2 rounded-full border-none transition-colors ${a.color}`}>
-              <a.icon className="w-4 h-4" />
-              {a.label}
-            </Button>
+          <Link to="/v1/patients">
+            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-primary/5 hover:bg-primary/10 transition-all">
+              <UserPlus className="w-6 h-6 text-primary" />
+              <span className="text-sm font-semibold">Novo Paciente</span>
+            </Card>
           </Link>
-        ))}
-      </motion.div>
+          <Link to="/v1/meal-plans">
+            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-blue-500/5 hover:bg-blue-500/10 transition-all">
+              <UtensilsCrossed className="w-6 h-6 text-blue-600" />
+              <span className="text-sm font-semibold">Criar Plano</span>
+            </Card>
+          </Link>
+          <Link to="/v1/chat">
+            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-emerald-500/5 hover:bg-emerald-500/10 transition-all">
+              <MessageSquare className="w-6 h-6 text-emerald-600" />
+              <span className="text-sm font-semibold">Chat</span>
+            </Card>
+          </Link>
+          <Link to="/v1/settings">
+            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-gray-100 hover:bg-gray-200 transition-all">
+              <Settings className="w-6 h-6 text-gray-700" />
+              <span className="text-sm font-semibold">Configurações</span>
+            </Card>
+          </Link>
+        </div>
+      </section>
 
-      {/* ── Setup Wizard ── */}
-      <div className="w-full">
-        <motion.div variants={item}>
-          <SetupWizard />
-        </motion.div>
+      <section className="space-y-4">
+        <h2 className="text-xl font-bold">Explorar</h2>
+        <ProStrategicDashboard />
+      </section>
+    </div>
+  );
+}
+
+function PatientDashboard() {
+  return (
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <header className="text-center py-4">
+        <h1 className="text-3xl font-bold">Minha Jornada</h1>
+        <p className="text-muted-foreground mt-1">Acompanhe seu progresso e plano alimentar.</p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link to="/v1/patient-meal-plan">
+          <Card className="p-6 flex flex-col items-center gap-3 bg-primary/5 hover:bg-primary/10 transition-all border-none">
+            <UtensilsCrossed className="w-8 h-8 text-primary" />
+            <span className="font-bold">Minha Dieta</span>
+          </Card>
+        </Link>
+        <Link to="/v1/checkin">
+          <Card className="p-6 flex flex-col items-center gap-3 bg-blue-500/5 hover:bg-blue-500/10 transition-all border-none">
+            <TrendingUp className="w-8 h-8 text-blue-600" />
+            <span className="font-bold">Evolução</span>
+          </Card>
+        </Link>
+        <Link to="/v1/chat">
+          <Card className="p-6 flex flex-col items-center gap-3 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all border-none">
+            <MessageSquare className="w-8 h-8 text-emerald-600" />
+            <span className="font-bold">Mensagens</span>
+          </Card>
+        </Link>
       </div>
 
-
-      {/* ── 1️⃣ Daily Overview Cards ── */}
-      <motion.div variants={item} className={`grid grid-cols-2 sm:grid-cols-3 ${isBasic ? "lg:grid-cols-4" : "lg:grid-cols-6"} gap-3`}>
-        <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/v1/patients")} />
-        <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/v1/appointments")} />
-        <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/v1/checkin-panel")} />
-        <OnlinePatientsWidget variant="card" showPremiumTag={false} />
-        <ChatDashboardWidget />
-      </motion.div>
-
-
-      <motion.div variants={item}>
+      <section className="pt-4 border-t border-border/50">
         <PatientGridDashboard />
-      </motion.div>
-
-
-      {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
-      <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Activity Feed */}
-        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
-                <Activity className="w-4 h-4 text-info" />
-              </div>
-              <div>
-                <h2 className="font-display font-semibold">Atividade Recente</h2>
-                <p className="text-xs text-muted-foreground">Últimos eventos dos pacientes</p>
-              </div>
-            </div>
-            {recentTimeline.length > 0 && (
-              <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setTimelineModalOpen(true)}>
-                Ver tudo <ArrowRight className="w-3 h-3" />
-              </Button>
-            )}
-          </div>
-          {recentTimeline.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Nenhuma atividade registrada.</p>
-          ) : (
-            <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
-              {recentTimeline.slice(0, 5).map((ev, i) => {
-                const conf = timelineEventIcons[ev.event_type] || timelineEventIcons.note;
-                const Icon = conf.icon;
-                return (
-                  <motion.div
-                    key={ev.id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon className={`w-3.5 h-3.5 ${conf.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {ev.patient_name && <span className="text-primary">{ev.patient_name}</span>}
-                        {ev.patient_name ? " — " : ""}{ev.title}
-                      </p>
-                      {ev.description && <p className="text-xs text-muted-foreground truncate">{ev.description}</p>}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground flex-shrink-0 mt-1">
-                      {new Date(ev.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Timeline Expanded Modal */}
-        <Dialog open={timelineModalOpen} onOpenChange={setTimelineModalOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center gap-3 pb-4 border-b border-border">
-              <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center">
-                <Activity className="w-5 h-5 text-info" />
-              </div>
-              <div>
-                <h2 className="font-display text-lg font-bold">Atividades Recentes</h2>
-                <p className="text-xs text-muted-foreground">{recentTimeline.length} eventos registrados</p>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-1 pr-1 py-2">
-              {recentTimeline.map((ev, i) => {
-                const conf = timelineEventIcons[ev.event_type] || timelineEventIcons.note;
-                const Icon = conf.icon;
-                return (
-                  <motion.div
-                    key={ev.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon className={`w-4 h-4 ${conf.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        {ev.patient_name && (
-                          <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{ev.patient_name}</span>
-                        )}
-                        <span className="text-[10px] text-muted-foreground">
-                          {new Date(ev.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium mt-1">{ev.title}</p>
-                      {ev.description && <p className="text-xs text-muted-foreground mt-0.5">{ev.description}</p>}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Program Performance */}
-        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-              <Rocket className="w-4 h-4 text-accent" />
-            </div>
-            <div>
-              <h2 className="font-display font-semibold">Performance dos Programas</h2>
-              <p className="text-xs text-muted-foreground">{programPerformance.length} programa{programPerformance.length !== 1 ? "s" : ""} ativo{programPerformance.length !== 1 ? "s" : ""}</p>
-            </div>
-          </div>
-          {programPerformance.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground">Crie programas para acompanhar a performance.</p>
-              <Link to="/v1/programs">
-                <Button variant="outline" size="sm" className="mt-3 gap-2"><Plus className="w-4 h-4" />Criar Programa</Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {programPerformance.map((prog, i) => (
-                <motion.div
-                  key={prog.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  onClick={() => navigate(`/programs/${prog.id}`)}
-                  className="p-3 rounded-lg bg-muted/20 border border-border/50 cursor-pointer hover:border-primary/30 transition-all"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold truncate">{prog.title}</p>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">{prog.patientCount} pacientes</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Progress value={prog.avgAdherence} className="h-2 flex-1" />
-                    <span className={`text-xs font-bold ${prog.avgAdherence >= 70 ? "text-success" : prog.avgAdherence >= 40 ? "text-warning" : "text-destructive"}`}>
-                      {prog.avgAdherence}%
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      {/* ── 6️⃣ Evolution Analytics — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Evolução Geral">
-            <PatientEvolutionCharts
-              data={evolutionData}
-              activePeriod={evolutionPeriod}
-              onPeriodChange={(days) => setEvolutionPeriod(days)}
-            />
-          </ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* ── Adherence Analytics — PRO+ ── */}
-      {minMode("pro") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Análise de Adesão">
-            <AdherenceAnalytics
-              patientCount={patientCount}
-              riskPatients={riskPatients}
-              evolutionData={evolutionData}
-            />
-          </ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* ── Advanced Analytics Charts — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Analytics Avançados">
-            <DashboardAdvancedCharts
-              riskPatients={riskPatients}
-              evolutionData={evolutionData}
-              programPerformance={programPerformance}
-              patientCount={patientCount}
-            />
-          </ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* ── Health Score — PRO+ ── */}
-      {minMode("pro") && riskPatients.length > 0 && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Health Score dos Pacientes">
-            <div className="glass-premium rounded-xl p-5 shimmer-sweep">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Heart className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <h2 className="font-display font-semibold">Health Score</h2>
-                  <p className="text-xs text-muted-foreground">Score 0-100 · adesão, registros e consistência</p>
-                </div>
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-2">
-                {riskPatients.slice(0, 10).map((p, i) => (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.04 }}
-                    onClick={(e) => { e.stopPropagation(); navigate(`/patients/${p.id}`); }}
-                    className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
-                  >
-                    <HealthScoreRing score={p.score} size="sm" />
-                    <p className="text-xs font-medium truncate max-w-[80px] text-center">{p.name.split(" ")[0]}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </ExpandablePanel>
-        </motion.div>
-      )}
-
-      {/* ── System Usage Gamification — ADVANCED ── */}
-      {minMode("advanced") && (
-        <motion.div variants={item}>
-          <SystemUsageCard />
-        </motion.div>
-      )}
-
-      {/* ── 9️⃣ Module Shortcut Grid (Premium) ── */}
-      <motion.div variants={item}>
-        <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-          <span className="w-8 h-[2px] gradient-primary rounded-full" />
-          Módulos
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-          {[
-            { to: "/patients", icon: Users, label: "Pacientes", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "basic" as const },
-            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "basic" as const },
-            { to: "/editor-v3", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
-            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5", min: "basic" as const },
-            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "pro" as const },
-            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "pro" as const },
-            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "pro" as const },
-            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5", min: "pro" as const },
-            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5", min: "pro" as const },
-            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5", min: "advanced" as const },
-            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
-          ].filter(mod => minMode(mod.min)).map((mod, i) => (
-            <Link key={mod.to} to={mod.to}>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                whileHover={{ y: -4, scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="glass-premium rounded-xl p-4 flex items-center gap-3 cursor-pointer metric-glow transition-all duration-300 h-[72px] group"
-              >
-                <div className={`w-10 h-10 rounded-xl ${mod.bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
-                  <mod.icon className={`w-5 h-5 ${mod.color}`} />
-                </div>
-                <p className="font-display font-semibold text-sm">{mod.label}</p>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
-      </motion.div>
-    </motion.div>
+      </section>
     </div>
-  );
-}
-
-// ── Daily Metric Card (Premium) ──
-function DailyMetricCard({ label, value, icon: Icon, color, pulse, onClick }: {
-  label: string; value: number; icon: any; color: string; pulse?: boolean; onClick?: () => void;
-}) {
-  return (
-    <motion.div
-      whileHover={{ y: -4, scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className={`glass-premium rounded-xl p-4 cursor-pointer metric-glow transition-all duration-300 shimmer-sweep`}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <motion.div
-          whileHover={{ rotate: 8 }}
-          className={`w-10 h-10 rounded-xl bg-${color}/10 flex items-center justify-center`}
-        >
-          <Icon className={`w-5 h-5 text-${color}`} />
-        </motion.div>
-        {pulse && value > 0 && (
-          <span className="relative flex h-2.5 w-2.5">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-${color} opacity-75`} />
-            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 bg-${color}`} />
-          </span>
-        )}
-      </div>
-      <motion.p
-        key={value}
-        initial={{ scale: 1.15, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="font-display font-bold text-2xl counter-animate"
-      >
-        {value}
-      </motion.p>
-      <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{label}</p>
-    </motion.div>
-  );
-}
-
-// ── Briefing Expandable ──
-function BriefingExpandable({ aiSummary, aiLoading, aiInsights, attentionPatients, pendingCheckins, appointmentsToday, riskPatients }: {
-  aiSummary: any; aiLoading: boolean; aiInsights: any[]; attentionPatients: any[];
-  pendingCheckins: number; appointmentsToday: number; riskPatients: any[];
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const navigate = useNavigate();
-  const highRisk = riskPatients.filter(p => p.score < 30);
-  const inactive = riskPatients.filter(p => {
-    if (!p.lastActivity) return true;
-    return Math.floor((Date.now() - new Date(p.lastActivity).getTime()) / 86400000) >= 3;
-  });
-
-  return (
-    <div
-      className={`rounded-xl border transition-all cursor-pointer ${expanded ? "border-primary/30 bg-gradient-to-br from-primary/5 via-card to-accent/5" : "border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5"}`}
-      onClick={() => setExpanded(prev => !prev)}
-    >
-      <div className="p-5">
-        <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-            <Brain className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h2 className="font-display font-bold text-base">Briefing Diário da IA</h2>
-              {aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">Analisando...</span>}
-              <span className="text-[10px] text-muted-foreground ml-auto">{expanded ? "▲ Recolher" : "▼ Expandir"}</span>
-            </div>
-            {aiSummary ? (
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                <span className="text-foreground font-medium">{aiSummary.high_risk_count || 0} paciente{(aiSummary.high_risk_count || 0) !== 1 ? "s" : ""} requer{(aiSummary.high_risk_count || 0) === 1 ? "" : "em"} atenção hoje.</span>
-                {" "}{pendingCheckins > 0 ? `${pendingCheckins} check-in${pendingCheckins > 1 ? "s" : ""} pendente${pendingCheckins > 1 ? "s" : ""}. ` : "Todos os check-ins em dia. "}
-                {appointmentsToday > 0 ? `${appointmentsToday} consulta${appointmentsToday > 1 ? "s" : ""} agendada${appointmentsToday > 1 ? "s" : ""}.` : "Nenhuma consulta hoje."}
-                {aiSummary.top_concern ? ` Principal preocupação: ${aiSummary.top_concern}.` : ""}
-              </p>
-            ) : !aiLoading ? (
-              <p className="text-sm text-muted-foreground">Cadastre pacientes com anamnese para ativar o briefing inteligente.</p>
-            ) : null}
-          </div>
-          {aiSummary?.avg_adherence_estimate && (
-            <div className="text-center px-3 flex-shrink-0 hidden sm:block">
-              <p className="font-display text-2xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
-              <p className="text-[10px] text-muted-foreground">Adesão geral</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4" onClick={(e) => e.stopPropagation()}>
-              {/* Quick metrics */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div className="rounded-lg bg-destructive/10 p-3 text-center">
-                  <p className="font-display font-bold text-lg text-destructive">{highRisk.length}</p>
-                  <p className="text-[10px] text-muted-foreground">Alto Risco</p>
-                </div>
-                <div className="rounded-lg bg-warning/10 p-3 text-center">
-                  <p className="font-display font-bold text-lg text-warning">{inactive.length}</p>
-                  <p className="text-[10px] text-muted-foreground">Inativos (3d+)</p>
-                </div>
-                <div className="rounded-lg bg-info/10 p-3 text-center">
-                  <p className="font-display font-bold text-lg text-info">{pendingCheckins}</p>
-                  <p className="text-[10px] text-muted-foreground">Check-ins Pendentes</p>
-                </div>
-                <div className="rounded-lg bg-primary/10 p-3 text-center">
-                  <p className="font-display font-bold text-lg text-primary">{appointmentsToday}</p>
-                  <p className="text-[10px] text-muted-foreground">Consultas Hoje</p>
-                </div>
-              </div>
-
-              {/* AI Insights feed */}
-              {aiInsights.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Insights da IA</p>
-                  <div className="space-y-1.5">
-                    {aiInsights.map((ins, i) => (
-                      <div key={i} className={`flex items-start gap-3 p-2.5 rounded-lg border ${
-                        ins.severity === "critical" ? "bg-destructive/5 border-destructive/20" :
-                        ins.severity === "warning" ? "bg-warning/5 border-warning/20" : "bg-info/5 border-info/20"
-                      }`}>
-                        <Brain className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${
-                          ins.severity === "critical" ? "text-destructive" : ins.severity === "warning" ? "text-warning" : "text-info"
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold">{ins.title}</p>
-                          <p className="text-[11px] text-muted-foreground">{ins.description}</p>
-                        </div>
-                        {ins.affected_count && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-card text-muted-foreground">{ins.affected_count}p</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Attention patients */}
-              {attentionPatients.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Pacientes que precisam de ação</p>
-                  <div className="space-y-1.5">
-                    {attentionPatients.slice(0, 5).map((p: any, i: number) => (
-                      <div
-                        key={i}
-                        onClick={() => navigate(`/patients/${p.patient_id}`)}
-                        className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-border/50 cursor-pointer hover:border-primary/30 transition-all"
-                      >
-                        <AlertTriangle className={`w-3.5 h-3.5 flex-shrink-0 ${
-                          p.priority === "high" ? "text-destructive" : p.priority === "medium" ? "text-warning" : "text-info"
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold truncate">{p.patient_name}</p>
-                          <p className="text-[11px] text-muted-foreground truncate">{p.reason}</p>
-                        </div>
-                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-
-function generateLocalInsights(patients: any[]) {
-  const insights: any[] = [];
-  const attention: any[] = [];
-
-  const lowAdherence = patients.filter(p => p.checklist_completion < 30 && p.checklist_completion >= 0);
-  const noMeals = patients.filter(p => p.meals_last_period === 0);
-  const badSleep = patients.filter(p => p.anamnesis_answers?.sleep_quality === "bad" || p.anamnesis_answers?.sleep_quality === "terrible");
-  const sedentary = patients.filter(p => p.anamnesis_answers?.activity_level === "sedentary");
-  const lostStreak = patients.filter(p => p.streak === 0 && p.score > 20);
-
-  if (lowAdherence.length > 0) {
-    insights.push({ title: "Baixa adesão ao checklist", description: `${lowAdherence.length} paciente(s) com menos de 30% de adesão ao checklist.`, category: "adherence", severity: "warning", affected_count: lowAdherence.length });
-    lowAdherence.forEach(p => attention.push({ patient_id: p.patient_id, patient_name: p.name, reason: "Baixa adesão ao checklist", priority: "high" }));
-  }
-  if (noMeals.length > 0) {
-    insights.push({ title: "Sem registros alimentares", description: `${noMeals.length} paciente(s) não registraram refeições recentemente.`, category: "nutrition", severity: "critical", affected_count: noMeals.length });
-    noMeals.forEach(p => attention.push({ patient_id: p.patient_id, patient_name: p.name, reason: "Ausência de registros alimentares", priority: "high" }));
-  }
-  if (badSleep.length > 0) {
-    insights.push({ title: "Qualidade de sono ruim", description: `${badSleep.length} paciente(s) relataram sono ruim na anamnese.`, category: "sleep", severity: "warning", affected_count: badSleep.length });
-  }
-  if (sedentary.length > 0) {
-    insights.push({ title: "Pacientes sedentários", description: `${sedentary.length} paciente(s) com nível sedentário de atividade.`, category: "metabolism", severity: "info", affected_count: sedentary.length });
-  }
-  if (lostStreak.length > 0) {
-    insights.push({ title: "Streaks perdidos", description: `${lostStreak.length} paciente(s) perderam seus streaks de consistência.`, category: "adherence", severity: "warning", affected_count: lostStreak.length });
-  }
-  if (insights.length === 0) {
-    insights.push({ title: "Tudo em ordem!", description: "Seus pacientes estão com boa adesão e progresso.", category: "progress", severity: "info" });
-  }
-
-  return { insights, attention };
-}
-
-export default function Index() {
-  const { user, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
-  const { isPatientContext, isHybridUser } = useWorkspaceContext();
-  const { minMode } = useExperienceMode();
-  const [showTour, setShowTour] = useState(false);
-  const { proView, setProView } = useLayoutPreference();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [showIntro, setShowIntro] = useState(false);
-
-  const isProRole = isNutritionist || isPersonal || isAdmin;
-  // For hybrid users, respect workspace context; for pure roles, use role check
-  const isPatient = isHybridUser ? isPatientContext : (!isProRole && !isAdmin);
-
-  // Regra Determinística: Redirecionar para o Hub de Boas-Vindas se não tivermos roles definidas
-  // ou se houver intenção de convite pendente.
-  // Removed automatic redirect to /welcome for radical simplification.
-  // The Index page will render content directly based on roles.
-
-  const tourKey = isProRole ? "tour_professional_completed" : "tour_patient_completed";
-  const onboardingKey = isProRole ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
-  const INTRO_STORAGE_KEY = "fj_intro_seen";
-
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const forceIntro = searchParams.get("intro") === "1";
-    const hasSeenIntro = sessionStorage.getItem(INTRO_STORAGE_KEY) === "1";
-    
-    // Mostramos a intro se for forçado VIA URL ou se for o primeiro acesso logado do usuário nesta sessão
-    if (forceIntro || (!hasSeenIntro && !loading && user)) {
-      setShowIntro(true);
-    }
-  }, [location.search, loading, user]);
-
-  // Auto-trigger tour after onboarding — with 30min cooldown
-  useEffect(() => {
-    if (loading || showIntro) return;
-    const onboardingDone = localStorage.getItem(onboardingKey) === "true";
-    const tourDone = localStorage.getItem(tourKey) === "true";
-    if (tourDone || !onboardingDone) return;
-
-    const dismissedAt = localStorage.getItem(`${tourKey}_dismissed_at`);
-    if (dismissedAt) {
-      const elapsed = Date.now() - Number(dismissedAt);
-      if (elapsed < 30 * 60 * 1000) return;
-    }
-
-    const timer = setTimeout(() => setShowTour(true), 1500);
-    return () => clearTimeout(timer);
-  }, [loading, onboardingKey, tourKey, showIntro]);
-
-  if (showIntro) {
-    return (
-      <CinematicIntro 
-        onComplete={() => {
-          setShowIntro(false);
-          sessionStorage.setItem(INTRO_STORAGE_KEY, "1");
-        }} 
-      />
-    );
-  }
-
-  if (loading && !showIntro) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <BrainLoader text="Iniciando FitJourney..." />
-      </div>
-    );
-  }
-
-  const renderContent = () => {
-    if (isPatient) {
-      console.log("[NAV] Index -> Redirecting patient to /client/dashboard");
-      return <Navigate to="/v1/client/dashboard" replace />;
-    }
-
-    // Professional / Admin view with toggle
-    return (
-      <div className="space-y-6">
-        {/* Experience mode inline toggle */}
-        <InlineExperienceToggle />
-        {/* View mode toggle — PRO+ only */}
-        {minMode("pro") && (
-          <div className="flex items-center justify-end">
-            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-              <Button
-                variant={proView === "clinical-list" ? "default" : "ghost"}
-                size="sm"
-                className="h-7 px-3 gap-1.5 text-xs"
-                onClick={() => setProView("clinical-list")}
-              >
-                <ListIcon className="w-3.5 h-3.5" />
-                Lista Clínica
-              </Button>
-              <Button
-                variant={proView === "strategic-dashboard" ? "default" : "ghost"}
-                size="sm"
-                className="h-7 px-3 gap-1.5 text-xs"
-                onClick={() => setProView("strategic-dashboard")}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                Dashboard
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {minMode("pro") && proView === "strategic-dashboard" ? (
-          <ProStrategicDashboard />
-        ) : (
-          <NutritionistDashboardContent />
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <DashboardLayout>
-      {renderContent()}
-      {showTour && (
-        <GuidedTour
-          steps={isProRole ? PROFESSIONAL_TOUR_STEPS : PATIENT_TOUR_STEPS}
-          storageKey={tourKey}
-          onComplete={() => {
-            setShowTour(false);
-            localStorage.setItem(`${tourKey}_dismissed_at`, String(Date.now()));
-          }}
-        />
-      )}
-    </DashboardLayout>
   );
 }
