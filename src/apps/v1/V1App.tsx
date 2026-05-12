@@ -1,25 +1,14 @@
-import "./index.css";
-import "./App.css";
-import { CoreProviders } from "./providers/CoreProviders";
-import { AppRoutes } from "./routes/AppRoutes";
-import { useAuth } from "./lib/auth";
-import { Loader2 } from "lucide-react";
+import React from 'react';
 
-const SimpleLoader = () => (
-  <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-    <div className="w-10 h-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-    <p className="text-xs text-primary font-bold uppercase tracking-[0.2em] animate-pulse">FitJourney</p>
-  </div>
-);
-
-const AppContent = () => {
-  return <AppRoutes />;
+const Auth = () => {
+  return (
+    <div style={{ backgroundColor: '#050505', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontFamily: 'sans-serif' }}>
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{ color: '#22c55e', fontSize: '24px', marginBottom: '20px' }}>FitJourney V1</h1>
+        <p style={{ color: '#a1a1aa' }}>Emergency Render Direct - No Providers</p>
+      </div>
+    </div>
+  );
 };
 
-const App = () => (
-  <CoreProviders>
-    <AppContent />
-  </CoreProviders>
-);
-
-export default App;
+export default Auth;
