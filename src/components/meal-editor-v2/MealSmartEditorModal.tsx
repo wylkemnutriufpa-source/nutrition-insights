@@ -50,13 +50,22 @@ export function MealSmartEditorModal({
   const item = items.find((i) => i.id === itemId);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
+  const [activeTab, setActiveTab] = useState<"isolated" | "ready" | "draft">("isolated");
   const [search, setSearch] = useState("");
   const [description, setDescription] = useState(item?.description || "");
   const [notes, setNotes] = useState((item as any)?.notes || "");
   const [substitutions, setSubstitutions] = useState<string[]>([]);
   const [portionFactor, setPortionFactor] = useState(1.0);
   const [showConsistencyReport, setShowConsistencyReport] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Snapshot original values for dirty check
+  const originalValues = useRef({
+    description: item?.description || "",
+    notes: (item as any)?.notes || "",
+    portionFactor: 1.0,
+    substitutions: [] as string[]
+  });
 
   const currentMeta = React.useMemo(() => (item as any)?.edit_metadata || (item as any)?.metadata || {}, [item]);
   
