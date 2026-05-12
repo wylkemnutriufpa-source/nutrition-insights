@@ -1247,6 +1247,21 @@ export default function Anamnesis() {
 
     setAnalyzing(false);
 
+    // Trigger automatic plan generation if not already done
+    void (async () => {
+      try {
+        console.log("[FJ:Anamnesis] Triggering automatic plan generation (Standard flow)...");
+        await supabase.functions.invoke("generate-meal-plan-v2", {
+          body: { 
+            patient_id: targetUserId,
+            plan_title: "Plano Inicial (Gerado Automaticamente)"
+          },
+        });
+      } catch (e: any) {
+        console.error("[FJ:Anamnesis] Error generating automatic plan:", e);
+      }
+    })();
+
     // Notify professional that everything is ready for evaluation
     try {
       const { data: nutriData } = await supabase
