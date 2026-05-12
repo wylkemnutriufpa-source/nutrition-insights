@@ -547,12 +547,21 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
             is_primary: false,
             substitution_group_id: groupId,
             library_item: sub.libraryItem,
-            sf: sub.scaleFactor
+            sf: sub.scaleFactor,
+            _baseCaloriesTarget: sub.targetKcal,
+            _baseProteinTarget: Math.round(sub.libraryItem.protein * sub.scaleFactor)
           });
         }
       }
 
-      const built = await Promise.all(itemsToBuild.map(buildItem));
+      const built = await Promise.all(itemsToBuild.map(async (input: any) => {
+        const item = await buildItem(input);
+        return {
+          ...item,
+          _baseCaloriesTarget: input._baseCaloriesTarget || input.calories_target,
+          _baseProteinTarget: input._baseProteinTarget || input.protein_target
+        };
+      }));
       const { items } = buildMealItems(built as any);
       return items;
     })
