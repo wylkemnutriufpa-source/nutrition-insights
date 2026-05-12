@@ -217,15 +217,19 @@ export function composeSlotSequence(
       }
     }
 
-    // Step 4: prefer least-used items (deterministic tie-break by input order).
-    const minUse = candidates.reduce(
-      (m, c) => Math.min(m, useCount.get(c.id) ?? 0),
-      Number.POSITIVE_INFINITY,
-    );
-    const preferred = candidates.filter(
-      (c) => (useCount.get(c.id) ?? 0) === minUse,
-    );
-    const drawSet = preferred.length > 0 ? preferred : candidates;
+    // Step 4: prefer least-used items (deterministic). Skipped when
+    // rotationStrength=0 (low_complexity) to honor adherence-first profiles.
+    let drawSet = candidates;
+    if (profile.rotationStrength > 0) {
+      const minUse = candidates.reduce(
+        (m, c) => Math.min(m, useCount.get(c.id) ?? 0),
+        Number.POSITIVE_INFINITY,
+      );
+      const preferred = candidates.filter(
+        (c) => (useCount.get(c.id) ?? 0) === minUse,
+      );
+      if (preferred.length > 0) drawSet = preferred;
+    }
 
     // Step 5: pick deterministically.
     const idx = nextInt(rng, drawSet.length);

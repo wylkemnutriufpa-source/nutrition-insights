@@ -61,7 +61,7 @@ describe("composeSlotSequence — pool exhaustion", () => {
       days: 0,
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(f.reason).toBe("INVALID_DAYS");
+    if (!r.ok) { const f = r; expect(f.reason).toBe("INVALID_DAYS"); }
   });
 
   it("missing seed returns INVALID_BEHAVIOR_PROFILE branch", () => {
