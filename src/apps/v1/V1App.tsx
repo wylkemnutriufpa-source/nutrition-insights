@@ -6,9 +6,9 @@ import { useAuth } from "./lib/auth";
 import { Loader2 } from "lucide-react";
 
 const SimpleLoader = () => (
-  <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-    <p className="text-sm text-muted-foreground animate-pulse">Carregando FitJourney...</p>
+  <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
+    <div className="w-10 h-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+    <p className="text-xs text-primary font-bold uppercase tracking-[0.2em] animate-pulse">FitJourney</p>
   </div>
 );
 

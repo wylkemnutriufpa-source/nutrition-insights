@@ -184,7 +184,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   };
 
   return (
-    <div ref={ref} className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div ref={ref} className="min-h-screen flex items-center justify-center bg-zinc-950 p-4 relative overflow-hidden text-white font-sans">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
@@ -205,7 +205,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           <p className="text-muted-foreground mt-1">{t("auth.tagline")}</p>
         </div>
 
-        <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
+        <Card className="shadow-2xl border border-white/10 bg-zinc-900/90 backdrop-blur-md rounded-2xl">
           <CardHeader className="pb-4">
             <h2 className="text-lg font-semibold text-center text-foreground">
               {mode === "forgot" ? t("auth.forgotTitle") : mode === "register" ? "Criar Conta Profissional" : t("auth.loginTitle")}
