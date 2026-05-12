@@ -45,7 +45,7 @@ const Chat = lazy(() => import("./pages/Chat"));
 const Appointments = lazy(() => import("./pages/Appointments"));
 const Landing = lazy(() => import("./pages/Landing"));
 const WeeklyGoals = lazy(() => import("./pages/WeeklyGoals"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AutomationCenter = lazy(() => import("./pages/AutomationCenter"));
 const WaterCalculator = lazy(() => import("./pages/WaterCalculator"));
 const WeightCalculator = lazy(() => import("./pages/WeightCalculator"));
