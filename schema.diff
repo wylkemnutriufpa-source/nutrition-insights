@@ -1,17 +1,16 @@
 {
   "summary": "Summary:",
   "details": {
-    "timestamp": "2026-05-08T19:24:46.339Z",
+    "timestamp": "2026-05-12T17:05:09.692Z",
     "duration": "0.1s",
-    "lastSnapshotMigration": "20260508031105_bb47df12-5904-4882-aae3-4a824d19f6a1.sql",
-    "lastActualMigration": "20260508175615_a3152da6-9ae4-4882-971b-5c1e98c01bce.sql",
+    "lastSnapshotMigration": "20260508175615_a3152da6-9ae4-4882-971b-5c1e98c01bce.sql",
+    "lastActualMigration": "20260512161028_2f846d3e-96f9-45d7-9cd7-92c7e8c53e9c.sql",
     "missingMigrations": [
-      "20260508125152_d32f0677-d25c-4244-9e1c-1c51cddbc4b9.sql",
-      "20260508125234_4a84b345-751b-43ea-8bf4-2f3c4f1fd75f.sql",
-      "20260508174050_6698c4a9-0d5e-47f2-a793-9b6694f624d3.sql",
-      "20260508174204_fdd48683-4abd-4be5-9a15-f1ecf8c1e293.sql",
-      "20260508174609_88b07347-ccb1-4255-ad2b-e67daee92ba5.sql",
-      "20260508175615_a3152da6-9ae4-4882-971b-5c1e98c01bce.sql"
+      "20260508200912_031b3cc6-0b8f-443b-a205-d49dbd3bdcd8.sql",
+      "20260508201052_aeba2efb-6c75-41fe-9517-211fb809a3bb.sql",
+      "20260512152714_32605291-1e5a-49b6-a086-d055f641f271.sql",
+      "20260512155447_c3fd8909-ef33-4256-9c3f-ab1fdeca1f1f.sql",
+      "20260512161028_2f846d3e-96f9-45d7-9cd7-92c7e8c53e9c.sql"
     ],
     "diffResults": []
   }
