@@ -637,42 +637,80 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Template "${template.name}" aplicado!`);
       },
 
-      updateMealItem: async (mealId, instanceId, updates) => {
-        set((state) => ({
-          meals: state.meals.map((m) =>
-            m.id === mealId
-              ? {
-                  ...m,
-                  items: m.items.map((i) => {
-                    if (i.instanceId === instanceId) {
-                      const updatedItem = { ...i, ...updates };
-                      
-                      // Se a quantidade mudou, recalculamos a massa clínica
-                      if (updates.quantity !== undefined) {
-                        const pValue = updatedItem.portionValue || 1;
-                        updatedItem.clinical_mass_g = (updatedItem.measurementType === 'gram' || updatedItem.measurementType === 'ml')
-                          ? updatedItem.quantity
-                          : updatedItem.quantity * pValue;
-                      }
+      updateMealItem: async (mealId, instanceId, updates, skipWeeklySync = false) => {
+        const state = get();
+        const meal = state.meals.find(m => m.id === mealId);
+        const item = meal?.items.find(i => i.instanceId === instanceId);
+        
+        if (!item) return;
 
-                      const newMacros = calculateItemMacros(updatedItem, updatedItem.quantity);
-                      return {
-                        ...updatedItem,
-                        kcal: newMacros.kcal,
-                        calories: newMacros.kcal,
-                        protein: newMacros.protein,
-                        carbs: newMacros.carbs,
-                        fat: newMacros.fat
-                      };
-                    }
-                    return i;
-                  }),
+        const updatedMeals = state.meals.map((m) => {
+          if (m.id === mealId) {
+            return {
+              ...m,
+              items: m.items.map((i) => {
+                if (i.instanceId === instanceId) {
+                  const merged = { ...i, ...updates };
+                  
+                  // Se a quantidade mudou, recalcular clinical_mass_g
+                  if (updates.quantity !== undefined) {
+                     const pValue = merged.portionValue || 1;
+                     merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
+                       ? merged.quantity
+                       : merged.quantity * pValue;
+                  }
+
+                  const newMacros = calculateItemMacros(merged, merged.quantity);
+                  return {
+                    ...merged,
+                    kcal: newMacros.kcal,
+                    protein: newMacros.protein,
+                    carbs: newMacros.carbs,
+                    fat: newMacros.fat
+                  };
                 }
-              : m
-          ),
-          planStatus: 'draft',
-        }));
+                return i;
+              })
+            };
+          }
+          
+          if (!skipWeeklySync && item.blockId && !updates.manual_override) {
+            const hasSameBlock = m.items.some(i => i.blockId === item.blockId && !i.manual_override);
+            if (hasSameBlock) {
+              return {
+                ...m,
+                items: m.items.map((i) => {
+                  if (i.blockId === item.blockId && !i.manual_override) {
+                    const { instanceId: _, id: __, ...propagatedUpdates } = updates as any;
+                    const merged = { ...i, ...propagatedUpdates };
+                    
+                    if (propagatedUpdates.quantity !== undefined) {
+                      const pValue = merged.portionValue || 1;
+                      merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
+                        ? merged.quantity
+                        : merged.quantity * pValue;
+                    }
 
+                    const newMacros = calculateItemMacros(merged, merged.quantity);
+                    return {
+                      ...merged,
+                      kcal: newMacros.kcal,
+                      protein: newMacros.protein,
+                      carbs: newMacros.carbs,
+                      fat: newMacros.fat
+                    };
+                  }
+                  return i;
+                })
+              };
+            }
+          }
+          
+          return m;
+        });
+
+        set({ meals: updatedMeals, planStatus: 'draft' });
+        
         const currentMeal = get().meals.find(m => m.id === mealId);
         if (currentMeal && currentMeal.imageSource !== 'manual' && (updates.id || updates.name)) {
           const bestImage = await getBestMealImage(currentMeal.name, currentMeal.items);
@@ -681,7 +719,6 @@ export const useEditorState = create<EditorState>()(
 
         get().recalculateScore();
       },
-
 
       removeFood: async (mealId, instanceId) => {
         const meal = get().meals.find((m) => m.id === mealId);
@@ -710,6 +747,7 @@ export const useEditorState = create<EditorState>()(
 
         get().recalculateScore();
       },
+
 
       
       updateFoodQuantity: (mealId, instanceId, quantity, clinical_mass_g) => {
