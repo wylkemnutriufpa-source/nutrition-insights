@@ -7,64 +7,57 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { useEffect, lazy, Suspense } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 
-// Eager-loaded (Critical Path)
+// ── EAGER LOADED (CRITICAL) ───────────────────────────
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
-// Lazy-loaded pages
-const Meals = lazy(() => import("./pages/Meals"));
-const Achievements = lazy(() => import("./pages/Achievements"));
-const Challenges = lazy(() => import("./pages/Challenges"));
+// ── LAZY LOADED PAGES ────────────────────────────────
+// Core / Shared
+const Chat = lazy(() => import("./pages/Chat"));
+const Appointments = lazy(() => import("./pages/Appointments"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const FoodDatabase = lazy(() => import("./pages/FoodDatabase"));
+const Recipes = lazy(() => import("./pages/Recipes"));
+const Feedbacks = lazy(() => import("./pages/Feedbacks"));
+
+// Nutritionist Flow
 const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
-const MealPlans = lazy(() => import("./pages/MealPlans"));
-const MealPlanEditor = lazy(() => import("./pages/MealPlanEditor"));
-const Anamnesis = lazy(() => import("./pages/Anamnesis"));
-const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
-const Settings = lazy(() => import("./pages/Settings"));
 const Protocols = lazy(() => import("./pages/Protocols"));
 const Programs = lazy(() => import("./pages/Programs"));
 const ProgramDetail = lazy(() => import("./pages/ProgramDetail"));
-const BiquiniBrancoDetail = lazy(() => import("./pages/BiquiniBrancoDetail"));
-const Checklist = lazy(() => import("./pages/Checklist"));
+const MealPlans = lazy(() => import("./pages/MealPlans"));
+const MealPlanEditor = lazy(() => import("./pages/MealPlanEditor"));
 const DietTemplates = lazy(() => import("./pages/DietTemplates"));
 const PhysicalAssessment = lazy(() => import("./pages/PhysicalAssessment"));
-const Feedbacks = lazy(() => import("./pages/Feedbacks"));
-const GlobalTips = lazy(() => import("./pages/GlobalTips"));
-const Recipes = lazy(() => import("./pages/Recipes"));
-const ShoppingList = lazy(() => import("./pages/ShoppingList"));
-const FoodDatabase = lazy(() => import("./pages/FoodDatabase"));
-const BodyAnalysis = lazy(() => import("./pages/BodyAnalysis"));
 const Branding = lazy(() => import("./pages/Branding"));
-const Notifications = lazy(() => import("./pages/Notifications"));
 const Reports = lazy(() => import("./pages/Reports"));
-const ClinicalIntelligence = lazy(() => import("./pages/ClinicalIntelligence"));
-const Chat = lazy(() => import("./pages/Chat"));
-const Appointments = lazy(() => import("./pages/Appointments"));
-const Landing = lazy(() => import("./pages/Landing"));
-const WeeklyGoals = lazy(() => import("./pages/WeeklyGoals"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AutomationCenter = lazy(() => import("./pages/AutomationCenter"));
-const WaterCalculator = lazy(() => import("./pages/WaterCalculator"));
-const WeightCalculator = lazy(() => import("./pages/WeightCalculator"));
-const HealthCheckQuiz = lazy(() => import("./pages/HealthCheckQuiz"));
-const Journey = lazy(() => import("./pages/Journey"));
-const Library = lazy(() => import("./pages/Library"));
 const Financial = lazy(() => import("./pages/Financial"));
-const WeeklyReport = lazy(() => import("./pages/WeeklyReport"));
-const Supplements = lazy(() => import("./pages/Supplements"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const PatientMealPlan = lazy(() => import("./pages/PatientMealPlan"));
-const BiquiniBrancoLanding = lazy(() => import("./pages/BiquiniBrancoLanding"));
-const Checkin = lazy(() => import("./pages/Checkin"));
-const CheckinPanel = lazy(() => import("./pages/CheckinPanel"));
-const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
-const ImportPatients = lazy(() => import("./pages/ImportPatients"));
-const AdminProfessionals = lazy(() => import("./pages/AdminProfessionals"));
+const AutomationCenter = lazy(() => import("./pages/AutomationCenter"));
 
-const queryClient = new QueryClient();
+// Patient Flow
+const Meals = lazy(() => import("./pages/Meals"));
+const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
+const Journey = lazy(() => import("./pages/Journey"));
+const Achievements = lazy(() => import("./pages/Achievements"));
+const Challenges = lazy(() => import("./pages/Challenges"));
+const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
+const PatientMealPlan = lazy(() => import("./pages/PatientMealPlan"));
+
+// Admin
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -108,44 +101,54 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <DarkModeInit />
-            <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+            <Suspense fallback={
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            }>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
-                {/* Dashboard & Principal */}
+                {/* Dashboard & Home */}
                 <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 
-                {/* Rutas Compartilhadas */}
+                {/* Rotas Nutricionista */}
+                <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+                <Route path="/patients/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+                <Route path="/protocols" element={<ProtectedRoute><Protocols /></ProtectedRoute>} />
+                <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
+                <Route path="/programs/:programId" element={<ProtectedRoute><ProgramDetail /></ProtectedRoute>} />
+                <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
+                <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
+                <Route path="/diet-templates" element={<ProtectedRoute><DietTemplates /></ProtectedRoute>} />
+                <Route path="/physical-assessment" element={<ProtectedRoute><PhysicalAssessment /></ProtectedRoute>} />
+                <Route path="/branding" element={<ProtectedRoute><Branding /></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+                <Route path="/automation" element={<ProtectedRoute><AutomationCenter /></ProtectedRoute>} />
+
+                {/* Rotas Paciente */}
+                <Route path="/client/dashboard" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+                <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
+                <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
+                <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
+                <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+                <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
+                <Route path="/patient/plan" element={<ProtectedRoute><PatientMealPlan /></ProtectedRoute>} />
+
+                {/* Rotas Admin */}
+                <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+
+                {/* Shared */}
                 <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
                 <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-                <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
                 <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
                 <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
-                <Route path="/supplements" element={<ProtectedRoute><Supplements /></ProtectedRoute>} />
-
-                {/* Nutricionista */}
-                <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-                <Route path="/patients/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
-                <Route path="/protocols" element={<ProtectedRoute><Protocols /></ProtectedRoute>} />
-                <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
-                <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
-                <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
-                <Route path="/diet-templates" element={<ProtectedRoute><DietTemplates /></ProtectedRoute>} />
-                <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                
-                {/* Paciente */}
-                <Route path="/client/dashboard" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
-                <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-                <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
-                <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
-                
-                {/* Admin */}
-                <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
