@@ -264,10 +264,10 @@ export function MealSmartEditorModal({
   };
 
   const totals = {
-    calories: item.calories_target || 0,
-    protein: Number(item.protein_target) || 0,
-    carbs: Number(item.carbs_target) || 0,
-    fat: Number(item.fat_target) || 0,
+    calories: adjustedMacros.calories,
+    protein: adjustedMacros.protein,
+    carbs: adjustedMacros.carbs,
+    fat: adjustedMacros.fat,
   };
 
   const handleOpenChange = (newOpen: boolean) => {
