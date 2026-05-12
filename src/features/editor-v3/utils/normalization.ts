@@ -292,7 +292,7 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
           normalized.measurementType === 'gram' ? 100 : 
           normalized.measurementType === 'ml' ? 200 : 1
         ),
-        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? (item as any).quantity : ((item as any).quantity * (normalized.portionValue || 1))),
+        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? (item as any).quantity : ((item as any).quantity * (normalized.portionValue || 1))),
         substitutions: (item as any).substitutions || [] 
       } as MealItem;
     })
