@@ -742,11 +742,22 @@ export const useEditorState = create<EditorState>()(
                         carbs: newMacros.carbs,
                         fat: newMacros.fat
                       };
+                    }
+                    return i;
+                  }),
+                }
+              : m
+          ),
+          planStatus: 'draft',
+        }));
+        get().recalculateScore();
+      },
 
       updateMealItem: async (mealId, instanceId, updates, skipWeeklySync = false) => {
         const state = get();
         const meal = state.meals.find(m => m.id === mealId);
         const item = meal?.items.find(i => i.instanceId === instanceId);
+
         
         if (!item) return;
 
