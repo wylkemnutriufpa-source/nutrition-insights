@@ -20,24 +20,26 @@ interface AuditMetric {
 
 export const ClinicalAuditDashboard = () => {
   const [metrics, setMetrics] = useState<AuditMetric[]>([]);
+  const [rules, setRules] = useState<LegacyRule[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMetrics = async () => {
-      const { data, error } = await supabase
-        .from('clinical_observability_dashboard')
-        .select('*')
-        .order('audit_date', { ascending: false });
+    const fetchData = async () => {
+      const [metricsRes, rulesRes] = await Promise.all([
+        supabase.from('clinical_observability_dashboard').select('*').order('audit_date', { ascending: false }),
+        supabase.from('legacy_rule_heatmap').select('*').order('impact_count', { ascending: false })
+      ]);
 
-      if (error) {
-        console.error("Error fetching audit metrics:", error);
-      } else {
-        setMetrics((data as unknown as AuditMetric[]) || []);
-      }
+      if (metricsRes.error) console.error("Error fetching metrics:", metricsRes.error);
+      else setMetrics((metricsRes.data as unknown as AuditMetric[]) || []);
+
+      if (rulesRes.error) console.error("Error fetching rules:", rulesRes.error);
+      else setRules((rulesRes.data as unknown as LegacyRule[]) || []);
+
       setLoading(false);
     };
 
-    fetchMetrics();
+    fetchData();
   }, []);
 
   if (loading) return <div className="p-8 text-slate-500 font-mono text-sm animate-pulse">Consultando Shadow Audit...</div>;
