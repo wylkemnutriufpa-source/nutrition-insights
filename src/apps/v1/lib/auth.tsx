@@ -1,3 +1,4 @@
+console.log("[Auth] Auth module execution start");
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@v1/integrations/supabase/client";
