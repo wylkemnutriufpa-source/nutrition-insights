@@ -1,7 +1,5 @@
 import "./index.css";
 import "./App.css";
-import "./styles/premium-tokens.css";
-import "./styles/experience-themes.css";
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useAuth } from "./lib/auth";
