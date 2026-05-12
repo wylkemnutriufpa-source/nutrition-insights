@@ -118,6 +118,9 @@ export async function publishMealPlan(
     return { success: false, error: (result.error as string) || "Erro ao publicar", data: result };
   }
 
+  // Onda 1: snapshot determinístico (não-bloqueante)
+  await persistSnapshotAfterPublish(planId);
+
   return { success: true, data: result };
 }
 
