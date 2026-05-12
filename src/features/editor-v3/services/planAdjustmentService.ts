@@ -197,13 +197,22 @@ const scaleMacronutrient = (meals: Meal[], category: string, targetTotal: number
     items: meal.items.map(item => {
       if (getFoodCategory(item) === category) {
         const newQuantity = clampItemGrams(Math.round(item.quantity * safeScale));
-        const macros = calculateItemMacros(item, newQuantity);
+        
+        // 🛡️ Sincronizar clinical_mass_g para garantir que o recalculateScore veja a mudança
+        const pValue = item.portionValue || 1;
+        const newClinicalMass = (item.measurementType === 'gram' || item.measurementType === 'ml')
+          ? newQuantity
+          : newQuantity * pValue;
+
+        const macros = calculateItemMacros({ ...item, clinical_mass_g: newClinicalMass }, newQuantity);
+        
         return {
           ...item,
           ...macros,
           kcal: clampItemKcal((macros as any).kcal ?? (macros as any).calories ?? 0),
           calories: clampItemKcal((macros as any).calories ?? (macros as any).kcal ?? 0),
-          quantity: newQuantity
+          quantity: newQuantity,
+          clinical_mass_g: newClinicalMass
         };
       }
       return item;
