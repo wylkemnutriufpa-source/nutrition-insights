@@ -1,19 +1,37 @@
 import { MacroTargets, ClinicalProfile, MealItem, reconcileMeal } from "./clinical-engine-v2.ts";
 
+export type DivergenceType = 
+  | 'macro_drift' 
+  | 'protein_clamp_violation' 
+  | 'meal_structure_mismatch' 
+  | 'substitution_mismatch' 
+  | 'weekly_rotation_mismatch' 
+  | 'meal_count_mismatch' 
+  | 'rule_smart_mode' 
+  | 'rule_marmita_freeze';
+
 export interface ShadowAuditResult {
   compatible: boolean;
   divergence_count: number;
   severity: 'info' | 'warn' | 'critical';
-  divergences: string[];
+  divergence_types: DivergenceType[];
+  analysis: {
+    types: Record<string, any>;
+    clinical_impact: string;
+    legacy_rules_detected: string[];
+  };
+  readiness_score: number;
   payload_diff: any;
 }
 
 export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
-  const divergences: string[] = [];
+  const divergence_types = new Set<DivergenceType>();
   const diff: any = {};
   let divergenceCount = 0;
+  let readiness_score = 100;
+  const legacy_rules_detected: string[] = [];
 
-  // 1. Basic Macros Comparison (Tolerance 5%)
+  // 1. Macro Drift Analysis (Tolerance 5%)
   const TOLERANCE = 0.05;
   const metrics = ['calories', 'protein', 'carbs', 'fat'] as const;
 
@@ -25,46 +43,77 @@ export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
 
     if (rel > TOLERANCE && delta > 1) {
       divergenceCount++;
-      divergences.push(`Divergência em ${m}: V1=${val1.toFixed(1)}, V2=${val2.toFixed(1)} (Δ=${delta.toFixed(1)})`);
-      diff[m] = { v1: val1, v2: val2, delta, rel };
-    }
-  });
-
-  // 2. Meal Count Comparison
-  if (v1.items?.length !== v2.items?.length) {
-    divergenceCount++;
-    divergences.push(`Divergência no nº de refeições: V1=${v1.items?.length}, V2=${v2.items?.length}`);
-    diff.meal_count = { v1: v1.items?.length, v2: v2.items?.length };
-  }
-
-  // 3. Protein Grammage Comparison (Individual Items)
-  // We try to match items by name/index if possible
-  v1.items?.forEach((item1: any, idx: number) => {
-    const item2 = v2.items?.[idx];
-    if (item2) {
-      const g1 = item1.grams || 0;
-      const g2 = item2.grams || 0;
-      const dG = Math.abs(g1 - g2);
-      if (dG > 10) { // More than 10g difference
-        divergenceCount++;
-        divergences.push(`Divergência na gramagem de ${item1.name || 'item'}: V1=${g1}g, V2=${g2}g`);
-        if (!diff.items) diff.items = [];
-        diff.items.push({ name: item1.name, idx, v1_grams: g1, v2_grams: g2 });
+      divergence_types.add('macro_drift');
+      readiness_score -= 15;
+      if (!diff.macros) diff.macros = {};
+      diff.macros[m] = { v1: val1, v2: val2, delta, rel };
+      
+      // Protein Clamp Violation check
+      if (m === 'protein' && val2 > 200 && val1 < val2) {
+        divergence_types.add('protein_clamp_violation');
+        readiness_score -= 20;
       }
     }
   });
 
-  const compatible = divergenceCount === 0;
+  // 2. Meal Structure & Count
+  const count1 = v1.items?.length || 0;
+  const count2 = v2.items?.length || 0;
+  if (count1 !== count2) {
+    divergenceCount++;
+    divergence_types.add('meal_count_mismatch');
+    divergence_types.add('meal_structure_mismatch');
+    readiness_score -= 20;
+    diff.meal_count = { v1: count1, v2: count2 };
+  }
+
+  // 3. Legacy Rules Detection (Heuristics)
+  // Smart Mode Check
+  if (v1.metadata?.smart_mode || JSON.stringify(v1).includes('smart_mode')) {
+    legacy_rules_detected.push('rule_smart_mode');
+    divergence_types.add('rule_smart_mode');
+  }
+  
+  // Marmita/Freeze Check
+  if (JSON.stringify(v1).toLowerCase().includes('congelado') || JSON.stringify(v1).toLowerCase().includes('marmita')) {
+    legacy_rules_detected.push('rule_marmita_freeze');
+    divergence_types.add('rule_marmita_freeze');
+  }
+
+  // 4. Clinical Impact Assessment
   let severity: 'info' | 'warn' | 'critical' = 'info';
-  if (divergenceCount > 5) severity = 'critical';
-  else if (divergenceCount > 0) severity = 'warn';
+  let clinical_impact = "Insignificante";
+
+  if (divergence_types.has('protein_clamp_violation')) {
+    severity = 'critical';
+    clinical_impact = "ALTO RISCO: Proteína V2 excede limites ou diverge agressivamente do legado";
+  } else if (divergence_types.has('macro_drift') && readiness_score < 70) {
+    severity = 'warn';
+    clinical_impact = "Moderado: Desvio calórico fora da margem de segurança";
+  } else if (divergenceCount > 0) {
+    severity = 'info';
+    clinical_impact = "Baixo: Divergências estruturais sem risco clínico imediato";
+  }
+
+  readiness_score = Math.max(0, readiness_score);
 
   return {
-    compatible,
+    compatible: divergenceCount === 0,
     divergence_count: divergenceCount,
     severity,
-    divergences,
-    payload_diff: diff
+    divergence_types: Array.from(divergence_types),
+    analysis: {
+      types: diff,
+      clinical_impact,
+      legacy_rules_detected
+    },
+    readiness_score,
+    payload_diff: {
+      divergences: Array.from(divergence_types),
+      diff,
+      v1_summary: v1.totals,
+      v2_summary: v2.totals
+    }
   };
 }
 
@@ -78,8 +127,6 @@ export async function runShadowAudit(
   try {
     const audit = compareClinicalOutputs(v1Data, v2Data);
     
-    // We don't want to block the main generation flow
-    // Fire and forget or handle error silently
     const { error } = await client
       .from("clinical_shadow_audit")
       .insert({
@@ -89,13 +136,11 @@ export async function runShadowAudit(
         v2_hash: JSON.stringify(v2Data.totals || {}),
         divergence_count: audit.divergence_count,
         compatible: audit.compatible,
-        payload_diff: {
-          divergences: audit.divergences,
-          diff: audit.payload_diff,
-          v1_full: v1Data,
-          v2_full: v2Data
-        },
-        severity: audit.severity
+        severity: audit.severity,
+        divergence_types: audit.divergence_types,
+        analysis: audit.analysis,
+        readiness_score: audit.readiness_score,
+        payload_diff: audit.payload_diff
       });
 
     if (error) console.error("[SHADOW-AUDIT] Error persisting audit:", error);
@@ -106,3 +151,4 @@ export async function runShadowAudit(
     return null;
   }
 }
+

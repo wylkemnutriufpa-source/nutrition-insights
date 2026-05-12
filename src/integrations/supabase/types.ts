@@ -3264,35 +3264,47 @@ export type Database = {
       }
       clinical_shadow_audit: {
         Row: {
+          analysis: Json | null
           compatible: boolean | null
           divergence_count: number | null
+          divergence_types: string[] | null
           generated_at: string | null
           id: string
           patient_id: string | null
           payload_diff: Json | null
           plan_id: string | null
+          readiness_score: number | null
+          severity: string | null
           v1_hash: string | null
           v2_hash: string | null
         }
         Insert: {
+          analysis?: Json | null
           compatible?: boolean | null
           divergence_count?: number | null
+          divergence_types?: string[] | null
           generated_at?: string | null
           id?: string
           patient_id?: string | null
           payload_diff?: Json | null
           plan_id?: string | null
+          readiness_score?: number | null
+          severity?: string | null
           v1_hash?: string | null
           v2_hash?: string | null
         }
         Update: {
+          analysis?: Json | null
           compatible?: boolean | null
           divergence_count?: number | null
+          divergence_types?: string[] | null
           generated_at?: string | null
           id?: string
           patient_id?: string | null
           payload_diff?: Json | null
           plan_id?: string | null
+          readiness_score?: number | null
+          severity?: string | null
           v1_hash?: string | null
           v2_hash?: string | null
         }
@@ -20837,6 +20849,26 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      clinical_observability_dashboard: {
+        Row: {
+          audit_date: string | null
+          avg_divergence_per_plan: number | null
+          compatibility_rate: number | null
+          divergence_heatmap: Json | null
+          readiness_score: number | null
+          total_samples: number | null
+        }
+        Relationships: []
+      }
+      legacy_rule_heatmap: {
+        Row: {
+          critical_failures: number | null
+          impact_count: number | null
+          legacy_rule: string | null
+          readiness_with_rule: number | null
+        }
+        Relationships: []
       }
       meal_plan_job_metrics: {
         Row: {

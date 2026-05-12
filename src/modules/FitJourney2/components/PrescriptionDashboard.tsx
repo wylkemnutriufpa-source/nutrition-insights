@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNutritionistProfile } from '../hooks/useNutritionistProfile';
 import { usePatients } from '../hooks/usePatients';
-import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, ShieldCheck } from 'lucide-react';
+import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, ShieldCheck, Activity, Search } from 'lucide-react';
 import { MealEditModal } from './MealEditModal';
+import { ClinicalAuditDashboard } from './ClinicalAuditDashboard';
 import { MealItem, MacroTargets, ClinicalProfile } from '../../../core/clinical-engine';
 
 export const PrescriptionDashboard = () => {
   const { profile, loading: loadingProfile } = useNutritionistProfile();
   const { patients, loading: loadingPatients } = usePatients(profile?.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'patients' | 'audit'>('patients');
 
   const mockMeal = {
     name: "Almoço Teste (Soberano)",
@@ -99,58 +101,81 @@ export const PrescriptionDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Patients */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-black uppercase tracking-tight">Pacientes Recentes</h2>
-            <button className="text-xs font-bold text-green-400 flex items-center gap-1 hover:text-green-300 transition-colors uppercase">
-              Ver todos <ArrowRight size={14} />
-            </button>
+          <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+            <div className="flex gap-6">
+              <button 
+                onClick={() => setActiveTab('patients')}
+                className={`text-sm font-black uppercase tracking-widest pb-2 transition-all ${activeTab === 'patients' ? 'text-green-500 border-b-2 border-green-500' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                Pacientes
+              </button>
+              <button 
+                onClick={() => setActiveTab('audit')}
+                className={`text-sm font-black uppercase tracking-widest pb-2 transition-all flex items-center gap-2 ${activeTab === 'audit' ? 'text-green-500 border-b-2 border-green-500' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                <Activity size={14} /> Auditoria Shadow
+              </button>
+            </div>
           </div>
 
-          <div className="bg-slate-900/30 border border-slate-800 rounded-2xl overflow-hidden">
-            {loadingPatients ? (
-              <div className="p-8 text-center text-slate-500 font-mono text-sm">Escaneando base de dados...</div>
-            ) : patients.length === 0 ? (
-              <div className="p-12 text-center space-y-4">
-                <div className="h-12 w-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-600">
-                  <Users size={24} />
-                </div>
-                <div>
-                  <p className="text-slate-400 font-medium">Nenhum paciente cadastrado na V2</p>
-                  <p className="text-slate-600 text-xs mt-1 uppercase font-bold tracking-wider">Inicie sua base de dados isolada</p>
-                </div>
-                <button className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-xl text-sm font-black uppercase transition-all flex items-center gap-2 mx-auto">
-                  <Plus size={16} /> Novo Paciente
+          {activeTab === 'patients' ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-black uppercase tracking-tight">Pacientes Recentes</h2>
+                <button className="text-xs font-bold text-green-400 flex items-center gap-1 hover:text-green-300 transition-colors uppercase">
+                  Ver todos <ArrowRight size={14} />
                 </button>
               </div>
-            ) : (
-              <div className="divide-y divide-slate-800">
-                {patients.map((patient) => (
-                  <div key={patient.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 font-bold">
-                        {patient.full_name[0]}
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm">{patient.full_name}</p>
-                        <p className="text-xs text-slate-500 font-mono italic">OBJETIVO: HIPERTROFIA</p>
-                      </div>
+
+              <div className="bg-slate-900/30 border border-slate-800 rounded-2xl overflow-hidden">
+                {loadingPatients ? (
+                  <div className="p-8 text-center text-slate-500 font-mono text-sm">Escaneando base de dados...</div>
+                ) : patients.length === 0 ? (
+                  <div className="p-12 text-center space-y-4">
+                    <div className="h-12 w-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-600">
+                      <Users size={24} />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="hidden md:block text-right mr-4">
-                        <div className="h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-green-500 w-[65%]" />
-                        </div>
-                        <p className="text-[10px] text-slate-500 uppercase mt-1 font-bold">Adesão: 65%</p>
-                      </div>
-                      <button className="h-8 w-8 bg-slate-800 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-green-500 group-hover:text-white transition-all">
-                        <ArrowRight size={16} />
-                      </button>
+                    <div>
+                      <p className="text-slate-400 font-medium">Nenhum paciente cadastrado na V2</p>
+                      <p className="text-slate-600 text-xs mt-1 uppercase font-bold tracking-wider">Inicie sua base de dados isolada</p>
                     </div>
+                    <button className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-xl text-sm font-black uppercase transition-all flex items-center gap-2 mx-auto">
+                      <Plus size={16} /> Novo Paciente
+                    </button>
                   </div>
-                ))}
+                ) : (
+                  <div className="divide-y divide-slate-800">
+                    {patients.map((patient) => (
+                      <div key={patient.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 font-bold">
+                            {patient.full_name[0]}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm">{patient.full_name}</p>
+                            <p className="text-xs text-slate-500 font-mono italic">OBJETIVO: HIPERTROFIA</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="hidden md:block text-right mr-4">
+                            <div className="h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-green-500 w-[65%]" />
+                            </div>
+                            <p className="text-[10px] text-slate-500 uppercase mt-1 font-bold">Adesão: 65%</p>
+                          </div>
+                          <button className="h-8 w-8 bg-slate-800 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-green-500 group-hover:text-white transition-all">
+                            <ArrowRight size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <ClinicalAuditDashboard />
+          )}
         </div>
 
         {/* Quick Actions / Shortcuts */}
