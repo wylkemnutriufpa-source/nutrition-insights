@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PrescriptionDashboard } from '../../modules/FitJourney2/components/PrescriptionDashboard';
+import { CompatibilityFallback } from './CompatibilityFallback';
 import { useAuth } from '../../lib/auth';
 
 /**
@@ -20,8 +21,10 @@ export const AppRouter = () => {
     return <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-widest">Iniciando FitJourney...</div>;
   }
 
-  // Se o usuário não está logado, forçar redirecionamento (Supabase Auth lida com isso se integrado, mas aqui garantimos)
-  // Nota: O AuthProvider já deve ter tentado recuperar a sessão.
+  // MODO V1 ATIVO: Renderiza o Fallback de Compatibilidade
+  if (mode === 'V1') {
+    return <CompatibilityFallback onSwitch={() => setMode('V2')} />;
+  }
 
   return (
     <BrowserRouter>
@@ -29,14 +32,10 @@ export const AppRouter = () => {
         {/* Toggle de Emergência (Mode Selector) */}
         <div className="fixed bottom-6 right-6 z-[100]">
           <button 
-            onClick={() => setMode(mode === 'V1' ? 'V2' : 'V1')}
-            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-tighter border shadow-2xl transition-all active:scale-95 ${
-              mode === 'V1' 
-              ? 'bg-green-600 border-green-400 text-white animate-pulse' 
-              : 'bg-slate-900 border-slate-700 text-slate-400'
-            }`}
+            onClick={() => setMode('V1')}
+            className="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-tighter border shadow-2xl transition-all active:scale-95 bg-slate-900 border-slate-700 text-slate-400"
           >
-            MODO: {mode}
+            Voltar para V1
           </button>
         </div>
 
