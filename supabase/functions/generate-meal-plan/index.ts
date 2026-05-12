@@ -3030,7 +3030,11 @@ async function executeShadowMigrationV2(
     const v2PlanItems: any[] = [];
     const dayTargets = { ...targets };
     
-    // 1. Group by day
+    // Use canonical protein distribution
+    const isGainGoal = goal.includes("gain") || goal.includes("muscle");
+    const { shares: proteinShares } = getProteinDistribution(isGainGoal);
+    
+    // Group by day
     const byDay = new Map<number, any[]>();
     for (const item of guardedItems) {
       const d = item.day_of_week || 0;
@@ -3038,31 +3042,26 @@ async function executeShadowMigrationV2(
       byDay.get(d)!.push(item);
     }
 
+    const clinicalEvents: any[] = [];
+
     for (const [day, dayItems] of byDay) {
       const dayV2Items: any[] = [];
       
       for (const item of dayItems) {
-        // Map to V2 MealItem
-        // We estimate densities based on V1's targets (back-calculation if needed)
-        // or we try to find the original food in the database.
-        // For shadow purposes, we'll use the V1's provided targets as "base"
         const densityFactor = 100 / (item.grams || 100);
         const v2Item: MealItemV2 = {
           name: item.title,
           grams: item.grams || 100,
-          macro_role: item.macro_role || (item.meal_type === 'breakfast' ? 'carb' : 'protein'),
+          macro_role: item.macro_role || (['almoco', 'jantar', 'lunch', 'dinner'].includes(item.meal_type) ? 'protein' : 'carb'),
           protein_per_100g: (item.protein_target || 0) * densityFactor,
           carbs_per_100g: (item.carbs_target || 0) * densityFactor,
           fat_per_100g: (item.fat_target || 0) * densityFactor,
           calories_per_100g: (item.calories_target || 0) * densityFactor,
         };
 
-        // If it's a multi-item meal description, this is an approximation.
-        // But the clinical engine V2 treats the "Meal" as a unit for reconciliation in this shadow phase.
-        
         const mealTarget = {
           calories: Math.round(dayTargets.calories * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
-          protein: Math.round(dayTargets.protein * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
+          protein: Math.round(dayTargets.protein * (proteinShares[item.meal_type] || 0.15)),
           carbs: Math.round(dayTargets.carbs * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
           fat: Math.round(dayTargets.fat * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
         };
@@ -3076,7 +3075,12 @@ async function executeShadowMigrationV2(
           goal: goal
         };
 
-        const reconciled = reconcileMealV2([v2Item], mealTarget, profileV2);
+        const reconciled = reconcileMealV2([v2Item], mealTarget, profileV2, item.meal_type);
+        
+        if (reconciled.events.length > 0) {
+          clinicalEvents.push(...reconciled.events.map(e => ({ ...e, day_of_week: day, patient_id: patientId })));
+        }
+
         dayV2Items.push({
           ...item,
           ...reconciled.totals,
@@ -3090,7 +3094,6 @@ async function executeShadowMigrationV2(
       v2PlanItems.push(...dayV2Items);
     }
 
-    // 2. Prepare summaries for comparison
     const v1Summary = {
       totals: {
         protein: v1Items.reduce((s, i) => s + (i.protein_target || 0), 0),
@@ -3111,7 +3114,12 @@ async function executeShadowMigrationV2(
       items: v2PlanItems.map(i => ({ name: i.title, grams: i.grams || 100 }))
     };
 
-    await runShadowAudit(client, planId, patientId, v1Summary, v2Summary);
+    const audit = await runShadowAudit(client, planId, patientId, v1Summary, v2Summary);
+    
+    // Log clinical events if any
+    if (clinicalEvents.length > 0 && audit) {
+      await client.from("clinical_event_log").insert(clinicalEvents);
+    }
     
   } catch (err) {
     console.error("[SHADOW-MIGRATION] Critical error:", err);
