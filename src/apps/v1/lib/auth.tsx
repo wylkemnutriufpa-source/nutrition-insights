@@ -165,21 +165,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initialize = async () => {
-      setLoading(false);
       try {
-        console.log("[Auth] Starting initialization...");
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log("[Auth] Checking session...");
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("[Auth] Session fetch error:", sessionError);
+          if (mounted) setLoading(false);
+          return;
+        }
+
         if (mounted) {
+          console.log("[Auth] Session result:", !!initialSession);
           setSession(initialSession);
           setUser(initialSession?.user ?? null);
+          
           if (initialSession?.user) {
+            console.log("[Auth] Fetching user data...");
             await fetchData(initialSession.user.id);
           }
         }
       } catch (e) {
-        if (import.meta.env.DEV) console.error("Recovery init error", e);
+        console.error("[Auth] Recovery init catch:", e);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          console.log("[Auth] Init complete, loading = false");
+          setLoading(false);
+        }
       }
     };
 
