@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 import { logClinicalEvent } from '../../audit/services/auditLogger';
 import { processSmartTemplate } from '../services/templateIntelligence';
+import { validatePersistedState } from '../security/storeGuard';
 
 
 interface EditorState {
