@@ -12,6 +12,24 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
+
+/**
+ * Onda 1 — Snapshot determinístico:
+ * Após qualquer publicação bem-sucedida, gera e persiste o snapshot imutável.
+ * NÃO bloqueia o fluxo: falhas são apenas logadas. Nenhuma camada lê o snapshot
+ * nesta onda — apenas geração + persistência.
+ */
+async function persistSnapshotAfterPublish(planId: string): Promise<void> {
+  try {
+    const result = await generateAndPersistMealPlanSnapshot(planId);
+    if (!result.success) {
+      console.warn("[ServerTransition] snapshot persistence soft-failed:", result.error);
+    }
+  } catch (e) {
+    console.warn("[ServerTransition] snapshot persistence threw (ignored):", e);
+  }
+}
 
 export interface TransitionResult {
   success: boolean;
