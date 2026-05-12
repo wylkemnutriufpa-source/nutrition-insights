@@ -13,15 +13,6 @@ const SimpleLoader = () => (
 );
 
 const AppContent = () => {
-  const { loading, authStatus } = useAuth();
-  
-  console.log("[V1App] Current State:", { loading, authStatus, path: window.location.pathname });
-
-  // Forçar renderização do AppRoutes se não estiver explicitamente carregando a sessão inicial
-  if (loading && authStatus === "loading") {
-    return <SimpleLoader />;
-  }
-
   return <AppRoutes />;
 };
 
