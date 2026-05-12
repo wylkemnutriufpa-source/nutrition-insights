@@ -567,7 +567,7 @@ export function MealSmartEditorModal({
                             min="0.1"
                             className="h-10 bg-background border-primary/20 rounded-xl"
                             value={portionFactor}
-                            onChange={(e) => setPortionFactor(parseFloat(e.target.value) || 1.0)}
+                            onChange={(e) => handlePortionChange(parseFloat(e.target.value) || 1.0)}
                           />
                           <span className="text-sm font-bold text-muted-foreground">x</span>
                         </div>
