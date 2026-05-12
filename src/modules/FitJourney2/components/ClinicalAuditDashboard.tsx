@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle, CheckCircle2, Activity, ShieldAlert, BarChart3, Clock } from 'lucide-react';
 
+interface LegacyRule {
+  legacy_rule: string;
+  impact_count: number;
+  readiness_with_rule: number;
+  critical_failures: number;
+}
+
 interface AuditMetric {
   audit_date: string;
   total_samples: number;
