@@ -4189,6 +4189,31 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       });
     }
 
+    // ──── SHADOW MIGRATION V2 (SILENT AUDIT) ────
+    try {
+      const shadowPatientProfile = {
+        sex: anamnesis?.answers?.sex || "male",
+        weight: weight,
+        height: height,
+        age: age,
+        activity_level: activityLevel,
+      };
+      
+      // Run shadow audit in background (non-blocking)
+      executeShadowMigrationV2(
+        serviceClient,
+        finalMealPlanId,
+        patient_id,
+        shadowPatientProfile,
+        planItems,
+        guardedPlanItems,
+        finalMacros,
+        goal
+      ).catch(e => console.error("[SHADOW-AUDIT] Non-blocking error:", e));
+    } catch (shadowErr) {
+      console.error("[SHADOW-AUDIT] Sync error:", shadowErr);
+    }
+
     const itemsToInsert = planItems.map((item: any) => {
       const { 
         _image_url, _source, _category_used, _scale_factor, _template_id, 
@@ -4202,6 +4227,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         day_of_week: 0
       };
     });
+
 
     console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan: final-insert)");
     itemsToInsert.forEach((item, idx) => {
