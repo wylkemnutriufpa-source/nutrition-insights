@@ -1,153 +1,188 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import StatsCard from "@/components/dashboard/StatsCard";
+import XPBar from "@/components/gamification/XPBar";
+import StreakCounter from "@/components/gamification/StreakCounter";
+import MealCard from "@/components/meals/MealCard";
+import { UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
-import { 
-  Users, ClipboardList, UtensilsCrossed, MessageSquare, 
-  Settings, UserPlus, Calendar, Activity, TrendingUp
-} from "lucide-react";
-import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard";
-import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { Link } from "react-router-dom";
+import type { Tables } from "@/integrations/supabase/types";
 
-export default function Index() {
-  const { user, isNutritionist, isPersonal, isAdmin } = useAuth();
-  const { isProfessionalContext } = useWorkspaceContext();
-  const navigate = useNavigate();
+type Meal = Tables<"meals">;
+type PlayerStats = Tables<"player_stats">;
 
-  const isProRole = isNutritionist || isPersonal || isAdmin;
-  const effectiveProRole = isProRole && isProfessionalContext;
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+const item = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0 },
+};
 
-  if (effectiveProRole) {
-    return <NutritionistDashboard />;
-  }
-
-  return <PatientDashboard />;
-}
-
-function NutritionistDashboard() {
+function PatientDashboardContent() {
   const { user } = useAuth();
-  const [patientCount, setPatientCount] = useState(0);
-  const [mealPlanCount, setMealPlanCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<PlayerStats | null>(null);
+  const [meals, setMeals] = useState<Meal[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id) return;
-      try {
-        const [patientsRes, plansRes] = await Promise.all([
-          supabase.from("nutritionist_patients").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("status", "active"),
-          supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("is_active", true),
-        ]);
-        setPatientCount(patientsRes.count || 0);
-        setMealPlanCount(plansRes.count || 0);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [user?.id]);
-
-  if (loading) return <div className="p-8">Carregando painel clínico...</div>;
+    if (!user) return;
+    supabase.from("player_stats").select("*").eq("user_id", user.id).single()
+      .then(({ data }) => setStats(data));
+    supabase.from("meals").select("*").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(6)
+      .then(({ data }) => setMeals(data || []));
+  }, [user]);
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Painel Profissional</h1>
-        <p className="text-muted-foreground">Bem-vindo ao seu centro de comando clínico.</p>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6 flex items-center gap-4">
-          <div className="p-3 bg-primary/10 rounded-xl text-primary"><Users className="w-6 h-6" /></div>
-          <div>
-            <p className="text-sm text-muted-foreground">Pacientes</p>
-            <h3 className="text-2xl font-bold">{patientCount}</h3>
-          </div>
-        </Card>
-        <Card className="p-6 flex items-center gap-4">
-          <div className="p-3 bg-blue-500/10 rounded-xl text-blue-600"><ClipboardList className="w-6 h-6" /></div>
-          <div>
-            <p className="text-sm text-muted-foreground">Planos Ativos</p>
-            <h3 className="text-2xl font-bold">{mealPlanCount}</h3>
-          </div>
-        </Card>
-      </div>
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold">Ações Rápidas</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link to="/v1/patients">
-            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-primary/5 hover:bg-primary/10 transition-all">
-              <UserPlus className="w-6 h-6 text-primary" />
-              <span className="text-sm font-semibold">Novo Paciente</span>
-            </Card>
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      {/* Header */}
+      <motion.div variants={item} className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Meu Dashboard</h1>
+          <p className="text-muted-foreground text-sm">Acompanhe seu progresso</p>
+        </div>
+        <div className="flex gap-2">
+          <Link to="/analyze">
+            <Button className="gradient-primary shadow-glow gap-2">
+              <Sparkles className="w-4 h-4" /> Analisar Refeição
+            </Button>
           </Link>
-          <Link to="/v1/meal-plans">
-            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-blue-500/5 hover:bg-blue-500/10 transition-all">
-              <UtensilsCrossed className="w-6 h-6 text-blue-600" />
-              <span className="text-sm font-semibold">Criar Plano</span>
-            </Card>
-          </Link>
-          <Link to="/v1/chat">
-            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-emerald-500/5 hover:bg-emerald-500/10 transition-all">
-              <MessageSquare className="w-6 h-6 text-emerald-600" />
-              <span className="text-sm font-semibold">Chat</span>
-            </Card>
-          </Link>
-          <Link to="/v1/settings">
-            <Card className="p-4 h-full flex flex-col items-center justify-center text-center gap-2 border-none bg-gray-100 hover:bg-gray-200 transition-all">
-              <Settings className="w-6 h-6 text-gray-700" />
-              <span className="text-sm font-semibold">Configurações</span>
-            </Card>
+          <Link to="/meals">
+            <Button variant="outline" className="gap-2">
+              <Plus className="w-4 h-4" /> Registrar
+            </Button>
           </Link>
         </div>
-      </section>
+      </motion.div>
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold">Explorar</h2>
-        <ProStrategicDashboard />
-      </section>
-    </div>
+      {/* Gamification bar */}
+      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} />
+        <StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} />
+      </motion.div>
+
+      {/* Stats */}
+      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatsCard title="Refeições" value={stats?.meals_logged || 0} icon={UtensilsCrossed} gradient />
+        <StatsCard title="Nível" value={stats?.level || 1} icon={TrendingUp} />
+        <StatsCard title="XP Total" value={stats?.total_xp || 0} icon={Target} />
+        <StatsCard title="Streak" value={`${stats?.current_streak || 0}d`} icon={Target} />
+      </motion.div>
+
+      {/* Recent meals */}
+      <motion.div variants={item}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display font-semibold text-lg">Refeições Recentes</h2>
+          <Link to="/meals" className="text-sm text-primary hover:underline">Ver todas</Link>
+        </div>
+        {meals.length === 0 ? (
+          <div className="glass rounded-xl p-8 text-center">
+            <UtensilsCrossed className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">Nenhuma refeição registrada ainda.</p>
+            <Link to="/meals">
+              <Button className="mt-4 gradient-primary">Registrar primeira refeição</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {meals.map((meal) => (
+              <MealCard
+                key={meal.id}
+                title={meal.title}
+                mealType={meal.meal_type}
+                loggedAt={meal.logged_at}
+                calories={meal.calories}
+                protein={meal.protein}
+                carbs={meal.carbs}
+                fat={meal.fat}
+                aiScore={meal.ai_score}
+                aiFeedback={meal.ai_feedback}
+                imageUrl={meal.image_url}
+                xpEarned={meal.xp_earned}
+              />
+            ))}
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
   );
 }
 
-function PatientDashboard() {
+function NutritionistDashboardContent() {
+  const { user } = useAuth();
+  const [patientCount, setPatientCount] = useState(0);
+  const [mealCount, setMealCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("nutritionist_patients").select("id", { count: "exact" })
+      .eq("nutritionist_id", user.id).eq("status", "active")
+      .then(({ count }) => setPatientCount(count || 0));
+    // Count recent meals from patients
+    supabase.from("nutritionist_patients").select("patient_id").eq("nutritionist_id", user.id).eq("status", "active")
+      .then(async ({ data }) => {
+        if (!data || data.length === 0) return;
+        const ids = data.map(d => d.patient_id);
+        const { count } = await supabase.from("meals").select("id", { count: "exact" })
+          .in("user_id", ids);
+        setMealCount(count || 0);
+      });
+  }, [user]);
+
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <header className="text-center py-4">
-        <h1 className="text-3xl font-bold">Minha Jornada</h1>
-        <p className="text-muted-foreground mt-1">Acompanhe seu progresso e plano alimentar.</p>
-      </header>
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={item} className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Dashboard Profissional</h1>
+          <p className="text-muted-foreground text-sm">Visão geral dos seus pacientes</p>
+        </div>
+        <Link to="/patients">
+          <Button className="gradient-primary gap-2">
+            <Plus className="w-4 h-4" /> Novo Paciente
+          </Button>
+        </Link>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link to="/v1/patient-meal-plan">
-          <Card className="p-6 flex flex-col items-center gap-3 bg-primary/5 hover:bg-primary/10 transition-all border-none">
-            <UtensilsCrossed className="w-8 h-8 text-primary" />
-            <span className="font-bold">Minha Dieta</span>
-          </Card>
-        </Link>
-        <Link to="/v1/checkin">
-          <Card className="p-6 flex flex-col items-center gap-3 bg-blue-500/5 hover:bg-blue-500/10 transition-all border-none">
-            <TrendingUp className="w-8 h-8 text-blue-600" />
-            <span className="font-bold">Evolução</span>
-          </Card>
-        </Link>
-        <Link to="/v1/chat">
-          <Card className="p-6 flex flex-col items-center gap-3 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all border-none">
-            <MessageSquare className="w-8 h-8 text-emerald-600" />
-            <span className="font-bold">Mensagens</span>
-          </Card>
-        </Link>
-      </div>
+      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatsCard title="Pacientes Ativos" value={patientCount} icon={Users} gradient />
+        <StatsCard title="Refeições Registradas" value={mealCount} icon={UtensilsCrossed} />
+        <StatsCard title="Planos Ativos" value="-" icon={TrendingUp} />
+      </motion.div>
 
-      <section className="pt-4 border-t border-border/50">
-        <PatientGridDashboard />
-      </section>
-    </div>
+      <motion.div variants={item} className="glass rounded-xl p-8 text-center">
+        <Users className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+        <h3 className="font-display font-semibold text-lg mb-1">Gerencie seus pacientes</h3>
+        <p className="text-muted-foreground text-sm mb-4">
+          Adicione pacientes, crie planos alimentares e acompanhe o progresso deles.
+        </p>
+        <Link to="/patients">
+          <Button variant="outline">Ver Pacientes</Button>
+        </Link>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+export default function Index() {
+  const { isNutritionist, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      {isNutritionist ? <NutritionistDashboardContent /> : <PatientDashboardContent />}
+    </DashboardLayout>
   );
 }
