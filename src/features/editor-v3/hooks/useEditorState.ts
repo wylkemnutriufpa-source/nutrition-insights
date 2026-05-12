@@ -902,6 +902,20 @@ export const useEditorState = create<EditorState>()(
       name: 'fitjourney-editor-v3-storage',
       version: 2,
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: (state) => {
+        return (persistedState, error) => {
+          if (error) {
+            console.error('[Zustand] Erro crítico na reidratação:', error);
+            return;
+          }
+          if (persistedState) {
+            const validated = validatePersistedState(persistedState);
+            if (!validated) {
+              console.error('[Zustand] Estado corrompido detectado. Abortando hidratação para evitar crash.');
+            }
+          }
+        };
+      },
       migrate: (persisted: any, version) => {
         if (!persisted || version < 2) {
           return { ...(persisted ?? {}), meals: DEFAULT_MEALS, planStatus: 'draft' };
@@ -911,3 +925,4 @@ export const useEditorState = create<EditorState>()(
     }
   )
 );
+
