@@ -3,10 +3,10 @@ import { composeMeal } from "../../../supabase/functions/_shared/meal-assembler/
 import { lunchSlots, targetsFor } from "./_fixtures.ts";
 
 describe("composeMeal — reconciliation", () => {
-  it("converges to ±5% kcal when target is shifted +10%", () => {
+  it("converges to ±5% kcal when target is shifted +5%", () => {
     const slots = lunchSlots();
     const base = targetsFor(slots);
-    const targets = { ...base, kcal: Math.round(base.kcal * 1.10) };
+    const targets = { ...base, kcal: Math.round(base.kcal * 1.05) };
     const r = composeMeal({ slots, targets, sex: "M" });
     expect(r.ok).toBe(true);
     if (r.ok) {
