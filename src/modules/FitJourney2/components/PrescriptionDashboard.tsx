@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNutritionistProfile } from '../hooks/useNutritionistProfile';
 import { usePatients } from '../hooks/usePatients';
-import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, ShieldCheck } from 'lucide-react';
+import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, ShieldCheck, Activity, Search } from 'lucide-react';
 import { MealEditModal } from './MealEditModal';
+import { ClinicalAuditDashboard } from './ClinicalAuditDashboard';
 import { MealItem, MacroTargets, ClinicalProfile } from '../../../core/clinical-engine';
 
 export const PrescriptionDashboard = () => {
   const { profile, loading: loadingProfile } = useNutritionistProfile();
   const { patients, loading: loadingPatients } = usePatients(profile?.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'patients' | 'audit'>('patients');
 
   const mockMeal = {
     name: "Almoço Teste (Soberano)",
