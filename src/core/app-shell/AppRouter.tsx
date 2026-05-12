@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PrescriptionDashboard } from '../../modules/FitJourney2/components/PrescriptionDashboard';
+import { PatientDietView } from '../../modules/FitJourney2/components/PatientDietView';
 import { CompatibilityFallback } from './CompatibilityFallback';
 import { useAuth } from '../../lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,15 +79,15 @@ export const AppRouter = () => {
               {/* Rotas Privadas */}
               <Route 
                 path="/" 
-                element={user ? <PrescriptionDashboard /> : <Navigate to="/auth" replace />} 
+                element={user ? (isPatient ? <PatientDietView /> : <PrescriptionDashboard />) : <Navigate to="/auth" replace />} 
               />
               <Route 
                 path="/dashboard" 
-                element={user ? <PrescriptionDashboard /> : <Navigate to="/auth" replace />} 
+                element={user ? (isPatient ? <PatientDietView /> : <PrescriptionDashboard />) : <Navigate to="/auth" replace />} 
               />
               <Route 
                 path="/my-diet" 
-                element={user ? <PrescriptionDashboard /> : <Navigate to="/auth" replace />} 
+                element={user ? <PatientDietView /> : <Navigate to="/auth" replace />} 
               />
 
               {/* Fallback */}
