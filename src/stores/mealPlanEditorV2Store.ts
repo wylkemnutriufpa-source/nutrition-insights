@@ -524,7 +524,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   },
 
   // ── Update item ───────────────────────────────────────────
-  updateItem: (itemId, patch) => {
+  updateItem: (itemId, patch, skipPersist = false) => {
     const sanitizedPatch = sanitizeMealPlanItemPatch(patch);
     if (Object.keys(sanitizedPatch).length === 0) {
       console.warn("[MealPlanEditorV2Store.updateItem] Ignorando patch sem campos persistíveis", {
