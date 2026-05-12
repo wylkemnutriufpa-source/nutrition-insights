@@ -791,10 +791,8 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      // updateMealItem is already defined earlier
+      // ... keep existing code
 
-
-      generatePlan: async (goal, baseCalories, availableFoods, replaceExisting = false) => {
         let currentMeals = get().meals;
         const { patientContext } = get();
         
