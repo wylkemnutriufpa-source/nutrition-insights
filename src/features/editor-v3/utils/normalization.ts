@@ -110,7 +110,7 @@ export function normalizeFood(food: any): Food {
 
 /**
  * Migration Guard: Converte dados do Editor V2 para V3 de forma segura.
- * Aplica validadores, sanitizers e normalizadores clínicos.
+ * Pode receber um array de refeições (V2) ou um array de itens flat (DB).
  */
 export function normalizeV2ToV3(v2Data: any): Meal[] {
   console.log('[Migration Guard] Iniciando migração V2 -> V3');
@@ -120,18 +120,54 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
     return [];
   }
 
-  return v2Data.map((meal: any) => {
+  // Se os dados forem itens flat (do banco de dados), agrupamos por tipo de refeição primeiro
+  let mealsArray: any[] = v2Data;
+  if (v2Data.length > 0 && v2Data[0].meal_type) {
+    const itemsByMealType: Record<string, any[]> = {};
+    v2Data.forEach((item: any) => {
+      const type = item.meal_type || 'outros';
+      if (!itemsByMealType[type]) itemsByMealType[type] = [];
+      itemsByMealType[type].push(item);
+    });
+
+    const mealTypeLabels: Record<string, string> = {
+      breakfast: 'Café da Manhã',
+      morning_snack: 'Lanche da Manhã',
+      lunch: 'Almoço',
+      afternoon_snack: 'Lanche da Tarde',
+      dinner: 'Jantar',
+      evening_snack: 'Ceia',
+      pre_workout: 'Pré-Treino',
+      post_workout: 'Pós-Treino'
+    };
+
+    mealsArray = Object.entries(itemsByMealType).map(([type, items]) => ({
+      id: Math.random().toString(36).substring(2, 9),
+      name: mealTypeLabels[type] || type,
+      time: type === 'breakfast' ? '08:00' : (type === 'lunch' ? '12:00' : (type === 'dinner' ? '20:00' : '00:00')),
+      items: items
+    }));
+  }
+
+  return mealsArray.map((meal: any) => {
     const items = (meal.items || []).map((item: any) => {
-      // 1. Sanitization: Remover campos nulos ou lixo
-      const sanitizedItem = { ...item };
+      // 1. Sanitization: Garantir que títulos e macros não são nulos
+      const sanitizedItem = { 
+        ...item,
+        name: item.name || item.title || 'Alimento sem nome',
+        kcal: item.kcal ?? item.calories_target ?? item.calories ?? 0,
+        protein: item.protein ?? item.protein_target ?? 0,
+        carbs: item.carbs ?? item.carbs_target ?? 0,
+        fat: item.fat ?? item.fat_target ?? 0,
+      };
       
-      // 2. Compatibility Layer: Mapear campos antigos para novos
+      // 2. Compatibility Layer: Mapear campos antigos para novos usando o normalizador clínico V3
       const normalized = normalizeFood(sanitizedItem) as any;
       
       return {
         ...normalized,
         instanceId: normalized.instanceId || Math.random().toString(36).substring(2, 10),
-        quantity: normalized.quantity ?? 100,
+        quantity: normalized.quantity ?? 1,
         substitutions: (normalized.substitutions || []).map((sub: any) => normalizeFood(sub))
       } as MealItem;
     });
@@ -145,6 +181,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
     } as Meal;
   });
 }
+
 
 /**
  * Busca a melhor imagem no banco meal_visual_library para um determinado nome/alimento.
