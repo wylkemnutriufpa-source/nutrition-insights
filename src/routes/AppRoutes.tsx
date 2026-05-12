@@ -1,3 +1,10 @@
+/**
+ * ══════════════════════════════════════════════════════════════════
+ * ROUTE PROTECTION — SYSTEM CORE
+ * ESTABILIZAÇÃO SOBERANA LOCKDOWN
+ * QUALQUER ALTERAÇÃO AQUI PODE IMPACTAR TODO O RUNTIME
+ * ══════════════════════════════════════════════════════════════════
+ */
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { lazy, Suspense, useEffect } from "react";

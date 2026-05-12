@@ -1,3 +1,10 @@
+/**
+ * ══════════════════════════════════════════════════════════════════
+ * ARCHITECTURE PROTECTED — APP BOOTSTRAP
+ * ESTABILIZAÇÃO SOBERANA LOCKDOWN
+ * NÃO ALTERAR SEM APROVAÇÃO EXPLÍCITA DE GOVERNANÇA
+ * ══════════════════════════════════════════════════════════════════
+ */
 import React, { useState, useEffect, Suspense } from 'react';
 import { PrescriptionDashboard } from './modules/FitJourney2/components/PrescriptionDashboard';
 import { AppRoutes } from './routes/AppRoutes';
