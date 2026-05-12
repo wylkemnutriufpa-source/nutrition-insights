@@ -15,6 +15,8 @@ import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
 import LanguageSelector from "@v1/components/common/LanguageSelector";
 import { useTranslation } from "react-i18next";
 
+console.log("[Auth] Page module loaded");
+
 type AuthMode = "login" | "forgot" | "register";
 type SelectedRole = "nutritionist" | "personal" | "patient" | null;
 
@@ -36,14 +38,11 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
 
   // Bypass authenticated check during recovery mode if needed
   // For now, keeping it simple to ensure the page renders
-  const { authStatus } = useAuth();
+  const { authStatus, user } = useAuth();
   
-  /* useEffect(() => {
-    if (authStatus === "authenticated") {
-      console.log("[Auth] Usuário já autenticado. Redirecionando para /dashboard...");
-      navigate("/v1/dashboard", { replace: true });
-    }
-  }, [authStatus, navigate]); */
+  useEffect(() => {
+    console.log("[Auth] Render check:", { authStatus, user: !!user });
+  }, [authStatus, user]);
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
