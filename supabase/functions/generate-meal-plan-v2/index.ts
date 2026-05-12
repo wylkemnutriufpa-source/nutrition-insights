@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
         .from("meal_plans")
         .insert({
           patient_id,
-          nutritionist_id: userId,
+          nutritionist_id: nutritionistId,
           tenant_id: link.tenant_id,
           title: plan_title ?? `Plano Determinístico V2 — ${new Date().toLocaleDateString("pt-BR")}`,
           plan_status: "draft",
