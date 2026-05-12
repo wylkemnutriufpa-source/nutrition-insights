@@ -1,6 +1,5 @@
 import "./index.css";
 import "./App.css";
-console.log("[V1App] Module script executed");
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useAuth } from "./lib/auth";
@@ -16,7 +15,7 @@ const SimpleLoader = () => (
 const AppContent = () => {
   const { loading, authStatus } = useAuth();
   
-  console.log("[V1App] Auth Debug:", { loading, authStatus });
+  // console.log("[V1App] Auth Debug:", { loading, authStatus });
 
   // Se a sessão principal ainda está sendo recuperada do Supabase,
   // mostramos o loader oficial em vídeo.
