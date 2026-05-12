@@ -105,7 +105,10 @@ export function MealSmartEditorModal({
 
   const handlePortionChange = (newVal: number) => {
     const factor = Math.max(0.1, Math.round(newVal * 10) / 10);
+    const scale = factor / portionFactor;
+    
     setDescription(prev => reconcileDescription(prev, factor, portionFactor));
+    setSubstitutions(prev => prev.map(sub => reconcileDescription(sub, factor, portionFactor)));
     setPortionFactor(factor);
   };
 
