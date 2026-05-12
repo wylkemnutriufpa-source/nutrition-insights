@@ -54,8 +54,6 @@ interface AuthContextType {
   checkSubscription: () => Promise<void>;
   setMode: (mode: string) => Promise<void>;
   error: Error | null;
-  experienceMode: "basic" | "pro" | "advanced";
-  experienceRole: "nutritionist" | "patient";
   tenantId: string | null;
   tenant: any | null;
 }
