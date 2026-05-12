@@ -3,7 +3,14 @@ import "./App.css";
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useAuth } from "./lib/auth";
-import { BrainLoaderScreen } from "@v1/components/common/BrainLoader";
+import { Loader2 } from "lucide-react";
+
+const SimpleLoader = () => (
+  <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+    <p className="text-sm text-muted-foreground animate-pulse">Carregando FitJourney...</p>
+  </div>
+);
 
 const AppContent = () => {
   const { loading } = useAuth();
@@ -11,7 +18,7 @@ const AppContent = () => {
   // Se a sessão principal ainda está sendo recuperada do Supabase,
   // mostramos o loader oficial em vídeo.
   if (loading) {
-    return <BrainLoaderScreen visible />;
+    return <SimpleLoader />;
   }
 
   return <AppRoutes />;

@@ -141,5 +141,13 @@ export default function Welcome() {
           "Direcionando para sua jornada…",
         ];
 
-  return <BrainLoaderScreen messages={stageMessages} visible />;
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="w-12 h-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold text-foreground">Aguarde um momento</h2>
+        <p className="text-sm text-muted-foreground">{stageMessages[0]}</p>
+      </div>
+    </div>
+  );
 }
