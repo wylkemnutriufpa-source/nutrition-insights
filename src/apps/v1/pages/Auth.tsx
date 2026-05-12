@@ -429,22 +429,6 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
             : t("auth.accessNote")}
         </p>
 
-        {/* Biquíni Branco Banner */}
-        <Link to="/v1/biquini-branco" className="block mt-4">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-orange-400/10 border border-pink-500/20 hover:border-pink-500/40 transition-colors cursor-pointer"
-          >
-            <span className="text-2xl">👙</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">{t("auth.biquiniBranco")}</p>
-              <p className="text-xs text-muted-foreground truncate">{t("auth.biquiniBrancoDesc")}</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-pink-500 shrink-0" />
-          </motion.div>
-        </Link>
       </motion.div>
     </div>
   );
