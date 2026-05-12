@@ -9,17 +9,14 @@ export function applyProteinClamp(
   if (item.macro_role !== 'protein') return grams;
 
   if (profile.sex === 'female') {
-    // Protein content per 100g
-    const proteinDensity = item.macros_per_100g.protein / 100;
-    const currentProteinContent = grams * proteinDensity;
-
-    if (currentProteinContent > PROTEIN_HARD_CLAMP_FEMALE) {
-      const clampedGrams = Math.floor(PROTEIN_HARD_CLAMP_FEMALE / proteinDensity);
-      console.warn(`[ProteinClamp] Clamping female protein item ${item.name} from ${grams}g to ${clampedGrams}g (max ${PROTEIN_HARD_CLAMP_FEMALE}g protein)`);
-      return clampedGrams;
+    // Note: The rule says "150g proteína sólida", which usually refers to the grams of the food item (like 150g chicken).
+    // The previous implementation was checking protein content. 
+    // I'll align with the shared engine's "solid protein grams" interpretation.
+    if (grams > PROTEIN_HARD_CLAMP_FEMALE) {
+      console.warn(`[ProteinClamp] Clamping female protein item ${item.name} from ${grams}g to ${PROTEIN_HARD_CLAMP_FEMALE}g`);
+      return PROTEIN_HARD_CLAMP_FEMALE;
     }
   }
 
-  // Male clamp logic could be added here based on role + elasticity
   return grams;
 }
