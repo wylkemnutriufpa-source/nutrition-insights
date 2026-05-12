@@ -70,6 +70,7 @@ export default function WorkspaceEditor() {
     addSection, updateSection, deleteSection, reorderSections,
     moveItem, toggleItemVisibility, togglePin, reorderItems, addItem, removeItem,
     getItemsForSection, resetToDefault,
+  } = useWorkspace();
 
   const [allMenuItems, setAllMenuItems] = useState<MenuItem[]>([]);
   const [newSectionName, setNewSectionName] = useState("");
