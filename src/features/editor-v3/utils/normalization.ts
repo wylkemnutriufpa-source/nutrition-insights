@@ -126,7 +126,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
       const sanitizedItem = { ...item };
       
       // 2. Compatibility Layer: Mapear campos antigos para novos
-      const normalized = normalizeFood(sanitizedItem);
+      const normalized = normalizeFood(sanitizedItem) as any;
       
       return {
         ...normalized,
