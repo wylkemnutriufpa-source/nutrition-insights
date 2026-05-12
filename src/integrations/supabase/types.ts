@@ -2494,6 +2494,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_event_log: {
+        Row: {
+          after: number | null
+          before: number | null
+          created_at: string | null
+          day_of_week: number | null
+          id: string
+          meal_type: string | null
+          metadata: Json | null
+          patient_id: string | null
+          source_rule: string | null
+          type: string
+        }
+        Insert: {
+          after?: number | null
+          before?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          meal_type?: string | null
+          metadata?: Json | null
+          patient_id?: string | null
+          source_rule?: string | null
+          type: string
+        }
+        Update: {
+          after?: number | null
+          before?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          meal_type?: string | null
+          metadata?: Json | null
+          patient_id?: string | null
+          source_rule?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       clinical_experiment_assignments: {
         Row: {
           assigned_at: string
@@ -20849,6 +20888,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      clinical_divergence_ranking: {
+        Row: {
+          affected_patients: number | null
+          avg_readiness: number | null
+          clinical_severity: string | null
+          frequency_pct: number | null
+          readiness_impact: number | null
+          rule: string | null
+        }
+        Relationships: []
       }
       clinical_observability_dashboard: {
         Row: {
