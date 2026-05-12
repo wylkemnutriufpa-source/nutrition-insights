@@ -186,7 +186,31 @@ export const PrescriptionDashboard = () => {
                 <p className="text-xs text-slate-500">Ajuste de guardrails</p>
               </div>
             </button>
+
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-left hover:border-green-500/50 transition-all group"
+            >
+              <div className="h-10 w-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-400 group-hover:scale-110 transition-transform">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <p className="font-bold uppercase text-sm">Testar Soberania</p>
+                <p className="text-xs text-slate-500 font-mono italic">Simular Modal Transacional</p>
+              </div>
+            </button>
           </div>
+
+          <MealEditModal 
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            initialMeal={mockMeal}
+            profile={clinicalProfile}
+            onSave={(reconciled) => {
+              console.log("Meal saved (Clinical Sovereignty):", reconciled);
+              alert("Refeição Salva com Sucesso! Verifique o console para os detalhes determinísticos.");
+            }}
+          />
 
           <div className="mt-8 p-6 bg-green-500/5 border border-green-500/10 rounded-2xl">
             <h4 className="text-xs font-black uppercase text-green-500 mb-3 tracking-widest">Dica do Motor</h4>
