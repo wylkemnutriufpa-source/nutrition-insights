@@ -6184,6 +6184,7 @@ export type Database = {
           professional_id: string
           status: string | null
           tenant_id: string | null
+          unique_code: string | null
           updated_at: string
           used_at: string | null
         }
@@ -6198,6 +6199,7 @@ export type Database = {
           professional_id: string
           status?: string | null
           tenant_id?: string | null
+          unique_code?: string | null
           updated_at?: string
           used_at?: string | null
         }
@@ -6212,6 +6214,7 @@ export type Database = {
           professional_id?: string
           status?: string | null
           tenant_id?: string | null
+          unique_code?: string | null
           updated_at?: string
           used_at?: string | null
         }
@@ -7484,6 +7487,10 @@ export type Database = {
           sharing_expires_at: string | null
           sharing_token: string | null
           simplicity_score: number | null
+          snapshot: Json | null
+          snapshot_generated_at: string | null
+          snapshot_hash: string | null
+          snapshot_schema_version: string | null
           start_date: string
           template_id: string | null
           template_slug: string | null
@@ -7545,6 +7552,10 @@ export type Database = {
           sharing_expires_at?: string | null
           sharing_token?: string | null
           simplicity_score?: number | null
+          snapshot?: Json | null
+          snapshot_generated_at?: string | null
+          snapshot_hash?: string | null
+          snapshot_schema_version?: string | null
           start_date: string
           template_id?: string | null
           template_slug?: string | null
@@ -7606,6 +7617,10 @@ export type Database = {
           sharing_expires_at?: string | null
           sharing_token?: string | null
           simplicity_score?: number | null
+          snapshot?: Json | null
+          snapshot_generated_at?: string | null
+          snapshot_hash?: string | null
+          snapshot_schema_version?: string | null
           start_date?: string
           template_id?: string | null
           template_slug?: string | null
@@ -8727,6 +8742,7 @@ export type Database = {
         Row: {
           carbs_base: number | null
           complexity_level: string | null
+          composition_mode: string
           created_at: string | null
           fat_base: number | null
           foods_structure: Json | null
@@ -8739,12 +8755,15 @@ export type Database = {
           nutritionist_id: string
           protein_base: number | null
           satiety_score: number | null
+          slots: Json | null
+          slots_version: number
           updated_at: string | null
           usage_count: number | null
         }
         Insert: {
           carbs_base?: number | null
           complexity_level?: string | null
+          composition_mode?: string
           created_at?: string | null
           fat_base?: number | null
           foods_structure?: Json | null
@@ -8757,12 +8776,15 @@ export type Database = {
           nutritionist_id: string
           protein_base?: number | null
           satiety_score?: number | null
+          slots?: Json | null
+          slots_version?: number
           updated_at?: string | null
           usage_count?: number | null
         }
         Update: {
           carbs_base?: number | null
           complexity_level?: string | null
+          composition_mode?: string
           created_at?: string | null
           fat_base?: number | null
           foods_structure?: Json | null
@@ -8775,6 +8797,8 @@ export type Database = {
           nutritionist_id?: string
           protein_base?: number | null
           satiety_score?: number | null
+          slots?: Json | null
+          slots_version?: number
           updated_at?: string | null
           usage_count?: number | null
         }
@@ -9046,6 +9070,7 @@ export type Database = {
           status: string
           tenant_id: string | null
           token: string
+          unique_code: string | null
           used_at: string | null
         }
         Insert: {
@@ -9058,6 +9083,7 @@ export type Database = {
           status?: string
           tenant_id?: string | null
           token?: string
+          unique_code?: string | null
           used_at?: string | null
         }
         Update: {
@@ -9070,6 +9096,7 @@ export type Database = {
           status?: string
           tenant_id?: string | null
           token?: string
+          unique_code?: string | null
           used_at?: string | null
         }
         Relationships: [
@@ -21682,6 +21709,16 @@ export type Database = {
       }
       migrate_to_single_source_of_truth: { Args: never; Returns: undefined }
       normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
+      persist_meal_plan_snapshot: {
+        Args: {
+          _engine_version: string
+          _plan_id: string
+          _schema_version: string
+          _snapshot: Json
+          _snapshot_hash: string
+        }
+        Returns: Json
+      }
       preview_orphan_onboarding_pipelines: {
         Args: never
         Returns: {

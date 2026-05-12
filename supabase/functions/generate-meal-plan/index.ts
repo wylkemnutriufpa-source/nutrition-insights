@@ -3742,6 +3742,19 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
             image_url: _image_url || rest.image_url || null 
           }; 
         });
+
+        console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan: option-loop)");
+        itemsToInsert.forEach((item, idx) => {
+          console.log(idx, Object.keys(item).sort());
+          console.log(idx, {
+            is_locked: (item as any).is_locked,
+            is_primary: (item as any).is_primary,
+            is_manually_edited: (item as any).is_manually_edited,
+            was_auto_corrected: (item as any).was_auto_corrected,
+          });
+        });
+        console.groupEnd();
+
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
@@ -4080,6 +4093,18 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         day_of_week: 0
       };
     });
+
+    console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan: final-insert)");
+    itemsToInsert.forEach((item, idx) => {
+      console.log(idx, Object.keys(item).sort());
+      console.log(idx, {
+        is_locked: (item as any).is_locked,
+        is_primary: (item as any).is_primary,
+        is_manually_edited: (item as any).is_manually_edited,
+        was_auto_corrected: (item as any).was_auto_corrected,
+      });
+    });
+    console.groupEnd();
 
     // ──── CONTRACT GUARD: plan_generation ────
     // Bloqueia retorno de plano vazio, sem título, com plan_type misturado ou macros zeradas.
