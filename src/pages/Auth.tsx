@@ -109,7 +109,7 @@ export default function Auth() {
             <Leaf className="w-8 h-8 text-primary-foreground" />
           </motion.div>
           <h1 className="text-3xl font-bold font-display text-foreground">
-            Nutri<span className="text-gradient">Flow</span>
+            Fit<span className="text-gradient">Journey</span>
           </h1>
           <p className="text-muted-foreground mt-1">Nutrição inteligente & gamificada</p>
         </div>

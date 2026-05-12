@@ -2494,6 +2494,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_event_log: {
+        Row: {
+          after: number | null
+          before: number | null
+          created_at: string | null
+          day_of_week: number | null
+          id: string
+          meal_type: string | null
+          metadata: Json | null
+          patient_id: string | null
+          source_rule: string | null
+          type: string
+        }
+        Insert: {
+          after?: number | null
+          before?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          meal_type?: string | null
+          metadata?: Json | null
+          patient_id?: string | null
+          source_rule?: string | null
+          type: string
+        }
+        Update: {
+          after?: number | null
+          before?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          meal_type?: string | null
+          metadata?: Json | null
+          patient_id?: string | null
+          source_rule?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       clinical_experiment_assignments: {
         Row: {
           assigned_at: string
@@ -3259,6 +3298,54 @@ export type Database = {
           rule_key?: string
           target_audience?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      clinical_shadow_audit: {
+        Row: {
+          analysis: Json | null
+          compatible: boolean | null
+          divergence_count: number | null
+          divergence_types: string[] | null
+          generated_at: string | null
+          id: string
+          patient_id: string | null
+          payload_diff: Json | null
+          plan_id: string | null
+          readiness_score: number | null
+          severity: string | null
+          v1_hash: string | null
+          v2_hash: string | null
+        }
+        Insert: {
+          analysis?: Json | null
+          compatible?: boolean | null
+          divergence_count?: number | null
+          divergence_types?: string[] | null
+          generated_at?: string | null
+          id?: string
+          patient_id?: string | null
+          payload_diff?: Json | null
+          plan_id?: string | null
+          readiness_score?: number | null
+          severity?: string | null
+          v1_hash?: string | null
+          v2_hash?: string | null
+        }
+        Update: {
+          analysis?: Json | null
+          compatible?: boolean | null
+          divergence_count?: number | null
+          divergence_types?: string[] | null
+          generated_at?: string | null
+          id?: string
+          patient_id?: string | null
+          payload_diff?: Json | null
+          plan_id?: string | null
+          readiness_score?: number | null
+          severity?: string | null
+          v1_hash?: string | null
+          v2_hash?: string | null
         }
         Relationships: []
       }
@@ -6184,6 +6271,7 @@ export type Database = {
           professional_id: string
           status: string | null
           tenant_id: string | null
+          unique_code: string | null
           updated_at: string
           used_at: string | null
         }
@@ -6198,6 +6286,7 @@ export type Database = {
           professional_id: string
           status?: string | null
           tenant_id?: string | null
+          unique_code?: string | null
           updated_at?: string
           used_at?: string | null
         }
@@ -6212,6 +6301,7 @@ export type Database = {
           professional_id?: string
           status?: string | null
           tenant_id?: string | null
+          unique_code?: string | null
           updated_at?: string
           used_at?: string | null
         }
@@ -7484,6 +7574,10 @@ export type Database = {
           sharing_expires_at: string | null
           sharing_token: string | null
           simplicity_score: number | null
+          snapshot: Json | null
+          snapshot_generated_at: string | null
+          snapshot_hash: string | null
+          snapshot_schema_version: string | null
           start_date: string
           template_id: string | null
           template_slug: string | null
@@ -7545,6 +7639,10 @@ export type Database = {
           sharing_expires_at?: string | null
           sharing_token?: string | null
           simplicity_score?: number | null
+          snapshot?: Json | null
+          snapshot_generated_at?: string | null
+          snapshot_hash?: string | null
+          snapshot_schema_version?: string | null
           start_date: string
           template_id?: string | null
           template_slug?: string | null
@@ -7606,6 +7704,10 @@ export type Database = {
           sharing_expires_at?: string | null
           sharing_token?: string | null
           simplicity_score?: number | null
+          snapshot?: Json | null
+          snapshot_generated_at?: string | null
+          snapshot_hash?: string | null
+          snapshot_schema_version?: string | null
           start_date?: string
           template_id?: string | null
           template_slug?: string | null
@@ -8184,6 +8286,240 @@ export type Database = {
         }
         Relationships: []
       }
+      nc_food_library: {
+        Row: {
+          base_quantity: number | null
+          calories: number
+          carbs: number
+          category: string
+          fat: number
+          id: string
+          is_global: boolean | null
+          name: string
+          protein: number
+          unit: string | null
+        }
+        Insert: {
+          base_quantity?: number | null
+          calories: number
+          carbs: number
+          category: string
+          fat: number
+          id?: string
+          is_global?: boolean | null
+          name: string
+          protein: number
+          unit?: string | null
+        }
+        Update: {
+          base_quantity?: number | null
+          calories?: number
+          carbs?: number
+          category?: string
+          fat?: number
+          id?: string
+          is_global?: boolean | null
+          name?: string
+          protein?: number
+          unit?: string | null
+        }
+        Relationships: []
+      }
+      nc_meal_plan_items: {
+        Row: {
+          calories: number | null
+          carbs: number | null
+          fat: number | null
+          food_name: string
+          id: string
+          meal_type: string
+          plan_id: string
+          protein: number | null
+          quantity: number
+          sort_order: number | null
+          unit: string
+        }
+        Insert: {
+          calories?: number | null
+          carbs?: number | null
+          fat?: number | null
+          food_name: string
+          id?: string
+          meal_type: string
+          plan_id: string
+          protein?: number | null
+          quantity: number
+          sort_order?: number | null
+          unit: string
+        }
+        Update: {
+          calories?: number | null
+          carbs?: number | null
+          fat?: number | null
+          food_name?: string
+          id?: string
+          meal_type?: string
+          plan_id?: string
+          protein?: number | null
+          quantity?: number
+          sort_order?: number | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_meal_plan_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "nc_meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_meal_plans: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          nutritionist_id: string
+          patient_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id: string
+          patient_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id?: string
+          patient_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_meal_plans_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nc_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nc_meal_plans_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "nc_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_onboarding_data: {
+        Row: {
+          data: Json
+          id: string
+          is_complete: boolean | null
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          data?: Json
+          id?: string
+          is_complete?: boolean | null
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          id?: string
+          is_complete?: boolean | null
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_onboarding_data_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "nc_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_patients: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          is_active: boolean | null
+          nutritionist_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          nutritionist_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_patients_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nc_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["nc_app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["nc_app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["nc_app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -8493,6 +8829,7 @@ export type Database = {
         Row: {
           carbs_base: number | null
           complexity_level: string | null
+          composition_mode: string
           created_at: string | null
           fat_base: number | null
           foods_structure: Json | null
@@ -8505,12 +8842,15 @@ export type Database = {
           nutritionist_id: string
           protein_base: number | null
           satiety_score: number | null
+          slots: Json | null
+          slots_version: number
           updated_at: string | null
           usage_count: number | null
         }
         Insert: {
           carbs_base?: number | null
           complexity_level?: string | null
+          composition_mode?: string
           created_at?: string | null
           fat_base?: number | null
           foods_structure?: Json | null
@@ -8523,12 +8863,15 @@ export type Database = {
           nutritionist_id: string
           protein_base?: number | null
           satiety_score?: number | null
+          slots?: Json | null
+          slots_version?: number
           updated_at?: string | null
           usage_count?: number | null
         }
         Update: {
           carbs_base?: number | null
           complexity_level?: string | null
+          composition_mode?: string
           created_at?: string | null
           fat_base?: number | null
           foods_structure?: Json | null
@@ -8541,6 +8884,8 @@ export type Database = {
           nutritionist_id?: string
           protein_base?: number | null
           satiety_score?: number | null
+          slots?: Json | null
+          slots_version?: number
           updated_at?: string | null
           usage_count?: number | null
         }
@@ -8812,6 +9157,7 @@ export type Database = {
           status: string
           tenant_id: string | null
           token: string
+          unique_code: string | null
           used_at: string | null
         }
         Insert: {
@@ -8824,6 +9170,7 @@ export type Database = {
           status?: string
           tenant_id?: string | null
           token?: string
+          unique_code?: string | null
           used_at?: string | null
         }
         Update: {
@@ -8836,6 +9183,7 @@ export type Database = {
           status?: string
           tenant_id?: string | null
           token?: string
+          unique_code?: string | null
           used_at?: string | null
         }
         Relationships: [
@@ -20541,6 +20889,37 @@ export type Database = {
           },
         ]
       }
+      clinical_divergence_ranking: {
+        Row: {
+          affected_patients: number | null
+          avg_readiness: number | null
+          clinical_severity: string | null
+          frequency_pct: number | null
+          readiness_impact: number | null
+          rule: string | null
+        }
+        Relationships: []
+      }
+      clinical_observability_dashboard: {
+        Row: {
+          audit_date: string | null
+          avg_divergence_per_plan: number | null
+          compatibility_rate: number | null
+          divergence_heatmap: Json | null
+          readiness_score: number | null
+          total_samples: number | null
+        }
+        Relationships: []
+      }
+      legacy_rule_heatmap: {
+        Row: {
+          critical_failures: number | null
+          impact_count: number | null
+          legacy_rule: string | null
+          readiness_with_rule: number | null
+        }
+        Relationships: []
+      }
       meal_plan_job_metrics: {
         Row: {
           avg_duration_seconds: number | null
@@ -21448,6 +21827,16 @@ export type Database = {
       }
       migrate_to_single_source_of_truth: { Args: never; Returns: undefined }
       normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
+      persist_meal_plan_snapshot: {
+        Args: {
+          _engine_version: string
+          _plan_id: string
+          _schema_version: string
+          _snapshot: Json
+          _snapshot_hash: string
+        }
+        Returns: Json
+      }
       preview_orphan_onboarding_pipelines: {
         Args: never
         Returns: {
@@ -21695,6 +22084,7 @@ export type Database = {
         | "recovery"
         | "maintenance"
         | "recomposition"
+      nc_app_role: "nutritionist" | "patient" | "admin"
       patient_lifecycle_status:
         | "onboarding_started"
         | "onboarding_ready_for_plan"
@@ -21943,6 +22333,7 @@ export const Constants = {
         "maintenance",
         "recomposition",
       ],
+      nc_app_role: ["nutritionist", "patient", "admin"],
       patient_lifecycle_status: [
         "onboarding_started",
         "onboarding_ready_for_plan",
