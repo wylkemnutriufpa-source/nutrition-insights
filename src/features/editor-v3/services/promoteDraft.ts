@@ -188,6 +188,7 @@ export async function promoteDraftToMealPlan(
             fat_target: Number((sub.fat || 0).toFixed(1)),
             item_origin: 'auto',
             is_manually_edited: false,
+            is_locked: false,
             is_primary: false,
             substitution_group_id: groupId
           });
