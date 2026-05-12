@@ -20,51 +20,69 @@ export function normalizeFood(food: any): Food {
   f.fat = f.fat || 0;
 
   const name = (f.name || '').toLowerCase();
+  const wasGram = f.measurementType === 'gram' || !f.measurementType;
+  const initialQuantity = f.quantity;
 
   // PARTE 1 — MEDIDAS CASEIRAS (PADRONIZAÇÃO URGENTE)
-  if (!f.measurementType || f.measurementType === 'gram') {
+  // Só aplica se for gramas (para converter) ou se não tiver tipo
+  if (wasGram) {
+    let newPortionValue = f.portionValue;
+    let newMeasurementType = f.measurementType;
+    let newPortionLabel = f.portionLabel;
+
     if (name.includes('ovo') || name.includes('omelete')) {
-      f.measurementType = 'unit';
-      f.portionValue = 50; // Média (M) = 50g
-      f.portionLabel = 'unidade';
-      f.portionUnitLabel = 'unid';
+      newMeasurementType = 'unit';
+      newPortionValue = 50; 
+      newPortionLabel = 'unidade';
     } else if (name.includes('banana')) {
-      f.measurementType = 'unit';
-      f.portionValue = 90; // Média = 90g
-      f.portionLabel = 'unidade M';
+      newMeasurementType = 'unit';
+      newPortionValue = 90; 
+      newPortionLabel = 'unidade M';
     } else if (name.includes('maçã')) {
-      f.measurementType = 'unit';
-      f.portionValue = 150; // Média = 150g
-      f.portionLabel = 'unidade M';
+      newMeasurementType = 'unit';
+      newPortionValue = 150; 
+      newPortionLabel = 'unidade M';
     } else if (name.includes('pão integral') || name.includes('pão de forma')) {
-      f.measurementType = 'unit';
-      f.portionValue = 25; // 1 fatia = 25g
-      f.portionLabel = 'fatia';
+      newMeasurementType = 'unit';
+      newPortionValue = 25; 
+      newPortionLabel = 'fatia';
     } else if (name.includes('pão francês')) {
-      f.measurementType = 'unit';
-      f.portionValue = 50; // 1 unid = 50g
-      f.portionLabel = 'unidade';
+      newMeasurementType = 'unit';
+      newPortionValue = 50; 
+      newPortionLabel = 'unidade';
     } else if (name.includes('azeite') || name.includes('manteiga')) {
-      f.measurementType = 'spoon';
-      f.portionValue = name.includes('azeite') ? 5 : 10; // Fio vs Sopa
-      f.portionLabel = name.includes('azeite') ? 'fio' : 'colher de sopa';
+      newMeasurementType = 'spoon';
+      newPortionValue = name.includes('azeite') ? 5 : 10; 
+      newPortionLabel = name.includes('azeite') ? 'fio' : 'colher de sopa';
     } else if (name.includes('arroz') || name.includes('feijão') || name.includes('macarrão')) {
-      f.measurementType = 'spoon';
-      f.portionValue = 25; // 1 colher sopa = 25g
-      f.portionLabel = 'colher de sopa';
+      newMeasurementType = 'spoon';
+      newPortionValue = 25; 
+      newPortionLabel = 'colher de sopa';
     } else if (name.includes('iogurte')) {
-      f.measurementType = 'unit';
-      f.portionValue = 170; // 1 pote = 170g
-      f.portionLabel = 'pote';
+      newMeasurementType = 'unit';
+      newPortionValue = 170; 
+      newPortionLabel = 'pote';
     } else if (name.includes('whey') || name.includes('suplemento')) {
-      f.measurementType = 'unit';
-      f.portionValue = 30; // 1 scoop = 30g
-      f.portionLabel = 'scoop';
+      newMeasurementType = 'unit';
+      newPortionValue = 30; 
+      newPortionLabel = 'scoop';
     } else if (name.includes('frango') || name.includes('carne') || name.includes('peixe')) {
-      f.measurementType = 'unit';
-      f.portionValue = 150; // Filé M = 150g
-      f.portionLabel = 'filé M';
+      newMeasurementType = 'unit';
+      newPortionValue = 150; 
+      newPortionLabel = 'filé M';
     }
+
+    // 🔥 FIX CRÍTICO: Se mudamos de GRAMAS para UNIT/SPOON, precisamos ajustar a QUANTITY
+    // Caso contrário: 125g de arroz vira 125 colheres (3125g)
+    if (newMeasurementType !== 'gram' && wasGram && initialQuantity > 5) {
+      // Se a quantidade parece ser em gramas (ex: > 5), convertemos para a nova unidade
+      f.quantity = Math.round((initialQuantity / (newPortionValue || 1)) * 10) / 10;
+      console.log(`[V3-Normalization] Converted ${initialQuantity}g ${name} to ${f.quantity} ${newPortionLabel}`);
+    }
+
+    f.measurementType = newMeasurementType;
+    f.portionValue = newPortionValue;
+    f.portionLabel = newPortionLabel;
   }
 
   // Inferência genérica de measurementType se ainda ausente
