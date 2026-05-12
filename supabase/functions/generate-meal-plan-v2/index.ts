@@ -416,6 +416,18 @@ Deno.serve(async (req) => {
         foods: m.items,
       },
     }));
+    
+    console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan-v2)");
+    itemsToInsert.forEach((item, idx) => {
+      console.log(idx, Object.keys(item).sort());
+      console.log(idx, {
+        is_locked: (item as any).is_locked,
+        is_primary: (item as any).is_primary,
+        is_manually_edited: (item as any).is_manually_edited,
+        was_auto_corrected: (item as any).was_auto_corrected,
+      });
+    });
+    console.groupEnd();
 
     const { error: ierr } = await supabase
       .from("meal_plan_items")
