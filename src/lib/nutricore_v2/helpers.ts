@@ -91,9 +91,10 @@ const resolveMacroGrams = (item: any, quantity: number) => {
   const kcal100 = Number(item.kcal_100g ?? item.calories_100g ?? 0);
   const totalKcal = Number(item.kcal ?? item.calories ?? 0);
   const inferredGrams = kcal100 > 0 && totalKcal > 0 ? Math.round((totalKcal / kcal100) * 100) : 0;
-  const canTrustInference = inferredGrams >= 5 && inferredGrams <= 600;
+  const canTrustInference = inferredGrams >= 5 && inferredGrams <= 800;
 
-  if (canTrustInference && (rawGrams > 600 || rawGrams / inferredGrams > 3)) return inferredGrams;
+  if (canTrustInference && (rawGrams > 800 || rawGrams / inferredGrams > 2)) return inferredGrams;
+  if (rawGrams > 1000 && !canTrustInference) return 150; // Fallback de segurança clínico
   return Math.max(0, rawGrams);
 };
 
