@@ -13,7 +13,8 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
     fat_100g: 0.2,
     measurementType: 'gram',
     quantity: 125,
-    portionValue: 100
+    portionValue: 100,
+    category: 'carb'
   };
 
   const paoForma = {
@@ -26,7 +27,8 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
     measurementType: 'unit',
     portionValue: 25, // 1 fatia = 25g
     portionLabel: 'fatia',
-    imageUrl: 'pao.jpg'
+    imageUrl: 'pao.jpg',
+    category: 'carb'
   };
 
   it('1. Normalização: 125g arroz -> 5 colheres', () => {
