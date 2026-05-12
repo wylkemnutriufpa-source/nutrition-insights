@@ -1160,15 +1160,28 @@ export default function Anamnesis() {
     // In onboarding pipeline mode, never keep the patient blocked waiting for AI.
     if (isPipelineMode && !isNutritionistMode) {
       setAnalyzing(false);
-      toast.success("Anamnese salva! Indo para a próxima etapa do onboarding. ✅");
+      toast.success("Anamnese salva! Gerando seu pré-plano alimentar automaticamente... 🍎");
 
-      // Não chamamos navigate(): a edge function que conclui anamnese atualiza
-      // patient_state para 'collecting_profile' e o SystemStateGuard rota
-      // automaticamente para /body-analysis.
+      void (async () => {
+        try {
+          console.log("[FJ:Anamnesis] Triggering automatic plan generation...");
+          const { data: planData, error: planError } = await supabase.functions.invoke("generate-meal-plan-v2", {
+            body: { 
+              patient_id: targetUserId,
+              plan_title: "Plano Inicial (Gerado Automaticamente)"
+            },
+          });
+          if (planError) throw planError;
+          console.log("[FJ:Anamnesis] Automatic plan generated successfully:", planData);
+        } catch (e: any) {
+          console.error("[FJ:Anamnesis] Error generating automatic plan:", e);
+        }
+      })();
+
       setTimeout(() => {
         if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
         navigate("/client/dashboard", { replace: true });
-      }, 1500);
+      }, 2500);
 
       void (async () => {
         try {
