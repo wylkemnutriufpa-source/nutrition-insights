@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
     });
     const { data: userRes, error: uerr } = await supabase.auth.getUser();
     if (uerr || !userRes?.user) return json({ error: "Unauthorized" }, 401);
-    const userId = userRes.user.id;
+    const callerId = userRes.user.id;
 
     const body = await req.json().catch(() => ({}));
     const {
@@ -311,16 +311,21 @@ Deno.serve(async (req) => {
 
     if (!patient_id) return json({ error: "patient_id required" }, 400);
 
-    // Multi-tenant guard: profissional só acessa seus pacientes.
+    // Multi-tenant guard: profissional só acessa seus pacientes OU o próprio paciente acessa seus dados.
     const { data: link, error: lerr } = await supabase
       .from("nutritionist_patients")
-      .select("tenant_id, status")
-      .eq("nutritionist_id", userId)
+      .select("tenant_id, status, nutritionist_id")
+      .or(`nutritionist_id.eq.${callerId},patient_id.eq.${callerId}`)
       .eq("patient_id", patient_id)
       .maybeSingle();
-    if (lerr || !link || link.status !== "active") {
-      return json({ error: "Patient not linked to this professional" }, 403);
+
+    if (lerr || !link || (link.status !== "active" && link.status !== "pending")) {
+      console.warn(`[generate-meal-plan-v2] Access denied for caller ${callerId} to patient ${patient_id}. Link:`, link);
+      return json({ error: "Access denied or Patient not linked" }, 403);
     }
+
+    const nutritionistId = link.nutritionist_id;
+
 
     // Carrega anamnese / dados clínicos do paciente
     let patientData = patient_input ?? null;
