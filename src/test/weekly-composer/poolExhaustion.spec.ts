@@ -13,9 +13,9 @@ describe("composeSlotSequence — pool exhaustion", () => {
       seed: "x",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) {
-      expect(r.reason).toBe("POOL_EMPTY_INPUT");
-      expect(r.message).toMatch(/empty/i);
+    if (!r.ok) { const f = r;
+      expect(f.reason).toBe("POOL_EMPTY_INPUT");
+      expect(f.message).toMatch(/empty/i);
     }
   });
 
@@ -31,10 +31,10 @@ describe("composeSlotSequence — pool exhaustion", () => {
       seed: "x",
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) {
-      expect(r.reason).toBe("POOL_EMPTY_AFTER_FILTER");
-      expect(r.metadata.pool_size_after_filter).toBe(0);
-      expect(r.metadata.filtered_items).toHaveLength(2);
+    if (!r.ok) { const f = r;
+      expect(f.reason).toBe("POOL_EMPTY_AFTER_FILTER");
+      expect(f.metadata.pool_size_after_filter).toBe(0);
+      expect(f.metadata.filtered_items).toHaveLength(2);
     }
   });
 
@@ -61,7 +61,7 @@ describe("composeSlotSequence — pool exhaustion", () => {
       days: 0,
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("INVALID_DAYS");
+    if (!r.ok) expect(f.reason).toBe("INVALID_DAYS");
   });
 
   it("missing seed returns INVALID_BEHAVIOR_PROFILE branch", () => {
