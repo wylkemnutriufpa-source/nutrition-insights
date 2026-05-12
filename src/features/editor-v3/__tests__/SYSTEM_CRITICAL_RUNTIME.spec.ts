@@ -19,7 +19,7 @@ describe('SYSTEM_CRITICAL_RUNTIME — Suíte de Estabilidade Soberana', () => {
     });
 
     it('deve preservar clinical_mass_g durante normalização', () => {
-      const food = {
+      const food: any = {
         name: 'Arroz Cozido',
         quantity: 150,
         measurementType: 'gram',
@@ -27,12 +27,12 @@ describe('SYSTEM_CRITICAL_RUNTIME — Suíte de Estabilidade Soberana', () => {
       };
       
       const normalized = normalizeFood(food);
-      expect(normalized.clinical_mass_g).toBe(150);
+      expect((normalized as any).clinical_mass_g).toBe(150);
       
       // Se mudar a exibição para colher, a massa clínica NÃO deve mudar
       const asSpoon = { ...normalized, measurementType: 'spoon', quantity: 6 };
       const reNormalized = normalizeFood(asSpoon);
-      expect(reNormalized.clinical_mass_g).toBe(150);
+      expect((reNormalized as any).clinical_mass_g).toBe(150);
     });
   });
 
