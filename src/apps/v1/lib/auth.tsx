@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[] | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenant, setTenant] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
   
@@ -165,8 +165,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initialize = async () => {
-      setLoading(true);
+      setLoading(false);
       try {
+        console.log("[Auth] Starting initialization...");
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         if (mounted) {
           setSession(initialSession);
