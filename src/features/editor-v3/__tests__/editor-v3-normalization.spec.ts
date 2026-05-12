@@ -30,7 +30,7 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
   };
 
   it('1. Normalização: 125g arroz -> 5 colheres', () => {
-    const normalized = normalizeFood(arrozCooked);
+    const normalized = normalizeFood(arrozCooked) as any;
     
     expect(normalized.measurementType).toBe('spoon');
     expect(normalized.portionValue).toBe(25); // colher de sopa para arroz
@@ -41,8 +41,8 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
   });
 
   it('2. Idempotência: rodar normalização duas vezes não altera valores', () => {
-    const firstPass = normalizeFood(arrozCooked);
-    const secondPass = normalizeFood(firstPass);
+    const firstPass = normalizeFood(arrozCooked) as any;
+    const secondPass = normalizeFood(firstPass) as any;
     
     expect(secondPass.quantity).toBe(5);
     expect(secondPass.measurementType).toBe('spoon');
@@ -52,7 +52,7 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
   });
 
   it('3. Consistência de Massa: 5 colheres -> massa absoluta continua 125g', () => {
-    const normalized = normalizeFood(arrozCooked);
+    const normalized = normalizeFood(arrozCooked) as any;
     // calculateItemMacros usa resolveMacroGrams que faz: quantity * portionValue se for spoon
     const macros = calculateItemMacros(normalized, normalized.quantity);
     
@@ -63,7 +63,7 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
   });
 
   it('4. Substituição: 125g arroz -> pão equivalente (~65g / 2.6 fatias)', () => {
-    const normalizedArroz = normalizeFood(arrozCooked);
+    const normalizedArroz = normalizeFood(arrozCooked) as any;
     
     const subs = getSubstitutionsWithGrams({
       base_item: normalizedArroz,
@@ -96,7 +96,7 @@ describe('EditorV3 Normalization & Substitution Blindagem', () => {
       portionValue: 100
     };
 
-    const normalized = normalizeFood(paoBruto);
+    const normalized = normalizeFood(paoBruto) as any;
     
     expect(normalized.measurementType).toBe('unit');
     expect(normalized.portionValue).toBe(50);
