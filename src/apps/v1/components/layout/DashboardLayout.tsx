@@ -226,14 +226,7 @@ function DynamicSidebar({
   const showPending = effectiveProRole && pendingCount > 0;
 
   return (
-    <div className={`flex h-full min-h-0 flex-col transition-colors duration-500 ${
-      mode === 'advanced' ? 'bg-card/40' : 
-      mode === 'pro' ? 'bg-blue-500/5' : 
-      'bg-green-700/5'
-    }`}>
-      {/* Workspace context switcher for hybrid users */}
-      <WorkspaceContextSwitcher collapsed={collapsed} />
-
+    <div className="flex h-full min-h-0 flex-col bg-card">
       <div className="p-4 flex items-center justify-between flex-shrink-0">
         <FitJourneyLogo collapsed={collapsed} size="sm" />
         {setCollapsed && (
@@ -247,172 +240,36 @@ function DynamicSidebar({
         )}
       </div>
 
-      {effectiveProRole ? (
-        <div className="px-3 mb-1">
-          <Link
-            to="/v1/intelligence-settings"
-            onClick={onLinkClick}
-            className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-          >
-            <div className="relative flex-shrink-0">
-              <motion.div
-                className="absolute -inset-1.5 rounded-full"
-                style={{
-                  background: "radial-gradient(circle, hsl(45 100% 50% / 0.3), transparent 70%)",
-                }}
-                animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.span
-                className="text-lg leading-none select-none relative z-10"
-                animate={{ rotate: [0, 8, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                style={{ filter: "drop-shadow(0 0 6px hsl(45 100% 50% / 0.5))" }}
-              >
-                🧠
-              </motion.span>
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{ border: "1px solid hsl(45 100% 60% / 0.4)" }}
-                animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-              />
-            </div>
-            {!collapsed && (
-              <span className="text-xs font-semibold truncate transition-colors"
-                style={{
-                  background: "linear-gradient(90deg, #FFD700, #FFA500)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Inteligência FitJourney
-              </span>
-            )}
-          </Link>
-        </div>
-      ) : isFeatureEnabled("ai-insights") && !mode.includes('basic') && (
-        <div className="px-3 mb-1">
-          <Link
-            to="/v1/patient-intelligence"
-            onClick={onLinkClick}
-            className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-          >
-            <div className="relative flex-shrink-0">
-              <motion.div
-                className="absolute -inset-1.5 rounded-full"
-                style={{
-                  background: "radial-gradient(circle, hsl(45 100% 50% / 0.3), transparent 70%)",
-                }}
-                animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.span
-                className="text-lg leading-none select-none relative z-10"
-                animate={{ rotate: [0, 8, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                style={{ filter: "drop-shadow(0 0 6px hsl(45 100% 50% / 0.5))" }}
-              >
-                🧠
-              </motion.span>
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{ border: "1px solid hsl(45 100% 60% / 0.4)" }}
-                animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-              />
-            </div>
-            {!collapsed && (
-              <span className="text-xs font-semibold truncate transition-colors"
-                style={{
-                  background: "linear-gradient(90deg, #FFD700, #FFA500)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Inteligência FitJourney
-              </span>
-            )}
-          </Link>
-        </div>
-      )}
-
-      {effectiveProRole && minMode("pro") && (
-        <div className="px-3 mb-1 space-y-1">
-          {isFeatureEnabled("analytics") && (
-            <Link
-              to="/v1/control-tower"
-              onClick={onLinkClick}
-              className={`flex items-center gap-2 w-full rounded-xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-            >
-              <div className="relative flex-shrink-0">
-                <motion.div
-                  className="absolute -inset-1 rounded-full"
-                  style={{ background: "radial-gradient(circle, hsl(270 80% 60% / 0.3), transparent 70%)" }}
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <Activity className="w-4 h-4 text-violet-500 relative z-10" />
-              </div>
-              {!collapsed && (
-                <span className="text-xs font-semibold text-violet-500 truncate group-hover:text-violet-400 transition-colors">
-                  Control Tower
-                </span>
-              )}
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+        {/* Simple navigation based on role */}
+        {effectiveProRole ? (
+          <>
+            <Link to="/v1/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
+              <LayoutDashboard className="w-5 h-5" />
+              {!collapsed && <span className="text-sm">Dashboard</span>}
             </Link>
-          )}
-
-          {/* Cockpit Premium — only for nutritionists and admins */}
-          {(isNutritionist || isAdmin) && isFeatureEnabled("automation") && (
-            <Link
-              to="/v1/cockpit"
-              onClick={() => {
-                console.log("[NAV] Sidebar clicking Cockpit Premium");
-                onLinkClick?.();
-              }}
-              className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-            >
-              <Rocket className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              {!collapsed && (
-                <span className="text-xs font-semibold text-amber-500 truncate group-hover:text-amber-400 transition-colors">
-                  Cockpit Premium
-                </span>
-              )}
+            <Link to="/v1/patients" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
+              <Users className="w-5 h-5" />
+              {!collapsed && <span className="text-sm">Pacientes</span>}
             </Link>
-          )}
-
-          {/* Workspace Clínico — only for nutritionists and admins, NOT personal trainers */}
-          {(isNutritionist || isAdmin) && isFeatureEnabled("analytics") && (
-            <Link
-              to="/v1/clinical-workspace"
-              onClick={() => {
-                console.log("[NAV] Sidebar clicking Workspace Clínico");
-                onLinkClick?.();
-              }}
-              className={`flex items-center gap-2 w-full rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-            >
-              <LayoutDashboard className="w-4 h-4 text-sky-500 flex-shrink-0" />
-              {!collapsed && (
-                <span className="text-xs font-semibold text-sky-500 truncate group-hover:text-sky-400 transition-colors">
-                  Workspace Clínico
-                </span>
-              )}
+            <Link to="/v1/meal-plans" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
+              <ClipboardCheck className="w-5 h-5" />
+              {!collapsed && <span className="text-sm">Planos</span>}
             </Link>
-          )}
-
-          {/* Coach Bodybuilder — only for nutritionists/admins, locked unless admin-enabled */}
-          {(isNutritionist || isAdmin) && isFeatureEnabled("protocols") && (
-            <div className="relative">
-              {!coachBodybuilderEnabled && (
-                <div className="absolute inset-0 z-10 rounded-xl bg-muted/60 backdrop-blur-[1px] flex items-center justify-center cursor-not-allowed">
-                  <Lock className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-              )}
-              <Link
-                to={coachBodybuilderEnabled ? "/coach-bodybuilder" : "#"}
-                onClick={(e) => { if (!coachBodybuilderEnabled) { e.preventDefault(); return; } onLinkClick?.(); }}
-                className={`flex items-center gap-2 w-full rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-              >
+          </>
+        ) : (
+          <>
+            <Link to="/v1/client/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
+              <LayoutDashboard className="w-5 h-5" />
+              {!collapsed && <span className="text-sm">Início</span>}
+            </Link>
+            <Link to="/v1/patient-meal-plan" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
+              <Activity className="w-5 h-5" />
+              {!collapsed && <span className="text-sm">Minha Dieta</span>}
+            </Link>
+          </>
+        )}
+      </nav>
                 <Activity className="w-4 h-4 text-orange-500 flex-shrink-0" />
                 {!collapsed && (
                   <span className="text-xs font-semibold text-orange-500 truncate group-hover:text-orange-400 transition-colors">
