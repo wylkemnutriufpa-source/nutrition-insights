@@ -157,23 +157,16 @@ export async function buildMealPlanSnapshot(
 
   if (itemsErr) throw itemsErr;
 
-  // 3. Contexto do paciente (best-effort, sem recalcular nada)
+  // 3. Contexto do paciente (best-effort, sem recalcular nada).
+  // Apenas colunas garantidas em `profiles`. Demais campos (gênero,
+  // idade, weight_source) ficam null nesta onda — Onda 2 enriquece.
   const { data: patientProfile } = await supabase
     .from("profiles")
     .select(
-      "id, current_weight, height, birth_date, gender, activity_level, goal, weight_source"
+      "id, current_weight, current_weight_kg, current_height_cm, activity_level, goal"
     )
     .eq("id", planRow.patient_id)
     .maybeSingle();
-
-  const ageFromBirth = (() => {
-    const bd = (patientProfile as Record<string, unknown> | null)?.birth_date as string | undefined;
-    if (!bd) return null;
-    const d = new Date(bd);
-    if (Number.isNaN(d.getTime())) return null;
-    const diff = Date.now() - d.getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
-  })();
 
   // 4. Agrupar itens por dia → refeição
   const dayMap = new Map<number, Map<string, SnapshotItem[]>>();
