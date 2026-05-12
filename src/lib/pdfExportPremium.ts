@@ -37,6 +37,13 @@ export interface PremiumMealPlanPDFData {
   goal?: string;
   notes?: string;
   planMode?: string;
+  /**
+   * ── Onda 2A — opcional, MODO PASSIVO ──
+   * Se presente, o gerador dispara em background a leitura do snapshot
+   * persistido em `meal_plans.snapshot` e loga divergências no console.
+   * NUNCA bloqueia, NUNCA altera o render. Pode ser omitido sem efeito.
+   */
+  mealPlanId?: string;
 }
 
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
