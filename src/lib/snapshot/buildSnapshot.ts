@@ -265,11 +265,17 @@ export async function buildMealPlanSnapshot(
     },
     patient_context: {
       id: planRow.patient_id,
-      weight_kg: profile?.current_weight != null ? num(profile.current_weight) : null,
-      weight_source: (profile?.weight_source as string) ?? null,
-      height_cm: profile?.height != null ? num(profile.height) : null,
-      age: ageFromBirth,
-      gender: (profile?.gender as string) ?? null,
+      weight_kg:
+        profile?.current_weight_kg != null
+          ? num(profile.current_weight_kg)
+          : profile?.current_weight != null
+          ? num(profile.current_weight)
+          : null,
+      weight_source: null,
+      height_cm:
+        profile?.current_height_cm != null ? num(profile.current_height_cm) : null,
+      age: null,
+      gender: null,
       activity_level: (profile?.activity_level as string) ?? null,
       goal: (profile?.goal as string) ?? null,
     },
