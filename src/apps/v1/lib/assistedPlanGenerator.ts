@@ -20,8 +20,8 @@
  * 100% determinístico. Sem IA generativa.
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import type { MealLibraryItem, GeneratedMealSlot } from "./mealPlanAutoGenerator";
 import { isBlockedFood, MEAL_LIMITS } from "./mealPlanFoodRules";
 

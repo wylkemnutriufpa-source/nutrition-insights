@@ -1,21 +1,21 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { PRODUCTION_URL } from "@v1/lib/config";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { PRODUCTION_URL } from "@/lib/config";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon, Zap, Globe, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { RadioGroup, RadioGroupItem } from "@v1/components/ui/radio-group";
-import SubscriptionGuard from "@v1/components/common/SubscriptionGuard";
-import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@v1/utils/whatsapp";
-import { getWhatsAppInvitationMessage, WhatsAppTemplateType, getInvitationUrl, getQuickLinkUrl, getOnboardingUrl } from "@v1/utils/invitation";
-import { useWhatsAppTemplates, useWhatsAppLogs } from "@v1/hooks/useWhatsAppBusiness";
-import WhatsAppTemplateEditor from "@v1/components/professional/WhatsAppTemplateEditor";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import SubscriptionGuard from "@/components/common/SubscriptionGuard";
+import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@/utils/whatsapp";
+import { getWhatsAppInvitationMessage, WhatsAppTemplateType, getInvitationUrl, getQuickLinkUrl, getOnboardingUrl } from "@/utils/invitation";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
+import WhatsAppTemplateEditor from "@/components/professional/WhatsAppTemplateEditor";
 
 export default function InvitePatient() {
   const { user } = useAuth();

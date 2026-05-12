@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings2, Users, Play, BarChart3, FileText, Cpu, MessageSquare, HelpCircle } from "lucide-react";
 import IntelligenceGoldenHeader from "./settings/IntelligenceGoldenHeader";
 import IntelligenceGeneralSettings from "./settings/IntelligenceGeneralSettings";

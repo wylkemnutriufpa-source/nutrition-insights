@@ -12,8 +12,8 @@
  * O plano oficial nunca é alterado — o motor cria uma versão personalizada.
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
-import type { Tables } from "@v1/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { resolvePatientSchedule } from "./patientScheduleResolver";
 import { BLOCKED_FOODS } from "./mealPlanFoodRules";
 

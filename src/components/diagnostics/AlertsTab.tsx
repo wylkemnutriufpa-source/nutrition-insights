@@ -4,11 +4,11 @@
  */
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, CheckCircle2, RefreshCw, Shield, XCircle } from "lucide-react";
 import { toast } from "sonner";
 

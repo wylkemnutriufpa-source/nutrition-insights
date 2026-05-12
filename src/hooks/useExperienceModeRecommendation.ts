@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import type { ExperienceMode } from "@v1/hooks/useExperienceMode";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import type { ExperienceMode } from "@/hooks/useExperienceMode";
 
 /**
  * IFJ Experience Mode Recommendation Engine v2

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { Label } from "@v1/components/ui/label";
-import { useSiteSettingsRaw, useUpdateSiteSetting, SiteSetting } from "@v1/hooks/useSiteSettings";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { useSiteSettingsRaw, useUpdateSiteSetting, SiteSetting } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
 import { Save, ExternalLink, Layout, Users, DollarSign, Eye, Dumbbell } from "lucide-react";
 

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, TrendingDown, Scale, Activity,

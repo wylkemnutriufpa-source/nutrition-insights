@@ -1,7 +1,7 @@
-import { useActiveMissions, useAdherenceScore } from "@v1/hooks/queries/useEngagement";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Progress } from "@v1/components/ui/progress";
-import { Badge } from "@v1/components/ui/badge";
+import { useActiveMissions, useAdherenceScore } from "@/hooks/queries/useEngagement";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Target, Flame, Trophy, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";

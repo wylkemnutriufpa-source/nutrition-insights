@@ -1,22 +1,22 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Switch } from "@v1/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { Badge } from "@v1/components/ui/badge";
-import { Textarea } from "@v1/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Crown, Zap, Save, DollarSign, Users, Briefcase, Plus, Trash2, Star,
   GripVertical, Check
 } from "lucide-react";
-import PrestigeBadge from "@v1/components/prestige/PrestigeBadge";
-import type { PrestigePlan } from "@v1/hooks/usePrestige";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 
 // ─── Types ───
 interface PricingPlan {

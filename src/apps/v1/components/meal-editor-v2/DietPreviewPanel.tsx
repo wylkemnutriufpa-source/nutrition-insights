@@ -1,4 +1,4 @@
-import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { Coffee, Apple, Utensils, Cookie, Moon, Sun, Flame, Beef, Wheat, Droplets } from "lucide-react";
 import { useState } from "react";
 

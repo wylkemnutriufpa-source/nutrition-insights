@@ -5,9 +5,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@v1/components/ui/dialog";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Badge } from "@v1/components/ui/badge";
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle, Calculator } from "lucide-react";
 
 interface RecipeSummary {

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, MessageCircle, Dumbbell, UtensilsCrossed, Stethoscope, Brain, Sparkles } from "lucide-react";
 

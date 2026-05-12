@@ -11,7 +11,7 @@
  * - plan_status + is_active → unified via publish_meal_plan RPC
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface TransitionResult {
   success: boolean;

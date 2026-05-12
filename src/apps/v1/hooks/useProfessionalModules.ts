@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfessionalModules {
   coachBodybuilderEnabled: boolean;

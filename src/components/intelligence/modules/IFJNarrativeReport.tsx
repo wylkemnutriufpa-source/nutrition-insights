@@ -4,15 +4,15 @@
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Loader2, Download, Brain, Eye, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";

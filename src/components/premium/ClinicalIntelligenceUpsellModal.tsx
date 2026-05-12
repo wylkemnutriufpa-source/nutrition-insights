@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Brain, Shield, Zap, Radar, TrendingUp, Activity, Eye,
   ArrowRight, Crown, HeartPulse, Target, BarChart3, BellRing,

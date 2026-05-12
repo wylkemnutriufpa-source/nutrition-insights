@@ -2,7 +2,7 @@
  * Sprint 1 — Testes do sistema de monitoring
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { logError, logWarn, getRecentErrors } from "@v1/lib/monitoring";
+import { logError, logWarn, getRecentErrors } from "@/lib/monitoring";
 
 describe("Monitoring System", () => {
   it("logError adiciona entry ao buffer", () => {

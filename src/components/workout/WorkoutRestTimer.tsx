@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Timer, Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
 
 interface Props {

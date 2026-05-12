@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, X, RotateCcw } from "lucide-react";
-import { useAuth } from "@v1/lib/auth";
-import { checkShouldRestore, clearSessionContext, saveSessionContext, SessionContext } from "@v1/lib/sessionContext";
+import { useAuth } from "@/lib/auth";
+import { checkShouldRestore, clearSessionContext, saveSessionContext, SessionContext } from "@/lib/sessionContext";
 
 export default function SessionRestoreBanner() {
   const { user } = useAuth();

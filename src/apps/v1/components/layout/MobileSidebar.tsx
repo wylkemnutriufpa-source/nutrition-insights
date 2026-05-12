@@ -1,21 +1,21 @@
 import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { useExperienceMode } from "@v1/hooks/useExperienceMode";
-import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
+import { useAuth } from "@/lib/auth";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LogOut, Moon, Sun, Settings, ChevronDown, LayoutDashboard,
   Dumbbell, Lock, Rocket, Activity, Shield, Brain, X,
 } from "lucide-react";
-import { useSmartMenu } from "@v1/hooks/useSmartMenu";
-import { useProfessionalModules } from "@v1/hooks/useProfessionalModules";
-import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
-import WorkspaceContextSwitcher from "@v1/components/layout/WorkspaceContextSwitcher";
-import AccordionSidebar from "@v1/components/layout/AccordionSidebar";
-import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
-import { ErrorBoundary } from "@v1/components/common/ErrorBoundary";
-import PendingApprovalsModal, { usePendingApprovals } from "@v1/components/patient/PendingApprovalsModal";
+import { useSmartMenu } from "@/hooks/useSmartMenu";
+import { useProfessionalModules } from "@/hooks/useProfessionalModules";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
+import AccordionSidebar from "@/components/layout/AccordionSidebar";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 
 /* ── Module definitions ── */
 interface ModuleDef {

@@ -2,7 +2,7 @@
  * Smart Checklist Engine
  * Generates personalized checklist tasks from clinical flags, labs, body composition, and adherence.
  */
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SmartTask {
   task_code: string;

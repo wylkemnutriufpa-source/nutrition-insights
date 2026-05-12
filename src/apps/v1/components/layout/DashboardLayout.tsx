@@ -1,14 +1,14 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { Button } from "@v1/components/ui/button";
-import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@v1/components/ui/sheet";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Activity, LayoutDashboard, Users, TrendingUp } from "lucide-react";
-import { useIsMobile } from "@v1/hooks/use-mobile";
-import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
-import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, signOut, profile, isNutritionist, isPersonal, isAdmin } = useAuth();

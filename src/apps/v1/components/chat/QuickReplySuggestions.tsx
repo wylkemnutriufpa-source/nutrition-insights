@@ -1,4 +1,4 @@
-import { useQuickReplies } from "@v1/hooks/useQuickReplies";
+import { useQuickReplies } from "@/hooks/useQuickReplies";
 import { motion } from "framer-motion";
 
 interface Props {

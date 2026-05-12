@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { loadOrCreateDraft, saveDraft } from './services/draftService';
-import { supabase } from '@v1/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock simple draft records and tenant flow
 const mockTenantId = '20081963-8db9-4a6c-8181-6a820b86e12f';

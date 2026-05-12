@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState, Fragment } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Card } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { localGenerateMealPlan } from "@v1/lib/localMealPlanGenerator";
+import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 import {
   Loader2,
   RefreshCw,
@@ -32,7 +32,7 @@ import {
   Database,
   Terminal,
 } from "lucide-react";
-import { Checkbox } from "@v1/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import {
   Select,
@@ -40,25 +40,25 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@v1/components/ui/select";
+} from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@v1/components/ui/popover";
+} from "@/components/ui/popover";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@v1/components/ui/tabs";
+} from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@v1/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -66,10 +66,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@v1/components/ui/table";
+} from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar as CalendarComponent } from "@v1/components/ui/calendar";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
@@ -533,7 +533,7 @@ const PlanAudit = () => {
           addLog("Salvar/Aprovar", "loading", "Validando e aprovando...");
           await takeSnapshot(currentPatientId!, "Antes de Salvar", executionId);
           
-          const { savePlanAsApproved } = await import("@v1/lib/serverTransitions");
+          const { savePlanAsApproved } = await import("@/lib/serverTransitions");
           const saveRes = await savePlanAsApproved(currentPlanId!, user.id);
           
           if (!saveRes.success) {
@@ -550,7 +550,7 @@ const PlanAudit = () => {
           addLog("Publicar", "loading", "Publicando para o paciente...");
           await takeSnapshot(currentPatientId!, "Antes de Publicar", executionId);
           
-          const { publishMealPlan } = await import("@v1/lib/serverTransitions");
+          const { publishMealPlan } = await import("@/lib/serverTransitions");
           const pubRes = await publishMealPlan(currentPlanId!, user.id);
           
           if (!pubRes.success) {
@@ -779,7 +779,7 @@ const PlanAudit = () => {
     setPublishingId(row.latest_plan_id);
     const toastId = toast.loading(`Publicando plano para ${row.patient_name}...`);
     try {
-      const { publishMealPlan } = await import("@v1/lib/serverTransitions");
+      const { publishMealPlan } = await import("@/lib/serverTransitions");
       const result = await publishMealPlan(row.latest_plan_id, user.id);
       if (!result.success) {
         throw new Error(result.error || "Erro ao publicar.");

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@v1/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   CheckCircle2, 
   Clock, 

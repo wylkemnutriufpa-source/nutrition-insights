@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * FitJourney — Binding Integrity Regression Tests

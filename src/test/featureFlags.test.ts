@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock supabase before importing
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -14,11 +14,11 @@ vi.mock("@v1/integrations/supabase/client", () => ({
   },
 }));
 
-vi.mock("@v1/lib/monitoring", () => ({
+vi.mock("@/lib/monitoring", () => ({
   logWarn: vi.fn(),
 }));
 
-import { isFeatureEnabled, invalidateFeatureFlags } from "@v1/lib/featureFlags";
+import { isFeatureEnabled, invalidateFeatureFlags } from "@/lib/featureFlags";
 
 describe("Feature Flags", () => {
   beforeEach(() => {

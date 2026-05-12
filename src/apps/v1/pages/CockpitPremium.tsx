@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { createMealPlanDraft } from "@v1/lib/createMealPlanDraft";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
 import { toast } from "sonner";
-import PersonalPremiumDashboard from "@v1/components/workout/PersonalPremiumDashboard";
+import PersonalPremiumDashboard from "@/components/workout/PersonalPremiumDashboard";
 
 /**
  * Cockpit Premium — central hub for nutritionists.

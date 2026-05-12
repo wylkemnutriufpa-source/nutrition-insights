@@ -1,7 +1,7 @@
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { RefreshCw, X, Sparkles, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
-import { cn } from "@v1/lib/utils";
+import { cn } from "@/lib/utils";
 
 // Mock PWA logic to avoid build-time issues with virtual modules
 export function PWAUpdateBanner() {

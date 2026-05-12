@@ -1,22 +1,22 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Card, CardContent } from "@v1/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useSyncStatus } from "@v1/hooks/useSyncStatus";
+import { useSyncStatus } from "@/hooks/useSyncStatus";
 import {
   Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
   Download, Copy, FileJson, AlertTriangle, User, RefreshCw, Check
 } from "lucide-react";
-import { HardFailLinkage } from "@v1/components/common/HardFailLinkage";
-import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
-import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@v1/utils/whatsapp";
-import { promptWhatsAppNotification } from "@v1/utils/whatsappNotification";
-import { INVITATION_TEXTS } from "@v1/config/invitation-texts";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
+import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
+import { INVITATION_TEXTS } from "@/config/invitation-texts";
 
 interface ProfessionalResult {
   user_id: string;

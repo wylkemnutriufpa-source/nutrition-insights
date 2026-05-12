@@ -1,4 +1,4 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MacroBalanceBarProps {
   protein: number;
@@ -8,7 +8,7 @@ interface MacroBalanceBarProps {
   compact?: boolean;
 }
 
-import { safeNum } from "@v1/lib/formatMacros";
+import { safeNum } from "@/lib/formatMacros";
 
 export default function MacroBalanceBar({ protein, carbs, fat, calories, compact = false }: MacroBalanceBarProps) {
   const protCal = safeNum(protein) * 4;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LayoutGrid, List, BookOpen, Sparkles, Wand2, Utensils, Eye, MousePointerClick, ArrowLeftRight } from "lucide-react";
 import { WeeklyGrid } from "./WeeklyGrid";
 import { ListView } from "./ListView";

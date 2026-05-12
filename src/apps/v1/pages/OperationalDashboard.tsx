@@ -4,19 +4,19 @@
  */
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import {
   AlertTriangle, Activity, Shield, Zap, BookOpen, Power,
   CheckCircle, XCircle, Clock, RefreshCw, TrendingUp,
   PlayCircle, Server, Wifi, Database, HardDrive
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Switch } from "@v1/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { RUNBOOKS, type Runbook } from "@v1/lib/runbooks";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RUNBOOKS, type Runbook } from "@/lib/runbooks";
 import { toast } from "sonner";
 
 // ========== Alerts Panel ==========

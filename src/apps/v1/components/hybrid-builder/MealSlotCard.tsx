@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
-import { sortMealPlanItems } from "@v1/lib/mealPlanSort";
+import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { sortMealPlanItems } from "@/lib/mealPlanSort";
 import {
   Plus,
   Flame,
@@ -18,14 +18,14 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
-import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@v1/lib/mealComposer";
-import type { PatientContext } from "@v1/lib/mealComposer";
+import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
+import type { PatientContext } from "@/lib/mealComposer";
 import SmartMealSelectorModal from "./SmartMealSelectorModal";
 import MealSlotItemCard from "./MealSlotItemCard";
 import FoodSearchInline from "./FoodSearchInline";
 import SaveMealSlotDialog from "./SaveMealSlotDialog";
-import { smartSubstituteFood } from "@v1/lib/smartFoodSubstitution";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
+import { smartSubstituteFood } from "@/lib/smartFoodSubstitution";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   day: number;

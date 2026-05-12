@@ -1,6 +1,6 @@
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import SubscriptionGuard from "@v1/components/common/SubscriptionGuard";
-import IntelligenceSettingsPanel from "@v1/components/intelligence/IntelligenceSettingsPanel";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SubscriptionGuard from "@/components/common/SubscriptionGuard";
+import IntelligenceSettingsPanel from "@/components/intelligence/IntelligenceSettingsPanel";
 
 export default function IntelligenceSettings() {
   return (

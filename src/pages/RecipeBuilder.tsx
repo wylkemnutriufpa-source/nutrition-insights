@@ -1,28 +1,28 @@
 import { useState, useMemo, useRef } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Label } from "@v1/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChefHat, Plus, Trash2, Camera, Save, Sparkles, Flame, Beef, Wheat, Droplets, ArrowLeft, Search, CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import IngredientSearch from "@v1/components/recipe/IngredientSearch";
-import MacroGauge from "@v1/components/recipe/MacroGauge";
-import MealSlotMatcher from "@v1/components/recipe/MealSlotMatcher";
-import RecipeSearchDialog from "@v1/components/recipe/RecipeSearchDialog";
+import IngredientSearch from "@/components/recipe/IngredientSearch";
+import MacroGauge from "@/components/recipe/MacroGauge";
+import MealSlotMatcher from "@/components/recipe/MealSlotMatcher";
+import RecipeSearchDialog from "@/components/recipe/RecipeSearchDialog";
 import {
   RecipeIngredient, calculateRecipeMacros, perServingMacros, getAvailableUnits,
-} from "@v1/lib/recipeCalculator";
-import { uploadFile } from "@v1/lib/upload";
+} from "@/lib/recipeCalculator";
+import { uploadFile } from "@/lib/upload";
 
 export default function RecipeBuilder() {
   const { user } = useAuth();

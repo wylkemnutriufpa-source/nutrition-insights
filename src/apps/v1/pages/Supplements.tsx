@@ -1,21 +1,21 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@v1/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@v1/components/ui/select";
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Pill, Plus, Search, Users, ChevronDown, ChevronUp, Trash2, ToggleLeft, ToggleRight, Check, BarChart3, Calendar } from "lucide-react";
-import { Badge } from "@v1/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface Supplement {

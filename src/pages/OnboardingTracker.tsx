@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
-import { Button } from "@v1/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { 
   ClipboardCheck, Shield, Scale, Utensils, Sparkles, ThumbsUp, 
   Search, Filter, Clock, User, CheckCircle2, AlertCircle, ArrowRight, Rocket
 } from "lucide-react";
-import { Input } from "@v1/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 

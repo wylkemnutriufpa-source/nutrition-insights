@@ -13,7 +13,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -22,20 +22,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@v1/components/ui/dialog";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@v1/components/ui/select";
+} from "@/components/ui/select";
 import { ShieldOff, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@v1/integrations/supabase/client";
-import { invalidateLifecycleQueries } from "@v1/lib/lifecycleCache";
+import { supabase } from "@/integrations/supabase/client";
+import { invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 
 interface UnblockPatientDialogProps {
   patientId: string;

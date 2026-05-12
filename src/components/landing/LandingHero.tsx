@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Sparkles, Play, CheckCircle2 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
-import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
+import { Button } from "@/components/ui/button";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 
 function Particle({ delay, x, y, size }: { delay: number; x: string; y: string; size: number }) {
   return (

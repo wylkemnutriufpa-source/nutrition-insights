@@ -1,4 +1,4 @@
-import { useNutritionistStatus } from "@v1/hooks/useNutritionistStatus";
+import { useNutritionistStatus } from "@/hooks/useNutritionistStatus";
 import { MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";

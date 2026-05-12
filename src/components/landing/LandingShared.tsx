@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
+import { Button } from "@/components/ui/button";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { ReactNode } from "react";
 
 /* ─── Animation presets ─── */

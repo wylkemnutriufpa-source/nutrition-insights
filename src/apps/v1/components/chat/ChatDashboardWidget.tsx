@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { MessageSquare, Clock, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 

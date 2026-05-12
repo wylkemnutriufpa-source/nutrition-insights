@@ -3,11 +3,11 @@
  * Daily command center for the coach
  */
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { PHASE_LABELS, type CheckinData, generateAlerts, analyzeAthleteData } from "@v1/lib/coachAnalysisEngine";
-import { calculatePriority, PRIORITY_CONFIG, type AthletePriority } from "@v1/lib/coachPriorityEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PHASE_LABELS, type CheckinData, generateAlerts, analyzeAthleteData } from "@/lib/coachAnalysisEngine";
+import { calculatePriority, PRIORITY_CONFIG, type AthletePriority } from "@/lib/coachPriorityEngine";
 import {
   Sunrise, AlertTriangle, Crown, Clock, Zap, ChevronRight,
   CheckCircle2, Activity, Shield

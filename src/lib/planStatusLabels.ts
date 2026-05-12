@@ -8,7 +8,7 @@
  * que novos estados apareçam no painel de diagnóstico.
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface PlanStatusMeta {
   label: string;

@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardContent } from "@v1/components/ui/card";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@v1/components/ui/table";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Input } from "@v1/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Search, Download, History, RefreshCcw, FileSpreadsheet, Loader2, XCircle, CheckCircle, BrainCircuit, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
-import { exportData } from "@v1/lib/auditExportUtils";
+import { exportData } from "@/lib/auditExportUtils";
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@v1/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ClinicalAuditTimeline } from "./ClinicalAuditTimeline";
 import { EngineExplainabilityPanel } from "./EngineExplainabilityPanel";
 import { ProtocolComparison } from "./ProtocolComparison";

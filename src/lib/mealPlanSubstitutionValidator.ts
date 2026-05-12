@@ -1,4 +1,4 @@
-import { FOOD_DATABASE } from "@v1/components/meals/FoodAutocomplete";
+import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 
 export type MealPlanItem = {
   id: string;

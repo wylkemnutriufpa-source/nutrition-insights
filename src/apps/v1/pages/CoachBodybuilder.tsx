@@ -1,7 +1,7 @@
 import { useState } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import CoachDashboard from "@v1/components/coach-bodybuilder/CoachDashboard";
-import AthleteDetailView from "@v1/components/coach-bodybuilder/AthleteDetailView";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import CoachDashboard from "@/components/coach-bodybuilder/CoachDashboard";
+import AthleteDetailView from "@/components/coach-bodybuilder/AthleteDetailView";
 
 export default function CoachBodybuilder() {
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Button } from "@v1/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Droplets, Calculator, GlassWater } from "lucide-react";
-import { usePatientMetrics } from "@v1/hooks/usePatientMetrics";
-import { Badge } from "@v1/components/ui/badge";
+import { usePatientMetrics } from "@/hooks/usePatientMetrics";
+import { Badge } from "@/components/ui/badge";
 
 const ACTIVITY_LEVELS = [
   { value: "sedentary", label: "Sedentário", factor: 30 },

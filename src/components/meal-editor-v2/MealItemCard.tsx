@@ -5,23 +5,23 @@ import {
   AlertTriangle, RefreshCcw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@v1/lib/utils";
+import { cn } from "@/lib/utils";
 import { MacroEditDialog } from "./MacroEditDialog";
-import { useMealPlanEditorV2Store, type MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { MealSmartEditorModal } from "./MealSmartEditorModal";
-import { getCategoryDot } from "@v1/components/meals/FoodSubstitutions";
-import { useMealDetail } from "@v1/components/patient/MealDetailContext";
+import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
+import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
-import { useMealVisualItem } from "@v1/hooks/useMealVisualItem";
-import { useSignedStorageUrl } from "@v1/hooks/useSignedStorageUrl";
-import { fmtMacro, getPortionWarning, isMacroInconsistent } from "@v1/lib/formatMacros";
-import { validateMealSubstitutions } from "@v1/lib/mealPlanSubstitutionValidator";
+import { useMealVisualItem } from "@/hooks/useMealVisualItem";
+import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
+import { fmtMacro, getPortionWarning, isMacroInconsistent } from "@/lib/formatMacros";
+import { validateMealSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@v1/components/ui/tooltip";
+} from "@/components/ui/tooltip";
 
 interface MealItemCardProps {
   item: MealPlanItem;

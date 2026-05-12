@@ -4,10 +4,10 @@
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useExperienceUI } from "@v1/hooks/useExperienceUI";
-import { Card } from "@v1/components/ui/card";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
+import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   Utensils,
@@ -17,10 +17,10 @@ import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
   MEAL_TYPES,
   type MealPlanItem, type MealCompletion, type AdherenceStatus,
-} from "@v1/components/patient/MealPlanDailyView";
-import { MealDetailModal } from "@v1/components/patient/MealDetailModal";
+} from "@/components/patient/MealPlanDailyView";
+import { MealDetailModal } from "@/components/patient/MealDetailModal";
 
-import type { MealDetailData } from "@v1/components/patient/MealPlanDailyView";
+import type { MealDetailData } from "@/components/patient/MealPlanDailyView";
 
 interface MealPlan {
   id: string;

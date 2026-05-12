@@ -1,15 +1,15 @@
 import { useRef } from "react";
-import { useAuth } from "@v1/lib/auth";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { useAuth } from "@/lib/auth";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
-import ShareProgressButton from "@v1/components/social/ShareProgressButton";
+import ShareProgressButton from "@/components/social/ShareProgressButton";
 // JourneyPhases removed
-import BeforeAfterReport from "@v1/components/social/BeforeAfterReport";
-import { JourneyTimelineFeed } from "@v1/components/gamification/JourneyTimelineFeed";
-import { MomentumIndicator } from "@v1/components/gamification/MomentumIndicator";
-import { PremiumBadge, PremiumAccentLine, PremiumMessage, PremiumCardWrapper } from "@v1/components/premium";
-import ExpandableMealPlanCard from "@v1/components/patient/ExpandableMealPlanCard";
+import BeforeAfterReport from "@/components/social/BeforeAfterReport";
+import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
+import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
+import { PremiumBadge, PremiumAccentLine, PremiumMessage, PremiumCardWrapper } from "@/components/premium";
+import ExpandableMealPlanCard from "@/components/patient/ExpandableMealPlanCard";
 
 export default function Journey() {
   const { user } = useAuth();

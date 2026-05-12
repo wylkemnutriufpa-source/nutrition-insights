@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Progress } from "@v1/components/ui/progress";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {

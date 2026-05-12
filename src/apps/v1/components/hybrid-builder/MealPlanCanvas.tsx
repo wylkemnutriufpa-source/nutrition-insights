@@ -1,9 +1,9 @@
-import { useMealPlanEditorV2Store, type MealType } from "@v1/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
 import MealSlotCard from "./MealSlotCard";
 import DayActions from "./DayActions";
 import { Coffee, Apple, Utensils, Cookie, Moon, Sun, Zap, Pencil, Sparkles } from "lucide-react";
 import { useState } from "react";
-import type { PatientContext, ComposerMode, MacroTarget } from "@v1/lib/mealComposer";
+import type { PatientContext, ComposerMode, MacroTarget } from "@/lib/mealComposer";
 
 
 const MEAL_SLOTS: { key: MealType; label: string; icon: React.ReactNode; calShare: number }[] = [

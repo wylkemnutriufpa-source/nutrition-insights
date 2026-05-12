@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@v1/lib/auth";
-import { useExperienceMode } from "@v1/hooks/useExperienceMode";
-import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@v1/hooks/useWorkspace";
-import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
-import { useIsMobile } from "@v1/hooks/use-mobile";
+import { useAuth } from "@/lib/auth";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   ChevronDown, Trophy, LayoutDashboard, Users, UtensilsCrossed,
   ClipboardCheck, Dumbbell, Brain, FileText, Target, Activity,
@@ -17,8 +17,8 @@ import {
   GraduationCap, LogOut, ChevronRight, Search, AlertTriangle,
   Flame, ShoppingCart, Pin, X,
 } from "lucide-react";
-import { SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@v1/hooks/useSmartMenu";
-import NewFeatureBadge from "@v1/components/common/NewFeatureBadge";
+import { SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@/hooks/useSmartMenu";
+import NewFeatureBadge from "@/components/common/NewFeatureBadge";
 
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, Brain,

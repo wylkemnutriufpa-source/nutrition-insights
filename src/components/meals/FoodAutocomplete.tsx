@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Input } from "@v1/components/ui/input";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Flame, Beef, Wheat, Droplets } from "lucide-react";
 
 export interface FoodItem {

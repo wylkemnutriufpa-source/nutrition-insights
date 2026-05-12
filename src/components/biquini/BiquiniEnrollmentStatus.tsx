@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
-import { Button } from "@v1/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import {
   Lock, CheckCircle2, AlertTriangle, Clock, Scale,
   Camera, Target, Flame, Calendar, ArrowRight, Sparkles, Trophy

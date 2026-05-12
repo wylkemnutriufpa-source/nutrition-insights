@@ -1,6 +1,6 @@
 
-import { supabase } from "@v1/integrations/supabase/client";
-import { NutriCoreV2Adapter } from "@v1/lib/nutricore_v2/adapter";
+import { supabase } from "@/integrations/supabase/client";
+import { NutriCoreV2Adapter } from "@/lib/nutricore_v2/adapter";
 import { PatientContext, Meal } from "../types";
 import { promoteDraftToMealPlan } from "./promoteDraft";
 

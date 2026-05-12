@@ -1,4 +1,4 @@
-import { supabase } from '@v1/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { loadOrCreateDraft, saveDraft } from './draftService';
 import type { Meal } from '../types';
 

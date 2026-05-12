@@ -60,7 +60,7 @@ function buildProfilesQuery() {
   return builder;
 }
 
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from(table: string) {
       if (table === "meal_plans") return buildMealPlanQuery();
@@ -78,12 +78,12 @@ vi.mock("@v1/integrations/supabase/client", () => ({
   },
 }));
 
-vi.mock("@v1/lib/auth", () => ({
+vi.mock("@/lib/auth", () => ({
   useAuth: () => ({ user: { id: "nutri-1" } }),
 }));
 
 import WorkspaceMealPlans from "../WorkspaceMealPlans";
-import { __resetPlanStatusReportingForTests } from "@v1/lib/planStatusLabels";
+import { __resetPlanStatusReportingForTests } from "@/lib/planStatusLabels";
 
 function renderComp(search = "") {
   return render(

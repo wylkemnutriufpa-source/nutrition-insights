@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { recordStateChange } from "@v1/lib/governanceTelemetry";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { recordStateChange } from "@/lib/governanceTelemetry";
 
 export type JourneyStatus =
   | "onboarding_slides"

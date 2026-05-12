@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Progress } from "@v1/components/ui/progress";
-import { Badge } from "@v1/components/ui/badge";
-import { BrainLoaderCard } from "@v1/components/common/PageLoader";
-import HealthScoreRing from "@v1/components/dashboard/HealthScoreRing";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { BrainLoaderCard } from "@/components/common/PageLoader";
+import HealthScoreRing from "@/components/dashboard/HealthScoreRing";
 import {
   BarChart3, Users, AlertTriangle, TrendingDown, Activity,
   FileText, CheckCircle2, Scale, Brain, Shield, ArrowRight

@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Switch } from "@v1/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Globe, Eye, Save, Loader2, Link2, Copy, ExternalLink,

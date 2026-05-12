@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@v1/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
-import { getTherapeuticMomentum } from "@v1/lib/therapeuticPriorityEngine";
+import { getTherapeuticMomentum } from "@/lib/therapeuticPriorityEngine";
 import { Flame, AlertTriangle, TrendingUp, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { safeNum } from "@v1/lib/formatMacros";
+import { safeNum } from "@/lib/formatMacros";
 
 const MOMENTUM_CONFIG: Record<string, { icon: any; bg: string; text: string }> = {
   green: { icon: TrendingUp, bg: "bg-green-500/10 border-green-500/30", text: "text-green-600" },

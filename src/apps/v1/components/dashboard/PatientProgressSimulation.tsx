@@ -6,9 +6,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@v1/components/ui/chart";
+} from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 interface PatientSimulationData {
   id: string;

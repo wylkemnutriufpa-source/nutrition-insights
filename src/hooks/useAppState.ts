@@ -1,4 +1,4 @@
-import { useAuth } from "@v1/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { useMemo } from "react";
 
 export function useAppState() {

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Badge } from "@v1/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Layers, CalendarDays, TrendingUp, Heart, Ruler, Trophy,
   ArrowRightLeft, MessageCircle, FileText, Sparkles, BookOpen,

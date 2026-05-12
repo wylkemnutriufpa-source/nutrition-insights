@@ -13,7 +13,7 @@ const mockRpc = vi.fn();
 const mockFrom = vi.fn();
 const mockStorageFrom = vi.fn();
 
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: (...args: any[]) => mockRpc(...args),
     from: (...args: any[]) => mockFrom(...args),
@@ -44,7 +44,7 @@ describe("E2E Flow: Payment Confirmation", () => {
       error: null,
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await supabase.rpc("confirm_patient_payment", {
       _patient_id: "patient-1",
       _nutritionist_id: "nutri-1",
@@ -66,7 +66,7 @@ describe("E2E Flow: Payment Confirmation", () => {
       error: { message: "Missing required parameter" },
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await supabase.rpc("confirm_patient_payment" as any, {
       _patient_id: "patient-1",
       _nutritionist_id: "",
@@ -79,7 +79,7 @@ describe("E2E Flow: Payment Confirmation", () => {
     const response = { data: { success: true, new_status: "onboarding_active" }, error: null };
     mockRpc.mockResolvedValue(response);
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const r1 = await supabase.rpc("confirm_patient_payment" as any, { _patient_id: "p1", _nutritionist_id: "n1" });
     const r2 = await supabase.rpc("confirm_patient_payment" as any, { _patient_id: "p1", _nutritionist_id: "n1" });
 
@@ -97,7 +97,7 @@ describe("E2E Flow: Onboarding Pipeline", () => {
       error: null,
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await supabase.rpc("complete_patient_onboarding_by_patient" as any, {
       _patient_id: "patient-1",
       _pipeline_id: "pipeline-1",
@@ -113,7 +113,7 @@ describe("E2E Flow: Onboarding Pipeline", () => {
       error: { message: "Pipeline not found" },
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await supabase.rpc("complete_patient_onboarding_by_patient" as any, {
       _patient_id: "patient-1",
       _pipeline_id: "invalid",
@@ -137,7 +137,7 @@ describe("E2E Flow: Meal Plan Lifecycle", () => {
       })),
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await (supabase as any).from("meal_plans")
       .update({ is_active: true })
       .eq("id", "plan-1");
@@ -159,7 +159,7 @@ describe("E2E Flow: Meal Plan Lifecycle", () => {
       })),
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await (supabase as any).from("meal_plans")
       .select("*")
       .eq("patient_id", "patient-1")
@@ -181,7 +181,7 @@ describe("E2E Flow: Patient Check-in", () => {
       upload: vi.fn(() => Promise.resolve({ data: { path: storagePath }, error: null })),
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const uploadResult = await supabase.storage
       .from("checkin-photos")
       .upload(storagePath, new Blob(["fake"]));
@@ -204,7 +204,7 @@ describe("E2E Flow: Patient Check-in", () => {
       })),
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await supabase.storage
       .from("checkin-photos")
       .createSignedUrl(path, 3600);
@@ -230,7 +230,7 @@ describe("E2E Flow: Patient Check-in", () => {
       })),
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await (supabase as any).from("patient_checkins")
       .insert({
         patient_id: "patient-1",
@@ -267,7 +267,7 @@ describe("E2E Flow: Chat Messages", () => {
       })),
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await (supabase as any).from("chat_messages")
       .insert({
         sender_id: "nutri-1",
@@ -292,14 +292,14 @@ describe("E2E Flow: Signed URL Resilience", () => {
       createSignedUrl: vi.fn(() => Promise.resolve({ data: { signedUrl }, error: null })),
     });
 
-    const { resolveStorageUrl } = await import("@v1/hooks/useSignedStorageUrl");
+    const { resolveStorageUrl } = await import("@/hooks/useSignedStorageUrl");
     const url = await resolveStorageUrl("patient-1/body/front.jpg", "body-images");
 
     expect(url).toBe(signedUrl);
   });
 
   it("resolveStorageUrl passes through full URLs unchanged", async () => {
-    const { resolveStorageUrl } = await import("@v1/hooks/useSignedStorageUrl");
+    const { resolveStorageUrl } = await import("@/hooks/useSignedStorageUrl");
     const fullUrl = "https://example.com/image.jpg";
     const result = await resolveStorageUrl(fullUrl);
 
@@ -307,7 +307,7 @@ describe("E2E Flow: Signed URL Resilience", () => {
   });
 
   it("resolveStorageUrl returns null for null/undefined input", async () => {
-    const { resolveStorageUrl } = await import("@v1/hooks/useSignedStorageUrl");
+    const { resolveStorageUrl } = await import("@/hooks/useSignedStorageUrl");
     expect(await resolveStorageUrl(null)).toBeNull();
     expect(await resolveStorageUrl(undefined)).toBeNull();
   });
@@ -320,7 +320,7 @@ describe("E2E Flow: Signed URL Resilience", () => {
       })),
     });
 
-    const { resolveStorageUrl } = await import("@v1/hooks/useSignedStorageUrl");
+    const { resolveStorageUrl } = await import("@/hooks/useSignedStorageUrl");
     const result = await resolveStorageUrl("invalid/path.jpg", "checkin-photos");
 
     expect(result).toBeNull();
@@ -332,7 +332,7 @@ describe("E2E Flow: Signed URL Resilience", () => {
 // ═══════════════════════════════════════════════════════════
 describe("E2E Flow: Data Safeguards (prevent UI crashes)", () => {
   it("safeNumber handles all edge cases", async () => {
-    const { safeNumber } = await import("@v1/lib/safeguards");
+    const { safeNumber } = await import("@/lib/safeguards");
 
     expect(safeNumber(null)).toBe(0);
     expect(safeNumber(undefined)).toBe(0);
@@ -345,7 +345,7 @@ describe("E2E Flow: Data Safeguards (prevent UI crashes)", () => {
   });
 
   it("safeString handles all edge cases", async () => {
-    const { safeString } = await import("@v1/lib/safeguards");
+    const { safeString } = await import("@/lib/safeguards");
 
     expect(safeString(null)).toBe("");
     expect(safeString(undefined)).toBe("");
@@ -354,7 +354,7 @@ describe("E2E Flow: Data Safeguards (prevent UI crashes)", () => {
   });
 
   it("safeArray handles all edge cases", async () => {
-    const { safeArray } = await import("@v1/lib/safeguards");
+    const { safeArray } = await import("@/lib/safeguards");
 
     expect(safeArray(null)).toEqual([]);
     expect(safeArray(undefined)).toEqual([]);
@@ -415,7 +415,7 @@ describe("E2E Flow: Smart Notifications", () => {
       })),
     });
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
     const result = await (supabase as any).from("notifications").insert([{
       user_id: "patient-1",
       title: "Novo plano",
@@ -444,7 +444,7 @@ describe("E2E Flow: Body Analysis Upload", () => {
       });
     }
 
-    const { supabase } = await import("@v1/integrations/supabase/client");
+    const { supabase } = await import("@/integrations/supabase/client");
 
     for (const path of paths) {
       const result = await supabase.storage

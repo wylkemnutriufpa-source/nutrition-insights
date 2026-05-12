@@ -16,7 +16,7 @@ import {
   aggregateUnknownByWorkspace,
   summarizeTrend,
 } from "../planDiagnosticsHelpers";
-import { buildAuditCsv } from "@v1/lib/auditExportUtils";
+import { buildAuditCsv } from "@/lib/auditExportUtils";
 
 const FIXED_NOW = new Date("2026-04-24T12:00:00Z");
 

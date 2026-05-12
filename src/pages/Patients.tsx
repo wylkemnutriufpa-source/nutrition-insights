@@ -1,21 +1,21 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useExperienceMode } from "@v1/hooks/useExperienceMode";
-import { useSafeInteraction } from "@v1/hooks/useSafeInteraction";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { useSafeInteraction } from "@/hooks/useSafeInteraction";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Checkbox } from "@v1/components/ui/checkbox";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Badge } from "@v1/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@v1/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@v1/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Skeleton } from "@v1/components/ui/skeleton";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
@@ -23,23 +23,23 @@ import {
   LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles, UserPlus,
   UtensilsCrossed, User, FileText
 } from "lucide-react";
-import { BASE_URL } from "@v1/lib/config";
+import { BASE_URL } from "@/lib/config";
 import { useNavigate, Link } from "react-router-dom";
-import { getWhatsAppInvitationMessage } from "@v1/utils/invitation";
-import { useWhatsAppTemplates, useWhatsAppLogs } from "@v1/hooks/useWhatsAppBusiness";
-import PatientStatusManager from "@v1/components/patients/PatientStatusManager";
-import PrestigeBadge from "@v1/components/prestige/PrestigeBadge";
-import { useOnlinePatients } from "@v1/hooks/useOnlinePatients";
+import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
+import PatientStatusManager from "@/components/patients/PatientStatusManager";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import {
   usePatientsList, useTogglePatientStatus, useAddPatient,
   useRemoveFromProgram, useUpdateExpiry, useBulkToggle, useAssignToProgram,
   trackPatientView, DEFAULT_PAGE_SIZE,
-} from "@v1/hooks/queries/usePatientsList";
-import type { PatientInfo, ProgramInfo, PatientsListParams } from "@v1/hooks/queries/usePatientsList";
-import type { PrestigePlan } from "@v1/hooks/usePrestige";
-import PaginationControls from "@v1/components/patients/PaginationControls";
-import PatientQueueTabs from "@v1/components/patients/PatientQueueTabs";
-import { EngineSelector } from "@v1/features/editor-v3/components/EngineSelector";
+} from "@/hooks/queries/usePatientsList";
+import type { PatientInfo, ProgramInfo, PatientsListParams } from "@/hooks/queries/usePatientsList";
+import type { PrestigePlan } from "@/hooks/usePrestige";
+import PaginationControls from "@/components/patients/PaginationControls";
+import PatientQueueTabs from "@/components/patients/PatientQueueTabs";
+import { EngineSelector } from "@/features/editor-v3/components/EngineSelector";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {

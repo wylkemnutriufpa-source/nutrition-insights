@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { 
   UserPlus, 
@@ -19,8 +19,8 @@ import {
   User,
   Sparkles
 } from "lucide-react";
-import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
-import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@v1/utils/whatsapp";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 
 export default function QuickLink() {
   const { nutriId } = useParams();

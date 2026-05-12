@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
-import { Badge } from "@v1/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, ArrowLeft, Check, CheckCheck, Clock, Stethoscope } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import NutritionistStatusIndicator from "@v1/components/chat/NutritionistStatusIndicator";
-import QuickReplySuggestions from "@v1/components/chat/QuickReplySuggestions";
-import { useChatContacts, useChatMessages, useSendMessage } from "@v1/hooks/queries";
-import type { Message } from "@v1/hooks/queries/useChatQuery";
-import { Skeleton } from "@v1/components/ui/skeleton";
+import NutritionistStatusIndicator from "@/components/chat/NutritionistStatusIndicator";
+import QuickReplySuggestions from "@/components/chat/QuickReplySuggestions";
+import { useChatContacts, useChatMessages, useSendMessage } from "@/hooks/queries";
+import type { Message } from "@/hooks/queries/useChatQuery";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@v1/hooks/queries/queryKeys";
+import { queryKeys } from "@/hooks/queries/queryKeys";
 
 export default function Chat() {
   const { user, isNutritionist, isPatient } = useAuth();

@@ -4,11 +4,11 @@
  */
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertTriangle, TrendingUp, Users, Activity, Target,
   ArrowRight, ShieldAlert, Flame, Award

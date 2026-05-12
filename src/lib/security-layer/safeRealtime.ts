@@ -9,7 +9,7 @@
  * Este helper garante que QUALQUER falha de Realtime nunca propague como crash —
  * em vez disso, o app continua funcionando sem realtime (degradação graciosa).
  */
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 let realtimeAvailable: boolean | null = null;
 

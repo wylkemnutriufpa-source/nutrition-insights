@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import IFJCommandCenter from "@v1/components/intelligence/modules/IFJCommandCenter";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Progress } from "@v1/components/ui/progress";
-import { Button } from "@v1/components/ui/button";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -15,7 +15,7 @@ import {
   Calendar, ArrowRight, Flame, Clock, Trophy, ChevronRight,
   Heart, Zap, Scale, Droplets
 } from "lucide-react";
-import { PatientRetentionAlerts } from "@v1/components/dashboard/PatientRetentionAlerts";
+import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Brain, Users, TrendingDown, TrendingUp, AlertTriangle, Sparkles, Activity, Shield } from "lucide-react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { cn } from "@v1/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 interface IntelligenceStats {
   totalAnalyzed: number;

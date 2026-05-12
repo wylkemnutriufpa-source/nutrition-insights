@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Switch } from "@v1/components/ui/switch";
-import { Badge } from "@v1/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   CalendarDays, DollarSign, Globe, Loader2, Save, ExternalLink, CreditCard, Users
 } from "lucide-react";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface BookingProfile {
   id: string;

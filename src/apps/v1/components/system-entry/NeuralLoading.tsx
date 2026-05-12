@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import * as THREE from "three";
-import logoPng from "@v1/assets/logo.png";
+import logoPng from "@/assets/logo.png";
 
 export type NeuralAnimationMode = "idle" | "converge" | "diverge";
 

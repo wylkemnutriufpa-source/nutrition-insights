@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NeuralStepTransition } from "@v1/components/ui/neural-transitions";
-import { ProgressPulse } from "@v1/components/ui/micro-interactions";
-import { useAuth } from "@v1/lib/auth";
-import { useConsentGuard } from "@v1/hooks/useConsentGuard";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Progress } from "@v1/components/ui/progress";
+import { NeuralStepTransition } from "@/components/ui/neural-transitions";
+import { ProgressPulse } from "@/components/ui/micro-interactions";
+import { useAuth } from "@/lib/auth";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { 
   AlertDialog, 
@@ -18,31 +18,31 @@ import {
   AlertDialogFooter, 
   AlertDialogHeader, 
   AlertDialogTitle 
-} from "@v1/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save, Lock, AlertTriangle, ArrowRight, History, RefreshCcw } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useTenant } from "@v1/lib/tenantContext";
-import { useAppState } from "@v1/hooks/useAppState";
-import { useSyncStatus } from "@v1/hooks/useSyncStatus";
-import { HardFailLinkage } from "@v1/components/common/HardFailLinkage";
-import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@v1/utils/dataSafety";
-import { safeLocalStorage, safeSessionStorage } from "@v1/lib/safeStorage";
-import { usePatientJourneyStatus } from "@v1/hooks/usePatientJourneyStatus";
-import { runEngine } from '@v1/lib/nutricore_v2/nutrition-engine';
+import { useTenant } from "@/lib/tenantContext";
+import { useAppState } from "@/hooks/useAppState";
+import { useSyncStatus } from "@/hooks/useSyncStatus";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
+import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@/utils/dataSafety";
+import { safeLocalStorage, safeSessionStorage } from "@/lib/safeStorage";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { runEngine } from '@/lib/nutricore_v2/nutrition-engine';
 
 
-import { SmartPlanCard } from "@v1/components/patient/AnamnesisInsightsCard";
-import OnboardingExitGuard from "@v1/components/onboarding/OnboardingExitGuard";
-import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@v1/lib/adaptiveAnamnesisBlocks";
-import { processAnamnesisFlags } from "@v1/lib/clinicalFlags";
-import { RadialOrbitalSelector, type OrbitalOption as RadialOption } from "@v1/components/ui/radial-orbital-selector";
+import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
+import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
+import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
+import { processAnamnesisFlags } from "@/lib/clinicalFlags";
+import { RadialOrbitalSelector, type OrbitalOption as RadialOption } from "@/components/ui/radial-orbital-selector";
 import {
   OrbitalMultiSelect,
   OrbitalSlider,
   OrbitalNumberInput,
   OrbitalTextInput,
   OrbitalTimeInput,
-} from "@v1/components/onboarding/OrbitalAnamnesisInputs";
+} from "@/components/onboarding/OrbitalAnamnesisInputs";
 
 // ──── Question definitions ────
 interface Option {

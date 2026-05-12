@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
 import {
   Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Flame, Heart, Scale,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock Supabase
 const mockSingle = vi.fn();
@@ -10,7 +10,7 @@ const mockSelect = vi.fn(() => ({
   in: vi.fn().mockReturnThis()
 }));
 
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: {
       signInWithPassword: vi.fn(),

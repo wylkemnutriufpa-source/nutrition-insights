@@ -1,8 +1,8 @@
 import { useState } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Input } from "@v1/components/ui/input";
-import { Badge } from "@v1/components/ui/badge";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { BookOpen, Search, Apple, Droplets, Dumbbell, Brain, Heart, Leaf } from "lucide-react";
 
 interface Article {

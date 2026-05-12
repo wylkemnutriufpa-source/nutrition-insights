@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Brain, TrendingDown, Zap, DollarSign, Activity, Cpu, Database, RefreshCw, Target } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--warning))", "hsl(var(--destructive))", "#8884d8", "#82ca9d"];

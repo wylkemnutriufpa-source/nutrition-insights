@@ -1,8 +1,8 @@
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import ProtocolBBToggle from "@v1/components/admin/ProtocolBBToggle";
-import ProtocolBBDocumentation from "@v1/components/admin/ProtocolBBDocumentation";
-import BBPlanGenerator from "@v1/components/biquini/BBPlanGenerator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import ProtocolBBToggle from "@/components/admin/ProtocolBBToggle";
+import ProtocolBBDocumentation from "@/components/admin/ProtocolBBDocumentation";
+import BBPlanGenerator from "@/components/biquini/BBPlanGenerator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, FileText, Sparkles, Zap } from "lucide-react";
 
 export default function AdminProtocolBiquiniBranco() {

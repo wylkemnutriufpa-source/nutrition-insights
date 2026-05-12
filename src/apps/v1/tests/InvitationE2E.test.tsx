@@ -4,9 +4,9 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import Invitation from '@v1/pages/Invitation';
-import PatientRegister from '@v1/pages/PatientRegister';
-import { supabase } from '@v1/integrations/supabase/client';
+import Invitation from '@/pages/Invitation';
+import PatientRegister from '@/pages/PatientRegister';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock Supabase
 const mockQuery = {
@@ -18,7 +18,7 @@ const mockQuery = {
   update: vi.fn().mockReturnThis(),
 };
 
-vi.mock('@v1/integrations/supabase/client', () => ({
+vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(() => mockQuery),
     auth: { 
@@ -28,7 +28,7 @@ vi.mock('@v1/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@v1/lib/auth', () => ({
+vi.mock('@/lib/auth', () => ({
   useAuth: vi.fn().mockReturnValue({ user: null, loading: false }),
   AuthProvider: ({ children }: any) => <>{children}</>
 }));

@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { ExperienceProvider, useExperienceContext } from "./ExperienceProvider";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import React, { ReactNode } from "react";
 
 // Mock dependencies
-vi.mock("@v1/lib/auth", () => ({
+vi.mock("@/lib/auth", () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     channel: vi.fn(() => ({
       on: vi.fn().mockReturnThis(),

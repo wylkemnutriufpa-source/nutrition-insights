@@ -2,8 +2,8 @@
  * Hook to load patient context for the Meal Composer Engine.
  */
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import type { PatientContext } from "@v1/lib/mealComposer";
+import { supabase } from "@/integrations/supabase/client";
+import type { PatientContext } from "@/lib/mealComposer";
 
 function extractArray(val: unknown): string[] {
   if (Array.isArray(val)) return val.filter(v => typeof v === "string");

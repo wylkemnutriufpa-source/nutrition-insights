@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@v1/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
-import { getLearnedPatterns } from "@v1/lib/clinicalLearningEngine";
+import { getLearnedPatterns } from "@/lib/clinicalLearningEngine";
 import { Brain, TrendingUp, Utensils, Dumbbell, Sparkles, ChevronRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { safeNum } from "@v1/lib/formatMacros";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { safeNum } from "@/lib/formatMacros";
 
 const TYPE_ICONS: Record<string, any> = {
   nutrition: Utensils,

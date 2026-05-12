@@ -4,7 +4,7 @@
  * Determines what the patient should see first based on clinical urgency,
  * behavioral risk, adherence, and temporal context.
  */
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface TherapeuticPriority {
   category: string;

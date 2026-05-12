@@ -3,13 +3,13 @@
  * Includes quick presets: Essencial, Acompanhamento, Completo, Premium
  */
 import { useState, useEffect } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { Switch } from "@v1/components/ui/switch";
-import { Label } from "@v1/components/ui/label";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Brain, Loader2, UtensilsCrossed, BookOpen, CheckSquare, Droplets, TrendingUp, Calendar, Repeat, MessageSquare, Lightbulb, Zap } from "lucide-react";
 

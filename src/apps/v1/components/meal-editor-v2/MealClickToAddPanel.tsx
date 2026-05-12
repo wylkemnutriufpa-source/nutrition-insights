@@ -5,10 +5,10 @@
  * One click = add to plan. Auto macro sum displayed live.
  */
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useMealPlanEditorV2Store, type MealType } from "@v1/stores/mealPlanEditorV2Store";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Input } from "@v1/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import {
   Search, Loader2, Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Wheat, Droplets, Check, Plus, Image as ImageIcon,

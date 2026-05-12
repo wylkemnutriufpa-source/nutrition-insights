@@ -1,4 +1,4 @@
-import type { Tables } from "@v1/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 
 export type MealPlan = Tables<"meal_plans">;
 export type MealPlanItem = Tables<"meal_plan_items">;
@@ -192,7 +192,7 @@ export const persistEditorPlanoState = (planId: string, state: EditorPlanoState)
   }
 };
 
-import { assertContract } from "@v1/lib/contractGuards";
+import { assertContract } from "@/lib/contractGuards";
 
 export const editorPlanoReducer = (
   state: EditorPlanoState,

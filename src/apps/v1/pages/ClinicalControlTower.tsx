@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { Brain, Activity, Radar, Target, BarChart3, Shield, Zap } from "lucide-react";
-import { useExperienceUI } from "@v1/hooks/useExperienceUI";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import SubscriptionGuard from "@v1/components/common/SubscriptionGuard";
-import GlobalClinicalStatusBar from "@v1/components/control-tower/GlobalClinicalStatusBar";
-import PatientPriorityRadar from "@v1/components/control-tower/PatientPriorityRadar";
-import AICommandFeed from "@v1/components/control-tower/AICommandFeed";
-import ClinicalFocusQueue from "@v1/components/control-tower/ClinicalFocusQueue";
-import PatientHealthMatrix from "@v1/components/control-tower/PatientHealthMatrix";
-import AutomationTransparencyPanel from "@v1/components/control-tower/AutomationTransparencyPanel";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SubscriptionGuard from "@/components/common/SubscriptionGuard";
+import GlobalClinicalStatusBar from "@/components/control-tower/GlobalClinicalStatusBar";
+import PatientPriorityRadar from "@/components/control-tower/PatientPriorityRadar";
+import AICommandFeed from "@/components/control-tower/AICommandFeed";
+import ClinicalFocusQueue from "@/components/control-tower/ClinicalFocusQueue";
+import PatientHealthMatrix from "@/components/control-tower/PatientHealthMatrix";
+import AutomationTransparencyPanel from "@/components/control-tower/AutomationTransparencyPanel";
 
 function SectionHeader({ icon: Icon, title, subtitle, color }: { icon: React.ElementType; title: string; subtitle: string; color: string }) {
   return (

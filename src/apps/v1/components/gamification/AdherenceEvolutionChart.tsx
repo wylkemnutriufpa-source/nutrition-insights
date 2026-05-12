@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { useAdherenceScore } from "@v1/hooks/queries/useEngagement";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import { useAdherenceScore } from "@/hooks/queries/useEngagement";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 

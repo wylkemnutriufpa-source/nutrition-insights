@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, Reorder } from "framer-motion";
-import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@v1/hooks/useWorkspace";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Switch } from "@v1/components/ui/switch";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Pin, PinOff,
   RotateCcw, Save, Pencil, ChevronDown, ChevronRight, ArrowRightLeft,
@@ -22,7 +22,7 @@ import {
   UtensilsCrossed, ChefHat, Rocket, Pill, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import SubscriptionGuard from "@v1/components/common/SubscriptionGuard";
+import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 
 const ICON_OPTIONS = [
   { name: "Heart", icon: Heart },

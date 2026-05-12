@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Brain, TrendingUp, Zap, BarChart3 } from "lucide-react";
-import mockupAiBrain from "@v1/assets/mockup-ai-brain.jpg";
+import mockupAiBrain from "@/assets/mockup-ai-brain.jpg";
 import { MockupParticles, EnergyBeam } from "./LandingEffects";
 
 const features = [

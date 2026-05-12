@@ -3,13 +3,13 @@
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Badge } from "@v1/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import {
   Brain, Send, Loader2, AlertTriangle, Target,
@@ -18,7 +18,7 @@ import {
   UserCheck, CreditCard, FileCheck, TrendingUp, Rocket
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { logAudit } from "@v1/lib/auditLog";
+import { logAudit } from "@/lib/auditLog";
 
 interface IFJResponse {
   title: string;

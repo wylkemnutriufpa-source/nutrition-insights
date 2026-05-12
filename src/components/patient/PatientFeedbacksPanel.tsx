@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import StorageImage from "@v1/components/common/StorageImage";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Dialog, DialogContent } from "@v1/components/ui/dialog";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Skeleton } from "@v1/components/ui/skeleton";
+import StorageImage from "@/components/common/StorageImage";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Camera, MessageSquare, Scale, Heart, Star,
   ChevronDown, ChevronUp, Eye, Clock, CheckCircle2,

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Progress } from "@v1/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 import { Trophy, Sparkles, Target, Star } from "lucide-react";
 
 interface DailyEngagementProgressProps {

@@ -1,4 +1,4 @@
-import { BASE_URL, OFFICIAL_DOMAIN, PRODUCTION_URL } from "@v1/lib/config";
+import { BASE_URL, OFFICIAL_DOMAIN, PRODUCTION_URL } from "@/lib/config";
 
 /**
  * Guard de integridade: garante que NENHUM link de convite emitido pelo app

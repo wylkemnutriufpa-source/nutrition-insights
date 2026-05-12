@@ -1,33 +1,33 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Rocket, Stethoscope, User, Brain, Trophy, BarChart3, MessageSquare, Calendar, Shield, Zap, Target, Sparkles, ChevronRight } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { EnergyGlow, MockupParticles, PremiumMockupFrame, EnergyBeam } from "@v1/components/landing/LandingEffects";
+import { Button } from "@/components/ui/button";
+import { EnergyGlow, MockupParticles, PremiumMockupFrame, EnergyBeam } from "@/components/landing/LandingEffects";
 
-import slide1 from "@v1/assets/onboarding/slide-1.png";
-import slide2 from "@v1/assets/onboarding/slide-2.png";
-import slide3 from "@v1/assets/onboarding/slide-3.png";
-import slide4 from "@v1/assets/onboarding/slide-4.png";
-import slide5 from "@v1/assets/onboarding/slide-5.png";
-import slide6 from "@v1/assets/onboarding/slide-6.png";
-import slide7 from "@v1/assets/onboarding/slide-7.png";
-import slide8 from "@v1/assets/onboarding/slide-8.png";
-import slide9 from "@v1/assets/onboarding/slide-9.png";
-import slide10 from "@v1/assets/onboarding/slide-10.png";
+import slide1 from "@/assets/onboarding/slide-1.png";
+import slide2 from "@/assets/onboarding/slide-2.png";
+import slide3 from "@/assets/onboarding/slide-3.png";
+import slide4 from "@/assets/onboarding/slide-4.png";
+import slide5 from "@/assets/onboarding/slide-5.png";
+import slide6 from "@/assets/onboarding/slide-6.png";
+import slide7 from "@/assets/onboarding/slide-7.png";
+import slide8 from "@/assets/onboarding/slide-8.png";
+import slide9 from "@/assets/onboarding/slide-9.png";
+import slide10 from "@/assets/onboarding/slide-10.png";
 
-import pSlide1 from "@v1/assets/onboarding-paciente/slide-1.png";
-import pSlide2 from "@v1/assets/onboarding-paciente/slide-2.png";
-import pSlide3 from "@v1/assets/onboarding-paciente/slide-3.png";
-import pSlide4 from "@v1/assets/onboarding-paciente/slide-4.png";
-import pSlide5 from "@v1/assets/onboarding-paciente/slide-5.png";
-import pSlide6 from "@v1/assets/onboarding-paciente/slide-6.png";
-import pSlide7 from "@v1/assets/onboarding-paciente/slide-7.png";
-import pSlide8 from "@v1/assets/onboarding-paciente/slide-8.png";
-import pSlide9 from "@v1/assets/onboarding-paciente/slide-9.png";
-import pSlide10 from "@v1/assets/onboarding-paciente/slide-10.png";
+import pSlide1 from "@/assets/onboarding-paciente/slide-1.png";
+import pSlide2 from "@/assets/onboarding-paciente/slide-2.png";
+import pSlide3 from "@/assets/onboarding-paciente/slide-3.png";
+import pSlide4 from "@/assets/onboarding-paciente/slide-4.png";
+import pSlide5 from "@/assets/onboarding-paciente/slide-5.png";
+import pSlide6 from "@/assets/onboarding-paciente/slide-6.png";
+import pSlide7 from "@/assets/onboarding-paciente/slide-7.png";
+import pSlide8 from "@/assets/onboarding-paciente/slide-8.png";
+import pSlide9 from "@/assets/onboarding-paciente/slide-9.png";
+import pSlide10 from "@/assets/onboarding-paciente/slide-10.png";
 
-import screenshotDashboard from "@v1/assets/screenshot-dashboard.jpg";
-import screenshotMealPlan from "@v1/assets/screenshot-mealplan.jpg";
+import screenshotDashboard from "@/assets/screenshot-dashboard.jpg";
+import screenshotMealPlan from "@/assets/screenshot-mealplan.jpg";
 
 interface ShowcaseSection {
   image: string;

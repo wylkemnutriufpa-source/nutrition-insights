@@ -1,19 +1,19 @@
 import { useEffect, useState, useCallback, useMemo, lazy } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Badge } from "@v1/components/ui/badge";
-import { Switch } from "@v1/components/ui/switch";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import QAChecklistPage from "./QAChecklistPage";
 import InvitationAudit from "../InvitationAudit";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
@@ -21,24 +21,24 @@ import {
   Palette, LayoutGrid, GraduationCap, Wand2, Dumbbell, Image as ImageIcon, ClipboardCheck, ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
-import OnlinePatientsWidget from "@v1/components/dashboard/OnlinePatientsWidget";
-import PatientProgressSimulation from "@v1/components/dashboard/PatientProgressSimulation";
-import PatientRevenueSimulator from "@v1/components/dashboard/PatientRevenueSimulator";
-import AffiliateRevenueSimulator from "@v1/components/dashboard/AffiliateRevenueSimulator";
-import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@v1/lib/featureRegistry";
+import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
+import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
+import AffiliateRevenueSimulator from "@/components/dashboard/AffiliateRevenueSimulator";
+import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@/lib/featureRegistry";
 import { useQuery } from "@tanstack/react-query";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, UserPlus as UserPlusIcon } from "lucide-react";
-import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@v1/components/admin/AdminDrillDownDialogs";
-import { MagicSlideButton } from "@v1/components/common/MagicSlideGenerator";
-import { HealthStatusIndicator } from "@v1/components/observability/HealthStatusIndicator";
+import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@/components/admin/AdminDrillDownDialogs";
+import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
+import { HealthStatusIndicator } from "@/components/observability/HealthStatusIndicator";
 
-import { StabilityZone } from "@v1/components/common/StabilityZone";
-import { SafeRender } from "@v1/components/common/SafeRender";
-import { usePageState } from "@v1/hooks/usePageState";
-import { BrainLoaderCard } from "@v1/components/common/PageLoader";
+import { StabilityZone } from "@/components/common/StabilityZone";
+import { SafeRender } from "@/components/common/SafeRender";
+import { usePageState } from "@/hooks/usePageState";
+import { BrainLoaderCard } from "@/components/common/PageLoader";
 import { AlertCircle } from "lucide-react";
 
 // ─── Types ───

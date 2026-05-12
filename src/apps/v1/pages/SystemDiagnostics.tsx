@@ -1,16 +1,16 @@
 import { useState, useCallback, useRef, lazy, Suspense } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { cn } from "@v1/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   Activity, Play, AlertTriangle, CheckCircle2, XCircle,
   Database, Route, Bell, Radio, Cpu, Shield, RefreshCw,
@@ -19,12 +19,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ErrorsTab = lazy(() => import("@v1/components/diagnostics/ErrorsTab"));
-const PipelinesTab = lazy(() => import("@v1/components/diagnostics/PipelinesTab"));
-const PerformanceTab = lazy(() => import("@v1/components/diagnostics/PerformanceTab"));
-const AlertsTab = lazy(() => import("@v1/components/diagnostics/AlertsTab"));
-const SimulationsTab = lazy(() => import("@v1/components/diagnostics/SimulationsTab"));
-const AuditTab = lazy(() => import("@v1/components/diagnostics/AuditTab"));
+const ErrorsTab = lazy(() => import("@/components/diagnostics/ErrorsTab"));
+const PipelinesTab = lazy(() => import("@/components/diagnostics/PipelinesTab"));
+const PerformanceTab = lazy(() => import("@/components/diagnostics/PerformanceTab"));
+const AlertsTab = lazy(() => import("@/components/diagnostics/AlertsTab"));
+const SimulationsTab = lazy(() => import("@/components/diagnostics/SimulationsTab"));
+const AuditTab = lazy(() => import("@/components/diagnostics/AuditTab"));
 
 type LogLevel = "ok" | "warning" | "error" | "info";
 interface DiagLog {

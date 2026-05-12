@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,16 +13,16 @@ import {
   CalendarDays, FileText, Filter, Search, X,
   BarChart3, Phone, CheckCheck, RefreshCw, Brain, TrendingUp, Zap, HeartPulse
 } from "lucide-react";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { Skeleton } from "@v1/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
-import { Progress } from "@v1/components/ui/progress";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import TherapeuticSuggestionsPanel from "./TherapeuticSuggestionsPanel";
 import BehavioralDropoutPanel from "./BehavioralDropoutPanel";
 

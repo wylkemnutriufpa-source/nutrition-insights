@@ -1,8 +1,8 @@
-import { Dialog, DialogContent } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { X, Clock, Users, Flame, Beef, Wheat, Droplets } from "lucide-react";
-import { fmtMacro } from "@v1/lib/formatMacros";
+import { fmtMacro } from "@/lib/formatMacros";
 
 interface Recipe {
   id: string;

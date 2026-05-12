@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import type { PrestigePlan } from "@v1/hooks/usePrestige";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 import PlanDetailModal from "./PlanDetailModal";
 
 interface PrestigeBadgeProps {

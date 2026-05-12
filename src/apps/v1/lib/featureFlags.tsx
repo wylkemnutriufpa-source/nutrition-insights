@@ -8,8 +8,8 @@
  * Em caso de falha de rede, usa cache local → default seguro.
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
-import { logWarn } from "@v1/lib/monitoring";
+import { supabase } from "@/integrations/supabase/client";
+import { logWarn } from "@/lib/monitoring";
 
 export interface FeatureFlag {
   key: string;

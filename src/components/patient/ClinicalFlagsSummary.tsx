@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Badge } from "@v1/components/ui/badge";
-import { Skeleton } from "@v1/components/ui/skeleton";
-import { getPatientFlagsByDomain, DOMAIN_CONFIG, type FlagWithCatalog } from "@v1/lib/clinicalFlags";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getPatientFlagsByDomain, DOMAIN_CONFIG, type FlagWithCatalog } from "@/lib/clinicalFlags";
 import { AlertTriangle, CheckCircle2, Shield } from "lucide-react";
 
 interface ClinicalFlagsSummaryProps {

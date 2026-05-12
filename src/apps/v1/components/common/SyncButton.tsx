@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { RefreshCw, CheckCircle2, AlertTriangle, Loader2, History, Clock } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { clearRuntimeCaches, forceHardReload } from "@v1/lib/pwaUpdate";
+import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Popover, PopoverContent, PopoverTrigger } from "@v1/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface SyncHistoryItem {
   timestamp: string;

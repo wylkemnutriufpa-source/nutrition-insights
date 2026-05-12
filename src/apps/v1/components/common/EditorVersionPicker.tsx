@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@v1/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { ChevronDown, Zap, Sparkles, Pencil } from "lucide-react";
 
 interface EditorVersionPickerProps {

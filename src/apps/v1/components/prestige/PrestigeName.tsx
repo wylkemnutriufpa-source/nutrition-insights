@@ -1,4 +1,4 @@
-import type { PrestigePlan } from "@v1/hooks/usePrestige";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 import { Crown } from "lucide-react";
 
 interface PrestigeNameProps {

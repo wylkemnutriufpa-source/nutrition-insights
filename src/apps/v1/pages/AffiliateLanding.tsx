@@ -1,15 +1,15 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Award, DollarSign, TrendingUp, Users, Share2, ArrowRight,
   Sparkles, BarChart3, Crown, Shield
 } from "lucide-react";
-import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
+import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 import {
   FloatingOrb, LandingNav, HeroBadge, FeatureCard,
   StepCard, LandingFooter, AnimatedStat, fadeUp, stagger,
-} from "@v1/components/landing/LandingShared";
+} from "@/components/landing/LandingShared";
 
 const benefits = [
   { icon: DollarSign, title: "20% na 1ª Venda", desc: "Comece ganhando 20% de comissão no primeiro pagamento de cada indicação.", color: "text-amber-400", bg: "bg-amber-500/10" },

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, Plus, X, Flame, Beef } from "lucide-react";
-import { Input } from "@v1/components/ui/input";
-import { FOOD_DATABASE, type FoodItem } from "@v1/components/meals/FoodAutocomplete";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useMealPlanEditorV2Store, type MealType } from "@v1/stores/mealPlanEditorV2Store";
+import { Input } from "@/components/ui/input";
+import { FOOD_DATABASE, type FoodItem } from "@/components/meals/FoodAutocomplete";
+import { supabase } from "@/integrations/supabase/client";
+import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 
 interface Props {

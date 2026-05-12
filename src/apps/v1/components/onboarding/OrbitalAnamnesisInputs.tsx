@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Check, Sparkles, Clock, Droplets, Type, Hash } from "lucide-react";
-import { cn } from "@v1/lib/utils";
+import { cn } from "@/lib/utils";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
 

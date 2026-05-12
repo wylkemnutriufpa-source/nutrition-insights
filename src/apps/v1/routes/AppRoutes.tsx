@@ -1,22 +1,22 @@
 import { Routes, Route, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { useAuth } from "@v1/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { lazy, Suspense, useEffect } from "react";
-import { useAppState } from "@v1/hooks/useAppState";
-import { DegradedModeBanner } from "@v1/components/common/DegradedModeBanner";
-import { HardFailLinkage } from "@v1/components/common/HardFailLinkage";
-import { ErrorBoundaryDebug } from "@v1/components/common/ErrorBoundaryDebug";
-import { SectionalErrorBoundary } from "@v1/components/common/SectionalErrorBoundary";
-import { StabilityZone } from "@v1/components/common/StabilityZone";
-import { lazyDebug } from "@v1/lib/lazyDebug";
-import { useConsentGuard } from "@v1/hooks/useConsentGuard";
+import { useAppState } from "@/hooks/useAppState";
+import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
+import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
+import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
+import { StabilityZone } from "@/components/common/StabilityZone";
+import { lazyDebug } from "@/lib/lazyDebug";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { AnimatePresence } from "framer-motion";
-import SafePage from "@v1/components/common/SafePage";
-import PageLoader from "@v1/components/common/PageLoader";
-import { SystemStateGuard } from "@v1/components/common/SystemStateGuard";
-import ExperienceRouteGuard from "@v1/components/common/ExperienceRouteGuard";
-import WorkspaceRouteGuard from "@v1/components/common/WorkspaceRouteGuard";
-import { logError } from "@v1/lib/monitoring";
-import OnboardingEntry from "@v1/components/onboarding/OnboardingEntry";
+import SafePage from "@/components/common/SafePage";
+import PageLoader from "@/components/common/PageLoader";
+import { SystemStateGuard } from "@/components/common/SystemStateGuard";
+import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
+import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
+import { logError } from "@/lib/monitoring";
+import OnboardingEntry from "@/components/onboarding/OnboardingEntry";
 
 // Eager
 import Auth from "../pages/Auth";

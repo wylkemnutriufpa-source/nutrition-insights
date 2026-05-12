@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, UtensilsCrossed, Zap, ArrowLeft, MousePointer2, Rocket, AlertCircle, Loader2 } from "lucide-react";
-import { Dialog, DialogContent } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
   AlertDialog, 
@@ -14,7 +14,7 @@ import {
   AlertDialogFooter, 
   AlertDialogHeader, 
   AlertDialogTitle 
-} from "@v1/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 
 
 interface EditorMatrixModalProps {

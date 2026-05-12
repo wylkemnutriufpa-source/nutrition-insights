@@ -4,7 +4,7 @@ import { ValidationIssue } from '../types/nutritionalScoreTypes';
 import { isProtein } from './v3Motor';
 import { toast } from 'sonner';
 import { ClinicalEngineFactory } from './engineFactory';
-import { logAudit } from '@v1/lib/auditLog';
+import { logAudit } from '@/lib/auditLog';
 import { recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
 
 /**

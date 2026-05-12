@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Copy, CalendarRange, Save, Scale } from "lucide-react";
-import { normalizePortionsAcrossDays } from "@v1/lib/smartFoodSubstitution";
-import { Button } from "@v1/components/ui/button";
-import { Checkbox } from "@v1/components/ui/checkbox";
+import { normalizePortionsAcrossDays } from "@/lib/smartFoodSubstitution";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@v1/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,8 +19,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@v1/components/ui/alert-dialog";
-import { useMealPlanEditorV2Store, type MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+} from "@/components/ui/alert-dialog";
+import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 
 const ALL_DAYS = [

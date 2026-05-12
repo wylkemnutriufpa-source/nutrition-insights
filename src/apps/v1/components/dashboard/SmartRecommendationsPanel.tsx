@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Lightbulb, TrendingDown, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 interface PatientSignals {

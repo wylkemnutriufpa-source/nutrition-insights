@@ -1,5 +1,5 @@
 import React from "react";
-import { BUILD_INFO } from "@v1/lib/buildInfo";
+import { BUILD_INFO } from "@/lib/buildInfo";
 
 const TestDeploy = () => {
   return (

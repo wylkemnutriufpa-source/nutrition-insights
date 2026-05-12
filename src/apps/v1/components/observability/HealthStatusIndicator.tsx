@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Badge } from "@v1/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 import { HeartPulse, AlertCircle, CheckCircle } from "lucide-react";
 
 export function HealthStatusIndicator() {

@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Utensils, ArrowRight, ArrowLeft, Loader2, Plus, Sparkles, Wand2, ShieldCheck } from "lucide-react";
-import QuickMealEditor from "@v1/components/in-office/QuickMealEditor";
-import { runPlanPipeline } from "@v1/lib/planPipelineOrchestrator";
-import { CURRENT_ENGINE_VERSION } from "@v1/lib/engineVersionGovernance";
+import QuickMealEditor from "@/components/in-office/QuickMealEditor";
+import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
+import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
 
 interface Props {
   patientId: string;

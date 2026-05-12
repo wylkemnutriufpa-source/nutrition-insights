@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo, useCallback, createContext, useContext, ReactNode, memo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@v1/lib/auth";
-import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,7 +11,7 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@v1/components/ui/command";
+} from "@/components/ui/command";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, FileBarChart,
   Leaf, Settings, ClipboardCheck, FileText, Rocket, Activity,

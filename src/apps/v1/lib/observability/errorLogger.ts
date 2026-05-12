@@ -3,7 +3,7 @@
  * Captures and persists structured errors to system_error_logs.
  * Fire-and-forget: never blocks the UI.
  */
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 type Severity = "low" | "medium" | "high" | "critical";
 

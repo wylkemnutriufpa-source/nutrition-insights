@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter, getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Badge } from "@v1/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   Dumbbell, Plus, Search, ChevronDown, Pause, Play, Copy,
@@ -19,29 +19,29 @@ import {
   TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3, Film,
   CalendarDays, MessageCircle, FileText, Zap, Timer, Command, ArrowLeft, Users
 } from "lucide-react";
-import WorkoutEditor from "@v1/components/workout/WorkoutEditor";
-import ExerciseLibrary from "@v1/components/workout/ExerciseLibrary";
-import WorkoutTemplates from "@v1/components/workout/WorkoutTemplates";
-import TrainerAnamnesis from "@v1/components/workout/TrainerAnamnesis";
-import PersonalDashboardStats from "@v1/components/workout/PersonalDashboardStats";
-import PhysicalAssessment from "@v1/components/workout/PhysicalAssessment";
-import PeriodizationManager from "@v1/components/workout/PeriodizationManager";
-import CardioPrescription from "@v1/components/workout/CardioPrescription";
-import PersonalRecords from "@v1/components/workout/PersonalRecords";
-import CrossProfessionalAlerts from "@v1/components/workout/CrossProfessionalAlerts";
-import WorkoutPrePlanGenerator from "@v1/components/workout/WorkoutPrePlanGenerator";
-import WorkoutFeedbackAlerts from "@v1/components/workout/WorkoutFeedbackAlerts";
-import WorkoutIFJInsights from "@v1/components/workout/WorkoutIFJInsights";
-import WorkoutLoadHistory from "@v1/components/workout/WorkoutLoadHistory";
-import WorkoutCalendar from "@v1/components/workout/WorkoutCalendar";
-import AssessmentComparison from "@v1/components/workout/AssessmentComparison";
-import WorkoutPDFExport from "@v1/components/workout/WorkoutPDFExport";
-import PTStudentChat from "@v1/components/workout/PTStudentChat";
-import PTChallenges from "@v1/components/workout/PTChallenges";
-import WorkoutRestTimer from "@v1/components/workout/WorkoutRestTimer";
-import ExerciseVideoLibrary from "@v1/components/workout/ExerciseVideoLibrary";
-import IFJCommandCenter from "@v1/components/intelligence/modules/IFJCommandCenter";
-import PersonalPremiumDashboard from "@v1/components/workout/PersonalPremiumDashboard";
+import WorkoutEditor from "@/components/workout/WorkoutEditor";
+import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
+import WorkoutTemplates from "@/components/workout/WorkoutTemplates";
+import TrainerAnamnesis from "@/components/workout/TrainerAnamnesis";
+import PersonalDashboardStats from "@/components/workout/PersonalDashboardStats";
+import PhysicalAssessment from "@/components/workout/PhysicalAssessment";
+import PeriodizationManager from "@/components/workout/PeriodizationManager";
+import CardioPrescription from "@/components/workout/CardioPrescription";
+import PersonalRecords from "@/components/workout/PersonalRecords";
+import CrossProfessionalAlerts from "@/components/workout/CrossProfessionalAlerts";
+import WorkoutPrePlanGenerator from "@/components/workout/WorkoutPrePlanGenerator";
+import WorkoutFeedbackAlerts from "@/components/workout/WorkoutFeedbackAlerts";
+import WorkoutIFJInsights from "@/components/workout/WorkoutIFJInsights";
+import WorkoutLoadHistory from "@/components/workout/WorkoutLoadHistory";
+import WorkoutCalendar from "@/components/workout/WorkoutCalendar";
+import AssessmentComparison from "@/components/workout/AssessmentComparison";
+import WorkoutPDFExport from "@/components/workout/WorkoutPDFExport";
+import PTStudentChat from "@/components/workout/PTStudentChat";
+import PTChallenges from "@/components/workout/PTChallenges";
+import WorkoutRestTimer from "@/components/workout/WorkoutRestTimer";
+import ExerciseVideoLibrary from "@/components/workout/ExerciseVideoLibrary";
+import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
+import PersonalPremiumDashboard from "@/components/workout/PersonalPremiumDashboard";
 
 // --- Plans Tab Component ---
 function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails, onClonePlan }: any) {

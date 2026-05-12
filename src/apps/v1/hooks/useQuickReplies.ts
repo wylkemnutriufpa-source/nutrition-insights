@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuickReply {
   id: string;

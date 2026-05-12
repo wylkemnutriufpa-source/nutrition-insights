@@ -1,6 +1,6 @@
 import { useState, ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Maximize2 } from "lucide-react";
 
 interface ExpandablePanelProps {

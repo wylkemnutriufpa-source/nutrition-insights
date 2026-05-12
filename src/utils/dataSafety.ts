@@ -1,4 +1,4 @@
-import { logAudit, getSessionCorrelationId } from "@v1/lib/auditLog";
+import { logAudit, getSessionCorrelationId } from "@/lib/auditLog";
 
 export type BackupValidity = "valid" | "expired" | "invalid";
 

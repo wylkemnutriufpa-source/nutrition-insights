@@ -1,8 +1,8 @@
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { ShieldCheck, AlertTriangle, XCircle, Gauge } from "lucide-react";
-import type { SimplicityScore } from "@v1/lib/planSimplicityEngine";
-import { getScoreBadgeColor } from "@v1/lib/planSimplicityEngine";
+import type { SimplicityScore } from "@/lib/planSimplicityEngine";
+import { getScoreBadgeColor } from "@/lib/planSimplicityEngine";
 
 interface PlanSimplicityScoreCardProps {
   score: SimplicityScore;

@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Label } from "@v1/components/ui/label";
-import { Slider } from "@v1/components/ui/slider";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@v1/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calculator, BarChart3, TrendingUp } from "lucide-react";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function PatientRevenueSimulator() {
   const [plans, setPlans] = useState<{ name: string; price: number }[]>([]);

@@ -1,5 +1,5 @@
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 export function usePatientPoints() {
   const { user } = useAuth();

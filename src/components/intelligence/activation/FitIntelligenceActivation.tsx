@@ -7,8 +7,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { supabase } from "@v1/integrations/supabase/client";
-import NeuralLoading, { type NeuralAnimationMode } from "@v1/components/system-entry/NeuralLoading";
+import { supabase } from "@/integrations/supabase/client";
+import NeuralLoading, { type NeuralAnimationMode } from "@/components/system-entry/NeuralLoading";
 import {
   startNeuralAmbient,
   crescendo,

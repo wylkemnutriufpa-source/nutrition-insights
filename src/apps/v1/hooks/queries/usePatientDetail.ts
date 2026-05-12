@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
-import type { PrestigePlan } from "@v1/hooks/usePrestige";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 
 const HIDDEN_MEAL_PLAN_STATUSES = new Set(["archived", "rejected"]);
 const CANONICAL_MEAL_PLAN_STATUSES = new Set(["approved", "published", "published_to_patient"]);

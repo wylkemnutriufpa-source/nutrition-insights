@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { generateTimelineEvent } from "./timelineService";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock Supabase with proper chain return values
 const mockSingle = vi.fn();
@@ -14,7 +14,7 @@ const mockSelect = vi.fn(() => ({
 const mockInsert = vi.fn(() => ({ select: mockSelect }));
 const mockDelete = vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ error: null }) }));
 
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn((table: string) => {
       if (table === "timeline_events") {

@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { useExperienceUI } from "@v1/hooks/useExperienceUI";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@v1/components/ui/dialog";
-import { Badge } from "@v1/components/ui/badge";
-import { Separator } from "@v1/components/ui/separator";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
   ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
   SlidersHorizontal,
 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { FOOD_DATABASE } from "@v1/components/meals/FoodAutocomplete";
-import { supabase } from "@v1/integrations/supabase/client";
-import { fmtMacro, isMacroInconsistent, getMacroStatusColor, getMacroStatusLabel, safeNum } from "@v1/lib/formatMacros";
-import type { MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
+import { supabase } from "@/integrations/supabase/client";
+import { fmtMacro, isMacroInconsistent, getMacroStatusColor, getMacroStatusLabel, safeNum } from "@/lib/formatMacros";
+import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import {
   validatePortion,
   getPortionAutocompleteOptions,
   PORTION_ERROR_MESSAGE,
   PORTION_PLACEHOLDER,
   PORTION_DATALIST_ID,
-} from "@v1/lib/portionValidation";
+} from "@/lib/portionValidation";
 
 interface FoodItem {
   name: string;

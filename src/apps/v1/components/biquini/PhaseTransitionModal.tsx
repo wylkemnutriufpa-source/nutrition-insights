@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { X, PartyPopper, ArrowRight, Sparkles } from "lucide-react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 interface PhaseInfo {
   phase: number;

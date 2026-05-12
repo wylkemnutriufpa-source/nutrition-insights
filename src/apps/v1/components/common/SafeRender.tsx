@@ -2,7 +2,7 @@
 import React, { ReactNode } from "react";
 import { StabilityZone } from "./StabilityZone";
 import { ShieldAlert } from "lucide-react";
-import { logError } from "@v1/lib/monitoring";
+import { logError } from "@/lib/monitoring";
 
 interface SafeRenderProps {
   children: ReactNode;

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dumbbell, Users, BarChart3, Trophy, Zap, ArrowRight, Sparkles,
   CheckCircle2, Shield, TrendingUp, Calendar, ClipboardCheck,
@@ -11,7 +11,7 @@ import {
   FloatingOrb, LandingNav, HeroBadge, FeatureCard,
   TestimonialCard, StepCard, LandingFooter, AnimatedStat,
   fadeUp, stagger,
-} from "@v1/components/landing/LandingShared";
+} from "@/components/landing/LandingShared";
 
 const features = [
   { icon: Dumbbell, title: "Montagem de Treinos", desc: "Crie rotinas A/B/C/D com séries, reps, carga, descanso e notas. Organize treinos completos em minutos.", color: "text-orange-400", bg: "bg-orange-500/10", gradient: "from-orange-500 to-red-500" },

@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import SmartAlertsBanner from "../SmartAlertsBanner";
 import { MealItemCard } from "../MealPlanDailyView";
-import { TooltipProvider } from "@v1/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { MemoryRouter } from "react-router-dom";
 
 // ─── Mocks ───────────────────────────────────────────────────────────
 
 // Mock clinicalConstitution to allow changing constants in tests
-vi.mock("@v1/lib/clinicalConstitution", async (importOriginal) => {
+vi.mock("@/lib/clinicalConstitution", async (importOriginal) => {
   const actual = await importOriginal() as any;
   return {
     ...actual,
@@ -19,7 +19,7 @@ vi.mock("@v1/lib/clinicalConstitution", async (importOriginal) => {
   };
 });
 
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
@@ -31,15 +31,15 @@ vi.mock("@v1/integrations/supabase/client", () => ({
   },
 }));
 
-vi.mock("@v1/lib/auth", () => ({
+vi.mock("@/lib/auth", () => ({
   useAuth: () => ({ 
     user: { id: "patient-123" },
     profile: { id: "patient-123", full_name: "Test Patient" }
   }),
 }));
 
-import { supabase } from "@v1/integrations/supabase/client";
-import * as clinicalConst from "@v1/lib/clinicalConstitution";
+import { supabase } from "@/integrations/supabase/client";
+import * as clinicalConst from "@/lib/clinicalConstitution";
 
 describe("Dynamic Clinical Bounds Configuration", () => {
   beforeEach(() => {

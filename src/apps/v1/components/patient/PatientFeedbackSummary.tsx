@@ -2,9 +2,9 @@
  * Shows patient feedback summary for a meal plan (nutritionist view).
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
-import { Badge } from "@v1/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 export default function PatientFeedbackSummary({ mealPlanId }: { mealPlanId: string }) {
   const { data: feedback = [] } = useQuery({

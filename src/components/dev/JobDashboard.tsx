@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Activity, AlertCircle, Clock, RefreshCw, RotateCcw, ShieldCheck, History, Trash2, Play, Download, FileText, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Brain, Shield, ShieldAlert, ShieldCheck, Target, Heart,
   Flame, Droplets, Moon, Dumbbell, Lightbulb, ArrowRight,
   Sparkles, TrendingUp, AlertTriangle, CheckCircle2
 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 interface AnamnesisInsight {
   id: string;

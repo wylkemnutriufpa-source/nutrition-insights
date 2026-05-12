@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 const ONLINE_THRESHOLD_MS = 90_000; // 90s - consider online if heartbeat within this
 

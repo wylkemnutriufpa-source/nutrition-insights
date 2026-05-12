@@ -1,5 +1,5 @@
-import { Dialog, DialogContent } from "@v1/components/ui/dialog";
-import { Badge } from "@v1/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Clock, ChefHat, Lightbulb, Utensils, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 

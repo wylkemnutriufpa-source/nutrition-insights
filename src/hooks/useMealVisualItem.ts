@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import type { MealVisualItem } from "@v1/types/mealVisualLibrary";
+import { supabase } from "@/integrations/supabase/client";
+import type { MealVisualItem } from "@/types/mealVisualLibrary";
 
 /**
  * Hook that resolves a visual library item by ID, with in-memory cache.

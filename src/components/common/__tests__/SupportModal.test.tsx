@@ -5,18 +5,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ─── Mocks ───────────────────────────────────────────────────
 
-vi.mock("@v1/lib/auth", () => ({ 
+vi.mock("@/lib/auth", () => ({ 
   useAuth: vi.fn(() => ({ 
     user: { id: "user-1", email: "test@example.com" },
     loading: false
   })) 
 }));
 
-vi.mock("@v1/lib/tenantContext", () => ({
+vi.mock("@/lib/tenantContext", () => ({
   useTenant: vi.fn(() => ({ tenantId: "tenant-1", isLoading: false }))
 }));
 
-vi.mock("@v1/lib/auditLog", () => ({
+vi.mock("@/lib/auditLog", () => ({
   logAudit: vi.fn(),
   getSessionCorrelationId: vi.fn(() => "fj_sess_test123")
 }));

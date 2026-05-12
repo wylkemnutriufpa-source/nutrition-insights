@@ -1,8 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
-import { cn } from "@v1/lib/utils";
-import { OrbitalHeader } from "@v1/components/onboarding/OrbitalAnamnesisInputs";
-import { RadialOrbitalSelector } from "@v1/components/ui/radial-orbital-selector";
+import { cn } from "@/lib/utils";
+import { OrbitalHeader } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { RadialOrbitalSelector } from "@/components/ui/radial-orbital-selector";
 import type { TrainerAnamnesisData } from "./types";
 import { GOAL_OPTIONS } from "./types";
 

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Flame, Beef, Wheat, Droplets, Copy } from "lucide-react";
-import { Checkbox } from "@v1/components/ui/checkbox";
-import { useMealPlanEditorV2Store, type MealPlanItem, type MealType } from "@v1/stores/mealPlanEditorV2Store";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useMealPlanEditorV2Store, type MealPlanItem, type MealType } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 
 interface MacroEditDialogProps {

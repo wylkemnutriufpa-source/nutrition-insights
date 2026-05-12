@@ -12,7 +12,7 @@ vi.mock("sonner", () => ({
 }));
 
 // Mock do supabase client
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -28,7 +28,7 @@ vi.mock("@v1/integrations/supabase/client", () => ({
   }
 }));
 
-import { PORTION_ERROR_MESSAGE, PORTION_PLACEHOLDER } from "@v1/lib/portionValidation";
+import { PORTION_ERROR_MESSAGE, PORTION_PLACEHOLDER } from "@/lib/portionValidation";
 
 describe("MealDetailModal - Validação de Porção", () => {
   const mockMeal = {

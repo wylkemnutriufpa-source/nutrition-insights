@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { MEAL_KCAL_SPLIT } from "@v1/lib/mealPlanFoodRules";
+import { supabase } from "@/integrations/supabase/client";
+import { MEAL_KCAL_SPLIT } from "@/lib/mealPlanFoodRules";
 
 // ─── Mocks ───────────────────────────────────────────────────
 
-vi.mock("@v1/lib/auth", () => ({ 
+vi.mock("@/lib/auth", () => ({ 
   useAuth: vi.fn(() => ({ 
     user: { id: "pat-1" },
     isPatient: true,
@@ -15,11 +15,11 @@ vi.mock("@v1/lib/auth", () => ({
   })) 
 }));
 
-vi.mock("@v1/hooks/useConsentGuard", () => ({
+vi.mock("@/hooks/useConsentGuard", () => ({
   useConsentGuard: vi.fn(() => ({ hasConsent: false, loading: false }))
 }));
 
-vi.mock("@v1/integrations/supabase/client", () => {
+vi.mock("@/integrations/supabase/client", () => {
   const mockChannel = {
     on: vi.fn().mockReturnThis(),
     subscribe: vi.fn().mockImplementation((cb) => {
@@ -96,7 +96,7 @@ describe("Onboarding E2E Flow", () => {
   });
 
   it("redirects to consent when accessing Anamnesis directly without consent", async () => {
-    const { useConsentGuard } = await import("@v1/hooks/useConsentGuard");
+    const { useConsentGuard } = await import("@/hooks/useConsentGuard");
     (useConsentGuard as any).mockReturnValue({ hasConsent: false, loading: false });
 
     // Mock direct redirect logic if it's in the component or App.tsx

@@ -6,8 +6,8 @@
  */
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { invalidateCriticalQueries } from "@v1/lib/queryInvalidation";
-import { useAuth } from "@v1/lib/auth";
+import { invalidateCriticalQueries } from "@/lib/queryInvalidation";
+import { useAuth } from "@/lib/auth";
 
 export function useRefetchOnFocus() {
   const { user } = useAuth();

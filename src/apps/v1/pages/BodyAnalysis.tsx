@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import StorageImage from "@v1/components/common/StorageImage";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter, getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
-import { uploadFile } from "@v1/lib/upload";
-import { useFormDraft } from "@v1/hooks/useFormDraft";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Badge } from "@v1/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import StorageImage from "@/components/common/StorageImage";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+import { uploadFile } from "@/lib/upload";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -21,8 +21,8 @@ import {
   Camera, Upload, Sparkles, ArrowLeft, Calendar, TrendingUp,
   User as UserIcon, Activity
 } from "lucide-react";
-import { useAIUsage } from "@v1/hooks/useAIUsage";
-import AIUsageBadge from "@v1/components/common/AIUsageBadge";
+import { useAIUsage } from "@/hooks/useAIUsage";
+import AIUsageBadge from "@/components/common/AIUsageBadge";
 
 interface BodyAnalysisRecord {
   id: string;

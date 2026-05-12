@@ -1,5 +1,5 @@
 import { Check, AlertTriangle, Loader2 } from "lucide-react";
-import type { SyncStatus } from "@v1/stores/mealPlanEditorV2Store";
+import type { SyncStatus } from "@/stores/mealPlanEditorV2Store";
 
 export function EditorSyncBadge({ status }: { status: SyncStatus }) {
   if (status === "idle") return null;

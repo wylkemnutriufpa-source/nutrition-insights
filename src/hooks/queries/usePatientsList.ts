@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
-import { logAudit } from "@v1/lib/auditLog";
-import type { PrestigePlan } from "@v1/hooks/usePrestige";
+import { logAudit } from "@/lib/auditLog";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 
 export interface PatientInfo {
   id: string;

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, Wand2, X, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
-import { haveMealPlanCollectionsChanged } from "@v1/lib/mealPlanPersistenceGuards";
+import { haveMealPlanCollectionsChanged } from "@/lib/mealPlanPersistenceGuards";
 
 interface MacroResult {
   label: string;

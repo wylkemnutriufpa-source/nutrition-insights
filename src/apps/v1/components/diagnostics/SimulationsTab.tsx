@@ -4,20 +4,20 @@
  */
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import {
   runSimulation, getModeSummary, isSimulatorEnabled, toggleKillSwitch,
   type SimMode, type SimulationRunResult,
-} from "@v1/lib/simulator/simulationEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Progress } from "@v1/components/ui/progress";
-import { Switch } from "@v1/components/ui/switch";
+} from "@/lib/simulator/simulationEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { cn } from "@v1/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   Play, Zap, CheckCircle2, XCircle, AlertTriangle,
   Clock, RefreshCw, FlaskConical, BarChart3, Shield,

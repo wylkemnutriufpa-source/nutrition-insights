@@ -1,7 +1,7 @@
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import ProtocolFitJourneyToggle from "@v1/components/admin/ProtocolFitJourneyToggle";
-import ProtocolMasterDocumentation from "@v1/components/admin/ProtocolMasterDocumentation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
+import ProtocolMasterDocumentation from "@/components/admin/ProtocolMasterDocumentation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, FileText } from "lucide-react";
 
 export default function AdminProtocolFitJourney() {

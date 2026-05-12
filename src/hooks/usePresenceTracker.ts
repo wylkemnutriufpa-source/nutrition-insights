@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 const HEARTBEAT_INTERVAL = 30_000; // 30s
 const OFFLINE_THRESHOLD = 60_000; // 60s without heartbeat = offline

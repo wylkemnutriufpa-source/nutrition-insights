@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Input } from "@v1/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
 import { Search, Apple } from "lucide-react";
 
 interface FoodResult {

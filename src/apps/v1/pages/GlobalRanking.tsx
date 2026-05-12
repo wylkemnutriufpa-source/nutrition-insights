@@ -1,16 +1,16 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { usePrestige } from "@v1/hooks/usePrestige";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@v1/components/ui/avatar";
-import { Button } from "@v1/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { Badge } from "@v1/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { usePrestige } from "@/hooks/usePrestige";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Crown, Trophy, TrendingUp, Flame, Utensils, Dumbbell,
   ClipboardCheck, CheckCircle2, Sparkles, Lock, Rocket, Bot,
@@ -20,10 +20,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
   Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, Legend
 } from "recharts";
-import PrestigeBadge from "@v1/components/prestige/PrestigeBadge";
-import PodiumBadge from "@v1/components/prestige/PodiumBadge";
-import OnlinePatientsWidget from "@v1/components/dashboard/OnlinePatientsWidget";
-import ShareProgressButton from "@v1/components/social/ShareProgressButton";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PodiumBadge from "@/components/prestige/PodiumBadge";
+import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import ShareProgressButton from "@/components/social/ShareProgressButton";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
 

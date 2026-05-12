@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Button } from "@v1/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal, FileQuestion, Clock, UserCheck, Lock, CheckCircle2, Activity, Info } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@v1/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { Helmet } from "react-helmet-async";
-import { getWhatsAppInvitationMessage, getInvitationUrl } from "@v1/utils/invitation";
-import { BASE_URL, OFFICIAL_DOMAIN } from "@v1/lib/config";
+import { getWhatsAppInvitationMessage, getInvitationUrl } from "@/utils/invitation";
+import { BASE_URL, OFFICIAL_DOMAIN } from "@/lib/config";
 
 export default function Invitation() {
   const { code } = useParams<{ code: string }>();

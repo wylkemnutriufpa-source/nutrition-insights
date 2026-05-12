@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ─── Mocks ───────────────────────────────────────────────────
 
-vi.mock("@v1/lib/auth", () => ({ 
+vi.mock("@/lib/auth", () => ({ 
   useAuth: vi.fn(() => ({ 
     user: { id: "user-orphan-1" },
     profile: { is_orphan: true },
@@ -14,11 +14,11 @@ vi.mock("@v1/lib/auth", () => ({
   })) 
 }));
 
-vi.mock("@v1/lib/tenantContext", () => ({
+vi.mock("@/lib/tenantContext", () => ({
   useTenant: vi.fn(() => ({ tenantId: "tenant-1", isLoading: false }))
 }));
 
-vi.mock("@v1/hooks/useAppState", () => ({
+vi.mock("@/hooks/useAppState", () => ({
   AppStateProvider: ({ children }: any) => <>{children}</>,
   useAppState: vi.fn(() => ({ 
     isReady: true,
@@ -28,14 +28,14 @@ vi.mock("@v1/hooks/useAppState", () => ({
   }))
 }));
 
-vi.mock("@v1/lib/auditLog", () => ({
+vi.mock("@/lib/auditLog", () => ({
   logAudit: vi.fn(),
   getSessionCorrelationId: vi.fn(() => "fj_sess_test123")
 }));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
-import { HardFailLinkage } from "@v1/components/common/HardFailLinkage";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 
 describe("Production Observability - Hard Fail Linkage", () => {
   const renderWithProviders = (ui: any) => render(
@@ -62,7 +62,7 @@ describe("Production Observability - Hard Fail Linkage", () => {
   });
 
   it("logs the linkage failure for audit", async () => {
-    const { logAudit } = await import("@v1/lib/auditLog");
+    const { logAudit } = await import("@/lib/auditLog");
     renderWithProviders(<HardFailLinkage />);
     
     expect(logAudit).toHaveBeenCalledWith(

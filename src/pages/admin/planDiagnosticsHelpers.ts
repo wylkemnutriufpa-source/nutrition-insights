@@ -3,7 +3,7 @@
  * Extraídos para permitir testes unitários determinísticos sem
  * acoplar ao componente React.
  */
-import { isTrulyUnknownPlanStatus } from "@v1/lib/planStatusLabels";
+import { isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
 
 export interface TrendBucket {
   date: string;

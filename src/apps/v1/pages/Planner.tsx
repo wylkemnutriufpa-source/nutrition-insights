@@ -1,24 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Calendar } from "@v1/components/ui/calendar";
-import { Badge } from "@v1/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@v1/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Switch } from "@v1/components/ui/switch";
-import { Label } from "@v1/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@v1/components/ui/popover";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, isSameDay, startOfMonth, endOfMonth, parseISO, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@v1/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   CalendarDays, Plus, Clock, CheckCircle2, Trash2, Edit2,
   Bell, DollarSign, MessageSquare, Stethoscope, Target,

@@ -5,8 +5,8 @@
  * Fire-and-forget — nunca bloqueia UI.
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
-import { logWarn } from "@v1/lib/monitoring";
+import { supabase } from "@/integrations/supabase/client";
+import { logWarn } from "@/lib/monitoring";
 
 export type RegressionSeverity = "critical" | "high" | "medium" | "low";
 export type SourceLayer = "frontend" | "backend" | "database" | "edge_function";

@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import SmartAlertsBanner from "../SmartAlertsBanner";
 import { MealItemCard } from "../MealPlanDailyView";
-import { TooltipProvider } from "@v1/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { MemoryRouter } from "react-router-dom";
 
 // ─── Mocks ───────────────────────────────────────────────────────────
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
@@ -18,14 +18,14 @@ vi.mock("@v1/integrations/supabase/client", () => ({
   },
 }));
 
-vi.mock("@v1/lib/auth", () => ({
+vi.mock("@/lib/auth", () => ({
   useAuth: () => ({ 
     user: { id: "patient-123" },
     profile: { id: "patient-123", full_name: "Test Patient" }
   }),
 }));
 
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 describe("Meal Plan UI Warnings", () => {
   beforeEach(() => {

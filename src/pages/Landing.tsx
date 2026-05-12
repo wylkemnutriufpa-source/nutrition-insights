@@ -1,10 +1,10 @@
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
-import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sparkles, Users, Brain, Shield, BarChart3, Utensils, CheckCircle2,
   ArrowRight, Star, Zap, Heart, ChevronRight, Bot, Pill, Camera,
@@ -12,9 +12,9 @@ import {
   Palette, DollarSign, Play, ArrowDown, Menu, X, BookOpen, TrendingUp,
   Award, Globe, Lock, Cpu, Trophy, Crown, Flame, Dumbbell
 } from "lucide-react";
-import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
-import BrainIntelligence from "@v1/components/common/BrainIntelligence";
-import CoachBodybuilderLandingSection from "@v1/components/coach-bodybuilder/CoachBodybuilderLandingSection";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import BrainIntelligence from "@/components/common/BrainIntelligence";
+import CoachBodybuilderLandingSection from "@/components/coach-bodybuilder/CoachBodybuilderLandingSection";
 
 /* ─── animation variants ─── */
 const fadeUp = { hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const } } };

@@ -1,4 +1,4 @@
-import InstitutionalLayout from "@v1/components/institutional/InstitutionalLayout";
+import InstitutionalLayout from "@/components/institutional/InstitutionalLayout";
 
 export default function TermsOfUse() {
   return (

@@ -3,25 +3,25 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import Patients from "../Patients";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useAuth } from "@v1/lib/auth";
-import { usePatientsList, useAddPatient } from "@v1/hooks/queries/usePatientsList";
+import { useAuth } from "@/lib/auth";
+import { usePatientsList, useAddPatient } from "@/hooks/queries/usePatientsList";
 import { toast } from "sonner";
-import { TooltipProvider } from "@v1/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Create a mock navigate function
 const mockNavigate = vi.fn();
 
 // Mock dependencies
-vi.mock("@v1/lib/auth", () => ({
+vi.mock("@/lib/auth", () => ({
   useAuth: vi.fn(),
 }));
 
 // Mock DashboardLayout to avoid complex nested dependencies
-vi.mock("@v1/components/layout/DashboardLayout", () => ({
+vi.mock("@/components/layout/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock("@v1/hooks/queries/usePatientsList", () => ({
+vi.mock("@/hooks/queries/usePatientsList", () => ({
   usePatientsList: vi.fn(),
   useAddPatient: vi.fn(),
   useTogglePatientStatus: vi.fn(() => ({ mutate: vi.fn() })),
@@ -33,11 +33,11 @@ vi.mock("@v1/hooks/queries/usePatientsList", () => ({
   DEFAULT_PAGE_SIZE: 10,
 }));
 
-vi.mock("@v1/hooks/useOnlinePatients", () => ({
+vi.mock("@/hooks/useOnlinePatients", () => ({
   useOnlinePatients: vi.fn(() => ({ onlineUsers: [] })),
 }));
 
-vi.mock("@v1/hooks/useExperienceMode", () => ({
+vi.mock("@/hooks/useExperienceMode", () => ({
   useExperienceMode: vi.fn(() => ({ minMode: () => true, isBasic: false })),
 }));
 

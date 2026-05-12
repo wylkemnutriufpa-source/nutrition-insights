@@ -1,10 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckCircle2, ArrowRight, Wrench, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
-import type { AutoFixResult, AutoFixChange } from "@v1/lib/autoFixEngine";
-import { fmtMacro, safeNum } from "@v1/lib/formatMacros";
+import type { AutoFixResult, AutoFixChange } from "@/lib/autoFixEngine";
+import { fmtMacro, safeNum } from "@/lib/formatMacros";
 
 interface Props {
   open: boolean;

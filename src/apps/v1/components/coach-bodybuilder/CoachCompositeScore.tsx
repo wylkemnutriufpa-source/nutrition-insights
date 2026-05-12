@@ -1,5 +1,5 @@
-import type { CompositeScore } from "@v1/lib/coachAnalysisEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import type { CompositeScore } from "@/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Heart, Shield, Zap, Target } from "lucide-react";
 
 const SCORE_ITEMS = [

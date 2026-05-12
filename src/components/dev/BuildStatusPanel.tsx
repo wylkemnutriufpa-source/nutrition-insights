@@ -12,18 +12,18 @@
  *    chunkValidation + últimas inspeções do TextSourceInspector
  */
 import { useEffect, useMemo, useState } from "react";
-import { BUILD_INFO } from "@v1/lib/buildInfo";
-import { clearRuntimeCaches, forceHardReload } from "@v1/lib/pwaUpdate";
+import { BUILD_INFO } from "@/lib/buildInfo";
+import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
 import {
   installDynamicChunkObservers,
   validateChunkHashes,
   type ChunkValidationResult,
-} from "@v1/lib/chunkHashValidator";
+} from "@/lib/chunkHashValidator";
 import {
   clearScopedCaches,
   reloadScopedRoute,
-} from "@v1/lib/scopedCacheCleaner";
-import { Button } from "@v1/components/ui/button";
+} from "@/lib/scopedCacheCleaner";
+import { Button } from "@/components/ui/button";
 import {
   Activity,
   AlertTriangle,

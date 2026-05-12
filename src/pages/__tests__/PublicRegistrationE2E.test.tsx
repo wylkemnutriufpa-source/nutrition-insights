@@ -4,16 +4,16 @@ import PatientRegister from "../PatientRegister";
 import Invitation from "../Invitation";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { HelmetProvider } from "react-helmet-async";
 
 // Mock useAuth
-vi.mock("@v1/lib/auth", () => ({
+vi.mock("@/lib/auth", () => ({
   useAuth: vi.fn(() => ({ user: null })),
 }));
 
 // Mock Supabase
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),

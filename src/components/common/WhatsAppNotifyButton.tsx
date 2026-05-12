@@ -1,6 +1,6 @@
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
-import { sendWhatsAppNotification } from "@v1/utils/whatsappNotification";
+import { sendWhatsAppNotification } from "@/utils/whatsappNotification";
 import { toast } from "sonner";
 
 interface WhatsAppNotifyButtonProps {

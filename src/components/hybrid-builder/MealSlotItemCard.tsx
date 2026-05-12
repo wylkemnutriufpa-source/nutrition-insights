@@ -16,8 +16,8 @@ import {
   RefreshCcw,
   Sparkles,
 } from "lucide-react";
-import { Input } from "@v1/components/ui/input";
-import type { MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+import { Input } from "@/components/ui/input";
+import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 
 interface Props {
   item: MealPlanItem;

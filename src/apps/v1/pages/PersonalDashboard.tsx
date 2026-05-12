@@ -1,24 +1,24 @@
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import IFJCommandCenter from "@v1/components/intelligence/modules/IFJCommandCenter";
-import StatsCard from "@v1/components/dashboard/StatsCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@v1/components/ui/avatar";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
+import StatsCard from "@/components/dashboard/StatsCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Users, Dumbbell, TrendingUp, AlertTriangle, Trophy,
   Plus, BarChart3, ArrowRight, Activity, UserX, Flame, Search, UserPlus, Camera
 } from "lucide-react";
-import AddStudentModal from "@v1/components/professional/AddStudentModal";
-import LinkStudentModal from "@v1/components/professional/LinkStudentModal";
-import { useProfessionalLinks } from "@v1/hooks/useProfessionalLinks";
-import InlineExperienceToggle from "@v1/components/dashboard/InlineExperienceToggle";
+import AddStudentModal from "@/components/professional/AddStudentModal";
+import LinkStudentModal from "@/components/professional/LinkStudentModal";
+import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
+import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
 
 export default function PersonalDashboard() {
   const { user } = useAuth();

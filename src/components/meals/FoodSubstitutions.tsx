@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { FOOD_DATABASE, type FoodItem } from "./FoodAutocomplete";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowRightLeft, Flame, Beef, Wheat, Droplets } from "lucide-react";
 
 const CATEGORY_COLORS: Record<string, string> = {

@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@v1/integrations/supabase/client";
-import { invalidateMenuCache } from "@v1/hooks/useSmartMenu";
-import type { Database } from "@v1/integrations/supabase/types";
-import { logAudit } from "@v1/lib/auditLog";
-import { logError } from "@v1/lib/monitoring";
-import { safeLocalStorage } from "@v1/lib/safeStorage";
+import { supabase } from "@/integrations/supabase/client";
+import { invalidateMenuCache } from "@/hooks/useSmartMenu";
+import type { Database } from "@/integrations/supabase/types";
+import { logAudit } from "@/lib/auditLog";
+import { logError } from "@/lib/monitoring";
+import { safeLocalStorage } from "@/lib/safeStorage";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 

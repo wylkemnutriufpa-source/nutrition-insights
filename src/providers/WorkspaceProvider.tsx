@@ -1,5 +1,5 @@
-import { useAuth } from "@v1/lib/auth";
-import { WorkspaceContext, useWorkspaceContextState } from "@v1/hooks/useWorkspaceContext";
+import { useAuth } from "@/lib/auth";
+import { WorkspaceContext, useWorkspaceContextState } from "@/hooks/useWorkspaceContext";
 import React from "react";
 
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {

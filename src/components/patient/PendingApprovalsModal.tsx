@@ -1,32 +1,32 @@
 import { useState, useEffect, useRef } from "react";
-import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { rejectMealPlan, transitionPlanToReview } from "@v1/lib/serverTransitions";
-import { supabase } from "@v1/integrations/supabase/client";
-import { finalizeGeneratedMealPlan } from "@v1/lib/finalizeGeneratedMealPlan";
-import { localGenerateMealPlan } from "@v1/lib/localMealPlanGenerator";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
+import { supabase } from "@/integrations/supabase/client";
+import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
+import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
   syncPipelineGeneratedPlan,
-} from "@v1/lib/onboardingPlanResolver";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
+} from "@/lib/onboardingPlanResolver";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
   Target, Sparkles, ChevronRight, Scale,
   FileText, Zap, Search, Trash2
 } from "lucide-react";
-import { Input } from "@v1/components/ui/input";
+import { Input } from "@/components/ui/input";
 // Removed EditorVersionPicker as we now handle version dispatching automatically
 
 interface PendingPipeline {

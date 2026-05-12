@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
-import { offlineQueue } from "@v1/lib/offlineSync";
+import { offlineQueue } from "@/lib/offlineSync";
 
 export interface ChatContact {
   user_id: string;

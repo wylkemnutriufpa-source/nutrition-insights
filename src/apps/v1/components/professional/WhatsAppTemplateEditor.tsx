@@ -1,15 +1,15 @@
 import { useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Label } from "@v1/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCircle, Save, Info, Eye, Smartphone } from "lucide-react";
-import { useWhatsAppTemplates } from "@v1/hooks/useWhatsAppBusiness";
-import { WhatsAppTemplateType, getWhatsAppInvitationMessage } from "@v1/utils/invitation";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Badge } from "@v1/components/ui/badge";
+import { useWhatsAppTemplates } from "@/hooks/useWhatsAppBusiness";
+import { WhatsAppTemplateType, getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 export default function WhatsAppTemplateEditor() {
   const { user } = useAuth();

@@ -5,8 +5,8 @@
  * e gera um draft simplificado preservando metas nutricionais.
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@v1/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import {
   calculatePlanSimplicityScore,
   getSimpleBrazilianReplacement,

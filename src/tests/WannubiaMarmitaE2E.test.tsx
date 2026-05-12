@@ -28,12 +28,12 @@ const mockStore = {
   updateItem: vi.fn(),
 };
 
-vi.mock('@v1/stores/mealPlanEditorV2Store', () => ({
+vi.mock('@/stores/mealPlanEditorV2Store', () => ({
   useMealPlanEditorV2Store: () => mockStore
 }));
 
 // Mocks
-vi.mock('@v1/components/layout/DashboardLayout', () => ({ default: ({ children }: any) => <div>{children}</div> }));
+vi.mock('@/components/layout/DashboardLayout', () => ({ default: ({ children }: any) => <div>{children}</div> }));
 
 vi.mock('../integrations/supabase/client', () => ({
   supabase: {

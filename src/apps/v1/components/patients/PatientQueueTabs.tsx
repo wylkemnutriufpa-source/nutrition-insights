@@ -1,21 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { releaseOnboarding } from "@v1/lib/serverTransitions";
-import { acquireActionLock, releaseActionLock } from "@v1/lib/fitjourneyBible";
-import { invalidateLifecycleQueries } from "@v1/lib/lifecycleCache";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { releaseOnboarding } from "@/lib/serverTransitions";
+import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
+import { invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Clock, CreditCard, Play, CheckCircle2, Activity,
   UserCheck, Loader2, Rocket, DollarSign
 } from "lucide-react";
-import OnboardingReleaseDialog from "@v1/components/patient/OnboardingReleaseDialog";
+import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 
 interface QueuePatient {
   id: string;

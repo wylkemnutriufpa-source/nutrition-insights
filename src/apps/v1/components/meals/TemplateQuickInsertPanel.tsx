@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@v1/components/ui/sheet";
-import { Input } from "@v1/components/ui/input";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { scaleMealToTarget, type MealTemplate, type ScaledMeal, type FoodStructureItem } from "@v1/lib/mealScalingEngine";
-import { buildMealItems, type MealItemInput } from "@v1/lib/mealItemBuilder";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { scaleMealToTarget, type MealTemplate, type ScaledMeal, type FoodStructureItem } from "@/lib/mealScalingEngine";
+import { buildMealItems, type MealItemInput } from "@/lib/mealItemBuilder";
 import {
   Search, Utensils, Flame, Beef, Wheat, Droplets, Loader2,
   BookOpen, User, Plus, Sparkles, ChevronRight, Zap

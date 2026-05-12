@@ -1,16 +1,16 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Badge } from "@v1/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { toast } from "sonner";
 import ExerciseLibrary from "./ExerciseLibrary";
 import ExerciseVideoLibrary from "./ExerciseVideoLibrary";
@@ -19,7 +19,7 @@ import {
   BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink, Film,
   ShieldAlert
 } from "lucide-react";
-import { hasHighIntensityMethods } from "@v1/lib/workoutIntensityUtils";
+import { hasHighIntensityMethods } from "@/lib/workoutIntensityUtils";
 
 const MUSCLE_GROUPS = [
   "Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Pernas",

@@ -1,75 +1,75 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useExperienceUI } from "@v1/hooks/useExperienceUI";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { supabase } from "@v1/integrations/supabase/client";
-import { createMealPlanDraft } from "@v1/lib/createMealPlanDraft";
-import { createPlanRevision } from "@v1/lib/createPlanRevision";
-import { acquireActionLock, releaseActionLock } from "@v1/lib/fitjourneyBible";
-import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@v1/lib/lifecycleCache";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { supabase } from "@/integrations/supabase/client";
+import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
+import { createPlanRevision } from "@/lib/createPlanRevision";
+import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
+import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useQueryClient } from "@tanstack/react-query";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@v1/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Skeleton } from "@v1/components/ui/skeleton";
-import { Switch } from "@v1/components/ui/switch";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import MetabolicRadar from "@v1/components/dashboard/MetabolicRadar";
-import { AnamnesisInsightsFull } from "@v1/components/patient/AnamnesisInsightsCard";
-import PatientCalculators from "@v1/components/patient/PatientCalculators";
-import PatientAgenda from "@v1/components/patient/PatientAgenda";
-import BodyEvolutionCard from "@v1/components/patient/BodyEvolutionCard";
-import HealthScoreRing, { calculateHealthScore } from "@v1/components/dashboard/HealthScoreRing";
-import ConsultationCompare from "@v1/components/patient/ConsultationCompare";
-import PatientCheckinsTab from "@v1/components/patient/PatientCheckinsTab";
-import PatientChecklistView from "@v1/components/patient/PatientChecklistView";
-import SmartAlertsBanner from "@v1/components/patient/SmartAlertsBanner";
-import PlanScheduler from "@v1/components/plans/PlanScheduler";
-import PatientFeedbackSummary from "@v1/components/patient/PatientFeedbackSummary";
-import DocumentUpload from "@v1/components/common/DocumentUpload";
-import ClinicalDecisionSupport from "@v1/components/patient/ClinicalDecisionSupport";
-import OnboardingApprovalQueue from "@v1/components/patient/OnboardingApprovalQueue";
-import UnblockPatientDialog from "@v1/components/patient/UnblockPatientDialog";
+import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
+import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
+import PatientCalculators from "@/components/patient/PatientCalculators";
+import PatientAgenda from "@/components/patient/PatientAgenda";
+import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
+import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
+import ConsultationCompare from "@/components/patient/ConsultationCompare";
+import PatientCheckinsTab from "@/components/patient/PatientCheckinsTab";
+import PatientChecklistView from "@/components/patient/PatientChecklistView";
+import SmartAlertsBanner from "@/components/patient/SmartAlertsBanner";
+import PlanScheduler from "@/components/plans/PlanScheduler";
+import PatientFeedbackSummary from "@/components/patient/PatientFeedbackSummary";
+import DocumentUpload from "@/components/common/DocumentUpload";
+import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSupport";
+import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueue";
+import UnblockPatientDialog from "@/components/patient/UnblockPatientDialog";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
   TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search, ShieldAlert, Timer, History, PencilLine, Ruler, Target
 } from "lucide-react";
 import { Link2, Copy, RefreshCw } from "lucide-react";
-import { WhatsAppNotifyButton } from "@v1/components/common/WhatsAppNotifyButton";
-import { sendWhatsAppNotification } from "@v1/utils/whatsappNotification";
-import BodyProjectionProCard from "@v1/components/patient/BodyProjectionProCard";
-import ActiveProtocolBadge from "@v1/components/patient/ActiveProtocolBadge";
-import PatientProjectGovernance from "@v1/components/patient/PatientProjectGovernance";
-import PrestigeBadge from "@v1/components/prestige/PrestigeBadge";
-import PrestigeName from "@v1/components/prestige/PrestigeName";
-import type { PrestigePlan } from "@v1/hooks/usePrestige";
-import { usePatientDetail, useTogglePatientDetailStatus, useDeletePatientLink } from "@v1/hooks/queries/usePatientDetail";
-import { queryKeys } from "@v1/hooks/queries/queryKeys";
+import { WhatsAppNotifyButton } from "@/components/common/WhatsAppNotifyButton";
+import { sendWhatsAppNotification } from "@/utils/whatsappNotification";
+import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
+import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
+import PatientProjectGovernance from "@/components/patient/PatientProjectGovernance";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PrestigeName from "@/components/prestige/PrestigeName";
+import type { PrestigePlan } from "@/hooks/usePrestige";
+import { usePatientDetail, useTogglePatientDetailStatus, useDeletePatientLink } from "@/hooks/queries/usePatientDetail";
+import { queryKeys } from "@/hooks/queries/queryKeys";
 // Gamification removed from MVP
 
 // V2 Editor removed as per NutriCore V3 unifications
-import MealAdherenceWidget from "@v1/components/patient/MealAdherenceWidget";
-import OnboardingReleaseDialog from "@v1/components/patient/OnboardingReleaseDialog";
-import ClinicalFlagsSummary from "@v1/components/patient/ClinicalFlagsSummary";
-import PatientBehavioralManager from "@v1/components/patient/PatientBehavioralManager";
-import PatientEvolutionPDF from "@v1/components/patient/PatientEvolutionPDF";
-import FitIntelligenceToggle from "@v1/components/intelligence/FitIntelligenceToggle";
-import PatientLabExams from "@v1/components/patient/PatientLabExams";
-import PatientFeedbacksPanel from "@v1/components/patient/PatientFeedbacksPanel";
-import { deactivateMealPlan } from "@v1/lib/serverTransitions";
-import { finalizeGeneratedMealPlan } from "@v1/lib/finalizeGeneratedMealPlan";
-import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@v1/lib/onboardingPlanResolver";
-import { DeterministicAuditLog } from "@v1/components/patient/DeterministicAuditLog";
+import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
+import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
+import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
+import PatientBehavioralManager from "@/components/patient/PatientBehavioralManager";
+import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
+import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceToggle";
+import PatientLabExams from "@/components/patient/PatientLabExams";
+import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
+import { deactivateMealPlan } from "@/lib/serverTransitions";
+import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
+import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
+import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
 
 
 export default function PatientDetail() {
@@ -332,7 +332,7 @@ export default function PatientDetail() {
       invalidate();
       
       // Prompt for WhatsApp notification
-      import("@v1/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
+      import("@/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
         promptWhatsAppNotification({
           patientId: patientId!,
           patientName: profile?.full_name || "Paciente",
@@ -378,7 +378,7 @@ export default function PatientDetail() {
     invalidate();
 
     if (activateForm.status === "active") {
-      import("@v1/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
+      import("@/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
         promptWhatsAppNotification({
           patientId: patientId!,
           patientName: profile?.full_name || "Paciente",
@@ -1628,7 +1628,7 @@ export default function PatientDetail() {
                                     return;
                                   }
                                   // Invalidate all caches
-                                  const { invalidateCriticalQueries } = await import("@v1/lib/queryInvalidation");
+                                  const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
                                   const qc = (window as any).__REACT_QUERY_CLIENT__;
                                   if (qc) invalidateCriticalQueries(qc, activePlan.patient_id);
                                   invalidate();

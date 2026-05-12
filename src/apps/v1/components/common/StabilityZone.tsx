@@ -1,9 +1,9 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle, RefreshCcw, Home, ShieldAlert, ChevronLeft } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { logError } from "@v1/lib/monitoring";
+import { logError } from "@/lib/monitoring";
 
 interface Props {
   children: ReactNode;

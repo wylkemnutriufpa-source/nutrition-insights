@@ -1,7 +1,7 @@
-import type { AnalysisResult } from "@v1/lib/coachAnalysisEngine";
-import { PHASE_LABELS } from "@v1/lib/coachAnalysisEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import type { AnalysisResult } from "@/lib/coachAnalysisEngine";
+import { PHASE_LABELS } from "@/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Brain, AlertTriangle, Droplets, TrendingDown, BarChart3 } from "lucide-react";
 import CoachCompositeScore from "./CoachCompositeScore";
 

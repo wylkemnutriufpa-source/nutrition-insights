@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { PATIENT_FEATURE_REGISTRY } from "@v1/lib/patientFeatureRegistry";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { PATIENT_FEATURE_REGISTRY } from "@/lib/patientFeatureRegistry";
 
 export interface FeatureExplorationState {
   exploredKeys: string[];

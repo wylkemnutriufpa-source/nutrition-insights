@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Users, ClipboardList, UtensilsCrossed, MessageSquare, 
   Settings, UserPlus, Calendar, Activity, TrendingUp
 } from "lucide-react";
-import ProStrategicDashboard from "@v1/components/dashboard/ProStrategicDashboard";
-import PatientGridDashboard from "@v1/components/dashboard/PatientGridDashboard";
-import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
+import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard";
+import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 
 export default function Index() {
   const { user, isNutritionist, isPersonal, isAdmin } = useAuth();

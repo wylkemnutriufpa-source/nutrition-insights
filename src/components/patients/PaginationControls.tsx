@@ -1,7 +1,7 @@
-import { Button } from "@v1/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import type { PaginationState } from "@v1/hooks/queries/usePatientsList";
+import type { PaginationState } from "@/hooks/queries/usePatientsList";
 
 interface PaginationControlsProps {
   pagination: PaginationState;

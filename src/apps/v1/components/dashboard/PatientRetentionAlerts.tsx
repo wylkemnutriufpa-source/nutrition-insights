@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { AlertCircle, Flame, CheckCircle2, TrendingUp, Zap, Target, Trophy, Calendar } from "lucide-react";
-import { useEngagement } from "@v1/hooks/useEngagement";
-import { Button } from "@v1/components/ui/button";
-import { Progress } from "@v1/components/ui/progress";
+import { useEngagement } from "@/hooks/useEngagement";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 export function PatientRetentionAlerts() {
   const { 

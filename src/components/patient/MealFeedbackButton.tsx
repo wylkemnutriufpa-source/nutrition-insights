@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { cn } from "@v1/lib/utils";
+import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface MealFeedbackButtonProps {

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { Loader2, AlertCircle, Link2Off, Clock, CheckCircle2, ShieldAlert } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 type TokenStatus = "loading" | "valid" | "TOKEN_NOT_FOUND" | "TOKEN_EXPIRED" | "TOKEN_USED" | "TOKEN_REVOKED" | "error";
 

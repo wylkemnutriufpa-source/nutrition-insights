@@ -1,12 +1,12 @@
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
-import { languages } from "@v1/i18n";
+import { languages } from "@/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@v1/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
 
 interface LanguageSelectorProps {

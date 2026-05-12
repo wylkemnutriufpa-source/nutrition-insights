@@ -1,8 +1,8 @@
 import { useState } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Progress } from "@v1/components/ui/progress";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Heart, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle, Star } from "lucide-react";
 
 const QUESTIONS = [

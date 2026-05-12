@@ -19,14 +19,14 @@ import {
   PORTION_DATALIST_ID,
   validatePortion,
   getPortionAutocompleteOptions,
-} from "@v1/lib/portionValidation";
+} from "@/lib/portionValidation";
 
 // --- Mocks ---
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: () => ({
       select: () => ({

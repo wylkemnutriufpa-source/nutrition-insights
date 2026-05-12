@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, ArrowRight, Wand2, PencilLine, X, Undo2, Loader2 } from "lucide-react";
-import type { AutoFixResult } from "@v1/lib/autoFixEngine";
-import { undoAutoFix } from "@v1/lib/autoFixEngine";
+import type { AutoFixResult } from "@/lib/autoFixEngine";
+import { undoAutoFix } from "@/lib/autoFixEngine";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 

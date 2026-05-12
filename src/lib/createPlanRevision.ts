@@ -1,5 +1,5 @@
-import { supabase } from "@v1/integrations/supabase/client";
-import { getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 
 /**
  * Creates an editable draft revision from an existing (immutable) meal plan.

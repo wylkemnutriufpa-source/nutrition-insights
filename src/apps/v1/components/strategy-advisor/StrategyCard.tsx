@@ -1,8 +1,8 @@
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Eye, Check, Trophy, Medal, Award } from "lucide-react";
 import { motion } from "framer-motion";
-import type { NutritionalStrategy, SizeVariant } from "@v1/lib/strategyAdvisor";
+import type { NutritionalStrategy, SizeVariant } from "@/lib/strategyAdvisor";
 
 interface Props {
   strategy: NutritionalStrategy;

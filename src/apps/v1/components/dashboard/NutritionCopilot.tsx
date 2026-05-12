@@ -8,9 +8,9 @@ import {
   Activity, Eye, ChevronDown, ChevronUp, Target, Flame, Moon,
   Droplets, Coffee, BarChart3, Send, RefreshCw
 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Progress } from "@v1/components/ui/progress";
-import { supabase } from "@v1/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // ── Types ──

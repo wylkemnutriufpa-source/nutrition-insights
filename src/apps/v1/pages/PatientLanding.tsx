@@ -1,17 +1,17 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, Trophy, Target, Brain, UtensilsCrossed, TrendingUp,
   MessageSquare, Camera, Star, Sparkles, ArrowRight, Shield, Zap,
   BarChart3, Heart, Flame, Crown, Download, Smartphone
 } from "lucide-react";
-import { useInstallPrompt } from "@v1/hooks/useInstallPrompt";
-import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 import {
   FloatingOrb, LandingNav, HeroBadge, TestimonialCard,
   FeatureCard, StepCard, LandingFooter, fadeUp, stagger,
-} from "@v1/components/landing/LandingShared";
+} from "@/components/landing/LandingShared";
 
 const features = [
   { icon: CheckCircle2, title: "Checklist Diário Inteligente", desc: "Tarefas personalizadas pelo seu nutricionista, com gamificação e pontos.", color: "text-emerald-400", bg: "bg-emerald-500/10" },

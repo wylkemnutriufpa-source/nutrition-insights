@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Brain, Sparkles, Crown } from "lucide-react";
-import { Badge } from "@v1/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 export default function IntelligenceGoldenHeader() {
   return (

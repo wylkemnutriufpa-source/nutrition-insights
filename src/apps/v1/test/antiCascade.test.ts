@@ -16,8 +16,8 @@ import {
   engineDeterminismContract,
   persistenceSafetyContract,
   uiConsistencyContract,
-} from "@v1/lib/criticalContracts";
-import { assertContract, ContractViolationError } from "@v1/lib/contractGuards";
+} from "@/lib/criticalContracts";
+import { assertContract, ContractViolationError } from "@/lib/contractGuards";
 
 describe("Anti-Cascade Architecture — Editor V3", () => {
   describe("1. Draft Integrity", () => {

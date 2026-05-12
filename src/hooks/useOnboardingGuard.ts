@@ -3,8 +3,8 @@
  * This hook DOES NOT perform any redirects.
  */
 import { useMemo } from "react";
-import { usePatientJourneyStatus } from "@v1/hooks/usePatientJourneyStatus";
-import { useAuth } from "@v1/lib/auth";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { useAuth } from "@/lib/auth";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading" | "error_no_link";
 

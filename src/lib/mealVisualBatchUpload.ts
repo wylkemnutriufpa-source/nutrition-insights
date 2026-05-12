@@ -2,7 +2,7 @@
  * Batch upload engine for meal_visual_library.
  * Groups files by base name, uploads to storage, and links to library items.
  */
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface BatchUploadReport {
   processed: number;

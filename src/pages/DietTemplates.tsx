@@ -1,26 +1,26 @@
 import { useEffect, useState, useMemo, memo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
-import { supabase } from "@v1/integrations/supabase/client";
-import { activateMealPlan } from "@v1/lib/serverTransitions";
-import { runPlanPipeline, type PipelineInput } from "@v1/lib/planPipelineOrchestrator";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Badge } from "@v1/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { activateMealPlan } from "@/lib/serverTransitions";
+import { runPlanPipeline, type PipelineInput } from "@/lib/planPipelineOrchestrator";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   BookOpen, Search, ArrowLeft, ChevronRight, Sparkles, Loader2,
   Coffee, Apple, Utensils, Cookie, Moon, Sun, ArrowRight,
   Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw, ClipboardCheck
 } from "lucide-react";
-import { TemplateFoodVisual } from "@v1/components/meal/TemplateFoodVisual";
-import { safeNum, fmtMacro } from "@v1/lib/formatMacros";
-import ConsistencyReportModal from "@v1/components/hybrid-builder/ConsistencyReportModal";
+import { TemplateFoodVisual } from "@/components/meal/TemplateFoodVisual";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
+import ConsistencyReportModal from "@/components/hybrid-builder/ConsistencyReportModal";
 
 interface DietTemplate {
   id: string;
@@ -383,7 +383,7 @@ export default function DietTemplates() {
 
   const dataSource = physicalAssessment?.calories_target ? "assessment" : "anamnesis";
 
-  // Helpers de coerção e renderização defensiva vivem em @v1/lib/formatMacros
+  // Helpers de coerção e renderização defensiva vivem em @/lib/formatMacros
   // (compartilhados com MealLibraryModal, MealLibrarySidebar, AssistedPlanModal,
   //  AutoFixResultsModal, PremiumRecipeModal, TemplateNutritionAudit).
 

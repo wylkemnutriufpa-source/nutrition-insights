@@ -5,7 +5,7 @@
  * Each group represents nutritionally equivalent options for a specific meal context.
  */
 
-import { FOOD_DATABASE, type FoodItem } from "@v1/components/meals/FoodAutocomplete";
+import { FOOD_DATABASE, type FoodItem } from "@/components/meals/FoodAutocomplete";
 
 // ── Substitution Group Definitions ──
 export type SubstitutionGroup =

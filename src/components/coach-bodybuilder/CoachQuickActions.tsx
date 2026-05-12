@@ -1,5 +1,5 @@
-import { Button } from "@v1/components/ui/button";
-import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Activity, Camera, Flag, PenLine, AlertTriangle, MessageSquare } from "lucide-react";
 
 interface Props {

@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useDraggable } from "@dnd-kit/core";
-import { Input } from "@v1/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Search, ChefHat, Apple,
   Flame, Beef, Wheat, Droplets, Loader2, GripVertical,

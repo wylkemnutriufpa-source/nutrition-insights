@@ -1,10 +1,10 @@
 import { useCallback } from "react";
-import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
-import { Button } from "@v1/components/ui/button";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@v1/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { Trash2, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 

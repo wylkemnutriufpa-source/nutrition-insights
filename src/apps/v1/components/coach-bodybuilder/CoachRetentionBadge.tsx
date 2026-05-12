@@ -1,8 +1,8 @@
 /**
  * Coach Retention Badge — Premium visual for athlete engagement
  */
-import { Badge } from "@v1/components/ui/badge";
-import { Card, CardContent } from "@v1/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Flame, Star, TrendingUp, CheckCircle2 } from "lucide-react";
 
 interface Props {

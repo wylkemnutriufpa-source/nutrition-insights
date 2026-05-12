@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Badge } from "@v1/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Send, Bot, Search, Globe, CheckCircle2, Loader2, ExternalLink } from "lucide-react";
-import { telegramApi } from "@v1/lib/api/telegram";
-import { firecrawlApi } from "@v1/lib/api/firecrawl";
+import { telegramApi } from "@/lib/api/telegram";
+import { firecrawlApi } from "@/lib/api/firecrawl";
 
 export default function Integrations() {
   return (

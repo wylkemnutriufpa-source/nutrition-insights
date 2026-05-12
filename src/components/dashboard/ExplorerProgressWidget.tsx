@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Compass, ChevronRight, Sparkles } from "lucide-react";
-import { Card, CardContent } from "@v1/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { useFeatureExplorer } from "@v1/hooks/useFeatureExplorer";
+import { useFeatureExplorer } from "@/hooks/useFeatureExplorer";
 
 export default function ExplorerProgressWidget() {
   const { progress, level, exploredCount, totalFeatures, unexploredFeatures, loading } = useFeatureExplorer();

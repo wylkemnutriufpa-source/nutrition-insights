@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Progress } from "@v1/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Target, Clock, CheckCircle2, Zap, Users, Trophy, Swords, Crown, HelpCircle, Star, TrendingUp, Award } from "lucide-react";
-import CommunityGroups from "@v1/components/community/CommunityGroups";
-import type { Tables } from "@v1/integrations/supabase/types";
+import CommunityGroups from "@/components/community/CommunityGroups";
+import type { Tables } from "@/integrations/supabase/types";
 
 type Challenge = Tables<"challenges">;
 type UserChallenge = Tables<"user_challenges">;

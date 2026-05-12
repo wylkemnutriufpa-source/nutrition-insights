@@ -1,6 +1,6 @@
-import { Badge } from "@v1/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Sparkles, Clock, Lock } from "lucide-react";
-import type { AIUsageStatus } from "@v1/hooks/useAIUsage";
+import type { AIUsageStatus } from "@/hooks/useAIUsage";
 
 interface Props {
   status: AIUsageStatus & { usageLabel: string; nextAvailableLabel: string | null };

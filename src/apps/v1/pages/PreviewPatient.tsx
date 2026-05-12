@@ -14,11 +14,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Skeleton } from "@v1/components/ui/skeleton";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   Eye,
@@ -29,10 +29,10 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { usePatientLifecycleStateFor } from "@v1/hooks/usePatientLifecycleState";
-import { invalidateLifecycleQueries } from "@v1/lib/lifecycleCache";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { usePatientLifecycleStateFor } from "@/hooks/usePatientLifecycleState";
+import { invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

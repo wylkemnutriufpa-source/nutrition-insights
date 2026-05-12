@@ -1,7 +1,7 @@
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatInternationalWhatsApp } from "./whatsapp";
-import { BASE_URL } from "@v1/lib/config";
+import { BASE_URL } from "@/lib/config";
 
 export type WhatsAppTemplateType = "meal_plan_ready" | "protocol_activated" | "registration_updated" | "invitation";
 

@@ -1,15 +1,15 @@
 import { useState } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { useAuth } from "@v1/lib/auth";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Pill, Plus, Search, Copy, Eye, Pencil, Sparkles } from "lucide-react";
-import { Input } from "@v1/components/ui/input";
-import { Button } from "@v1/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import PhytotherapyTemplateCard from "@v1/components/phytotherapy/PhytotherapyTemplateCard";
-import PhytotherapyTemplateModal from "@v1/components/phytotherapy/PhytotherapyTemplateModal";
-import PhytotherapyEditorModal from "@v1/components/phytotherapy/PhytotherapyEditorModal";
+import PhytotherapyTemplateCard from "@/components/phytotherapy/PhytotherapyTemplateCard";
+import PhytotherapyTemplateModal from "@/components/phytotherapy/PhytotherapyTemplateModal";
+import PhytotherapyEditorModal from "@/components/phytotherapy/PhytotherapyEditorModal";
 
 export interface PhytotherapyTemplate {
   id: string;

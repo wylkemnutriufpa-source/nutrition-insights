@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Send, Image, BarChart3, X, Plus, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

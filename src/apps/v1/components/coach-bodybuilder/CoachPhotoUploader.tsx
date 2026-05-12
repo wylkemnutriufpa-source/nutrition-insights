@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Button } from "@v1/components/ui/button";
-import { Label } from "@v1/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Camera, Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

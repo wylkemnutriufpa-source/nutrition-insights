@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { Flame, Beef } from "lucide-react";
-import { Badge } from "@v1/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import MealVisualPlaceholder from "./MealVisualPlaceholder";
-import type { MealVisualItem } from "@v1/types/mealVisualLibrary";
-import { MEAL_VISUAL_CATEGORIES } from "@v1/types/mealVisualLibrary";
-import { fmtMacro, safeNum } from "@v1/lib/formatMacros";
+import type { MealVisualItem } from "@/types/mealVisualLibrary";
+import { MEAL_VISUAL_CATEGORIES } from "@/types/mealVisualLibrary";
+import { fmtMacro, safeNum } from "@/lib/formatMacros";
 
 interface MealVisualCardProps {
   item: MealVisualItem;

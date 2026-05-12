@@ -1,22 +1,22 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { FEATURE_REGISTRY, getFeaturesByCategory } from "@v1/lib/featureRegistry";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { FEATURE_REGISTRY, getFeaturesByCategory } from "@/lib/featureRegistry";
 import { 
   Compass, CheckCircle2, Sparkles, Search, Zap, Crown, ExternalLink,
   BookOpen, UserPlus, CreditCard, ShieldCheck, ClipboardList, FileText, 
   UtensilsCrossed, Activity, ChevronDown, ChevronUp, AlertTriangle, ArrowRight
 } from "lucide-react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useCallback } from "react";
-import { PROFESSIONAL_ROUTE_MAP } from "@v1/lib/featureRouteMap";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@v1/components/ui/collapsible";
+import { PROFESSIONAL_ROUTE_MAP } from "@/lib/featureRouteMap";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "IA & Automação": { gradient: "from-primary/20 to-primary/5", emoji: "🤖" },

@@ -9,8 +9,8 @@
  * This file will be removed once those components are migrated.
  */
 
-import { usePatientLifecycleState } from "@v1/hooks/usePatientLifecycleState";
-import type { PatientLifecycle } from "@v1/hooks/usePatientLifecycleState";
+import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
+import type { PatientLifecycle } from "@/hooks/usePatientLifecycleState";
 
 export type PatientPlanStatusCode =
   | "plan_delivered"

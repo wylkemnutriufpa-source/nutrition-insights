@@ -2,9 +2,9 @@
  * Intelligence Showcase Modal — Premium upsell for patients
  * Shows what FitJourney Intelligence does and encourages upgrade
  */
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Brain, Droplets, Dumbbell, Moon, Sparkles, MessageSquare, Crown, Lock, ArrowRight } from "lucide-react";
 

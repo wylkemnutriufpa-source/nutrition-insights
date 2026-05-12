@@ -4,13 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Brain, X, Droplets, Dumbbell, AlertTriangle, Sparkles,
   Check, Heart, Stethoscope, BellOff,
 } from "lucide-react";
-import type { IntelligencePrompt } from "@v1/lib/fitIntelligenceEngine";
+import type { IntelligencePrompt } from "@/lib/fitIntelligenceEngine";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 

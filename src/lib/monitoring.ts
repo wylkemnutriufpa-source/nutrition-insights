@@ -3,7 +3,7 @@
  * 
  * Centralized error logging with structured metadata, batching, and retries.
  */
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export type ErrorCategory = "auth_error" | "data_error" | "render_error" | "routing_error" | "global" | "logic_error";
 export type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";

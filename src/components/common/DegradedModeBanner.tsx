@@ -1,5 +1,5 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 export function DegradedModeBanner() {
   return (

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Flame, Trophy, Shield, Brain, Camera, Clock, Zap, Target,
   Activity, ChevronRight, CheckCircle2, BarChart3, TrendingUp,

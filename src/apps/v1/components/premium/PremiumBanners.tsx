@@ -2,9 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Brain, Radar, Shield, Zap, Crown, ArrowRight, Lock } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { useAuth } from "@v1/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
 import { ClinicalIntelligenceUpsellModal } from "./ClinicalIntelligenceUpsellModal";
 
 export function PremiumControlTowerBanner() {

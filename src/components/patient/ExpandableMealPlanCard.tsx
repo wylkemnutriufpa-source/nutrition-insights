@@ -5,13 +5,13 @@
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
-import { Card } from "@v1/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import {
   UtensilsCrossed, ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
@@ -21,9 +21,9 @@ import {
 import {
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion,
-} from "@v1/components/patient/MealPlanDailyView";
-import { fmtMacro, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@v1/lib/formatMacros";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
+} from "@/components/patient/MealPlanDailyView";
+import { fmtMacro, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

@@ -41,11 +41,11 @@ const { TODAY, TODAY_DOW, ITEMS } = vi.hoisted(() => {
 });
 
 // ---------- Mocks ----------
-vi.mock("@v1/lib/auth", () => ({
+vi.mock("@/lib/auth", () => ({
   useAuth: () => ({ user: { id: "patient-test-id" } }),
 }));
 
-vi.mock("@v1/integrations/supabase/client", () => {
+vi.mock("@/integrations/supabase/client", () => {
   const makeQB = (data: any) => {
     const result = { data, error: null };
     const b: any = {};
@@ -94,7 +94,7 @@ vi.mock("framer-motion", async () => {
 });
 
 // ---------- Import under test ----------
-import ExpandableMealPlanCard from "@v1/components/patient/ExpandableMealPlanCard";
+import ExpandableMealPlanCard from "@/components/patient/ExpandableMealPlanCard";
 
 async function renderCard() {
   render(

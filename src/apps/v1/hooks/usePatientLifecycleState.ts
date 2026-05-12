@@ -19,10 +19,10 @@
 
 import { useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { validateLifecycleEnvelope } from "@v1/lib/lifecycleStateValidator";
-import { safeChannel, safeSubscribe, safeRemoveChannel } from "@v1/lib/security-layer/safeRealtime";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { validateLifecycleEnvelope } from "@/lib/lifecycleStateValidator";
+import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/security-layer/safeRealtime";
 
 export type LifecycleState =
   | "onboarding_started"

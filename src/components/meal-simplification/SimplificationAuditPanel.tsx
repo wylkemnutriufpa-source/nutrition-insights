@@ -1,8 +1,8 @@
-import { Badge } from "@v1/components/ui/badge";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Ban, Utensils, Apple, Egg, Sparkles } from "lucide-react";
-import type { SimplicityIssue } from "@v1/lib/planSimplicityEngine";
-import { getSeverityColor, getMealTypeLabel } from "@v1/lib/planSimplicityEngine";
+import type { SimplicityIssue } from "@/lib/planSimplicityEngine";
+import { getSeverityColor, getMealTypeLabel } from "@/lib/planSimplicityEngine";
 
 interface SimplificationAuditPanelProps {
   issues: SimplicityIssue[];

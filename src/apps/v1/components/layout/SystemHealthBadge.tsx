@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@v1/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { CheckCircle2, AlertTriangle, ShieldCheck, Activity, AlertOctagon } from "lucide-react";
 import { motion } from "framer-motion";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@v1/components/ui/tooltip";
-import { Badge } from "@v1/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 type HealthStatus = "ok" | "warning" | "critical";
 

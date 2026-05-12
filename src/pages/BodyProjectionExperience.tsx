@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Button } from "@v1/components/ui/button";
-import { Card } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Input } from "@v1/components/ui/input";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   ArrowLeft, Share2, Download, Shield, ChevronRight, Sparkles,
@@ -20,8 +20,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Area, AreaChart
 } from "recharts";
-import { PROJECTION_DISCLAIMER } from "@v1/services/bodyProjectionVisualizer";
-import { evaluateAccuracy } from "@v1/services/bodyProjectionEngine";
+import { PROJECTION_DISCLAIMER } from "@/services/bodyProjectionVisualizer";
+import { evaluateAccuracy } from "@/services/bodyProjectionEngine";
 
 // ==========================================
 // TYPES

@@ -5,8 +5,8 @@ import {
   UserX, Clock, ArrowRight, Send, Calendar, FileText,
   AlertTriangle, TrendingDown, Shield
 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Progress } from "@v1/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 export interface ChurnPatient {
   id: string;

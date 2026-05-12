@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { ExperienceMode, ExperienceModeContextValue, checkFeaturePermission } from "@v1/hooks/useExperienceMode";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { ExperienceMode, ExperienceModeContextValue, checkFeaturePermission } from "@/hooks/useExperienceMode";
+import { supabase } from "@/integrations/supabase/client";
 
 const ExperienceContext = createContext<ExperienceModeContextValue | undefined>(undefined);
 

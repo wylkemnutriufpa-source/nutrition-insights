@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Card } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Users, ClipboardCheck, AlertTriangle, Trophy,
   TrendingUp, Activity, ArrowRight, Brain,

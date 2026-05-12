@@ -6,8 +6,8 @@
  *   them when the network comes back.
  * - Enforces a max queue size and a TTL to expire stale attempts.
  */
-import { supabase } from "@v1/integrations/supabase/client";
-import type { ExperienceMode } from "@v1/hooks/useExperienceMode";
+import { supabase } from "@/integrations/supabase/client";
+import type { ExperienceMode } from "@/hooks/useExperienceMode";
 
 const QUEUE_KEY = "fj_experience_mode_queue";
 

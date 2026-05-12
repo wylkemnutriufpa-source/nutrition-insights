@@ -1,10 +1,10 @@
-import { useOnlinePatients } from "@v1/hooks/useOnlinePatients";
+import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Badge } from "@v1/components/ui/badge";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { UsersRound, Crown, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 

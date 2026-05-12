@@ -21,10 +21,10 @@
  *   - was_auto_corrected: audit trail
  */
 
-import { supabase } from "@v1/integrations/supabase/client";
-import type { Tables } from "@v1/integrations/supabase/types";
-import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
-import { invokeWithRetry } from "@v1/lib/api/edgeFunctions";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+import { invokeWithRetry } from "@/lib/api/edgeFunctions";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
@@ -183,7 +183,7 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
       const { QueryClient } = await import("@tanstack/react-query");
       const qc = (window as any).__REACT_QUERY_CLIENT__ as import("@tanstack/react-query").QueryClient | undefined;
       if (qc) {
-        const { invalidateCriticalQueries } = await import("@v1/lib/queryInvalidation");
+        const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
         invalidateCriticalQueries(qc, input.patientId);
       }
       // Clear editor sessionStorage for previous plans

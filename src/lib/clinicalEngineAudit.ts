@@ -1,4 +1,4 @@
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Log a step of the Deterministic Clinical Engine for audit and transparency.

@@ -1,15 +1,15 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import MobileQA from "@v1/pages/MobileQA";
+import MobileQA from "@/pages/MobileQA";
 import { BrowserRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 
 // Mock complex components to avoid dependency hell
-vi.mock("@v1/components/layout/DashboardLayout", () => ({
+vi.mock("@/components/layout/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }));
 
-vi.mock("@v1/components/strategy-advisor/StrategyAdvisorPanel", () => ({
+vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
   default: () => <div>Mocked Strategy Advisor</div>
 }));
 

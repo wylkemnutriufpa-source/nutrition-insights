@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { TrendingDown, TrendingUp, Minus, Scale, Target, Flag } from "lucide-react";
 
 interface BodyEvolutionTimelineProps {

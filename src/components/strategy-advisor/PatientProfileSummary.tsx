@@ -1,4 +1,4 @@
-import { Badge } from "@v1/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { User, Activity, Scale, Flame } from "lucide-react";
 
 interface ProfileData {

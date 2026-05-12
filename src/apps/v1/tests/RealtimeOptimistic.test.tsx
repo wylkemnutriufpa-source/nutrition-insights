@@ -11,7 +11,7 @@ vi.mock('../lib/auth', () => ({
 }));
 
 // We need to mock components used in DailyMealPlanInline
-vi.mock('@v1/components/patient/MealPlanDailyView', () => ({
+vi.mock('@/components/patient/MealPlanDailyView', () => ({
   MacroSummary: () => <div data-testid="macro-summary" />,
   AdherenceCard: () => <div data-testid="adherence-card" />,
   DateNavigator: () => <div data-testid="date-navigator" />,
@@ -20,7 +20,7 @@ vi.mock('@v1/components/patient/MealPlanDailyView', () => ({
   DAYS: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
 }));
 
-vi.mock('@v1/components/patient/MealDetailModal', () => ({
+vi.mock('@/components/patient/MealDetailModal', () => ({
   MealDetailModal: () => <div data-testid="meal-modal" />,
 }));
 

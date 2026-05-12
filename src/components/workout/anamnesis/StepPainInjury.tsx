@@ -1,10 +1,10 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Checkbox } from "@v1/components/ui/checkbox";
-import { Slider } from "@v1/components/ui/slider";
-import { Badge } from "@v1/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Check } from "lucide-react";
-import { cn } from "@v1/lib/utils";
-import { OrbitalHeader, OrbitalTextInput } from "@v1/components/onboarding/OrbitalAnamnesisInputs";
+import { cn } from "@/lib/utils";
+import { OrbitalHeader, OrbitalTextInput } from "@/components/onboarding/OrbitalAnamnesisInputs";
 import type { TrainerAnamnesisData } from "./types";
 import { CONDITIONS_LIST } from "./types";
 

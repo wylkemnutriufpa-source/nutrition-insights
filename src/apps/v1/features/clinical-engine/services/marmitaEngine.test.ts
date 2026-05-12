@@ -7,7 +7,7 @@ import {
 } from "./marmitaEngine";
 
 // Mock Supabase
-vi.mock("@v1/integrations/supabase/client", () => ({
+vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({

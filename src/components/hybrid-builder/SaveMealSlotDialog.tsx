@@ -5,13 +5,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 import { Save, Loader2, Trash2, FolderOpen } from "lucide-react";
 

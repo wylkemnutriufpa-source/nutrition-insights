@@ -5,12 +5,12 @@
  */
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useSystemHealth } from "@v1/lib/observability/useSystemHealth";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useSystemHealth } from "@/lib/observability/useSystemHealth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, AlertTriangle, Bug, Eye, Gauge, Shield, Zap } from "lucide-react";
 
 function HealthIndicator({ score, status }: { score: number; status: string }) {

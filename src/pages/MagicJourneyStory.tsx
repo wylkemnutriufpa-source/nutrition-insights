@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
 import { Sparkles, ChevronLeft, ChevronRight, Share2, Utensils, ArrowRight, Loader2, Volume2, VolumeX } from "lucide-react";
-import { useAmbientAudio } from "@v1/hooks/useAmbientAudio";
-import { useFeatureFlag } from "@v1/lib/featureFlags";
+import { useAmbientAudio } from "@/hooks/useAmbientAudio";
+import { useFeatureFlag } from "@/lib/featureFlags";
 
 interface StoryData {
   narrative_opening: string;

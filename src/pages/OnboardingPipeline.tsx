@@ -1,35 +1,35 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
-import { invokeWithRetry, isTransientNetworkError } from "@v1/lib/api/edgeFunctions";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+import { invokeWithRetry, isTransientNetworkError } from "@/lib/api/edgeFunctions";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Progress } from "@v1/components/ui/progress";
-import { Badge } from "@v1/components/ui/badge";
-import { Checkbox } from "@v1/components/ui/checkbox";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
-import { usePatientPlanStatus } from "@v1/hooks/usePatientPlanStatus";
-import { useConsentGuard, TERMS_VERSION } from "@v1/hooks/useConsentGuard";
-import { logAudit } from "@v1/lib/auditLog";
+import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
+import { useConsentGuard, TERMS_VERSION } from "@/hooks/useConsentGuard";
+import { logAudit } from "@/lib/auditLog";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardCheck, Scale, Camera, Clock, Utensils, Sparkles,
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
   ChefHat, Heart, Zap, ThumbsUp, Shield, RefreshCw
 } from "lucide-react";
-import { generatePlanWithEngine } from "@v1/features/clinical-engine";
-import type { Meal, Food } from "@v1/features/clinical-engine/types/clinical-types";
-import { localGenerateMealPlan } from "@v1/lib/localMealPlanGenerator";
+import { generatePlanWithEngine } from "@/features/clinical-engine";
+import type { Meal, Food } from "@/features/clinical-engine/types/clinical-types";
+import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 
-import OnboardingExitGuard from "@v1/components/onboarding/OnboardingExitGuard";
-import SmartNumericInput from "@v1/components/ui/SmartNumericInput";
-import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@v1/lib/normalizeInputs";
+import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
+import SmartNumericInput from "@/components/ui/SmartNumericInput";
+import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@/lib/normalizeInputs";
 
 interface Pipeline {
   id: string;

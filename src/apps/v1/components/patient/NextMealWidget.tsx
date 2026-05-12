@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
-import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { supabase } from "@/integrations/supabase/client";
 import { UtensilsCrossed, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { safeNum, fmtMacro } from "@v1/lib/formatMacros";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
 
 interface MealSlot {
   meal_type: string;

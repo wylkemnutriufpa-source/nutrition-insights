@@ -1,4 +1,4 @@
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Clinical buckets that are private and require signed URLs.

@@ -1,20 +1,20 @@
 import { useState } from "react";
-import { useTeamMembers, TeamMemberWithPermissions } from "@v1/hooks/useTeamMembers";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
+import { useTeamMembers, TeamMemberWithPermissions } from "@/hooks/useTeamMembers";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose,
-} from "@v1/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@v1/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { UserPlus, Shield, Users, Trash2, ToggleLeft, ToggleRight, Crown } from "lucide-react";
-import { Skeleton } from "@v1/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import TeamMemberPermissionEditor from "./TeamMemberPermissionEditor";
 import TeamPatientAssignmentModal from "./TeamPatientAssignmentModal";
 

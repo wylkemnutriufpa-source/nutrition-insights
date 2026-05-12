@@ -1,6 +1,6 @@
-import { useAuth } from "@v1/lib/auth";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Lock, Crown, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ReactNode } from "react";

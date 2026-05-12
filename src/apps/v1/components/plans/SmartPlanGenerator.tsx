@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Zap, Brain, Stethoscope, Loader2, Save, AlertTriangle, ShieldCheck } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Switch } from "@v1/components/ui/switch";
-import { Label } from "@v1/components/ui/label";
-import { Input } from "@v1/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@v1/components/ui/alert-dialog";
-import { supabase } from "@v1/integrations/supabase/client";
-import { invokeWithRetry } from "@v1/lib/api/edgeFunctions";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { invokeWithRetry } from "@/lib/api/edgeFunctions";
 import { toast } from "sonner";
 
-import { useAuth } from "@v1/lib/auth";
-import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
+import { useAuth } from "@/lib/auth";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 
 type GenerationMode = "quick" | "smart" | "clinical";
 

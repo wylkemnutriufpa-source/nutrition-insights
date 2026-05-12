@@ -1,23 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Input } from "@v1/components/ui/input";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Slider } from "@v1/components/ui/slider";
-import { Progress } from "@v1/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import confetti from "@v1/lib/confetti";
+import confetti from "@/lib/confetti";
 import PostWorkoutFeedback from "./PostWorkoutFeedback";
 import {
   Dumbbell, CheckCircle2, Clock, Flame, AlertTriangle, Trophy,
   Play, Zap, Timer, ChevronRight, Video, Layers, X
 } from "lucide-react";
-import { groupExercisesForRender } from "@v1/lib/workoutIntensityUtils";
+import { groupExercisesForRender } from "@/lib/workoutIntensityUtils";
 
 const GROUP_BADGES: Record<string, { label: string; color: string; icon: string }> = {
   biset: { label: "BISET", color: "bg-blue-500/10 text-blue-400 border border-blue-500/30", icon: "⚡" },
@@ -247,7 +247,7 @@ export default function PatientWorkoutView() {
     return streak;
   })();
 
-  // Grouping logic is now in @v1/lib/workoutIntensityUtils.ts
+  // Grouping logic is now in @/lib/workoutIntensityUtils.ts
   const getYouTubeEmbed = (url: string) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/);
     return match ? `https://www.youtube.com/embed/${match[1]}` : null;

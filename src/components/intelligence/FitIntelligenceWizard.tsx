@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Dialog, DialogContent } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Brain, Droplets, Dumbbell, Heart, Sparkles, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
 

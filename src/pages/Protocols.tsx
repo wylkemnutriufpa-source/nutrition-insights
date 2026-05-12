@@ -1,17 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import ProtocolStatusBadge from "@v1/components/patient/ProtocolStatusBadge";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { Progress } from "@v1/components/ui/progress";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import ProtocolStatusBadge from "@/components/patient/ProtocolStatusBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
   Plus, FileText, Trash2, Clock, ListChecks,
@@ -19,8 +19,8 @@ import {
   BarChart3, CheckCircle2, XCircle, Calendar, TrendingUp,
   Pencil, Save, X
 } from "lucide-react";
-import { promptWhatsAppNotification } from "@v1/utils/whatsappNotification";
-import { BASE_URL } from "@v1/lib/config";
+import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
+import { BASE_URL } from "@/lib/config";
 
 
 // ── Types ──

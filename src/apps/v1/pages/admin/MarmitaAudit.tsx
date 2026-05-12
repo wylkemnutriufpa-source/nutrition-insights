@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   AlertCircle, CheckCircle2, RefreshCw, 
   ArrowRight, Search, ChefHat, Info, Utensils
 } from "lucide-react";
-import { Input } from "@v1/components/ui/input";
+import { Input } from "@/components/ui/input";
 
 interface AuditedPlan {
   id: string;

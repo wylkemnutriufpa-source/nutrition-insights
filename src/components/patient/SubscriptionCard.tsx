@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Badge } from "@v1/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { CreditCard, Calendar, CheckCircle2, AlertCircle, Clock } from "lucide-react";
-import PrestigeBadge from "@v1/components/prestige/PrestigeBadge";
-import PrestigeName from "@v1/components/prestige/PrestigeName";
-import { usePrestige } from "@v1/hooks/usePrestige";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PrestigeName from "@/components/prestige/PrestigeName";
+import { usePrestige } from "@/hooks/usePrestige";
 
 interface Subscription {
   id: string;

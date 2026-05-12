@@ -1,22 +1,22 @@
 import { useState, useCallback, useEffect } from "react";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake, AlertTriangle, Settings2, ClipboardCheck } from "lucide-react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { invokeWithRetry } from "@v1/lib/api/edgeFunctions";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { invokeWithRetry } from "@/lib/api/edgeFunctions";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 
-import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
-import StrategyAdvisorPanel from "@v1/components/strategy-advisor/StrategyAdvisorPanel";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import MealRecipeSelector from "./MealRecipeSelector";
 import MarmitaSettingsDialog from "./MarmitaSettingsDialog";
 import ConsistencyReportModal from "./ConsistencyReportModal";
-import { useMarmitaSettings } from "@v1/hooks/useMarmitaSettings";
-import { Switch } from "@v1/components/ui/switch";
-import { Label } from "@v1/components/ui/label";
+import { useMarmitaSettings } from "@/hooks/useMarmitaSettings";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Fingerprint } from "lucide-react";
-import type { NutritionalStrategy, StrategyMealPreview } from "@v1/lib/strategyAdvisor";
+import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
 
 // Constants for mode hints to avoid divergence between weekly and fixed modes
 const MODE_HINTS = {

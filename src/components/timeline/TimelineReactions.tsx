@@ -1,5 +1,5 @@
-import { useTimelineReactions } from "@v1/hooks/useTimeline";
-import { cn } from "@v1/lib/utils";
+import { useTimelineReactions } from "@/hooks/useTimeline";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 

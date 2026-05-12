@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -14,11 +14,11 @@ import {
   Download,
   FileDown
 } from "lucide-react";
-import { generateClinicalAuditPDF } from "@v1/lib/pdfExport";
-import { Badge } from "@v1/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { cn } from "@v1/lib/utils";
+import { generateClinicalAuditPDF } from "@/lib/pdfExport";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { 
   Select, 
@@ -26,7 +26,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@v1/components/ui/select";
+} from "@/components/ui/select";
 
 interface ClinicalAuditTimelineProps {
   patientId: string;

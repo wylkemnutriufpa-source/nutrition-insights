@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
 export default function PaymentSuccess() {

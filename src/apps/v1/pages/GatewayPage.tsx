@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import LandingHero from "@v1/components/landing/LandingHero";
-import LandingSocialProof from "@v1/components/landing/LandingSocialProof";
-import LandingProductDemo from "@v1/components/landing/LandingProductDemo";
-import LandingAIEngine from "@v1/components/landing/LandingAIEngine";
-import LandingGamification from "@v1/components/landing/LandingGamification";
-import LandingCoachSection from "@v1/components/landing/LandingCoachSection";
-import LandingIntegrations from "@v1/components/landing/LandingIntegrations";
-import LandingFAQ from "@v1/components/landing/LandingFAQ";
-import LandingFinalCTA from "@v1/components/landing/LandingFinalCTA";
-import CinematicIntro from "@v1/components/landing/CinematicIntro";
-import InstitutionalFooter from "@v1/components/institutional/InstitutionalFooter";
-import LandingTopNav from "@v1/components/landing/LandingTopNav";
+import LandingHero from "@/components/landing/LandingHero";
+import LandingSocialProof from "@/components/landing/LandingSocialProof";
+import LandingProductDemo from "@/components/landing/LandingProductDemo";
+import LandingAIEngine from "@/components/landing/LandingAIEngine";
+import LandingGamification from "@/components/landing/LandingGamification";
+import LandingCoachSection from "@/components/landing/LandingCoachSection";
+import LandingIntegrations from "@/components/landing/LandingIntegrations";
+import LandingFAQ from "@/components/landing/LandingFAQ";
+import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
+import CinematicIntro from "@/components/landing/CinematicIntro";
+import InstitutionalFooter from "@/components/institutional/InstitutionalFooter";
+import LandingTopNav from "@/components/landing/LandingTopNav";
 
 const STORAGE_KEY = "fj_intro_seen";
 

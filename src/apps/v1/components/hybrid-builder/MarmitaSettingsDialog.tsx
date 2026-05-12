@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Loader2, CalendarDays, Snowflake } from "lucide-react";
 import { toast } from "sonner";
-import { useMarmitaSettings, type MarmitaSettings } from "@v1/hooks/useMarmitaSettings";
+import { useMarmitaSettings, type MarmitaSettings } from "@/hooks/useMarmitaSettings";
 
 interface Props {
   open: boolean;

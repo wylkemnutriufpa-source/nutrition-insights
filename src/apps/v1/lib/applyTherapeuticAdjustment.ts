@@ -2,10 +2,10 @@
  * Applies a therapeutic intervention to an active meal plan.
  * Creates a version snapshot, scales items, and persists changes.
  */
-import { supabase } from "@v1/integrations/supabase/client";
-import { logError, logWarn } from "@v1/lib/monitoring";
-import type { Json } from "@v1/integrations/supabase/types";
-import { compareMealPlanCollections, haveMealPlanCollectionsChanged } from "@v1/lib/mealPlanPersistenceGuards";
+import { supabase } from "@/integrations/supabase/client";
+import { logError, logWarn } from "@/lib/monitoring";
+import type { Json } from "@/integrations/supabase/types";
+import { compareMealPlanCollections, haveMealPlanCollectionsChanged } from "@/lib/mealPlanPersistenceGuards";
 
 interface AdjustmentParams {
   planId: string;

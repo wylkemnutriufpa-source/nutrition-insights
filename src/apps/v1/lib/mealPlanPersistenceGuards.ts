@@ -1,4 +1,4 @@
-import type { Tables } from "@v1/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 

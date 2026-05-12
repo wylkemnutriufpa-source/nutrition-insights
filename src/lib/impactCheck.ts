@@ -5,7 +5,7 @@
  * Usado internamente para avaliar risco de regressão.
  */
 
-import { analyzeImpact, CriticalFlow, CRITICAL_FLOWS } from "@v1/lib/criticalFlows";
+import { analyzeImpact, CriticalFlow, CRITICAL_FLOWS } from "@/lib/criticalFlows";
 
 export interface ImpactReport {
   riskLevel: "low" | "moderate" | "high" | "critical";

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
-import { Database } from "@v1/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Database } from "@/integrations/supabase/types";
 
 type WorkspaceProfileRow = Database["public"]["Tables"]["workspace_profiles"]["Row"];
 type WorkspaceSectionRow = Database["public"]["Tables"]["workspace_sections"]["Row"];

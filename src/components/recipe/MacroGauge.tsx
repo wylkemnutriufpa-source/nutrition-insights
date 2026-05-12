@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { safeNum, fmtMacro } from "@v1/lib/formatMacros";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
 
 interface Props {
   label: string;

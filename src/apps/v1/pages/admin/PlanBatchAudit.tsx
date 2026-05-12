@@ -1,23 +1,23 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import {
   ShieldCheck, Loader2, AlertTriangle, CheckCircle2, XCircle,
   RefreshCw, ArrowRight, ChevronDown, ChevronUp, Filter,
   ExternalLink, Square, CheckSquare, Zap, Eye, Search, UserPlus, Users
 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Progress } from "@v1/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Checkbox } from "@v1/components/ui/checkbox";
-import { Input } from "@v1/components/ui/input";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { BLOCKED_FOODS } from "@v1/lib/mealPlanFoodRules";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { BLOCKED_FOODS } from "@/lib/mealPlanFoodRules";
 
 // ── Types ──
 interface AuditedPlan {

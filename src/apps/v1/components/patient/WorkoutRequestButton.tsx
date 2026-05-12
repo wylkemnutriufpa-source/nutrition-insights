@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Button } from "@v1/components/ui/button";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Dumbbell } from "lucide-react";
 

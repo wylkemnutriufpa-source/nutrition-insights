@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { useEngagement } from "@v1/hooks/useEngagement";
+import { Button } from "@/components/ui/button";
+import { useEngagement } from "@/hooks/useEngagement";
 import { format, parse } from "date-fns";
 
 interface MealCheckinCardProps {

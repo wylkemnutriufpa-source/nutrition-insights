@@ -8,18 +8,18 @@ import {
   LifeBuoy,
   ExternalLink
 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@v1/components/ui/dialog";
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { getSessionCorrelationId } from "@v1/lib/auditLog";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { getSessionCorrelationId } from "@/lib/auditLog";
 
 interface SupportModalProps {
   isOpen: boolean;

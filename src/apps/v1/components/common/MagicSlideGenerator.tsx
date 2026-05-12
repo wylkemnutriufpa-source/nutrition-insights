@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { useFeatureFlag } from "@v1/lib/featureFlags";
+import { useFeatureFlag } from "@/lib/featureFlags";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@v1/components/ui/dialog";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { RadioGroup, RadioGroupItem } from "@v1/components/ui/radio-group";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Wand2, Sparkles, Eye, Save, Send, Copy, ChevronRight,
   Loader2, X, Crown, Brain, Heart, Zap, Target,

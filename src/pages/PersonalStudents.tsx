@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Badge } from "@v1/components/ui/badge";
-import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Users, Plus, Search, UserX, Dumbbell, TrendingUp, Sparkles, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import LinkStudentModal from "@v1/components/professional/LinkStudentModal";
-import AddStudentModal from "@v1/components/professional/AddStudentModal";
-import { useProfessionalLinks } from "@v1/hooks/useProfessionalLinks";
+import LinkStudentModal from "@/components/professional/LinkStudentModal";
+import AddStudentModal from "@/components/professional/AddStudentModal";
+import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
 
 export default function PersonalStudents() {
   const navigate = useNavigate();

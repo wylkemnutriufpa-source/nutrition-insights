@@ -7,19 +7,19 @@
  * Zero AI. Pure telemetry.
  */
 import { useState, useMemo, useEffect } from "react";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
-import { Button } from "@v1/components/ui/button";
-import { Badge } from "@v1/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Switch } from "@v1/components/ui/switch";
-import { Label } from "@v1/components/ui/label";
-import { useTelemetryStore, getRecentStats, TelemetryEvent, RealtimeEvent, InvalidationEvent, RefetchEvent } from "@v1/lib/telemetryStore";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useTelemetryStore, getRecentStats, TelemetryEvent, RealtimeEvent, InvalidationEvent, RefetchEvent } from "@/lib/telemetryStore";
 import { useQueryClient } from "@tanstack/react-query";
-import { invalidateCriticalQueries, invalidateNutritionistQueries } from "@v1/lib/queryInvalidation";
-import { supabase } from "@v1/integrations/supabase/client";
-import { useAuth } from "@v1/lib/auth";
+import { invalidateCriticalQueries, invalidateNutritionistQueries } from "@/lib/queryInvalidation";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import {
   Activity,
   Zap,

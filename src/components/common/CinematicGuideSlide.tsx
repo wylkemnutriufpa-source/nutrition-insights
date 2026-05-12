@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { Badge } from "@v1/components/ui/badge";
-import { Button } from "@v1/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Sparkles, Crown, ExternalLink } from "lucide-react";
-import type { PresentationSlide } from "@v1/lib/presentationSlides";
-import { cn } from "@v1/lib/utils";
+import type { PresentationSlide } from "@/lib/presentationSlides";
+import { cn } from "@/lib/utils";
 
 interface Props {
   slide: PresentationSlide & {

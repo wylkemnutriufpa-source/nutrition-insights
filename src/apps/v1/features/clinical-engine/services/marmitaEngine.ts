@@ -1,4 +1,4 @@
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Macronutrients } from "./weeklyPlanner";
 
 export interface MarmitaIngrediente {

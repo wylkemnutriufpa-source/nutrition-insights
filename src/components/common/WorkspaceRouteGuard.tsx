@@ -1,6 +1,6 @@
 
-import { useAuth } from "@v1/lib/auth";
-import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
+import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 

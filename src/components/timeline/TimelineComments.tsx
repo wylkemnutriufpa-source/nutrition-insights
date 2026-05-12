@@ -1,4 +1,4 @@
-import { useTimelineComments } from "@v1/hooks/useTimeline";
+import { useTimelineComments } from "@/hooks/useTimeline";
 import { useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";

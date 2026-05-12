@@ -8,8 +8,8 @@
  */
 import { Component, ErrorInfo, ReactNode, Suspense } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Skeleton } from "@v1/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ========== Loading Fallback ==========
 function PageLoadingFallback() {

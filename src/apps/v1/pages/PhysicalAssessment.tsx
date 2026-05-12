@@ -1,24 +1,24 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useAppState } from "@v1/hooks/useAppState";
+import { useAppState } from "@/hooks/useAppState";
 
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuth } from "@v1/lib/auth";
-import { supabase } from "@v1/integrations/supabase/client";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { Button } from "@v1/components/ui/button";
-import { Input } from "@v1/components/ui/input";
-import { Label } from "@v1/components/ui/label";
-import { Textarea } from "@v1/components/ui/textarea";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   ArrowLeft, Save, Ruler, Activity, Flame, Target, TrendingDown,
   Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart, GitCompare, Upload
 } from "lucide-react";
-import ConsultationCompare from "@v1/components/patient/ConsultationCompare";
-import DocumentUpload from "@v1/components/common/DocumentUpload";
+import ConsultationCompare from "@/components/patient/ConsultationCompare";
+import DocumentUpload from "@/components/common/DocumentUpload";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Area, AreaChart

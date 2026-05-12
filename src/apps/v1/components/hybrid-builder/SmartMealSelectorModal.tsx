@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
-import { Input } from "@v1/components/ui/input";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Checkbox } from "@v1/components/ui/checkbox";
-import { useMealPlanEditorV2Store, type MealType } from "@v1/stores/mealPlanEditorV2Store";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
 import {
   Search, Flame, Beef, Wheat, Droplets, Loader2, Star,
   TrendingUp, Clock, CalendarDays, CalendarRange, Shuffle, Check,

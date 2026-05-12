@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import DashboardLayout from "@v1/components/layout/DashboardLayout";
-import { useAuth } from "@v1/lib/auth";
-import { useTenant } from "@v1/lib/tenantContext";
-import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
-import { readActiveEditorRoute } from "@v1/lib/mealPlanEditorStore";
-import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function MealPlanEditorV2Entry() {
   const navigate = useNavigate();

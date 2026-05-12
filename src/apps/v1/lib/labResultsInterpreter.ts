@@ -2,7 +2,7 @@
  * Lab Results Interpreter Engine
  * Applies deterministic rules from lab_marker_rules to structured lab data.
  */
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface LabMarkerRule {
   id: string;

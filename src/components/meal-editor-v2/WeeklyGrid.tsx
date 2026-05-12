@@ -6,21 +6,21 @@ import {
   Flame, Beef, Wheat, Droplets, Zap, Bookmark,
   Copy, ClipboardPaste, MoreHorizontal,
 } from "lucide-react";
-import { Button } from "@v1/components/ui/button";
-import { Separator } from "@v1/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Input } from "@v1/components/ui/input";
-import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+import { Input } from "@/components/ui/input";
+import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { MealItemCard } from "./MealItemCard";
 import { DayBlockActions } from "./DayBlockActions";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
 import { MealLibraryModal } from "./MealLibraryModal";
 import { SaveTemplateDialog } from "./SaveTemplateDialog";
-import MacroBalanceBar from "@v1/components/meals/MacroBalanceBar";
-import { FOOD_DATABASE } from "@v1/components/meals/FoodAutocomplete";
-import type { FoodItem } from "@v1/components/meals/FoodAutocomplete";
-import FoodSearchInline from "@v1/components/hybrid-builder/FoodSearchInline";
-import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@v1/lib/mealEditorVisualInsert";
+import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
+import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
+import type { FoodItem } from "@/components/meals/FoodAutocomplete";
+import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
+import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },

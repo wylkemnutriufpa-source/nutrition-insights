@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import InOfficeStepFinalize from '@v1/components/in-office/InOfficeStepFinalize';
+import InOfficeStepFinalize from '@/components/in-office/InOfficeStepFinalize';
 import { BrowserRouter } from 'react-router-dom';
-import { supabase } from '@v1/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Mock Supabase with full chaining support
-vi.mock('@v1/integrations/supabase/client', () => {
+vi.mock('@/integrations/supabase/client', () => {
   const mockQueryBuilder = {
     select: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),

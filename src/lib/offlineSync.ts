@@ -1,4 +1,4 @@
-import { supabase } from "@v1/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 const QUEUE_KEY = "fitjourney_offline_queue";
 const SYNC_STATUS_KEY = "fitjourney_sync_status";

@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { Checkbox } from "@v1/components/ui/checkbox";
-import { cn } from "@v1/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import {
   OrbitalHeader,
   OrbitalNumberInput,
   OrbitalTextInput,
-} from "@v1/components/onboarding/OrbitalAnamnesisInputs";
-import { RadialOrbitalSelector } from "@v1/components/ui/radial-orbital-selector";
+} from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { RadialOrbitalSelector } from "@/components/ui/radial-orbital-selector";
 import type { TrainerAnamnesisData } from "./types";
 import { MODALITIES } from "./types";
 

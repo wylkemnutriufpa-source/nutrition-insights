@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useAuth } from "@v1/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 export type PremiumLevel = "standard" | "premium" | "premium_evolving" | "premium_elite";
 

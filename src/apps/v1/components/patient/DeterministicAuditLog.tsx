@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@v1/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, CheckCircle2, AlertTriangle, Clock, ListChecks, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ScrollArea } from "@v1/components/ui/scroll-area";
-import { Badge } from "@v1/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface AuditLog {
   id: string;
