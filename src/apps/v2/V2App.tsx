@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import "./styles/premium-tokens.css";
-import "./styles/experience-themes.css";
+import "../v1/styles/premium-tokens.css";
+import "../v1/styles/experience-themes.css";
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PrescriptionDashboard } from './modules/FitJourney2/components/PrescriptionDashboard';
 import { PatientDietView } from './modules/FitJourney2/components/PatientDietView';
