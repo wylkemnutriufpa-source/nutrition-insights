@@ -14,6 +14,11 @@ export interface Food {
   carbs_g?: number; // Keep for backward compatibility
   fat: number;
   fat_g?: number; // Keep for backward compatibility
+  // V3 - Anti-Loop Metrics (Standard 100g base)
+  kcal_100g?: number;
+  protein_100g?: number;
+  carb_100g?: number;
+  fat_100g?: number;
   portionValue: number;
   portionUnitLabel: string;
   portionUnit: string; // Keep for backward compatibility

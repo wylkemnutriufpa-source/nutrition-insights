@@ -624,7 +624,7 @@ const EditorV3Page = () => {
       }
     };
     loadSmartSuggestions();
-  }, [selectedItem]);
+  }, [selectedItem, selectedItem?.item.quantity, selectedItem?.item.instanceId, patientContext]);
 
   useEffect(() => {
     const loadAllData = async () => {
