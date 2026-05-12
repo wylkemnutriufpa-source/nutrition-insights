@@ -65,6 +65,9 @@ import {
 } from "../_shared/meal-description.ts";
 import { scaleRecipeByMacros, type RecipeIngredient } from "../_shared/recipe-scaling-engine.ts";
 import { ClinicalEngine } from "../_shared/clinical-engine.ts";
+import { reconcileMeal as reconcileMealV2, type MealItem as MealItemV2 } from "../_shared/clinical-engine-v2.ts";
+import { runShadowAudit } from "../_shared/shadow-auditor.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://fitjourney.com.br", // Reforçado para produção
