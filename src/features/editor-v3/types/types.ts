@@ -38,10 +38,14 @@ export interface Food {
 
 export interface MealItem extends Food {
   instanceId: string;
-  quantity: number; // Quantidade de exibição (ex: 6 colheres, 2 unidades)
-  clinical_mass_g?: number; // Massa real em gramas (Fonte da Verdade)
+  quantity: number; // display_quantity: UI only (e.g., 6 spoons, 2 units)
+  clinical_mass_g: number; // clinical_mass_g: SINGLE SOURCE OF TRUTH for math
+  unit_count?: number; // Physical count of units
+  display_unit?: string; // UI unit label
+  blockId?: string; // Weekly block reference (governance)
+  manual_override?: boolean; // If true, ignore weekly block propagation
   selectedUnit?: string;
-  substitutions: Food[]; // Definido como obrigatório para evitar null/undefined
+  substitutions: Food[];
   description?: string;
   instructions?: string;
   ingredients?: any[];

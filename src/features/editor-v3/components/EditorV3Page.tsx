@@ -168,6 +168,8 @@ const EditorV3Page = () => {
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
   
   const [selectedItemState, setSelectedItemState] = useState<{ mealId: string, instanceId: string } | null>(null);
+  const [localDraft, setLocalDraft] = useState<MealItem | null>(null);
+  const [isModalDirty, setIsModalDirty] = useState(false);
   
   const selectedItem = useMemo(() => {
     if (!selectedItemState) return null;
@@ -178,29 +180,34 @@ const EditorV3Page = () => {
     return { mealId: selectedItemState.mealId, item };
   }, [selectedItemState, meals]);
 
-  const setSelectedItem = (data: { mealId: string, item: MealItem } | null) => {
-    if (!data) {
-      setSelectedItemState(null);
-    } else {
-      setSelectedItemState({ mealId: data.mealId, instanceId: data.item.instanceId });
+  const handleOpenModal = (data: { mealId: string, item: MealItem }) => {
+    setSelectedItemState({ mealId: data.mealId, instanceId: data.item.instanceId });
+    setLocalDraft(JSON.parse(JSON.stringify(data.item)));
+    setIsModalDirty(false);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedItemState(null);
+    setLocalDraft(null);
+    setIsModalDirty(false);
+  };
+
+  const handleCommitModal = async () => {
+    if (localDraft && selectedItemState) {
+      await updateMealItem(selectedItemState.mealId, selectedItemState.instanceId, localDraft);
+      toast.success('Alterações salvas com sucesso!');
+      handleCloseModal();
     }
   };
-  const [substitutionSearch, setSubstitutionSearch] = useState('');
-  const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
-  const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
-  const [swapSearch, setSwapSearch] = useState('');
-  const [swapResults, setSwapResults] = useState<Food[]>([]);
-  const [isSearchingSwap, setIsSearchingSwap] = useState(false);
-  const [smartSubstitutions, setSmartSubstitutions] = useState<Food[]>([]);
-  const [isLoadingSmartSubs, setIsLoadingSmartSubs] = useState(false);
-  const [replacementPending, setReplacementPending] = useState<{
-    current: MealItem,
-    target: Food,
-    mealId: string
-  } | null>(null);
-  const [showAnamnesisHandshake, setShowAnamnesisHandshake] = useState(false);
-  const [pendingAnamnesisData, setPendingAnamnesisData] = useState<any>(null);
-  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+
+  const updateLocalDraft = (updates: Partial<MealItem>) => {
+    setLocalDraft(prev => {
+      if (!prev) return null;
+      setIsModalDirty(true);
+      return { ...prev, ...updates };
+    });
+  };
+
 
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);

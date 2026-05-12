@@ -65,8 +65,8 @@ interface EditorState {
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
   removeFood: (mealId: string, instanceId: string) => Promise<void>;
 
-  updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
-  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => Promise<void>;
+  updateFoodQuantity: (mealId: string, instanceId: string, quantity: number, clinical_mass_g?: number) => void;
+  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>, skipWeeklySync?: boolean) => Promise<void>;
 
   generatePlan: (goal: string, baseCalories: number, availableFoods: Food[], replaceExisting?: boolean) => void;
   generateMeal: (mealId: string, goal: string, availableFoods: Food[], baseCalories?: number) => void;

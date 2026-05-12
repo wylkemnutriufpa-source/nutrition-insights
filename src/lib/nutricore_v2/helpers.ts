@@ -111,44 +111,32 @@ const resolveMacroGrams = (item: any, quantity: number) => {
 };
 
 export const calculateItemMacros = (item: any, quantity: number) => {
-  // 🛡️ BLINDAGEM V3: Priorizar valores por 100g e reparar quantidades antigas corrompidas
-  const kcal100 = item.kcal_100g ?? item.calories_100g;
-  const protein100 = item.protein_100g ?? item.protein_g;
-  const carbs100 = item.carb_100g ?? item.carbs_g;
-  const fat100 = item.fat_100g ?? item.fat_g;
-
-  let factor = 0;
+  // 🛡️ BORDER GOVERNANCE: Macros MUST always derive from clinical_mass_g if available
+  // quantity passed here is display_quantity, but we prioritize internal state
+  const grams = item.clinical_mass_g ?? resolveMacroGrams(item, quantity);
   
-  if (kcal100 !== undefined || protein100 !== undefined) {
-    // Temos base de 100g. Calculamos o total de gramas primeiro.
-    const totalGrams = resolveMacroGrams(item, quantity);
-    factor = totalGrams / 100;
-    
-    const result = {
-      kcal: Math.round((kcal100 || 0) * factor * 10) / 10,
-      protein: Math.round((protein100 || 0) * factor * 10) / 10,
-      carbs: Math.round((carbs100 || 0) * factor * 10) / 10,
-      fat: Math.round((fat100 || 0) * factor * 10) / 10
-    };
+  const kcal100 = Number(item.kcal_100g ?? item.calories_100g ?? 0);
+  const protein100 = Number(item.protein_100g ?? item.protein_g ?? 0);
+  const carbs100 = Number(item.carb_100g ?? item.carbs_g ?? 0);
+  const fat100 = Number(item.fat_100g ?? item.fat_g ?? 0);
 
-    // 🛡️ RECOVERY: Se o resultado for 0 mas houver quantidade e base, algo falhou no totalGrams
-    if (result.kcal === 0 && quantity > 0 && (kcal100 > 0)) {
-      result.kcal = Math.round(kcal100 * (quantity / 100) * 10) / 10;
-      result.protein = Math.round((protein100 || 0) * (quantity / 100) * 10) / 10;
-      result.carbs = Math.round((carbs100 || 0) * (quantity / 100) * 10) / 10;
-      result.fat = Math.round((fat100 || 0) * (quantity / 100) * 10) / 10;
-    }
+  const factor = grams / 100;
+  
+  const result = {
+    kcal: Math.round(kcal100 * factor * 10) / 10,
+    protein: Math.round(protein100 * factor * 10) / 10,
+    carbs: Math.round(carbs100 * factor * 10) / 10,
+    fat: Math.round(fat100 * factor * 10) / 10
+  };
 
-    // 🛑 EMERGENCY BRAKE: Proteção contra calorias absurdas (Bug de Multiplicação)
-    if (result.kcal > 1500 && factor < 10) {
-      console.error('[V3-CRITICAL] Absurd calories detected for item:', item.name, result.kcal);
-      const repairedKcal = (kcal100 || 0); 
-      if (repairedKcal < 1000) result.kcal = repairedKcal;
-      else result.kcal = 500;
-    }
-    
-    return result;
+  // 🛑 ANTI-EXPLOSION: Absolute sanity check
+  if (result.kcal > 3000) {
+     console.error('[V3-MOTOR] Clinical Explosion Detected:', item.name, grams, 'g');
+     return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
   }
+
+  return result;
+};
 
   // Fallback para valores por porção (Legado ou Custom)
   const kcalPortion = item.kcal ?? item.calories ?? 0;
