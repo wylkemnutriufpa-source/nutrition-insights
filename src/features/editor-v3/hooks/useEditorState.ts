@@ -712,13 +712,21 @@ export const useEditorState = create<EditorState>()(
                   ...m,
                   items: m.items.map((i) => {
                     if (i.instanceId === instanceId) {
-                      // 🛡️ Ao alterar a quantidade manualmente, usamos a base 100g se disponível
-                      // para evitar o erro de escala progressiva (feedback loop).
-                      const newMacros = calculateItemMacros(i, quantity);
+                      // 🛡️ BLINDAGEM: Se a quantidade for > 50 e o tipo for colher, 
+                      // é quase certo que o usuário está digitando gramas diretamente no editor.
+                      // Forçamos o tipo para 'gram' para evitar a explosão matemática (130 colheres).
+                      const isLikelyGrams = (i.measurementType === 'spoon' && quantity >= 50);
+                      const correctedType = isLikelyGrams ? 'gram' : i.measurementType;
+                      const correctedLabel = isLikelyGrams ? 'Gramas' : i.portionUnitLabel;
+
+                      const tempItem = { ...i, measurementType: correctedType, quantity };
+                      const newMacros = calculateItemMacros(tempItem, quantity);
                       
                       return { 
                         ...i, 
                         quantity,
+                        measurementType: correctedType,
+                        portionUnitLabel: correctedLabel,
                         kcal: newMacros.kcal,
                         calories: newMacros.kcal,
                         protein: newMacros.protein,
