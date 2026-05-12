@@ -118,17 +118,20 @@ export const calculateItemMacros = (item: any, quantity: number) => {
       fat: Math.round((fat100 || 0) * factor * 10) / 10
     };
 
+    // 🛡️ RECOVERY: Se o resultado for 0 mas houver quantidade e base, algo falhou no totalGrams
+    if (result.kcal === 0 && quantity > 0 && (kcal100 > 0)) {
+      result.kcal = Math.round(kcal100 * (quantity / 100) * 10) / 10;
+      result.protein = Math.round((protein100 || 0) * (quantity / 100) * 10) / 10;
+      result.carbs = Math.round((carbs100 || 0) * (quantity / 100) * 10) / 10;
+      result.fat = Math.round((fat100 || 0) * (quantity / 100) * 10) / 10;
+    }
+
     // 🛑 EMERGENCY BRAKE: Proteção contra calorias absurdas (Bug de Multiplicação)
-    // Se o item tiver mais de 1500 kcal e a quantidade não for massiva (> 1kg), algo está errado.
     if (result.kcal > 1500 && factor < 10) {
       console.error('[V3-CRITICAL] Absurd calories detected for item:', item.name, result.kcal);
-      // Tentamos reparar assumindo que kcal100 na verdade era kcal total
       const repairedKcal = (kcal100 || 0); 
-      if (repairedKcal < 1000) {
-        result.kcal = repairedKcal;
-      } else {
-        result.kcal = 500; // Fallback seguro
-      }
+      if (repairedKcal < 1000) result.kcal = repairedKcal;
+      else result.kcal = 500;
     }
     
     return result;
