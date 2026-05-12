@@ -223,6 +223,7 @@ export function MealSmartEditorModal({
     
     try {
       const toastId = "meal-save-toast";
+      // Final persist call (no skipPersist)
       updateItem(itemId, {
         description: finalDescription,
         calories_target: adjustedMacros.calories,
@@ -240,7 +241,7 @@ export function MealSmartEditorModal({
           fat_base: fatBase
         }
       } as any);
-      toast.success("Refeição atualizada com sucesso", { id: toastId });
+      toast.success("Refeição persistida com sucesso", { id: toastId });
       onOpenChange(false);
     } catch (error) {
       toast.error("Erro ao salvar alterações. Tente novamente.", { id: "meal-save-toast" });
