@@ -1,1 +1,0 @@
-export default function IntelligenceModal({ open, onOpenChange }: any) { return null; }

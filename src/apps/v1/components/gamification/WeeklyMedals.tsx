@@ -1,1 +1,0 @@
-export default function WeeklyMedals({ userId }: any) { return null; }
