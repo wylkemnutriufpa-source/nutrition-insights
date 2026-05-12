@@ -264,15 +264,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isPatient = roles?.includes("patient") ?? false;
   const isLojista = (roles as string[] | null)?.includes("lojista") ?? false;
 
-  const experienceRole: "nutritionist" | "patient" = (isNutritionist || isPersonal || isAdmin) ? "nutritionist" : "patient";
-  const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode === "pro" || profile?.experience_mode === "advanced") 
-    ? profile.experience_mode as any
-    : "basic";
-
-  useEffect(() => {
-    console.log(`[DEBUG] useAuth experienceMode calculated: ${experienceMode} | profileMode: ${profile?.experience_mode}`);
-  }, [experienceMode, profile?.experience_mode]);
-
   return (
     <AuthContext.Provider
       value={{
@@ -293,8 +284,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         checkSubscription,
         setMode,
         error,
-        experienceMode,
-        experienceRole,
         tenantId,
         tenant,
       }}
@@ -325,8 +314,6 @@ export function useAuth() {
       checkSubscription: async () => {},
       setMode: async (m: string) => {},
       error: null,
-      experienceMode: "basic" as const,
-      experienceRole: "nutritionist" as const,
       tenantId: null,
       tenant: null,
     };
