@@ -577,7 +577,7 @@ export function MealSmartEditorModal({
                           variant="outline" 
                           size="sm" 
                           className="h-9 text-[10px] rounded-xl"
-                          onClick={() => setPortionFactor(prev => Math.max(0.1, Math.round((prev - 0.1) * 10) / 10))}
+                          onClick={() => handlePortionChange(portionFactor - 0.1)}
                         >
                           - 10%
                         </Button>
