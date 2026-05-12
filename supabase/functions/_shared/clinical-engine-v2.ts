@@ -115,16 +115,17 @@ export function reconcileMeal(
 
   // 3. ADJUST CARBS (PRIMARY PIVOT)
   const carbItems = result.filter(i => i.macro_role === 'carb');
-  if (carbItems.length > 0) {
-    const neededCarbs = Math.max(0, targets.carbs - current.carbs);
-    carbItems.forEach(item => {
-      const density = item.carbs_per_100g / 100;
-      if (density > 0) {
-        const share = neededCarbs / carbItems.length;
-        item.grams = Math.round(share / density);
-      }
-    });
-  }
+  carbItems.forEach(item => {
+    const density = item.carbs_per_100g / 100;
+    if (density > 0) {
+      const carbsFromOthers = current.carbs - (item.grams * density);
+      const neededCarbs = Math.max(0, targets.carbs - carbsFromOthers);
+      const share = neededCarbs / carbItems.length;
+      item.grams = Math.round(share / density);
+      
+      current = calculateTotals(result);
+    }
+  });
 
   return {
     items: result,
