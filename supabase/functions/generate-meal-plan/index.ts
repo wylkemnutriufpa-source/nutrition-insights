@@ -4096,19 +4096,9 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       });
     }
 
-    const itemsToInsert = planItems.map((item: any) => {
-      const { 
-        _image_url, _source, _category_used, _scale_factor, _template_id, 
-        _recipe_id, _recipe_name, meal_time, is_primary, ...rest 
-      } = item;
-      return { 
-        ...rest, 
-        meal_plan_id: finalMealPlanId, 
-        image_url: _image_url || rest.image_url || null,
-        is_primary: is_primary ?? true,
-        day_of_week: 0
-      };
-    });
+    const itemsToInsert = planItems.map((item: any) =>
+      sanitizeMealPlanItem(item, finalMealPlanId, { day_of_week: 0 })
+    );
 
     // ──── CONTRACT GUARD: plan_generation ────
     // Bloqueia retorno de plano vazio, sem título, com plan_type misturado ou macros zeradas.
