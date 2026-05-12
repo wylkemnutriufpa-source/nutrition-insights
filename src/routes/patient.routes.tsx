@@ -19,6 +19,7 @@ const PersonalDashboard = lazy(() => import("../pages/PersonalDashboard"));
 const BodyAnalysis = lazy(() => import("../pages/BodyAnalysis"));
 const ClientDashboard = lazy(() => import("../pages/ClientDashboard"));
 const PhysicalAssessment = lazy(() => import("../pages/PhysicalAssessment"));
+const Patients = lazy(() => import("../pages/Patients"));
 
 export const patientRoutes = [
   <Route key="patient-register" path="/cadastro" element={<Suspense fallback={<PageLoader />}><PatientRegister /></Suspense>} />,
@@ -29,7 +30,7 @@ export const patientRoutes = [
   <Route key="client-checklist" path="/client/checklist" element={<Navigate to="/checklist" replace />} />,
   <Route key="client-achievements" path="/client/achievements" element={<Navigate to="/achievements" replace />} />,
   <Route key="physical-assessment" path="/physical-assessment" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PhysicalAssessment /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
-  <Route key="patients" path="/patients" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><lazy(() => import("../pages/Patients")) /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
+  <Route key="patients" path="/patients" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Patients /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="patient-detail" path="/patients/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="journey" path="/journey" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Journey /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="achievements" path="/achievements" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Achievements /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
