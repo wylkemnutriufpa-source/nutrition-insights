@@ -41,7 +41,7 @@ const FORCE_RESET_KEY = "fitjourney_force_reset_v1";
 const SWIPE_THRESHOLD = 50;
 
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-import { BrainLoaderCard } from "@/components/common/PageLoader";
+import { PageLoader } from "@/components/common/PageLoader";
 
 export default function OnboardingPaciente() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
@@ -143,7 +143,7 @@ export default function OnboardingPaciente() {
 
   const slide = SLIDES[idx];
 
-  if (journeyLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><BrainLoaderCard text="Preparando sua jornada..." /></div>;
+  if (journeyLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><PageLoader text="Preparando sua jornada..." /></div>;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black overflow-hidden select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>

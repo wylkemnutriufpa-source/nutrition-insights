@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { MessageCircle, Wifi, WifiOff, Send, Loader2, CheckCircle2, XCircle, Clock, Phone, Shield, Zap, AlertTriangle } from "lucide-react";
-import { BrainLoaderInline } from "@/components/common/PageLoader";
+import { PageLoader } from "@/components/common/PageLoader";
 import {
   getIntegration,
   validateAndSaveIntegration,
@@ -193,7 +193,7 @@ export default function WhatsAppSettings() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <BrainLoaderInline text="Carregando configurações..." />
+          <PageLoader text="Carregando configurações..." />
         </div>
       </DashboardLayout>
     );

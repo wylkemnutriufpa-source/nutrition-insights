@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
-import { BrainLoaderCard } from "@/components/common/PageLoader";
+import { PageLoader } from "@/components/common/PageLoader";
 import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
 import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
@@ -209,7 +209,7 @@ export default function ClientDashboard() {
     return (
       <DashboardLayout>
         <div className="p-6">
-          <BrainLoaderCard text="Carregando seu painel clínico…" />
+          <PageLoader text="Carregando seu painel clínico…" />
         </div>
       </DashboardLayout>
     );

@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { BrainLoaderCard } from "@/components/common/PageLoader";
+import { PageLoader } from "@/components/common/PageLoader";
 import HealthScoreRing from "@/components/dashboard/HealthScoreRing";
 import {
   BarChart3, Users, AlertTriangle, TrendingDown, Activity,
@@ -180,7 +180,7 @@ export default function ProfessionalClinicalAnalytics() {
   if (loading) {
     return (
       <DashboardLayout>
-        <BrainLoaderCard text="Calculando métricas clínicas..." />
+        <PageLoader text="Calculando métricas clínicas..." />
       </DashboardLayout>
     );
   }

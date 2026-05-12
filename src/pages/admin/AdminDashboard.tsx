@@ -38,7 +38,7 @@ import { HealthStatusIndicator } from "@/components/observability/HealthStatusIn
 import { StabilityZone } from "@/components/common/StabilityZone";
 import { SafeRender } from "@/components/common/SafeRender";
 import { usePageState } from "@/hooks/usePageState";
-import { BrainLoaderCard } from "@/components/common/PageLoader";
+import { PageLoader } from "@/components/common/PageLoader";
 import { AlertCircle } from "lucide-react";
 
 // ─── Types ───
@@ -929,7 +929,7 @@ export default function AdminDashboard() {
     return (
       <DashboardLayout>
         <div className="p-12">
-          <BrainLoaderCard text="Preparando painel administrativo..." />
+          <PageLoader text="Preparando painel administrativo..." />
         </div>
       </DashboardLayout>
     );
