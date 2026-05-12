@@ -1,22 +1,36 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { ReactNode } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Activity, LayoutDashboard, Users, TrendingUp } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import {
+  LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
+  Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings
+} from "lucide-react";
+import { useState } from "react";
+
+const nutritionistLinks = [
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/patients", icon: Users, label: "Pacientes" },
+  { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
+  { to: "/settings", icon: Settings, label: "Ajustes" },
+];
+
+const patientLinks = [
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },
+  { to: "/achievements", icon: Trophy, label: "Conquistas" },
+  { to: "/challenges", icon: Target, label: "Desafios" },
+  { to: "/settings", icon: Settings, label: "Ajustes" },
+];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, signOut, profile, isNutritionist, isPersonal, isAdmin } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
-  const [dark, setDark] = useState(document.documentElement.classList.contains("dark"));
+  const { profile, isNutritionist, signOut } = useAuth();
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const { isProfessionalContext } = useWorkspaceContext();
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  const links = isNutritionist ? nutritionistLinks : patientLinks;
 
   const toggleDark = () => {
     const isDark = document.documentElement.classList.toggle("dark");
@@ -24,123 +38,93 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   };
 
-  const initials = profile?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "??";
-  const profileName = profile?.full_name || user?.email?.split("@")[0] || "Usuário";
-
-  const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
-  const effectiveProRole = isProRole && isProfessionalContext;
-
-  const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => (
-    <div className="flex h-full flex-col bg-card">
-      <div className="p-4 flex items-center justify-between border-b border-border/50">
-        <FitJourneyLogo collapsed={collapsed} size="sm" />
-        {!isMobile && (
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-          >
-            <ChevronRight className={`w-4 h-4 transition-transform ${collapsed ? "" : "rotate-180"}`} />
-          </button>
-        )}
-      </div>
-
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {effectiveProRole ? (
-          <>
-            <Link to="/v1/dashboard" onClick={onLinkClick} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === "/v1/dashboard" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-              <LayoutDashboard className="w-5 h-5" />
-              {!collapsed && <span className="text-sm">Dashboard</span>}
-            </Link>
-            <Link to="/v1/patients" onClick={onLinkClick} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === "/v1/patients" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-              <Users className="w-5 h-5" />
-              {!collapsed && <span className="text-sm">Pacientes</span>}
-            </Link>
-            <Link to="/v1/meal-plans" onClick={onLinkClick} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === "/v1/meal-plans" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-              <ClipboardCheck className="w-5 h-5" />
-              {!collapsed && <span className="text-sm">Planos</span>}
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link to="/v1/client/dashboard" onClick={onLinkClick} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === "/v1/client/dashboard" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-              <LayoutDashboard className="w-5 h-5" />
-              {!collapsed && <span className="text-sm">Início</span>}
-            </Link>
-            <Link to="/v1/patient-meal-plan" onClick={onLinkClick} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === "/v1/patient-meal-plan" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-              <Activity className="w-5 h-5" />
-              {!collapsed && <span className="text-sm">Minha Dieta</span>}
-            </Link>
-            <Link to="/v1/checkin" onClick={onLinkClick} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === "/v1/checkin" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-              <TrendingUp className="w-5 h-5" />
-              {!collapsed && <span className="text-sm">Evolução</span>}
-            </Link>
-          </>
-        )}
-      </nav>
-
-      <div className="p-3 border-t border-border/50 space-y-1">
-        <Link to="/v1/settings" onClick={onLinkClick} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
-          <Settings className="w-5 h-5" />
-          {!collapsed && <span className="text-sm">Configurações</span>}
-        </Link>
-        <button onClick={toggleDark} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full text-left">
-          {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          {!collapsed && <span className="text-sm">{dark ? "Modo Claro" : "Modo Escuro"}</span>}
-        </button>
-        <div className="flex items-center gap-3 px-3 py-3 mt-2">
-          <Avatar className="w-8 h-8 border border-border">
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
-          </Avatar>
-          {!collapsed && <span className="text-sm font-medium truncate">{profileName}</span>}
-        </div>
-        <button onClick={() => signOut()} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full text-left">
-          <LogOut className="w-5 h-5" />
-          {!collapsed && <span className="text-sm">Sair</span>}
-        </button>
-      </div>
-    </div>
-  );
+  const initials = (profile?.full_name || "U")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Desktop Sidebar */}
-      {!isMobile && (
-        <aside className={`${collapsed ? "w-20" : "w-64"} border-r border-border/50 hidden md:block transition-all duration-300`}>
-          <SidebarContent />
-        </aside>
-      )}
+    <div className="min-h-screen flex bg-background">
+      {/* Sidebar */}
+      <aside className="w-64 border-r bg-card flex flex-col">
+        <div className="p-6">
+          <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold text-primary">
+            <Leaf className="w-6 h-6" />
+            FitJourney
+          </Link>
+        </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile Header */}
-        {isMobile && (
-          <header className="h-16 border-b border-border/50 bg-card flex items-center justify-between px-4 shrink-0">
-            <FitJourneyLogo size="sm" />
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="w-6 h-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-72">
-                <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
-                <SidebarContent />
-              </SheetContent>
-            </Sheet>
-          </header>
-        )}
+        <nav className="flex-1 px-4 space-y-1">
+          {links.map((link) => {
+            const Icon = link.icon;
+            const active = location.pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-        {/* Content Scroll Area */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            key={location.pathname}
+        <div className="p-4 border-t space-y-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3"
+            onClick={toggleDark}
           >
-            {children}
-          </motion.div>
-        </main>
-      </div>
+            {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {dark ? "Modo Claro" : "Modo Escuro"}
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50"
+            onClick={signOut}
+          >
+            <LogOut className="w-5 h-5" />
+            Sair
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto">
+        <header className="h-16 border-b bg-card/50 backdrop-blur-sm flex items-center justify-between px-8 sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <Avatar>
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium">{profile?.full_name || "Bem-vindo"}</p>
+              <p className="text-xs text-muted-foreground">
+                {isNutritionist ? "Nutricionista" : "Paciente"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Pro Plan
+            </Button>
+          </div>
+        </header>
+
+        <div className="p-8 max-w-7xl mx-auto">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
