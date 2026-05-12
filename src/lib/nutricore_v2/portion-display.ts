@@ -60,8 +60,12 @@ export function resolveDisplayGrams(item: PortionLike): number {
 
   const kcal100 = lookupKcal100(item);
   const totalKcal = Number(item.kcal ?? item.calories ?? 0);
-  const inferredGrams = kcal100 > 0 && totalKcal > 0
-    ? Math.round((totalKcal / kcal100) * 100)
+  
+  // 🛡️ ANTI-EXPLOSION: Se as calorias totais forem absurdas, ignoramos para inferência
+  const safeTotalKcal = totalKcal > 3000 ? 0 : totalKcal;
+  
+  const inferredGrams = kcal100 > 0 && safeTotalKcal > 0
+    ? Math.round((safeTotalKcal / kcal100) * 100)
     : 0;
 
   const hasCoherentInference = inferredGrams >= 5 && inferredGrams <= 800;

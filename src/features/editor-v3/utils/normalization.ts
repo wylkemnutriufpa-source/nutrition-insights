@@ -136,8 +136,23 @@ export function normalizeFood(food: any): Food {
     if (clamped !== f.quantity) {
       tracer.trace(`Clinical Guard Clamp Applied: ${name}`, { old: f.quantity, new: clamped });
       f.quantity = clamped;
+      // Se clampamos a quantity, precisamos garantir que o clinical_mass_g também seja saudável
+      if (f.measurementType === 'gram') f.clinical_mass_g = clamped;
     }
   }
+
+  // 🛡️ MACRO SANITIZATION: Garante que os macros estáticos do objeto fiquem limpos
+  const cleanMacros = ClinicalGuard.sanitizeMacros({
+    kcal: f.kcal || 0,
+    protein: f.protein || 0,
+    carbs: f.carbs || 0,
+    fat: f.fat || 0
+  });
+
+  f.kcal = cleanMacros.kcal;
+  f.protein = cleanMacros.protein;
+  f.carbs = cleanMacros.carbs;
+  f.fat = cleanMacros.fat;
 
   return f as Food;
 }

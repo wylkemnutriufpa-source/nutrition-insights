@@ -81,8 +81,8 @@ export function getSubstitutions(
       }
     }
 
-    // Arredondamento para múltiplos de 5g
-    const roundedGrams = Math.round(gramsSub / 5) * 5;
+    // Arredondamento para múltiplos de 5g e Limite de Segurança
+    const roundedGrams = Math.min(800, Math.round(gramsSub / 5) * 5);
     if (roundedGrams <= 5) return null; // Evitar quantidades irrelevantes
     
     // 🏷️ Rótulo de Unidade Inteligente (Humanizado)

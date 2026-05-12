@@ -155,6 +155,23 @@ export async function promoteDraftToMealPlan(
       const groupId = crypto.randomUUID();
       const mealType = mealNameToType(meal.name);
       
+      // 🛡️ FINAL CLINICAL SANITIZATION: Garante que NADA explodido chegue à persistência
+      // Mesmo que o editor esteja dirty, o ClinicalGuard limpa aqui.
+      const rawMacros = {
+        kcal: Number(item.kcal || 0),
+        protein: Number(item.protein || 0),
+        carbs: Number(item.carbs || 0),
+        fat: Number(item.fat || 0)
+      };
+      
+      // Se detectarmos explosão óbvia, usamos o motor para recalcular do zero
+      let cleanMacros = rawMacros;
+      if (rawMacros.kcal > 3000 || rawMacros.protein > 150) {
+        console.warn(`[Promote-Guard] Explosion detected on item ${item.name}. Recalculating...`);
+        const recalculated = calculateItemMacros(item, item.quantity || 1);
+        cleanMacros = recalculated;
+      }
+
       // 2.1) Item Primário
       itemsRows.push({
         meal_plan_id: plan.id,
@@ -162,10 +179,10 @@ export async function promoteDraftToMealPlan(
         meal_type: mealType,
         title: buildItemTitle(item),
         description: buildItemDescription(item),
-        calories_target: Math.round(item.kcal || 0),
-        protein_target: Number((item.protein || 0).toFixed(1)),
-        carbs_target: Number((item.carbs || 0).toFixed(1)),
-        fat_target: Number((item.fat || 0).toFixed(1)),
+        calories_target: Math.round(cleanMacros.kcal || 0),
+        protein_target: Number((cleanMacros.protein || 0).toFixed(1)),
+        carbs_target: Number((cleanMacros.carbs || 0).toFixed(1)),
+        fat_target: Number((cleanMacros.fat || 0).toFixed(1)),
         item_origin: 'manual',
         is_manually_edited: true,
         is_locked: (item as any).locked || false,
