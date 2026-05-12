@@ -11,6 +11,12 @@ export const PrescriptionDashboard = () => {
   const { patients, loading: loadingPatients } = usePatients(profile?.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'patients' | 'audit'>('patients');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredPatients = patients.filter(p => 
+    p.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
 
   const mockMeal = {
     name: "Almoço Teste (Soberano)",
@@ -120,17 +126,24 @@ export const PrescriptionDashboard = () => {
 
           {activeTab === 'patients' ? (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-xl font-black uppercase tracking-tight">Pacientes Recentes</h2>
-                <button className="text-xs font-bold text-green-400 flex items-center gap-1 hover:text-green-300 transition-colors uppercase">
-                  Ver todos <ArrowRight size={14} />
-                </button>
+                <div className="relative w-full md:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input 
+                    type="text"
+                    placeholder="Buscar paciente..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs font-mono focus:border-green-500 outline-none transition-all"
+                  />
+                </div>
               </div>
 
               <div className="bg-slate-900/30 border border-slate-800 rounded-2xl overflow-hidden">
                 {loadingPatients ? (
                   <div className="p-8 text-center text-slate-500 font-mono text-sm">Escaneando base de dados...</div>
-                ) : patients.length === 0 ? (
+                ) : filteredPatients.length === 0 ? (
                   <div className="p-12 text-center space-y-4">
                     <div className="h-12 w-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-600">
                       <Users size={24} />
@@ -145,7 +158,7 @@ export const PrescriptionDashboard = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-800">
-                    {patients.map((patient) => (
+                    {filteredPatients.map((patient) => (
                       <div key={patient.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
                         <div className="flex items-center gap-4">
                           <div className="h-10 w-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 font-bold">
