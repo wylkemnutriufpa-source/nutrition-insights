@@ -742,16 +742,6 @@ export const useEditorState = create<EditorState>()(
                         carbs: newMacros.carbs,
                         fat: newMacros.fat
                       };
-                    }
-                    return i;
-                  }),
-                }
-              : m
-          ),
-          planStatus: 'draft',
-        }));
-        get().recalculateScore();
-      },
 
       updateMealItem: async (mealId, instanceId, updates, skipWeeklySync = false) => {
         const state = get();
