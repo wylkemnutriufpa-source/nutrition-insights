@@ -19,6 +19,7 @@ export interface ShadowAuditResult {
     types: Record<string, any>;
     clinical_impact: string;
     legacy_rules_detected: string[];
+    readiness_status: 'READY_FOR_CUTOVER' | 'SHADOW_STABLE' | 'HIGH_DIVERGENCE' | 'BLOCKED';
   };
   readiness_score: number;
   payload_diff: any;
@@ -31,8 +32,8 @@ export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
   let readiness_score = 100;
   const legacy_rules_detected: string[] = [];
 
-  // 1. Macro Drift Analysis (Tolerance 5%)
-  const TOLERANCE = 0.05;
+  // 1. Macro Drift Analysis (Tolerance 3% - Reduced from 5%)
+  const TOLERANCE = 0.03;
   const metrics = ['calories', 'protein', 'carbs', 'fat'] as const;
 
   metrics.forEach(m => {
@@ -44,14 +45,19 @@ export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
     if (rel > TOLERANCE && delta > 1) {
       divergenceCount++;
       divergence_types.add('macro_drift');
-      readiness_score -= 15;
+      
+      // Penalidade proporcional ao drift
+      const penalty = Math.min(20, Math.round(rel * 100));
+      readiness_score -= penalty;
+      
       if (!diff.macros) diff.macros = {};
       diff.macros[m] = { v1: val1, v2: val2, delta, rel };
       
       // Protein Clamp Violation check
-      if (m === 'protein' && val2 > 200 && val1 < val2) {
+      // Se V1 > 180g e V2 corrigiu para <= 200g (ou 150g), é uma violação do legado detectada e corrigida
+      if (m === 'protein' && val1 > 150 && val2 < val1) {
         divergence_types.add('protein_clamp_violation');
-        readiness_score -= 20;
+        // Not necessarily a penalty for readiness if V2 fixed it, but we track it
       }
     }
   });
@@ -63,39 +69,45 @@ export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
     divergenceCount++;
     divergence_types.add('meal_count_mismatch');
     divergence_types.add('meal_structure_mismatch');
-    readiness_score -= 20;
+    readiness_score -= 25;
     diff.meal_count = { v1: count1, v2: count2 };
   }
 
   // 3. Legacy Rules Detection (Heuristics)
-  // Smart Mode Check
   if (v1.metadata?.smart_mode || JSON.stringify(v1).includes('smart_mode')) {
     legacy_rules_detected.push('rule_smart_mode');
     divergence_types.add('rule_smart_mode');
+    readiness_score -= 5;
   }
   
-  // Marmita/Freeze Check
   if (JSON.stringify(v1).toLowerCase().includes('congelado') || JSON.stringify(v1).toLowerCase().includes('marmita')) {
     legacy_rules_detected.push('rule_marmita_freeze');
     divergence_types.add('rule_marmita_freeze');
+    readiness_score -= 5;
   }
 
-  // 4. Clinical Impact Assessment
+  // 4. Score-based Status
+  readiness_score = Math.max(0, readiness_score);
+  let readiness_status: ShadowAuditResult['analysis']['readiness_status'] = 'BLOCKED';
+  
+  if (readiness_score >= 95) readiness_status = 'READY_FOR_CUTOVER';
+  else if (readiness_score >= 85) readiness_status = 'SHADOW_STABLE';
+  else if (readiness_score >= 70) readiness_status = 'HIGH_DIVERGENCE';
+
+  // 5. Clinical Impact Assessment
   let severity: 'info' | 'warn' | 'critical' = 'info';
   let clinical_impact = "Insignificante";
 
   if (divergence_types.has('protein_clamp_violation')) {
     severity = 'critical';
-    clinical_impact = "ALTO RISCO: Proteína V2 excede limites ou diverge agressivamente do legado";
-  } else if (divergence_types.has('macro_drift') && readiness_score < 70) {
+    clinical_impact = "DIVERGÊNCIA CRÍTICA: Legado ultrapassa limites clínicos; V2 aplicando soberania.";
+  } else if (readiness_score < 70) {
     severity = 'warn';
-    clinical_impact = "Moderado: Desvio calórico fora da margem de segurança";
+    clinical_impact = "Moderado: Desvio estrutural ou calórico elevado";
   } else if (divergenceCount > 0) {
     severity = 'info';
-    clinical_impact = "Baixo: Divergências estruturais sem risco clínico imediato";
+    clinical_impact = "Baixo: Pequenas variações de arredondamento ou estrutura";
   }
-
-  readiness_score = Math.max(0, readiness_score);
 
   return {
     compatible: divergenceCount === 0,
@@ -105,14 +117,16 @@ export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
     analysis: {
       types: diff,
       clinical_impact,
-      legacy_rules_detected
+      legacy_rules_detected,
+      readiness_status
     },
     readiness_score,
     payload_diff: {
       divergences: Array.from(divergence_types),
       diff,
       v1_summary: v1.totals,
-      v2_summary: v2.totals
+      v2_summary: v2.totals,
+      readiness_status
     }
   };
 }
