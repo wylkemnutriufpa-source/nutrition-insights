@@ -791,65 +791,8 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      updateMealItem: async (mealId, instanceId, updates, skipWeeklySync = false) => {
-        const state = get();
-        const meal = state.meals.find(m => m.id === mealId);
-        const item = meal?.items.find(i => i.instanceId === instanceId);
+      // updateMealItem is already defined earlier
 
-        
-        if (!item) return;
-
-        const updatedMeals = state.meals.map((m) => {
-          if (m.id === mealId) {
-            return {
-              ...m,
-              items: m.items.map((i) => {
-                if (i.instanceId === instanceId) {
-                  const merged = { ...i, ...updates };
-                  const newMacros = calculateItemMacros(merged, merged.quantity);
-                  return {
-                    ...merged,
-                    kcal: newMacros.kcal,
-                    protein: newMacros.protein,
-                    carbs: newMacros.carbs,
-                    fat: newMacros.fat
-                  };
-                }
-                return i;
-              })
-            };
-          }
-          
-          if (!skipWeeklySync && item.blockId && !updates.manual_override) {
-            const hasSameBlock = m.items.some(i => i.blockId === item.blockId && !i.manual_override);
-            if (hasSameBlock) {
-              return {
-                ...m,
-                items: m.items.map((i) => {
-                  if (i.blockId === item.blockId && !i.manual_override) {
-                    const { instanceId: _, id: __, ...propagatedUpdates } = updates as any;
-                    const merged = { ...i, ...propagatedUpdates };
-                    const newMacros = calculateItemMacros(merged, merged.quantity);
-                    return {
-                      ...merged,
-                      kcal: newMacros.kcal,
-                      protein: newMacros.protein,
-                      carbs: newMacros.carbs,
-                      fat: newMacros.fat
-                    };
-                  }
-                  return i;
-                })
-              };
-            }
-          }
-          
-          return m;
-        });
-
-        set({ meals: updatedMeals, planStatus: 'draft' });
-        get().recalculateScore();
-      },
 
       generatePlan: async (goal, baseCalories, availableFoods, replaceExisting = false) => {
         let currentMeals = get().meals;
