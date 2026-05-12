@@ -1,71 +1,56 @@
---- ROUTE AUDIT ---
-## Current Routes (App.tsx)
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-            <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-            <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
-            <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-            <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
-            <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-## Historical Routes (569c57fd9)
-              <Route path="/landing" element={<Landing />} />
-              <Route path="/biquini-branco" element={<BiquiniBrancoLanding />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-              <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-              <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-              <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
-              <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
-              <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
-              <Route path="/supplements" element={<ProtectedRoute><Supplements /></ProtectedRoute>} />
-              <Route path="/patients" element={<NutritionistRoute><Patients /></NutritionistRoute>} />
-              <Route path="/patients/:patientId" element={<NutritionistRoute><PatientDetail /></NutritionistRoute>} />
-              <Route path="/protocols" element={<NutritionistRoute><Protocols /></NutritionistRoute>} />
-              <Route path="/programs" element={<NutritionistRoute><Programs /></NutritionistRoute>} />
-              <Route path="/programs/:programId" element={<NutritionistRoute><ProgramDetail /></NutritionistRoute>} />
-              <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><BiquiniBrancoDetail /></NutritionistRoute>} />
-              <Route path="/meal-plans" element={<NutritionistRoute><MealPlans /></NutritionistRoute>} />
-              <Route path="/meal-plans/:id" element={<NutritionistRoute><MealPlanEditor /></NutritionistRoute>} />
-              <Route path="/diet-templates" element={<NutritionistRoute><DietTemplates /></NutritionistRoute>} />
-              <Route path="/physical-assessment" element={<NutritionistRoute><PhysicalAssessment /></NutritionistRoute>} />
-              <Route path="/body-analysis" element={<NutritionistRoute><BodyAnalysis /></NutritionistRoute>} />
-              <Route path="/branding" element={<NutritionistRoute><Branding /></NutritionistRoute>} />
-              <Route path="/reports" element={<NutritionistRoute><Reports /></NutritionistRoute>} />
-              <Route path="/weekly-report" element={<NutritionistRoute><WeeklyReport /></NutritionistRoute>} />
-              <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
-              <Route path="/global-tips" element={<NutritionistRoute><GlobalTips /></NutritionistRoute>} />
-              <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
-              <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
-              <Route path="/client/dashboard" element={<PatientRoute><ClientDashboard /></PatientRoute>} />
-              <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-              <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
-              <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
-              <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
-              <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
-              <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
-              <Route path="/my-diet" element={<ProtectedRoute><PatientMealPlan /></ProtectedRoute>} />
-              <Route path="/autobot" element={<ProtectedRoute><AutoBot /></ProtectedRoute>} />
-              <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
-              <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-              <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
-              <Route path="/water-calculator" element={<ProtectedRoute><WaterCalculator /></ProtectedRoute>} />
-              <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
-              <Route path="/checkin" element={<ProtectedRoute><Checkin /></ProtectedRoute>} />
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/features" element={<AdminRoute><AdminFeatureControl /></AdminRoute>} />
-              <Route path="/admin/testimonials" element={<AdminRoute><AdminTestimonials /></AdminRoute>} />
-              <Route path="/admin/site-editor" element={<AdminRoute><AdminSiteEditor /></AdminRoute>} />
-              <Route path="/admin/resources" element={<AdminRoute><AdminResourceCenter /></AdminRoute>} />
-              <Route path="/admin/import-patients" element={<NutritionistRoute><ImportPatients /></NutritionistRoute>} />
-              <Route path="/admin/profissionais" element={<AdminRoute><AdminProfessionals /></AdminRoute>} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="*" element={<NotFound />} />
+# ROUTE_AUDIT.md — Auditoria Forense de Rotas
+
+## Estado Atual vs Original (FitJourney V1)
+
+| Rota Original (569c57fd9) | Rota Atual | Status | Ação |
+|---------------------------|------------|--------|------|
+| /landing | /landing | ✅ Mantida | - |
+| /auth | /auth | ✅ Mantida | - |
+| /reset-password | /reset-password | ✅ Mantida | - |
+| / | / | ✅ Mantida | - |
+| /chat | /chat | 🔴 Ausente | Restaurar |
+| /appointments | /appointments | 🔴 Ausente | Restaurar |
+| /patients | /patients | ✅ Mantida | - |
+| /patient/:id | /patient/:id | 🔴 Ausente | Restaurar |
+| /checkin-panel | /checkin-panel | 🔴 Ausente | Restaurar |
+| /automation | /automation | 🔴 Ausente | Restaurar |
+| /meal-plans | /meal-plans | ✅ Mantida | - |
+| /meal-plans/:id | /meal-plans/:id | 🔴 Ausente | Restaurar |
+| /diet-templates | /diet-templates | 🔴 Ausente | Restaurar |
+| /recipes | /recipes | 🔴 Ausente | Restaurar |
+| /food-database | /food-database | 🔴 Ausente | Restaurar |
+| /reports | /reports | 🔴 Ausente | Restaurar |
+| /weekly-report | /weekly-report | 🔴 Ausente | Restaurar |
+| /weekly-goals | /weekly-goals | 🔴 Ausente | Restaurar |
+| /financial | /financial | 🔴 Ausente | Restaurar |
+| /supplements | /supplements | 🔴 Ausente | Restaurar |
+| /global-tips | /global-tips | 🔴 Ausente | Restaurar |
+| /feedbacks | /feedbacks | 🔴 Ausente | Restaurar |
+| /branding | /branding | 🔴 Ausente | Restaurar |
+| /protocols | /protocols | 🔴 Ausente | Restaurar |
+| /programs | /programs | 🔴 Ausente | Restaurar |
+| /program/:id | /program/:id | 🔴 Ausente | Restaurar |
+| /biquini-branco/:id | /biquini-branco/:id | 🔴 Ausente | Restaurar |
+| /anamnesis | /anamnesis | 🔴 Ausente | Restaurar |
+| /physical-assessment | /physical-assessment | 🔴 Ausente | Restaurar |
+| /body-analysis | /body-analysis | 🔴 Ausente | Restaurar |
+| /notifications | /notifications | 🔴 Ausente | Restaurar |
+| /clinical-intelligence | /clinical-intelligence | 🔴 Ausente | Restaurar |
+| /admin | /admin | 🔴 Ausente | Restaurar |
+| /settings | /settings | ✅ Mantida | - |
+| /my-diet | /my-diet | 🔴 Ausente | Restaurar |
+| /analyze | /analyze | ✅ Mantida | - |
+| /checklist | /checklist | 🔴 Ausente | Restaurar |
+| /checkin | /checkin | 🔴 Ausente | Restaurar |
+| /shopping-list | /shopping-list | 🔴 Ausente | Restaurar |
+| /journey | /journey | 🔴 Ausente | Restaurar |
+| /library | /library | 🔴 Ausente | Restaurar |
+| /weight-calculator | /weight-calculator | 🔴 Ausente | Restaurar |
+| /water-calculator | /water-calculator | 🔴 Ausente | Restaurar |
+| /health-quiz | /health-quiz | 🔴 Ausente | Restaurar |
+| /autobot | /autobot | 🔴 Ausente | Restaurar |
+
+## Observações Forenses:
+- **Branding:** O nome original "FitJourney" foi preservado no DashboardLayout histórico. Qualquer menção a "NutriFlow" deve ser removida.
+- **Estrutura:** O App.tsx atual possui uma lista drasticamente reduzida de rotas, quebrando a navegação original.
+- **Divergência Crítica:** A rota `/v1/welcome` relatada pelo usuário não existia no commit original (569c57fd9), sugerindo uma criação arbitrária recente.
