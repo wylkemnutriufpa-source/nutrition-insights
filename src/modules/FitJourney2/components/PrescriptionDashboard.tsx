@@ -57,8 +57,12 @@ export const PrescriptionDashboard = () => {
       {/* Header */}
       <header className="flex justify-between items-center mb-10">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter uppercase italic">Dashboard V2</h1>
-          <p className="text-slate-500 text-sm font-mono tracking-widest uppercase">Motor: Proteína Primeiro</p>
+          <h1 className="text-3xl font-black tracking-tighter uppercase italic">
+            {localStorage.getItem('fitjourney_mode') === 'V1' ? 'FitJourney 1.0' : 'Dashboard V2'}
+          </h1>
+          <p className="text-slate-500 text-sm font-mono tracking-widest uppercase">
+            {localStorage.getItem('fitjourney_mode') === 'V1' ? 'Modo Estável' : 'Motor: Proteína Primeiro'}
+          </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right mr-4 hidden md:block">
