@@ -8742,6 +8742,7 @@ export type Database = {
         Row: {
           carbs_base: number | null
           complexity_level: string | null
+          composition_mode: string
           created_at: string | null
           fat_base: number | null
           foods_structure: Json | null
@@ -8754,12 +8755,15 @@ export type Database = {
           nutritionist_id: string
           protein_base: number | null
           satiety_score: number | null
+          slots: Json | null
+          slots_version: number
           updated_at: string | null
           usage_count: number | null
         }
         Insert: {
           carbs_base?: number | null
           complexity_level?: string | null
+          composition_mode?: string
           created_at?: string | null
           fat_base?: number | null
           foods_structure?: Json | null
@@ -8772,12 +8776,15 @@ export type Database = {
           nutritionist_id: string
           protein_base?: number | null
           satiety_score?: number | null
+          slots?: Json | null
+          slots_version?: number
           updated_at?: string | null
           usage_count?: number | null
         }
         Update: {
           carbs_base?: number | null
           complexity_level?: string | null
+          composition_mode?: string
           created_at?: string | null
           fat_base?: number | null
           foods_structure?: Json | null
@@ -8790,6 +8797,8 @@ export type Database = {
           nutritionist_id?: string
           protein_base?: number | null
           satiety_score?: number | null
+          slots?: Json | null
+          slots_version?: number
           updated_at?: string | null
           usage_count?: number | null
         }
