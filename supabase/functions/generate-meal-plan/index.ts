@@ -3852,6 +3852,30 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           }; 
         });
 
+        // ──── SHADOW MIGRATION V2 (SILENT AUDIT) ────
+        try {
+          const shadowPatientProfile = {
+            sex: anamnesis?.answers?.sex || "male",
+            weight: weight,
+            height: height,
+            age: age,
+            activity_level: activityLevel,
+          };
+          executeShadowMigrationV2(
+            serviceClient,
+            newPlan.id,
+            patient_id,
+            shadowPatientProfile,
+            planItems,
+            guardedItems,
+            finalMacros,
+            goal
+          ).catch(e => console.error("[SHADOW-AUDIT] Non-blocking error:", e));
+        } catch (shadowErr) {
+          console.error("[SHADOW-AUDIT] Sync error in multi-plan:", shadowErr);
+        }
+
+
         console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan: option-loop)");
         itemsToInsert.forEach((item, idx) => {
           console.log(idx, Object.keys(item).sort());
