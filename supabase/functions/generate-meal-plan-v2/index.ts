@@ -380,7 +380,7 @@ Deno.serve(async (req) => {
       .or(`nutritionist_id.is.null,nutritionist_id.eq.${userId}`);
     if (ferr) return json({ error: "Falha ao carregar alimentos", details: ferr.message }, 500);
 
-    const built = buildPlan(metrics, foods ?? []);
+    const built = buildPlan(metrics, foods ?? [], patientData);
 
     if (dry_run) {
       return json({
