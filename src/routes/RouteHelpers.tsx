@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams, Navigate } from "react-router-dom";
+import SafePage from "@/components/common/SafePage";
 
 export function RedirectWithParams({ to }: { to: string }) {
   const params = useParams();
@@ -10,7 +11,7 @@ export function RedirectWithParams({ to }: { to: string }) {
   return <Navigate to={target} replace />;
 }
 
-export function LP({ children, section, SafePage }: { children: React.ReactNode; section?: string; SafePage: any }) {
+export function LP({ children, section }: { children: React.ReactNode; section?: string }) {
   return (
     <SafePage pageName={section || "Página"}>
       {children}
