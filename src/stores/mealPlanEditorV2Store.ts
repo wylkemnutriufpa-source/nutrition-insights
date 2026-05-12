@@ -58,7 +58,7 @@ interface EditorV2State {
   // Item CRUD (local-first)
   addItem: (insert: TablesInsert<"meal_plan_items">) => void;
   addItems: (inserts: TablesInsert<"meal_plan_items">[]) => void;
-  updateItem: (itemId: string, patch: Partial<MealPlanItem>) => void;
+  updateItem: (itemId: string, patch: Partial<MealPlanItem>, skipPersist?: boolean) => void;
   deleteItem: (itemId: string) => void;
   deleteItemsInCell: (day: number, mealType: MealType) => void;
   clearAllItems: () => void;
