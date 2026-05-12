@@ -64,12 +64,18 @@ export function resolveDisplayGrams(item: PortionLike): number {
     ? Math.round((totalKcal / kcal100) * 100)
     : 0;
 
-  const hasCoherentInference = inferredGrams >= 5 && inferredGrams <= 600;
-  const rawLooksCorrupted = rawGrams > 600 || (hasCoherentInference && rawGrams > 250 && rawGrams / inferredGrams > 3);
+  const hasCoherentInference = inferredGrams >= 5 && inferredGrams <= 800;
+  const rawLooksCorrupted = rawGrams > 800 || (hasCoherentInference && rawGrams > 200 && rawGrams / inferredGrams > 2);
 
   if (!hasQuantity && hasCoherentInference) return inferredGrams;
   if (!hasQuantity) return parseGramsFromText(item.portionLabel) || Math.max(0, Math.round(Number(item.portionValue) || 0));
   if (rawLooksCorrupted && hasCoherentInference) return inferredGrams;
+  
+  // 🛡️ ANTI-EXPLOSION: Se o peso final for > 1kg para arroz/feijão/proteína, 
+  // é 99% de chance de erro de normalização (ex: 130 colheres). 
+  // Forçamos o teto clínico de 500g se não houver confiança.
+  if (rawGrams > 1000 && !hasCoherentInference) return 150; 
+
   return Math.max(0, Math.round(rawGrams));
 }
 
