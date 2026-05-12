@@ -1,0 +1,1 @@
+export default function DisciplineScore({ userId }: any) { return null; }

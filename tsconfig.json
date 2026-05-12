@@ -5,9 +5,9 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@v1/*": ["./src/apps/v1/*"],
+      "@v2/*": ["./src/apps/v2/*"]
     },
     "skipLibCheck": true,
     "strictNullChecks": false

@@ -1,0 +1,28 @@
+import "./index.css";
+import "./App.css";
+import "./styles/premium-tokens.css";
+import "./styles/experience-themes.css";
+import { CoreProviders } from "./providers/CoreProviders";
+import { AppRoutes } from "./routes/AppRoutes";
+import { useAuth } from "./lib/auth";
+import { BrainLoaderScreen } from "@v1/components/common/BrainLoader";
+
+const AppContent = () => {
+  const { loading } = useAuth();
+
+  // Se a sessão principal ainda está sendo recuperada do Supabase,
+  // mostramos o loader oficial em vídeo.
+  if (loading) {
+    return <BrainLoaderScreen visible />;
+  }
+
+  return <AppRoutes />;
+};
+
+const App = () => (
+  <CoreProviders>
+    <AppContent />
+  </CoreProviders>
+);
+
+export default App;
