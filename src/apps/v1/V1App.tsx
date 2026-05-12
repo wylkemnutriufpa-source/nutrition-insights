@@ -13,7 +13,9 @@ const SimpleLoader = () => (
 );
 
 const AppContent = () => {
-  const { loading } = useAuth();
+  const { loading, authStatus } = useAuth();
+  
+  console.log("[V1App] Auth Debug:", { loading, authStatus });
 
   // Se a sessão principal ainda está sendo recuperada do Supabase,
   // mostramos o loader oficial em vídeo.
