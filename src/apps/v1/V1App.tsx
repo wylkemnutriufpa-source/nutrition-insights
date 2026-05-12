@@ -1,14 +1,15 @@
 import React from 'react';
+import { CoreProviders } from "./providers/CoreProviders";
+import { AppRoutes } from "./routes/AppRoutes";
+import "./index.css";
+import "./App.css";
 
-const Auth = () => {
+const V1App = () => {
   return (
-    <div style={{ backgroundColor: '#050505', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontFamily: 'sans-serif' }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{ color: '#22c55e', fontSize: '24px', marginBottom: '20px' }}>FitJourney V1</h1>
-        <p style={{ color: '#a1a1aa' }}>Emergency Render Direct - No Providers</p>
-      </div>
-    </div>
+    <CoreProviders>
+      <AppRoutes />
+    </CoreProviders>
   );
 };
 
-export default Auth;
+export default V1App;
