@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[] | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenant, setTenant] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
   
@@ -165,20 +165,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initialize = async () => {
-      setLoading(true);
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log("[Auth] Checking session...");
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("[Auth] Session fetch error:", sessionError);
+          if (mounted) setLoading(false);
+          return;
+        }
+
         if (mounted) {
+          console.log("[Auth] Session result:", !!initialSession);
           setSession(initialSession);
           setUser(initialSession?.user ?? null);
+          
           if (initialSession?.user) {
+            console.log("[Auth] Fetching user data...");
             await fetchData(initialSession.user.id);
           }
         }
       } catch (e) {
-        if (import.meta.env.DEV) console.error("Recovery init error", e);
+        console.error("[Auth] Recovery init catch:", e);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          console.log("[Auth] Init complete, loading = false");
+          setLoading(false);
+        }
       }
     };
 
@@ -245,7 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const authStatus: AuthStatus = loading ? "loading" : error ? "error" : user ? "authenticated" : "unauthenticated";
+  const authStatus: AuthStatus = user ? "authenticated" : loading ? "loading" : error ? "error" : "unauthenticated";
 
   const isNutritionist = roles?.includes("nutritionist") ?? false;
   const isPersonal = roles?.includes("personal") ?? false;

@@ -15,6 +15,8 @@ import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
 import LanguageSelector from "@v1/components/common/LanguageSelector";
 import { useTranslation } from "react-i18next";
 
+console.log("[Auth] Page module loaded");
+
 type AuthMode = "login" | "forgot" | "register";
 type SelectedRole = "nutritionist" | "personal" | "patient" | null;
 
@@ -36,14 +38,11 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
 
   // Bypass authenticated check during recovery mode if needed
   // For now, keeping it simple to ensure the page renders
-  const { authStatus } = useAuth();
+  const { authStatus, user } = useAuth();
   
-  /* useEffect(() => {
-    if (authStatus === "authenticated") {
-      console.log("[Auth] Usuário já autenticado. Redirecionando para /dashboard...");
-      navigate("/v1/dashboard", { replace: true });
-    }
-  }, [authStatus, navigate]); */
+  useEffect(() => {
+    console.log("[Auth] Render check:", { authStatus, user: !!user });
+  }, [authStatus, user]);
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
@@ -184,7 +183,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   };
 
   return (
-    <div ref={ref} className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div ref={ref} className="min-h-screen flex items-center justify-center bg-[#050505] p-4 relative overflow-hidden text-white font-sans">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
@@ -198,14 +197,14 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }} className="mb-4">
+        <div className="flex flex-col items-center mb-10">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="mb-4">
             <FitJourneyLogo size="lg" />
           </motion.div>
-          <p className="text-muted-foreground mt-1">{t("auth.tagline")}</p>
+          <p className="text-zinc-400 text-sm tracking-wide">{t("auth.tagline")}</p>
         </div>
 
-        <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
+        <Card className="shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 bg-[#111111] rounded-2xl overflow-hidden">
           <CardHeader className="pb-4">
             <h2 className="text-lg font-semibold text-center text-foreground">
               {mode === "forgot" ? t("auth.forgotTitle") : mode === "register" ? "Criar Conta Profissional" : t("auth.loginTitle")}

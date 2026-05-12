@@ -1,26 +1,15 @@
-import "./index.css";
-import "./App.css";
+import React from 'react';
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
-import { useAuth } from "./lib/auth";
-import { BrainLoaderScreen } from "@v1/components/common/BrainLoader";
+import "./index.css";
+import "./App.css";
 
-const AppContent = () => {
-  const { loading } = useAuth();
-
-  // Se a sessão principal ainda está sendo recuperada do Supabase,
-  // mostramos o loader oficial em vídeo.
-  if (loading) {
-    return <BrainLoaderScreen visible />;
-  }
-
-  return <AppRoutes />;
+const V1App = () => {
+  return (
+    <CoreProviders>
+      <AppRoutes />
+    </CoreProviders>
+  );
 };
 
-const App = () => (
-  <CoreProviders>
-    <AppContent />
-  </CoreProviders>
-);
-
-export default App;
+export default V1App;

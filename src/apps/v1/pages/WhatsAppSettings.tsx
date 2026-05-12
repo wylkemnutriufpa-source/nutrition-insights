@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { toast } from "sonner";
 import { MessageCircle, Wifi, WifiOff, Send, Loader2, CheckCircle2, XCircle, Clock, Phone, Shield, Zap, AlertTriangle } from "lucide-react";
-import { BrainLoaderInline } from "@v1/components/common/BrainLoader";
+import { BrainLoaderInline } from "@v1/components/common/PageLoader";
 import {
   getIntegration,
   validateAndSaveIntegration,

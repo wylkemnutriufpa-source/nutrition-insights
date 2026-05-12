@@ -41,7 +41,7 @@ const FORCE_RESET_KEY = "fitjourney_force_reset_v1";
 const SWIPE_THRESHOLD = 50;
 
 import { usePatientJourneyStatus } from "@v1/hooks/usePatientJourneyStatus";
-import { BrainLoaderCard } from "@v1/components/common/BrainLoader";
+import { BrainLoaderCard } from "@v1/components/common/PageLoader";
 
 export default function OnboardingPaciente() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();

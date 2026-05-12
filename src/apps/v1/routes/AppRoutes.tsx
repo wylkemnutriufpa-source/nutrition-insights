@@ -20,6 +20,7 @@ import OnboardingEntry from "@v1/components/onboarding/OnboardingEntry";
 
 // Eager
 import Auth from "../pages/Auth";
+console.log("[AppRoutes] Auth page imported", !!Auth);
 import AuthConfirm from "../pages/AuthConfirm";
 import NotFound from "../pages/NotFound";
 import Index from "../pages/Index";

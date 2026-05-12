@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card
 import { toast } from "sonner";
 import { Progress } from "@v1/components/ui/progress";
 import SmartTips from "@v1/components/patient/SmartTips";
-import { BrainLoaderCard } from "@v1/components/common/BrainLoader";
+import { BrainLoaderCard } from "@v1/components/common/PageLoader";
 import BehavioralTasksWidget from "@v1/components/patient/BehavioralTasksWidget";
 import ExperienceModeStatusSection from "@v1/components/dashboard/ExperienceModeStatusSection";
 import ClinicalMessagesWidget from "@v1/components/patient/ClinicalMessagesWidget";

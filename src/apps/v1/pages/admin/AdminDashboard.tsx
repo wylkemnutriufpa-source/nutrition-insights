@@ -38,7 +38,7 @@ import { HealthStatusIndicator } from "@v1/components/observability/HealthStatus
 import { StabilityZone } from "@v1/components/common/StabilityZone";
 import { SafeRender } from "@v1/components/common/SafeRender";
 import { usePageState } from "@v1/hooks/usePageState";
-import { BrainLoaderCard } from "@v1/components/common/BrainLoader";
+import { BrainLoaderCard } from "@v1/components/common/PageLoader";
 import { AlertCircle } from "lucide-react";
 
 // ─── Types ───
