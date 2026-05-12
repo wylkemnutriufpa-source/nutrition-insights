@@ -772,7 +772,6 @@ export const useEditorState = create<EditorState>()(
                   return {
                     ...merged,
                     kcal: newMacros.kcal,
-                    calories: newMacros.kcal,
                     protein: newMacros.protein,
                     carbs: newMacros.carbs,
                     fat: newMacros.fat
@@ -796,7 +795,6 @@ export const useEditorState = create<EditorState>()(
                     return {
                       ...merged,
                       kcal: newMacros.kcal,
-                      calories: newMacros.kcal,
                       protein: newMacros.protein,
                       carbs: newMacros.carbs,
                       fat: newMacros.fat
