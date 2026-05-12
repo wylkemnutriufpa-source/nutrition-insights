@@ -491,7 +491,7 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
       const storageDay = normalizeGeneratedDayForStorage(slot.day);
       const groupId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
       
-      const primaryItemsInput = {
+      const primaryItemsInput: GeneratedItemInput = {
         meal_plan_id: planId,
         title: await getClosestValidatedFood(slot.libraryItem.title) || slot.libraryItem.title,
         meal_type: mealType,
@@ -504,10 +504,12 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
         is_primary: true,
         substitution_group_id: slot.substitutions?.length > 0 ? groupId : null,
         library_item: slot.libraryItem,
-        sf: slot.scaleFactor
+        sf: slot.scaleFactor,
+        _baseCaloriesTarget: slot.targetKcal,
+        _baseProteinTarget: Math.round(slot.libraryItem.protein * slot.scaleFactor)
       };
 
-      const buildItem = async (input: any) => {
+      const buildItem = async (input: GeneratedItemInput) => {
         let foodNames = Array.isArray(input.library_item.foods) ? input.library_item.foods.map((f: any) => f.name || "") : [];
         if (input.meal_type === "breakfast") {
           foodNames = ensureBreakfastProtein(foodNames);
