@@ -7487,6 +7487,10 @@ export type Database = {
           sharing_expires_at: string | null
           sharing_token: string | null
           simplicity_score: number | null
+          snapshot: Json | null
+          snapshot_generated_at: string | null
+          snapshot_hash: string | null
+          snapshot_schema_version: string | null
           start_date: string
           template_id: string | null
           template_slug: string | null
@@ -7548,6 +7552,10 @@ export type Database = {
           sharing_expires_at?: string | null
           sharing_token?: string | null
           simplicity_score?: number | null
+          snapshot?: Json | null
+          snapshot_generated_at?: string | null
+          snapshot_hash?: string | null
+          snapshot_schema_version?: string | null
           start_date: string
           template_id?: string | null
           template_slug?: string | null
@@ -7609,6 +7617,10 @@ export type Database = {
           sharing_expires_at?: string | null
           sharing_token?: string | null
           simplicity_score?: number | null
+          snapshot?: Json | null
+          snapshot_generated_at?: string | null
+          snapshot_hash?: string | null
+          snapshot_schema_version?: string | null
           start_date?: string
           template_id?: string | null
           template_slug?: string | null
@@ -21688,6 +21700,16 @@ export type Database = {
       }
       migrate_to_single_source_of_truth: { Args: never; Returns: undefined }
       normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
+      persist_meal_plan_snapshot: {
+        Args: {
+          _engine_version: string
+          _plan_id: string
+          _schema_version: string
+          _snapshot: Json
+          _snapshot_hash: string
+        }
+        Returns: Json
+      }
       preview_orphan_onboarding_pipelines: {
         Args: never
         Returns: {
