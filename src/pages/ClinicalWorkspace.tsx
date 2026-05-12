@@ -1,5 +1,4 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -43,7 +42,6 @@ function ModuleLoader() {
 }
 
 export default function ClinicalWorkspace() {
-  const expUI = useExperienceUI();
   const visibleTabs = TABS.filter(t => expUI.minMode(t.minMode));
   const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "patients");
   const [search, setSearch] = useState("");

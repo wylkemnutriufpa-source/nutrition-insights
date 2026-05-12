@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 
 export interface MenuItem {
   id: string;
@@ -144,7 +143,6 @@ export const CATEGORY_COLORS: Record<string, string> = {
 
 export function useSmartMenu() {
   const { user, roles } = useAuth();
-  const { isPatientContext, isHybridUser } = useWorkspaceContext();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [usage, setUsage] = useState<MenuUsage[]>([]);
   const [loading, setLoading] = useState(true);

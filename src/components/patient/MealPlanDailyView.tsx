@@ -1,5 +1,4 @@
 import React, { memo, useMemo } from "react";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
 import MealFeedbackButton from "@/components/patient/MealFeedbackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -187,7 +186,6 @@ const MealItemCard = memo(function MealItemCard({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
-  const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
   const needsVisualFallback = !item.image_url && !!item.visual_library_item_id;
   const { item: visualItem } = useMealVisualItem(needsVisualFallback ? item.visual_library_item_id : null);
@@ -417,7 +415,6 @@ const AdherenceCard = memo(function AdherenceCard({
   totalItems: number;
   allMarked: boolean;
 }) {
-  const { isBasic, showDetailedAdherence } = useExperienceUI();
   const motivational = getMotivationalMessage(dailyAdherence);
 
   if (isBasic) {
@@ -479,7 +476,6 @@ const DateNavigator = memo(function DateNavigator({
   isToday: boolean;
   onChangeDate: (offset: number) => void;
 }) {
-  const { isBasic } = useExperienceUI();
 
   return (
     <div className="flex items-center justify-center gap-4">
@@ -517,7 +513,6 @@ const MealGroup = memo(function MealGroup({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
-  const { isBasic } = useExperienceUI();
   const mealFollowed = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const mealPartial = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "partial")).length;
   const isCurrent = isCurrentMeal(mealType.time);

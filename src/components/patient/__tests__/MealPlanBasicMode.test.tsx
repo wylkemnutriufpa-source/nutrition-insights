@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MealGroup } from '../MealPlanDailyView';
-import { useExperienceUI } from '@/hooks/useExperienceUI';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Mock dependencies
-vi.mock('@/hooks/useExperienceUI', () => ({
-  useExperienceUI: vi.fn()
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -45,7 +42,6 @@ describe('MealPlanDailyView - Basic Mode Accessibility', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useExperienceUI as any).mockReturnValue({ isBasic: true, showMacros: true });
   });
 
   it('should display "AGORA" and have correct ARIA attributes when it is the current meal', () => {

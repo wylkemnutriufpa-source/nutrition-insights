@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, createContext, useContext, ReactNode, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CommandDialog,
@@ -173,7 +172,6 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { user, isNutritionist, isPatient, isAdmin, isPersonal } = useAuth();
-  const { isPatientContext } = useWorkspaceContext();
   const [patients, setPatients] = useState<ProfileResult[]>([]);
   const [professionals, setProfessionals] = useState<ProfileResult[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlanResult[]>([]);

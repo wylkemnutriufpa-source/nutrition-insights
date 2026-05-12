@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, Reorder } from "framer-motion";
-import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +70,6 @@ export default function WorkspaceEditor() {
     addSection, updateSection, deleteSection, reorderSections,
     moveItem, toggleItemVisibility, togglePin, reorderItems, addItem, removeItem,
     getItemsForSection, resetToDefault,
-  } = useWorkspace();
 
   const [allMenuItems, setAllMenuItems] = useState<MenuItem[]>([]);
   const [newSectionName, setNewSectionName] = useState("");

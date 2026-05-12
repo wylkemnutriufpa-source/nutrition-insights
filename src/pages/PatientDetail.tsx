@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
@@ -78,7 +77,6 @@ export default function PatientDetail() {
   const { user, isAdmin } = useAuth();
   const { tenantId } = useTenant();
   const queryClient = useQueryClient();
-  const expUI = useExperienceUI();
 
   // React Query hook
   const { data, isLoading, refetch } = usePatientDetail(patientId);

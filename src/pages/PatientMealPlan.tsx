@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -89,7 +88,6 @@ function StreakBadge({ count }: { count: number }) {
 
 export default function PatientMealPlan() {
   const { user } = useAuth();
-  const { isBasic } = useExperienceUI();
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [allItems, setAllItems] = useState<MealPlanItem[]>([]);

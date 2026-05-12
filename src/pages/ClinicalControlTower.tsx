@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Brain, Activity, Radar, Target, BarChart3, Shield, Zap } from "lucide-react";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import GlobalClinicalStatusBar from "@/components/control-tower/GlobalClinicalStatusBar";
@@ -25,7 +24,6 @@ function SectionHeader({ icon: Icon, title, subtitle, color }: { icon: React.Ele
 }
 
 export default function ClinicalControlTower() {
-  const { showAdvancedMetrics, showAutomation } = useExperienceUI();
   return (
     <DashboardLayout>
     <SubscriptionGuard requiredTier="premium" featureName="Clinical Control Tower">

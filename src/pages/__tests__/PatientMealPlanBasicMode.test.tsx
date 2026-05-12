@@ -2,7 +2,6 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import PatientMealPlan from "../PatientMealPlan";
 import { useAuth } from "@/lib/auth";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { supabase } from "@/integrations/supabase/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -23,8 +22,6 @@ vi.mock("@/lib/auth", () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock("@/hooks/useExperienceUI", () => ({
-  useExperienceUI: vi.fn(),
 }));
 
 vi.mock("@/components/layout/DashboardLayout", () => ({
@@ -68,7 +65,6 @@ describe("PatientMealPlan - Basic Mode", () => {
 
 
     // Mock basic mode
-    (useExperienceUI as any).mockReturnValue({
       isBasic: true,
       minMode: (mode: string) => mode === "basic",
     });
