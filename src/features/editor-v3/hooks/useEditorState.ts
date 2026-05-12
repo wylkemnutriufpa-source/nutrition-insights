@@ -712,7 +712,7 @@ export const useEditorState = create<EditorState>()(
       },
 
       
-      updateFoodQuantity: (mealId, instanceId, quantity) => {
+      updateFoodQuantity: (mealId, instanceId, quantity, clinical_mass_g) => {
         if (quantity < 0) return;
         set((state) => ({
           meals: state.meals.map((m) =>
@@ -721,34 +721,22 @@ export const useEditorState = create<EditorState>()(
                   ...m,
                   items: m.items.map((i) => {
                     if (i.instanceId === instanceId) {
-                      // 🛡️ BLINDAGEM: Se a quantidade for > 50 e o tipo for colher, 
-                      // é quase certo que o usuário está digitando gramas diretamente no editor.
-                      const isLikelyGrams = (i.measurementType === 'spoon' && quantity >= 50);
-                      const correctedType = isLikelyGrams ? 'gram' : i.measurementType;
-                      const correctedLabel = isLikelyGrams ? 'Gramas' : i.portionUnitLabel;
-
-                      // Sincronizar massa clínica com a nova quantidade
                       const pValue = i.portionValue || 1;
-                      const newClinicalMass = (correctedType === 'gram' || correctedType === 'ml')
-                        ? quantity
-                        : quantity * pValue;
+                      const newClinicalMass = clinical_mass_g ?? 
+                        ((i.measurementType === 'gram' || i.measurementType === 'ml')
+                          ? quantity
+                          : quantity * pValue);
 
-                      const tempItem = { 
+                      const updatedItem = { 
                         ...i, 
-                        measurementType: correctedType, 
                         quantity,
                         clinical_mass_g: newClinicalMass,
-                        _is_editing_quantity: true // Flag temporária para o resolveMacroGrams
                       };
 
-                      const newMacros = calculateItemMacros(tempItem, quantity);
+                      const newMacros = calculateItemMacros(updatedItem, quantity);
                       
                       return { 
-                        ...i, 
-                        quantity,
-                        clinical_mass_g: newClinicalMass,
-                        measurementType: correctedType,
-                        portionUnitLabel: correctedLabel,
+                        ...updatedItem, 
                         kcal: newMacros.kcal,
                         calories: newMacros.kcal,
                         protein: newMacros.protein,
@@ -763,6 +751,67 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
+      },
+
+      updateMealItem: async (mealId, instanceId, updates, skipWeeklySync = false) => {
+        const state = get();
+        const meal = state.meals.find(m => m.id === mealId);
+        const item = meal?.items.find(i => i.instanceId === instanceId);
+        
+        if (!item) return;
+
+        const updatedMeals = state.meals.map((m) => {
+          if (m.id === mealId) {
+            return {
+              ...m,
+              items: m.items.map((i) => {
+                if (i.instanceId === instanceId) {
+                  const merged = { ...i, ...updates };
+                  const newMacros = calculateItemMacros(merged, merged.quantity);
+                  return {
+                    ...merged,
+                    kcal: newMacros.kcal,
+                    calories: newMacros.kcal,
+                    protein: newMacros.protein,
+                    carbs: newMacros.carbs,
+                    fat: newMacros.fat
+                  };
+                }
+                return i;
+              })
+            };
+          }
+          
+          if (!skipWeeklySync && item.blockId && !updates.manual_override) {
+            const hasSameBlock = m.items.some(i => i.blockId === item.blockId && !i.manual_override);
+            if (hasSameBlock) {
+              return {
+                ...m,
+                items: m.items.map((i) => {
+                  if (i.blockId === item.blockId && !i.manual_override) {
+                    const { instanceId: _, id: __, ...propagatedUpdates } = updates as any;
+                    const merged = { ...i, ...propagatedUpdates };
+                    const newMacros = calculateItemMacros(merged, merged.quantity);
+                    return {
+                      ...merged,
+                      kcal: newMacros.kcal,
+                      calories: newMacros.kcal,
+                      protein: newMacros.protein,
+                      carbs: newMacros.carbs,
+                      fat: newMacros.fat
+                    };
+                  }
+                  return i;
+                })
+              };
+            }
+          }
+          
+          return m;
+        });
+
+        set({ meals: updatedMeals, planStatus: 'draft' });
         get().recalculateScore();
       },
 

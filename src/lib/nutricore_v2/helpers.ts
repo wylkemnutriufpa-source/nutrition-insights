@@ -138,36 +138,6 @@ export const calculateItemMacros = (item: any, quantity: number) => {
   return result;
 };
 
-  // Fallback para valores por porção (Legado ou Custom)
-  const kcalPortion = item.kcal ?? item.calories ?? 0;
-  const proteinPortion = item.protein ?? 0;
-  const carbsPortion = item.carbs ?? 0;
-  const fatPortion = item.fat ?? 0;
-
-  if (item.measurementType === 'unit' || item.measurementType === 'spoon') {
-    factor = quantity;
-  } else {
-    // Se for gramas e não temos kcal_100g, assumimos que kcalPortion é para portionValue gramas
-    // 🛡️ Segurança: portionValue nunca pode ser < 1 para divisão
-    const pValue = Math.max(1, item.portionValue || 100);
-    factor = quantity / pValue;
-  }
-
-  const finalResult = {
-    kcal: Math.round(kcalPortion * factor * 10) / 10,
-    protein: Math.round(proteinPortion * factor * 10) / 10,
-    carbs: Math.round(carbsPortion * factor * 10) / 10,
-    fat: Math.round(fatPortion * factor * 10) / 10
-  };
-
-  // 🛑 EMERGENCY BRAKE (Fallback path)
-  if (finalResult.kcal > 2000 && factor < 10) {
-    finalResult.kcal = Math.min(finalResult.kcal, 600);
-  }
-
-  return finalResult;
-};
-
 export const getDeterministicSuggestions = (baseItemName: string, availableFoods: any[], baseMeasurementType?: string, basePortionLabel?: string): any[] => {
   const name = baseItemName.toLowerCase();
   let suggestions: any[] = [];
