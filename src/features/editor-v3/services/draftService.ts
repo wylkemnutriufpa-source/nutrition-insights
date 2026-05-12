@@ -7,7 +7,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
-import { normalizeMeals } from '../utils/normalization';
+import { normalizeMeals, normalizeV2ToV3 } from '../utils/normalization';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 
 export interface DraftRecord {
