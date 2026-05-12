@@ -184,7 +184,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   };
 
   return (
-    <div ref={ref} className="min-h-screen flex items-center justify-center bg-zinc-950 p-4 relative overflow-hidden text-white font-sans">
+    <div ref={ref} className="min-h-screen flex items-center justify-center bg-[#050505] p-4 relative overflow-hidden text-white font-sans">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
@@ -198,14 +198,14 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }} className="mb-4">
+        <div className="flex flex-col items-center mb-10">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="mb-4">
             <FitJourneyLogo size="lg" />
           </motion.div>
-          <p className="text-muted-foreground mt-1">{t("auth.tagline")}</p>
+          <p className="text-zinc-400 text-sm tracking-wide">{t("auth.tagline")}</p>
         </div>
 
-        <Card className="shadow-2xl border border-white/10 bg-zinc-900/90 backdrop-blur-md rounded-2xl">
+        <Card className="shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 bg-[#111111] rounded-2xl overflow-hidden">
           <CardHeader className="pb-4">
             <h2 className="text-lg font-semibold text-center text-foreground">
               {mode === "forgot" ? t("auth.forgotTitle") : mode === "register" ? "Criar Conta Profissional" : t("auth.loginTitle")}
