@@ -259,7 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const authStatus: AuthStatus = loading ? "loading" : error ? "error" : user ? "authenticated" : "unauthenticated";
+  const authStatus: AuthStatus = user ? "authenticated" : loading ? "loading" : error ? "error" : "unauthenticated";
 
   const isNutritionist = roles?.includes("nutritionist") ?? false;
   const isPersonal = roles?.includes("personal") ?? false;
