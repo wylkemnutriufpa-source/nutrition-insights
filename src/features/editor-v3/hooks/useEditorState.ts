@@ -791,9 +791,9 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      // ... keep existing code
-
+      generatePlan: async (goal, baseCalories, availableFoods, replaceExisting = false) => {
         let currentMeals = get().meals;
+
         const { patientContext } = get();
         
         // No V3, se tivermos contexto do paciente, priorizamos as metas calculadas pelo NutriCore
