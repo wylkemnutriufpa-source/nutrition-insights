@@ -207,6 +207,7 @@ export class NutriCoreV3Adapter {
               measurementType: measurementType as any,
               instanceId: Math.random().toString(36).substring(2, 10),
               quantity, 
+              clinical_mass_g: item.grams, // 🛡️ Congelamento na fonte (Motor V3)
               substitutions
             };
           });
