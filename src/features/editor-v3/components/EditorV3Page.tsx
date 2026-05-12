@@ -1114,11 +1114,10 @@ const EditorV3Page = () => {
     
     try {
       const pdfData = await preparePDFData();
-      const { generatePremiumMealPlanPDF, buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
       
-      // 1. Gera o PDF local para o profissional ver/salvar
-      generatePremiumMealPlanPDF(pdfData);
-      
+      // 1. Gera o PDF local via Sandbox (Etapa 4 - Blindagem)
+      await safeGeneratePDF(pdfData);
+
       // 2. Gera HTML para compartilhamento via link
       const html = buildPremiumMealPlanHTML(pdfData);
       const fileName = `plan-${patientId}-${Date.now()}.html`;
