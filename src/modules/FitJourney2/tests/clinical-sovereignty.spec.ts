@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { reconcileMeal } from '../reconciler';
-import { MacroTargets, ClinicalProfile, MealItem } from '../types';
+import { reconcileMeal } from '../../../core/clinical-engine/reconciler';
+import { MacroTargets, ClinicalProfile, MealItem } from '../../../core/clinical-engine/types';
 
 describe('Clinical Sovereignty - Soberania Clínica', () => {
   const profile: ClinicalProfile = {
