@@ -70,6 +70,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
       } catch { /* ignore */ }
     }
     return {
+      mealPlanId: plan?.id, // Onda 2A — habilita comparação PASSIVA snapshot vs. render
       planTitle: plan?.title || "Plano Alimentar",
       patientName,
       nutritionistName,
