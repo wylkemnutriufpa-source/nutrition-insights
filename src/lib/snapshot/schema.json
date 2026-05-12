@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fitjourney.com.br/schemas/meal-plan-snapshot/v1.json",
+  "title": "MealPlanSnapshot",
+  "description": "Contrato imutável do snapshot determinístico de plano alimentar — Onda 1.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "engine_version",
+    "generated_at",
+    "hash",
+    "plan",
+    "patient_context",
+    "targets",
+    "days",
+    "weekly_totals",
+    "daily_average"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "engine_version": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+
+    "plan": {
+      "type": "object",
+      "required": ["plan_id", "patient_id", "nutritionist_id", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "plan_id": { "type": "string", "format": "uuid" },
+        "patient_id": { "type": "string", "format": "uuid" },
+        "nutritionist_id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": ["string", "null"] },
+        "title": { "type": "string" },
+        "start_date": { "type": ["string", "null"] },
+        "end_date": { "type": ["string", "null"] },
+        "plan_type": { "type": ["string", "null"] },
+        "plan_mode": { "type": ["string", "null"] },
+        "template_id": { "type": ["string", "null"] },
+        "template_slug": { "type": ["string", "null"] },
+        "template_version": { "type": ["integer", "null"] },
+        "generation_source": { "type": ["string", "null"] },
+        "protocol_used": { "type": ["string", "null"] }
+      }
+    },
+
+    "patient_context": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "weight_kg": { "type": ["number", "null"] },
+        "weight_source": { "type": ["string", "null"] },
+        "height_cm": { "type": ["number", "null"] },
+        "age": { "type": ["integer", "null"] },
+        "gender": { "type": ["string", "null"] },
+        "activity_level": { "type": ["string", "null"] },
+        "goal": { "type": ["string", "null"] }
+      }
+    },
+
+    "targets": {
+      "type": "object",
+      "required": ["kcal", "protein_g", "carbs_g", "fat_g"],
+      "additionalProperties": false,
+      "properties": {
+        "kcal": { "type": "number", "minimum": 0 },
+        "protein_g": { "type": "number", "minimum": 0 },
+        "carbs_g": { "type": "number", "minimum": 0 },
+        "fat_g": { "type": "number", "minimum": 0 },
+        "goal": { "type": ["string", "null"] }
+      }
+    },
+
+    "days": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["day_of_week", "totals", "meals"],
+        "additionalProperties": false,
+        "properties": {
+          "day_of_week": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "totals": { "$ref": "#/definitions/macros" },
+          "meals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["meal_type", "totals", "items"],
+              "additionalProperties": false,
+              "properties": {
+                "meal_type": { "type": "string" },
+                "totals": { "$ref": "#/definitions/macros" },
+                "items": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/item" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "weekly_totals": { "$ref": "#/definitions/macros" },
+    "daily_average": { "$ref": "#/definitions/macros" }
+  },
+
+  "definitions": {
+    "macros": {
+      "type": "object",
+      "required": ["kcal", "protein_g", "carbs_g", "fat_g"],
+      "additionalProperties": false,
+      "properties": {
+        "kcal": { "type": "number", "minimum": 0 },
+        "protein_g": { "type": "number", "minimum": 0 },
+        "carbs_g": { "type": "number", "minimum": 0 },
+        "fat_g": { "type": "number", "minimum": 0 }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["id", "title", "macros", "substitutions"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "title": { "type": "string" },
+        "description": { "type": ["string", "null"] },
+        "image_url": { "type": ["string", "null"] },
+        "visual_library_item_id": { "type": ["string", "null"] },
+        "is_primary": { "type": "boolean" },
+        "is_locked": { "type": "boolean" },
+        "substitution_group_id": { "type": ["string", "null"] },
+        "target_percentage": { "type": ["number", "null"] },
+        "macros": { "$ref": "#/definitions/macros" },
+        "substitutions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "food_id": { "type": ["string", "null"] },
+              "name": { "type": "string" },
+              "grams": { "type": ["number", "null"] },
+              "unit_label": { "type": ["string", "null"] },
+              "macros": {
+                "oneOf": [
+                  { "type": "null" },
+                  { "$ref": "#/definitions/macros" }
+                ]
+              },
+              "equivalence_pct": { "type": ["number", "null"] },
+              "image_url": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}
