@@ -3,10 +3,10 @@
  * Shows metabolic profile, phase, projected summary, and suggested strategy
  */
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Skeleton } from "@v1/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   TrendingDown, TrendingUp, Activity, AlertTriangle,

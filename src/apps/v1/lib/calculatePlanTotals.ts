@@ -8,7 +8,7 @@
  *  - O backend marca planos sem totais como `totals_status = 'incomplete'`
  *    para correção assíncrona, sem impedir salvamento/publicação.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 export interface PlanTotals {
   success: boolean;

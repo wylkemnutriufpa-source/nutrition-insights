@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Separator } from "@v1/components/ui/separator";
 import { Crown, Sparkles, Check, ArrowUp, Calendar, Zap } from "lucide-react";
 import { motion } from "framer-motion";
-import type { PrestigePlan } from "@/hooks/usePrestige";
+import type { PrestigePlan } from "@v1/hooks/usePrestige";
 
 interface PlanDetailModalProps {
   plan: PrestigePlan;

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Input } from "@v1/components/ui/input";
+import { Badge } from "@v1/components/ui/badge";
 import { Search, Sparkles, ChevronLeft, Sun, Bug, Droplets, Brain, Heart, Apple, Dumbbell, Leaf, Moon, Eye, Bone, Shield, Baby, Flame, Clock, Pill, Wind } from "lucide-react";
 
 interface Curiosidade {

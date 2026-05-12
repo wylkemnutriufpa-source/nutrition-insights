@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, Rocket, Volume2, VolumeX, Pause, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { useAmbientAudio } from "@/hooks/useAmbientAudio";
+import { Button } from "@v1/components/ui/button";
+import { Slider } from "@v1/components/ui/slider";
+import { useAmbientAudio } from "@v1/hooks/useAmbientAudio";
 
 export interface PresentationSlide {
   image_url: string;

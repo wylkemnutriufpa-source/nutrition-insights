@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Skeleton } from "@v1/components/ui/skeleton";
+import { Progress } from "@v1/components/ui/progress";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export default function NutritionProtocolPerformance() {

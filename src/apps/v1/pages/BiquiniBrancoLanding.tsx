@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { Helmet } from "react-helmet-async";
 import {
   Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Flame, Heart, Scale,
@@ -54,10 +54,10 @@ export default function BiquiniBrancoLanding() {
               <span className="font-bold text-lg tracking-tight">Biquíni Branco</span>
             </div>
             <div className="flex items-center gap-3">
-              <Link to="/auth">
+              <Link to="/v1/auth">
                 <Button variant="ghost" size="sm">Entrar</Button>
               </Link>
-              <Link to="/auth">
+              <Link to="/v1/auth">
                 <Button size="sm" className="gap-1.5">
                   Começar Agora <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -98,7 +98,7 @@ export default function BiquiniBrancoLanding() {
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
+              <Link to="/v1/auth">
                 <Button size="lg" className="text-base px-8 gap-2 shadow-lg">
                   Quero Participar <ArrowRight className="w-5 h-5" />
                 </Button>
@@ -238,7 +238,7 @@ export default function BiquiniBrancoLanding() {
               Cadastre-se agora e sua nutricionista irá te inscrever no Projeto Biquíni Branco. 
               Vagas limitadas por turma!
             </p>
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button size="lg" className="text-base px-10 gap-2 shadow-lg">
                 Criar Minha Conta <ArrowRight className="w-5 h-5" />
               </Button>

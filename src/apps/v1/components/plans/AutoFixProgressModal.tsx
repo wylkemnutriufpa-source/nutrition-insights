@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type AutoFixStep, AUTOFIX_STEP_LABELS } from "@/lib/autoFixEngine";
+import { type AutoFixStep, AUTOFIX_STEP_LABELS } from "@v1/lib/autoFixEngine";
 
 const STEPS_ORDER: AutoFixStep[] = [
   "loading_context",

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, CreditCard, Stethoscope, ArrowRight, RefreshCw, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Card, CardContent } from "@v1/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { type JourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { type JourneyStatus, IS_FLUID_STATE } from "@v1/hooks/usePatientJourneyStatus";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
 
 interface Props {
   status: JourneyStatus;

@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { AlertCircle, Flame, CheckCircle2, TrendingUp, Zap, Target, Trophy, Calendar } from "lucide-react";
-import { useEngagement } from "@/hooks/useEngagement";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { useEngagement } from "@v1/hooks/useEngagement";
+import { Button } from "@v1/components/ui/button";
+import { Progress } from "@v1/components/ui/progress";
 
 export function PatientRetentionAlerts() {
   const { 
@@ -156,7 +156,7 @@ export function PatientRetentionAlerts() {
                 Você está perdendo o ritmo da sua evolução. Voltar hoje é 2x mais fácil que voltar amanhã.
               </p>
               <Button size="sm" variant="secondary" className="font-bold text-rose-600 bg-white hover:bg-white/90" asChild>
-                <a href="/my-diet">Fazer check-in agora</a>
+                <a href="/v1/my-diet">Fazer check-in agora</a>
               </Button>
             </div>
           </motion.div>

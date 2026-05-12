@@ -6,7 +6,7 @@
  * the system falls back to safe defaults instead of breaking.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 // ── Default Schedule (Brazilian standard) ────────────────────
 export const DEFAULT_MEAL_SCHEDULE: Record<string, string> = {

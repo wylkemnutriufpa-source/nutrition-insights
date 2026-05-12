@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Switch } from "@v1/components/ui/switch";
+import { Badge } from "@v1/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { toast } from "@v1/hooks/use-toast";
 import {
   Save, RefreshCw, Settings, GripVertical, Eye, EyeOff,
   ArrowUp, ArrowDown, Crown, LayoutDashboard, Users,
@@ -20,8 +20,8 @@ import {
   UserCheck, Share2, Award, CreditCard, Dumbbell, GraduationCap, Sparkles,
   ChevronDown, ChevronUp, Search
 } from "lucide-react";
-import { CATEGORY_LABELS, CATEGORY_COLORS, invalidateMenuCache } from "@/hooks/useSmartMenu";
-import { Input } from "@/components/ui/input";
+import { CATEGORY_LABELS, CATEGORY_COLORS, invalidateMenuCache } from "@v1/hooks/useSmartMenu";
+import { Input } from "@v1/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ICON_MAP: Record<string, any> = {

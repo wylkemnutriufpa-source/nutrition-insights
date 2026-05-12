@@ -7,10 +7,10 @@ import {
   safeNumber, safeString, safeArray, safeBool, safeObject,
   safeFixed, safePercent, safeDivide, safeMap, safeLength,
   safeJsonParse, safeGet, sanitizeRecord,
-} from "@/lib/safeguards";
+} from "@v1/lib/safeguards";
 import {
   normalizeLifecycleStatus, validateContract, validateContractArray,
-} from "@/lib/compatibilityGuard";
+} from "@v1/lib/compatibilityGuard";
 
 describe("Safeguards — Data Sanitization", () => {
   describe("safeNumber", () => {

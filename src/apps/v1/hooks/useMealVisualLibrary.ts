@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { MealVisualItem, MealVisualAlias } from "@/types/mealVisualLibrary";
+import { supabase } from "@v1/integrations/supabase/client";
+import type { MealVisualItem, MealVisualAlias } from "@v1/types/mealVisualLibrary";
 
 export function useMealVisualLibrary(options?: { category?: string; search?: string }) {
   const [items, setItems] = useState<MealVisualItem[]>([]);

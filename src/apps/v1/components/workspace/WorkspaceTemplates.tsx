@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { BookOpen, Check, AlertTriangle, ChevronRight, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@v1/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
 
 interface Props { search: string; }
 

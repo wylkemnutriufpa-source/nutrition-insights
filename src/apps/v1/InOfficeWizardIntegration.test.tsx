@@ -53,12 +53,12 @@ vi.mock('./integrations/supabase/client', () => ({
   }
 }));
 
-vi.mock('@/lib/auth', () => ({
+vi.mock('@v1/lib/auth', () => ({
   useAuth: () => ({ user: { id: 'nutri1' }, isAdmin: false }),
   AuthProvider: ({ children }: any) => <div>{children}</div>
 }));
 
-vi.mock('@/lib/onboardingPlanResolver', () => ({
+vi.mock('@v1/lib/onboardingPlanResolver', () => ({
   resolvePatientIdentity: vi.fn((id) => Promise.resolve({ canonicalId: id, profileId: id + '_prof', allIds: [id] }))
 }));
 

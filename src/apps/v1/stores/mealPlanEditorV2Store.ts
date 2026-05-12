@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import type { Database } from "@/integrations/supabase/types";
-import { autoMatchSingle } from "@/lib/mealVisualAssociation";
-import { sortMealPlanItems } from "@/lib/mealPlanSort";
+import { supabase } from "@v1/integrations/supabase/client";
+import type { Tables, TablesInsert } from "@v1/integrations/supabase/types";
+import type { Database } from "@v1/integrations/supabase/types";
+import { autoMatchSingle } from "@v1/lib/mealVisualAssociation";
+import { sortMealPlanItems } from "@v1/lib/mealPlanSort";
 
 /**
  * Single-Day Editor Store (v3 - Pure Single Day)

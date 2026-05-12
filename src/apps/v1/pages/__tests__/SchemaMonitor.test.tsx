@@ -4,7 +4,7 @@ import SchemaMonitor from "../SchemaMonitor";
 import "@testing-library/jest-dom";
 
 // Mock snapshot data to simulate missing columns
-vi.mock("@/integrations/supabase/schema-snapshot.json", () => ({
+vi.mock("@v1/integrations/supabase/schema-snapshot.json", () => ({
   default: {
     generatedAt: "2026-04-27",
     tables: {
@@ -16,7 +16,7 @@ vi.mock("@/integrations/supabase/schema-snapshot.json", () => ({
 }));
 
 // Mock layout to avoid complexity
-vi.mock("@/components/layout/DashboardLayout", () => ({
+vi.mock("@v1/components/layout/DashboardLayout", () => ({
   default: ({ children }: any) => <div data-testid="layout">{children}</div>
 }));
 

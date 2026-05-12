@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Sparkles, Play, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
+import { Button } from "@v1/components/ui/button";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
+import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
 
 function Particle({ delay, x, y, size }: { delay: number; x: string; y: string; size: number }) {
   return (
@@ -98,7 +98,7 @@ export default function LandingHero() {
           className="flex flex-col items-center gap-6 mt-4"
         >
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button
                 size="lg"
                 className="h-14 px-10 text-sm font-bold rounded-xl bg-gradient-to-r from-[hsl(152,58%,45%)] to-[hsl(170,55%,42%)] hover:opacity-90 text-white shadow-lg shadow-[hsl(152_58%_45%/0.2)] transition-all duration-300 hover:scale-[1.04] glow-pulse-border"
@@ -107,7 +107,7 @@ export default function LandingHero() {
                 Criar conta gratuita
               </Button>
             </Link>
-            <Link to="/demo">
+            <Link to="/v1/demo">
               <Button
                 size="lg"
                 variant="outline"
@@ -141,7 +141,7 @@ export default function LandingHero() {
             transition={{ duration: 0.5, delay: 1 }}
           >
             <Link
-              to="/auth?tab=login"
+              to="/v1/auth?tab=login"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/20 hover:border-primary/50 bg-white/[0.06] hover:bg-white/[0.12] text-white/70 hover:text-white text-sm font-medium transition-all duration-300 backdrop-blur-sm shadow-sm hover:shadow-primary/10"
             >
               Já tenho conta → Entrar

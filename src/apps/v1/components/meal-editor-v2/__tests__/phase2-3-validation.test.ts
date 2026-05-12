@@ -9,7 +9,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // ── Test the store logic directly ──────────────────────────
 // We mock supabase to validate local-first behavior
 
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: () => ({
       select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: null }), order: () => Promise.resolve({ data: [] }) }) }),
@@ -20,11 +20,11 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-vi.mock("@/lib/mealVisualAssociation", () => ({
+vi.mock("@v1/lib/mealVisualAssociation", () => ({
   autoMatchSingle: () => Promise.resolve(null),
 }));
 
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
 
 const PLAN_ID = "test-plan-001";
 const MEAL_TYPE = "lunch" as const;

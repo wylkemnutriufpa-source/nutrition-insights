@@ -7,8 +7,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FitIntelligenceActivation from "./activation/FitIntelligenceActivation";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { toast } from "sonner";
 import { Brain } from "lucide-react";
 import {
@@ -18,8 +18,8 @@ import {
   isSnoozed,
   type IntelligencePrompt,
   type BehavioralContext,
-} from "@/lib/fitIntelligenceEngine";
-import { buildIntelligenceContext } from "@/lib/fitIntelligenceContext";
+} from "@v1/lib/fitIntelligenceEngine";
+import { buildIntelligenceContext } from "@v1/lib/fitIntelligenceContext";
 import FitIntelligenceWizard from "./FitIntelligenceWizard";
 import FitIntelligencePromptCard from "./FitIntelligencePromptCard";
 

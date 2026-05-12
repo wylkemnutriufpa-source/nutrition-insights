@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
-import { cn } from "@/lib/utils";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { cn } from "@v1/lib/utils";
 import { Brain, X, ChevronRight, Eye, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@v1/components/ui/badge";
 
 type EntityState = "passive" | "detecting" | "critical" | "positive";
 
@@ -347,7 +347,7 @@ export default function ClinicalAIEntity() {
                     ))}
                   </div>
 
-                  <Link to="/control-tower" onClick={() => setPanelOpen(false)}>
+                  <Link to="/v1/control-tower" onClick={() => setPanelOpen(false)}>
                     <Button variant="outline" size="sm" className="w-full text-xs border-white/10 text-white/60 hover:text-white gap-1.5 mt-2">
                       Abrir Control Tower <ChevronRight className="w-3 h-3" />
                     </Button>

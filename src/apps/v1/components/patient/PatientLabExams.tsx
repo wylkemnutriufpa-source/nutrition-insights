@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   Upload, FileText, AlertTriangle, CheckCircle2, Clock, TrendingUp,
   Search, Plus, Eye, Trash2, Activity, Loader2
@@ -16,8 +16,8 @@ import {
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
-import { extractLabMarkersFromText, interpretLabResults } from "@/lib/labResultsInterpreter";
-import type { LabFlag, LabInterpretationResult } from "@/lib/labResultsInterpreter";
+import { extractLabMarkersFromText, interpretLabResults } from "@v1/lib/labResultsInterpreter";
+import type { LabFlag, LabInterpretationResult } from "@v1/lib/labResultsInterpreter";
 
 interface Props {
   patientId: string;

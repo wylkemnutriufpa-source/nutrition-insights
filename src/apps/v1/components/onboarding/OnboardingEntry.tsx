@@ -1,8 +1,8 @@
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@v1/lib/auth";
 import { Navigate } from "react-router-dom";
-import OnboardingPaciente from "@/pages/OnboardingPaciente";
-import OnboardingProfissional from "@/pages/OnboardingProfissional";
-import PageLoader from "@/components/common/PageLoader";
+import OnboardingPaciente from "@v1/pages/OnboardingPaciente";
+import OnboardingProfissional from "@v1/pages/OnboardingProfissional";
+import PageLoader from "@v1/components/common/PageLoader";
 
 export default function OnboardingEntry() {
   const { isNutritionist, isPersonal, isAdmin, isPatient, authStatus } = useAuth();
@@ -18,5 +18,5 @@ export default function OnboardingEntry() {
   }
 
   // Fallback
-  return <Navigate to="/" replace />;
+  return <Navigate to="/v1/" replace />;
 }

@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle, XCircle, Loader2, ClipboardCheck, History, Smartphone } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Button } from "@v1/components/ui/button";
+import { Card } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Label } from "@v1/components/ui/label";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 

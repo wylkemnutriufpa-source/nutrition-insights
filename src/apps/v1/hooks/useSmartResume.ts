@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
 
 interface PendingAction {
   action_type: string;

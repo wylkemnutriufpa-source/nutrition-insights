@@ -1,16 +1,16 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader } from "@v1/components/ui/card";
+import { Input } from "@v1/components/ui/input";
+import { Badge } from "@v1/components/ui/badge";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { Shield, Search, Clock, User, Activity, LogIn, LogOut, UserPlus, UserX, RefreshCw, FileText, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 
 const ACTION_META: Record<string, { label: string; icon: typeof Activity; color: string }> = {
   login: { label: "Login", icon: LogIn, color: "text-primary" },

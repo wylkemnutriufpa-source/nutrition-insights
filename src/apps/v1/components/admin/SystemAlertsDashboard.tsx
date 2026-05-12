@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { inspectPatientPlans } from "@/lib/planSafeOperations";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Card, CardHeader, CardTitle, CardContent } from "@v1/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@v1/components/ui/table";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { inspectPatientPlans } from "@v1/lib/planSafeOperations";
 import { toast } from "sonner";
 
 export const SystemAlertsDashboard = () => {

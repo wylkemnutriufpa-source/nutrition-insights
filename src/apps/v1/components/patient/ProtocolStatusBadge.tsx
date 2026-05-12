@@ -1,7 +1,7 @@
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@v1/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 import { Shield, ShieldAlert, Pause, XCircle, Wrench, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

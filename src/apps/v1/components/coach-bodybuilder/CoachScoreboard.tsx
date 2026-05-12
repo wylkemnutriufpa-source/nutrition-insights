@@ -2,9 +2,9 @@
  * Coach Executive Scoreboard — Portfolio command panel
  */
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { PHASE_LABELS, type CheckinData, generateAlerts, analyzeAthleteData } from "@/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { PHASE_LABELS, type CheckinData, generateAlerts, analyzeAthleteData } from "@v1/lib/coachAnalysisEngine";
 import {
   Trophy, TrendingUp, TrendingDown, AlertTriangle, Target,
   BarChart3, Users, Shield, Flame, Crown

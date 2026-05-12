@@ -2,7 +2,7 @@
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useAuth } from "./lib/auth";
-import { BrainLoaderScreen } from "@/components/common/BrainLoader";
+import { BrainLoaderScreen } from "@v1/components/common/BrainLoader";
 
 const AppContent = () => {
   const { loading } = useAuth();

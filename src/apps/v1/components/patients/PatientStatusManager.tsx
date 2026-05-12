@@ -1,28 +1,28 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "@v1/components/ui/switch";
+import { Input } from "@v1/components/ui/input";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 import { toast } from "sonner";
 import {
   Search, CreditCard, Play, FileCheck, ArrowLeft,
   Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck,
   ClipboardList, KeyRound, Send, UserCog, Mail, Copy, MessageCircle
 } from "lucide-react";
-import { releaseOnboarding } from "@/lib/serverTransitions";
-import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
-import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
-import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
-import { getWhatsAppInvitationMessage, getInvitationUrl } from "@/utils/invitation";
-import type { PatientInfo } from "@/hooks/queries/usePatientsList";
+import { releaseOnboarding } from "@v1/lib/serverTransitions";
+import { acquireActionLock, releaseActionLock, isAtOrPast } from "@v1/lib/fitjourneyBible";
+import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@v1/lib/lifecycleCache";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@v1/hooks/useWhatsAppBusiness";
+import { getWhatsAppInvitationMessage, getInvitationUrl } from "@v1/utils/invitation";
+import type { PatientInfo } from "@v1/hooks/queries/usePatientsList";
 
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
   invited: { label: "Convidado", color: "bg-muted text-muted-foreground" },

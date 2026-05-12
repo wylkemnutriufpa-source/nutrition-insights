@@ -1,5 +1,5 @@
-import type { TablesInsert } from "@/integrations/supabase/types";
-import type { MealType } from "@/stores/mealPlanEditorV2Store";
+import type { TablesInsert } from "@v1/integrations/supabase/types";
+import type { MealType } from "@v1/stores/mealPlanEditorV2Store";
 
 export interface DraggedVisualLibraryItem {
   source: "visual_library";

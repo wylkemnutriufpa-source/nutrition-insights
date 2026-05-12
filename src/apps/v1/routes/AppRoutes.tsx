@@ -1,22 +1,22 @@
 import { Routes, Route, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@v1/lib/auth";
 import { lazy, Suspense, useEffect } from "react";
-import { useAppState } from "@/hooks/useAppState";
-import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
-import { HardFailLinkage } from "@/components/common/HardFailLinkage";
-import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
-import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
-import { StabilityZone } from "@/components/common/StabilityZone";
-import { lazyDebug } from "@/lib/lazyDebug";
-import { useConsentGuard } from "@/hooks/useConsentGuard";
+import { useAppState } from "@v1/hooks/useAppState";
+import { DegradedModeBanner } from "@v1/components/common/DegradedModeBanner";
+import { HardFailLinkage } from "@v1/components/common/HardFailLinkage";
+import { ErrorBoundaryDebug } from "@v1/components/common/ErrorBoundaryDebug";
+import { SectionalErrorBoundary } from "@v1/components/common/SectionalErrorBoundary";
+import { StabilityZone } from "@v1/components/common/StabilityZone";
+import { lazyDebug } from "@v1/lib/lazyDebug";
+import { useConsentGuard } from "@v1/hooks/useConsentGuard";
 import { AnimatePresence } from "framer-motion";
-import SafePage from "@/components/common/SafePage";
-import PageLoader from "@/components/common/PageLoader";
-import { SystemStateGuard } from "@/components/common/SystemStateGuard";
-import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
-import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
-import { logError } from "@/lib/monitoring";
-import OnboardingEntry from "@/components/onboarding/OnboardingEntry";
+import SafePage from "@v1/components/common/SafePage";
+import PageLoader from "@v1/components/common/PageLoader";
+import { SystemStateGuard } from "@v1/components/common/SystemStateGuard";
+import ExperienceRouteGuard from "@v1/components/common/ExperienceRouteGuard";
+import WorkspaceRouteGuard from "@v1/components/common/WorkspaceRouteGuard";
+import { logError } from "@v1/lib/monitoring";
+import OnboardingEntry from "@v1/components/onboarding/OnboardingEntry";
 
 // Eager
 import Auth from "../pages/Auth";
@@ -243,7 +243,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (authStatus !== "authenticated") {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/v1/auth" replace />;
   }
   
   return <>{children}</>;
@@ -306,11 +306,11 @@ export const AppRoutes = () => {
       <Route path="/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Index /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/client/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClientDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/client/meals" element={<Navigate to="/meals" replace />} />
-      <Route path="/client/patient-meal-plan" element={<Navigate to="/patient-meal-plan" replace />} />
-      <Route path="/client/journey" element={<Navigate to="/journey" replace />} />
-      <Route path="/client/checklist" element={<Navigate to="/checklist" replace />} />
-      <Route path="/client/achievements" element={<Navigate to="/achievements" replace />} />
+      <Route path="/client/meals" element={<Navigate to="/v1/meals" replace />} />
+      <Route path="/client/patient-meal-plan" element={<Navigate to="/v1/patient-meal-plan" replace />} />
+      <Route path="/client/journey" element={<Navigate to="/v1/journey" replace />} />
+      <Route path="/client/checklist" element={<Navigate to="/v1/checklist" replace />} />
+      <Route path="/client/achievements" element={<Navigate to="/v1/achievements" replace />} />
 
 
       {/* Mapeamento de Rotas do Nutritionist (Conforme imports acima) */}
@@ -323,14 +323,14 @@ export const AppRoutes = () => {
       <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans/:planId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/diet-templates" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietTemplates /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/editor" element={<Navigate to="/editor-v3" replace />} />
+      <Route path="/editor" element={<Navigate to="/v1/editor-v3" replace />} />
       <Route path="/editor-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/editor-v3/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><EditorV3Page /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/v3" element={<Navigate to="/editor-v3" replace />} />
-      <Route path="/v3/:patientId" element={<RedirectWithParams to="/editor-v3/:patientId" />} />
-      <Route path="/meal-plans/editor/v3" element={<Navigate to="/editor-v3" replace />} />
-      <Route path="/diet-builder" element={<Navigate to="/editor-v3" replace />} />
-      <Route path="/meal-plan-editor-v3" element={<Navigate to="/editor-v3" replace />} />
+      <Route path="/v3" element={<Navigate to="/v1/editor-v3" replace />} />
+      <Route path="/v3/:patientId" element={<RedirectWithParams to="/v1/editor-v3/:patientId" />} />
+      <Route path="/meal-plans/editor/v3" element={<Navigate to="/v1/editor-v3" replace />} />
+      <Route path="/diet-builder" element={<Navigate to="/v1/editor-v3" replace />} />
+      <Route path="/meal-plan-editor-v3" element={<Navigate to="/v1/editor-v3" replace />} />
       <Route path="/recipes" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Recipes /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/appointments" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Appointments /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/financial" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Financial /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -364,7 +364,7 @@ export const AppRoutes = () => {
       <Route path="/personal/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/personal/students" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalStudents /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/personal/workouts" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalWorkouts /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/personal-dashboard" element={<Navigate to="/personal/dashboard" replace />} />
+      <Route path="/personal-dashboard" element={<Navigate to="/v1/personal/dashboard" replace />} />
       <Route path="/body-analysis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyAnalysis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/body-projection" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyProjectionExperience /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/consent" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ConsentRequired /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -377,7 +377,7 @@ export const AppRoutes = () => {
       <Route path="/admin/protocols" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminNutritionProtocols /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/guide-engine" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminGuideEngine /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/marketing" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminMarketingContent /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/admin/marketing-content" element={<Navigate to="/admin/marketing" replace />} />
+      <Route path="/admin/marketing-content" element={<Navigate to="/v1/admin/marketing" replace />} />
       <Route path="/admin/menu-config" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminMenuConfig /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/patient-features" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminPatientFeatures /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/qa" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><QAChecklist /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -391,9 +391,9 @@ export const AppRoutes = () => {
       <Route path="/admin/landing-pages" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminSiteEditor /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/booking-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminBookingSettings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/admin/subscription-monitor" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminSubscriptionMonitor /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/admin/migrations" element={<Navigate to="/schema-monitor" replace />} />
-      <Route path="/admin/experimental" element={<Navigate to="/admin/feature-control" replace />} />
-      <Route path="/admin/performance" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/admin/migrations" element={<Navigate to="/v1/schema-monitor" replace />} />
+      <Route path="/admin/experimental" element={<Navigate to="/v1/admin/feature-control" replace />} />
+      <Route path="/admin/performance" element={<Navigate to="/v1/dashboard" replace />} />
       <Route path="/my-referrals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyReferrals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Rotas Extras e Inteligência */}
@@ -421,7 +421,7 @@ export const AppRoutes = () => {
       <Route path="/shopping-list" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ShoppingList /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patient-meal-plan" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientMealPlan /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patient-overview" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientOverview /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/my-diet" element={<Navigate to="/patient-meal-plan" replace />} />
+      <Route path="/my-diet" element={<Navigate to="/v1/patient-meal-plan" replace />} />
       <Route path="/patient-plan" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientMealPlan /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patient-plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientMealPlan /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patient/plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientMealPlan /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -461,7 +461,7 @@ export const AppRoutes = () => {
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
-      <Route path="*" element={<Navigate to="/welcome" replace />} />
+      <Route path="*" element={<Navigate to="/v1/welcome" replace />} />
     </Routes>
   );
 };

@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { cn } from "@v1/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@v1/components/ui/tooltip";
 
 interface MatrixPatient {
   id: string;

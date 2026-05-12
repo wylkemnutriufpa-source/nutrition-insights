@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { Trophy, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import PrestigeBadge from "./PrestigeBadge";
@@ -38,7 +38,7 @@ export default function RankingWidget() {
   }, [user]);
 
   return (
-    <Link to="/ranking">
+    <Link to="/v1/ranking">
       <div className="glass-premium rounded-xl p-4 cursor-pointer metric-glow transition-all duration-300 shimmer-sweep h-full">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">

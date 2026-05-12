@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import {
   Brain, Shield, Zap, Radar, TrendingUp, Activity, Eye,
   ArrowRight, Crown, HeartPulse, Target, BarChart3, BellRing,
@@ -207,7 +207,7 @@ export function ClinicalIntelligenceUpsellModal({ open, onOpenChange }: Clinical
 
         {/* CTA */}
         <div className="px-6 pb-6">
-          <Link to="/pricing" onClick={() => onOpenChange(false)}>
+          <Link to="/v1/pricing" onClick={() => onOpenChange(false)}>
             <Button className="w-full h-12 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold text-sm border-0 shadow-lg shadow-emerald-500/20 gap-2">
               <Crown className="w-4 h-4" />
               Ativar Inteligência Clínica

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
 import { 
   Zap, 
   Target, 
@@ -10,7 +10,7 @@ import {
   Flame,
   BrainCircuit
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 
 interface ExplainabilityPanelProps {
   metadata: {

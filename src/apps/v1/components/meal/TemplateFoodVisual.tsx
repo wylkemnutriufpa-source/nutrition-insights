@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useMealVisualMatch } from "@/hooks/useMealVisualLibrary";
+import { useMealVisualMatch } from "@v1/hooks/useMealVisualLibrary";
 import { RecipeDetailModal } from "./RecipeDetailModal";
 import { ChefHat } from "lucide-react";
 

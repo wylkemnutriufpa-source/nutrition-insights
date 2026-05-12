@@ -5,7 +5,7 @@
  * ajustando gramagens para atingir metas de macros.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 // ── Types ────────────────────────────────────────────────────
 export type FoodRole = "protein" | "carb" | "vegetable" | "fruit" | "fat" | "dairy" | "beverage" | "complement" | "soup";

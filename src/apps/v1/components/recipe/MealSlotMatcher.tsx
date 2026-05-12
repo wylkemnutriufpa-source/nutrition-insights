@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Button } from "@v1/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Badge } from "@v1/components/ui/badge";
 import { Check, AlertTriangle, ArrowRight } from "lucide-react";
-import { RecipeIngredient, RecipeMacros, matchRecipeToMealSlot, perServingMacros, calculateRecipeMacros, macrosMatchTarget } from "@/lib/recipeCalculator";
+import { RecipeIngredient, RecipeMacros, matchRecipeToMealSlot, perServingMacros, calculateRecipeMacros, macrosMatchTarget } from "@v1/lib/recipeCalculator";
 
 interface MealSlot {
   id: string;

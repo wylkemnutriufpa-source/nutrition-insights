@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Badge } from "@v1/components/ui/badge";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import { ArrowRightLeft, Flame, Beef, TrendingUp, TrendingDown, Minus, Clock } from "lucide-react";
 
 interface SubstitutionRecord {

@@ -2,11 +2,11 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import CinematicGuideSlide from "@/components/common/CinematicGuideSlide";
-import type { PresentationSlide } from "@/lib/presentationSlides";
-import { resolveFeatureRoute } from "@/lib/featureRouteMap";
+import { Button } from "@v1/components/ui/button";
+import { Progress } from "@v1/components/ui/progress";
+import CinematicGuideSlide from "@v1/components/common/CinematicGuideSlide";
+import type { PresentationSlide } from "@v1/lib/presentationSlides";
+import { resolveFeatureRoute } from "@v1/lib/featureRouteMap";
 import { toast } from "sonner";
 
 interface Props {

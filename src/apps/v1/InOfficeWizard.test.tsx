@@ -8,15 +8,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Mocks simples para componentes complexos
-vi.mock('@/components/layout/DashboardLayout', () => ({
+vi.mock('@v1/components/layout/DashboardLayout', () => ({
   default: ({ children }: any) => <div data-testid="layout">{children}</div>
 }));
 
-vi.mock('@/components/in-office/InOfficeStepPatient', () => ({
+vi.mock('@v1/components/in-office/InOfficeStepPatient', () => ({
   default: () => <div data-testid="step-1">Cadastro</div>
 }));
 
-vi.mock('@/components/in-office/InOfficeStepAnamnesis', () => ({
+vi.mock('@v1/components/in-office/InOfficeStepAnamnesis', () => ({
   default: () => <div data-testid="step-2">Anamnese</div>
 }));
 

@@ -1,21 +1,21 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, Heart, Sparkles, Rocket } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 
-import slide1 from "@/assets/onboarding-paciente/slide-1.png";
-import slide2 from "@/assets/onboarding-paciente/slide-2.png";
-import slide3 from "@/assets/onboarding-paciente/slide-3.png";
-import slide4 from "@/assets/onboarding-paciente/slide-4.png";
-import slide5 from "@/assets/onboarding-paciente/slide-5.png";
-import slide6 from "@/assets/onboarding-paciente/slide-6.png";
-import slide7 from "@/assets/onboarding-paciente/slide-7.png";
-import slide8 from "@/assets/onboarding-paciente/slide-8.png";
-import slide9 from "@/assets/onboarding-paciente/slide-9.png";
-import slide10 from "@/assets/onboarding-paciente/slide-10.png";
+import slide1 from "@v1/assets/onboarding-paciente/slide-1.png";
+import slide2 from "@v1/assets/onboarding-paciente/slide-2.png";
+import slide3 from "@v1/assets/onboarding-paciente/slide-3.png";
+import slide4 from "@v1/assets/onboarding-paciente/slide-4.png";
+import slide5 from "@v1/assets/onboarding-paciente/slide-5.png";
+import slide6 from "@v1/assets/onboarding-paciente/slide-6.png";
+import slide7 from "@v1/assets/onboarding-paciente/slide-7.png";
+import slide8 from "@v1/assets/onboarding-paciente/slide-8.png";
+import slide9 from "@v1/assets/onboarding-paciente/slide-9.png";
+import slide10 from "@v1/assets/onboarding-paciente/slide-10.png";
 
 interface SlideData {
   image: string;
@@ -40,8 +40,8 @@ const ONBOARDING_KEY = "patient_onboarding_completed";
 const FORCE_RESET_KEY = "fitjourney_force_reset_v1";
 const SWIPE_THRESHOLD = 50;
 
-import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-import { BrainLoaderCard } from "@/components/common/BrainLoader";
+import { usePatientJourneyStatus } from "@v1/hooks/usePatientJourneyStatus";
+import { BrainLoaderCard } from "@v1/components/common/BrainLoader";
 
 export default function OnboardingPaciente() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();

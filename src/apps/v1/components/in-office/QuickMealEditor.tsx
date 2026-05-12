@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@v1/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Copy, Save, Search,
@@ -13,10 +13,10 @@ import {
   Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle, Info, ShieldCheck, Check
 } from "lucide-react";
 // withRetry removido para garantir comportamento fail-fast
-import type { Database } from "@/integrations/supabase/types";
-import { cn } from "@/lib/utils";
-import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
-import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
+import type { Database } from "@v1/integrations/supabase/types";
+import { cn } from "@v1/lib/utils";
+import { validatePlanSubstitutions } from "@v1/lib/mealPlanSubstitutionValidator";
+import { CURRENT_ENGINE_VERSION } from "@v1/lib/engineVersionGovernance";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 

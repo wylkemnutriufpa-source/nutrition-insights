@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Separator } from "@v1/components/ui/separator";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {

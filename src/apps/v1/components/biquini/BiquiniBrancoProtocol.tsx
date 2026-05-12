@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import {
   Lock, Unlock, Shield, CheckCircle2, Clock,
   Droplets, Apple, Dumbbell, Moon, Target,

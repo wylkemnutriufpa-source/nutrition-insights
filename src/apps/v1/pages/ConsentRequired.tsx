@@ -6,14 +6,14 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Lock, Eye, FileText, Brain, CheckCircle2, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { logAudit } from "@/lib/auditLog";
+import { Button } from "@v1/components/ui/button";
+import { Checkbox } from "@v1/components/ui/checkbox";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { logAudit } from "@v1/lib/auditLog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { TERMS_VERSION } from "@/hooks/useConsentGuard";
+import { TERMS_VERSION } from "@v1/hooks/useConsentGuard";
 
 const CONSENT_SECTIONS = [
   {
@@ -181,10 +181,10 @@ export default function ConsentRequired() {
 
         {/* Footer Links */}
         <div className="text-center mt-6 space-x-4">
-          <Link to="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/v1/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
             Política de Privacidade
           </Link>
-          <Link to="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/v1/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
             Termos de Uso
           </Link>
         </div>

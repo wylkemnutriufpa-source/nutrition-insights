@@ -1,20 +1,20 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useMealPlanEditorV2Store, type MealType } from "@v1/stores/mealPlanEditorV2Store";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@v1/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+import { Input } from "@v1/components/ui/input";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   Search, Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Wheat, Droplets, Plus, Loader2, RefreshCcw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { fmtMacro, safeNum } from "@/lib/formatMacros";
+import { fmtMacro, safeNum } from "@v1/lib/formatMacros";
 
 // ── Types ───────────────────────────────────────────────────
 interface MealLibraryItem {

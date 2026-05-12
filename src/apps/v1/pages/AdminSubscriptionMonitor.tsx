@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { toast } from "sonner";
 import {
   CreditCard, Users, Search, Loader2, CheckCircle2, XCircle,

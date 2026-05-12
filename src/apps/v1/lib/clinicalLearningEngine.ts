@@ -3,7 +3,7 @@
  * Detects patterns from patient behavior, body response, and adherence.
  * Stores learned patterns for personalization without generative AI.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 interface LearningPattern {
   learning_type: string;

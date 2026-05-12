@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v2/integrations/supabase/client';
 
 export function usePatients(nutritionistId: string | undefined) {
   const [patients, setPatients] = useState<any[]>([]);

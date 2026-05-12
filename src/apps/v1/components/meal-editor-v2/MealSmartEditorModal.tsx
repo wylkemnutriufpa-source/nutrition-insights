@@ -4,12 +4,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
+} from "@v1/components/ui/dialog";
+import { Input } from "@v1/components/ui/input";
+import { Button } from "@v1/components/ui/button";
+import { Label } from "@v1/components/ui/label";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Textarea } from "@v1/components/ui/textarea";
 import {
   Plus,
   Trash2,
@@ -25,11 +25,11 @@ import {
   ClipboardCheck,
   AlertTriangle
 } from "lucide-react";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
-import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
+import { FOOD_DATABASE } from "@v1/components/meals/FoodAutocomplete";
 import { MEAL_TEMPLATES } from "./MealTemplatePanel";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 import { normalizeSubstitutions, formatFinalDescription } from "./mealEditorHelpers";
 
 interface MealSmartEditorModalProps {

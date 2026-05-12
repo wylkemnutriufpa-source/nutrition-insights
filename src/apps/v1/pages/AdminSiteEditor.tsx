@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSiteSettingsRaw, useUpdateSiteSetting, SiteSetting } from "@/hooks/useSiteSettings";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { useSiteSettingsRaw, useUpdateSiteSetting, SiteSetting } from "@v1/hooks/useSiteSettings";
 import { toast } from "sonner";
 import { Settings, Palette, Globe, Search, Save, Type, Image, BarChart3, MessageSquare, HelpCircle, DollarSign, Share2, Megaphone } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@v1/components/ui/label";
+import { Switch } from "@v1/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { supabase } from "@v1/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
 import { useNavigate } from "react-router-dom";

@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Skeleton } from "@v1/components/ui/skeleton";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Separator } from "@v1/components/ui/separator";
 import {
   Target, Brain, Dumbbell, Heart, Apple, Zap, Shield, Scale,
   FlaskConical, Flame, Leaf, Activity

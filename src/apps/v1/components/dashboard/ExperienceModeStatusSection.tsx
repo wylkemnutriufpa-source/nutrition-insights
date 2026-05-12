@@ -4,9 +4,9 @@
  * blocked, failed, offline-queued) so the user does not need to rely
  * on toasts only.
  */
-import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { useExperienceMode } from "@v1/hooks/useExperienceMode";
 import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw, Copy, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -14,7 +14,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@v1/components/ui/tooltip";
 import RequestUnlockDialog from "./RequestUnlockDialog";
 
 function CorrelationIdBadge({ id }: { id: string }) {

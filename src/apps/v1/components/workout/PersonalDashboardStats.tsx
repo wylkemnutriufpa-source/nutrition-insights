@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
+import { Button } from "@v1/components/ui/button";
 import {
   Users, Dumbbell, TrendingUp, AlertTriangle, Trophy,
   Activity, UserX, Flame, Clock, Target, ArrowRight

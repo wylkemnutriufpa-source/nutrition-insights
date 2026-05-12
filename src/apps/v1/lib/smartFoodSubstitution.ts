@@ -6,7 +6,7 @@
  * Used by the canvas/editor when the user clicks "Trocar por outro alimento".
  * Does NOT touch the original template — it just edits the current item.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 export type SmartFoodCategory =
   | "protein_main"

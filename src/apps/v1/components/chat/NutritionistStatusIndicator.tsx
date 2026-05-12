@@ -1,4 +1,4 @@
-import { useNutritionistStatus } from "@/hooks/useNutritionistStatus";
+import { useNutritionistStatus } from "@v1/hooks/useNutritionistStatus";
 
 interface Props {
   patientId: string | undefined;

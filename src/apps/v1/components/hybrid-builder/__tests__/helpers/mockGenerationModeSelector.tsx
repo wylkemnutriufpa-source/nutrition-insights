@@ -111,14 +111,14 @@ export function setMockState(opts: MockStateOptions = {}) {
  * `src/components/hybrid-builder/__tests__/`.
  */
 export function installGenerationModeSelectorMocks() {
-  vi.mock("@/lib/auth", () => ({
+  vi.mock("@v1/lib/auth", () => ({
     useAuth: () => {
       const g = globalThis as any;
       return { user: g[STATE_KEY]?.user ?? { id: "nutri-1" } };
     },
   }));
 
-  vi.mock("@/stores/mealPlanEditorV2Store", () => ({
+  vi.mock("@v1/stores/mealPlanEditorV2Store", () => ({
     useMealPlanEditorV2Store: () => ({ planId: "plan-1", hydrate: vi.fn() }),
   }));
 
@@ -126,13 +126,13 @@ export function installGenerationModeSelectorMocks() {
     toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() },
   }));
 
-  vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
+  vi.mock("@v1/components/strategy-advisor/StrategyAdvisorPanel", () => ({
     default: () => null,
   }));
   vi.mock("../MealRecipeSelector", () => ({ default: () => null }));
   vi.mock("../MarmitaSettingsDialog", () => ({ default: () => null }));
 
-  vi.mock("@/hooks/useMarmitaSettings", () => ({
+  vi.mock("@v1/hooks/useMarmitaSettings", () => ({
     useMarmitaSettings: () => {
       const g = globalThis as any;
       const s = g[STATE_KEY];
@@ -143,7 +143,7 @@ export function installGenerationModeSelectorMocks() {
     },
   }));
 
-  vi.mock("@/integrations/supabase/client", () => ({
+  vi.mock("@v1/integrations/supabase/client", () => ({
     supabase: {
       from: () => ({
         select: () => ({

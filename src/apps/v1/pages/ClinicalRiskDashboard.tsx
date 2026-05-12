@@ -1,6 +1,6 @@
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
-import { PremiumCardWrapper } from "@/components/premium";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import ClinicalRiskDashboardContent from "@v1/components/dashboard/ClinicalRiskDashboardContent";
+import { PremiumCardWrapper } from "@v1/components/premium";
 
 export default function ClinicalRiskDashboard() {
   return (

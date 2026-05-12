@@ -6,10 +6,10 @@
  */
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { invalidateCriticalQueries } from "@/lib/queryInvalidation";
-import { useTelemetryStore } from "@/lib/telemetryStore";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { invalidateCriticalQueries } from "@v1/lib/queryInvalidation";
+import { useTelemetryStore } from "@v1/lib/telemetryStore";
 
 export function usePatientRealtime() {
   const { user, isPatient } = useAuth();

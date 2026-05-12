@@ -1,24 +1,24 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/lib/tenantContext";
-import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useTenant } from "@v1/lib/tenantContext";
+import { getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Progress } from "@v1/components/ui/progress";
 import { toast } from "sonner";
 import { CheckCircle2, Circle, Flame, Trophy, Calendar, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, X, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import confetti from "@/lib/confetti";
-import { usePatientPoints } from "@/hooks/usePatientPoints";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import confetti from "@v1/lib/confetti";
+import { usePatientPoints } from "@v1/hooks/usePatientPoints";
 import { useTranslation } from "react-i18next";
-import ShareProgressButton from "@/components/social/ShareProgressButton";
-import { useChecklistTasks, useToggleChecklistTask, type ChecklistTask } from "@/hooks/queries/useChecklistQuery";
+import ShareProgressButton from "@v1/components/social/ShareProgressButton";
+import { useChecklistTasks, useToggleChecklistTask, type ChecklistTask } from "@v1/hooks/queries/useChecklistQuery";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/hooks/queries/queryKeys";
+import { queryKeys } from "@v1/hooks/queries/queryKeys";
 
 const DEFAULT_TASKS = [
   { title: "Seguir café da manhã do plano", icon: "☕", category: "nutrition", description: "Café da manhã conforme plano alimentar" },

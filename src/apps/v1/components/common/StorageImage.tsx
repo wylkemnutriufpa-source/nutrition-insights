@@ -2,7 +2,7 @@
  * StorageImage — Renders an image from a storage path or URL.
  * Uses useSignedStorageUrl for auto-renewal of signed URLs.
  */
-import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
+import { useSignedStorageUrl } from "@v1/hooks/useSignedStorageUrl";
 
 interface StorageImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string | null | undefined;

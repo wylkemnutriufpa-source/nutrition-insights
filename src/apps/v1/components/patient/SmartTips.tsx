@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 import { Lightbulb, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 

@@ -1,18 +1,18 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MealItemCard } from "@/components/patient/MealPlanDailyView";
+import { MealItemCard } from "@v1/components/patient/MealPlanDailyView";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 
-vi.mock("@/lib/auth", () => ({
+vi.mock("@v1/lib/auth", () => ({
   useAuth: () => ({ user: { id: "test-user" } }),
 }));
 
-vi.mock("@/hooks/useMealVisualItem", () => ({
+vi.mock("@v1/hooks/useMealVisualItem", () => ({
   useMealVisualItem: () => ({ item: null }),
 }));
 
-vi.mock("@/hooks/useSignedStorageUrl", () => ({
+vi.mock("@v1/hooks/useSignedStorageUrl", () => ({
   useSignedStorageUrl: () => ({ url: null }),
 }));
 

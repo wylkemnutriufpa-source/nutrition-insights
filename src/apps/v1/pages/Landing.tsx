@@ -1,10 +1,10 @@
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
-import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
-import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
+import { supabase } from "@v1/integrations/supabase/client";
 import {
   Sparkles, Users, Brain, Shield, BarChart3, Utensils, CheckCircle2,
   ArrowRight, Star, Zap, Heart, ChevronRight, Bot, Pill, Camera,
@@ -12,9 +12,9 @@ import {
   Palette, DollarSign, Play, ArrowDown, Menu, X, BookOpen, TrendingUp,
   Award, Globe, Lock, Cpu, Trophy, Crown, Flame, Dumbbell
 } from "lucide-react";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import BrainIntelligence from "@/components/common/BrainIntelligence";
-import CoachBodybuilderLandingSection from "@/components/coach-bodybuilder/CoachBodybuilderLandingSection";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
+import BrainIntelligence from "@v1/components/common/BrainIntelligence";
+import CoachBodybuilderLandingSection from "@v1/components/coach-bodybuilder/CoachBodybuilderLandingSection";
 
 /* ─── animation variants ─── */
 const fadeUp = { hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const } } };
@@ -244,8 +244,8 @@ export default function Landing() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/auth"><Button variant="ghost" size="sm" className="font-medium">Entrar</Button></Link>
-            <Link to="/auth"><Button size="sm" className="gradient-primary shadow-glow font-semibold gap-1.5">Começar Grátis <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
+            <Link to="/v1/auth"><Button variant="ghost" size="sm" className="font-medium">Entrar</Button></Link>
+            <Link to="/v1/auth"><Button size="sm" className="gradient-primary shadow-glow font-semibold gap-1.5">Começar Grátis <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
           </div>
 
           <button className="md:hidden p-2" onClick={() => setMobileMenu(!mobileMenu)}>
@@ -259,8 +259,8 @@ export default function Landing() {
               <a key={href} href={href} className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground" onClick={() => setMobileMenu(false)}>{label}</a>
             ))}
             <div className="flex gap-2 pt-2">
-              <Link to="/auth" className="flex-1"><Button variant="outline" className="w-full" size="sm">Entrar</Button></Link>
-              <Link to="/auth" className="flex-1"><Button className="w-full gradient-primary shadow-glow" size="sm">Criar Conta</Button></Link>
+              <Link to="/v1/auth" className="flex-1"><Button variant="outline" className="w-full" size="sm">Entrar</Button></Link>
+              <Link to="/v1/auth" className="flex-1"><Button className="w-full gradient-primary shadow-glow" size="sm">Criar Conta</Button></Link>
             </div>
           </motion.div>
         )}
@@ -296,7 +296,7 @@ export default function Landing() {
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-              <Link to="/auth">
+              <Link to="/v1/auth">
                 <Button size="lg" className="gradient-primary shadow-glow gap-2 text-base px-10 h-14 font-semibold hover:scale-105 active:scale-[0.98] transition-transform">
                   {heroCta} <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -655,7 +655,7 @@ export default function Landing() {
             </div>
 
             <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mt-10">
-              <Link to="/auth">
+              <Link to="/v1/auth">
                 <Button variant="outline" className="gap-2 h-12 px-8 font-semibold">
                   <Flame className="w-4 h-4 text-accent" /> Quero participar do ranking
                 </Button>
@@ -743,7 +743,7 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth">
+                <Link to="/v1/auth">
                   <Button className={`w-full h-12 font-semibold ${plan.popular ? "gradient-primary shadow-glow" : ""}`} variant={plan.popular ? "default" : "outline"}>
                     {plan.cta} <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
@@ -817,7 +817,7 @@ export default function Landing() {
               Comece grátis agora mesmo.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
+              <Link to="/v1/auth">
                 <Button size="lg" className="gradient-primary shadow-glow gap-2 text-base px-12 h-14 font-semibold hover:scale-105 active:scale-[0.98] transition-transform">
                   <Sparkles className="w-4 h-4" /> Criar Conta Profissional
                 </Button>
@@ -860,9 +860,9 @@ export default function Landing() {
             <div>
               <h4 className="font-display font-semibold mb-4 text-sm">Legal</h4>
               <ul className="space-y-2.5 text-sm text-muted-foreground">
-                <li><Link to="/terms" className="hover:text-primary transition-colors">Termos de Uso</Link></li>
-                <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacidade</Link></li>
-                <li><Link to="/settings/account-deletion" className="hover:text-primary transition-colors">LGPD</Link></li>
+                <li><Link to="/v1/terms" className="hover:text-primary transition-colors">Termos de Uso</Link></li>
+                <li><Link to="/v1/privacy" className="hover:text-primary transition-colors">Privacidade</Link></li>
+                <li><Link to="/v1/settings/account-deletion" className="hover:text-primary transition-colors">LGPD</Link></li>
               </ul>
             </div>
           </div>

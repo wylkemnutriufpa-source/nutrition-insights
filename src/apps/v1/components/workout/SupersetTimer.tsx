@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
 import { Zap, Play, Pause, SkipForward, RotateCcw, CheckCircle2, Timer, Volume2, VolumeX } from "lucide-react";
 
 interface Exercise {

@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Play, Stethoscope, User } from "lucide-react";
-import screenshotDashboard from "@/assets/screenshot-dashboard.jpg";
-import screenshotMealPlan from "@/assets/screenshot-mealplan.jpg";
+import screenshotDashboard from "@v1/assets/screenshot-dashboard.jpg";
+import screenshotMealPlan from "@v1/assets/screenshot-mealplan.jpg";
 import { EnergyGlow, MockupParticles, PremiumMockupFrame, EnergyBeam } from "./LandingEffects";
 
 export default function LandingProductDemo() {
@@ -27,7 +27,7 @@ export default function LandingProductDemo() {
             para profissionais e pacientes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link to="/demo">
+            <Link to="/v1/demo">
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
@@ -44,7 +44,7 @@ export default function LandingProductDemo() {
                 </div>
               </motion.button>
             </Link>
-            <Link to="/demo">
+            <Link to="/v1/demo">
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}

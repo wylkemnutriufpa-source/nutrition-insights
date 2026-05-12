@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 import { TrendingDown, TrendingUp, Minus, Scale, Flame, Target, Award, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -119,7 +119,7 @@ export default function PatientEvolutionSummary() {
         <h2 className="font-display font-semibold flex items-center gap-2">
           <Award className="w-5 h-5 text-primary" /> Minha Evolução
         </h2>
-        <Link to="/journey" className="text-xs text-primary hover:underline flex items-center gap-1">
+        <Link to="/v1/journey" className="text-xs text-primary hover:underline flex items-center gap-1">
           Ver jornada <ArrowRight className="w-3 h-3" />
         </Link>
       </div>

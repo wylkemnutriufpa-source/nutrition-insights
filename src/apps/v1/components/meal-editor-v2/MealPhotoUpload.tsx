@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { Camera, Loader2, X, ImagePlus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 
 interface MealPhotoUploadProps {
   imageUrl?: string | null;

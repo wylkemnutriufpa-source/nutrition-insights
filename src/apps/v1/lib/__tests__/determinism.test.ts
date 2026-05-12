@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-import { generateMealPlanFromLibrary, PatientProfile } from "@/lib/mealPlanAutoGenerator";
+import { generateMealPlanFromLibrary, PatientProfile } from "@v1/lib/mealPlanAutoGenerator";
 
 // Mock clinicalEngineAudit to avoid DB calls in tests
-vi.mock("@/lib/clinicalEngineAudit", () => ({
+vi.mock("@v1/lib/clinicalEngineAudit", () => ({
   logEngineStep: vi.fn().mockResolvedValue({}),
 }));
 
 // Mock supabase
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
@@ -35,7 +35,7 @@ describe("Clinical Engine Determinism Tests", () => {
 
   it("should be deterministic for the same input using a mocked library", async () => {
     // We mock the return value of supabase to return consistent items
-    const { supabase } = await import("@/integrations/supabase/client");
+    const { supabase } = await import("@v1/integrations/supabase/client");
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockResolvedValue({
@@ -60,7 +60,7 @@ describe("Clinical Engine Determinism Tests", () => {
   });
 
   it("should block generation if items have different plan types", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
+    const { supabase } = await import("@v1/integrations/supabase/client");
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockResolvedValue({

@@ -1,21 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Check, ClipboardList, Activity,
   Utensils, CheckCircle2, User, Loader2
 } from "lucide-react";
-import InOfficeStepPatient from "@/components/in-office/InOfficeStepPatient";
-import InOfficeStepAnamnesis from "@/components/in-office/InOfficeStepAnamnesis";
-import InOfficeStepAssessment from "@/components/in-office/InOfficeStepAssessment";
-import InOfficeStepMealPlan from "@/components/in-office/InOfficeStepMealPlan";
-import InOfficeStepFinalize from "@/components/in-office/InOfficeStepFinalize";
-import { resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
+import InOfficeStepPatient from "@v1/components/in-office/InOfficeStepPatient";
+import InOfficeStepAnamnesis from "@v1/components/in-office/InOfficeStepAnamnesis";
+import InOfficeStepAssessment from "@v1/components/in-office/InOfficeStepAssessment";
+import InOfficeStepMealPlan from "@v1/components/in-office/InOfficeStepMealPlan";
+import InOfficeStepFinalize from "@v1/components/in-office/InOfficeStepFinalize";
+import { resolvePatientIdentity } from "@v1/lib/onboardingPlanResolver";
 
 const STEPS = [
   { id: 1, label: "Cadastro", icon: User },

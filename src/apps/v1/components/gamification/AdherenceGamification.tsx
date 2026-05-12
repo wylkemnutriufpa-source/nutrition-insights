@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 import { Flame, Droplets, Dumbbell, UtensilsCrossed, Star, Trophy, Zap } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@v1/components/ui/progress";
 
 // ── Category Points Config ──
 const CATEGORY_POINTS: Record<string, number> = {

@@ -1,13 +1,13 @@
 import { useState, useMemo, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   ArrowLeft, Check, Trash2, Plus, Search, AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
-import { PHYSIOLOGICAL_GUARDRAILS } from "@/lib/strategyAdvisor";
+import type { NutritionalStrategy, StrategyMealPreview } from "@v1/lib/strategyAdvisor";
+import { PHYSIOLOGICAL_GUARDRAILS } from "@v1/lib/strategyAdvisor";
 import FoodSearchInStrategy from "./FoodSearchInStrategy";
 
 interface Props {

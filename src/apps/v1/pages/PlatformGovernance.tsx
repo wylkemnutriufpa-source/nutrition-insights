@@ -1,8 +1,8 @@
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   WEIGHT_LOSS_LIMITS,
   CALORIC_DEFICIT_LIMITS,
@@ -15,7 +15,7 @@ import {
   ENGINE_VERSIONS,
   VOICE_GUIDELINES,
   PRODUCT_NARRATIVE,
-} from "@/lib/clinicalConstitution";
+} from "@v1/lib/clinicalConstitution";
 import {
   Shield, Zap, Clock, Brain, Heart, Activity, ArrowRight,
   CheckCircle2, AlertTriangle, TrendingUp, Scale, Target,

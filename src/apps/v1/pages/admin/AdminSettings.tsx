@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@v1/components/ui/card";
 import { Settings2, Shield, Activity, Cpu, Sparkles, Database, GitBranch, BarChart3, Users, Bell } from "lucide-react";
 
 const SECTIONS = [

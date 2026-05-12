@@ -1,20 +1,20 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useMealPlanEditorV2Store, type MealType } from "@v1/stores/mealPlanEditorV2Store";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@v1/components/ui/sheet";
+import { Input } from "@v1/components/ui/input";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   Search, Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Loader2, Plus, BookOpen, User, Zap,
   Library, FileDown, Wheat, Droplets, Check, AlertTriangle, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { fmtMacro } from "@/lib/formatMacros";
+import { fmtMacro } from "@v1/lib/formatMacros";
 
 interface MealLibrarySidebarProps {
   open: boolean;

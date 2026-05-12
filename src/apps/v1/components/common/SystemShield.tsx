@@ -1,6 +1,6 @@
 import React, { useEffect, useState, createContext, useContext, useCallback } from "react";
 import { ShieldAlert, RefreshCcw, WifiOff, Lock, ServerCrash, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 
 interface SystemBootState {
   isAuthLoaded: boolean;

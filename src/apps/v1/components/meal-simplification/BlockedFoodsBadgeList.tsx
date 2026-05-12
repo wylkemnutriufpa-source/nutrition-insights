@@ -1,6 +1,6 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@v1/components/ui/badge";
 import { Ban } from "lucide-react";
-import { BRAZILIAN_REPLACEMENTS } from "@/lib/planSimplicityEngine";
+import { BRAZILIAN_REPLACEMENTS } from "@v1/lib/planSimplicityEngine";
 
 interface BlockedFoodsBadgeListProps {
   blockedFoods: string[];

@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Crown } from "lucide-react";
-import { usePremiumPresence } from "@/hooks/usePremiumPresence";
+import { usePremiumPresence } from "@v1/hooks/usePremiumPresence";
 
 /** Subtle premium badge — displays inline next to user name or header */
 export function PremiumBadge({ className = "" }: { className?: string }) {

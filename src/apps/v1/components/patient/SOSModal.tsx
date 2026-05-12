@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Checkbox } from "@v1/components/ui/checkbox";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Label } from "@v1/components/ui/label";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { toast } from "sonner";
 import { AlertTriangle, Send, Lock } from "lucide-react";
-import { usePrestige } from "@/hooks/usePrestige";
-import { Badge } from "@/components/ui/badge";
+import { usePrestige } from "@v1/hooks/usePrestige";
+import { Badge } from "@v1/components/ui/badge";
 
 const SOS_CATEGORIES = [
   { key: "plan_doubt", label: "Dúvidas no plano alimentar" },

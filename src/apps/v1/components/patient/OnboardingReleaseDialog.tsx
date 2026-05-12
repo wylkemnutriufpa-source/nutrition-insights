@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { releaseOnboarding } from "@/lib/serverTransitions";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { releaseOnboarding } from "@v1/lib/serverTransitions";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Label } from "@v1/components/ui/label";
+import { Input } from "@v1/components/ui/input";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
 import { Rocket, Loader2, Lock, CheckCircle2 } from "lucide-react";
 
 interface Props {

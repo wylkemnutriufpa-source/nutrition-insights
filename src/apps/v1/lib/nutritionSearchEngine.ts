@@ -3,7 +3,7 @@
  * Searches: meal_library, recipes, nutrition_plan_templates, caloric_templates
  * Returns grouped results with badges
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 export interface NutritionSearchResult {
   id: string;

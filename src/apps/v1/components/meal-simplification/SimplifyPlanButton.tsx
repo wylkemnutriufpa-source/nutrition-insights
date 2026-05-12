@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@v1/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
 import { Wand2, Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import type { MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
 import {
   calculatePlanSimplicityScore,
   type MealItemForAudit,
-} from "@/lib/planSimplicityEngine";
+} from "@v1/lib/planSimplicityEngine";
 import {
   generateSimplificationPreview,
   generateSimplifiedMealPlanVersion,
   type SimplificationPreview,
-} from "@/lib/planSimplificationGenerator";
+} from "@v1/lib/planSimplificationGenerator";
 import PlanSimplicityScoreCard from "./PlanSimplicityScoreCard";
 import SimplificationAuditPanel from "./SimplificationAuditPanel";
 import PlanComparisonView from "./PlanComparisonView";

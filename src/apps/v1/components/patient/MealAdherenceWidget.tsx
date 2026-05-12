@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Progress } from "@v1/components/ui/progress";
+import { Badge } from "@v1/components/ui/badge";
 import {
   CheckCircle2, MinusCircle, AlertCircle, TrendingUp,
   TrendingDown, Minus, Utensils, Coffee, Apple, Cookie, Moon, Sun,

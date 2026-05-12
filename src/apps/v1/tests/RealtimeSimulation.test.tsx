@@ -11,7 +11,7 @@ vi.mock('../lib/auth', () => ({
 }));
 
 // Mock components to simplify rendering
-vi.mock('@/components/patient/MealPlanDailyView', () => {
+vi.mock('@v1/components/patient/MealPlanDailyView', () => {
   return {
     MacroSummary: () => <div data-testid="macro-summary" />,
     AdherenceCard: () => <div data-testid="adherence-card" />,
@@ -44,7 +44,7 @@ vi.mock('@/components/patient/MealPlanDailyView', () => {
   };
 });
 
-vi.mock('@/components/patient/MealDetailModal', () => ({
+vi.mock('@v1/components/patient/MealDetailModal', () => ({
   MealDetailModal: () => <div data-testid="meal-modal" />,
 }));
 

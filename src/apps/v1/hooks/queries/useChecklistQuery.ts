@@ -1,12 +1,12 @@
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
-import { offlineQueue } from "@/lib/offlineSync";
+import { offlineQueue } from "@v1/lib/offlineSync";
 
 export interface ChecklistTask {
   id: string;

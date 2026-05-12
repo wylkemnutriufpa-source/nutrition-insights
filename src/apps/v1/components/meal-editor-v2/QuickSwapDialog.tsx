@@ -7,9 +7,9 @@
  *   • só persiste após confirmação explícita
  */
 import { useMemo, useState, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import { ArrowLeftRight, Flame, Beef, Wheat, Droplets, Check, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 

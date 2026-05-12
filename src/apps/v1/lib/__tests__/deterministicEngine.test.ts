@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { generateMealPlanFromLibrary } from "@/lib/mealPlanAutoGenerator";
+import { generateMealPlanFromLibrary } from "@v1/lib/mealPlanAutoGenerator";
 
 // Mock Supabase
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -15,7 +15,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 // Mock clinicalEngineAudit to avoid DB calls in tests
-vi.mock("@/lib/clinicalEngineAudit", () => ({
+vi.mock("@v1/lib/clinicalEngineAudit", () => ({
   logEngineStep: vi.fn(),
 }));
 

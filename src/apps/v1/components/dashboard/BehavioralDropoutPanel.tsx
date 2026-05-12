@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -11,10 +11,10 @@ import {
   UserX, Clock, Send, Calendar, FileText, Shield, Brain,
   AlertTriangle, TrendingDown, RefreshCw, Zap, Phone, CheckCheck
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
+import { Skeleton } from "@v1/components/ui/skeleton";
 
 interface RecoveryAction {
   id: string;

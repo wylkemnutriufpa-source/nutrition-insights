@@ -2,7 +2,7 @@
 import React from "react";
 import { Trophy, Star, Zap, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 
 interface AchievementBadgesProps {
   achievements: {

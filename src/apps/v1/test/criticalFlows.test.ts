@@ -3,7 +3,7 @@
  * BLOCO 3 — Smoke tests automáticos para fluxos protegidos
  */
 import { describe, it, expect } from "vitest";
-import { CRITICAL_FLOWS, getFlow, getFlowsByPage, getFlowsByTable, analyzeImpact } from "@/lib/criticalFlows";
+import { CRITICAL_FLOWS, getFlow, getFlowsByPage, getFlowsByTable, analyzeImpact } from "@v1/lib/criticalFlows";
 
 describe("Critical Flows Registry", () => {
   it("should have all mandatory flows registered", () => {

@@ -1,10 +1,10 @@
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@v1/components/ui/badge";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import { ArrowRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
-import type { SimplicityScore } from "@/lib/planSimplicityEngine";
+import type { MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+import type { SimplicityScore } from "@v1/lib/planSimplicityEngine";
 import PlanSimplicityScoreCard from "./PlanSimplicityScoreCard";
-import { getMealTypeLabel } from "@/lib/planSimplicityEngine";
+import { getMealTypeLabel } from "@v1/lib/planSimplicityEngine";
 
 interface PlanComparisonViewProps {
   originalItems: MealPlanItem[];

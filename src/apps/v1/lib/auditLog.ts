@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
+import { supabase } from "@v1/integrations/supabase/client";
+import type { Json } from "@v1/integrations/supabase/types";
 
 // Generate a session-persistent correlation ID
 const SESSION_CORRELATION_ID = `fj_sess_${Math.random().toString(36).substring(2, 11)}`;

@@ -1,14 +1,14 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Avatar, AvatarImage, AvatarFallback } from "@v1/components/ui/avatar";
+import { Button } from "@v1/components/ui/button";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
 import { toast } from "sonner";
 import { Camera, Upload, Smile, Trash2, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 
 const EMOJI_AVATARS = [
   "😊", "😎", "🤩", "💪", "🏃", "🧘", "🥗", "🍎",

@@ -2,8 +2,8 @@
  * Shows consent status badge for patient profiles (visible to nutritionists).
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Badge } from "@v1/components/ui/badge";
 import { Shield, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

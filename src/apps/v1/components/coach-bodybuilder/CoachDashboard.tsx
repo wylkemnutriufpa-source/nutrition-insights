@@ -1,17 +1,17 @@
 import { useState, useMemo } from "react";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { analyzeAthleteData, generateAlerts, PHASE_LABELS, PHASE_LIST, type CheckinData } from "@/lib/coachAnalysisEngine";
-import { calculatePriority, PRIORITY_CONFIG, type PriorityLevel } from "@/lib/coachPriorityEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { supabase } from "@v1/integrations/supabase/client";
+import { analyzeAthleteData, generateAlerts, PHASE_LABELS, PHASE_LIST, type CheckinData } from "@v1/lib/coachAnalysisEngine";
+import { calculatePriority, PRIORITY_CONFIG, type PriorityLevel } from "@v1/lib/coachPriorityEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
+import { Label } from "@v1/components/ui/label";
 import {
   Flame, Plus, Search, Users, TrendingUp, AlertTriangle, Trophy,
   ShieldAlert, Filter, Target, Zap, Clock, BarChart3, Camera, Crown

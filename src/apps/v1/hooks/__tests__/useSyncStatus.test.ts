@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useSyncStatus } from "../useSyncStatus";
 
 // Mock fjLog
-vi.mock("@/utils/dataSafety", () => ({
+vi.mock("@v1/utils/dataSafety", () => ({
   fjLog: vi.fn(),
   FJ_LOG_TAGS: {
     CRITICAL: "[FJ:CRITICAL]",

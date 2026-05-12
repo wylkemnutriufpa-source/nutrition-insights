@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WifiOff, RefreshCw, Check, AlertTriangle } from "lucide-react";
-import { offlineQueue, type SyncStatus } from "@/lib/offlineSync";
-import { Button } from "@/components/ui/button";
+import { offlineQueue, type SyncStatus } from "@v1/lib/offlineSync";
+import { Button } from "@v1/components/ui/button";
 
 export default function OfflineSyncBanner() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);

@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Label } from "@v1/components/ui/label";
 import { Plus, Trash2, Save } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { toast } from "sonner";
-import type { PhytotherapyTemplate } from "@/pages/PhytotherapyProtocols";
+import type { PhytotherapyTemplate } from "@v1/pages/PhytotherapyProtocols";
 
 interface Props {
   template: PhytotherapyTemplate | null;

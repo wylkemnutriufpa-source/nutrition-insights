@@ -2,7 +2,7 @@
  * Patient Daily Focus Engine
  * Resolves the most important clinical focus for a patient each day.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 export interface DailyFocus {
   id: string;

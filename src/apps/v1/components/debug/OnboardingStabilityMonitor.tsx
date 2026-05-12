@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { usePatientJourneyStatus } from '@/hooks/usePatientJourneyStatus';
-import { useAuth } from '@/lib/auth';
+import { usePatientJourneyStatus } from '@v1/hooks/usePatientJourneyStatus';
+import { useAuth } from '@v1/lib/auth';
 import { Shield, Activity, Lock, Unlock } from 'lucide-react';
 
 /**

@@ -1,6 +1,6 @@
 import { Pill, Eye, Copy, Pencil, Globe, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { PhytotherapyTemplate } from "@/pages/PhytotherapyProtocols";
+import { Button } from "@v1/components/ui/button";
+import type { PhytotherapyTemplate } from "@v1/pages/PhytotherapyProtocols";
 
 interface Props {
   template: PhytotherapyTemplate;

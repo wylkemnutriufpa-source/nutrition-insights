@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { getServiceWorkerVersionToken, wasDismissedRecently, markDismissed } from "@/lib/pwaUpdate";
+import { getServiceWorkerVersionToken, wasDismissedRecently, markDismissed } from "@v1/lib/pwaUpdate";
 
 describe("pwaUpdate", () => {
   beforeEach(() => {

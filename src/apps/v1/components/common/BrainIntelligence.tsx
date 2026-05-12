@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, TrendingUp, Lightbulb, Sparkles, X, BarChart3, Zap } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@v1/components/ui/tooltip";
 
 interface SystemMetrics {
   totalDataAnalyzed: number;

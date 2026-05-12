@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Mocks
-vi.mock('@/components/layout/DashboardLayout', () => ({ default: ({ children }: any) => <div>{children}</div> }));
+vi.mock('@v1/components/layout/DashboardLayout', () => ({ default: ({ children }: any) => <div>{children}</div> }));
 
 vi.mock('./integrations/supabase/client', () => {
   const mockQuery = {

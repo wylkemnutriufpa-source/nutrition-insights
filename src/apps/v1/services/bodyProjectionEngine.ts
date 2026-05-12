@@ -14,7 +14,7 @@
  * ═══════════════════════════════════════════════════════════
  */
 
-import { WEIGHT_LOSS_LIMITS, CALORIC_DEFICIT_LIMITS, DETECTION_WINDOWS, CONFIDENCE_THRESHOLDS } from "@/lib/clinicalConstitution";
+import { WEIGHT_LOSS_LIMITS, CALORIC_DEFICIT_LIMITS, DETECTION_WINDOWS, CONFIDENCE_THRESHOLDS } from "@v1/lib/clinicalConstitution";
 
 // ── TYPES ───────────────────────────────────────────────────
 

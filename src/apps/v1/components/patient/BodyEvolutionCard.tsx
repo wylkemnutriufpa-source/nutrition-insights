@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { motion } from "framer-motion";
 import {
   AreaChart, Area, LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import { Scale, Activity, Flame, TrendingUp, TrendingDown, Minus, Target, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 interface BodyEvolutionCardProps {

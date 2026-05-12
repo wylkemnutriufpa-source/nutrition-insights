@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Badge } from "@v1/components/ui/badge";
+import { Skeleton } from "@v1/components/ui/skeleton";
 import { CheckCircle2, Circle, SkipForward, Sparkles, ListChecks, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import { DOMAIN_CONFIG } from "@/lib/clinicalFlags";
+import { DOMAIN_CONFIG } from "@v1/lib/clinicalFlags";
 
 interface BehavioralTask {
   id: string;

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Button } from "@v1/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, User, Phone, ArrowRight, Save, Check, Pencil } from "lucide-react";
 

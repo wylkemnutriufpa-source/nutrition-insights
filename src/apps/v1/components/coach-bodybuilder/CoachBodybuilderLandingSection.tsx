@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import {
   Flame, Trophy, Shield, Brain, Camera, Clock, Zap, Target,
   Activity, ChevronRight, CheckCircle2, BarChart3, TrendingUp,
@@ -166,7 +166,7 @@ export default function CoachBodybuilderLandingSection() {
                 ))}
               </ul>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link to="/auth">
+                <Link to="/v1/auth">
                   <Button size="lg" className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg shadow-orange-500/20 gap-2 h-13 px-8 font-semibold w-full sm:w-auto">
                     <Flame className="w-4 h-4" /> Começar Agora
                     <ChevronRight className="w-4 h-4" />

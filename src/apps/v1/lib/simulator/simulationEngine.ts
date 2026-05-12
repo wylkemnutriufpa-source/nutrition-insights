@@ -7,8 +7,8 @@
  * 
  * Kill switch via feature_flags.simulator_kill_switch
  */
-import { supabase } from "@/integrations/supabase/client";
-import { logSystemError } from "@/lib/observability/errorLogger";
+import { supabase } from "@v1/integrations/supabase/client";
+import { logSystemError } from "@v1/lib/observability/errorLogger";
 
 export type SimMode = "manual" | "smoke_test";
 export type ScenarioStatus = "passed" | "failed" | "skipped";

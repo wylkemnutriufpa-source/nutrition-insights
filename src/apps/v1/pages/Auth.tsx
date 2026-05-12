@@ -1,18 +1,18 @@
 import { forwardRef, useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { lovable } from "@v1/integrations/lovable/index";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Checkbox } from "@v1/components/ui/checkbox";
+import { Card, CardContent, CardHeader } from "@v1/components/ui/card";
 import { toast } from "sonner";
 import { Eye, EyeOff, ArrowRight, Stethoscope, Users, Dumbbell } from "lucide-react";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import LanguageSelector from "@/components/common/LanguageSelector";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
+import LanguageSelector from "@v1/components/common/LanguageSelector";
 import { useTranslation } from "react-i18next";
 
 type AuthMode = "login" | "forgot" | "register";
@@ -430,7 +430,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
         </p>
 
         {/* Biquíni Branco Banner */}
-        <Link to="/biquini-branco" className="block mt-4">
+        <Link to="/v1/biquini-branco" className="block mt-4">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

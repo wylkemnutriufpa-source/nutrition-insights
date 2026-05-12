@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 /**
  * Detecta se o erro é uma falha transitória de rede (típica do preview iframe

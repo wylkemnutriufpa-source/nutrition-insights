@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+import { supabase } from "@v1/integrations/supabase/client";
+import { getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
 
 interface CreateMealPlanDraftInput {
   nutritionistId: string;

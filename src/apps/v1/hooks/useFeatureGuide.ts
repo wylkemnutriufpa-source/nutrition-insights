@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import {
   LayoutDashboard, Users, Utensils, BarChart3, Sparkles,
   CalendarCheck, Apple, TrendingUp, Target, HeartPulse,
   AlertTriangle, FileText, Zap, MessageCircle, Trophy,
   Flame, Crown, type LucideIcon,
 } from "lucide-react";
-import type { PresentationSlide } from "@/lib/presentationSlides";
+import type { PresentationSlide } from "@v1/lib/presentationSlides";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard, Users, Utensils, BarChart3, Sparkles,

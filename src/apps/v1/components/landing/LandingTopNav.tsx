@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, LogIn, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { Button } from "@v1/components/ui/button";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
 
 const navLinks = [
   { label: "Funcionalidades", href: "#funcionalidades" },
@@ -41,7 +41,7 @@ export default function LandingTopNav() {
 
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/auth?tab=login">
+          <Link to="/v1/auth?tab=login">
             <Button
               variant="ghost"
               size="sm"
@@ -51,7 +51,7 @@ export default function LandingTopNav() {
               Entrar
             </Button>
           </Link>
-          <Link to="/auth">
+          <Link to="/v1/auth">
             <Button
               size="sm"
               className="bg-gradient-to-r from-[hsl(152,58%,45%)] to-[hsl(170,55%,42%)] hover:opacity-90 text-white font-semibold rounded-xl shadow-lg shadow-[hsl(152_58%_45%/0.2)] gap-1.5 text-sm"
@@ -97,7 +97,7 @@ export default function LandingTopNav() {
                 </a>
               ))}
               <div className="border-t border-white/[0.06] mt-2 pt-3 flex flex-col gap-2">
-                <Link to="/auth?tab=login" onClick={() => setMenuOpen(false)}>
+                <Link to="/v1/auth?tab=login" onClick={() => setMenuOpen(false)}>
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-white/60 hover:text-white gap-2 text-sm"
@@ -106,7 +106,7 @@ export default function LandingTopNav() {
                     Entrar na minha conta
                   </Button>
                 </Link>
-                <Link to="/auth" onClick={() => setMenuOpen(false)}>
+                <Link to="/v1/auth" onClick={() => setMenuOpen(false)}>
                   <Button
                     className="w-full bg-gradient-to-r from-[hsl(152,58%,45%)] to-[hsl(170,55%,42%)] hover:opacity-90 text-white font-semibold rounded-xl gap-2 text-sm"
                   >

@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
-import { useAuth } from "@/lib/auth";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { useExperienceMode, type ExperienceMode } from "@v1/hooks/useExperienceMode";
+import { useAuth } from "@v1/lib/auth";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
 import { Zap, BarChart3, Rocket, RefreshCw, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import ExperienceModeRecommendation from "./ExperienceModeRecommendation";
 
 type ModeConfig = { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string };

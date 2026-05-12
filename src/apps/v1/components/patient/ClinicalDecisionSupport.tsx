@@ -1,14 +1,14 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/lib/tenantContext";
-import { useFeatureFlag } from "@/lib/featureFlags";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useTenant } from "@v1/lib/tenantContext";
+import { useFeatureFlag } from "@v1/lib/featureFlags";
+import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Switch } from "@v1/components/ui/switch";
+import { Label } from "@v1/components/ui/label";
 import {
   Brain, AlertTriangle, TrendingDown, Zap, RefreshCw,
   Loader2, Target, Shield, Activity, Heart,

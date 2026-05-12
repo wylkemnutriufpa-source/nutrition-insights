@@ -2,24 +2,24 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import "@testing-library/jest-dom";
-import NotFound from "@/pages/NotFound";
+import NotFound from "@v1/pages/NotFound";
 
 // Mocking some internal components that might cause issues in a pure routing test
-vi.mock("@/components/common/SafePage", () => ({
+vi.mock("@v1/components/common/SafePage", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="safe-page">{children}</div>,
 }));
 
 // Static mocks for the pages to avoid hoisting issues in loops
-vi.mock("@/pages/Landing", () => ({ default: () => <div data-testid="landing-page">Landing</div> }));
-vi.mock("@/pages/PatientLanding", () => ({ default: () => <div data-testid="patientlanding-page">Patient Landing</div> }));
-vi.mock("@/pages/PersonalLanding", () => ({ default: () => <div data-testid="personallanding-page">Personal Landing</div> }));
-vi.mock("@/pages/AffiliateLanding", () => ({ default: () => <div data-testid="affiliatelanding-page">Affiliate Landing</div> }));
-vi.mock("@/pages/BiquiniBrancoLanding", () => ({ default: () => <div data-testid="biquinibrancolanding-page">Biquini Branco</div> }));
-vi.mock("@/pages/Auth", () => ({ default: () => <div data-testid="auth-page">Auth</div> }));
-vi.mock("@/pages/ResetPassword", () => ({ default: () => <div data-testid="resetpassword-page">Reset Password</div> }));
-vi.mock("@/pages/PrivacyPolicy", () => ({ default: () => <div data-testid="privacypolicy-page">Privacy</div> }));
-vi.mock("@/pages/TermsOfUse", () => ({ default: () => <div data-testid="termsofuse-page">Terms</div> }));
-vi.mock("@/pages/AccountDeletion", () => ({ default: () => <div data-testid="accountdeletion-page">Account Deletion</div> }));
+vi.mock("@v1/pages/Landing", () => ({ default: () => <div data-testid="landing-page">Landing</div> }));
+vi.mock("@v1/pages/PatientLanding", () => ({ default: () => <div data-testid="patientlanding-page">Patient Landing</div> }));
+vi.mock("@v1/pages/PersonalLanding", () => ({ default: () => <div data-testid="personallanding-page">Personal Landing</div> }));
+vi.mock("@v1/pages/AffiliateLanding", () => ({ default: () => <div data-testid="affiliatelanding-page">Affiliate Landing</div> }));
+vi.mock("@v1/pages/BiquiniBrancoLanding", () => ({ default: () => <div data-testid="biquinibrancolanding-page">Biquini Branco</div> }));
+vi.mock("@v1/pages/Auth", () => ({ default: () => <div data-testid="auth-page">Auth</div> }));
+vi.mock("@v1/pages/ResetPassword", () => ({ default: () => <div data-testid="resetpassword-page">Reset Password</div> }));
+vi.mock("@v1/pages/PrivacyPolicy", () => ({ default: () => <div data-testid="privacypolicy-page">Privacy</div> }));
+vi.mock("@v1/pages/TermsOfUse", () => ({ default: () => <div data-testid="termsofuse-page">Terms</div> }));
+vi.mock("@v1/pages/AccountDeletion", () => ({ default: () => <div data-testid="accountdeletion-page">Account Deletion</div> }));
 
 describe("Routing Integrity Suite", () => {
   beforeEach(() => {

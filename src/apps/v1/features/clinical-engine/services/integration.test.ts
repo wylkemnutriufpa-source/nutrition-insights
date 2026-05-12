@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from "vitest";
 
 // Mock dependencies to avoid loading problematic client.ts
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {}
 }));
 

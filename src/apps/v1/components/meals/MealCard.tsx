@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Clock, Sparkles, AlertCircle, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { fmtMacro, safeNum, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@/lib/formatMacros";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@v1/components/ui/badge";
+import { fmtMacro, safeNum, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@v1/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 
 
 const mealTypeLabels: Record<string, { label: string; emoji: string }> = {

@@ -17,7 +17,7 @@ import {
 } from "../experienceModeTelemetry";
 
 const insertSpy: any = vi.fn(async () => ({ error: null }));
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser: vi.fn(async () => ({ data: { user: { id: "u1" } } })) },
     from: vi.fn(() => ({ insert: (arg: any) => insertSpy(arg) })),

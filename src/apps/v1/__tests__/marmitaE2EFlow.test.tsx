@@ -2,14 +2,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v1/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Mocks
-import NextMealWidget from '@/components/patient/NextMealWidget';
+import NextMealWidget from '@v1/components/patient/NextMealWidget';
 
-vi.mock('@/integrations/supabase/client', () => {
+vi.mock('@v1/integrations/supabase/client', () => {
   const mockQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -21,11 +21,11 @@ vi.mock('@/integrations/supabase/client', () => {
   return { supabase: { from: vi.fn(() => mockQuery) } };
 });
 
-vi.mock('@/lib/auth', () => ({ 
+vi.mock('@v1/lib/auth', () => ({ 
   useAuth: () => ({ user: { id: 'patient-123' }, loading: false })
 }));
 
-vi.mock('@/lib/tenantContext', () => ({
+vi.mock('@v1/lib/tenantContext', () => ({
   useTenant: () => ({ tenantId: 'tenant-123' })
 }));
 

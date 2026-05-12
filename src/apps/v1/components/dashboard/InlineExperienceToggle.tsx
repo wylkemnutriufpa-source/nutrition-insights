@@ -2,9 +2,9 @@
  * Compact inline experience mode toggle for the top of the dashboard.
  * Allows quick switching between Basic / Pro / Advanced.
  */
-import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
-import { useAuth } from "@/lib/auth";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { useExperienceMode, type ExperienceMode } from "@v1/hooks/useExperienceMode";
+import { useAuth } from "@v1/lib/auth";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
 import { Zap, BarChart3, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";

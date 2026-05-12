@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import { Loader2, Wand2, ShieldAlert, CheckCircle2, AlertCircle } from "lucide-react";
-import { attemptAutoFix, collectRouteDiagnostics, type RouteDiagnostics } from "@/lib/routeDiagnostics";
+import { attemptAutoFix, collectRouteDiagnostics, type RouteDiagnostics } from "@v1/lib/routeDiagnostics";
 
 interface NotFoundDiagnosticsModalProps {
   open: boolean;

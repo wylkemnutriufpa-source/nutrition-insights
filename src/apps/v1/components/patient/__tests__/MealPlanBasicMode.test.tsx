@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MealGroup } from '../MealPlanDailyView';
-import { useExperienceUI } from '@/hooks/useExperienceUI';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { useExperienceUI } from '@v1/hooks/useExperienceUI';
+import { TooltipProvider } from '@v1/components/ui/tooltip';
 
 // Mock dependencies
-vi.mock('@/hooks/useExperienceUI', () => ({
+vi.mock('@v1/hooks/useExperienceUI', () => ({
   useExperienceUI: vi.fn()
 }));
 
-vi.mock('@/lib/auth', () => ({
+vi.mock('@v1/lib/auth', () => ({
   useAuth: vi.fn(() => ({ user: { id: 'test-user' } }))
 }));
 
-vi.mock('@/hooks/useMealVisualItem', () => ({
+vi.mock('@v1/hooks/useMealVisualItem', () => ({
   useMealVisualItem: vi.fn(() => ({ item: null }))
 }));
 
-vi.mock('@/hooks/useSignedStorageUrl', () => ({
+vi.mock('@v1/hooks/useSignedStorageUrl', () => ({
   useSignedStorageUrl: vi.fn(() => ({ url: null }))
 }));
 

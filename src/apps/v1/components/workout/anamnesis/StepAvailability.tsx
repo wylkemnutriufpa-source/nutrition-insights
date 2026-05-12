@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 import {
   OrbitalHeader,
   OrbitalMultiSelect,
   OrbitalSlider,
   OrbitalTextInput,
-} from "@/components/onboarding/OrbitalAnamnesisInputs";
-import { RadialOrbitalSelector } from "@/components/ui/radial-orbital-selector";
+} from "@v1/components/onboarding/OrbitalAnamnesisInputs";
+import { RadialOrbitalSelector } from "@v1/components/ui/radial-orbital-selector";
 import type { TrainerAnamnesisData } from "./types";
 import { EQUIPMENT_OPTIONS, HOURS_OPTIONS } from "./types";
 

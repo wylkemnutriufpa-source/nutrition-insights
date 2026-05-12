@@ -1,30 +1,30 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/lib/auth";
+import { Card } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Separator } from "@v1/components/ui/separator";
+import { useAuth } from "@v1/lib/auth";
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
-import { useLayoutPreference } from "@/hooks/useLayoutPreference";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
-import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
+import { useLayoutPreference } from "@v1/hooks/useLayoutPreference";
+import { useExperienceUI } from "@v1/hooks/useExperienceUI";
+import { usePatientLifecycleState } from "@v1/hooks/usePatientLifecycleState";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/hooks/queries/queryKeys";
-import { supabase } from "@/integrations/supabase/client";
-import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
-import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
-import ExperienceModeStatusSection from "@/components/dashboard/ExperienceModeStatusSection";
-import PlanRequestButton from "@/components/patient/PlanRequestButton";
+import { queryKeys } from "@v1/hooks/queries/queryKeys";
+import { supabase } from "@v1/integrations/supabase/client";
+import FitJourneyTimeline from "@v1/components/timeline/FitJourneyTimeline";
+import InlineExperienceToggle from "@v1/components/dashboard/InlineExperienceToggle";
+import ExperienceModeStatusSection from "@v1/components/dashboard/ExperienceModeStatusSection";
+import PlanRequestButton from "@v1/components/patient/PlanRequestButton";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Camera as CameraIcon, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
   Shield, Activity,
 } from "lucide-react";
-import NewFeatureBadge from "@/components/common/NewFeatureBadge";
+import NewFeatureBadge from "@v1/components/common/NewFeatureBadge";
 
-const DailyMealPlanInline = lazy(() => import("@/components/patient/DailyMealPlanInline"));
+const DailyMealPlanInline = lazy(() => import("@v1/components/patient/DailyMealPlanInline"));
 
 type MinMode = "basic" | "pro" | "advanced";
 

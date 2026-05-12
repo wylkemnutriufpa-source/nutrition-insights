@@ -2,7 +2,7 @@ import { Flame, Dumbbell, Scale, Heart } from "lucide-react";
 import {
   RadialOrbitalSelector,
   type OrbitalOption,
-} from "@/components/ui/radial-orbital-selector";
+} from "@v1/components/ui/radial-orbital-selector";
 
 const GOAL_OPTIONS: OrbitalOption[] = [
   {

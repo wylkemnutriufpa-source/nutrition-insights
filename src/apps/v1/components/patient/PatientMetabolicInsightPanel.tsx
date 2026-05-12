@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { Activity, Droplets, Apple, Moon, TrendingUp, Shield, Zap } from "lucide-react";
-import { safeNum } from "@/lib/formatMacros";
+import { safeNum } from "@v1/lib/formatMacros";
 
 interface MetabolicData {
   score: number;

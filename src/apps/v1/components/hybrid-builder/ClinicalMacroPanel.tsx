@@ -1,4 +1,4 @@
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
 import { Flame, Beef, Wheat, Droplets, AlertTriangle, CheckCircle2, Target, Loader2 } from "lucide-react";
 
 interface Props {

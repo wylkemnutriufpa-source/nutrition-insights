@@ -1,5 +1,5 @@
-import { useAuth } from "@/lib/auth";
-import { featureMap } from "@/config/features";
+import { useAuth } from "@v1/lib/auth";
+import { featureMap } from "@v1/config/features";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
 
@@ -47,7 +47,7 @@ export const checkFeaturePermission = (
   return Array.isArray(allowedFeatures) ? allowedFeatures.includes(feature) : false;
 };
 
-import { useExperienceContext } from "@/providers/ExperienceProvider";
+import { useExperienceContext } from "@v1/providers/ExperienceProvider";
 
 export function useExperienceMode(): ExperienceModeContextValue {
   return useExperienceContext();

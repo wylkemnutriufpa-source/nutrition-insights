@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Slider } from "@v1/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { buildMealItems, type MealItemInput } from "@/lib/mealItemBuilder";
+import { supabase } from "@v1/integrations/supabase/client";
+import { buildMealItems, type MealItemInput } from "@v1/lib/mealItemBuilder";
 import {
   Flame, Beef, Wheat, Droplets, Loader2, Zap, Check,
   Coffee, Apple, Utensils, Cookie, Moon, Sun
 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@v1/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 

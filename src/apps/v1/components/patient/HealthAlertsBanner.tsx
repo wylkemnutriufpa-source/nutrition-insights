@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 import { AlertTriangle, TrendingDown, X, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -80,7 +80,7 @@ export default function HealthAlertsBanner() {
                 <p className="text-sm font-semibold">{alert.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{alert.message}</p>
                 <Link
-                  to="/journey"
+                  to="/v1/journey"
                   className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"
                 >
                   Ver evolução <ArrowRight className="w-3 h-3" />

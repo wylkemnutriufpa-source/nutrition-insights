@@ -1,29 +1,29 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
 import { toast } from "sonner";
 import {
   BookOpen, Plus, Search, Filter, Image as ImageIcon, Trash2, Link2, Eye,
   RefreshCw, BarChart3, AlertTriangle, Loader2, Upload, CheckCircle2, XCircle, ImagePlus,
 } from "lucide-react";
-import MealVisualCard from "@/components/meals/MealVisualCard";
-import MealVisualModal from "@/components/meals/MealVisualModal";
-import { runAutoAssociation, type AssociationReport } from "@/lib/mealVisualAssociation";
-import { batchUploadAndLink, type BatchUploadReport } from "@/lib/mealVisualBatchUpload";
-import type { MealVisualItem, MealVisualAlias } from "@/types/mealVisualLibrary";
-import { MEAL_VISUAL_CATEGORIES } from "@/types/mealVisualLibrary";
+import MealVisualCard from "@v1/components/meals/MealVisualCard";
+import MealVisualModal from "@v1/components/meals/MealVisualModal";
+import { runAutoAssociation, type AssociationReport } from "@v1/lib/mealVisualAssociation";
+import { batchUploadAndLink, type BatchUploadReport } from "@v1/lib/mealVisualBatchUpload";
+import type { MealVisualItem, MealVisualAlias } from "@v1/types/mealVisualLibrary";
+import { MEAL_VISUAL_CATEGORIES } from "@v1/types/mealVisualLibrary";
 
 export default function MealVisualLibraryAdmin() {
   const { user } = useAuth();

@@ -4,7 +4,7 @@
  * Consolidates all patient data needed by the prompt engine
  * into a single typed context object.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 export interface FitIntelligenceContext {
   patientId: string;

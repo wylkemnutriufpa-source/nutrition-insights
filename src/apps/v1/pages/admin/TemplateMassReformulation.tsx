@@ -1,14 +1,14 @@
 
 import { useState, useMemo, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Separator } from "@v1/components/ui/separator";
+import { cn } from "@v1/lib/utils";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -26,12 +26,12 @@ import {
   CheckSquare,
   Square
 } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@v1/components/ui/table";
+import { Input } from "@v1/components/ui/input";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
-import { validateImageUrl } from "@/lib/clinical-engine/marmitaVisualEngine";
+import { validateImageUrl } from "@v1/lib/clinical-engine/marmitaVisualEngine";
 
 const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
 

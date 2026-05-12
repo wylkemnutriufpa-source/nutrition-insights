@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -11,8 +11,8 @@ import {
   ShieldAlert,
   Activity
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Badge } from "@v1/components/ui/badge";
+import { cn } from "@v1/lib/utils";
 
 interface AuditTimelineProps {
   correlationId: string;

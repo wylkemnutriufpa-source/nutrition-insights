@@ -2,9 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Brain, Radar, Shield, Zap, Crown, ArrowRight, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/lib/auth";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { useAuth } from "@v1/lib/auth";
 import { ClinicalIntelligenceUpsellModal } from "./ClinicalIntelligenceUpsellModal";
 
 export function PremiumControlTowerBanner() {
@@ -61,7 +61,7 @@ export function PremiumControlTowerBanner() {
           </div>
 
           {hasAccess ? (
-            <Link to="/control-tower">
+            <Link to="/v1/control-tower">
               <Button
                 size="sm"
                 className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white border-0 gap-1.5 shadow-lg shadow-emerald-500/20"

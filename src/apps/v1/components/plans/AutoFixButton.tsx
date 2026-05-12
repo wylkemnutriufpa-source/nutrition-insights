@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Wand2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { supabase } from "@/integrations/supabase/client";
-import { autoFixMealPlan, type AutoFixResult, type AutoFixStep, AUTOFIX_STEP_LABELS } from "@/lib/autoFixEngine";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { supabase } from "@v1/integrations/supabase/client";
+import { autoFixMealPlan, type AutoFixResult, type AutoFixStep, AUTOFIX_STEP_LABELS } from "@v1/lib/autoFixEngine";
 import AutoFixPreviewModal from "./AutoFixPreviewModal";
 import AutoFixProgressModal from "./AutoFixProgressModal";
 

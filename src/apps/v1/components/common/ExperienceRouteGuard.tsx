@@ -1,4 +1,4 @@
-import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { useExperienceMode } from "@v1/hooks/useExperienceMode";
 import { ReactNode } from "react";
 import { Shield } from "lucide-react";
 

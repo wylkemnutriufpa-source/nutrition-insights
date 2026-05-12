@@ -5,10 +5,10 @@
  * NUNCA escreve em `meal_plans` / `meal_plan_items` diretamente.
  * A promoção (draft -> plano oficial) acontece em `promoteDraft.ts`.
  */
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v1/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
 import { normalizeMeals } from '../utils/normalization';
-import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
+import { calculateItemMacros } from '@v1/lib/nutricore_v2/helpers';
 
 export interface DraftRecord {
   id: string;

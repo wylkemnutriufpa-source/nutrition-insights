@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
 import { Link2, Mail, MessageCircle, Copy, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
+import { supabase } from "@v1/integrations/supabase/client";
+import { buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@v1/lib/pdfExportPremium";
 
 interface Props {
   open: boolean;

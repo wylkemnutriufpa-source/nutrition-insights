@@ -12,7 +12,7 @@
  * - Sugestões por anamnese
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 // ── Cache local do banco validado ──
 let _validatedFoodsCache: Set<string> | null = null;

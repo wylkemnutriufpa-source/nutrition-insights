@@ -53,9 +53,9 @@ function buildFixedRecipes(fixedLunch: number, fixedDinner: number): RecipeRow[]
 }
 
 // ─── Mocks (hoisted) ───────────────────────────────────────────────────
-vi.mock("@/lib/auth", () => ({ useAuth: () => ({ user: { id: "nutri-1" } }) }));
+vi.mock("@v1/lib/auth", () => ({ useAuth: () => ({ user: { id: "nutri-1" } }) }));
 
-vi.mock("@/stores/mealPlanEditorV2Store", () => ({
+vi.mock("@v1/stores/mealPlanEditorV2Store", () => ({
   useMealPlanEditorV2Store: () => ({ planId: "plan-1", hydrate: vi.fn() }),
 }));
 
@@ -63,21 +63,21 @@ vi.mock("sonner", () => ({
   toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
+vi.mock("@v1/components/strategy-advisor/StrategyAdvisorPanel", () => ({
   default: () => null,
 }));
-vi.mock("@/components/hybrid-builder/MealRecipeSelector", () => ({
+vi.mock("@v1/components/hybrid-builder/MealRecipeSelector", () => ({
   default: () => null,
 }));
-vi.mock("@/components/hybrid-builder/MarmitaSettingsDialog", () => ({
+vi.mock("@v1/components/hybrid-builder/MarmitaSettingsDialog", () => ({
   default: () => null,
 }));
 
-vi.mock("@/hooks/useMarmitaSettings", () => ({
+vi.mock("@v1/hooks/useMarmitaSettings", () => ({
   useMarmitaSettings: () => ({ settings: STATE.marmitaSettings, loading: false }),
 }));
 
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: (table: string) => {
       if (table === "diet_templates") {

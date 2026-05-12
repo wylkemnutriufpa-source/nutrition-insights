@@ -36,15 +36,15 @@ if (typeof (globalThis as any).ResizeObserver === "undefined") {
   };
 }
 
-import { fmtMacro, safeNum, safeMultiplier, fmtMacroDecimal } from "@/lib/formatMacros";
-import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
-import MacroGauge from "@/components/recipe/MacroGauge";
-import MealCard from "@/components/meals/MealCard";
-import MealVisualCard from "@/components/meals/MealVisualCard";
+import { fmtMacro, safeNum, safeMultiplier, fmtMacroDecimal } from "@v1/lib/formatMacros";
+import MacroBalanceBar from "@v1/components/meals/MacroBalanceBar";
+import MacroGauge from "@v1/components/recipe/MacroGauge";
+import MealCard from "@v1/components/meals/MealCard";
+import MealVisualCard from "@v1/components/meals/MealVisualCard";
 
 // Mock supabase para ConsultationCompare (não toca rede)
 const ASSESSMENTS_STATE: { rows: any[] } = { rows: [] };
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: () => {
       const chain: any = {};
@@ -57,7 +57,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-import ConsultationCompare from "@/components/patient/ConsultationCompare";
+import ConsultationCompare from "@v1/components/patient/ConsultationCompare";
 
 // ───────────────────────────────────────────────────────────────────
 // Helpers de asserção

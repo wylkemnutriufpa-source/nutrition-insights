@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { fjLog } from "@/utils/dataSafety";
+import { fjLog } from "@v1/utils/dataSafety";
 
 export type SyncStatus = "idle" | "syncing" | "success" | "error";
 

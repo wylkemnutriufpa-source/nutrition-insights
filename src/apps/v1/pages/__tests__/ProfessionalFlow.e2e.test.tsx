@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ─── Mocks ───────────────────────────────────────────────────
-vi.mock("@/lib/auth", () => ({ 
+vi.mock("@v1/lib/auth", () => ({ 
   useAuth: () => ({ 
     user: { id: "nutri-1" },
     isNutritionist: true,
@@ -12,12 +12,12 @@ vi.mock("@/lib/auth", () => ({
   }) 
 }));
 
-vi.mock("@/lib/tenantContext", () => ({ useTenant: () => ({ tenantId: "t1" }) }));
-vi.mock("@/lib/tenantQueryHelpers", () => ({ withTenantFilter: (q: any) => q }));
+vi.mock("@v1/lib/tenantContext", () => ({ useTenant: () => ({ tenantId: "t1" }) }));
+vi.mock("@v1/lib/tenantQueryHelpers", () => ({ withTenantFilter: (q: any) => q }));
 vi.mock("sonner", () => ({ toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() } }));
-vi.mock("@/components/layout/DashboardLayout", () => ({ default: ({ children }: any) => <div>{children}</div> }));
+vi.mock("@v1/components/layout/DashboardLayout", () => ({ default: ({ children }: any) => <div>{children}</div> }));
 
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn((table) => ({
       select: vi.fn().mockReturnThis(),

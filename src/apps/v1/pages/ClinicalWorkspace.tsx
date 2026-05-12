@@ -1,21 +1,21 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
+import { useExperienceUI } from "@v1/hooks/useExperienceUI";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@v1/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
 import { Users, UtensilsCrossed, BookOpen, ChefHat, Zap, AlertTriangle, ClipboardCheck, Plus, ArrowLeft, Search, UserPlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@v1/components/ui/input";
 import { Link } from "react-router-dom";
-import SubscriptionGuard from "@/components/common/SubscriptionGuard";
+import SubscriptionGuard from "@v1/components/common/SubscriptionGuard";
 
 // Lazy loaded workspace modules
-const PatientsList = lazy(() => import("@/components/workspace/WorkspacePatients"));
-const MealPlanModule = lazy(() => import("@/components/workspace/WorkspaceMealPlans"));
-const TemplatesModule = lazy(() => import("@/components/workspace/WorkspaceTemplates"));
-const RecipesModule = lazy(() => import("@/components/workspace/WorkspaceRecipes"));
-const ProtocolModule = lazy(() => import("@/components/workspace/WorkspaceProtocols"));
-const AlertsModule = lazy(() => import("@/components/workspace/WorkspaceAlerts"));
-const OnboardingsModule = lazy(() => import("@/components/workspace/WorkspaceOnboardings"));
+const PatientsList = lazy(() => import("@v1/components/workspace/WorkspacePatients"));
+const MealPlanModule = lazy(() => import("@v1/components/workspace/WorkspaceMealPlans"));
+const TemplatesModule = lazy(() => import("@v1/components/workspace/WorkspaceTemplates"));
+const RecipesModule = lazy(() => import("@v1/components/workspace/WorkspaceRecipes"));
+const ProtocolModule = lazy(() => import("@v1/components/workspace/WorkspaceProtocols"));
+const AlertsModule = lazy(() => import("@v1/components/workspace/WorkspaceAlerts"));
+const OnboardingsModule = lazy(() => import("@v1/components/workspace/WorkspaceOnboardings"));
 
 const TABS = [
   { key: "patients", label: "Pacientes", icon: Users, minMode: "basic" as const },
@@ -62,7 +62,7 @@ export default function ClinicalWorkspace() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <Link to="/">
+            <Link to="/v1/">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
@@ -82,7 +82,7 @@ export default function ClinicalWorkspace() {
                 className="pl-9 w-64 h-9 text-sm"
               />
             </div>
-            <Link to="/invite-patient">
+            <Link to="/v1/invite-patient">
               <Button size="sm" variant="outline" className="gap-1.5 border-amber-500/30 text-amber-600 hover:bg-amber-500/5">
                 <UserPlus className="w-4 h-4" /> Convidar
               </Button>

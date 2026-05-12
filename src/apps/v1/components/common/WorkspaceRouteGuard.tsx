@@ -1,6 +1,6 @@
 
-import { useAuth } from "@/lib/auth";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { useAuth } from "@v1/lib/auth";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -43,7 +43,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   if (location.pathname.startsWith("/admin")) {
     if (!isPro) {
       console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /admin sem ser PRO. Redirecionando para /client/dashboard.`);
-      return <Navigate to="/client/dashboard" replace />;
+      return <Navigate to="/v1/client/dashboard" replace />;
     }
   }
 
@@ -51,7 +51,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   if (location.pathname.startsWith("/client")) {
     if (!isPatient && isPro) {
       console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar /client sendo PRO (e não paciente). Redirecionando para /dashboard.`);
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/v1/dashboard" replace />;
     }
   }
 
@@ -79,13 +79,13 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     "/in-office"
   ];
   if (proOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro) {
-    return <Navigate to="/client/dashboard" replace />;
+    return <Navigate to="/v1/client/dashboard" replace />;
   }
 
   const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/checkin", "/meals"];
   if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
     console.warn(`[RASTREADOR] Redirect para /welcome disparado por: WorkspaceRouteGuard (Patient only paths)`);
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/v1/welcome" replace />;
   }
 
   return <>{children}</>;

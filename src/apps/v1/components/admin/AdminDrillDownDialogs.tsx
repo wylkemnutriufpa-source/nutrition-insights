@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
 import {
   Users, Search, Loader2, UserCheck, Dumbbell, CreditCard, DollarSign,
   CheckCircle2, XCircle, Crown, Calendar, TrendingUp, Activity

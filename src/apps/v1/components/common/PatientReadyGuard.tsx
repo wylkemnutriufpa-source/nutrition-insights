@@ -1,12 +1,12 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
-import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
+import { useAuth } from "@v1/lib/auth";
+import { useEnsurePatientReady } from "@v1/hooks/useEnsurePatientReady";
 import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { toast } from "sonner";
-import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
-import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
+import { usePatientJourneyStatus, IS_FLUID_STATE } from "@v1/hooks/usePatientJourneyStatus";
+import OnboardingGateScreen from "@v1/components/patient/OnboardingGateScreen";
 
 interface Props {
   children: ReactNode;

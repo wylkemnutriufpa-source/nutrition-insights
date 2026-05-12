@@ -6,10 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
 import { Zap, History, Check, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 
 interface EngineSelectorProps {
   isOpen: boolean;

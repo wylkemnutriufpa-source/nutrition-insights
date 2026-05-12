@@ -7,8 +7,8 @@ import {
   chatMessageSchema,
   profileSchema,
   financialTransactionSchema,
-} from "@/lib/validations";
-import { cn } from "@/lib/utils";
+} from "@v1/lib/validations";
+import { cn } from "@v1/lib/utils";
 
 // ============================================================
 // 1. UTILITY INTEGRITY

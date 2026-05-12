@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 import {
   CheckCircle2, XCircle, AlertTriangle, Loader2, ShieldCheck,
   Gauge, TrendingUp, ArrowRight, Ban, Brain, RefreshCw, Hammer, Rocket,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
 import AutoFixButton from "./AutoFixButton";
-import { validateMealPlan } from "@/lib/mealPlanValidationFlow";
+import { validateMealPlan } from "@v1/lib/mealPlanValidationFlow";
 
 // ── Types ──────────────────────────────────────────────────────
 

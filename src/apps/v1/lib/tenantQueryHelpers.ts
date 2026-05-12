@@ -6,7 +6,7 @@
  * ADDITIONAL filter alongside existing ones (nutritionist_id, patient_id, etc.).
  * 
  * Usage:
- *   import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+ *   import { withTenantFilter, getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
  *   
  *   // Reads: add .eq("tenant_id", tenantId) when available
  *   let query = supabase.from("profiles").select("*").eq("user_id", userId);

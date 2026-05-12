@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluatePatientReadiness } from "@/lib/patientReadinessGuards";
+import { evaluatePatientReadiness } from "@v1/lib/patientReadinessGuards";
 
 describe("evaluatePatientReadiness", () => {
   it("não bloqueia paciente com plano ativo mesmo com pipeline superseded_by_published_plan", () => {

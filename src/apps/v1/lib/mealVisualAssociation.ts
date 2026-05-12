@@ -9,8 +9,8 @@
  *
  * Idempotent: never overwrites existing correct links.
  */
-import { supabase } from "@/integrations/supabase/client";
-import type { MealVisualAlias } from "@/types/mealVisualLibrary";
+import { supabase } from "@v1/integrations/supabase/client";
+import type { MealVisualAlias } from "@v1/types/mealVisualLibrary";
 
 export interface AssociationReport {
   totalAnalyzed: number;

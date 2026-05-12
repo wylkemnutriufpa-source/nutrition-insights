@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
+import { usePatientJourneyStatus, IS_FLUID_STATE } from "@v1/hooks/usePatientJourneyStatus";
 
 interface OnboardingExitGuardProps {
   /** 

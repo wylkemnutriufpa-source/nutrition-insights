@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { MessageSquare, Clock, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -52,7 +52,7 @@ export default function ChatDashboardWidget() {
   }, [user]);
 
   return (
-    <Link to="/chat">
+    <Link to="/v1/chat">
       <div className="glass-premium rounded-xl p-4 hover:scale-[1.02] transition-all cursor-pointer shimmer-sweep">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import {
   Dumbbell, Users, BarChart3, Trophy, Zap, ArrowRight, Sparkles,
   CheckCircle2, Shield, TrendingUp, Calendar, ClipboardCheck,
@@ -11,7 +11,7 @@ import {
   FloatingOrb, LandingNav, HeroBadge, FeatureCard,
   TestimonialCard, StepCard, LandingFooter, AnimatedStat,
   fadeUp, stagger,
-} from "@/components/landing/LandingShared";
+} from "@v1/components/landing/LandingShared";
 
 const features = [
   { icon: Dumbbell, title: "Montagem de Treinos", desc: "Crie rotinas A/B/C/D com séries, reps, carga, descanso e notas. Organize treinos completos em minutos.", color: "text-orange-400", bg: "bg-orange-500/10", gradient: "from-orange-500 to-red-500" },
@@ -87,13 +87,13 @@ export default function PersonalLanding() {
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button size="lg" className="h-14 px-10 text-base font-bold rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-xl shadow-orange-600/25 hover:scale-105 transition-all">
                 <Flame className="w-5 h-5 mr-2" />
                 Criar minha conta grátis
               </Button>
             </Link>
-            <Link to="/">
+            <Link to="/v1/">
               <Button variant="ghost" size="lg" className="h-14 px-8 text-base text-white/50 hover:text-white border border-white/[0.08] hover:border-white/20 rounded-xl">
                 Ver todas as soluções
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -140,7 +140,7 @@ export default function PersonalLanding() {
             <p className="text-white/40 text-sm leading-relaxed mb-8">
               Cada funcionalidade foi pensada para a rotina real de quem prescreve treinos e acompanha a evolução de alunos diariamente.
             </p>
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-semibold rounded-xl px-6 shadow-lg shadow-orange-600/20 hover:scale-105 transition-transform">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Experimentar agora
@@ -227,7 +227,7 @@ export default function PersonalLanding() {
             Comece agora mesmo, sem cartão de crédito. Organize seus treinos, acompanhe seus alunos e escale seus resultados.
           </motion.p>
           <motion.div variants={fadeUp}>
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button size="lg" className="h-16 px-12 text-lg font-bold rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-2xl shadow-orange-600/30 hover:scale-105 transition-all glow-pulse-border">
                 <Flame className="w-6 h-6 mr-2" />
                 Começar grátis agora

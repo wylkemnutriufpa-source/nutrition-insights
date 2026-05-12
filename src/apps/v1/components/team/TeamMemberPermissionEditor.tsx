@@ -1,8 +1,8 @@
-import { useTeamMembers, TeamMemberWithPermissions, TeamPermissions } from "@/hooks/useTeamMembers";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { useTeamMembers, TeamMemberWithPermissions, TeamPermissions } from "@v1/hooks/useTeamMembers";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Switch } from "@v1/components/ui/switch";
+import { Label } from "@v1/components/ui/label";
+import { Badge } from "@v1/components/ui/badge";
 import { AlertTriangle, Shield } from "lucide-react";
 
 interface Props {

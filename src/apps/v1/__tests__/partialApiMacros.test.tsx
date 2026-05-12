@@ -2,15 +2,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v1/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Componentes a testar
-import NextMealWidget from '@/components/patient/NextMealWidget';
-import PatientMealPlan from '@/pages/PatientMealPlan';
+import NextMealWidget from '@v1/components/patient/NextMealWidget';
+import PatientMealPlan from '@v1/pages/PatientMealPlan';
 
-vi.mock('@/integrations/supabase/client', () => {
+vi.mock('@v1/integrations/supabase/client', () => {
   const mockQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -30,7 +30,7 @@ vi.mock('@/integrations/supabase/client', () => {
   };
 });
 
-vi.mock('@/lib/auth', () => ({ 
+vi.mock('@v1/lib/auth', () => ({ 
   useAuth: () => ({ 
     user: { id: 'patient-123' }, 
     isPatient: true, 
@@ -39,11 +39,11 @@ vi.mock('@/lib/auth', () => ({
   })
 }));
 
-vi.mock('@/lib/tenantContext', () => ({
+vi.mock('@v1/lib/tenantContext', () => ({
   useTenant: () => ({ tenantId: 'tenant-123' })
 }));
 
-vi.mock('@/components/layout/DashboardLayout', () => ({
+vi.mock('@v1/components/layout/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>
 }));
 

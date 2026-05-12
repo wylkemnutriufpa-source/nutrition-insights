@@ -11,7 +11,7 @@
  * - Logs renewals to telemetry (no sensitive data)
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 const SIGNED_URL_DURATION = 3600; // 1 hour
 const DEFAULT_REFRESH_BUFFER = 300; // 5 min before expiry

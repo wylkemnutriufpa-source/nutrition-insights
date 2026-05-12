@@ -6,7 +6,7 @@ import {
 } from "./imageResolver";
 
 // Mock Supabase
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({

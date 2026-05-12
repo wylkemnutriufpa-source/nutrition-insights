@@ -4,7 +4,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@v1/components/ui/accordion";
 
 const faqs = [
   { q: "Preciso pagar para testar?", a: "Não. O FitJourney possui teste gratuito de 7 dias com acesso completo a todas as funcionalidades." },

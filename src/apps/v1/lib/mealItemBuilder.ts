@@ -11,7 +11,7 @@
  * Description logic delegated to mealDescriptionEngine.ts (canonical source).
  */
 
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@v1/integrations/supabase/types";
 import { isGenericDescription } from "./mealDescriptionEngine";
 
 export interface MealItemInput {

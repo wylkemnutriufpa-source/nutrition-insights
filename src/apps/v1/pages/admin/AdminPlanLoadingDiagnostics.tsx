@@ -13,17 +13,17 @@
  *   • Export filtrado (CSV/XLSX/PDF) com recorte de janela + filtros
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
+} from "@v1/components/ui/dialog";
 import {
   RefreshCw,
   AlertTriangle,
@@ -35,9 +35,9 @@ import {
   Download,
   Search,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { getPlanStatusMeta, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
-import { exportData } from "@/lib/auditExportUtils";
+import { supabase } from "@v1/integrations/supabase/client";
+import { getPlanStatusMeta, isTrulyUnknownPlanStatus } from "@v1/lib/planStatusLabels";
+import { exportData } from "@v1/lib/auditExportUtils";
 import { toast } from "sonner";
 
 import {

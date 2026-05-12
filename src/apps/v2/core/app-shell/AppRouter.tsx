@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PrescriptionDashboard } from '../../modules/FitJourney2/components/PrescriptionDashboard';
 import { PatientDietView } from '../../modules/FitJourney2/components/PatientDietView';
 import { useAuth } from '../../lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v2/integrations/supabase/client';
 
 type AppRole = 'admin' | 'nutritionist' | 'personal' | 'lojista' | 'patient';
 
@@ -61,13 +61,13 @@ export const AppRouter = () => {
         )}
 
         <Routes>
-          <Route path="/auth" element={user ? <Navigate to="/" replace /> : <div className="p-20 text-white">Tela de Login Placeholder</div>} />
+          <Route path="/auth" element={user ? <Navigate to="/v2/" replace /> : <div className="p-20 text-white">Tela de Login Placeholder</div>} />
 
           <Route
             path="/"
             element={
               !user
-                ? <Navigate to="/auth" replace />
+                ? <Navigate to="/v2/auth" replace />
                 : isPro
                   ? <PrescriptionDashboard />
                   : isPatientOnly
@@ -75,10 +75,10 @@ export const AppRouter = () => {
                     : <PrescriptionDashboard /> /* fallback: sem role definida → trata como pro/admin para não travar */
             }
           />
-          <Route path="/dashboard" element={user ? (isPro ? <PrescriptionDashboard /> : <PatientDietView />) : <Navigate to="/auth" replace />} />
-          <Route path="/my-diet" element={user ? <PatientDietView /> : <Navigate to="/auth" replace />} />
+          <Route path="/dashboard" element={user ? (isPro ? <PrescriptionDashboard /> : <PatientDietView />) : <Navigate to="/v2/auth" replace />} />
+          <Route path="/my-diet" element={user ? <PatientDietView /> : <Navigate to="/v2/auth" replace />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/v2/" replace />} />
         </Routes>
       </div>
     </BrowserRouter>

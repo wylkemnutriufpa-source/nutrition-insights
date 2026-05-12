@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, Clock, Eye, Activity, History, AlertCircle, RefreshCw, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

@@ -5,13 +5,13 @@
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
+import { Card } from "@v1/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@v1/components/ui/tabs";
 import { Link } from "react-router-dom";
 import {
   UtensilsCrossed, ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
@@ -21,9 +21,9 @@ import {
 import {
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion,
-} from "@/components/patient/MealPlanDailyView";
-import { fmtMacro, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@/lib/formatMacros";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+} from "@v1/components/patient/MealPlanDailyView";
+import { fmtMacro, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@v1/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -166,7 +166,7 @@ export default function ExpandableMealPlanCard() {
         </div>
         <div className="flex items-center gap-2">
           <Link
-            to="/my-diet"
+            to="/v1/my-diet"
             onClick={(e) => e.stopPropagation()}
             className="w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
           >
@@ -403,7 +403,7 @@ export default function ExpandableMealPlanCard() {
               </Tabs>
 
               {/* CTA to full page */}
-              <Link to="/my-diet" className="block">
+              <Link to="/v1/my-diet" className="block">
                 <Button variant="outline" size="sm" className="w-full gap-2 text-xs border-primary/20 hover:bg-primary/10">
                   <UtensilsCrossed className="w-3.5 h-3.5" />
                   Abrir plano completo com adesão

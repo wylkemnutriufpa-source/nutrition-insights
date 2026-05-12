@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { cn } from "@v1/lib/utils";
 import { Check, AlertCircle, Info } from "lucide-react";
-import type { NormalizationResult, FieldNormalizer } from "@/lib/normalizeInputs";
+import type { NormalizationResult, FieldNormalizer } from "@v1/lib/normalizeInputs";
 
 interface SmartNumericInputProps {
   label: string;

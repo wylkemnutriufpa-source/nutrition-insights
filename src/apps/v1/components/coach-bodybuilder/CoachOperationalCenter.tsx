@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { PHASE_LABELS, type CheckinData, generateAlerts, analyzeAthleteData } from "@/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { PHASE_LABELS, type CheckinData, generateAlerts, analyzeAthleteData } from "@v1/lib/coachAnalysisEngine";
 import {
   AlertTriangle, Clock, Crown, TrendingDown, Activity,
   ChevronRight, Flame, BarChart3

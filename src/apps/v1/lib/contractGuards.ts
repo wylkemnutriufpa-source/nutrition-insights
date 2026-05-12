@@ -11,9 +11,9 @@
  *   });
  */
 
-import { CRITICAL_CONTRACTS, CriticalContractId } from "@/lib/criticalContracts";
-import { logCriticalRegression } from "@/lib/regressionGuard";
-import { isSimpleMode } from "@/lib/simpleModeFlag";
+import { CRITICAL_CONTRACTS, CriticalContractId } from "@v1/lib/criticalContracts";
+import { logCriticalRegression } from "@v1/lib/regressionGuard";
+import { isSimpleMode } from "@v1/lib/simpleModeFlag";
 
 export class ContractViolationError extends Error {
   constructor(

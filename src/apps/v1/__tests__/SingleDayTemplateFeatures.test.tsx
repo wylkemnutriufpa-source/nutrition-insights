@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useMealPlanEditorV2Store } from '@/stores/mealPlanEditorV2Store';
-import { validateMealSubstitutions } from '@/lib/mealPlanSubstitutionValidator';
+import { useMealPlanEditorV2Store } from '@v1/stores/mealPlanEditorV2Store';
+import { validateMealSubstitutions } from '@v1/lib/mealPlanSubstitutionValidator';
 
 // Mock supabase
-vi.mock('@/integrations/supabase/client', () => ({
+vi.mock('@v1/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({

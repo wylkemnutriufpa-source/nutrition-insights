@@ -1,24 +1,24 @@
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
-import StatsCard from "@/components/dashboard/StatsCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import IFJCommandCenter from "@v1/components/intelligence/modules/IFJCommandCenter";
+import StatsCard from "@v1/components/dashboard/StatsCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@v1/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Users, Dumbbell, TrendingUp, AlertTriangle, Trophy,
   Plus, BarChart3, ArrowRight, Activity, UserX, Flame, Search, UserPlus, Camera
 } from "lucide-react";
-import AddStudentModal from "@/components/professional/AddStudentModal";
-import LinkStudentModal from "@/components/professional/LinkStudentModal";
-import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
-import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
+import AddStudentModal from "@v1/components/professional/AddStudentModal";
+import LinkStudentModal from "@v1/components/professional/LinkStudentModal";
+import { useProfessionalLinks } from "@v1/hooks/useProfessionalLinks";
+import InlineExperienceToggle from "@v1/components/dashboard/InlineExperienceToggle";
 
 export default function PersonalDashboard() {
   const { user } = useAuth();
@@ -194,7 +194,7 @@ export default function PersonalDashboard() {
               <Search className="w-4 h-4" />
               Vincular Aluno
             </Button>
-            <Link to="/invite-patient">
+            <Link to="/v1/invite-patient">
               <Button size="sm" variant="outline" className="gap-1.5 border-amber-500/30 text-amber-600 hover:bg-amber-500/5">
                 <UserPlus className="w-4 h-4" /> Convidar
               </Button>
@@ -203,10 +203,10 @@ export default function PersonalDashboard() {
               <UserPlus className="w-4 h-4" />
               Cadastrar Rápido
             </Button>
-            <Link to="/personal/students">
+            <Link to="/v1/personal/students">
               <Button variant="outline" size="sm"><Users className="w-4 h-4 mr-1" /> Ver Todos</Button>
             </Link>
-            <Link to="/personal/workouts">
+            <Link to="/v1/personal/workouts">
               <Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-1" /> Novo Treino</Button>
             </Link>
           </div>
@@ -214,11 +214,11 @@ export default function PersonalDashboard() {
 
         {/* Stats - all clickable */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <StatsCard title="Alunos Ativos" value={String(activeStudents)} icon={Users} href="/personal/students" />
-          <StatsCard title="Planos Ativos" value={String(totalPlans)} icon={Dumbbell} href="/personal/workouts" />
-          <StatsCard title="Treinos Hoje" value={String(todayCompletions)} icon={Activity} href="/personal/workouts" />
-          <StatsCard title="Treinos na Semana" value={String(weeklyCompletions)} icon={TrendingUp} href="/personal/workouts" />
-          <StatsCard title="Adesão Semanal" value={`${adherencePercent}%`} icon={BarChart3} href="/reports" />
+          <StatsCard title="Alunos Ativos" value={String(activeStudents)} icon={Users} href="/v1/personal/students" />
+          <StatsCard title="Planos Ativos" value={String(totalPlans)} icon={Dumbbell} href="/v1/personal/workouts" />
+          <StatsCard title="Treinos Hoje" value={String(todayCompletions)} icon={Activity} href="/v1/personal/workouts" />
+          <StatsCard title="Treinos na Semana" value={String(weeklyCompletions)} icon={TrendingUp} href="/v1/personal/workouts" />
+          <StatsCard title="Adesão Semanal" value={`${adherencePercent}%`} icon={BarChart3} href="/v1/reports" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -288,25 +288,25 @@ export default function PersonalDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Link to="/personal/workouts" className="block">
+              <Link to="/v1/personal/workouts" className="block">
                 <Button variant="outline" className="w-full justify-start h-10">
                   <Dumbbell className="w-4 h-4 mr-2" /> Criar Plano de Treino
                   <ArrowRight className="w-3 h-3 ml-auto" />
                 </Button>
               </Link>
-              <Link to="/personal/students" className="block">
+              <Link to="/v1/personal/students" className="block">
                 <Button variant="outline" className="w-full justify-start h-10">
                   <Users className="w-4 h-4 mr-2" /> Gerenciar Alunos
                   <ArrowRight className="w-3 h-3 ml-auto" />
                 </Button>
               </Link>
-              <Link to="/ranking" className="block">
+              <Link to="/v1/ranking" className="block">
                 <Button variant="outline" className="w-full justify-start h-10">
                   <Trophy className="w-4 h-4 mr-2" /> Ranking de Alunos
                   <ArrowRight className="w-3 h-3 ml-auto" />
                 </Button>
               </Link>
-              <Link to="/settings" className="block">
+              <Link to="/v1/settings" className="block">
                 <Button variant="outline" className="w-full justify-start h-10">
                   <Camera className="w-4 h-4 mr-2" /> Configurações
                   <ArrowRight className="w-3 h-3 ml-auto" />

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { User, Target, Ruler, Weight, Calendar, AlertTriangle, Users, Sparkles } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { OrbitalHeader } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { Badge } from "@v1/components/ui/badge";
+import { OrbitalHeader } from "@v1/components/onboarding/OrbitalAnamnesisInputs";
 import type { TrainerAnamnesisData } from "./types";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;

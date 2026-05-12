@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Switch } from "@v1/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
+import { Checkbox } from "@v1/components/ui/checkbox";
+import { Badge } from "@v1/components/ui/badge";
 import { toast } from "sonner";
 import {
   Bot, Plus, Trash2, Clock, AlertTriangle, CheckCircle2,
   Bell, ListChecks, Lightbulb, Zap, BookOpen, ChevronDown, ChevronUp,
   Lock, Shield,
 } from "lucide-react";
-import ProtocolMasterDocumentation from "@/components/admin/ProtocolMasterDocumentation";
+import ProtocolMasterDocumentation from "@v1/components/admin/ProtocolMasterDocumentation";
 
 const TRIGGER_TYPES = [
   { value: "checklist.low_detected", label: "Baixa aderência ao checklist" },

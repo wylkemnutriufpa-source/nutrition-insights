@@ -1,7 +1,7 @@
-import type { CoachAlert } from "@/lib/coachAnalysisEngine";
-import { ALERT_TYPE_LABELS } from "@/lib/coachAnalysisEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import type { CoachAlert } from "@v1/lib/coachAnalysisEngine";
+import { ALERT_TYPE_LABELS } from "@v1/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
 import { AlertTriangle, Bell, ShieldAlert, Info } from "lucide-react";
 
 const SEVERITY_CONFIG = {

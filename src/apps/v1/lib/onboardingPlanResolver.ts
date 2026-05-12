@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 const INVALID_PLAN_STATUSES = new Set(["archived", "rejected"]);
 const CANDIDATE_PLAN_STATUSES = [

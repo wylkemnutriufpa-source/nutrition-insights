@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@v1/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye, FileDown, Share2 } from "lucide-react";
 import { WeeklyGrid } from "./WeeklyGrid";
 import { ListView } from "./ListView";
@@ -10,11 +10,11 @@ import { AssistedPlanModal } from "./AssistedPlanModal";
 import { MealVisualLibraryModal } from "./MealVisualLibraryModal";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
 import DietPreviewPanel from "./DietPreviewPanel";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
-import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
-import SharePlanDialog from "@/components/meal-plan/SharePlanDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
+import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from "@v1/lib/pdfExportPremium";
+import SharePlanDialog from "@v1/components/meal-plan/SharePlanDialog";
+import { supabase } from "@v1/integrations/supabase/client";
 import { toast } from "sonner";
 
 type ViewMode = "grid" | "list";

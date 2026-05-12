@@ -3,7 +3,7 @@
  * BLOCO 4 — Testes de regressão para fluxos sensíveis
  */
 import { describe, it, expect } from "vitest";
-import { CRITICAL_FLOWS, getFlow, getDependentFlows } from "@/lib/criticalFlows";
+import { CRITICAL_FLOWS, getFlow, getDependentFlows } from "@v1/lib/criticalFlows";
 
 describe("Regression: Flow Chain Integrity", () => {
   describe("Chain: Anamnese → Flags → Tarefas → Mensagens", () => {

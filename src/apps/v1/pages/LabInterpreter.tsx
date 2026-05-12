@@ -1,23 +1,23 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 import { toast } from "sonner";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import {
   ArrowLeft, FlaskConical, Activity, AlertTriangle, CheckCircle2,
   Search, Loader2, Crown, Users, Sparkles, FileText, Beaker
 } from "lucide-react";
-import { extractLabMarkersFromText, interpretLabResults } from "@/lib/labResultsInterpreter";
-import type { LabFlag, LabInterpretationResult } from "@/lib/labResultsInterpreter";
+import { extractLabMarkersFromText, interpretLabResults } from "@v1/lib/labResultsInterpreter";
+import type { LabFlag, LabInterpretationResult } from "@v1/lib/labResultsInterpreter";
 
 const MARKER_LABELS: Record<string, string> = {
   vitamin_d: "Vitamina D", ferritin: "Ferritina", hemoglobin: "Hemoglobina",

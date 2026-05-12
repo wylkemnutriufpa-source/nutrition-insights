@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { Input } from "@v1/components/ui/input";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import { Search, Loader2, ChefHat, Flame, Beef } from "lucide-react";
-import { RecipeIngredient } from "@/lib/recipeCalculator";
+import { RecipeIngredient } from "@v1/lib/recipeCalculator";
 
 interface LoadedRecipe {
   id: string;

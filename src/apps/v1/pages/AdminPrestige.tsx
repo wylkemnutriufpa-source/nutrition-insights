@@ -1,22 +1,22 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Switch } from "@v1/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Separator } from "@v1/components/ui/separator";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Crown, Zap, Save, Plus, Trash2, X, Sparkles, Loader2, Users, Search, UserPlus, UserMinus, RotateCcw } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import PrestigeBadge from "@/components/prestige/PrestigeBadge";
-import PatientPickerDropdown from "@/components/common/PatientPickerDropdown";
-import type { PrestigePlan } from "@/hooks/usePrestige";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@v1/components/ui/dialog";
+import PrestigeBadge from "@v1/components/prestige/PrestigeBadge";
+import PatientPickerDropdown from "@v1/components/common/PatientPickerDropdown";
+import type { PrestigePlan } from "@v1/hooks/usePrestige";
 
 interface PointRule {
   id: string;

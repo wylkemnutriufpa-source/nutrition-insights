@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import { Database, Json } from "@/integrations/supabase/types";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Database, Json } from "@v1/integrations/supabase/types";
 
 type TimelineEventInsert = Database["public"]["Tables"]["timeline_events"]["Insert"];
 

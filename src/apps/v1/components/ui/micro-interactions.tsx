@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ReactNode, useCallback, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1];
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { toast } from "sonner";
-import { WhatsAppTemplateType } from "@/utils/invitation";
+import { WhatsAppTemplateType } from "@v1/utils/invitation";
 
 export function useWhatsAppTemplates() {
   const { user } = useAuth();

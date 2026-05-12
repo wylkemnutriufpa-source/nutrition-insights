@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Label } from "@v1/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { toast } from "sonner";
 import { Sparkles, Upload, Loader2, Brain, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { Database } from "@/integrations/supabase/types";
-import { useAIUsage } from "@/hooks/useAIUsage";
-import AIUsageBadge from "@/components/common/AIUsageBadge";
+import type { Database } from "@v1/integrations/supabase/types";
+import { useAIUsage } from "@v1/hooks/useAIUsage";
+import AIUsageBadge from "@v1/components/common/AIUsageBadge";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 
@@ -179,7 +179,7 @@ export default function AnalyzeMeal() {
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <Link to="/">
+          <Link to="/v1/">
             <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
           </Link>
           <div className="flex items-center justify-between">

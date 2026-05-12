@@ -1,6 +1,6 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
 import { Pill, Clock, Calendar, AlertTriangle, FileText, Stethoscope } from "lucide-react";
-import type { PhytotherapyTemplate } from "@/pages/PhytotherapyProtocols";
+import type { PhytotherapyTemplate } from "@v1/pages/PhytotherapyProtocols";
 
 interface Props {
   template: PhytotherapyTemplate;

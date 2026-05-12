@@ -1,10 +1,10 @@
 import React, { memo, useMemo } from "react";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
-import MealFeedbackButton from "@/components/patient/MealFeedbackButton";
+import { useExperienceUI } from "@v1/hooks/useExperienceUI";
+import MealFeedbackButton from "@v1/components/patient/MealFeedbackButton";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
 import {
   CheckCircle2, Circle, Calendar, ChevronLeft, ChevronRight,
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
@@ -12,12 +12,12 @@ import {
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
   Info, Clock,
 } from "lucide-react";
-import { useMealVisualItem } from "@/hooks/useMealVisualItem";
-import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMealVisualItem } from "@v1/hooks/useMealVisualItem";
+import { useSignedStorageUrl } from "@v1/hooks/useSignedStorageUrl";
+import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@v1/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@v1/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 type AdherenceStatus = "followed" | "partial" | "not_followed";

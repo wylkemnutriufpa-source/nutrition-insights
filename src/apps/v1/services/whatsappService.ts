@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import { validateWhatsApp, normalizeWhatsApp } from "@/utils/whatsapp";
+import { supabase } from "@v1/integrations/supabase/client";
+import { validateWhatsApp, normalizeWhatsApp } from "@v1/utils/whatsapp";
 
 
 export interface WhatsAppIntegration {

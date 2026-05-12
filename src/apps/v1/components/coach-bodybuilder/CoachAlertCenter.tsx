@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { ALERT_TYPE_LABELS } from "@/lib/coachAnalysisEngine";
-import type { CoachAlert } from "@/lib/coachAnalysisEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { ALERT_TYPE_LABELS } from "@v1/lib/coachAnalysisEngine";
+import type { CoachAlert } from "@v1/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Textarea } from "@v1/components/ui/textarea";
 import { AlertTriangle, Bell, ShieldAlert, Info, CheckCircle, Eye } from "lucide-react";
 import { toast } from "sonner";
 

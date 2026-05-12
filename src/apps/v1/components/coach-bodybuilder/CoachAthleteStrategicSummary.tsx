@@ -1,11 +1,11 @@
 /**
  * Athlete Strategic Summary — Premium executive block
  */
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import type { AnalysisResult, CoachAlert, DecisionSuggestion } from "@/lib/coachAnalysisEngine";
-import { PHASE_LABELS, DECISION_LABELS } from "@/lib/coachAnalysisEngine";
-import { PRIORITY_CONFIG, type PriorityLevel } from "@/lib/coachPriorityEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import type { AnalysisResult, CoachAlert, DecisionSuggestion } from "@v1/lib/coachAnalysisEngine";
+import { PHASE_LABELS, DECISION_LABELS } from "@v1/lib/coachAnalysisEngine";
+import { PRIORITY_CONFIG, type PriorityLevel } from "@v1/lib/coachPriorityEngine";
 import {
   Brain, Target, AlertTriangle, Zap, Eye, PenLine, Activity, Shield, Flame
 } from "lucide-react";

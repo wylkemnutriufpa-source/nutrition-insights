@@ -1,7 +1,7 @@
-import { useTeamActivity } from "@/hooks/useTeamMembers";
-import { Card, CardContent } from "@/components/ui/card";
+import { useTeamActivity } from "@v1/hooks/useTeamMembers";
+import { Card, CardContent } from "@v1/components/ui/card";
 import { Activity, UserPlus, Shield, Users, FileText, MessageSquare } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@v1/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

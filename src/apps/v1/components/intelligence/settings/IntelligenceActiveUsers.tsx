@@ -4,14 +4,14 @@
  * Auto-creates default permissions on toggle ON
  */
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Switch } from "@v1/components/ui/switch";
+import { Input } from "@v1/components/ui/input";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { Brain, Loader2, Users, Search, CheckCircle2, XCircle, Settings2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import IFJPermissionsModal from "../IFJPermissionsModal";

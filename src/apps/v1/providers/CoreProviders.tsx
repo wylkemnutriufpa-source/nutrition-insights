@@ -1,11 +1,11 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@v1/components/ui/toaster";
+import { Toaster as Sonner } from "@v1/components/ui/sonner";
+import { TooltipProvider } from "@v1/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider } from "@v1/lib/auth";
 import { WorkspaceProvider } from "./WorkspaceProvider";
 import { ExperienceProvider } from "./ExperienceProvider";
-import { CommandPaletteProvider } from "@/components/common/CommandPalette";
+import { CommandPaletteProvider } from "@v1/components/common/CommandPalette";
 import { BrowserRouter } from "react-router-dom";
 
 import { Helmet, HelmetProvider } from "react-helmet-async";

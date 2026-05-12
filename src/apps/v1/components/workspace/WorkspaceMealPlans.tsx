@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
 import { UtensilsCrossed, Clock, CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
-import { getPlanStatusMeta } from "@/lib/planStatusLabels";
-import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
+import { getPlanStatusMeta } from "@v1/lib/planStatusLabels";
+import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@v1/lib/planLoadErrorClassifier";
 
 interface Props { search: string; }
 

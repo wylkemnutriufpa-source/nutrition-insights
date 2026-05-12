@@ -1,8 +1,8 @@
 import React, { Component, ErrorInfo, useEffect, useState } from 'react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertTitle, AlertDescription } from '@v1/components/ui/alert';
 import { AlertCircle, RefreshCcw, X, ShieldAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { friendlySupabaseError } from '@/lib/supabaseErrorMapper';
+import { Button } from '@v1/components/ui/button';
+import { friendlySupabaseError } from '@v1/lib/supabaseErrorMapper';
 
 interface RuntimeError {
   section: string;

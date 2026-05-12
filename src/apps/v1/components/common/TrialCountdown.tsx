@@ -1,4 +1,4 @@
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@v1/lib/auth";
 import { useEffect, useState } from "react";
 import { Clock, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";

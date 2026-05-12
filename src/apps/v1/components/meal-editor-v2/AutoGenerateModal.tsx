@@ -1,18 +1,18 @@
 import { useState, useCallback } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@v1/components/ui/select";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   Loader2, Wand2, AlertTriangle, CheckCircle2, Flame, Beef, Wheat, Droplets, Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@v1/stores/mealPlanEditorV2Store";
 import {
   generateMealPlanFromLibrary,
   loadPatientProfile,
@@ -21,9 +21,9 @@ import {
   type PatientProfile,
   type AutoGenerationResult,
   type MealDistribution,
-} from "@/lib/mealPlanAutoGenerator";
-import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
+} from "@v1/lib/mealPlanAutoGenerator";
+import { supabase } from "@v1/integrations/supabase/client";
+import type { Json } from "@v1/integrations/supabase/types";
 
 interface Props {
   open: boolean;

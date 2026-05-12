@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v2/integrations/supabase/client';
 import { Utensils, Clock, Calendar, ChevronRight } from 'lucide-react';
 
 export const PatientDietView = () => {

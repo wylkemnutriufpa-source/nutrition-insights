@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import AchievementCard from "@/components/gamification/AchievementCard";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import AchievementCard from "@v1/components/gamification/AchievementCard";
 import { Trophy } from "lucide-react";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@v1/integrations/supabase/types";
 import { useTranslation } from "react-i18next";
-import ShareProgressButton from "@/components/social/ShareProgressButton";
+import ShareProgressButton from "@v1/components/social/ShareProgressButton";
 
 type Achievement = Tables<"achievements">;
 type UserAchievement = Tables<"user_achievements">;

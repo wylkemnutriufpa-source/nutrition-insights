@@ -5,9 +5,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import { Sparkles, PenTool, Lock, AlertTriangle } from "lucide-react";
 
 export type ValidationMode = "MANUAL_EDIT" | "AUTO_ENGINE";

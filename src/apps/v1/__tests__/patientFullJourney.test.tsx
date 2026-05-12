@@ -2,16 +2,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v1/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Mocks de Componentes
-import OnboardingPaciente from '@/pages/OnboardingPaciente';
-import NextMealWidget from '@/components/patient/NextMealWidget';
+import OnboardingPaciente from '@v1/pages/OnboardingPaciente';
+import NextMealWidget from '@v1/components/patient/NextMealWidget';
 
 // Mock do Supabase
-vi.mock('@/integrations/supabase/client', () => {
+vi.mock('@v1/integrations/supabase/client', () => {
   const mockQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -29,7 +29,7 @@ vi.mock('@/integrations/supabase/client', () => {
 });
 
 // Mock do useAuth
-vi.mock('@/lib/auth', () => ({ 
+vi.mock('@v1/lib/auth', () => ({ 
   useAuth: () => ({ 
     user: { id: 'patient-123' }, 
     isPatient: true, 
@@ -39,7 +39,7 @@ vi.mock('@/lib/auth', () => ({
 }));
 
 // Mock do Contexto de Tenant
-vi.mock('@/lib/tenantContext', () => ({
+vi.mock('@v1/lib/tenantContext', () => ({
   useTenant: () => ({ tenantId: 'tenant-123' })
 }));
 

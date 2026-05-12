@@ -1,9 +1,9 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Checkbox } from "@v1/components/ui/checkbox";
 import { AlertTriangle, ShieldCheck, ShieldAlert, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { OrbitalHeader } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { cn } from "@v1/lib/utils";
+import { OrbitalHeader } from "@v1/components/onboarding/OrbitalAnamnesisInputs";
 import type { TrainerAnamnesisData, ReadinessScreening } from "./types";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;

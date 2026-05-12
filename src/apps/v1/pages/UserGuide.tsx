@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useFeatureExplorer } from "@/hooks/useFeatureExplorer";
-import { PATIENT_FEATURE_REGISTRY, getPatientFeaturesByCategory } from "@/lib/patientFeatureRegistry";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { useFeatureExplorer } from "@v1/hooks/useFeatureExplorer";
+import { PATIENT_FEATURE_REGISTRY, getPatientFeaturesByCategory } from "@v1/lib/patientFeatureRegistry";
 import { Compass, CheckCircle2, Search, Trophy, Zap, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { PATIENT_ROUTE_MAP } from "@/lib/featureRouteMap";
+import { PATIENT_ROUTE_MAP } from "@v1/lib/featureRouteMap";
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "Alimentação": { gradient: "from-success/20 to-success/5", emoji: "🥗" },

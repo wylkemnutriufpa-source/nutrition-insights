@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
   Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X, PenTool, Lock,
 Bot, UserCheck, ShieldCheck, ShieldAlert,
   BookOpen,
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
 import type { ValidationMode } from "./ValidationModeDialog";
 
 interface Props {

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { Pill, Clock, Calendar, AlertTriangle, FileText } from "lucide-react";
 
 export default function PatientPhytotherapySection({ patientId }: { patientId?: string }) {

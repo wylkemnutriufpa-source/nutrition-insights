@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { 
   Columns, 
   FlaskConical, 
@@ -10,9 +10,9 @@ import {
   Loader2,
   AlertCircle
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import { 
   Table, 
   TableHeader, 
@@ -20,7 +20,7 @@ import {
   TableHead, 
   TableBody, 
   TableCell 
-} from "@/components/ui/table";
+} from "@v1/components/ui/table";
 import { toast } from "sonner";
 
 interface ProtocolComparisonProps {

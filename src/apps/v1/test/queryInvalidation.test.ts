@@ -2,7 +2,7 @@
  * Sprint 1 — Testes de invalidação de queries críticas
  */
 import { describe, it, expect, vi } from "vitest";
-import { invalidateCriticalQueries, invalidateNutritionistQueries } from "@/lib/queryInvalidation";
+import { invalidateCriticalQueries, invalidateNutritionistQueries } from "@v1/lib/queryInvalidation";
 
 function createMockQueryClient() {
   return {

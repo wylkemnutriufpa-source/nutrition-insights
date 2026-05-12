@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+} from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Progress } from "@v1/components/ui/progress";
 import {
   ClipboardCheck, Scale, UtensilsCrossed, CheckCircle2,
   ArrowRight, Sparkles, Clock, PartyPopper, Info,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
-import { resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
+import { cn } from "@v1/lib/utils";
+import { usePatientPlanStatus } from "@v1/hooks/usePatientPlanStatus";
+import { resolvePatientIdentity } from "@v1/lib/onboardingPlanResolver";
 
 interface PipelineStep {
   key: string;

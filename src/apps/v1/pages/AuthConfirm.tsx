@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Button } from "@v1/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@v1/components/ui/card";
 import { Loader2, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 

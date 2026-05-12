@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
 import { CheckCircle2, XCircle, AlertCircle, Info, ChevronRight, ChevronLeft, Navigation, AlertTriangle } from "lucide-react";
-import { validateMealSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
-import { cn } from "@/lib/utils";
-import type { Tables } from "@/integrations/supabase/types";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { validateMealSubstitutions } from "@v1/lib/mealPlanSubstitutionValidator";
+import { cn } from "@v1/lib/utils";
+import type { Tables } from "@v1/integrations/supabase/types";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Badge } from "@v1/components/ui/badge";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 

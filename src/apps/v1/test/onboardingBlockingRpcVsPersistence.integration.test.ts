@@ -1,5 +1,5 @@
 import { describe, it, expect, afterAll } from "vitest";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 /**
  * Integration test: For each scenario, verify that the fields returned by the RPC

@@ -4,16 +4,16 @@ import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Plus, Check, Flame, Beef, Wheat, Droplets, Search, ArrowLeftRight, Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
 import { MealItemCard } from "./MealItemCard";
-import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
-import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
-import type { FoodItem } from "@/components/meals/FoodAutocomplete";
-import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
+import MacroBalanceBar from "@v1/components/meals/MacroBalanceBar";
+import { FOOD_DATABASE } from "@v1/components/meals/FoodAutocomplete";
+import type { FoodItem } from "@v1/components/meals/FoodAutocomplete";
+import FoodSearchInline from "@v1/components/hybrid-builder/FoodSearchInline";
 import { MealLibraryModal } from "./MealLibraryModal";
-import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
+import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@v1/lib/mealEditorVisualInsert";
 import { toast } from "sonner";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [

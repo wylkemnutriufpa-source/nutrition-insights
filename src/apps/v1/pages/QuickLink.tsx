@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Card, CardContent } from "@v1/components/ui/card";
 import { toast } from "sonner";
 import { 
   UserPlus, 
@@ -19,8 +19,8 @@ import {
   User,
   Sparkles
 } from "lucide-react";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@v1/utils/whatsapp";
 
 export default function QuickLink() {
   const { nutriId } = useParams();
@@ -189,7 +189,7 @@ export default function QuickLink() {
           </p>
           <div className="pt-4">
             <Button asChild className="w-full h-12 text-base font-semibold gradient-primary shadow-glow">
-              <Link to="/auth">
+              <Link to="/v1/auth">
                 Ir para o Painel <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
             </Button>
@@ -313,7 +313,7 @@ export default function QuickLink() {
               Seus dados estão protegidos com criptografia de ponta.
             </p>
             <div className="pt-2">
-              <Link to="/auth" className="text-sm text-primary hover:underline font-medium">
+              <Link to="/v1/auth" className="text-sm text-primary hover:underline font-medium">
                 Já possui uma conta? Entre aqui
               </Link>
             </div>

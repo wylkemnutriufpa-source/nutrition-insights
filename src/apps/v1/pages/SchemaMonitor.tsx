@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@v1/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@v1/components/ui/table";
+import { Badge } from "@v1/components/ui/badge";
 import { AlertCircle, CheckCircle2, FileJson, AlertTriangle, Search, RefreshCw, Diff, Clock } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@v1/components/ui/input";
+import { Button } from "@v1/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@v1/components/ui/alert";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import snapshotData from "@/integrations/supabase/schema-snapshot.json";
+import { supabase } from "@v1/integrations/supabase/client";
+import snapshotData from "@v1/integrations/supabase/schema-snapshot.json";
 import { toast } from "sonner";
 
 interface Violation {

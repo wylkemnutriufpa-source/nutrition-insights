@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
 import { motion } from "framer-motion";
 import { Flame, Scale, AlertTriangle, ShieldAlert, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { calculateMomentum, type MomentumLevel } from "@/components/gamification/MomentumIndicator";
+import { calculateMomentum, type MomentumLevel } from "@v1/components/gamification/MomentumIndicator";
 
 const LEVEL_CONFIG: Record<MomentumLevel, { emoji: string; color: string; bg: string; label: string }> = {
   fire: { emoji: "🔥", color: "text-orange-500", bg: "bg-orange-500/10", label: "Em Alta" },

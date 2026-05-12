@@ -1,27 +1,27 @@
 import { useState, useCallback, useEffect } from "react";
-import { useTenant } from "@/lib/tenantContext";
+import { useTenant } from "@v1/lib/tenantContext";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+} from "@v1/components/ui/dialog";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@v1/components/ui/select";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@v1/components/ui/collapsible";
 import {
   Loader2, Sparkles, AlertTriangle, CheckCircle2, Flame, Beef, Wheat, Droplets,
   Info, ArrowRight, Eye, ChevronLeft, Shield, Target, Zap, Heart, Activity,
   RefreshCw, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { fmtMacro, safeNum } from "@/lib/formatMacros";
-import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
-import { slotsToInserts } from "@/lib/mealPlanAutoGenerator";
-import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
+import { fmtMacro, safeNum } from "@v1/lib/formatMacros";
+import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@v1/stores/mealPlanEditorV2Store";
+import { slotsToInserts } from "@v1/lib/mealPlanAutoGenerator";
+import { supabase } from "@v1/integrations/supabase/client";
+import type { Json } from "@v1/integrations/supabase/types";
 import {
   loadPatientContext,
   generateAssistedPlan,
@@ -34,7 +34,7 @@ import {
   type ComplexityTier,
   type PlanFocus,
   type ProteinLevel,
-} from "@/lib/assistedPlanGenerator";
+} from "@v1/lib/assistedPlanGenerator";
 
 interface Props {
   open: boolean;

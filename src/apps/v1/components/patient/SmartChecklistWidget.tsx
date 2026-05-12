@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { getSmartChecklist, completeSmartTask, generateSmartChecklist } from "@/lib/smartChecklistEngine";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@v1/lib/auth";
+import { getSmartChecklist, completeSmartTask, generateSmartChecklist } from "@v1/lib/smartChecklistEngine";
+import { Button } from "@v1/components/ui/button";
+import { Progress } from "@v1/components/ui/progress";
 import { CheckCircle2, Circle, Sparkles, Droplets, UtensilsCrossed, Brain, Dumbbell, Sun, Heart } from "lucide-react";
 import { toast } from "sonner";
-import { safeNum } from "@/lib/formatMacros";
+import { safeNum } from "@v1/lib/formatMacros";
 
 const CATEGORY_ICONS: Record<string, any> = {
   hydration: Droplets,

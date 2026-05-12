@@ -1,16 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { Link } from "react-router-dom";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Switch } from "@v1/components/ui/switch";
+import { Checkbox } from "@v1/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { UserPlus, ExternalLink, Brain, Settings2, Loader2, CheckCheck, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import IFJPermissionsModal from "@/components/intelligence/IFJPermissionsModal";
+import IFJPermissionsModal from "@v1/components/intelligence/IFJPermissionsModal";
 
 interface Props { search: string; }
 
@@ -147,7 +147,7 @@ export default function WorkspacePatients({ search }: Props) {
               </Button>
             </>
           )}
-          <Link to="/invite-patient">
+          <Link to="/v1/invite-patient">
             <Button size="sm" variant="outline" className="gap-1.5">
               <UserPlus className="w-4 h-4" /> Convidar
             </Button>

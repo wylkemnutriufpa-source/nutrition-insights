@@ -1,27 +1,27 @@
 import { useState, useEffect } from "react";
-import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
-import { supabase } from "@/integrations/supabase/client";
-import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
-import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@v1/lib/serverTransitions";
+import { supabase } from "@v1/integrations/supabase/client";
+import { finalizeGeneratedMealPlan } from "@v1/lib/finalizeGeneratedMealPlan";
+import { localGenerateMealPlan } from "@v1/lib/localMealPlanGenerator";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
   syncPipelineGeneratedPlan,
-} from "@/lib/onboardingPlanResolver";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+} from "@v1/lib/onboardingPlanResolver";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Label } from "@v1/components/ui/label";
+import { Switch } from "@v1/components/ui/switch";
+import { Input } from "@v1/components/ui/input";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@v1/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@v1/components/ui/dialog";
 import { toast } from "sonner";
 import {
   CheckCircle2, XCircle, Clock, Sparkles, Edit2, ChevronDown,

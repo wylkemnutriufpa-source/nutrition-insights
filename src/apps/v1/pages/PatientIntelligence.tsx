@@ -2,17 +2,17 @@
  * Patient-facing Intelligence Dashboard — Golden Premium panel
  * Shows their Intelligence status, behavioral profile, and recent prompts.
  */
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useAuth } from "@/lib/auth";
-import { usePrestige } from "@/hooks/usePrestige";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { useAuth } from "@v1/lib/auth";
+import { usePrestige } from "@v1/hooks/usePrestige";
 import { motion } from "framer-motion";
 import { Brain, Sparkles, Droplets, Dumbbell, Moon, MessageSquare, Crown, Lock, Shield, Zap } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import IntelligenceShowcaseModal from "@/components/intelligence/IntelligenceShowcaseModal";
+import { supabase } from "@v1/integrations/supabase/client";
+import IntelligenceShowcaseModal from "@v1/components/intelligence/IntelligenceShowcaseModal";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
 

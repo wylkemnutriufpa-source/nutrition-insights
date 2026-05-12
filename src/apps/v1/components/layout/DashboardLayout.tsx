@@ -1,37 +1,37 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { useAuth } from "@v1/lib/auth";
+import { Button } from "@v1/components/ui/button";
+import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@v1/components/ui/sheet";
 import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket, RefreshCw, ShieldCheck } from "lucide-react";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
-import SyncButton from "@/components/common/SyncButton";
+import { useExperienceMode } from "@v1/hooks/useExperienceMode";
+import SyncButton from "@v1/components/common/SyncButton";
 import { Search, Loader2 } from "lucide-react";
-import NotificationBell from "@/components/notifications/NotificationBell";
-import { openCommandPalette } from "@/components/common/CommandPalette";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useSmartMenu } from "@/hooks/useSmartMenu";
-import AccordionSidebar from "@/components/layout/AccordionSidebar";
-import MobileSidebar from "@/components/layout/MobileSidebar";
-import { useProfessionalModules } from "@/hooks/useProfessionalModules";
-import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import SmartResumeModal from "@/components/common/SmartResumeModal";
-import IntelligenceModal from "@/components/common/IntelligenceModal";
-import IntelligenceShowcaseModal from "@/components/intelligence/IntelligenceShowcaseModal";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import TrialCountdown from "@/components/common/TrialCountdown";
-import ClinicalAIEntity from "@/components/ai-entity/ClinicalAIEntity";
-import { usePatientRealtime } from "@/hooks/usePatientRealtime";
-import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
-import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
-import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
-import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import NotificationBell from "@v1/components/notifications/NotificationBell";
+import { openCommandPalette } from "@v1/components/common/CommandPalette";
+import { useIsMobile } from "@v1/hooks/use-mobile";
+import { useSmartMenu } from "@v1/hooks/useSmartMenu";
+import AccordionSidebar from "@v1/components/layout/AccordionSidebar";
+import MobileSidebar from "@v1/components/layout/MobileSidebar";
+import { useProfessionalModules } from "@v1/hooks/useProfessionalModules";
+import PendingApprovalsModal, { usePendingApprovals } from "@v1/components/patient/PendingApprovalsModal";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
+import SmartResumeModal from "@v1/components/common/SmartResumeModal";
+import IntelligenceModal from "@v1/components/common/IntelligenceModal";
+import IntelligenceShowcaseModal from "@v1/components/intelligence/IntelligenceShowcaseModal";
+import { ErrorBoundary } from "@v1/components/common/ErrorBoundary";
+import TrialCountdown from "@v1/components/common/TrialCountdown";
+import ClinicalAIEntity from "@v1/components/ai-entity/ClinicalAIEntity";
+import { usePatientRealtime } from "@v1/hooks/usePatientRealtime";
+import { useNutritionistRealtime } from "@v1/hooks/useNutritionistRealtime";
+import { useRefetchOnFocus } from "@v1/hooks/useRefetchOnFocus";
+import { useRealtimeEventBus } from "@v1/hooks/useRealtimeEventBus";
+import WorkspaceContextSwitcher from "@v1/components/layout/WorkspaceContextSwitcher";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
 import SystemHealthBadge from "./SystemHealthBadge";
-import { StabilityZone } from "@/components/common/StabilityZone";
+import { StabilityZone } from "@v1/components/common/StabilityZone";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "fj_sidebar_collapsed";
 
@@ -47,7 +47,7 @@ function LayoutFallbackCard({
       <div className="space-y-2">
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         <p className="text-sm text-muted-foreground">{description}</p>
-        <Link to="/" className="inline-flex">
+        <Link to="/v1/" className="inline-flex">
           <Button variant="outline" size="sm">Ir para o início</Button>
         </Link>
       </div>
@@ -123,7 +123,7 @@ function SidebarFooter({
     <div className="flex-shrink-0 p-3 border-t border-border space-y-2">
       {!collapsed && isProRole && (
         <Link
-          to="/workspace"
+          to="/v1/workspace"
           onClick={() => {
             console.log("[NAV] Sidebar clicking Editor Workspace");
             onLinkClick?.();
@@ -136,7 +136,7 @@ function SidebarFooter({
       )}
       {!mode?.includes('basic') && (
         <Link
-          to="/settings"
+          to="/v1/settings"
           onClick={() => {
             console.log("[NAV] Sidebar clicking Configurações");
             onLinkClick?.();
@@ -250,7 +250,7 @@ function DynamicSidebar({
       {effectiveProRole ? (
         <div className="px-3 mb-1">
           <Link
-            to="/intelligence-settings"
+            to="/v1/intelligence-settings"
             onClick={onLinkClick}
             className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
           >
@@ -294,7 +294,7 @@ function DynamicSidebar({
       ) : isFeatureEnabled("ai-insights") && !mode.includes('basic') && (
         <div className="px-3 mb-1">
           <Link
-            to="/patient-intelligence"
+            to="/v1/patient-intelligence"
             onClick={onLinkClick}
             className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
           >
@@ -341,7 +341,7 @@ function DynamicSidebar({
         <div className="px-3 mb-1 space-y-1">
           {isFeatureEnabled("analytics") && (
             <Link
-              to="/control-tower"
+              to="/v1/control-tower"
               onClick={onLinkClick}
               className={`flex items-center gap-2 w-full rounded-xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
             >
@@ -365,7 +365,7 @@ function DynamicSidebar({
           {/* Cockpit Premium — only for nutritionists and admins */}
           {(isNutritionist || isAdmin) && isFeatureEnabled("automation") && (
             <Link
-              to="/cockpit"
+              to="/v1/cockpit"
               onClick={() => {
                 console.log("[NAV] Sidebar clicking Cockpit Premium");
                 onLinkClick?.();
@@ -384,7 +384,7 @@ function DynamicSidebar({
           {/* Workspace Clínico — only for nutritionists and admins, NOT personal trainers */}
           {(isNutritionist || isAdmin) && isFeatureEnabled("analytics") && (
             <Link
-              to="/clinical-workspace"
+              to="/v1/clinical-workspace"
               onClick={() => {
                 console.log("[NAV] Sidebar clicking Workspace Clínico");
                 onLinkClick?.();
@@ -451,7 +451,7 @@ function DynamicSidebar({
       {!effectiveProRole && minMode("pro") && (
         <div className="px-3 mb-1 space-y-1">
           <Link
-            to="/onboarding"
+            to="/v1/onboarding"
             onClick={onLinkClick}
             className={`flex items-center gap-2 w-full rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
           >
@@ -465,7 +465,7 @@ function DynamicSidebar({
             )}
           </Link>
           <Link
-            to="/patient-overview"
+            to="/v1/patient-overview"
             onClick={onLinkClick}
             className={`flex items-center gap-2 w-full rounded-xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
           >
@@ -532,7 +532,7 @@ function DynamicSidebar({
       {isAdmin && (
         <div className="px-3 mb-2 space-y-1">
           <Link
-            to="/admin/dashboard"
+            to="/v1/admin/dashboard"
             onClick={onLinkClick}
             className={`flex items-center gap-2 w-full rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
           >
@@ -553,7 +553,7 @@ function DynamicSidebar({
           </Link>
 
           <Link
-            to="/admin/diagnostics"
+            to="/v1/admin/diagnostics"
             onClick={onLinkClick}
             className={`flex items-center gap-2 w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
           >

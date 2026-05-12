@@ -5,8 +5,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Play, RotateCcw, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
 import FitIntelligenceActivation from "../activation/FitIntelligenceActivation";
 
 export default function IntelligenceActivationPreview() {

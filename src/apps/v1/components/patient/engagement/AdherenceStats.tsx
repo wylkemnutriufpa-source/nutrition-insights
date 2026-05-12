@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Flame, Target, Calendar } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@v1/components/ui/card";
 
 interface AdherenceStatsProps {
   streak: number;

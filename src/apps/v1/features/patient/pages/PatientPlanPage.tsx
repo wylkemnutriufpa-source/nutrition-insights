@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { patientService } from '../services/patientService';
 import { PatientPlan } from '../types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@v1/components/ui/card';
+import { Button } from '@v1/components/ui/button';
 import { 
   CheckCircle2, Share2, Download, Flame, Trophy, Calendar, 
   RefreshCw, ChevronRight, Scale, Info, Sparkles, Utensils
@@ -11,9 +11,9 @@ import {
 
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
-} from '@/components/ui/dialog';
-import { getSubstitutions } from '@/lib/nutricore_v2/substitutions';
-import { BASE_FOODS, Food } from '@/lib/nutricore_v2/food-database';
+} from '@v1/components/ui/dialog';
+import { getSubstitutions } from '@v1/lib/nutricore_v2/substitutions';
+import { BASE_FOODS, Food } from '@v1/lib/nutricore_v2/food-database';
 import { toast } from 'sonner';
 
 

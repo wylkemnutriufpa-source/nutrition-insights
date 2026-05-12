@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Briefcase, User, ArrowLeftRight } from "lucide-react";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
+import { useExperienceMode } from "@v1/hooks/useExperienceMode";
 import { toast } from "sonner";
 
 interface Props {

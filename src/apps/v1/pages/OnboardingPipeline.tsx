@@ -1,35 +1,35 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
-import { invokeWithRetry, isTransientNetworkError } from "@/lib/api/edgeFunctions";
+import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
+import { invokeWithRetry, isTransientNetworkError } from "@v1/lib/api/edgeFunctions";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Progress } from "@v1/components/ui/progress";
+import { Badge } from "@v1/components/ui/badge";
+import { Checkbox } from "@v1/components/ui/checkbox";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
-import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
-import { useConsentGuard, TERMS_VERSION } from "@/hooks/useConsentGuard";
-import { logAudit } from "@/lib/auditLog";
+import { usePatientPlanStatus } from "@v1/hooks/usePatientPlanStatus";
+import { useConsentGuard, TERMS_VERSION } from "@v1/hooks/useConsentGuard";
+import { logAudit } from "@v1/lib/auditLog";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardCheck, Scale, Camera, Clock, Utensils, Sparkles,
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
   ChefHat, Heart, Zap, ThumbsUp, Shield, RefreshCw
 } from "lucide-react";
-import { generatePlanWithEngine } from "@/features/clinical-engine";
-import type { Meal, Food } from "@/features/clinical-engine/types/clinical-types";
-import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
+import { generatePlanWithEngine } from "@v1/features/clinical-engine";
+import type { Meal, Food } from "@v1/features/clinical-engine/types/clinical-types";
+import { localGenerateMealPlan } from "@v1/lib/localMealPlanGenerator";
 
-import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
-import SmartNumericInput from "@/components/ui/SmartNumericInput";
-import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@/lib/normalizeInputs";
+import OnboardingExitGuard from "@v1/components/onboarding/OnboardingExitGuard";
+import SmartNumericInput from "@v1/components/ui/SmartNumericInput";
+import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@v1/lib/normalizeInputs";
 
 interface Pipeline {
   id: string;
@@ -659,7 +659,7 @@ export default function OnboardingPipeline() {
           </p>
           <div className="flex flex-col gap-2 pt-4 max-w-xs mx-auto">
             <Button asChild variant="outline">
-              <Link to="/status">Verificar status do meu cadastro</Link>
+              <Link to="/v1/status">Verificar status do meu cadastro</Link>
             </Button>
             <Button onClick={() => window.location.reload()} variant="ghost" size="sm">
               <RefreshCw className="w-3 h-3 mr-2" /> Tentar novamente
@@ -1191,7 +1191,7 @@ function AnamnesisAutoRedirect() {
           Se a página não avançar em alguns segundos, toque no botão abaixo:
         </p>
         <Button asChild variant="outline" className="w-full">
-          <a href="/anamnesis?pipeline=true">
+          <a href="/v1/anamnesis?pipeline=true">
             Abrir Anamnese <ArrowRight className="w-4 h-4 ml-2" />
           </a>
         </Button>

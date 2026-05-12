@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
+import { Badge } from "@v1/components/ui/badge";
+import { Separator } from "@v1/components/ui/separator";
 import { Flame, Beef, Wheat, Droplets, UtensilsCrossed, ScrollText, ChevronLeft, ChevronRight } from "lucide-react";
 import MealVisualPlaceholder from "./MealVisualPlaceholder";
-import type { MealVisualItem } from "@/types/mealVisualLibrary";
-import { MEAL_VISUAL_CATEGORIES } from "@/types/mealVisualLibrary";
+import type { MealVisualItem } from "@v1/types/mealVisualLibrary";
+import { MEAL_VISUAL_CATEGORIES } from "@v1/types/mealVisualLibrary";
 
 interface MealVisualModalProps {
   open: boolean;

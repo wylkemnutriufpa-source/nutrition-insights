@@ -1,22 +1,22 @@
 import { useEffect, useState, useRef, lazy, Suspense } from "react";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
+import { useExperienceUI } from "@v1/hooks/useExperienceUI";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
-import { supabase } from "@/integrations/supabase/client";
-import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
-import { autoMatchSingle } from "@/lib/mealVisualAssociation";
-import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
-import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
-import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter } from "@v1/lib/tenantQueryHelpers";
+import { supabase } from "@v1/integrations/supabase/client";
+import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@v1/lib/serverTransitions";
+import { autoMatchSingle } from "@v1/lib/mealVisualAssociation";
+import { friendlyEdgeFunctionError } from "@v1/lib/edgeFunctionErrorHelper";
+import { createMealPlanDraft } from "@v1/lib/createMealPlanDraft";
+import { finalizeGeneratedMealPlan } from "@v1/lib/finalizeGeneratedMealPlan";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
   resolveLatestOnboardingPipeline,
   resolvePatientIdentity,
   syncPipelineGeneratedPlan,
-} from "@/lib/onboardingPlanResolver";
+} from "@v1/lib/onboardingPlanResolver";
 
 /** After AI generates a plan, resolve visuals for all its items */
 async function runPostGenVisualMatch(planId: string) {
@@ -39,19 +39,19 @@ async function runPostGenVisualMatch(planId: string) {
       })
   );
 }
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@v1/components/ui/dialog";
 import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap, RefreshCw, Sparkles } from "lucide-react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import type { Tables } from "@/integrations/supabase/types";
-import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
-import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
-import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
+import type { Tables } from "@v1/integrations/supabase/types";
+import GenerationModeSelector from "@v1/components/hybrid-builder/GenerationModeSelector";
+import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@v1/lib/planLoadErrorClassifier";
+import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS, isTrulyUnknownPlanStatus } from "@v1/lib/planStatusLabels";
 
 type MealPlan = Tables<"meal_plans">;
 
@@ -159,7 +159,7 @@ export default function MealPlans() {
       // Anomalous drop detection
       const patientIdFilter = searchParams.get("patient_id") || searchParams.get("patientId");
       if (patientIdFilter) {
-        import("@/lib/planDiagnostics").then(({ checkPlanAnomalies }) => {
+        import("@v1/lib/planDiagnostics").then(({ checkPlanAnomalies }) => {
           checkPlanAnomalies(patientIdFilter, enriched.length);
         });
       }
@@ -436,7 +436,7 @@ export default function MealPlans() {
       }
 
       toast.success("Plano excluído definitivamente.");
-      const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
+      const { invalidateCriticalQueries } = await import("@v1/lib/queryInvalidation");
       const qc = (window as any).__REACT_QUERY_CLIENT__;
       if (qc) invalidateCriticalQueries(qc);
       fetchPlans();
@@ -501,7 +501,7 @@ export default function MealPlans() {
               Refazer sincronização
             </Button>
             <Button asChild variant="outline" size="sm" className="gap-2">
-              <Link to="/plan-audit">
+              <Link to="/v1/plan-audit">
                 <ClipboardList className="w-4 h-4" /> Auditoria de Planos
               </Link>
             </Button>

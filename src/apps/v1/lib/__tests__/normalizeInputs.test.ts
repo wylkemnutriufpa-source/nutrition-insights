@@ -7,7 +7,7 @@ import {
   normalizeMeasurementInput,
   normalizeBodyFatInput,
   normalizeNumericInput,
-} from "@/lib/normalizeInputs";
+} from "@v1/lib/normalizeInputs";
 
 describe("normalizeHeightInput", () => {
   it("accepts plain cm", () => {

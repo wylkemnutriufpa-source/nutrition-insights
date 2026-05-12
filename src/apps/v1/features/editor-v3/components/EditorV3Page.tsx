@@ -7,7 +7,7 @@ import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
 import { loadOrCreateDraft, saveDraft } from '../services/draftService';
 import { runV3IntegrationTests } from '../services/v3Tests';
-import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
+import { runClinicalProofTests } from '@v1/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
@@ -18,31 +18,31 @@ import {
 } from '../../clinical-engine';
 import { 
   isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros 
-} from '@/lib/nutricore_v2/helpers';
+} from '@v1/lib/nutricore_v2/helpers';
 
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V2 Imports
-import { generateDailyPlan } from "@/lib/nutricore_v2/plan-generator";
-import { runEngine } from "@/lib/nutricore_v2/nutrition-engine";
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
-import { MealSlot } from "@/lib/nutricore_v2/meal-distribution";
-import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { generateDailyPlan } from "@v1/lib/nutricore_v2/plan-generator";
+import { runEngine } from "@v1/lib/nutricore_v2/nutrition-engine";
+import { BASE_FOODS } from "@v1/lib/nutricore_v2/food-database";
+import { MealSlot } from "@v1/lib/nutricore_v2/meal-distribution";
+import { getSubstitutions } from "@v1/lib/nutricore_v2/substitutions";
+import { Button } from '@v1/components/ui/button';
+import { Card } from '@v1/components/ui/card';
+import { Badge } from '@v1/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@v1/components/ui/popover';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAuth } from '@/lib/auth';
+} from "@v1/components/ui/select";
+import { Input } from '@v1/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@v1/components/ui/avatar';
+import { ScrollArea } from '@v1/components/ui/scroll-area';
+import { useAuth } from '@v1/lib/auth';
 import {
   Dialog,
   DialogContent,
@@ -50,10 +50,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+} from "@v1/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Label } from "@v1/components/ui/label";
 import {
   ArrowLeft, UserX, Plus, Trash2, Lock,
   Sparkles, Save, Package, ChefHat, Clock,
@@ -65,11 +65,11 @@ import {
 
 
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn } from '@v1/lib/utils';
 import { Meal, MealItem, Food, MealTemplate } from '../types';
-import { usePatientsList } from '@/hooks/queries/usePatientsList';
-import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
-import { supabase } from '@/integrations/supabase/client';
+import { usePatientsList } from '@v1/hooks/queries/usePatientsList';
+import { usePatientDetail } from '@v1/hooks/queries/usePatientDetail';
+import { supabase } from '@v1/integrations/supabase/client';
 
 const MEASURE_OPTIONS = [
   { label: 'Gramas', unit: 'g', type: 'gram' as const },

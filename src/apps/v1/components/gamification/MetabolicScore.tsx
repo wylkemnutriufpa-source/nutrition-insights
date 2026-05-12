@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { Activity, Droplets, Apple, Moon, Dumbbell } from "lucide-react";
 
 interface MetabolicScoreProps {

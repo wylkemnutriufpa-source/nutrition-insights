@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { personalizePlanItems, type PersonalizationContext } from "@/lib/planPersonalizationEngine";
-import { isItemProtected } from "@/lib/planPipelineOrchestrator";
-import type { Database } from "@/integrations/supabase/types";
+import { personalizePlanItems, type PersonalizationContext } from "@v1/lib/planPersonalizationEngine";
+import { isItemProtected } from "@v1/lib/planPipelineOrchestrator";
+import type { Database } from "@v1/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 

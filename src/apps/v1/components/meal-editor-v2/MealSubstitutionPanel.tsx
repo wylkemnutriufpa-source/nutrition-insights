@@ -5,12 +5,12 @@
  * Allows one-click swap maintaining caloric/macro balance.
  */
 import { useState, useMemo, useCallback } from "react";
-import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@v1/stores/mealPlanEditorV2Store";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   ArrowLeftRight, Flame, Beef, Wheat, Droplets, Check, Info,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { toast } from "sonner";
 
 interface SubstitutionOption {

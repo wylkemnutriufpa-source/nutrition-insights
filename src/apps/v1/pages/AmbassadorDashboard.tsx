@@ -1,22 +1,22 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Input } from "@v1/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@v1/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useTenant } from "@v1/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Copy, Share2, Users, DollarSign, TrendingUp, Award, CheckCircle2, Clock, Trophy, Star, MessageCircle, Send, Instagram, Image, FileText, Sparkles, Target, Zap, Crown, Medal, Flame } from "lucide-react";
-import AffiliateRevenueSimulator from "@/components/dashboard/AffiliateRevenueSimulator";
+import AffiliateRevenueSimulator from "@v1/components/dashboard/AffiliateRevenueSimulator";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@v1/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CAREER_TIERS = [

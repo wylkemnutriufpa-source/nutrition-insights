@@ -1,20 +1,20 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Separator } from "@v1/components/ui/separator";
 import {
   ArrowRightLeft, Flame, Beef, Wheat, Droplets,
   Check, TrendingDown, TrendingUp, Minus, Sparkles,
   UtensilsCrossed, ShieldCheck,
 } from "lucide-react";
-import { FOOD_DATABASE, type FoodItem } from "@/components/meals/FoodAutocomplete";
+import { FOOD_DATABASE, type FoodItem } from "@v1/components/meals/FoodAutocomplete";
 import {
   getValidSubstitutions, getFoodGroup, SUBSTITUTION_GROUP_LABELS,
   SMART_LABEL_CONFIG, findFoodsInTitle,
-} from "@/lib/substitutionGroups";
-import { supabase } from "@/integrations/supabase/client";
+} from "@v1/lib/substitutionGroups";
+import { supabase } from "@v1/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface MealSubstitutionModalProps {

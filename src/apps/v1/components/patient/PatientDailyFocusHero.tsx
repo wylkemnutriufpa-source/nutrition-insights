@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { resolvePatientDailyFocus, completeDailyFocus, type DailyFocus } from "@/lib/dailyFocusEngine";
-import { resolveFocusAction, getFocusQuickActions } from "@/lib/focusActionResolver";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { safeNum } from "@/lib/formatMacros";
+import { useAuth } from "@v1/lib/auth";
+import { resolvePatientDailyFocus, completeDailyFocus, type DailyFocus } from "@v1/lib/dailyFocusEngine";
+import { resolveFocusAction, getFocusQuickActions } from "@v1/lib/focusActionResolver";
+import { Button } from "@v1/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@v1/components/ui/dialog";
+import { safeNum } from "@v1/lib/formatMacros";
 import {
   CheckCircle2, Droplets, UtensilsCrossed, AlertTriangle, TrendingUp,
   Sparkles, ChevronRight, ClipboardCheck, MessageSquare, ArrowRight, Clock,

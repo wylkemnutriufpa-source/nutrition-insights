@@ -9,10 +9,10 @@
  *   - Não toca em planos publicados (cria SEMPRE como `draft` clínico)
  *   - Marmitas mantêm `is_locked = true` no item oficial
  */
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@v1/integrations/supabase/client';
 import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
-import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
+import { calculateItemMacros } from '@v1/lib/nutricore_v2/helpers';
 
 type ClinicalMealType =
   | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
 import { DayContent } from "./DayContent";
 
 /**

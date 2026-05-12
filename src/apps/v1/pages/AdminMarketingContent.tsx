@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Textarea } from "@v1/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Sparkles, Instagram, Copy, Download, RefreshCw, Eye,
   Wand2, CheckCircle, Clock, FileText, ArrowLeft,
 } from "lucide-react";
-import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
+import { MagicSlideButton } from "@v1/components/common/MagicSlideGenerator";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+} from "@v1/components/ui/dialog";
 
 interface MarketingAsset {
   id: string;

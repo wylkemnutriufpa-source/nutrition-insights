@@ -8,7 +8,7 @@
  *     via MutationObserver + PerformanceObserver, e pode reavaliar a
  *     validação após o primeiro render.
  */
-import { BUILD_INFO } from "@/lib/buildInfo";
+import { BUILD_INFO } from "@v1/lib/buildInfo";
 
 export type ChunkValidationStatus = "ok" | "mismatch" | "dev" | "unknown";
 

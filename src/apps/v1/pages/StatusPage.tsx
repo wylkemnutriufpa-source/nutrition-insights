@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, RefreshCw, Loader2, AlertTriangle, Activity } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Card } from "@v1/components/ui/card";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 

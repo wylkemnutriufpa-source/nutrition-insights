@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 export type EnsureStatus = "loading" | "ok" | "fixed" | "error" | "no_link";
 

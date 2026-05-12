@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
+import { Progress } from "@v1/components/ui/progress";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Dumbbell, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useTenant } from "@/lib/tenantContext";
-import { useAppState } from "@/hooks/useAppState";
+import { useTenant } from "@v1/lib/tenantContext";
+import { useAppState } from "@v1/hooks/useAppState";
 
-import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+import { getTenantIdForInsert } from "@v1/lib/tenantQueryHelpers";
 import {
   OrbitalSingleSelect,
   OrbitalMultiSelect,
@@ -20,7 +20,7 @@ import {
   OrbitalTextInput,
   OrbitalTimeInput,
   OrbitalHeader,
-} from "@/components/onboarding/OrbitalAnamnesisInputs";
+} from "@v1/components/onboarding/OrbitalAnamnesisInputs";
 
 // ──── Types ────
 interface Option {

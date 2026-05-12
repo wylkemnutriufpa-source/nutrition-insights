@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { useAdherenceScore } from "@/hooks/queries/useEngagement";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { useAdherenceScore } from "@v1/hooks/queries/useEngagement";
+import { Badge } from "@v1/components/ui/badge";
+import { Card, CardContent } from "@v1/components/ui/card";
 import { motion } from "framer-motion";
 import { Flame, Scale, AlertTriangle, TrendingUp, TrendingDown, Minus, ShieldAlert } from "lucide-react";
 

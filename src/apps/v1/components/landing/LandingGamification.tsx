@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import mockupGamification from "@/assets/mockup-gamification.jpg";
+import mockupGamification from "@v1/assets/mockup-gamification.jpg";
 import { EnergyGlow, MockupParticles, PremiumMockupFrame, EnergyBeam } from "./LandingEffects";
 
 export default function LandingGamification() {

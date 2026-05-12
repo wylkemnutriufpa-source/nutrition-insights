@@ -11,7 +11,7 @@
  * payloads vindos de edge functions desatualizadas, etc).
  */
 
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@v1/integrations/supabase/types";
 
 export type PlanMode = "weekly" | "single_day";
 

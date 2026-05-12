@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MealSmartEditorModal } from '../MealSmartEditorModal';
-import { useMealPlanEditorV2Store } from '@/stores/mealPlanEditorV2Store';
+import { useMealPlanEditorV2Store } from '@v1/stores/mealPlanEditorV2Store';
 
 // Mock the store
-vi.mock('@/stores/mealPlanEditorV2Store', () => ({
+vi.mock('@v1/stores/mealPlanEditorV2Store', () => ({
   useMealPlanEditorV2Store: vi.fn(),
 }));
 

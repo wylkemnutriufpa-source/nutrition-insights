@@ -1,46 +1,46 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
-import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
+import { useExperienceMode } from "@v1/hooks/useExperienceMode";
+import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@v1/components/common/GuidedTour";
 import { motion, AnimatePresence } from "framer-motion";
-import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
-import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
-import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard";
-import { useLayoutPreference } from "@/hooks/useLayoutPreference";
+import PatientGridDashboard from "@v1/components/dashboard/PatientGridDashboard";
+import FitJourneyTimeline from "@v1/components/timeline/FitJourneyTimeline";
+import ProStrategicDashboard from "@v1/components/dashboard/ProStrategicDashboard";
+import { useLayoutPreference } from "@v1/hooks/useLayoutPreference";
 import { LayoutGrid, List as ListIcon } from "lucide-react";
-import { useAuth } from "@/lib/auth";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import AIInsightsPanel from "@/components/dashboard/AIInsightsPanel";
-import AttentionPatientsPanel from "@/components/dashboard/AttentionPatientsPanel";
-import PatientEvolutionCharts from "@/components/dashboard/PatientEvolutionCharts";
-import RiskPanel from "@/components/dashboard/RiskPanel";
-import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
-import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
-import DashboardAdvancedCharts from "@/components/dashboard/DashboardAdvancedCharts";
-import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
-import AIStrategyCenter from "@/components/dashboard/AIStrategyCenter";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
-import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
-import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
-import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
-import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
-import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
-import CinematicIntro from "@/components/landing/CinematicIntro";
-import BrainLoader from "@/components/common/BrainLoader";
+import { useAuth } from "@v1/lib/auth";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import AIInsightsPanel from "@v1/components/dashboard/AIInsightsPanel";
+import AttentionPatientsPanel from "@v1/components/dashboard/AttentionPatientsPanel";
+import PatientEvolutionCharts from "@v1/components/dashboard/PatientEvolutionCharts";
+import RiskPanel from "@v1/components/dashboard/RiskPanel";
+import HealthScoreRing, { calculateHealthScore } from "@v1/components/dashboard/HealthScoreRing";
+import AdherenceAnalytics from "@v1/components/dashboard/AdherenceAnalytics";
+import DashboardAdvancedCharts from "@v1/components/dashboard/DashboardAdvancedCharts";
+import AnalyticsDashboard from "@v1/components/dashboard/AnalyticsDashboard";
+import AIStrategyCenter from "@v1/components/dashboard/AIStrategyCenter";
+import { Dialog, DialogContent } from "@v1/components/ui/dialog";
+import SystemUsageCard from "@v1/components/dashboard/SystemUsageCard";
+import NutritionCopilot from "@v1/components/dashboard/NutritionCopilot";
+import ChurnRiskPanel from "@v1/components/dashboard/ChurnRiskPanel";
+import StagnationAlerts from "@v1/components/dashboard/StagnationAlerts";
+import ClinicalRiskDashboardContent from "@v1/components/dashboard/ClinicalRiskDashboardContent";
+import PendingApprovalsModal, { usePendingApprovals } from "@v1/components/patient/PendingApprovalsModal";
+import CinematicIntro from "@v1/components/landing/CinematicIntro";
+import BrainLoader from "@v1/components/common/BrainLoader";
 
 // Removed legacy panels for MVP cleanup
 
-import { PremiumControlTowerBanner } from "@/components/premium/PremiumBanners";
-import SetupWizard from "@/components/professional/SetupWizard";
-import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
-import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
-import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
+import { PremiumControlTowerBanner } from "@v1/components/premium/PremiumBanners";
+import SetupWizard from "@v1/components/professional/SetupWizard";
+import PatientRevenueSimulator from "@v1/components/dashboard/PatientRevenueSimulator";
+import OnlinePatientsWidget from "@v1/components/dashboard/OnlinePatientsWidget";
+import ChatDashboardWidget from "@v1/components/chat/ChatDashboardWidget";
 // TreatmentInsightsPanel removed due to table removal
-import ExpandablePanel from "@/components/common/ExpandablePanel";
-import PatientMomentumSummary from "@/components/dashboard/PatientMomentumSummary";
-import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
+import ExpandablePanel from "@v1/components/common/ExpandablePanel";
+import PatientMomentumSummary from "@v1/components/dashboard/PatientMomentumSummary";
+import InlineExperienceToggle from "@v1/components/dashboard/InlineExperienceToggle";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Plus,
   CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
@@ -48,8 +48,8 @@ import {
   BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus,
   Link2
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@v1/components/ui/button";
+import { Progress } from "@v1/components/ui/progress";
 import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 
 const container = {
@@ -600,7 +600,7 @@ function NutritionistDashboardContent() {
           {programPerformance.length === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm text-muted-foreground">Crie programas para acompanhar a performance.</p>
-              <Link to="/programs">
+              <Link to="/v1/programs">
                 <Button variant="outline" size="sm" className="mt-3 gap-2"><Plus className="w-4 h-4" />Criar Programa</Button>
               </Link>
             </div>
@@ -1040,7 +1040,7 @@ export default function Index() {
   const renderContent = () => {
     if (isPatient) {
       console.log("[NAV] Index -> Redirecting patient to /client/dashboard");
-      return <Navigate to="/client/dashboard" replace />;
+      return <Navigate to="/v1/client/dashboard" replace />;
     }
 
     // Professional / Admin view with toggle

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
 import { useSearchParams } from "react-router-dom";
 import { 
   Table, 
@@ -10,17 +10,17 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@v1/components/ui/table";
 import { 
   Card, 
   CardContent, 
   CardHeader, 
   CardTitle,
   CardDescription
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@v1/components/ui/card";
+import { Input } from "@v1/components/ui/input";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
 import { 
   Search, 
   Filter, 
@@ -48,16 +48,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { AuditTimeline } from "@/components/admin/AuditTimeline";
+} from "@v1/components/ui/dialog";
+import { AuditTimeline } from "@v1/components/admin/AuditTimeline";
 import { toast } from "sonner";
 import { 
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+} from "@v1/components/ui/tooltip";
+import { cn } from "@v1/lib/utils";
 
 const ITEMS_PER_PAGE = 20;
 

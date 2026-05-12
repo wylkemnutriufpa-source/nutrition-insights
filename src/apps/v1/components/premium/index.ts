@@ -1,5 +1,5 @@
-export { usePremiumPresence } from "@/hooks/usePremiumPresence";
-export type { PremiumLevel } from "@/hooks/usePremiumPresence";
+export { usePremiumPresence } from "@v1/hooks/usePremiumPresence";
+export type { PremiumLevel } from "@v1/hooks/usePremiumPresence";
 export {
   PremiumBadge,
   PremiumMessage,

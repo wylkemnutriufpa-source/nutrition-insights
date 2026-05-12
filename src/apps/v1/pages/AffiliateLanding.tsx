@@ -1,15 +1,15 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import {
   Award, DollarSign, TrendingUp, Users, Share2, ArrowRight,
   Sparkles, BarChart3, Crown, Shield
 } from "lucide-react";
-import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
+import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
 import {
   FloatingOrb, LandingNav, HeroBadge, FeatureCard,
   StepCard, LandingFooter, AnimatedStat, fadeUp, stagger,
-} from "@/components/landing/LandingShared";
+} from "@v1/components/landing/LandingShared";
 
 const benefits = [
   { icon: DollarSign, title: "20% na 1ª Venda", desc: "Comece ganhando 20% de comissão no primeiro pagamento de cada indicação.", color: "text-amber-400", bg: "bg-amber-500/10" },
@@ -75,7 +75,7 @@ export default function AffiliateLanding() {
           </motion.div>
 
           <motion.div variants={fadeUp}>
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-lg rounded-xl shadow-xl shadow-amber-500/25 hover:scale-105 transition-transform">
                 Começar Agora <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
@@ -171,7 +171,7 @@ export default function AffiliateLanding() {
           </motion.h2>
           <motion.p variants={fadeUp} className="text-white/40 mb-8">{ctaSubtitle}</motion.p>
           <motion.div variants={fadeUp}>
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-lg rounded-xl shadow-xl shadow-amber-500/20 hover:scale-105 transition-transform">
                 Quero Ser Embaixador <ArrowRight className="w-5 h-5 ml-2" />
               </Button>

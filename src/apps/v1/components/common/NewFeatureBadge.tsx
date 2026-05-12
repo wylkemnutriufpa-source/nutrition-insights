@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { isFeatureNew, dismissFeature } from "@/lib/newFeatures";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { isFeatureNew, dismissFeature } from "@v1/lib/newFeatures";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 
 interface NewFeatureBadgeProps {
   /** Route path or feature key to check */

@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Compass, ChevronRight, Sparkles } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@v1/components/ui/card";
 import { Link } from "react-router-dom";
-import { useFeatureExplorer } from "@/hooks/useFeatureExplorer";
+import { useFeatureExplorer } from "@v1/hooks/useFeatureExplorer";
 
 export default function ExplorerProgressWidget() {
   const { progress, level, exploredCount, totalFeatures, unexploredFeatures, loading } = useFeatureExplorer();
@@ -12,7 +12,7 @@ export default function ExplorerProgressWidget() {
   const nextTip = unexploredFeatures[0];
 
   return (
-    <Link to="/user-guide">
+    <Link to="/v1/user-guide">
       <Card className="group relative overflow-hidden hover:border-primary/40 transition-all cursor-pointer">
         {/* Shimmer */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />

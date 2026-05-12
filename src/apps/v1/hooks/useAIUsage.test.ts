@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useAIUsage } from "./useAIUsage";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 
 // Mock dependencies
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     rpc: vi.fn(),
   },
 }));
 
-vi.mock("@/lib/auth", () => ({
+vi.mock("@v1/lib/auth", () => ({
   useAuth: vi.fn(),
 }));
 

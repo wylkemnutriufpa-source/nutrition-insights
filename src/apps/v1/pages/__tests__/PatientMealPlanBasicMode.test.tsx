@@ -1,12 +1,12 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import PatientMealPlan from "../PatientMealPlan";
-import { useAuth } from "@/lib/auth";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useExperienceUI } from "@v1/hooks/useExperienceUI";
+import { supabase } from "@v1/integrations/supabase/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@v1/components/ui/tooltip";
 
 
 const queryClient = new QueryClient({
@@ -19,20 +19,20 @@ const queryClient = new QueryClient({
 
 
 // Mocking hooks
-vi.mock("@/lib/auth", () => ({
+vi.mock("@v1/lib/auth", () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock("@/hooks/useExperienceUI", () => ({
+vi.mock("@v1/hooks/useExperienceUI", () => ({
   useExperienceUI: vi.fn(),
 }));
 
-vi.mock("@/components/layout/DashboardLayout", () => ({
+vi.mock("@v1/components/layout/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>,
 }));
 
 
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     rpc: vi.fn(),
     from: vi.fn(() => ({

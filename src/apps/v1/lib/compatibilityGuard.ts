@@ -7,8 +7,8 @@
  * REGRA: Quando um campo muda, este guard garante fallback seguro.
  */
 
-import { logWarn } from "@/lib/monitoring";
-import { safeNumber, safeString, safeArray, safeBool, safeObject } from "@/lib/safeguards";
+import { logWarn } from "@v1/lib/monitoring";
+import { safeNumber, safeString, safeArray, safeBool, safeObject } from "@v1/lib/safeguards";
 
 // ========== Status Maps (legado → atual) ==========
 

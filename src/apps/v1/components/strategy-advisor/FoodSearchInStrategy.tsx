@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Input } from "@v1/components/ui/input";
+import { Button } from "@v1/components/ui/button";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import { Search, X, Utensils, Plus } from "lucide-react";
 import { motion } from "framer-motion";
-import type { StrategyMealPreview } from "@/lib/strategyAdvisor";
+import type { StrategyMealPreview } from "@v1/lib/strategyAdvisor";
 
 interface Props {
   mealType: string;

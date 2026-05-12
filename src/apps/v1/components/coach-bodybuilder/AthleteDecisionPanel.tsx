@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import type { AnalysisResult, DecisionSuggestion } from "@/lib/coachAnalysisEngine";
-import { DECISION_LABELS } from "@/lib/coachAnalysisEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useTenant } from "@v1/lib/tenantContext";
+import type { AnalysisResult, DecisionSuggestion } from "@v1/lib/coachAnalysisEngine";
+import { DECISION_LABELS } from "@v1/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Textarea } from "@v1/components/ui/textarea";
 import { Zap, CheckCircle, XCircle, Lightbulb, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 

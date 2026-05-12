@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { useWorkspaceContext } from "@v1/hooks/useWorkspaceContext";
 
 export interface MenuItem {
   id: string;

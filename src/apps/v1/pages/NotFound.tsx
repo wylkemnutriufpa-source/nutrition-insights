@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { Home, ArrowLeft, RefreshCw, Loader2, Stethoscope } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { hardResetPwaCaches, logRoute404 } from "@/lib/route404Telemetry";
-import NotFoundDiagnosticsModal from "@/components/common/NotFoundDiagnosticsModal";
+import { hardResetPwaCaches, logRoute404 } from "@v1/lib/route404Telemetry";
+import NotFoundDiagnosticsModal from "@v1/components/common/NotFoundDiagnosticsModal";
 
 function getSafeHomePath(pathname: string) {
   if (pathname.startsWith("/~oauth/convite/")) return pathname;

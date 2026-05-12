@@ -3,7 +3,7 @@
  * Calls the get_system_health_score RPC.
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 interface SystemHealth {
   health_score: number;

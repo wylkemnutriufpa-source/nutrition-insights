@@ -1,8 +1,8 @@
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
 import { BookOpen, BarChart3, Settings } from "lucide-react";
-import NutritionProtocolLibrary from "@/components/protocols/NutritionProtocolLibrary";
-import NutritionProtocolPerformance from "@/components/protocols/NutritionProtocolPerformance";
+import NutritionProtocolLibrary from "@v1/components/protocols/NutritionProtocolLibrary";
+import NutritionProtocolPerformance from "@v1/components/protocols/NutritionProtocolPerformance";
 
 export default function AdminNutritionProtocols() {
   return (

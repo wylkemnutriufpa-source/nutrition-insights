@@ -24,27 +24,27 @@ const STATE: {
 } = { templates: [] };
 
 // ─── Mocks (hoisted) ───────────────────────────────────────────────────
-vi.mock("@/lib/auth", () => ({ useAuth: () => ({ user: { id: "nutri-1" } }) }));
-vi.mock("@/lib/tenantContext", () => ({
+vi.mock("@v1/lib/auth", () => ({ useAuth: () => ({ user: { id: "nutri-1" } }) }));
+vi.mock("@v1/lib/tenantContext", () => ({
   useTenant: () => ({ tenantId: "tenant-1" }),
 }));
-vi.mock("@/lib/tenantQueryHelpers", () => ({
+vi.mock("@v1/lib/tenantQueryHelpers", () => ({
   withTenantFilter: (q: any) => q,
   getTenantIdForInsert: () => ({ tenant_id: "tenant-1" }),
 }));
 vi.mock("sonner", () => ({
   toast: { info: vi.fn(), success: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }));
-vi.mock("@/lib/serverTransitions", () => ({ activateMealPlan: vi.fn() }));
-vi.mock("@/lib/planPipelineOrchestrator", () => ({ runPlanPipeline: vi.fn() }));
-vi.mock("@/components/layout/DashboardLayout", () => ({
+vi.mock("@v1/lib/serverTransitions", () => ({ activateMealPlan: vi.fn() }));
+vi.mock("@v1/lib/planPipelineOrchestrator", () => ({ runPlanPipeline: vi.fn() }));
+vi.mock("@v1/components/layout/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
-vi.mock("@/components/meal/TemplateFoodVisual", () => ({
+vi.mock("@v1/components/meal/TemplateFoodVisual", () => ({
   TemplateFoodVisual: () => null,
 }));
 
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: (table: string) => {
       if (table === "diet_templates") {

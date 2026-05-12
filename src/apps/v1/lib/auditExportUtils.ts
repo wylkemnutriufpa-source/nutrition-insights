@@ -1,8 +1,8 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { isTrulyUnknownPlanStatus, KNOWN_PLAN_STATUS_KEYS } from "@/lib/planStatusLabels";
+import { isTrulyUnknownPlanStatus, KNOWN_PLAN_STATUS_KEYS } from "@v1/lib/planStatusLabels";
 
 interface ExportOptions {
   format: 'CSV' | 'PDF' | 'XLSX';

@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import MealPlanEditorV2 from "../MealPlanEditorV2";
 import { BrowserRouter } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { toast } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
 });
 
 // Mock Supabase
-vi.mock("@/integrations/supabase/client", () => ({
+vi.mock("@v1/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -36,13 +36,13 @@ vi.mock("sonner", () => ({
 }));
 
 // Mock DashboardLayout to simplify test
-vi.mock("@/components/layout/DashboardLayout", () => ({
+vi.mock("@v1/components/layout/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }));
 
 // Mock hooks to avoid heavy lifting
-vi.mock("@/lib/auth", () => ({ useAuth: () => ({ user: { id: "123" } }) }));
-vi.mock("@/lib/tenantContext", () => ({ useTenant: () => ({ tenantId: "tenant-123" }) }));
+vi.mock("@v1/lib/auth", () => ({ useAuth: () => ({ user: { id: "123" } }) }));
+vi.mock("@v1/lib/tenantContext", () => ({ useTenant: () => ({ tenantId: "tenant-123" }) }));
 
 describe("MealPlanEditorV2 Schema Check", () => {
   beforeEach(() => {

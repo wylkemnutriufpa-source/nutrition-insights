@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@v1/lib/auth";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Label } from "@v1/components/ui/label";
+import { Badge } from "@v1/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@v1/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@v1/components/ui/select";
 import { toast } from "sonner";
 import { MessageCircle, Wifi, WifiOff, Send, Loader2, CheckCircle2, XCircle, Clock, Phone, Shield, Zap, AlertTriangle } from "lucide-react";
-import { BrainLoaderInline } from "@/components/common/BrainLoader";
+import { BrainLoaderInline } from "@v1/components/common/BrainLoader";
 import {
   getIntegration,
   validateAndSaveIntegration,
@@ -22,9 +22,9 @@ import {
   normalizePhone,
   type WhatsAppIntegration,
   type WhatsAppLog,
-} from "@/services/whatsappService";
-import { supabase } from "@/integrations/supabase/client";
-import { validateWhatsApp } from "@/utils/whatsapp";
+} from "@v1/services/whatsappService";
+import { supabase } from "@v1/integrations/supabase/client";
+import { validateWhatsApp } from "@v1/utils/whatsapp";
 
 
 export default function WhatsAppSettings() {

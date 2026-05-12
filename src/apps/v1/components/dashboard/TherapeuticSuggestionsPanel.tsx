@@ -1,24 +1,24 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { applyTherapeuticAdjustment } from "@/lib/applyTherapeuticAdjustment";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { applyTherapeuticAdjustment } from "@v1/lib/applyTherapeuticAdjustment";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
 import {
   Zap, AlertTriangle, TrendingDown, ArrowUpRight, ArrowDownRight,
   Pause, RefreshCw, Check, X, Eye, ChevronDown, ChevronUp,
   Activity, Brain, Flame, Scale, Shield
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Avatar, AvatarFallback } from "@v1/components/ui/avatar";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
+} from "@v1/components/ui/dialog";
 
 interface Intervention {
   id: string;

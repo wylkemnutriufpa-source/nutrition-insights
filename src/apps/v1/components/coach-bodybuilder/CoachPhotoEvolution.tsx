@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { CheckinData } from "@/lib/coachAnalysisEngine";
-import { VISUAL_VERDICT_OPTIONS } from "@/lib/coachAnalysisEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import type { CheckinData } from "@v1/lib/coachAnalysisEngine";
+import { VISUAL_VERDICT_OPTIONS } from "@v1/lib/coachAnalysisEngine";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
 import { Camera, ChevronLeft, ChevronRight, Maximize2, Eye, Layers } from "lucide-react";
-import StorageImage from "@/components/common/StorageImage";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import StorageImage from "@v1/components/common/StorageImage";
+import { Dialog, DialogContent } from "@v1/components/ui/dialog";
 
 interface Props {
   checkins: CheckinData[];

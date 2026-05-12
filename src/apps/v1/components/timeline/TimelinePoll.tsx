@@ -1,5 +1,5 @@
-import { useTimelinePollVote } from "@/hooks/useTimeline";
-import { cn } from "@/lib/utils";
+import { useTimelinePollVote } from "@v1/hooks/useTimeline";
+import { cn } from "@v1/lib/utils";
 import { BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 

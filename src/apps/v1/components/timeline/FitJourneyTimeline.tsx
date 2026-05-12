@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
-import { useTimeline } from "@/hooks/useTimeline";
-import { useAuth } from "@/lib/auth";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTimeline } from "@v1/hooks/useTimeline";
+import { useAuth } from "@v1/lib/auth";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
 import { Sparkles, Loader2, MessageSquare, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TimelineEventCard from "./TimelineEventCard";
 import CreateTimelinePost from "./CreateTimelinePost";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
 function getDateLabel(dateStr: string): string {

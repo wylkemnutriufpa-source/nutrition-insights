@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, CreditCard, Crown, ArrowRight, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import { useAuth } from "@/lib/auth";
+import { Button } from "@v1/components/ui/button";
+import { Card, CardContent } from "@v1/components/ui/card";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
+import { useAuth } from "@v1/lib/auth";
 
 export default function PaymentRequired() {
   const { signOut } = useAuth();

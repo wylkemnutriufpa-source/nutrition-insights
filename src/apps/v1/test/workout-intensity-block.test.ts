@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupExercisesForRender, hasHighIntensityMethods, Exercise } from "@/lib/workoutIntensityUtils";
+import { groupExercisesForRender, hasHighIntensityMethods, Exercise } from "@v1/lib/workoutIntensityUtils";
 
 describe("workoutIntensityUtils - Bloqueio de Alta Intensidade", () => {
   const mockExercises: Exercise[] = [

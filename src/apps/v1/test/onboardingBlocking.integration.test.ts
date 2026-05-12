@@ -1,5 +1,5 @@
 import { describe, it, expect, afterAll } from "vitest";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 /**
  * Integration test to verify that the onboarding blocking logic is correctly 

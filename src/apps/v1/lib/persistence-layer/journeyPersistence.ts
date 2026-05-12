@@ -1,6 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
-import { assertContract } from "@/lib/contractGuards";
-import { JourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { supabase } from "@v1/integrations/supabase/client";
+import { assertContract } from "@v1/lib/contractGuards";
+import { JourneyStatus } from "@v1/hooks/usePatientJourneyStatus";
 
 /**
  * Persistence Layer — Journey

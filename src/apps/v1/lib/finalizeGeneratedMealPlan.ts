@@ -1,4 +1,4 @@
-import { runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
+import { runValidateAndFixMealPlan } from "@v1/lib/mealPlanValidationFlow";
 
 interface FinalizeGeneratedMealPlanParams {
   planId: string;

@@ -8,15 +8,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Mocks simplificados para evitar renderização pesada e problemas de contexto
-vi.mock('@/components/layout/DashboardLayout', () => ({
+vi.mock('@v1/components/layout/DashboardLayout', () => ({
   default: ({ children }: any) => <div data-testid="layout">{children}</div>
 }));
 
-vi.mock('@/components/in-office/InOfficeStepPatient', () => ({ default: () => <div data-testid="step-1">Cadastro</div> }));
-vi.mock('@/components/in-office/InOfficeStepAnamnesis', () => ({ default: () => <div data-testid="step-2">Anamnese</div> }));
-vi.mock('@/components/in-office/InOfficeStepAssessment', () => ({ default: () => <div data-testid="step-3">Avaliação</div> }));
-vi.mock('@/components/in-office/InOfficeStepMealPlan', () => ({ default: () => <div data-testid="step-4">Plano</div> }));
-vi.mock('@/components/in-office/InOfficeStepFinalize', () => ({ default: () => <div data-testid="step-5">Finalizar</div> }));
+vi.mock('@v1/components/in-office/InOfficeStepPatient', () => ({ default: () => <div data-testid="step-1">Cadastro</div> }));
+vi.mock('@v1/components/in-office/InOfficeStepAnamnesis', () => ({ default: () => <div data-testid="step-2">Anamnese</div> }));
+vi.mock('@v1/components/in-office/InOfficeStepAssessment', () => ({ default: () => <div data-testid="step-3">Avaliação</div> }));
+vi.mock('@v1/components/in-office/InOfficeStepMealPlan', () => ({ default: () => <div data-testid="step-4">Plano</div> }));
+vi.mock('@v1/components/in-office/InOfficeStepFinalize', () => ({ default: () => <div data-testid="step-5">Finalizar</div> }));
 
 // Mock Supabase
 vi.mock('./integrations/supabase/client', () => {

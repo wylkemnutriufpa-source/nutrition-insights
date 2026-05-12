@@ -1,18 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Label } from "@v1/components/ui/label";
+import { Textarea } from "@v1/components/ui/textarea";
+import { Button } from "@v1/components/ui/button";
 import { toast } from "sonner";
 import { Activity, Save, ArrowRight, ArrowLeft, Loader2, Check, Scale, Ruler, Camera } from "lucide-react";
-import SmartNumericInput from "@/components/ui/SmartNumericInput";
+import SmartNumericInput from "@v1/components/ui/SmartNumericInput";
 import InOfficePhotoUpload from "./InOfficePhotoUpload";
 import {
   normalizeWeightInput, normalizeHeightInput, normalizeBodyFatInput,
   normalizeMeasurementInput, type NormalizationResult, type FieldNormalizer,
-} from "@/lib/normalizeInputs";
+} from "@v1/lib/normalizeInputs";
 
 interface Props {
   patientId: string;

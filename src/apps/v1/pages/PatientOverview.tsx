@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import IFJCommandCenter from "@v1/components/intelligence/modules/IFJCommandCenter";
+import { useAuth } from "@v1/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Progress } from "@v1/components/ui/progress";
+import { Button } from "@v1/components/ui/button";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -15,7 +15,7 @@ import {
   Calendar, ArrowRight, Flame, Clock, Trophy, ChevronRight,
   Heart, Zap, Scale, Droplets
 } from "lucide-react";
-import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
+import { PatientRetentionAlerts } from "@v1/components/dashboard/PatientRetentionAlerts";
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -136,7 +136,7 @@ export default function PatientOverview() {
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <motion.div variants={item}>
-                <Link to="/checklist">
+                <Link to="/v1/checklist">
                   <Card className="group hover:shadow-lg hover:shadow-emerald-500/10 transition-all cursor-pointer border-emerald-500/20 hover:border-emerald-500/40">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -154,7 +154,7 @@ export default function PatientOverview() {
               </motion.div>
 
               <motion.div variants={item}>
-                <Link to="/checkin">
+                <Link to="/v1/checkin">
                   <Card className="group hover:shadow-lg hover:shadow-sky-500/10 transition-all cursor-pointer border-sky-500/20 hover:border-sky-500/40">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -171,7 +171,7 @@ export default function PatientOverview() {
               </motion.div>
 
               <motion.div variants={item}>
-                <Link to="/achievements">
+                <Link to="/v1/achievements">
                   <Card className="group hover:shadow-lg hover:shadow-amber-500/10 transition-all cursor-pointer border-amber-500/20 hover:border-amber-500/40">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -188,7 +188,7 @@ export default function PatientOverview() {
               </motion.div>
 
               <motion.div variants={item}>
-                <Link to="/patient-meal-plan">
+                <Link to="/v1/patient-meal-plan">
                   <Card className="group hover:shadow-lg hover:shadow-violet-500/10 transition-all cursor-pointer border-violet-500/20 hover:border-violet-500/40">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -256,7 +256,7 @@ export default function PatientOverview() {
               </motion.div>
 
               <motion.div variants={item}>
-                <Link to="/journey">
+                <Link to="/v1/journey">
                   <Card className="group hover:shadow-md transition-all cursor-pointer border-amber-500/20 hover:border-amber-500/40">
                     <CardContent className="p-5">
                       <div className="flex items-center justify-between mb-4">

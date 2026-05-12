@@ -45,6 +45,6 @@ export interface Substitution {
 export { 
   isProtein, isCarb, isFruit, isVegetable, isFat, getFoodCategory, 
   getSubstitutionsWithGrams, calculateItemMacros, getDeterministicSuggestions 
-} from '@/lib/nutricore_v2/helpers';
+} from '@v1/lib/nutricore_v2/helpers';
 
 

@@ -1,4 +1,4 @@
-import { Meal } from "@/features/editor-v3/types/types";
+import { Meal } from "@v1/features/editor-v3/types/types";
 
 export interface PatientPlan {
   id: string;

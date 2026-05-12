@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   AlertTriangle, ClipboardList, ListChecks, FileText, 
   ArrowRight, X, Sparkles, ShieldCheck, Flame
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
+import { Button } from "@v1/components/ui/button";
+import { isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@v1/lib/formatMacros";
 
 interface SmartAlert {
   id: string;

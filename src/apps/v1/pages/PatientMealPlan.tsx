@@ -1,39 +1,39 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { useExperienceUI } from "@/hooks/useExperienceUI";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@v1/lib/auth";
+import { useExperienceUI } from "@v1/hooks/useExperienceUI";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
+import { Badge } from "@v1/components/ui/badge";
+import { Progress } from "@v1/components/ui/progress";
 import { toast } from "sonner";
-import confetti from "@/lib/confetti";
+import confetti from "@v1/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer, RefreshCw,
   CalendarDays, Star, ChevronDown, ChevronUp, Trophy,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown, Calendar
 } from "lucide-react";
-import { generatePremiumMealPlanPDF, buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
-import { MealDetailModal } from "@/components/patient/MealDetailModal";
-import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+import { generatePremiumMealPlanPDF, buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@v1/lib/pdfExportPremium";
+import { MealDetailModal } from "@v1/components/patient/MealDetailModal";
+import MealSubstitutionModal from "@v1/components/patient/MealSubstitutionModal";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+} from "@v1/components/ui/dialog";
+import { Calendar as CalendarComponent } from "@v1/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
 
-import type { FoodItem } from "@/components/meals/FoodAutocomplete";
+import type { FoodItem } from "@v1/components/meals/FoodAutocomplete";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion, type AdherenceStatus, type MealDetailData,
-} from "@/components/patient/MealPlanDailyView";
-import { useEngagement } from "@/hooks/useEngagement";
-import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
+} from "@v1/components/patient/MealPlanDailyView";
+import { useEngagement } from "@v1/hooks/useEngagement";
+import { PatientRetentionAlerts } from "@v1/components/dashboard/PatientRetentionAlerts";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 

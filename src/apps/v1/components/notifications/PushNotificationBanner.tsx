@@ -1,6 +1,6 @@
 import { Bell, BellOff, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { Button } from "@v1/components/ui/button";
+import { usePushNotifications } from "@v1/hooks/usePushNotifications";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 

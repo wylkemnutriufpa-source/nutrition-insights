@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 
 export default function LandingFinalCTA() {
   return (
@@ -21,7 +21,7 @@ export default function LandingFinalCTA() {
           Configure sua conta em menos de 2 minutos. Sem cartão de crédito.
         </p>
 
-        <Link to="/auth">
+        <Link to="/v1/auth">
           <Button
             size="lg"
             className="h-14 px-12 text-sm font-bold rounded-xl bg-gradient-to-r from-[hsl(152,58%,45%)] to-[hsl(170,55%,42%)] hover:opacity-90 text-white shadow-lg shadow-[hsl(152_58%_45%/0.2)] transition-all duration-300 hover:scale-[1.04] glow-pulse-border"

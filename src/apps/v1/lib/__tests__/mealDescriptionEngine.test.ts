@@ -5,7 +5,7 @@ import {
   scaleDescriptionQuantities,
   isGenericDescription,
   finalizeMealDescription,
-} from "@/lib/mealDescriptionEngine";
+} from "@v1/lib/mealDescriptionEngine";
 
 // ── HARDENING: Invalid description prevention ────────────────
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { ChevronRight, X, Sparkles } from "lucide-react";
 
 export interface TourStep {

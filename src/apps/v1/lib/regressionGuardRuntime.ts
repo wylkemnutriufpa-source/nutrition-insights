@@ -16,7 +16,7 @@
  *   4. detectRegression() compara — se quebrou, throw + log
  */
 
-import { logCriticalRegression } from "@/lib/regressionGuard";
+import { logCriticalRegression } from "@v1/lib/regressionGuard";
 
 export interface PlanSnapshot {
   planId: string;

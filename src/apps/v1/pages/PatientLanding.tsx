@@ -1,17 +1,17 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import {
   CheckCircle2, Trophy, Target, Brain, UtensilsCrossed, TrendingUp,
   MessageSquare, Camera, Star, Sparkles, ArrowRight, Shield, Zap,
   BarChart3, Heart, Flame, Crown, Download, Smartphone
 } from "lucide-react";
-import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
+import { useInstallPrompt } from "@v1/hooks/useInstallPrompt";
+import { useSiteSettings, getSetting } from "@v1/hooks/useSiteSettings";
 import {
   FloatingOrb, LandingNav, HeroBadge, TestimonialCard,
   FeatureCard, StepCard, LandingFooter, fadeUp, stagger,
-} from "@/components/landing/LandingShared";
+} from "@v1/components/landing/LandingShared";
 
 const features = [
   { icon: CheckCircle2, title: "Checklist Diário Inteligente", desc: "Tarefas personalizadas pelo seu nutricionista, com gamificação e pontos.", color: "text-emerald-400", bg: "bg-emerald-500/10" },
@@ -70,7 +70,7 @@ export default function PatientLanding() {
           </motion.h1>
           <motion.p variants={fadeUp} className="text-white/45 text-lg md:text-xl max-w-2xl mx-auto mb-10">{heroSubtitle}</motion.p>
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg hover:opacity-90 shadow-xl shadow-emerald-500/25 rounded-xl font-semibold hover:scale-105 transition-transform">
                 Acessar Minha Conta <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
@@ -201,7 +201,7 @@ export default function PatientLanding() {
           </motion.h2>
           <motion.p variants={fadeUp} className="text-white/40 mb-8">{ctaSubtitle}</motion.p>
           <motion.div variants={fadeUp}>
-            <Link to="/auth">
+            <Link to="/v1/auth">
               <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg rounded-xl font-semibold shadow-xl shadow-emerald-500/20 hover:scale-105 transition-transform">
                 Acessar Minha Conta <ArrowRight className="w-5 h-5 ml-2" />
               </Button>

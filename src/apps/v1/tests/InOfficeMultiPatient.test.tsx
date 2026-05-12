@@ -53,7 +53,7 @@ vi.mock('../lib/auth', () => ({
   AuthProvider: ({ children }: any) => <div>{children}</div>
 }));
 
-vi.mock('@/lib/onboardingPlanResolver', () => ({
+vi.mock('@v1/lib/onboardingPlanResolver', () => ({
   resolvePatientIdentity: vi.fn((id) => Promise.resolve({ canonicalId: id, profileId: id + '_prof', allIds: [id] }))
 }));
 

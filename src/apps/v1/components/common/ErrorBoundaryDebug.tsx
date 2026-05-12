@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
 import { AlertTriangle, ChevronDown, ChevronUp, Copy, RefreshCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@v1/components/ui/button";
 import { toast } from "sonner";
 
 interface Props {

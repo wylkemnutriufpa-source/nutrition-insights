@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@v1/components/ui/alert-dialog";
 import { AlertTriangle } from "lucide-react";
 
 interface Props {

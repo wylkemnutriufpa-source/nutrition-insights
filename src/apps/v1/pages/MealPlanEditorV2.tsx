@@ -1,41 +1,41 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { createPlanRevision } from "@/lib/createPlanRevision";
-import { MealDetailProvider } from "@/components/patient/MealDetailContext";
+import { createPlanRevision } from "@v1/lib/createPlanRevision";
+import { MealDetailProvider } from "@v1/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
   PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil, Star
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 // DropdownMenu imported below with additional components
-import { useTenant } from "@/lib/tenantContext";
-import SimplifyPlanButton from "@/components/meal-simplification/SimplifyPlanButton";
-import { useAuth } from "@/lib/auth";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
-import { supabase } from "@/integrations/supabase/client";
-import { publishMealPlan, savePlanAsApproved, resolvePlanState } from "@/lib/serverTransitions";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
-import { ListView } from "@/components/meal-editor-v2/ListView";
-import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
-import { sendWhatsAppNotification, getMealPlanReadyMessage } from "@/utils/whatsappNotification";
-import { BASE_URL } from "@/lib/config";
+import { useTenant } from "@v1/lib/tenantContext";
+import SimplifyPlanButton from "@v1/components/meal-simplification/SimplifyPlanButton";
+import { useAuth } from "@v1/lib/auth";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
+import { supabase } from "@v1/integrations/supabase/client";
+import { publishMealPlan, savePlanAsApproved, resolvePlanState } from "@v1/lib/serverTransitions";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Button } from "@v1/components/ui/button";
+import { WeeklyGrid } from "@v1/components/meal-editor-v2/WeeklyGrid";
+import { ListView } from "@v1/components/meal-editor-v2/ListView";
+import { EditorSyncBadge } from "@v1/components/meal-editor-v2/EditorSyncBadge";
+import { sendWhatsAppNotification, getMealPlanReadyMessage } from "@v1/utils/whatsappNotification";
+import { BASE_URL } from "@v1/lib/config";
 
-import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
-import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
-import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
-import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal";
-import { MealVisualLibraryModal } from "@/components/meal-editor-v2/MealVisualLibraryModal";
-import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
-import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
-import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
-import type { AutoFixResult } from "@/lib/autoFixEngine";
-import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
-import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
-import { PlanReviewModal } from "@/components/meal-editor-v2/PlanReviewModal";
-import { PlanHistoryModal } from "@/components/meal-editor-v2/PlanHistoryModal";
+import { MealLibrarySidebar } from "@v1/components/meal-editor-v2/MealLibrarySidebar";
+import { MealLibraryModal } from "@v1/components/meal-editor-v2/MealLibraryModal";
+import { AutoGenerateModal } from "@v1/components/meal-editor-v2/AutoGenerateModal";
+import { AssistedPlanModal } from "@v1/components/meal-editor-v2/AssistedPlanModal";
+import { MealVisualLibraryModal } from "@v1/components/meal-editor-v2/MealVisualLibraryModal";
+import { ValidationCorrectionPanel, type ValidationResult } from "@v1/components/meal-editor-v2/ValidationCorrectionPanel";
+import AutoFixResultsModal from "@v1/components/hybrid-builder/AutoFixResultsModal";
+import { CURRENT_ENGINE_VERSION } from "@v1/lib/engineVersionGovernance";
+import type { AutoFixResult } from "@v1/lib/autoFixEngine";
+import EditorWorkspaceTabs from "@v1/components/meal-editor-v2/EditorWorkspaceTabs";
+import EditorCompactToolbar from "@v1/components/meal-editor-v2/EditorCompactToolbar";
+import { PlanReviewModal } from "@v1/components/meal-editor-v2/PlanReviewModal";
+import { PlanHistoryModal } from "@v1/components/meal-editor-v2/PlanHistoryModal";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -45,16 +45,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem
-} from "@/components/ui/dropdown-menu";
+} from "@v1/components/ui/dropdown-menu";
 import { FileText, History as HistoryIcon, Layout, Monitor, Smartphone, Tablet } from "lucide-react";
-import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
-import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
+import PlanAuditPanel from "@v1/components/plans/PlanAuditPanel";
+import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from "@v1/lib/pdfExportPremium";
 import { toast } from "sonner";
-import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
-import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
-import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
-import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
-import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
+import { calculatePlanTotals } from "@v1/lib/calculatePlanTotals";
+import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@v1/lib/mealPlanValidationFlow";
+import { validatePlanSubstitutions } from "@v1/lib/mealPlanSubstitutionValidator";
+import { runPlanPipeline } from "@v1/lib/planPipelineOrchestrator";
+import SaveMealTemplateDialog from "@v1/components/meals/SaveMealTemplateDialog";
 
 type ViewMode = "grid" | "list";
 type EditorLayout = "tabs" | "compact";
@@ -273,7 +273,7 @@ export default function MealPlanEditorV2() {
     const appUrl = `${BASE_URL}/plano`;
     
     // Agora usando promptWhatsAppNotification para padronizar o pop-up
-    import("@/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
+    import("@v1/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
       promptWhatsAppNotification({
         patientId: plan.patient_id,
         patientName: store.patientName || "Paciente",

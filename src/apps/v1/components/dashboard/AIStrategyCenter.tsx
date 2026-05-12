@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import {
   Brain, TrendingUp, Users, AlertTriangle, Lightbulb,
   Target, Zap, FileText, ArrowRight, RefreshCw, Loader2,
   CheckCircle2, BarChart3, Activity
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@v1/components/ui/button";
+import { Progress } from "@v1/components/ui/progress";
 import { toast } from "sonner";
 
 const item = {

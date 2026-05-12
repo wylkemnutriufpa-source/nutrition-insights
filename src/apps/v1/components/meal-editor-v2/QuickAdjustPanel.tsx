@@ -1,5 +1,5 @@
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
-import { Button } from "@/components/ui/button";
+import { useMealPlanEditorV2Store } from "@v1/stores/mealPlanEditorV2Store";
+import { Button } from "@v1/components/ui/button";
 import { Beef, Wheat, Flame, Plus, Minus, Zap, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 

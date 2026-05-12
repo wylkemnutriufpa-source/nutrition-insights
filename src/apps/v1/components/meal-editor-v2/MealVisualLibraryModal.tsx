@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+} from "@v1/components/ui/dialog";
+import { Input } from "@v1/components/ui/input";
+import { ScrollArea } from "@v1/components/ui/scroll-area";
+import { Badge } from "@v1/components/ui/badge";
 import {
   Search, Loader2, Coffee, Apple, Utensils, Moon, Cherry,
   Flame, Beef, Wheat, Droplets, GripVertical,

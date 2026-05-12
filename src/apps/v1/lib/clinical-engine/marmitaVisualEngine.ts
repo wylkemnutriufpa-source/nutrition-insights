@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 
 export type ProteinType = 'FRANGO' | 'CARNE' | 'PORCO';
 

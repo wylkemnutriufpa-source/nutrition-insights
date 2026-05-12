@@ -1,12 +1,12 @@
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import SubscriptionGuard from "@/components/common/SubscriptionGuard";
-import { useCanUseTeamHierarchy } from "@/hooks/useTeamMembers";
-import TeamMembersList from "@/components/team/TeamMembersList";
-import TeamActivityFeed from "@/components/team/TeamActivityFeed";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import SubscriptionGuard from "@v1/components/common/SubscriptionGuard";
+import { useCanUseTeamHierarchy } from "@v1/hooks/useTeamMembers";
+import TeamMembersList from "@v1/components/team/TeamMembersList";
+import TeamActivityFeed from "@v1/components/team/TeamActivityFeed";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@v1/components/ui/tabs";
 import { Users, Activity, Crown } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Button } from "@v1/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function TeamManagement() {

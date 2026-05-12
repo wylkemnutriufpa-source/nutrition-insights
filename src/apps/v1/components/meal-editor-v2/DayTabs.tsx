@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@v1/lib/utils";
 
 const DAYS = [
   { key: 0, label: "Domingo", short: "Dom" },

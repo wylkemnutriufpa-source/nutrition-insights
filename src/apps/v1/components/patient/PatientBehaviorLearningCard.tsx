@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { Brain, Clock, TrendingDown, TrendingUp, AlertCircle, Sparkles, ChevronRight } from "lucide-react";
-import { safeNum } from "@/lib/formatMacros";
+import { safeNum } from "@v1/lib/formatMacros";
 
 interface BehaviorPattern {
   type: "peak_performance" | "weak_window" | "consistency_gap" | "recovery_signal";

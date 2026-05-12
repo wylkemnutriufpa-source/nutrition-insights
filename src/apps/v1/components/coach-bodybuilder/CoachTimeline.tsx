@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@v1/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
 import { Clock, Activity, Brain, Zap, CheckCircle, XCircle, Eye, Flag, MessageSquare } from "lucide-react";
 
 const EVENT_ICONS: Record<string, any> = {

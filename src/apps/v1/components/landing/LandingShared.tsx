@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { Button } from "@v1/components/ui/button";
+import FitJourneyLogo from "@v1/components/common/FitJourneyLogo";
 import { ReactNode } from "react";
 
 /* ─── Animation presets ─── */
@@ -41,12 +41,12 @@ export function LandingNav({ ctaLabel, ctaClassName }: LandingNavProps) {
     <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/[0.05]">
       <FitJourneyLogo size="sm" />
       <div className="flex items-center gap-3">
-        <Link to="/">
+        <Link to="/v1/">
           <Button variant="ghost" size="sm" className="text-white/60 hover:text-white text-sm">
             Voltar
           </Button>
         </Link>
-        <Link to="/auth">
+        <Link to="/v1/auth">
           <Button size="sm" className={ctaClassName}>
             {ctaLabel}
           </Button>

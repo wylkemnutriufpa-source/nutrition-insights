@@ -1,19 +1,19 @@
 import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { supabase } from "@v1/integrations/supabase/client";
+import DashboardLayout from "@v1/components/layout/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
+import { Badge } from "@v1/components/ui/badge";
+import { Button } from "@v1/components/ui/button";
+import { Input } from "@v1/components/ui/input";
+import { Switch } from "@v1/components/ui/switch";
 import { toast } from "sonner";
 import {
   Crown, Search, Shield, Save, Users, Sparkles, Check, X,
   Brain, ChefHat, MessageSquare, Heart, Utensils, Zap, Target
 } from "lucide-react";
-import { PATIENT_FEATURE_REGISTRY, getPatientFeaturesByCategory } from "@/lib/patientFeatureRegistry";
-import type { PrestigePlan } from "@/hooks/usePrestige";
-import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import { PATIENT_FEATURE_REGISTRY, getPatientFeaturesByCategory } from "@v1/lib/patientFeatureRegistry";
+import type { PrestigePlan } from "@v1/hooks/usePrestige";
+import PrestigeBadge from "@v1/components/prestige/PrestigeBadge";
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "Alimentação": Utensils,

@@ -19,7 +19,7 @@
  * - Substituições apenas dentro da mesma categoria
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@v1/integrations/supabase/client";
 import {
   isBlockedFood,
   getRealisticOptions,

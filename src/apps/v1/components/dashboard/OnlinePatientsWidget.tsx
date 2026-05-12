@@ -1,10 +1,10 @@
-import { useOnlinePatients } from "@/hooks/useOnlinePatients";
+import { useOnlinePatients } from "@v1/hooks/useOnlinePatients";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { supabase } from "@v1/integrations/supabase/client";
+import { useAuth } from "@v1/lib/auth";
+import { Badge } from "@v1/components/ui/badge";
+import { Card, CardContent } from "@v1/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@v1/components/ui/tooltip";
 import { UsersRound, Crown, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -131,7 +131,7 @@ export default function OnlinePatientsWidget({ variant = "card", showPremiumTag 
               </Link>
             ))}
             {onlinePatients.length > 5 && (
-              <Link to="/chat" className="text-[10px] text-primary hover:underline pl-2.5">
+              <Link to="/v1/chat" className="text-[10px] text-primary hover:underline pl-2.5">
                 +{onlinePatients.length - 5} mais online →
               </Link>
             )}
