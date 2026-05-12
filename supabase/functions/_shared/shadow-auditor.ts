@@ -8,7 +8,9 @@ export type DivergenceType =
   | 'weekly_rotation_mismatch' 
   | 'meal_count_mismatch' 
   | 'rule_smart_mode' 
-  | 'rule_marmita_freeze';
+  | 'rule_marmita_freeze'
+  | 'energy_reconciliation';
+
 
 export interface ShadowAuditResult {
   compatible: boolean;
@@ -109,6 +111,45 @@ export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
     clinical_impact = "Baixo: Pequenas variações de arredondamento ou estrutura";
   }
 
+  // 4. Energy Reconciliation Tracking
+  // If V2 used energy pivots, we track it as an improvement over legacy drift
+  const v2Events = v2.events || [];
+  const energyEvents = v2Events.filter((e: any) => e.type === 'energy_reconciliation');
+  if (energyEvents.length > 0) {
+    divergence_types.add('energy_reconciliation');
+    diff.energy_reconciliation = {
+      count: energyEvents.length,
+      pivots: energyEvents.map((e: any) => e.metadata?.dominant_pivot),
+      impact: energyEvents.reduce((acc: number, e: any) => acc + (e.before - e.after), 0)
+    };
+  }
+
+  // 5. Score-based Status
+  readiness_score = Math.max(0, readiness_score);
+  let readiness_status: ShadowAuditResult['analysis']['readiness_status'] = 'BLOCKED';
+  
+  if (readiness_score >= 95) readiness_status = 'READY_FOR_CUTOVER';
+  else if (readiness_score >= 85) readiness_status = 'SHADOW_STABLE';
+  else if (readiness_score >= 70) readiness_status = 'HIGH_DIVERGENCE';
+
+  // 6. Clinical Impact Assessment
+  let severity: 'info' | 'warn' | 'critical' = 'info';
+  let clinical_impact = "Insignificante";
+
+  if (divergence_types.has('protein_clamp_violation')) {
+    severity = 'critical';
+    clinical_impact = "DIVERGÊNCIA CRÍTICA: Legado ultrapassa limites clínicos; V2 aplicando soberania.";
+  } else if (divergence_types.has('energy_reconciliation') && Math.abs(diff.macros?.calories?.rel || 0) < 0.01) {
+    severity = 'info';
+    clinical_impact = "Soberania Energética: V2 reconciliou drift do legado com sucesso.";
+  } else if (readiness_score < 70) {
+    severity = 'warn';
+    clinical_impact = "Moderado: Desvio estrutural ou calórico elevado";
+  } else if (divergenceCount > 0) {
+    severity = 'info';
+    clinical_impact = "Baixo: Pequenas variações de arredondamento ou estrutura";
+  }
+
   return {
     compatible: divergenceCount === 0,
     divergence_count: divergenceCount,
@@ -126,6 +167,7 @@ export function compareClinicalOutputs(v1: any, v2: any): ShadowAuditResult {
       diff,
       v1_summary: v1.totals,
       v2_summary: v2.totals,
+      events: v2Events,
       readiness_status
     }
   };
