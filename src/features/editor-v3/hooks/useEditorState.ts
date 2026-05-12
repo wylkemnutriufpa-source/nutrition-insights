@@ -536,10 +536,42 @@ export const useEditorState = create<EditorState>()(
         if (food.measurementType === 'spoon') initialQuantity = 1;
         if (food.measurementType === 'unit') initialQuantity = 1;
 
+        // 🛡️ Blindagem V3: Garantir base de 100g para cálculos estáveis
+        const normalized = normalizeFood(food);
+        const kcal100 = normalized.kcal_100g ?? (normalized.measurementType === 'gram' ? normalized.kcal : (normalized.kcal / (normalized.portionValue || 1)));
+        const protein100 = normalized.protein_100g ?? (normalized.measurementType === 'gram' ? normalized.protein : (normalized.protein / (normalized.portionValue || 1)));
+        const carb100 = normalized.carb_100g ?? (normalized.measurementType === 'gram' ? normalized.carbs : (normalized.carbs / (normalized.portionValue || 1)));
+        const fat100 = normalized.fat_100g ?? (normalized.measurementType === 'gram' ? normalized.fat : (normalized.fat / (normalized.portionValue || 1)));
+
+        const macros = calculateItemMacros({ 
+          ...normalized, 
+          kcal_100g: kcal100, 
+          protein_100g: protein100, 
+          carb_100g: carb100, 
+          fat_100g: fat100 
+        }, initialQuantity);
+
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
-              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: initialQuantity, locked: false, substitutions: [] }] }
+              ? { 
+                  ...m, 
+                  items: [...m.items, { 
+                    ...normalized, 
+                    instanceId: makeInstanceId(), 
+                    quantity: initialQuantity, 
+                    locked: false, 
+                    substitutions: [],
+                    kcal: macros.kcal,
+                    protein: macros.protein,
+                    carbs: macros.carbs,
+                    fat: macros.fat,
+                    kcal_100g: kcal100,
+                    protein_100g: protein100,
+                    carb_100g: carb100,
+                    fat_100g: fat100
+                  }] 
+                }
               : m
           ),
           planStatus: 'draft',
