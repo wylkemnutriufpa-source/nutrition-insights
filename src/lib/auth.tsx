@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { invalidateMenuCache } from "@/hooks/useSmartMenu";
 import type { Database } from "@/integrations/supabase/types";
 import { logAudit } from "@/lib/auditLog";
 import { logError } from "@/lib/monitoring";
@@ -245,7 +244,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   const signOut = async () => {
-    invalidateMenuCache();
     // Clear workspace and context related data
     localStorage.removeItem("fj_workspace_context");
     localStorage.removeItem("fj_last_path");

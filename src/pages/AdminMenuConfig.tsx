@@ -20,7 +20,6 @@ import {
   UserCheck, Share2, Award, CreditCard, Dumbbell, GraduationCap, Sparkles,
   ChevronDown, ChevronUp, Search
 } from "lucide-react";
-import { CATEGORY_LABELS, CATEGORY_COLORS, invalidateMenuCache } from "@/hooks/useSmartMenu";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -165,7 +164,6 @@ export default function AdminMenuConfig() {
           } as any)
           .eq("id", item.id);
       }
-      invalidateMenuCache();
       toast({ title: "✅ Menu salvo!", description: "As configurações foram atualizadas com sucesso." });
     } catch (e) {
       toast({ title: "Erro ao salvar", description: String(e), variant: "destructive" });
