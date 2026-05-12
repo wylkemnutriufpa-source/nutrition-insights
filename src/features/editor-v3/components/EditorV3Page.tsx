@@ -168,6 +168,8 @@ const EditorV3Page = () => {
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
   
   const [selectedItemState, setSelectedItemState] = useState<{ mealId: string, instanceId: string } | null>(null);
+  const [localDraft, setLocalDraft] = useState<MealItem | null>(null);
+  const [isModalDirty, setIsModalDirty] = useState(false);
   
   const selectedItem = useMemo(() => {
     if (!selectedItemState) return null;
@@ -178,13 +180,42 @@ const EditorV3Page = () => {
     return { mealId: selectedItemState.mealId, item };
   }, [selectedItemState, meals]);
 
-  const setSelectedItem = (data: { mealId: string, item: MealItem } | null) => {
-    if (!data) {
-      setSelectedItemState(null);
-    } else {
-      setSelectedItemState({ mealId: data.mealId, instanceId: data.item.instanceId });
+  const handleOpenModal = (data: { mealId: string, item: MealItem }) => {
+    setSelectedItemState({ mealId: data.mealId, instanceId: data.item.instanceId });
+    setLocalDraft(JSON.parse(JSON.stringify(data.item)));
+    setIsModalDirty(false);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedItemState(null);
+    setLocalDraft(null);
+    setIsModalDirty(false);
+  };
+
+  const handleCommitModal = async () => {
+    if (localDraft && selectedItemState) {
+      await updateMealItem(selectedItemState.mealId, selectedItemState.instanceId, localDraft);
+      toast.success('Alterações salvas com sucesso!');
+      handleCloseModal();
     }
   };
+
+  const updateLocalDraft = (updates: Partial<MealItem>) => {
+    setLocalDraft(prev => {
+      if (!prev) return null;
+      setIsModalDirty(true);
+      return { ...prev, ...updates };
+    });
+  };
+
+  const setSelectedItem = (data: { mealId: string, item: MealItem } | null) => {
+    if (!data) {
+      handleCloseModal();
+    } else {
+      handleOpenModal(data);
+    }
+  };
+
   const [substitutionSearch, setSubstitutionSearch] = useState('');
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
   const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
@@ -201,6 +232,8 @@ const EditorV3Page = () => {
   const [showAnamnesisHandshake, setShowAnamnesisHandshake] = useState(false);
   const [pendingAnamnesisData, setPendingAnamnesisData] = useState<any>(null);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+
+
 
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -2989,25 +3022,25 @@ const EditorV3Page = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog open={!!selectedItem} onOpenChange={(v) => !v && setSelectedItem(null)}>
+      <Dialog open={!!localDraft} onOpenChange={(v) => !v && handleCloseModal()}>
         <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
-          {selectedItem && (
+          {localDraft && (
             <div className="p-8">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                    {selectedItem.item.imageUrl ? (
-                      <img src={selectedItem.item.imageUrl} alt={selectedItem.item.name} className="w-full h-full object-cover rounded-xl" />
+                    {localDraft.imageUrl ? (
+                      <img src={localDraft.imageUrl} alt={localDraft.name} className="w-full h-full object-cover rounded-xl" />
                     ) : (
                       <Apple className="w-8 h-8 text-emerald-500" />
                     )}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">{selectedItem.item.name}</h2>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">{localDraft.name}</h2>
                     <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Ajuste de Porção e Substituições Inteligentes</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setSelectedItem(null)} className="text-white/40 hover:text-white rounded-full">
+                <Button variant="ghost" size="icon" onClick={() => handleCloseModal()} className="text-white/40 hover:text-white rounded-full">
                   <X className="w-6 h-6" />
                 </Button>
               </div>
@@ -3026,16 +3059,16 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = selectedItem.item.measurementType === 'unit' ? 1 : 10;
-                            updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Math.max(0, selectedItem.item.quantity - step));
+                            const step = localDraft.measurementType === 'unit' ? 1 : 10;
+                            updateLocalDraft({ quantity: Math.max(0, localDraft.quantity - step) });
                           }}
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
                         <Input 
                           type="number" 
-                          value={selectedItem.item.quantity} 
-                          onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
+                          value={localDraft.quantity} 
+                          onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })}
                           className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50 text-center"
                         />
                         <Button 
@@ -3043,8 +3076,8 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = selectedItem.item.measurementType === 'unit' ? 1 : 10;
-                            updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, selectedItem.item.quantity + step);
+                            const step = localDraft.measurementType === 'unit' ? 1 : 10;
+                            updateLocalDraft({ quantity: localDraft.quantity + step });
                           }}
                         >
                           <Plus className="w-4 h-4" />
@@ -3053,15 +3086,15 @@ const EditorV3Page = () => {
                       
                       <div className="w-[140px]">
                         <Select
-                          value={selectedItem.item.portionUnitLabel || (selectedItem.item.measurementType === 'gram' ? 'Gramas' : 'Porção')}
+                          value={localDraft.portionUnitLabel || (localDraft.measurementType === 'gram' ? 'Gramas' : 'Porção')}
                           onValueChange={(val) => {
                             const option = MEASURE_OPTIONS.find(o => o.unit === val || o.label === val);
                             const unitLabel = option?.label || val;
                             const unitType = option?.type || 'unit';
                             
                             // Lógica de Peso para Medidas Caseiras
-                            const name = selectedItem.item.name.toLowerCase();
-                            let newQuantity = selectedItem.item.quantity;
+                            const name = localDraft.name.toLowerCase();
+                            let newQuantity = localDraft.quantity;
                             
                             if (val === 'Unid. P') {
                               if (name.includes('banana')) newQuantity = 60;
@@ -3080,12 +3113,9 @@ const EditorV3Page = () => {
                               else newQuantity = 150;
                             } else if (val === 'colher(es)') {
                               newQuantity = 15;
-                            } else if (val === 'Gramas' || val === 'g') {
-                              // Se estava em unidade e voltou para gramas, mantemos o peso atual
-                              // mas garantimos que o tipo mude
-                            }
+                            } 
                             
-                            updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
+                            updateLocalDraft({ 
                               measurementType: unitType as any,
                               portionUnitLabel: unitLabel,
                               quantity: newQuantity
@@ -3108,24 +3138,46 @@ const EditorV3Page = () => {
                     <div className="mt-4 flex gap-4">
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
                         <p className="text-[8px] font-black text-white/30 uppercase">Calorias</p>
-                        <p className="text-sm font-black text-white">{Math.round(calculateItemMacros(selectedItem.item, selectedItem.item.quantity).kcal)} kcal</p>
+                        <p className="text-sm font-black text-white">{Math.round(calculateItemMacros(localDraft, localDraft.quantity).kcal)} kcal</p>
                       </div>
                       <div className="flex-1 text-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
                         <p className="text-[8px] font-black text-white/30 uppercase">Proteína</p>
-                        <p className="text-sm font-black text-emerald-400">{Math.round(calculateItemMacros(selectedItem.item, selectedItem.item.quantity).protein)}g</p>
+                        <p className="text-sm font-black text-emerald-400">{Math.round(calculateItemMacros(localDraft, localDraft.quantity).protein)}g</p>
                       </div>
                     </div>
                   </div>
 
+                  <div className="flex gap-4">
+                    <Button 
+                      onClick={handleCommitModal}
+                      disabled={!isModalDirty}
+                      className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:opacity-50"
+                    >
+                      Salvar Alterações
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleCloseModal}
+                      className="flex-1 h-14 border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase tracking-widest rounded-xl"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
                   <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                     <Label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-4 block">Substituições Recomendadas</Label>
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                    <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
                       {isLoadingSmartSubs ? (
                         <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 text-blue-500 animate-spin" /></div>
                       ) : smartSubstitutions.map((sub) => (
                         <button 
                           key={sub.id}
-                          onClick={() => handleRequestSwap(selectedItem.mealId, selectedItem.item, sub)}
+                          onClick={() => {
+                            const candidate = { ...sub };
+                            updateLocalDraft(candidate as any);
+                          }}
                           className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left group"
                         >
                           <span className="text-xs font-bold text-white group-hover:text-blue-400">
@@ -3136,9 +3188,7 @@ const EditorV3Page = () => {
                       ))}
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-6">
                    <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                       <Input 
@@ -3149,22 +3199,31 @@ const EditorV3Page = () => {
                       />
                    </div>
                    
-                   <ScrollArea className="h-[350px] pr-2">
+                   <ScrollArea className="h-[250px] pr-2">
                       <div className="grid gap-2">
                         {(substitutionSearch.length > 0 ? substitutionResults : []).map((res) => (
                           <button 
                             key={res.id}
-                            onClick={() => handleRequestSwap(selectedItem.mealId, selectedItem.item, res)}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 transition-all text-left"
+                            onClick={() => updateLocalDraft(res as any)}
+                            className="w-full group relative flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden shadow-sm"
                           >
-                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                               {res.imageUrl ? <img src={res.imageUrl} className="w-full h-full object-cover rounded-lg" /> : <Apple className="w-5 h-5 text-white/20" />}
+                            <div className="w-10 h-10 rounded-lg bg-white/5 overflow-hidden flex-shrink-0 border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                              {res.imageUrl ? (
+                                <img src={res.imageUrl} alt={res.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Apple className="w-4 h-4 text-white/10" />
+                                </div>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
-                               <p className="text-xs font-bold text-white truncate">{res.name}</p>
-                               <p className="text-[9px] font-black text-white/30 uppercase">{res.kcal} kcal / 100g</p>
+                              <p className="font-black text-white text-[11px] truncate leading-tight group-hover:text-emerald-400 transition-colors">{res.name}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                 <span className="text-[9px] font-bold text-white/30 uppercase tracking-tighter">{res.kcal} kcal</span>
+                                 <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">• {res.portionLabel}</span>
+                              </div>
                             </div>
-                            <Plus className="w-4 h-4 text-emerald-500/40" />
+                            <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-emerald-500 transition-colors" />
                           </button>
                         ))}
                       </div>
@@ -3175,6 +3234,7 @@ const EditorV3Page = () => {
           )}
         </DialogContent>
       </Dialog>
+
       
       <PlanAdjustmentModal
         isOpen={showAdjustmentModal}
