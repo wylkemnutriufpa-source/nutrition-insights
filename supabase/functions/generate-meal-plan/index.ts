@@ -65,6 +65,9 @@ import {
 } from "../_shared/meal-description.ts";
 import { scaleRecipeByMacros, type RecipeIngredient } from "../_shared/recipe-scaling-engine.ts";
 import { ClinicalEngine } from "../_shared/clinical-engine.ts";
+import { reconcileMeal as reconcileMealV2, type MealItem as MealItemV2 } from "../_shared/clinical-engine-v2.ts";
+import { runShadowAudit } from "../_shared/shadow-auditor.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://fitjourney.com.br", // Reforçado para produção
@@ -3010,6 +3013,112 @@ function buildGenerationMetadata(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// SHADOW MIGRATION: V2 ENGINE (SILENT AUDIT)
+// ═══════════════════════════════════════════════════════════════
+
+async function executeShadowMigrationV2(
+  client: any,
+  planId: string,
+  patientId: string,
+  patientProfile: any,
+  v1Items: any[],
+  guardedItems: any[],
+  targets: { calories: number; protein: number; carbs: number; fat: number },
+  goal: string
+) {
+  try {
+    const v2PlanItems: any[] = [];
+    const dayTargets = { ...targets };
+    
+    // 1. Group by day
+    const byDay = new Map<number, any[]>();
+    for (const item of guardedItems) {
+      const d = item.day_of_week || 0;
+      if (!byDay.has(d)) byDay.set(d, []);
+      byDay.get(d)!.push(item);
+    }
+
+    for (const [day, dayItems] of byDay) {
+      const dayV2Items: any[] = [];
+      
+      for (const item of dayItems) {
+        // Map to V2 MealItem
+        // We estimate densities based on V1's targets (back-calculation if needed)
+        // or we try to find the original food in the database.
+        // For shadow purposes, we'll use the V1's provided targets as "base"
+        const densityFactor = 100 / (item.grams || 100);
+        const v2Item: MealItemV2 = {
+          name: item.title,
+          grams: item.grams || 100,
+          macro_role: item.macro_role || (item.meal_type === 'breakfast' ? 'carb' : 'protein'),
+          protein_per_100g: (item.protein_target || 0) * densityFactor,
+          carbs_per_100g: (item.carbs_target || 0) * densityFactor,
+          fat_per_100g: (item.fat_target || 0) * densityFactor,
+          calories_per_100g: (item.calories_target || 0) * densityFactor,
+        };
+
+        // If it's a multi-item meal description, this is an approximation.
+        // But the clinical engine V2 treats the "Meal" as a unit for reconciliation in this shadow phase.
+        
+        const mealTarget = {
+          calories: Math.round(dayTargets.calories * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
+          protein: Math.round(dayTargets.protein * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
+          carbs: Math.round(dayTargets.carbs * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
+          fat: Math.round(dayTargets.fat * (MEAL_KCAL_SPLIT[item.meal_type] || 0.2)),
+        };
+
+        const profileV2 = {
+          sex: (patientProfile?.sex || 'male') as 'male' | 'female',
+          weight: patientProfile?.weight || 70,
+          height: patientProfile?.height || 170,
+          age: patientProfile?.age || 30,
+          activityLevel: patientProfile?.activity_level || 'moderate',
+          goal: goal
+        };
+
+        const reconciled = reconcileMealV2([v2Item], mealTarget, profileV2);
+        dayV2Items.push({
+          ...item,
+          ...reconciled.totals,
+          grams: reconciled.items[0].grams,
+          protein_target: reconciled.totals.protein,
+          carbs_target: reconciled.totals.carbs,
+          fat_target: reconciled.totals.fat,
+          calories_target: reconciled.totals.calories,
+        });
+      }
+      v2PlanItems.push(...dayV2Items);
+    }
+
+    // 2. Prepare summaries for comparison
+    const v1Summary = {
+      totals: {
+        protein: v1Items.reduce((s, i) => s + (i.protein_target || 0), 0),
+        carbs: v1Items.reduce((s, i) => s + (i.carbs_target || 0), 0),
+        fat: v1Items.reduce((s, i) => s + (i.fat_target || 0), 0),
+        calories: v1Items.reduce((s, i) => s + (i.calories_target || 0), 0),
+      },
+      items: v1Items.map(i => ({ name: i.title, grams: i.grams || 100 }))
+    };
+
+    const v2Summary = {
+      totals: {
+        protein: v2PlanItems.reduce((s, i) => s + (i.protein_target || 0), 0),
+        carbs: v2PlanItems.reduce((s, i) => s + (i.carbs_target || 0), 0),
+        fat: v2PlanItems.reduce((s, i) => s + (i.fat_target || 0), 0),
+        calories: v2PlanItems.reduce((s, i) => s + (i.calories_target || 0), 0),
+      },
+      items: v2PlanItems.map(i => ({ name: i.title, grams: i.grams || 100 }))
+    };
+
+    await runShadowAudit(client, planId, patientId, v1Summary, v2Summary);
+    
+  } catch (err) {
+    console.error("[SHADOW-MIGRATION] Critical error:", err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SERVE
 // ═══════════════════════════════════════════════════════════════
 
@@ -3743,6 +3852,30 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           }; 
         });
 
+        // ──── SHADOW MIGRATION V2 (SILENT AUDIT) ────
+        try {
+          const shadowPatientProfile = {
+            sex: anamnesis?.answers?.sex || "male",
+            weight: weight,
+            height: height,
+            age: age,
+            activity_level: activityLevel,
+          };
+          executeShadowMigrationV2(
+            serviceClient,
+            newPlan.id,
+            patient_id,
+            shadowPatientProfile,
+            planItems,
+            guardedItems,
+            finalMacros,
+            goal
+          ).catch(e => console.error("[SHADOW-AUDIT] Non-blocking error:", e));
+        } catch (shadowErr) {
+          console.error("[SHADOW-AUDIT] Sync error in multi-plan:", shadowErr);
+        }
+
+
         console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan: option-loop)");
         itemsToInsert.forEach((item, idx) => {
           console.log(idx, Object.keys(item).sort());
@@ -4080,6 +4213,31 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       });
     }
 
+    // ──── SHADOW MIGRATION V2 (SILENT AUDIT) ────
+    try {
+      const shadowPatientProfile = {
+        sex: anamnesis?.answers?.sex || "male",
+        weight: weight,
+        height: height,
+        age: age,
+        activity_level: activityLevel,
+      };
+      
+      // Run shadow audit in background (non-blocking)
+      executeShadowMigrationV2(
+        serviceClient,
+        finalMealPlanId,
+        patient_id,
+        shadowPatientProfile,
+        planItems,
+        guardedPlanItems,
+        finalMacros,
+        goal
+      ).catch(e => console.error("[SHADOW-AUDIT] Non-blocking error:", e));
+    } catch (shadowErr) {
+      console.error("[SHADOW-AUDIT] Sync error:", shadowErr);
+    }
+
     const itemsToInsert = planItems.map((item: any) => {
       const { 
         _image_url, _source, _category_used, _scale_factor, _template_id, 
@@ -4093,6 +4251,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         day_of_week: 0
       };
     });
+
 
     console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan: final-insert)");
     itemsToInsert.forEach((item, idx) => {

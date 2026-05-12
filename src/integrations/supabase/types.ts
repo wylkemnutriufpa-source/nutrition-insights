@@ -3262,6 +3262,42 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_shadow_audit: {
+        Row: {
+          compatible: boolean | null
+          divergence_count: number | null
+          generated_at: string | null
+          id: string
+          patient_id: string | null
+          payload_diff: Json | null
+          plan_id: string | null
+          v1_hash: string | null
+          v2_hash: string | null
+        }
+        Insert: {
+          compatible?: boolean | null
+          divergence_count?: number | null
+          generated_at?: string | null
+          id?: string
+          patient_id?: string | null
+          payload_diff?: Json | null
+          plan_id?: string | null
+          v1_hash?: string | null
+          v2_hash?: string | null
+        }
+        Update: {
+          compatible?: boolean | null
+          divergence_count?: number | null
+          generated_at?: string | null
+          id?: string
+          patient_id?: string | null
+          payload_diff?: Json | null
+          plan_id?: string | null
+          v1_hash?: string | null
+          v2_hash?: string | null
+        }
+        Relationships: []
+      }
       clinical_signals_catalog: {
         Row: {
           category: string
