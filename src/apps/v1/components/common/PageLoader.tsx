@@ -9,4 +9,20 @@ export const PageLoader = () => (
   </div>
 );
 
+export const BrainLoaderCard = ({ text }: { text?: string }) => (
+  <div className="flex flex-col items-center justify-center py-10 gap-4">
+    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+    {text && <p className="text-sm text-muted-foreground">{text}</p>}
+  </div>
+);
+
+export const BrainLoaderInline = ({ text }: { text?: string }) => (
+  <span className="inline-flex items-center gap-2">
+    <Loader2 className="w-4 h-4 text-primary animate-spin" />
+    {text && <span className="text-xs text-muted-foreground">{text}</span>}
+  </span>
+);
+
+export const BrainLoaderScreen = ({ visible }: { visible?: boolean }) => visible ? <PageLoader /> : null;
+
 export default PageLoader;

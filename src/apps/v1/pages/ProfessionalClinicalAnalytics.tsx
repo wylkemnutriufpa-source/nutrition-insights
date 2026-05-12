@@ -6,7 +6,7 @@ import DashboardLayout from "@v1/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@v1/components/ui/card";
 import { Progress } from "@v1/components/ui/progress";
 import { Badge } from "@v1/components/ui/badge";
-import { BrainLoaderCard } from "@v1/components/common/BrainLoader";
+import { BrainLoaderCard } from "@v1/components/common/PageLoader";
 import HealthScoreRing from "@v1/components/dashboard/HealthScoreRing";
 import {
   BarChart3, Users, AlertTriangle, TrendingDown, Activity,
