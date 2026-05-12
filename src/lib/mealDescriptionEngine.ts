@@ -127,6 +127,9 @@ export function scaleDescriptionQuantities(
   factor: number
 ): string | null | undefined {
   if (!description || !Number.isFinite(factor) || factor <= 0 || Math.abs(factor - 1) < 0.08) return description;
+  
+  // 🛡️ CIRCUIT BREAKER: Hard clamp scaling factor for descriptions to prevent clinical explosions
+  const safeFactor = Math.max(0.4, Math.min(2.5, factor));
 
   const scaleToken = (rawValue: string, unit: string, spacer = "") => {
     const parsed = Number(rawValue.replace(",", "."));
