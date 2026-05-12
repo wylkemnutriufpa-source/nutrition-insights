@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Navigate } from "react-router-dom";
 import PageLoader from "@/components/common/PageLoader";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { WorkspaceRouteGuard } from "@/components/common/WorkspaceRouteGuard";
+import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminAffiliates = lazy(() => import("../pages/AdminAffiliates"));
