@@ -8,6 +8,37 @@ import { MealItem, MacroTargets, ClinicalProfile } from '../../../core/clinical-
 export const PrescriptionDashboard = () => {
   const { profile, loading: loadingProfile } = useNutritionistProfile();
   const { patients, loading: loadingPatients } = usePatients(profile?.id);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const mockMeal = {
+    name: "Almoço Teste (Soberano)",
+    targets: { protein: 40, carbs: 60, fat: 15, calories: 535 },
+    items: [
+      {
+        id: 'p1',
+        name: 'Frango Grelhado',
+        grams: 100,
+        macro_role: 'protein' as const,
+        macros_per_100g: { protein: 27, carbs: 0, fat: 3, calories: 135 }
+      },
+      {
+        id: 'c1',
+        name: 'Arroz Branco',
+        grams: 100,
+        macro_role: 'carb' as const,
+        macros_per_100g: { protein: 2, carbs: 28, fat: 0.2, calories: 124 }
+      }
+    ]
+  };
+
+  const clinicalProfile: ClinicalProfile = {
+    sex: 'female',
+    weight: 65,
+    height: 165,
+    age: 30,
+    activityLevel: 'moderate',
+    goal: 'maintain'
+  };
 
   if (loadingProfile) {
     return <div className="flex items-center justify-center h-screen bg-black text-white">Carregando...</div>;
