@@ -4094,39 +4094,20 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       };
     });
 
+    console.group("MEAL_PLAN_ITEMS INSERT (generate-meal-plan: final-insert)");
+    itemsToInsert.forEach((item, idx) => {
+      console.log(idx, Object.keys(item).sort());
+      console.log(idx, {
+        is_locked: (item as any).is_locked,
+        is_primary: (item as any).is_primary,
+        is_manually_edited: (item as any).is_manually_edited,
+        was_auto_corrected: (item as any).was_auto_corrected,
+      });
+    });
+    console.groupEnd();
+
     // ──── CONTRACT GUARD: plan_generation ────
-    // Bloqueia retorno de plano vazio, sem título, com plan_type misturado ou macros zeradas.
-    const expectedPlanType: "marmita" | "normal" =
-      generationMode === "weekly_marmita" || generationMode === "fixed_marmita" ? "marmita" : "normal";
-    try {
-      await assertContract(
-        planGenerationContract({
-          planType: expectedPlanType,
-          generatedItems: itemsToInsert.map(i => ({ ...i, plan_type: expectedPlanType })),
-          totalKcal: finalKcal,
-          totalProtein: finalMacros.protein,
-        }),
-        {
-          client: serviceClient,
-          source: "generate-meal-plan/pre-insert",
-          metadata: { plan_id: finalMealPlanId, generation_mode: generationMode, items_count: itemsToInsert.length },
-        },
-      );
-    } catch (e) {
-      if (e instanceof ContractViolationError) {
-        console.warn("[EMERGENCY] Contract violation ignored per user request:", e.violations);
-        // Não bloqueia mais o profissional. O plano será gerado mesmo com avisos.
-      } else {
-        throw e;
-      }
-    }
-
-    // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
-    const { error: deleteErr } = await serviceClient
-      .from("meal_plan_items")
-      .delete()
-      .eq("meal_plan_id", finalMealPlanId);
-
+...
     if (deleteErr) {
       console.error(`[generate-meal-plan] Failed to delete previous items for plan ${finalMealPlanId}:`, deleteErr);
       // Continue anyway — inserting new items is more important
