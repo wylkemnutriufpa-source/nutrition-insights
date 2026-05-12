@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 import { supabase } from "@/integrations/supabase/client";
 
 export function RootRouter() {
   const { roles, authStatus, loading, profile, refreshProfile, user } = useAuth();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next");
   const [error, setError] = useState<string | null>(null);
