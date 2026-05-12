@@ -13,6 +13,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { reconcileMeal, MacroTargets, ClinicalProfile, MealItem as CItem } from "../_shared/clinical-engine-v2.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
