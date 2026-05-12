@@ -20,6 +20,7 @@ import OnboardingEntry from "@v1/components/onboarding/OnboardingEntry";
 
 // Eager
 import Auth from "../pages/Auth";
+console.log("[AppRoutes] Auth page imported", !!Auth);
 import AuthConfirm from "../pages/AuthConfirm";
 import NotFound from "../pages/NotFound";
 import Index from "../pages/Index";
@@ -276,19 +277,7 @@ export const AppRoutes = () => {
     <Routes>
       <Route
         path="/"
-        element={
-          authStatus === "loading" ? (
-            <PageLoader />
-          ) : authStatus === "authenticated" ? (
-            (() => {
-              const search = window.location.search;
-              console.log("[NAV] Root path redirecting to /welcome", { authStatus, search });
-              return <Navigate to={`/v1/welcome${search}`} replace />;
-            })()
-          ) : (
-            <Auth />
-          )
-        }
+        element={<Auth />}
       />
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/confirm" element={<AuthConfirm />} />
