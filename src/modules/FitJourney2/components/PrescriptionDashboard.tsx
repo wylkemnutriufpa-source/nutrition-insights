@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNutritionistProfile } from '../hooks/useNutritionistProfile';
 import { usePatients } from '../hooks/usePatients';
-import { Users, Utensils, ClipboardCheck, ArrowRight, Plus } from 'lucide-react';
+import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, ShieldCheck } from 'lucide-react';
+import { MealEditModal } from './MealEditModal';
+import { MealItem, MacroTargets, ClinicalProfile } from '../../../core/clinical-engine';
 
 export const PrescriptionDashboard = () => {
   const { profile, loading: loadingProfile } = useNutritionistProfile();
