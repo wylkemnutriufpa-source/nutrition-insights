@@ -208,6 +208,33 @@ const EditorV3Page = () => {
     });
   };
 
+  const setSelectedItem = (data: { mealId: string, item: MealItem } | null) => {
+    if (!data) {
+      handleCloseModal();
+    } else {
+      handleOpenModal(data);
+    }
+  };
+
+  const [substitutionSearch, setSubstitutionSearch] = useState('');
+  const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
+  const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
+  const [swapSearch, setSwapSearch] = useState('');
+  const [swapResults, setSwapResults] = useState<Food[]>([]);
+  const [isSearchingSwap, setIsSearchingSwap] = useState(false);
+  const [smartSubstitutions, setSmartSubstitutions] = useState<Food[]>([]);
+  const [isLoadingSmartSubs, setIsLoadingSmartSubs] = useState(false);
+  const [replacementPending, setReplacementPending] = useState<{
+    current: MealItem,
+    target: Food,
+    mealId: string
+  } | null>(null);
+  const [showAnamnesisHandshake, setShowAnamnesisHandshake] = useState(false);
+  const [pendingAnamnesisData, setPendingAnamnesisData] = useState<any>(null);
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+  const setSubstitutionSearch = setSubstitutionSearch; // To avoid unused variable error if it is used in the UI
+
+
 
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
