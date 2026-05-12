@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from '../types';
-import { normalizeFood, getBestMealImage, normalizeMeals } from '../utils/normalization';
+import { normalizeFood, getBestMealImage, normalizeMeals, normalizeV2ToV3 } from '../utils/normalization';
 import { 
   generatePlanWithEngine, 
   generateMealWithEngine, 
@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 import { logClinicalEvent } from '../../audit/services/auditLogger';
 import { processSmartTemplate } from '../services/templateIntelligence';
+import { validatePersistedState } from '../security/storeGuard';
 
 
 interface EditorState {
@@ -901,6 +902,20 @@ export const useEditorState = create<EditorState>()(
       name: 'fitjourney-editor-v3-storage',
       version: 2,
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: (state) => {
+        return (persistedState, error) => {
+          if (error) {
+            console.error('[Zustand] Erro crítico na reidratação:', error);
+            return;
+          }
+          if (persistedState) {
+            const validated = validatePersistedState(persistedState);
+            if (!validated) {
+              console.error('[Zustand] Estado corrompido detectado. Abortando hidratação para evitar crash.');
+            }
+          }
+        };
+      },
       migrate: (persisted: any, version) => {
         if (!persisted || version < 2) {
           return { ...(persisted ?? {}), meals: DEFAULT_MEALS, planStatus: 'draft' };
@@ -910,3 +925,4 @@ export const useEditorState = create<EditorState>()(
     }
   )
 );
+

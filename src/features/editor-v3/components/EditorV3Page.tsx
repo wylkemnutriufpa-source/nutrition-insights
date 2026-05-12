@@ -64,8 +64,10 @@ import {
   Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
   User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy
 } from 'lucide-react';
-import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from '@/lib/pdfExportPremium';
+import { safeGeneratePDF } from '../services/pdfService';
+import { type PremiumMealPlanPDFData, buildPremiumMealPlanHTML } from '@/lib/pdfExportPremium';
 import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
+
 import PlanAdjustmentModal from './PlanAdjustmentModal';
 import TemplateEditorModal from './TemplateEditorModal';
 
@@ -1114,11 +1116,10 @@ const EditorV3Page = () => {
     
     try {
       const pdfData = await preparePDFData();
-      const { generatePremiumMealPlanPDF, buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
       
-      // 1. Gera o PDF local para o profissional ver/salvar
-      generatePremiumMealPlanPDF(pdfData);
-      
+      // 1. Gera o PDF local via Sandbox (Etapa 4 - Blindagem)
+      await safeGeneratePDF(pdfData);
+
       // 2. Gera HTML para compartilhamento via link
       const html = buildPremiumMealPlanHTML(pdfData);
       const fileName = `plan-${patientId}-${Date.now()}.html`;
@@ -1154,8 +1155,8 @@ const EditorV3Page = () => {
     const toastId = toast.loading("Gerando prévia do PDF...");
     try {
       const pdfData = await preparePDFData();
-      const { generatePremiumMealPlanPDF } = await import("@/lib/pdfExportPremium");
-      generatePremiumMealPlanPDF(pdfData);
+      await safeGeneratePDF(pdfData);
+
       toast.success("PDF gerado com sucesso!", { id: toastId });
     } catch (err) {
       console.error("PDF preview error:", err);

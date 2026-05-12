@@ -7,7 +7,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
-import { normalizeMeals } from '../utils/normalization';
+import { normalizeMeals, normalizeV2ToV3 } from '../utils/normalization';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 
 export interface DraftRecord {
@@ -131,50 +131,8 @@ export async function loadOrCreateDraft(
       .single();
 
     if (officialPlan && officialPlan.meal_plan_items) {
-      // Agrupar itens por tipo de refeição (V2 agrupa por meal_type)
-      const itemsByMealType: Record<string, any[]> = {};
-      officialPlan.meal_plan_items.forEach((item: any) => {
-        const type = item.meal_type || 'outros';
-        if (!itemsByMealType[type]) itemsByMealType[type] = [];
-        itemsByMealType[type].push(item);
-      });
-
-      const mealTypeLabels: Record<string, string> = {
-        breakfast: 'Café da Manhã',
-        morning_snack: 'Lanche da Manhã',
-        lunch: 'Almoço',
-        afternoon_snack: 'Lanche da Tarde',
-        dinner: 'Jantar',
-        evening_snack: 'Ceia',
-        pre_workout: 'Pré-Treino',
-        post_workout: 'Pós-Treino'
-      };
-
-      const convertedMeals: Meal[] = Object.entries(itemsByMealType).map(([type, items]) => ({
-        id: Math.random().toString(36).substring(2, 9),
-        name: mealTypeLabels[type] || type,
-        time: type === 'breakfast' ? '08:00' : (type === 'lunch' ? '12:00' : (type === 'dinner' ? '20:00' : '00:00')),
-        items: items.map((item: any) => {
-          const isSubstitution = item.description?.toLowerCase().includes('substituição');
-          return {
-            id: item.id,
-            instanceId: Math.random().toString(36).substring(2, 10),
-            name: item.title,
-            kcal: item.calories_target || 0,
-            calories: item.calories_target || 0,
-            protein: item.protein_target || 0,
-            carbs: item.carbs_target || 0,
-            fat: item.fat_target || 0,
-            quantity: 1,
-            measurementType: 'unit' as const,
-            portionValue: 1,
-            portionUnitLabel: 'porção',
-            portionUnit: 'porção',
-            portionLabel: item.description && !isSubstitution ? item.description : '1 porção',
-            substitutions: []
-          };
-        })
-      }));
+      // Usar o Migration Guard para garantir compatibilidade total
+      const convertedMeals = normalizeV2ToV3(officialPlan.meal_plan_items);
       
       if (convertedMeals.length > 0) {
         initialMealsToUse = convertedMeals;
