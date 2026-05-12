@@ -1,13 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal, MealItem } from '../types';
+import { PipelineTrace, ClinicalGuard } from './pipeline-trace';
+
+const tracer = PipelineTrace.getInstance();
 
 /**
  * Normaliza um alimento para garantir que ele siga o padrão Elite V3.
  * Cura inconsistências de campos ausentes e infere tipos se necessário.
+ * FASE: PIPELINE PURIFICATION — Separação de Massa Clínica vs Display
  */
 export function normalizeFood(food: any): Food {
   const f = { ...food };
+  const originalId = f.id || f.instanceId;
   
+  tracer.trace(`Normalizing Food: ${f.name || 'Unknown'}`, { id: originalId, initial: { ...f } });
+
   // Garantir macros consistentes (kcal vs calories)
   if (f.kcal === undefined && f.calories !== undefined) f.kcal = f.calories;
   if (f.calories === undefined && f.kcal !== undefined) f.calories = f.kcal;
@@ -22,6 +29,13 @@ export function normalizeFood(food: any): Food {
   const name = (f.name || '').toLowerCase();
   const wasGram = f.measurementType === 'gram' || !f.measurementType;
   const initialQuantity = f.quantity;
+
+  // 🛡️ CONGELAMENTO DA MASSA CLÍNICA (Soberania do Motor)
+  // Se for gramas e ainda não tiver clinical_mass_g, este é o ponto zero.
+  if (wasGram && (f.clinical_mass_g === undefined || f.clinical_mass_g === null)) {
+    f.clinical_mass_g = initialQuantity;
+    tracer.trace(`Clinical Mass Frozen: ${name}`, { mass: f.clinical_mass_g });
+  }
 
   // PARTE 1 — MEDIDAS CASEIRAS (PADRONIZAÇÃO URGENTE)
   if (wasGram) {
@@ -71,9 +85,17 @@ export function normalizeFood(food: any): Food {
       newPortionLabel = 'filé M';
     }
 
+    // Só converte quantity se for a primeira vez (wasGram) e tivermos um teto clínico
     if (newMeasurementType !== 'gram' && wasGram && initialQuantity > 5) {
-      f.quantity = Math.round((initialQuantity / (newPortionValue || 1)) * 10) / 10;
-      console.log(`[V3-Normalization] Converted ${initialQuantity}g ${name} to ${f.quantity} ${newPortionLabel}`);
+      // Se já temos clinical_mass_g, usamos ele para garantir que a conversão não seja recursiva
+      const sourceMass = f.clinical_mass_g || initialQuantity;
+      f.quantity = Math.round((sourceMass / (newPortionValue || 1)) * 10) / 10;
+      
+      tracer.trace(`Display Conversion: ${name}`, { 
+        from: `${sourceMass}g`, 
+        to: `${f.quantity} ${newPortionLabel}`,
+        factor: newPortionValue 
+      });
     }
 
     f.measurementType = newMeasurementType;
@@ -81,6 +103,7 @@ export function normalizeFood(food: any): Food {
     f.portionLabel = newPortionLabel;
   }
 
+  // Se não tem tipo, inferir
   if (!f.measurementType) {
     if (name.includes('leite') || name.includes('suco') || name.includes('bebida') || name.includes('água') || name.includes('ml')) {
       f.measurementType = 'ml';
@@ -91,10 +114,12 @@ export function normalizeFood(food: any): Food {
     }
   }
 
+  // Fallbacks de labels
   if (!f.portionUnitLabel && f.portionUnit) f.portionUnitLabel = f.portionUnit;
   if (!f.portionUnit && f.portionUnitLabel) f.portionUnit = f.portionUnitLabel;
   if (!f.portionLabel && f.portionUnitLabel) f.portionLabel = `1 ${f.portionUnitLabel}`;
 
+  // Garantir portionValue positivo
   if (!f.portionValue || f.portionValue <= 0) {
     if (f.measurementType === 'gram' || f.measurementType === 'ml') {
       f.portionValue = 100; 
@@ -105,22 +130,30 @@ export function normalizeFood(food: any): Food {
     }
   }
 
+  // 🛡️ GUARDIÃO FISIOLÓGICO (FIM DO PIPELINE)
+  if (f.quantity) {
+    const clamped = ClinicalGuard.clampQuantity(f.quantity, name, f.measurementType);
+    if (clamped !== f.quantity) {
+      tracer.trace(`Clinical Guard Clamp Applied: ${name}`, { old: f.quantity, new: clamped });
+      f.quantity = clamped;
+    }
+  }
+
   return f as Food;
 }
 
 /**
  * Migration Guard: Converte dados do Editor V2 para V3 de forma segura.
- * Pode receber um array de refeições (V2) ou um array de itens flat (DB).
  */
 export function normalizeV2ToV3(v2Data: any): Meal[] {
   console.log('[Migration Guard] Iniciando migração V2 -> V3');
+  tracer.trace('Migration Start', { items_count: v2Data?.length });
   
   if (!v2Data || !Array.isArray(v2Data)) {
     console.warn('[Migration Guard] Dados V2 inválidos ou ausentes');
     return [];
   }
 
-  // Se os dados forem itens flat (do banco de dados), agrupamos por tipo de refeição primeiro
   let mealsArray: any[] = v2Data;
   if (v2Data.length > 0 && v2Data[0].meal_type) {
     const itemsByMealType: Record<string, any[]> = {};
@@ -151,7 +184,6 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
 
   return mealsArray.map((meal: any) => {
     const items = (meal.items || []).map((item: any) => {
-      // 1. Sanitization: Garantir que títulos e macros não são nulos
       const sanitizedItem = { 
         ...item,
         name: item.name || item.title || 'Alimento sem nome',
@@ -161,13 +193,13 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
         fat: item.fat ?? item.fat_target ?? 0,
       };
       
-      // 2. Compatibility Layer: Mapear campos antigos para novos usando o normalizador clínico V3
       const normalized = normalizeFood(sanitizedItem) as any;
       
       return {
         ...normalized,
         instanceId: normalized.instanceId || Math.random().toString(36).substring(2, 10),
         quantity: normalized.quantity ?? 1,
+        clinical_mass_g: normalized.clinical_mass_g ?? (normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1))),
         substitutions: (normalized.substitutions || []).map((sub: any) => normalizeFood(sub))
       } as MealItem;
     });
@@ -182,9 +214,8 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
   });
 }
 
-
 /**
- * Busca a melhor imagem no banco meal_visual_library para um determinado nome/alimento.
+ * Busca a melhor imagem no banco meal_visual_library.
  */
 export async function getBestMealImage(mealName: string, items: any[]): Promise<{ url: string; source: 'manual' | 'auto' | 'fallback' }> {
   try {
@@ -249,16 +280,21 @@ export async function getBestMealImage(mealName: string, items: any[]): Promise<
  * Normaliza uma lista de refeições.
  */
 export function normalizeMeals(meals: Meal[]): Meal[] {
+  tracer.trace('Normalizing Meals Array', { count: meals?.length });
   return (meals || []).map(meal => ({
     ...meal,
-    items: (meal.items || []).map(item => ({
-      ...normalizeFood(item),
-      instanceId: item.instanceId || Math.random().toString(36).substring(2, 10),
-      quantity: item.quantity !== undefined ? item.quantity : (
-        item.measurementType === 'gram' ? 100 : 
-        item.measurementType === 'ml' ? 200 : 1
-      ),
-      substitutions: item.substitutions || [] 
-    }))
+    items: (meal.items || []).map(item => {
+      const normalized = normalizeFood(item);
+      return {
+        ...normalized,
+        instanceId: (item as any).instanceId || Math.random().toString(36).substring(2, 10),
+        quantity: (item as any).quantity !== undefined ? (item as any).quantity : (
+          normalized.measurementType === 'gram' ? 100 : 
+          normalized.measurementType === 'ml' ? 200 : 1
+        ),
+        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? (item as any).quantity : ((item as any).quantity * (normalized.portionValue || 1))),
+        substitutions: (item as any).substitutions || [] 
+      } as MealItem;
+    })
   }));
 }

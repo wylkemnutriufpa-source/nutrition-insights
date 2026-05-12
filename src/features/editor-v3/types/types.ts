@@ -38,7 +38,8 @@ export interface Food {
 
 export interface MealItem extends Food {
   instanceId: string;
-  quantity: number; 
+  quantity: number; // Quantidade de exibição (ex: 6 colheres, 2 unidades)
+  clinical_mass_g?: number; // Massa real em gramas (Fonte da Verdade)
   selectedUnit?: string;
   substitutions: Food[]; // Definido como obrigatório para evitar null/undefined
   description?: string;

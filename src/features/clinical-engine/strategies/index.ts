@@ -32,12 +32,13 @@ const createMealItem = (food: Food | undefined, quantity: number): MealItem | nu
   
   return {
     ...food,
-    ...macros, // Override with recalculated values (NÃO confiar em valores vindos da engine)
+    ...macros, // Override with recalculated values
     instanceId: makeId(),
     quantity: safeQuantity,
+    clinical_mass_g: safeQuantity, // 🛡️ Congelamento na fonte (Motor)
     locked: food.isMarmita || false,
     substitutions: [] // Contrato V3: substitutions sempre array
-  };
+  } as MealItem;
 };
 
 export class FitJourneyStrategy implements ClinicalStrategy {
