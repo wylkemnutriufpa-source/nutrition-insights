@@ -50,13 +50,22 @@ export function MealSmartEditorModal({
   const item = items.find((i) => i.id === itemId);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
+  const [activeTab, setActiveTab] = useState<"isolated" | "ready" | "draft">("isolated");
   const [search, setSearch] = useState("");
   const [description, setDescription] = useState(item?.description || "");
   const [notes, setNotes] = useState((item as any)?.notes || "");
   const [substitutions, setSubstitutions] = useState<string[]>([]);
   const [portionFactor, setPortionFactor] = useState(1.0);
   const [showConsistencyReport, setShowConsistencyReport] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Snapshot original values for dirty check
+  const originalValues = useRef({
+    description: item?.description || "",
+    notes: (item as any)?.notes || "",
+    portionFactor: 1.0,
+    substitutions: [] as string[]
+  });
 
   const currentMeta = React.useMemo(() => (item as any)?.edit_metadata || (item as any)?.metadata || {}, [item]);
   
@@ -84,11 +93,41 @@ export function MealSmartEditorModal({
     return substitutions.some(sub => isBlockedForWannubia(sub));
   }, [substitutions, isBlockedForWannubia]);
 
+  const reconcileDescription = useCallback((text: string, newFactor: number, oldFactor: number) => {
+    if (!text) return "";
+    const scale = newFactor / oldFactor;
+    return text.replace(/(\d+(?:[.,]\d+)?)\s*g/g, (match, grams) => {
+      const g = parseFloat(grams.replace(',', '.'));
+      if (isNaN(g)) return match;
+      return `${Math.round(g * scale)}g`;
+    });
+  }, []);
+
+  const handlePortionChange = (newVal: number) => {
+    const factor = Math.max(0.1, Math.round(newVal * 10) / 10);
+    const scale = factor / portionFactor;
+    
+    setDescription(prev => reconcileDescription(prev, factor, portionFactor));
+    setSubstitutions(prev => prev.map(sub => reconcileDescription(sub, factor, portionFactor)));
+    setPortionFactor(factor);
+  };
+
   useEffect(() => {
     if (item && open) {
-      setDescription(item.description || "");
-      
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
+      const currentPortion = meta.portion_factor || 1.0;
+      
+      setDescription(item.description || "");
+      setNotes((item as any).notes || "");
+      setPortionFactor(currentPortion);
+      
+      // Store original values for dirty check
+      originalValues.current = {
+        description: item.description || "",
+        notes: (item as any).notes || "",
+        portionFactor: currentPortion,
+        substitutions: []
+      };
       
       if (meta.is_fixed) {
         const missing = [];
@@ -102,9 +141,7 @@ export function MealSmartEditorModal({
             description: `Campos ausentes no edit_metadata: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
             action: {
               label: "Corrigir Agora",
-              onClick: () => {
-                inputRef.current?.focus();
-              }
+              onClick: () => inputRef.current?.focus()
             },
             duration: 8000
           });
@@ -116,6 +153,7 @@ export function MealSmartEditorModal({
                           
       if (hasValidJson) {
         setSubstitutions(meta.substitutions_json);
+        originalValues.current.substitutions = meta.substitutions_json;
       } else {
         const desc = item.description || "";
         const parts = desc.split(/\n\n🔄 Substituições:\n/);
@@ -123,13 +161,43 @@ export function MealSmartEditorModal({
         const subLines = subsPart.split("\n")
           .filter(l => l.trim().length > 0)
           .map(l => l.trim());
-        setSubstitutions(subLines.slice(0, substitutionCount));
+        const initialSubs = subLines.slice(0, substitutionCount);
+        setSubstitutions(initialSubs);
+        originalValues.current.substitutions = initialSubs;
       }
-      
-      setNotes((item as any).notes || "");
-      setPortionFactor(meta.portion_factor || 1.0);
     }
-  }, [item, open, substitutionCount]);
+  }, [item?.id, open, substitutionCount]);
+
+  // Real-time synchronization with global draft (skip persistence)
+  useEffect(() => {
+    if (!item || !open) return;
+
+    const dirty = description !== originalValues.current.description ||
+                  notes !== originalValues.current.notes ||
+                  portionFactor !== originalValues.current.portionFactor ||
+                  JSON.stringify(substitutions) !== JSON.stringify(originalValues.current.substitutions);
+    
+    setIsDirty(dirty);
+
+    // Sync to store immediately but skip persistence
+    const cleanedSubs = normalizeSubstitutions(substitutions, substitutionCount);
+    const finalDescription = formatFinalDescription(description, cleanedSubs);
+
+    updateItem(itemId, {
+      description: finalDescription,
+      calories_target: adjustedMacros.calories,
+      protein_target: adjustedMacros.protein,
+      carbs_target: adjustedMacros.carbs,
+      fat_target: adjustedMacros.fat,
+      edit_metadata: {
+        ...currentMeta,
+        notes,
+        substitutions_json: cleanedSubs,
+        portion_factor: portionFactor,
+      }
+    } as any, true); // true = skipPersist
+
+  }, [description, notes, substitutions, portionFactor, open, itemId]);
 
   if (!item) return null;
 
@@ -174,6 +242,7 @@ export function MealSmartEditorModal({
     
     try {
       const toastId = "meal-save-toast";
+      // Final persist call (no skipPersist)
       updateItem(itemId, {
         description: finalDescription,
         calories_target: adjustedMacros.calories,
@@ -191,7 +260,7 @@ export function MealSmartEditorModal({
           fat_base: fatBase
         }
       } as any);
-      toast.success("Refeição atualizada com sucesso", { id: toastId });
+      toast.success("Refeição persistida com sucesso", { id: toastId });
       onOpenChange(false);
     } catch (error) {
       toast.error("Erro ao salvar alterações. Tente novamente.", { id: "meal-save-toast" });
@@ -215,10 +284,10 @@ export function MealSmartEditorModal({
   };
 
   const totals = {
-    calories: item.calories_target || 0,
-    protein: Number(item.protein_target) || 0,
-    carbs: Number(item.carbs_target) || 0,
-    fat: Number(item.fat_target) || 0,
+    calories: adjustedMacros.calories,
+    protein: adjustedMacros.protein,
+    carbs: adjustedMacros.carbs,
+    fat: adjustedMacros.fat,
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -501,7 +570,7 @@ export function MealSmartEditorModal({
                             min="0.1"
                             className="h-10 bg-background border-primary/20 rounded-xl"
                             value={portionFactor}
-                            onChange={(e) => setPortionFactor(parseFloat(e.target.value) || 1.0)}
+                            onChange={(e) => handlePortionChange(parseFloat(e.target.value) || 1.0)}
                           />
                           <span className="text-sm font-bold text-muted-foreground">x</span>
                         </div>
@@ -511,7 +580,7 @@ export function MealSmartEditorModal({
                           variant="outline" 
                           size="sm" 
                           className="h-9 text-[10px] rounded-xl"
-                          onClick={() => setPortionFactor(prev => Math.max(0.1, Math.round((prev - 0.1) * 10) / 10))}
+                          onClick={() => handlePortionChange(portionFactor - 0.1)}
                         >
                           - 10%
                         </Button>
@@ -519,7 +588,7 @@ export function MealSmartEditorModal({
                           variant="outline" 
                           size="sm" 
                           className="h-9 text-[10px] rounded-xl"
-                          onClick={() => setPortionFactor(prev => Math.round((prev + 0.1) * 10) / 10)}
+                          onClick={() => handlePortionChange(portionFactor + 0.1)}
                         >
                           + 10%
                         </Button>
@@ -650,10 +719,16 @@ export function MealSmartEditorModal({
                 Cancelar
               </Button>
               <Button 
-                className="flex-[2] h-12 rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" 
+                className={cn(
+                  "flex-[2] h-12 rounded-2xl font-bold transition-all shadow-lg",
+                  isDirty 
+                    ? "bg-primary hover:bg-primary/90 shadow-primary/20" 
+                    : "bg-muted text-muted-foreground shadow-none cursor-not-allowed opacity-70"
+                )}
                 onClick={handleSave}
+                disabled={!isDirty && !hasBlockedSubs}
               >
-                Salvar Alterações
+                {isDirty ? "Confirmar e Salvar" : "Sem Alterações"}
               </Button>
             </div>
           </div>

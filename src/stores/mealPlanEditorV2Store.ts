@@ -58,7 +58,7 @@ interface EditorV2State {
   // Item CRUD (local-first)
   addItem: (insert: TablesInsert<"meal_plan_items">) => void;
   addItems: (inserts: TablesInsert<"meal_plan_items">[]) => void;
-  updateItem: (itemId: string, patch: Partial<MealPlanItem>) => void;
+  updateItem: (itemId: string, patch: Partial<MealPlanItem>, skipPersist?: boolean) => void;
   deleteItem: (itemId: string) => void;
   deleteItemsInCell: (day: number, mealType: MealType) => void;
   clearAllItems: () => void;
@@ -524,7 +524,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   },
 
   // ── Update item ───────────────────────────────────────────
-  updateItem: (itemId, patch) => {
+  updateItem: (itemId, patch, skipPersist = false) => {
     const sanitizedPatch = sanitizeMealPlanItemPatch(patch);
     if (Object.keys(sanitizedPatch).length === 0) {
       console.warn("[MealPlanEditorV2Store.updateItem] Ignorando patch sem campos persistíveis", {
@@ -542,8 +542,8 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       items: sortMealPlanItems(s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i))),
     }));
 
-    // Se for item temporário, não enfileiramos update; o insert pendente já pegará o estado atualizado do store no momento do flush
-    if (itemId.startsWith("temp-")) {
+    // Se for item temporário ou skipPersist, não enfileiramos update; o insert pendente já pegará o estado atualizado do store no momento do flush
+    if (itemId.startsWith("temp-") || skipPersist) {
       return;
     }
 
