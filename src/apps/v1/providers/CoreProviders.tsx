@@ -27,7 +27,7 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <BrowserRouter>
+          <div className="v1-wrapper">
             <AuthProvider>
               <ExperienceProvider>
                 <WorkspaceProvider>
@@ -43,7 +43,7 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
               </ExperienceProvider>
             </AuthProvider>
 
-          </BrowserRouter>
+          </div>
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
