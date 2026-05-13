@@ -1,4 +1,5 @@
 import { Food, MealItem } from "../types/clinical-types";
+import { SovereignFatalGuard } from "@/lib/sovereign-fatal-guards";
 
 /**
  * Normalizes food units and measurements.
@@ -12,12 +13,16 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
   displayQuantity: number;
   normalizedGrams: number;
 } => {
+  // 🛡️ BLOQUEIO SOBERANO: Impede normalização baseada em heurísticas se for detectada
+  if (!item.portionUnitLabel && !('clinical_mass_g' in item) && (item as Food).portionValue === undefined) {
+    SovereignFatalGuard.blockLegacyNormalization('normalizeFoodMeasurement', item.name);
+  }
+
   // 1. Prioridade absoluta: clinical_mass_g se disponível
   const grams = (item as MealItem).clinical_mass_g ?? (item as MealItem).quantity ?? (item as Food).portionValue ?? 0;
   
   if (grams <= 0) {
     console.warn(`[V3-NORMALIZER] Item com massa inválida: ${item.name}`, item);
-    // Não inventamos massa. Retornamos o que temos ou falhamos.
   }
 
   // 2. Se já temos uma unidade de exibição definida no item (V3), usamos ela
@@ -65,11 +70,9 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
  * Implementation of FitJourney V3 - Step 3
  */
 export const recalculateMacros = (item: Food, quantityGrams: number) => {
-  // 🛡️ SOBERANIA CLÍNICA: Falhar explicitamente se dados nutricionais base faltarem
-  if (!item.kcal && !item.calories && !item.protein && !item.carbs && !item.fat) {
-     console.error('[V3-MOTOR] Food without nutrition data:', item.name);
-     return { calories: 0, protein: 0, carbs: 0, fat: 0 };
-  }
+  // 🛡️ BLOQUEIO SOBERANO: Impede recálculo manual fora do motor V3 se não houver contexto soberano
+  // (Aqui poderíamos checar um window.sovereign_context se necessário, mas o comando é abortar)
+  SovereignFatalGuard.blockManualRecalculation('recalculateMacros', `Item: ${item.name}, Quantidade: ${quantityGrams}g`);
 
   const baseGrams = item.portionValue || 100;
   const ratio = quantityGrams / baseGrams;

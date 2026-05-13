@@ -33,6 +33,13 @@ export interface SovereignLogParams {
   snapshot_version?: string;
 }
 
+export class SovereignViolationError extends Error {
+  constructor(public params: SovereignLogParams) {
+    super(`[SOVEREIGN VIOLATION] ${params.event_type}: ${params.message} (Correlation: ${params.correlation_id})`);
+    this.name = "SovereignViolationError";
+  }
+}
+
 export const SovereignTelemetry = {
   /**
    * Logs a sovereignty violation to the database and console.
@@ -78,10 +85,23 @@ export const SovereignTelemetry = {
   },
 
   /**
+   * Logs and ABORTS the flow if critical.
+   */
+  abort: async (params: SovereignLogParams) => {
+    const correlation_id = params.correlation_id || `corr_${Math.random().toString(36).substring(2, 11)}`;
+    const finalParams = { ...params, correlation_id };
+    
+    // Sync log before throwing
+    await SovereignTelemetry.log(finalParams);
+    
+    throw new SovereignViolationError(finalParams);
+  },
+
+  /**
    * Helper for critical schema violations that block hydration.
    */
   reportBlockedHydration: (source: string, reason: string, metadata?: any) => {
-    return SovereignTelemetry.log({
+    return SovereignTelemetry.abort({
       runtime_source: source,
       event_type: 'hydration_blocked',
       severity: 'critical',
@@ -94,10 +114,10 @@ export const SovereignTelemetry = {
    * Helper for detecting legacy recalculations or fallbacks.
    */
   reportLegacyDetection: (source: string, feature: string, metadata?: any) => {
-    return SovereignTelemetry.log({
+    return SovereignTelemetry.abort({
       runtime_source: source,
       event_type: 'legacy_detected',
-      severity: 'warning',
+      severity: 'critical', // Changed to critical to force abort in Phase Final
       message: `Legacy pattern detected in sovereign runtime: ${feature}`,
       metadata
     });

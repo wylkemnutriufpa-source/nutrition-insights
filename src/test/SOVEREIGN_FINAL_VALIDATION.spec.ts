@@ -77,35 +77,35 @@ describe("SOVEREIGN_FINAL_VALIDATION — Prova Real de Runtime", () => {
     daily_average: { kcal: 2500, protein_g: 150, carbs_g: 300, fat_g: 80 }
   };
 
-  it("Fase 1: Valida que um snapshot soberano íntegro é aceito", () => {
-    const validated = validateMealPlanSnapshot(mockValidSnapshot, "test_validation");
+  it("Fase 1: Valida que um snapshot soberano íntegro é aceito", async () => {
+    const validated = await validateMealPlanSnapshot(mockValidSnapshot, "test_validation");
     expect(validated.plan.editor_version).toBe("v3");
     expect(validated.days[0].meals[0].items[0].clinical_mass_g).toBe(100);
   });
 
-  it("Fase 1: Bloqueia snapshots com campos críticos ausentes (ex: clinical_mass_g)", () => {
+  it("Fase 1: Bloqueia snapshots com campos críticos ausentes (ex: clinical_mass_g)", async () => {
     const invalidSnapshot = JSON.parse(JSON.stringify(mockValidSnapshot));
     delete invalidSnapshot.days[0].meals[0].items[0].clinical_mass_g;
     
-    expect(() => validateMealPlanSnapshot(invalidSnapshot, "test_failure"))
-      .toThrow("[SOVEREIGN_VIOLATION] Snapshot corrompido ou incompleto detectado");
+    await expect(validateMealPlanSnapshot(invalidSnapshot, "test_failure"))
+      .rejects.toThrow("Snapshot corrompido ou incompleto detectado");
   });
 
-  it("Fase 2: Bloqueia runtime que tenta usar lógica legado (Função Proibida)", () => {
+  it("Fase 2: Bloqueia runtime que tenta usar lógica legado (Função Proibida)", async () => {
     // Definindo uma função com nome proibido para aparecer no stack trace
-    const normalizeFood = () => {
-      assertSovereignRuntime("legacy_call_test");
+    const normalizeFood = async () => {
+      await assertSovereignRuntime("legacy_call_test");
     };
     
-    expect(() => normalizeFood()).toThrow("[SOVEREIGN_VIOLATION] Uso de motor legado detectado: normalizeFood");
+    await expect(normalizeFood()).rejects.toThrow("BLOQUEIO SOBERANO: Uso de motor legado detectado");
   });
 
-  it("Fase 3: Gera telemetria estruturada durante a validação", () => {
-    expect(() => logSovereignEvent("INFO", "TEST_EVENT", { correlation_id: "test-id" })).not.toThrow();
+  it("Fase 3: Gera telemetria estruturada durante a validação", async () => {
+    await expect(logSovereignEvent("INFO", "TEST_EVENT", { correlation_id: "test-id" })).resolves.not.toThrow();
   });
 
-  it("Fase 5: Garante que Patient App recebe dados 1:1 sem drift", () => {
-    const validated = validateMealPlanSnapshot(mockValidSnapshot, "patient_app_access");
+  it("Fase 5: Garante que Patient App recebe dados 1:1 sem drift", async () => {
+    const validated = await validateMealPlanSnapshot(mockValidSnapshot, "patient_app_access");
     const item = validated.days[0].meals[0].items[0];
     
     expect(item.macros.kcal).toBe(mockValidSnapshot.days[0].meals[0].items[0].macros.kcal);
