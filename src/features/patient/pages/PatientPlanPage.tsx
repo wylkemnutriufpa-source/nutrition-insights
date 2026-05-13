@@ -85,6 +85,9 @@ export const PatientPlanPage = () => {
   const handleOpenSubstitution = (item: any, mealId: string) => {
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
     if (plan?.editor_version === 'v3') {
+      // 🛡️ Blindagem: Patient App em modo passivo snapshot-first
+      assertSovereignRuntime("PatientPlanPage_Substitution");
+
       // No V3, usamos APENAS o que o nutricionista definiu como substitutos válidos no snapshot
       const snapshotSubs = item.substitutions || [];
       
