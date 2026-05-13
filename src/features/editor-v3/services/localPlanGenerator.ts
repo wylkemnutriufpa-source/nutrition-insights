@@ -60,7 +60,7 @@ export async function generateAndSaveLocalPlan(
         weightSource = 'assessment';
       } else if (answers.weight) {
         weight = Number(answers.weight);
-        weightSource = 'anamnesis';
+        weightSource = 'anamnese';
       } else {
         weight = 60;
         weightSource = 'dynamic_fallback';
@@ -130,8 +130,15 @@ export async function generateAndSaveLocalPlan(
           protein_target: Math.min(500, Number(item.protein) || 0),
           carbs_target: Math.min(800, Number(item.carbs) || 0),
           fat_target: Math.min(300, Number(item.fat) || 0),
-          description: item.portionUnitLabel || `${item.quantity}g`,
-          tenant_id: tenantId
+          description: item.portionLabel && /\d/.test(item.portionLabel) 
+            ? item.portionLabel 
+            : `${item.quantity} ${item.portionUnitLabel || item.portionLabel || 'g'}`,
+          tenant_id: tenantId,
+          edit_metadata: {
+            ...item,
+            display_quantity: item.quantity,
+            display_unit: item.portionUnitLabel || item.portionLabel || 'g'
+          }
         } as any);
       }
     }

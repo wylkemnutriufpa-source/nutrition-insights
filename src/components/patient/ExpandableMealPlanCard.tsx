@@ -1,8 +1,3 @@
-/**
- * Expandable meal plan card for patient journey/dashboard.
- * Shows today's meals in a collapsible card with daily/weekly/full toggle.
- * Always visible as the first element.
- */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -261,10 +256,19 @@ export default function ExpandableMealPlanCard() {
                                   );
                                 })()}
                               </div>
-                              {item.description && (
-                                <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-pre-line leading-snug">
-                                  {item.description}
-                                </p>
+                              {(item.description || (item as any).edit_metadata?.display_quantity) && (
+                                <div className="mt-0.5">
+                                  {(item as any).edit_metadata?.display_quantity && (
+                                    <p className="text-[10px] font-bold text-primary leading-tight">
+                                      {(item as any).edit_metadata.display_quantity} {(item as any).edit_metadata.display_unit || ''}
+                                    </p>
+                                  )}
+                                  {item.description && (
+                                    <p className="text-[10px] text-muted-foreground whitespace-pre-line leading-snug">
+                                      {item.description}
+                                    </p>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -334,16 +338,23 @@ export default function ExpandableMealPlanCard() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-medium truncate">{item.title}</span>
-                                  {(() => {
-                                    const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
-                                    if (cal === null || cal === undefined) return null;
-                                    return <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(cal)}kcal</span>;
-                                  })()}
+                                  {item.calories_target != null && (
+                                    <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
+                                  )}
                                 </div>
-                                {item.description && (
-                                  <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-pre-line leading-snug">
-                                    {item.description}
-                                  </p>
+                                {(item.description || (item as any).edit_metadata?.display_quantity) && (
+                                  <div className="mt-0.5">
+                                    {(item as any).edit_metadata?.display_quantity && (
+                                      <p className="text-[10px] font-bold text-primary leading-tight">
+                                        {(item as any).edit_metadata.display_quantity} {(item as any).edit_metadata.display_unit || ''}
+                                      </p>
+                                    )}
+                                    {item.description && (
+                                      <p className="text-[10px] text-muted-foreground whitespace-pre-line leading-snug">
+                                        {item.description}
+                                      </p>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -386,10 +397,19 @@ export default function ExpandableMealPlanCard() {
                                       <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
                                     )}
                                   </div>
-                                  {item.description && (
-                                    <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-pre-line leading-snug">
-                                      {item.description}
-                                    </p>
+                                  {(item.description || (item as any).edit_metadata?.display_quantity) && (
+                                    <div className="mt-0.5">
+                                      {(item as any).edit_metadata?.display_quantity && (
+                                        <p className="text-[10px] font-bold text-primary leading-tight">
+                                          {(item as any).edit_metadata.display_quantity} {(item as any).edit_metadata.display_unit || ''}
+                                        </p>
+                                      )}
+                                      {item.description && (
+                                        <p className="text-[10px] text-muted-foreground whitespace-pre-line leading-snug">
+                                          {item.description}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </div>

@@ -40,12 +40,16 @@ function buildItemTitle(item: MealItem): string {
 }
 
 function buildItemDescription(item: MealItem): string {
-  if (item.portionLabel) return item.portionLabel;
-  if (item.portionUnitLabel) return item.portionUnitLabel;
-  
-  const unit = item.portionUnit || 'g';
   const quantity = item.quantity || 1;
-  return `${quantity}${unit}`;
+  const unit = item.portionUnitLabel || item.portionLabel || item.portionUnit || 'g';
+  
+  // Se o label já parece conter o número (ex: "100g", "2 fatias"), retornamos ele puro
+  if ((item.portionLabel && /\d/.test(item.portionLabel)) || (item.portionUnitLabel && /\d/.test(item.portionUnitLabel))) {
+    return item.portionLabel || item.portionUnitLabel || `${quantity}${unit}`;
+  }
+  
+  // Caso contrário, combinamos: "2 fatias"
+  return `${quantity} ${unit}`;
 }
 
 function sumMealMacros(meal: Meal) {
@@ -187,7 +191,12 @@ export async function promoteDraftToMealPlan(
         is_manually_edited: true,
         is_locked: (item as any).locked || false,
         is_primary: true,
-        substitution_group_id: groupId
+        substitution_group_id: groupId,
+        edit_metadata: {
+          ...item,
+          display_quantity: item.quantity,
+          display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit
+        }
       });
 
       // 2.2) Substituições (se houver)
@@ -207,7 +216,12 @@ export async function promoteDraftToMealPlan(
             is_manually_edited: false,
             is_locked: false,
             is_primary: false,
-            substitution_group_id: groupId
+            substitution_group_id: groupId,
+            edit_metadata: {
+              ...sub,
+              display_quantity: sub.suggestedQuantity || sub.portionValue || 100,
+              display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g'
+            }
           });
         });
       }
