@@ -37,6 +37,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   goalMetadata
 }) => {
   const [initialMeals, setInitialMeals] = useState<Meal[]>([]);
+  const isApplyingRef = React.useRef(false);
   
   // 🛡️ DETECTOR DE ESCOPO (DIÁRIO VS SEMANAL)
   const dayCount = useMemo(() => {
