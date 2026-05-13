@@ -8,7 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { buildMealPlanSnapshot, BuildSnapshotOptions } from "./buildSnapshot";
 import { SNAPSHOT_SCHEMA_VERSION } from "./types";
-import { validateMealPlanSnapshot, logSovereignEvent } from "@/lib/runtimeGovernance";
+import { validateMealPlanSnapshot, logSovereignEvent, getCorrelationId } from "@/lib/runtimeGovernance";
 
 export interface PersistSnapshotResult {
   success: boolean;
