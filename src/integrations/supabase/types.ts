@@ -19686,6 +19686,36 @@ export type Database = {
           },
         ]
       }
+      v3_clusters: {
+        Row: {
+          cluster_name: string
+          cluster_slug: string
+          created_at: string | null
+          description: string | null
+          id: string
+          meal_type: string[] | null
+          objective: string | null
+        }
+        Insert: {
+          cluster_name: string
+          cluster_slug: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          meal_type?: string[] | null
+          objective?: string | null
+        }
+        Update: {
+          cluster_name?: string
+          cluster_slug?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          meal_type?: string[] | null
+          objective?: string | null
+        }
+        Relationships: []
+      }
       v3_drafts: {
         Row: {
           created_at: string
@@ -19736,6 +19766,172 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      v3_library_aliases: {
+        Row: {
+          alias: string
+          canonical_slug: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          alias: string
+          canonical_slug: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          alias?: string
+          canonical_slug?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v3_library_aliases_canonical_slug_fkey"
+            columns: ["canonical_slug"]
+            isOneToOne: false
+            referencedRelation: "v3_library_items"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      v3_library_images: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          image_asset: string
+          item_slug: string
+          variant_index: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          image_asset: string
+          item_slug: string
+          variant_index?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          image_asset?: string
+          item_slug?: string
+          variant_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v3_library_images_item_slug_fkey"
+            columns: ["item_slug"]
+            isOneToOne: false
+            referencedRelation: "v3_library_items"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      v3_library_items: {
+        Row: {
+          active: boolean | null
+          carbs_base: number | null
+          category: string | null
+          created_at: string | null
+          fats_base: number | null
+          id: string
+          kcal_base: number | null
+          meal_type: string[] | null
+          objective_tags: string[] | null
+          portion_mode: string | null
+          protein_base: number | null
+          slug: string
+          substitutions_group: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          carbs_base?: number | null
+          category?: string | null
+          created_at?: string | null
+          fats_base?: number | null
+          id?: string
+          kcal_base?: number | null
+          meal_type?: string[] | null
+          objective_tags?: string[] | null
+          portion_mode?: string | null
+          protein_base?: number | null
+          slug: string
+          substitutions_group?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          carbs_base?: number | null
+          category?: string | null
+          created_at?: string | null
+          fats_base?: number | null
+          id?: string
+          kcal_base?: number | null
+          meal_type?: string[] | null
+          objective_tags?: string[] | null
+          portion_mode?: string | null
+          protein_base?: number | null
+          slug?: string
+          substitutions_group?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      v3_substitutions: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          equivalence_type: string | null
+          id: string
+          meal_type: string | null
+          score: number | null
+          source_slug: string
+          target_slug: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          equivalence_type?: string | null
+          id?: string
+          meal_type?: string | null
+          score?: number | null
+          source_slug: string
+          target_slug: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          equivalence_type?: string | null
+          id?: string
+          meal_type?: string | null
+          score?: number | null
+          source_slug?: string
+          target_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v3_substitutions_source_slug_fkey"
+            columns: ["source_slug"]
+            isOneToOne: false
+            referencedRelation: "v3_library_items"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "v3_substitutions_target_slug_fkey"
+            columns: ["target_slug"]
+            isOneToOne: false
+            referencedRelation: "v3_library_items"
+            referencedColumns: ["slug"]
+          },
+        ]
       }
       wearable_devices: {
         Row: {
