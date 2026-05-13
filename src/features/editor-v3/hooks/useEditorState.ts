@@ -674,13 +674,13 @@ export const useEditorState = create<EditorState>()(
             };
           }
           
-          if (!skipWeeklySync && item.blockId && !updates.manual_override) {
-            const hasSameBlock = m.items.some(i => i.blockId === item.blockId && !i.manual_override);
+          if (!skipWeeklySync && item.blockId) {
+            const hasSameBlock = m.items.some(i => i.blockId === item.blockId);
             if (hasSameBlock) {
               return {
                 ...m,
                 items: m.items.map((i) => {
-                  if (i.blockId === item.blockId && !i.manual_override) {
+                  if (i.blockId === item.blockId) {
                     const { instanceId: _, id: __, ...propagatedUpdates } = updates as any;
                     const merged = { ...i, ...propagatedUpdates };
                     
