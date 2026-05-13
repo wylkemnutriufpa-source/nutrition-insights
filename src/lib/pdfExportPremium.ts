@@ -1,4 +1,4 @@
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+// PDF Export Premium V3 - Sovereign Passive Renderer
 
 /**
  * Premium Meal Plan PDF Export — FitJourney v2.0
