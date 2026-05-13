@@ -159,13 +159,27 @@ export default function PatientMealPlan() {
     }
 
     const planData = result as any;
+    
+    // Buscar editor_version e snapshot para garantir soberania
+    const { data: snapshotData } = await supabase
+      .from('meal_plans')
+      .select('editor_version, snapshot, total_target_calories, total_target_protein, total_target_carbs, total_target_fat')
+      .eq('id', planData.id)
+      .maybeSingle();
+
     setPlan({
       id: planData.id,
       title: planData.title,
       start_date: planData.start_date,
       totals_status: planData.totals_status,
       plan_mode: planData.plan_mode,
-    });
+      editor_version: snapshotData?.editor_version,
+      snapshot: snapshotData?.snapshot,
+      total_target_calories: snapshotData?.total_target_calories,
+      total_target_protein: snapshotData?.total_target_protein,
+      total_target_carbs: snapshotData?.total_target_carbs,
+      total_target_fat: snapshotData?.total_target_fat,
+    } as any);
 
     let resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
     let resolvedAllItems = resolvedItems;
