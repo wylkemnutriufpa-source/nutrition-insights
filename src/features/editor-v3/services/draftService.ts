@@ -183,6 +183,14 @@ export async function saveDraft(
   auditLog: AuditLogEntry[] = []
 ): Promise<DraftRecord | null> {
   const macros = computeMacros(meals);
+  
+  // 🛡️ TRACING SOBERANO — DRAFT PERSIST
+  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!isUuid(draftId)) {
+     console.error(`[FATAL-IDENTITY] Draft ID inválido no saveDraft: ${draftId}`, { stack: new Error().stack });
+     throw new Error(`RUPTURA DE IDENTIDADE: Draft ID "${draftId}" inválido.`);
+  }
+
   const payload: DraftPayload = {
     meals,
     version: DRAFT_PAYLOAD_VERSION,

@@ -132,7 +132,7 @@ export function useSendMessage() {
 
   return useMutation({
     mutationFn: async ({ receiverId, message }: { receiverId: string; message: string }) => {
-      const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const tempId = `temp_${Date.now()}_${crypto.randomUUID()}`;
 
       // Optimistic: add to cache immediately
       const optimisticMsg: Message = {

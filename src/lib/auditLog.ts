@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
 // Generate a session-persistent correlation ID
-const SESSION_CORRELATION_ID = `fj_sess_${Math.random().toString(36).substring(2, 11)}`;
+const SESSION_CORRELATION_ID = `fj_sess_${crypto.randomUUID()}`;
 
 /**
  * Generates a granular request-specific correlation ID linked to parent.

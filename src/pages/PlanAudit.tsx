@@ -428,7 +428,7 @@ const PlanAudit = () => {
     setEmergencyProcessing(true);
     
     // Unique Execution ID
-    const executionId = `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const executionId = `exec-${Date.now()}-${crypto.randomUUID()}`;
     setLastExecutionId(executionId);
 
     const addLog = (

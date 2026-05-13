@@ -45,7 +45,7 @@ export const SovereignTelemetry = {
    * Logs a sovereignty violation to the database and console.
    */
   log: async (params: SovereignLogParams) => {
-    const correlation_id = params.correlation_id || `corr_${Math.random().toString(36).substring(2, 11)}`;
+    const correlation_id = params.correlation_id || `corr_${crypto.randomUUID()}`;
     const timestamp = new Date().toISOString();
 
     // 1. Local Console Log (Deterministic & Immediate)
@@ -88,7 +88,7 @@ export const SovereignTelemetry = {
    * Logs and ABORTS the flow if critical.
    */
   abort: async (params: SovereignLogParams) => {
-    const correlation_id = params.correlation_id || `corr_${Math.random().toString(36).substring(2, 11)}`;
+    const correlation_id = params.correlation_id || `corr_${crypto.randomUUID()}`;
     const finalParams = { ...params, correlation_id };
     
     // Sync log before throwing

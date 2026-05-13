@@ -161,11 +161,15 @@ export async function promoteDraftToMealPlan(
     if (meal.items.length === 0) continue;
 
     for (const item of meal.items) {
-      // 🛡️ FASE 4: IDENTIDADE SOBERANA
+      // 🛡️ FASE 4: IDENTIDADE SOBERANA — SANITIZAÇÃO
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
       const rawGroupId = item.substitution_group_id || item.blockId || crypto.randomUUID();
-      // 🛡️ GUARD: Validar identidade do grupo antes da persistência
-      SovereignFatalGuard.validateIdentity(rawGroupId, `substitution_group_id [${item.name}]`);
-      const groupId = rawGroupId;
+      const groupId = isUuid(rawGroupId) ? rawGroupId : crypto.randomUUID();
+      
+      if (!isUuid(rawGroupId)) {
+        console.warn(`[IDENTITY-RECOVERY] Substitution Group ID "${rawGroupId}" corrigido para UUID soberano.`);
+      }
       const mealType = mealNameToType(meal.name);
       
       // 🛡️ FINAL CLINICAL SANITIZATION: Garante que NADA explodido chegue à persistência
@@ -185,11 +189,15 @@ export async function promoteDraftToMealPlan(
         cleanMacros = recalculated;
       }
 
-      // 🛡️ GUARD: Validar identidade do item antes da persistência
-      SovereignFatalGuard.validateIdentity(item.instanceId, `item.id [${item.name}]`);
+      // 🛡️ TRACING SOBERANO — RUPTURA DE IDENTIDADE
+      const itemInstanceId = isUuid(item.instanceId) ? item.instanceId : crypto.randomUUID();
+      
+      if (item.instanceId && !isUuid(item.instanceId)) {
+        console.warn(`[IDENTITY-RECOVERY] Item ID "${item.instanceId}" corrigido para UUID soberano.`);
+      }
 
       itemsRows.push({
-        id: item.instanceId, // 🛡️ FASE 4: Identidade Soberana (instanceId persistente)
+        id: itemInstanceId, // 🛡️ FASE 4: Identidade Soberana
         meal_plan_id: plan.id,
         tenant_id: draft.tenant_id,
         meal_type: mealType,
@@ -215,6 +223,7 @@ export async function promoteDraftToMealPlan(
       if (item.substitutions && Array.isArray(item.substitutions)) {
         item.substitutions.forEach((sub: any) => {
           itemsRows.push({
+            id: isUuid(sub.instanceId || sub.id) ? (sub.instanceId || sub.id) : crypto.randomUUID(),
             meal_plan_id: plan.id,
             tenant_id: draft.tenant_id,
             meal_type: mealType,

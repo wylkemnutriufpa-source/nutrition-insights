@@ -56,7 +56,7 @@ function groupItems(items: DisplayMealPlanItem[]): GroupedMeal[] {
   const groups = new Map<string, DisplayMealPlanItem[]>();
 
   for (const item of sortPlanItems(items)) {
-    const groupId = item.substitution_group_id || `orphan:${item.id}`;
+    const groupId = item.substitution_group_id || item.id; // Use item.id as fallback if no groupId, assuming it is a UUID
     const current = groups.get(groupId) || [];
     current.push(item);
     groups.set(groupId, current);
