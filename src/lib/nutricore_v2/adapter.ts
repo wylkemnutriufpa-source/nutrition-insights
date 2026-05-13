@@ -227,7 +227,7 @@ export class NutriCoreV3Adapter {
           const bestImage = await getBestMealImage(mealName, v3Items);
             
           return {
-            id: Math.random().toString(36).substring(2, 9),
+            id: crypto.randomUUID(),
             name: mealName,
             time: slot.time,
             items: v3Items,
