@@ -10,6 +10,7 @@
  *   - Marmitas mantêm `is_locked = true` no item oficial
  */
 import { supabase } from '@/integrations/supabase/client';
+import { SovereignFatalGuard } from "@/lib/sovereign-fatal-guards";
 import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
@@ -161,7 +162,10 @@ export async function promoteDraftToMealPlan(
 
     for (const item of meal.items) {
       // 🛡️ FASE 4: IDENTIDADE SOBERANA
-      const groupId = item.substitution_group_id || item.blockId || crypto.randomUUID();
+      const rawGroupId = item.substitution_group_id || item.blockId || crypto.randomUUID();
+      // 🛡️ GUARD: Validar identidade do grupo antes da persistência
+      SovereignFatalGuard.validateIdentity(rawGroupId, `substitution_group_id [${item.name}]`);
+      const groupId = rawGroupId;
       const mealType = mealNameToType(meal.name);
       
       // 🛡️ FINAL CLINICAL SANITIZATION: Garante que NADA explodido chegue à persistência
@@ -181,7 +185,9 @@ export async function promoteDraftToMealPlan(
         cleanMacros = recalculated;
       }
 
-      // 2.1) Item Primário
+      // 🛡️ GUARD: Validar identidade do item antes da persistência
+      SovereignFatalGuard.validateIdentity(item.instanceId, `item.id [${item.name}]`);
+
       itemsRows.push({
         id: item.instanceId, // 🛡️ FASE 4: Identidade Soberana (instanceId persistente)
         meal_plan_id: plan.id,

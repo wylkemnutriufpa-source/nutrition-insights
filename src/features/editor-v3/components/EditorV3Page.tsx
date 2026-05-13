@@ -1908,7 +1908,7 @@ const EditorV3Page = () => {
                                 const v3Meals: Meal[] = ptMeals.map((m: any) => {
                                   const mealItems: MealItem[] = (m.foods || []).map((f: any) => {
                                     // 🛡️ Normalização robusta para V3
-                                    const foodId = Math.random().toString(36).substring(2, 9);
+                                    const foodId = crypto.randomUUID();
                                     
                                     // Tentar encontrar o alimento real no DB para pegar as macros por 100g
                                     // Fallback para os valores do template
@@ -1935,14 +1935,14 @@ const EditorV3Page = () => {
                                       portionUnit: 'g',
                                       portionLabel: f.portion || '100g',
                                       measurementType: 'gram',
-                                      instanceId: Math.random().toString(36).substring(2, 10),
+                                      instanceId: crypto.randomUUID(),
                                       quantity: 100, // Base default para templates
                                       substitutions: []
                                     } as MealItem;
                                   });
                                   
                                   return {
-                                    id: Math.random().toString(36).substring(2, 9),
+                                    id: crypto.randomUUID(),
                                     name: m.title || m.meal_type,
                                     time: '08:00',
                                     items: mealItems,
@@ -2731,7 +2731,7 @@ const EditorV3Page = () => {
                             const ptMeals = Array.isArray(pt.meals) ? pt.meals : [];
                             const v3Meals: Meal[] = ptMeals.map((m: any) => {
                               const mealItems: MealItem[] = (m.foods || []).map((f: any) => ({
-                                id: Math.random().toString(36).substring(2, 9),
+                                id: crypto.randomUUID(),
                                 name: f.name,
                                 kcal: f.calories || 0,
                                 calories: f.calories || 0,
@@ -2743,13 +2743,13 @@ const EditorV3Page = () => {
                                 portionUnit: 'g',
                                 portionLabel: f.portion || '100g',
                                 measurementType: 'gram',
-                                instanceId: Math.random().toString(36).substring(2, 10),
+                                instanceId: crypto.randomUUID(),
                                 quantity: 100,
                                 substitutions: []
                               } as MealItem));
                               
                               return {
-                                id: Math.random().toString(36).substring(2, 9),
+                                id: crypto.randomUUID(),
                                 name: m.title || m.meal_type,
                                 time: '08:00',
                                 items: mealItems,

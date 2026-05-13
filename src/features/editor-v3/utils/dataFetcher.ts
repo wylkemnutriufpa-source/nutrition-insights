@@ -282,7 +282,7 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
       name: t.name,
       description: t.goal_tags ? t.goal_tags.join(", ") : (t.meal_type || ""),
       items: foods.map((f: any) => ({
-        id: Math.random().toString(36).substring(2, 9),
+        id: crypto.randomUUID(),
         name: f.name,
         kcal: f.kcal || 0,
         calories: f.kcal || 0,

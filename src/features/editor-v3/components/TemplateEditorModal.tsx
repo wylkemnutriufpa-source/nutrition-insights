@@ -62,7 +62,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
   };
 
   const addItem = (food: Food) => {
-    setItems([...items, { ...food, id: Math.random().toString(36).substring(2, 9) }]);
+    setItems([...items, { ...food, id: crypto.randomUUID() }]);
     setSearchQuery('');
     setSearchResults([]);
   };
