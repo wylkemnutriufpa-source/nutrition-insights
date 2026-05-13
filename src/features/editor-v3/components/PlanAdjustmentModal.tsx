@@ -89,6 +89,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   // Snapshot initial meals ONLY ONCE when opened
   useEffect(() => {
     if (isOpen && initialMeals.length === 0) {
+      isApplyingRef.current = false;
       const currentMealsClone = JSON.parse(JSON.stringify(meals));
       setInitialMeals(currentMealsClone);
       
