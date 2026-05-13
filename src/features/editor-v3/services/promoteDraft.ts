@@ -16,6 +16,7 @@ import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 import { validatePlanBeforePublish } from '@/lib/planSafetyNet';
 import { formatDisplayPortion, resolveDisplayGrams } from '@/lib/nutricore_v2/portion-display';
 import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
+import { assertSovereignRuntime, logSovereignEvent, getCorrelationId } from "@/lib/runtimeGovernance";
 
 type ClinicalMealType =
   | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
@@ -258,7 +259,13 @@ export async function promoteDraftToMealPlan(
     console.warn("[Promote-Snapshot] Falha ao gerar snapshot (não-bloqueante):", snapshotErr);
   }
 
-  // Log de acesso: Exportação/Promoção de draft para plano oficial
+  // Log de acesso soberano
+  logSovereignEvent("INFO", "DRAFT_PROMOVIDO_SUCESSO", {
+    meal_plan_id: plan.id,
+    draft_id: draft.id,
+    correlation_id: correlationId
+  });
+
   await supabase.from('access_logs').insert({
     user_id: draft.nutritionist_id,
     patient_id: profileId,
