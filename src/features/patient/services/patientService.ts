@@ -41,23 +41,53 @@ export const patientService = {
       const currentDow = new Date().getDay();
       const dayData = snapshot.days?.find((d: any) => d.day_of_week === currentDow) || snapshot.days?.[0];
       
-      // Mapear refeições do snapshot para o formato do Patient App
-      const mappedMeals = (dayData?.meals || snapshot.meals || []).map((m: any) => ({
-        id: m.meal_type || m.id,
-        name: m.meal_type || m.name,
-        time: '',
-        items: (m.items || []).map((it: any) => ({
-          id: it.id || it.instanceId, // 🛡️ Blindagem UUID
-          name: it.title || it.name,
-          kcal: Number(it.macros?.kcal || it.kcal || 0),
-          protein: Number(it.macros?.protein_g || it.protein || 0),
-          carbs: Number(it.macros?.carbs_g || it.carbs || 0),
-          fat: Number(it.macros?.fat_g || it.fat || 0),
-          portionValue: it.display_quantity || it.quantity || 1,
-          portionUnitLabel: it.display_unit || it.portionUnitLabel || 'unidade',
-          imageUrl: it.image_url || it.imageUrl
-        }))
-      }));
+      // 🛡️ SOBERANIA V3: Mapear respeitando hierarquia de substituições
+      const mappedMeals = (dayData?.meals || snapshot.meals || []).map((m: any) => {
+        const allItems = m.items || [];
+        // Filtramos apenas itens primários para a lista principal
+        const primaryItems = allItems.filter((it: any) => it.is_primary !== false);
+        
+        return {
+          id: m.meal_type || m.id,
+          name: m.meal_type || m.name,
+          time: '',
+          items: primaryItems.map((it: any) => {
+            // Buscamos as substituições que pertencem ao mesmo grupo deste item
+            const itemSubs = allItems.filter((sub: any) => 
+              sub.is_primary === false && 
+              sub.substitution_group_id === it.substitution_group_id &&
+              it.substitution_group_id !== null &&
+              sub.id !== it.id
+            ).map((sub: any) => ({
+              id: sub.id,
+              name: sub.title || sub.name,
+              kcal: Number(sub.macros?.kcal || sub.kcal || 0),
+              protein: Number(sub.macros?.protein_g || sub.protein || 0),
+              carbs: Number(sub.macros?.carbs_g || sub.carbs || 0),
+              fat: Number(sub.macros?.fat_g || sub.fat || 0),
+              display_quantity: sub.display_quantity || sub.quantity,
+              display_unit: sub.display_unit || sub.portionUnitLabel,
+              clinical_mass_g: sub.clinical_mass_g
+            }));
+
+            return {
+              id: it.id || it.instanceId,
+              name: it.title || it.name,
+              kcal: Number(it.macros?.kcal || it.kcal || 0),
+              protein: Number(it.macros?.protein_g || it.protein || 0),
+              carbs: Number(it.macros?.carbs_g || it.carbs || 0),
+              fat: Number(it.macros?.fat_g || it.fat || 0),
+              portionValue: it.display_quantity || it.quantity || 1,
+              portionUnitLabel: it.display_unit || it.portionUnitLabel || 'unidade',
+              imageUrl: it.image_url || it.imageUrl,
+              display_quantity: it.display_quantity,
+              display_unit: it.display_unit,
+              clinical_mass_g: it.clinical_mass_g,
+              substitutions: itemSubs
+            };
+          })
+        };
+      });
 
       return {
         id: data.id,
