@@ -272,33 +272,35 @@ const MealItemCard = memo(function MealItemCard({
             <div className="mt-1">
               {(() => {
                 const editMeta = (item as any).edit_metadata;
+                const isV3 = item.editor_version === "v3";
+
+                if (isV3) {
+                  const dQty = item.display_quantity || editMeta?.display_quantity;
+                  const dUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
+                  
+                  if (dQty) {
+                    return (
+                      <p className="text-xs font-bold text-primary mb-0.5">
+                        {dQty} {dUnit}
+                      </p>
+                    );
+                  }
+                  
+                  const cMass = item.clinical_mass_g || (item as any).clinical_mass_g;
+                  if (cMass) {
+                    return (
+                      <p className="text-xs font-bold text-primary mb-0.5">
+                        {cMass}g
+                      </p>
+                    );
+                  }
+                  return null;
+                }
+
                 const displayQuantity = item.display_quantity || editMeta?.display_quantity;
                 const displayUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
                 const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g;
 
-                // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-                if (item.editor_version === 'v3') {
-                  // No V3, priorizamos TOTALMENTE o que está no snapshot
-                  if (displayQuantity) {
-                    return (
-                      <p className="text-xs font-bold text-primary mb-0.5">
-                        {displayQuantity} {displayUnit}
-                        {clinicalMass ? ` (${clinicalMass}g)` : ''}
-                      </p>
-                    );
-                  }
-                  if (clinicalMass) {
-                    return (
-                      <p className="text-xs font-bold text-primary mb-0.5">
-                        {clinicalMass}g
-                      </p>
-                    );
-                  }
-                  // Se for V3 e não tiver nada, é erro mas tentamos mostrar o que der
-                  return null;
-                }
-
-                // --- LEGADO V1/V2 ---
                 if (displayQuantity) {
                   return (
                     <p className="text-xs font-bold text-primary mb-0.5">
