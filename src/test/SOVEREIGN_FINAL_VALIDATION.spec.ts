@@ -91,14 +91,13 @@ describe("SOVEREIGN_FINAL_VALIDATION — Prova Real de Runtime", () => {
       .toThrow("[SOVEREIGN_VIOLATION] Snapshot corrompido ou incompleto detectado");
   });
 
-  it("Fase 2: Bloqueia runtime que tenta usar lógica legado (RegExp mutators)", () => {
-    const legacyLogic = () => {
-      // Simulando rastro de stack trace proibido
-      const regex = /test/;
-      assertSovereignRuntime("legacy_regex_test");
+  it("Fase 2: Bloqueia runtime que tenta usar lógica legado (Função Proibida)", () => {
+    // Definindo uma função com nome proibido para aparecer no stack trace
+    const normalizeFood = () => {
+      assertSovereignRuntime("legacy_call_test");
     };
     
-    expect(() => legacyLogic()).toThrow("[SOVEREIGN_VIOLATION] Uso de motor legado detectado");
+    expect(() => normalizeFood()).toThrow("[SOVEREIGN_VIOLATION] Uso de motor legado detectado: normalizeFood");
   });
 
   it("Fase 3: Gera telemetria estruturada durante a validação", () => {
