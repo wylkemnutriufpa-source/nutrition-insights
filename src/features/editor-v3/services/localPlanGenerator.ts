@@ -62,9 +62,7 @@ export async function generateAndSaveLocalPlan(
         weight = Number(answers.weight);
         weightSource = 'anamnese';
       } else {
-        weight = 60;
-        weightSource = 'dynamic_fallback';
-        console.warn('[localPlanGenerator] ⚠ Nenhum peso encontrado em profile/history/assessment/anamnese — usando fallback dinâmico 60kg.');
+        throw new Error(`Impossível gerar plano: Peso do paciente não encontrado em nenhuma fonte (Perfil, Histórico, Avaliação ou Anamnese).`);
       }
     }
 
