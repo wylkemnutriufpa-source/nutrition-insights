@@ -21971,7 +21971,7 @@ export type Database = {
         Returns: Json
       }
       resolve_patient_meal_plan: {
-        Args: { p_date?: string; p_patient_id: string }
+        Args: { p_date: string; p_patient_id: string }
         Returns: Json
       }
       resolve_patient_plan_status: {
