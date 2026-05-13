@@ -242,24 +242,8 @@ function roundMacro(value: unknown): number {
 }
 
 function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
-  const groupedByDay = items.reduce((acc, item) => {
-    const dayKey = item.day_of_week ?? -1;
-    if (!acc[dayKey]) acc[dayKey] = [];
-    acc[dayKey].push(item);
-    return acc;
-  }, {} as Record<number, MealPlanPDFItem[]>);
-
-  const dayOrder = [1, 2, 3, 4, 5, 6, 0, -1];
-  const selectedDay = dayOrder.find(day => groupedByDay[day]?.some(item => item.is_primary !== false)) ?? Number(Object.keys(groupedByDay)[0] ?? -1);
-  const dayItems = groupedByDay[selectedDay] || items;
-  const groups = new Map<string, MealPlanPDFItem[]>();
-
-  dayItems.forEach((item) => {
-    const key = getMealGroupKey(item);
-    groups.set(key, [...(groups.get(key) || []), item]);
-  });
-
-  return Array.from(groups.values()).map(group => group.find(item => item.is_primary !== false) || group[0]);
+  // 🛡️ SOBERANIA V3: Filtra apenas itens que são primários
+  return items.filter(item => item.is_primary === true);
 }
 
 function calculateDisplayTotals(data: PremiumMealPlanPDFData) {
