@@ -129,7 +129,7 @@ export async function createPlanWithV3(
     }
 
     return {
-      id: Math.random().toString(36).substring(7),
+      id: crypto.randomUUID(),
       name: dist.meal_type.replace('_', ' '),
       type: dist.meal_type,
       time: dist.time,
