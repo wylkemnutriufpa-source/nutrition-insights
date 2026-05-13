@@ -98,13 +98,15 @@ export async function loadOrCreateDraft(
     // Silently ignore 409/conflicts in logs
   }
 
-  // 1. Tentar encontrar rascunho ativo
+  // 1. Tentar encontrar rascunho ativo ou último promovido para evitar "plano sumiu"
   const { data: existing, error: findErr } = await supabase
     .from('v3_drafts' as any)
     .select('*')
     .eq('nutritionist_id', nutritionistId)
     .eq('patient_id', patientId)
-    .eq('draft_status', 'editing')
+    .in('draft_status', ['editing', 'promoted'])
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (findErr) {
@@ -113,6 +115,8 @@ export async function loadOrCreateDraft(
 
   if (existing) {
     const record = existing as unknown as DraftRecord;
+    // Se o rascunho encontrado já foi promovido, mas não há um novo rascunho 'editing',
+    // nós o usamos como base, mas ele será salvo como um novo rascunho 'editing' na próxima alteração.
     if (record.payload?.meals) {
       record.payload.meals = normalizeMeals(record.payload.meals);
     }
