@@ -186,14 +186,14 @@ export default function PatientMealPlan() {
 
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (snapshotData?.editor_version === 'v3') {
-      if (!snapshotData.snapshot || !snapshotData.snapshot.meals) {
+      if (!snapshotData.snapshot || !(snapshotData.snapshot as any).meals) {
         console.error(`[CRITICAL] V3 Plan ${planData.id} missing snapshot in Patient App.`);
         toast.error("Erro ao carregar os dados clínicos do plano.");
         setLoading(false);
         return;
       }
 
-      const snapshot = snapshotData.snapshot;
+      const snapshot = snapshotData.snapshot as any;
       // No V3, flattened items no snapshot contêm tudo que precisamos
       // Precisamos converter a estrutura de Meals do snapshot para uma lista flat de MealPlanItem para compatibilidade com o Patient App
       const currentDow = new Date(date + "T12:00:00").getDay();
