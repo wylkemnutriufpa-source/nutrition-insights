@@ -272,7 +272,7 @@ export default function PatientMealPlan() {
     }
 
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-    if (snapshotData?.editor_version === 'v3') {
+    if (planData.editor_version === 'v3' || planData.editor_version === 'V3') {
       setItems(resolvedItems);
     } else {
       setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
