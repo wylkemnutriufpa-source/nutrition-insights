@@ -192,17 +192,19 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
       
       equivalentGrams = Math.round(equivalentGrams);
 
+      // 🛡️ SOBERANIA CLÍNICA: A unidade é derivada estritamente da estrutura do candidato, sem regex.
       let unidade = `${equivalentGrams}g`;
-      if (candidate.measurementType === 'unit' && candidate.portionValue) {
+      if (candidate.measurementType === 'unit' && candidate.portionValue > 0) {
         const units = Math.round((equivalentGrams / candidate.portionValue) * 10) / 10;
         if (units >= 0.1) {
-          const unitLabel = candidate.name.toLowerCase().includes('ovo') ? (units === 1 ? 'unidade' : 'unidades') : (candidate.portionLabel || 'unidade');
+          const unitLabel = candidate.portionUnitLabel || candidate.portionLabel || 'unidade';
           unidade = `${units} ${unitLabel} (${equivalentGrams}g)`;
         }
-      } else if (candidate.measurementType === 'spoon') {
-        const spoonWeight = candidate.portionValue || 15;
+      } else if (candidate.measurementType === 'spoon' && candidate.portionValue > 0) {
+        const spoonWeight = candidate.portionValue;
         const spoons = Math.round((equivalentGrams / spoonWeight) * 10) / 10;
-        unidade = `${spoons} colheres (${equivalentGrams}g)`;
+        const spoonLabel = candidate.portionUnitLabel || 'colher(es)';
+        unidade = `${spoons} ${spoonLabel} (${equivalentGrams}g)`;
       }
 
       const ratioKcal = candidate.kcal_100g !== undefined ? equivalentGrams / 100 : equivalentGrams / (candidate.portionValue || 100);
