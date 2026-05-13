@@ -550,14 +550,20 @@ export default function PatientMealPlan() {
   }, [visibleCompletions, items]);
 
   const getWeekDayAdherence = useCallback((dayDate: string, dayIdx: number) => {
-    const dayItems = buildDailyDisplayItems(allItems as any, dayIdx) as MealPlanItem[];
+    let dayItems: MealPlanItem[] = [];
+    if (plan?.editor_version === 'v3') {
+      dayItems = allItems.filter(item => item.day_of_week === dayIdx);
+    } else {
+      dayItems = buildDailyDisplayItems(allItems as any, dayIdx) as MealPlanItem[];
+    }
+    
     const dayComps = weekCompletions.filter(c => (c as any).date === dayDate);
     if (dayItems.length === 0) return { pct: 0, total: 0, done: 0 };
     const followed = dayComps.filter(c => c.adherence_status === "followed").length;
     const partial = dayComps.filter(c => c.adherence_status === "partial").length;
     const pct = ((followed * 100 + partial * 50) / (dayItems.length * 100)) * 100;
     return { pct, total: dayItems.length, done: dayComps.length };
-  }, [allItems, weekCompletions]);
+  }, [allItems, weekCompletions, plan?.editor_version]);
 
   if (loading) {
     return (
