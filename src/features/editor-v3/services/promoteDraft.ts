@@ -149,7 +149,8 @@ export async function promoteDraftToMealPlan(
     if (meal.items.length === 0) continue;
 
     for (const item of meal.items) {
-      const groupId = crypto.randomUUID();
+      // 🛡️ FASE 4: IDENTIDADE SOBERANA
+      const groupId = item.substitution_group_id || item.blockId || crypto.randomUUID();
       const mealType = mealNameToType(meal.name);
       
       // 🛡️ FINAL CLINICAL SANITIZATION: Garante que NADA explodido chegue à persistência
