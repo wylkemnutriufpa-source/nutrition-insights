@@ -674,8 +674,8 @@ export const useEditorState = create<EditorState>()(
             };
           }
           
-          if (!skipWeeklySync && item.blockId && !updates.manual_override) {
-            const hasSameBlock = m.items.some(i => i.blockId === item.blockId && !i.manual_override);
+          if (!skipWeeklySync && item.blockId) {
+            const hasSameBlock = m.items.some(i => i.blockId === item.blockId);
             if (hasSameBlock) {
               return {
                 ...m,
