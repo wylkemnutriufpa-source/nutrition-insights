@@ -680,7 +680,7 @@ export const useEditorState = create<EditorState>()(
               return {
                 ...m,
                 items: m.items.map((i) => {
-                  if (i.blockId === item.blockId && !i.manual_override) {
+                  if (i.blockId === item.blockId) {
                     const { instanceId: _, id: __, ...propagatedUpdates } = updates as any;
                     const merged = { ...i, ...propagatedUpdates };
                     
