@@ -144,8 +144,35 @@ export function selectCanonicalDayItems(items: DisplayMealPlanItem[], requestedD
     : dedupeIdenticalItems(items);
 }
 
+/**
+ * Constrói os itens para exibição diária, agrupando substituições e
+ * garantindo que não haja explosão de macros por duplicatas de "virtual days".
+ */
 export function buildDailyDisplayItems(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
-  return groupItems(selectCanonicalDayItems(items, requestedDay))
+  const canonicalItems = selectCanonicalDayItems(items, requestedDay);
+  const groups = groupItems(canonicalItems);
+  
+  // Deduplicar grupos idênticos (mesmo título de primário e mesmo tipo de refeição)
+  // Isso resolve o problema de 480 itens onde o mesmo grupo foi replicado N vezes sem day_of_week.
+  const seenGroups = new Set<string>();
+  const uniqueGroups: GroupedMeal[] = [];
+  
+  for (const group of groups) {
+    const groupKey = [
+      String(group.primary.meal_type ?? ""),
+      String(group.primary.title ?? "").trim().toLowerCase(),
+      String(group.primary.calories_target ?? group.primary.metadata?.calories ?? ""),
+      // Incluímos a contagem de substitutos na chave para diferenciar grupos que podem ter o mesmo primário mas opções diferentes
+      String(group.substitutions.length)
+    ].join("|");
+    
+    if (!seenGroups.has(groupKey)) {
+      seenGroups.add(groupKey);
+      uniqueGroups.push(group);
+    }
+  }
+
+  return uniqueGroups
     .filter((group) => isPrimaryMealItem(group.primary))
     .map(withSubstitutionMetadata);
 }
