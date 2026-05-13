@@ -96,6 +96,7 @@ export const AppRoutes = () => {
       <Route path="/programs/:programId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProgramDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/my-referrals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyReferrals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyPublicProfile /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/sovereign" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SovereignDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
 
       {/* Onboarding */}
       <Route path="/onboarding" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><OnboardingEntry /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
