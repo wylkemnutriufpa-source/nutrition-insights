@@ -69,7 +69,7 @@ export default function NextMealWidget() {
 
       const itemsQuery = supabase
         .from("meal_plan_items")
-        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week")
+        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week, is_primary")
         .eq("meal_plan_id", plan.id);
       
       // Se não for single_day, filtra por dia
