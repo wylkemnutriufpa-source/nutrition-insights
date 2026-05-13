@@ -300,14 +300,22 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
     ...meal,
     items: (meal.items || []).map(item => {
       const normalized = normalizeFood(item);
+      const quantity = (item as any).quantity !== undefined ? (item as any).quantity : (
+        normalized.measurementType === 'gram' ? 100 : 
+        normalized.measurementType === 'ml' ? 200 : 1
+      );
+      
+      // 🛡️ GOVERNANÇA SEMANAL: Garantir que alimentos idênticos na mesma refeição tenham o mesmo blockId
+      // Normalizamos o nome da refeição (ex: "Almoço Segunda" -> "almoço") para agrupar horizontalmente
+      const baseMealName = meal.name.toLowerCase().split(' ')[0].split('-')[0].trim();
+      const generatedBlockId = `${baseMealName}-${normalized.id}`;
+
       return {
         ...normalized,
         instanceId: (item as any).instanceId || Math.random().toString(36).substring(2, 10),
-        quantity: (item as any).quantity !== undefined ? (item as any).quantity : (
-          normalized.measurementType === 'gram' ? 100 : 
-          normalized.measurementType === 'ml' ? 200 : 1
-        ),
-        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? (item as any).quantity : ((item as any).quantity * (normalized.portionValue || 1))),
+        quantity,
+        blockId: (item as any).blockId || generatedBlockId,
+        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? quantity : (quantity * (normalized.portionValue || 1))),
         substitutions: (item as any).substitutions || [] 
       } as MealItem;
     })
