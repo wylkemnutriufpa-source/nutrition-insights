@@ -56,9 +56,13 @@ export async function generateAndPersistMealPlanSnapshot(
     }
 
     return { success: true, hash: snapshot.hash };
-  } catch (err) {
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[snapshot] build/persist failed:", message);
+    console.error("[snapshot] build/persist failed:", message, {
+      planId,
+      stack: err?.stack,
+      issues: err?.issues // Para erros do Zod
+    });
     return { success: false, error: message };
   }
 }

@@ -13,6 +13,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
+import { logSovereignEvent } from "./runtimeGovernance";
 
 /**
  * Onda 1 — Snapshot determinístico:
@@ -24,7 +25,9 @@ async function persistSnapshotAfterPublish(planId: string): Promise<void> {
   try {
     const result = await generateAndPersistMealPlanSnapshot(planId);
     if (!result.success) {
-      console.warn("[ServerTransition] snapshot persistence soft-failed:", result.error);
+      console.warn(`[ServerTransition] snapshot persistence soft-failed for plan ${planId}:`, result.error);
+      // Log for audit but don't block
+      await logSovereignEvent("WARN", "snapshot_soft_fail", { planId, error: result.error });
     }
   } catch (e) {
     console.warn("[ServerTransition] snapshot persistence threw (ignored):", e);

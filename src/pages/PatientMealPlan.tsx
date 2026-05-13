@@ -194,39 +194,37 @@ export default function PatientMealPlan() {
 
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (snapshotData?.editor_version === 'v3') {
-      if (!snapshotData.snapshot || !(snapshotData.snapshot as any).meals) {
+      const snapshot = snapshotData.snapshot as any;
+      if (!snapshot || (!snapshot.days && !snapshot.meals)) {
         console.error(`[CRITICAL] V3 Plan ${planData.id} missing snapshot in Patient App.`);
         toast.error("Erro ao carregar os dados clínicos do plano.");
         setLoading(false);
         return;
       }
 
-      const snapshot = snapshotData.snapshot as any;
-      // No V3, flattened items no snapshot contêm tudo que precisamos
-      // Precisamos converter a estrutura de Meals do snapshot para uma lista flat de MealPlanItem para compatibilidade com o Patient App
       const currentDow = new Date(date + "T12:00:00").getDay();
-      
       const flatItems: any[] = [];
-      snapshot.meals.forEach((meal: any) => {
-        // Se for modo semanal, filtramos pelo dia. Se for diário, pegamos todos.
-        const isWeekly = snapshot.selectionMode === 'week';
-        
-        meal.items.forEach((item: any) => {
-          // Filtro por dia se for semanal
-          if (isWeekly && item.day_of_week !== currentDow) return;
 
+      // 🛡️ Blindagem: Suportar estrutura de dias (V1.0.0) ou legado de transição (meals top-level)
+      const meals = snapshot.days 
+        ? (snapshot.days.find((d: any) => d.day_of_week === currentDow)?.meals || [])
+        : (snapshot.meals || []);
+
+      meals.forEach((meal: any) => {
+        meal.items.forEach((item: any) => {
           flatItems.push({
             ...item,
-            id: item.instanceId || item.id,
+            // 🛡️ Blindagem UUID: Preferir ID soberano da persistência sobre instanceId transitório
+            id: item.id || item.instanceId,
             meal_type: meal.meal_type || meal.id,
-            title: item.name || item.title,
+            title: item.title || item.name,
             description: item.description || item.instructions,
-            calories_target: item.kcal,
-            protein_target: item.protein,
-            carbs_target: item.carbs,
-            fat_target: item.fat,
-            image_url: item.imageUrl,
-            day_of_week: item.day_of_week,
+            calories_target: item.macros?.kcal ?? item.kcal ?? 0,
+            protein_target: item.macros?.protein_g ?? item.protein ?? 0,
+            carbs_target: item.macros?.carbs_g ?? item.carbs ?? 0,
+            fat_target: item.macros?.fat_g ?? item.fat ?? 0,
+            image_url: item.image_url || item.imageUrl,
+            day_of_week: currentDow,
             display_quantity: item.display_quantity || item.quantity,
             display_unit: item.display_unit || item.portionUnitLabel,
             clinical_mass_g: item.clinical_mass_g,
