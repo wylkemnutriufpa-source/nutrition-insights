@@ -20888,7 +20888,6 @@ export type Database = {
           created_at: string | null
           id: string | null
           referral_code_used: string | null
-          referred_email_masked: string | null
           referred_plan: string | null
           referred_type: string | null
           referred_user_id: string | null
@@ -20900,7 +20899,6 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           referral_code_used?: string | null
-          referred_email_masked?: never
           referred_plan?: string | null
           referred_type?: string | null
           referred_user_id?: string | null
@@ -20912,7 +20910,6 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           referral_code_used?: string | null
-          referred_email_masked?: never
           referred_plan?: string | null
           referred_type?: string | null
           referred_user_id?: string | null
