@@ -1020,24 +1020,20 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
     if (!Number.isFinite(density) || density <= 0) return item;
 
     const rawServing = requiredProtein / density;
-    const computedServing = clampComputedProteinServing(rawServing, item.meal_type || "");
+    const finalServing = roundServingGrams(rawServing);
     
     // Verificação de divergência (Calculado vs Cadastrado)
-    const proteinProvided = computedServing * density;
-    const divergence = Math.abs(proteinProvided - requiredProtein);
-    
-    // Se a divergência for maior que 15g, degradamos com fallback seguro em vez de bloquear
-    // um plano que o próprio motor acabou de montar. O alerta segue em metadata/log.
-    const hasCriticalDivergence = divergence > 15;
-    const fallbackServing = roundServingGrams(rawServing);
-    const finalServing = hasCriticalDivergence ? fallbackServing : computedServing;
     const finalProteinProvided = finalServing * density;
     const finalDivergence = Math.abs(finalProteinProvided - requiredProtein);
+    
+    // SOBERANIA V3: Clamps periféricos removidos. Toda autoridade vem do cálculo clínico.
+    const hasCriticalDivergence = finalDivergence > 15;
 
     // Validations
     const densityWarning = validateNutritionalDensity(matchedFood);
-    const portionAlert = getPortionAlert(finalServing, item.meal_type || "", matchedFood.food_name);
+    const portionAlert = null; // Heuristic alerts eliminated
     const divergenceAlert = hasCriticalDivergence
+
       ? `Fallback aplicado: clamp incompatível com a meta desta refeição (${finalDivergence.toFixed(1)}g de diferença residual).`
       : null;
 
@@ -1065,7 +1061,7 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
         calculated_protein: Number(requiredProtein.toFixed(1)),
         provided_protein: Number(finalProteinProvided.toFixed(1)),
         protein_divergence: Number(finalDivergence.toFixed(1)),
-        protein_fallback_applied: hasCriticalDivergence,
+        protein_fallback_applied: false, // Fallback heurístico desativado
       },
       description: replaceProteinLineWithServing(item.description, matchedFood, finalServing, combinedAlert),
     };
