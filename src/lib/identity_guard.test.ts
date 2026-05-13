@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SovereignFatalGuard } from '../sovereign-fatal-guards';
+import { SovereignFatalGuard } from './sovereign-fatal-guards';
 
 describe('SovereignFatalGuard — Identity Validation', () => {
   it('should allow valid UUIDs', () => {
