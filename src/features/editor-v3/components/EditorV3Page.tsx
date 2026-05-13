@@ -204,7 +204,18 @@ const EditorV3Page = () => {
     setLocalDraft(prev => {
       if (!prev) return null;
       setIsModalDirty(true);
-      return { ...prev, ...updates };
+      
+      const merged = { ...prev, ...updates };
+      
+      // 🛡️ SOBERANIA CLÍNICA NO DRAFT: Sincronizar massa clínica para preview real-time
+      if (updates.quantity !== undefined || updates.measurementType !== undefined || updates.portionValue !== undefined) {
+        const pValue = Number(merged.portionValue) || 1;
+        merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
+          ? merged.quantity
+          : merged.quantity * pValue;
+      }
+      
+      return merged;
     });
   };
 
