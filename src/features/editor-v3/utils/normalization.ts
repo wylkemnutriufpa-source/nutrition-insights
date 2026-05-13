@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal, MealItem } from '../types';
 import { PipelineTrace, ClinicalGuard } from './pipeline-trace';
+import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
 
 const tracer = PipelineTrace.getInstance();
 
