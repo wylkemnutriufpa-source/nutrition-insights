@@ -201,9 +201,19 @@ export default function PatientMealPlan() {
       const flatItems: any[] = [];
 
       // 🛡️ Blindagem: Suportar estrutura de dias (V1.0.0) ou legado de transição (meals top-level)
-      const meals = snapshot.days 
-        ? (snapshot.days.find((d: any) => d.day_of_week === currentDow)?.meals || [])
-        : (snapshot.meals || []);
+      // Para planos 'single_day', se não encontrar o dia específico, pega o primeiro disponível
+      let meals = [];
+      if (snapshot.days) {
+        const dayMatch = snapshot.days.find((d: any) => d.day_of_week === currentDow);
+        if (dayMatch) {
+          meals = dayMatch.meals || [];
+        } else if (planData.plan_mode === 'single_day' && snapshot.days.length > 0) {
+          // Fallback para o único dia disponível em planos de dia único
+          meals = snapshot.days[0].meals || [];
+        }
+      } else {
+        meals = snapshot.meals || [];
+      }
 
       meals.forEach((meal: any) => {
         meal.items.forEach((item: any) => {
