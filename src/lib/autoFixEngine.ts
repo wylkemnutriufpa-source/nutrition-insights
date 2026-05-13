@@ -257,78 +257,22 @@ function fixItemBlockedFoods(item: MealPlanItem): { fixed: MealPlanItem; changes
 
 function fixBreakfastComplexity(
   items: MealPlanItem[],
-  dayOfWeek: number,
-  mealType: string,
-  isGainGoal: boolean
+  _dayOfWeek: number,
+  _mealType: string,
+  _isGainGoal: boolean
 ): { items: MealPlanItem[]; changes: AutoFixChange[] } {
-  const changes: AutoFixChange[] = [];
-  let result = [...items];
-  const maxItems = isGainGoal ? 4 : 3;
-
-  if (result.length > maxItems) {
-    const removed = result.splice(maxItems);
-    changes.push({
-      type: "breakfast_fixed",
-      mealType,
-      dayOfWeek,
-      from: `${result.length + removed.length} itens`,
-      to: `${result.length} itens (máx ${maxItems})`,
-      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
-    });
-  }
-
-  // Check excess protein at breakfast for weight loss
-  if (!isGainGoal) {
-    const totalProtein = result.reduce((sum, i) => sum + (i.protein_target || 0), 0);
-    if (totalProtein > 30) {
-      // Scale down protein items
-      const factor = 30 / totalProtein;
-      for (const item of result) {
-        if (item.protein_target && item.protein_target > 10) {
-          const oldP = item.protein_target;
-          item.protein_target = Math.round(item.protein_target * factor);
-          item.calories_target = Math.round((item.calories_target || 0) * 0.9);
-          changes.push({
-            type: "breakfast_fixed",
-            mealType,
-            dayOfWeek,
-            from: `${oldP}g proteína`,
-            to: `${item.protein_target}g proteína`,
-            detail: "Proteína reduzida no café da manhã para emagrecimento",
-          });
-        }
-      }
-    }
-  }
-
-  return { items: result, changes };
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais alterar a estrutura do café da manhã.
+  return { items, changes: [] };
 }
-
-// ── Fix: Snack simplification ───────────────────────────────
 
 function fixSnackComplexity(
   items: MealPlanItem[],
-  dayOfWeek: number,
-  mealType: string,
-  isGainGoal: boolean
+  _dayOfWeek: number,
+  _mealType: string,
+  _isGainGoal: boolean
 ): { items: MealPlanItem[]; changes: AutoFixChange[] } {
-  const changes: AutoFixChange[] = [];
-  let result = [...items];
-  const maxItems = isGainGoal ? 3 : 2;
-
-  if (result.length > maxItems) {
-    const removed = result.splice(maxItems);
-    changes.push({
-      type: "snack_fixed",
-      mealType,
-      dayOfWeek,
-      from: `${result.length + removed.length} itens`,
-      to: `${result.length} itens (máx ${maxItems})`,
-      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
-    });
-  }
-
-  return { items: result, changes };
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais alterar a estrutura dos lanches.
+  return { items, changes: [] };
 }
 
 // ── Fix: Main meal standardization ──────────────────────────
