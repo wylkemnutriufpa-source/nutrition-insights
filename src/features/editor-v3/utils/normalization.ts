@@ -271,7 +271,17 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
         instanceId: (item as any).instanceId || crypto.randomUUID(),
         quantity,
         blockId: (item as any).blockId || generatedBlockId,
-        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? quantity : (quantity * (normalized.portionValue || 1))),
+        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (() => {
+          const fallback = normalized.measurementType === 'gram' ? quantity : (quantity * (normalized.portionValue || 1));
+          SovereignTelemetry.log({
+            runtime_source: 'normalization_v3',
+            event_type: 'missing_clinical_mass',
+            severity: 'warning',
+            message: `Inferring clinical_mass_g for ${normalized.name} during hydration.`,
+            metadata: { name: normalized.name, fallback, source: 'normalizeMeals' }
+          });
+          return fallback;
+        })(),
         substitutions: (item as any).substitutions || [] 
       } as MealItem;
     })
