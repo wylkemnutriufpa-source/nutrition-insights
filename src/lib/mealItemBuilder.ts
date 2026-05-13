@@ -99,6 +99,10 @@ export function buildMealItems(inputs: MealItemInput[]): BuildResult {
       was_auto_corrected: input.was_auto_corrected || false,
       is_primary: input.is_primary ?? true,
       substitution_group_id: input.substitution_group_id ?? null,
+      display_quantity: input.display_quantity ?? null,
+      portion_label: input.portion_label ?? null,
+      clinical_mass_g: input.clinical_mass_g ?? null,
+      edit_metadata: input.edit_metadata ?? null,
     } as any);
   }
 
