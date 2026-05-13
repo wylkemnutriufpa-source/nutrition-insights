@@ -186,7 +186,7 @@ export async function createPlanWithV3(
   }
 
   return {
-    id: Math.random().toString(36).substring(7),
+    id: crypto.randomUUID(),
     patient_id: patientMetrics.id,
     mode,
     meals: finalMeals,
