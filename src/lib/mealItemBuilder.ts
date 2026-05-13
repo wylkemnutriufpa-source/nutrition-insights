@@ -32,6 +32,10 @@ export interface MealItemInput {
   was_auto_corrected?: boolean;
   is_primary?: boolean;
   substitution_group_id?: string | null;
+  display_quantity?: number | null;
+  portion_label?: string | null;
+  clinical_mass_g?: number | null;
+  edit_metadata?: any | null;
   /** Foods used to compose this item — used to auto-build description if missing */
   foods?: string[];
 }
