@@ -1112,12 +1112,6 @@ export async function autoFixMealPlan(
       clinical_mass_g: (fi as any).clinical_mass_g || null,
       substitution_group_id: (fi as any).substitution_group_id || null,
     }));
-      tenant_id: tenantId,
-      item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
-      is_manually_edited: (fi as any).is_manually_edited || false,
-      is_locked: (fi as any).is_locked || false,
-      was_auto_corrected: !isItemProtected(fi),
-    }));
 
     const { error: insertErr } = await supabase.from("meal_plan_items").insert(fixedItems);
     if (insertErr) {
