@@ -130,7 +130,7 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
   };
 
   try {
-    const { data, error } = await invokeWithRetry("generate-meal-plan", {
+    const { data, error } = await invokeWithRetry("generate-meal-plan-v2", {
       body: {
         patientId: input.patientId,
         nutritionistId: input.nutritionistId,
