@@ -152,26 +152,30 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-2 mb-1 px-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Metas Nutricionais do Dia</span>
+      </div>
       <div className="grid grid-cols-4 gap-2">
-        <div className="glass rounded-xl p-3 text-center">
-          <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" />
-          <p className="text-xs text-muted-foreground">Calorias</p>
-          <p className="font-display font-bold text-sm" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
+        <div className="bg-orange-500/5 border border-orange-500/10 rounded-xl p-3 text-center transition-all hover:bg-orange-500/10 group">
+          <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1 group-hover:scale-110 transition-transform" />
+          <p className="text-[9px] text-muted-foreground font-medium uppercase">Kcal</p>
+          <p className="font-display font-bold text-sm text-orange-600" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
         </div>
-        <div className="glass rounded-xl p-3 text-center">
-          <Beef className="w-4 h-4 mx-auto text-red-500 mb-1" />
-          <p className="text-xs text-muted-foreground">Proteína</p>
-          <p className="font-display font-bold text-sm" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
+        <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 text-center transition-all hover:bg-red-500/10 group">
+          <Beef className="w-4 h-4 mx-auto text-red-500 mb-1 group-hover:scale-110 transition-transform" />
+          <p className="text-[9px] text-muted-foreground font-medium uppercase">Prot</p>
+          <p className="font-display font-bold text-sm text-red-600" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
         </div>
-        <div className="glass rounded-xl p-3 text-center">
-          <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" />
-          <p className="text-xs text-muted-foreground">Carbs</p>
-          <p className="font-display font-bold text-sm" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
+        <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3 text-center transition-all hover:bg-amber-500/10 group">
+          <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1 group-hover:scale-110 transition-transform" />
+          <p className="text-[9px] text-muted-foreground font-medium uppercase">Carbs</p>
+          <p className="font-display font-bold text-sm text-amber-600" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
         </div>
-        <div className="glass rounded-xl p-3 text-center">
-          <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1" />
-          <p className="text-xs text-muted-foreground">Gordura</p>
-          <p className="font-display font-bold text-sm" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
+        <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-xl p-3 text-center transition-all hover:bg-yellow-500/10 group">
+          <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1 group-hover:scale-110 transition-transform" />
+          <p className="text-[9px] text-muted-foreground font-medium uppercase">Gord</p>
+          <p className="font-display font-bold text-sm text-yellow-600" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
         </div>
       </div>
       
@@ -212,20 +216,20 @@ const MealItemCard = memo(function MealItemCard({
   });
   const resolvedImage = item.image_url || signedFallback || null;
   
-  const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5"
-    : status === "partial" ? "border-amber-500/30 bg-amber-500/5"
-    : status === "not_followed" ? "border-red-500/30 bg-red-500/5"
-    : "";
+  const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
+    : status === "partial" ? "border-amber-500/30 bg-amber-500/5 shadow-inner"
+    : status === "not_followed" ? "border-red-500/30 bg-red-500/5 shadow-inner"
+    : "border-border/40 hover:border-primary/30 hover:shadow-md transition-all";
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{
-        opacity: 1, x: 0,
+        opacity: 1, y: 0,
         boxShadow: isJustDone ? "0 0 20px rgba(16,185,129,0.3)" : "none",
       }}
-      className={`glass rounded-xl overflow-hidden transition-all w-full max-w-full ${statusColor}`}
+      className={`relative rounded-2xl border overflow-hidden bg-card/40 backdrop-blur-sm group ${statusColor}`}
     >
       {resolvedImage && (
         <div
@@ -598,7 +602,7 @@ const MealGroup = memo(function MealGroup({
 
   return (
     <div 
-      className={`transition-all duration-300 w-full max-w-full overflow-hidden ${isCurrent && isBasic ? "ring-2 ring-primary ring-offset-2 rounded-2xl p-2 bg-primary/10 shadow-lg" : ""}`}
+      className={`transition-all duration-300 w-full max-w-full overflow-hidden ${isCurrent && isBasic ? "ring-2 ring-primary ring-offset-2 rounded-2xl p-3 bg-primary/5 border border-primary/20 shadow-xl" : ""}`}
       role="region"
       aria-label={`Refeição: ${mealType.label}${isCurrent ? " - Agora" : ""}`}
       aria-current={isCurrent ? "time" : undefined}
