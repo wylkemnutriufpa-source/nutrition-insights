@@ -94,19 +94,25 @@ function UserAvatarMenu({ initials, profileName, signOut, navigate }: { initials
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
+        <Button variant="ghost" className="h-9 w-9 rounded-full p-0 overflow-hidden ring-offset-background transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
           <Avatar className="w-8 h-8">
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel className="px-2 py-1 text-xs text-muted-foreground">{profileName}</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-56 mt-1">
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{profileName}</p>
+            <p className="text-xs leading-none text-muted-foreground italic">Perfil do Paciente</p>
+          </div>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/settings")}>
-          <Settings className="w-4 h-4 mr-2" /> Configurações
+        <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
+          <Settings className="w-4 h-4 mr-2" /> Configurações de Perfil
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive cursor-pointer">
           <LogOut className="w-4 h-4 mr-2" /> Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -128,18 +134,22 @@ function SidebarFooter({ collapsed, dark, toggleDark, initials, profileName, sig
           {!collapsed && <span className="text-sm">Configurações</span>}
         </Link>
       )}
+
       <button onClick={toggleDark} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all">
         {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         {!collapsed && <span className="text-sm">{dark ? "Modo claro" : "Modo escuro"}</span>}
       </button>
+
       <div className="flex items-center gap-3 px-3 py-2">
         <Avatar className="w-8 h-8"><AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback></Avatar>
         {!collapsed && <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{profileName}</p></div>}
       </div>
+
       <button onClick={() => { signOut(); onLinkClick?.(); }} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full transition-all">
         <LogOut className="w-5 h-5" />
         {!collapsed && <span className="text-sm">Sair</span>}
       </button>
+
       {setCollapsed && (
         <button onClick={() => setCollapsed(!collapsed)} className="flex items-center justify-center w-full py-1 text-muted-foreground hover:text-foreground">
           <ChevronRight className={`w-4 h-4 transition-transform ${collapsed ? "" : "rotate-180"}`} />
@@ -151,18 +161,13 @@ function SidebarFooter({ collapsed, dark, toggleDark, initials, profileName, sig
 
 function DynamicSidebar({ collapsed, dark, toggleDark, initials, profileName, signOut, setCollapsed, onLinkClick, isPatient }: any) {
   const { categories, flatItems, trackClick, loading: menuLoading } = useSmartMenu();
-  const { minMode, mode, isFeatureEnabled } = useExperienceMode();
+  const { mode, isFeatureEnabled } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
-  const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
-  const [approvalsOpen, setApprovalsOpen] = useState(false);
-  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
-  const [showcaseOpen, setShowcaseOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
   const effectiveProRole = isProRole && isProfessionalContext;
-  const showPending = effectiveProRole && pendingCount > 0;
 
   return (
     <div className={`flex h-full min-h-0 flex-col transition-colors duration-500 ${mode === 'advanced' ? 'bg-card/40' : mode === 'pro' ? 'bg-blue-500/5' : 'bg-green-700/5'}`}>
@@ -175,36 +180,12 @@ function DynamicSidebar({ collapsed, dark, toggleDark, initials, profileName, si
           </button>
         )}
       </div>
-      {effectiveProRole ? (
-        <div className="px-3 mb-1">
-          <Link to="/intelligence-settings" onClick={onLinkClick} className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}>
-            <BrainEmoji collapsed={collapsed} />
-            {!collapsed && <span className="text-xs font-semibold truncate transition-colors" style={{ background: "linear-gradient(90deg, #FFD700, #FFA500)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Inteligência FitJourney</span>}
-          </Link>
-        </div>
-      ) : isFeatureEnabled("ai-insights") && !mode.includes('basic') && (
-        <div className="px-3 mb-1">
-          <Link to="/patient-intelligence" onClick={onLinkClick} className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}>
-            <BrainEmoji collapsed={collapsed} />
-            {!collapsed && <span className="text-xs font-semibold truncate transition-colors" style={{ background: "linear-gradient(90deg, #FFD700, #FFA500)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Inteligência FitJourney</span>}
-          </Link>
-        </div>
-      )}
       <nav className="flex-1 min-h-0 px-3 overflow-y-auto overscroll-contain">
         <ErrorBoundary section="Layout:SidebarNav" fallback={<SidebarFallback onLinkClick={onLinkClick} />}>
           <AccordionSidebar categories={categories} flatItems={flatItems} collapsed={collapsed} isProRole={effectiveProRole} onLinkClick={onLinkClick} trackClick={trackClick} loading={menuLoading} />
         </ErrorBoundary>
       </nav>
       <SidebarFooter collapsed={collapsed} dark={dark} toggleDark={toggleDark} initials={initials} profileName={profileName} signOut={signOut} setCollapsed={setCollapsed} onLinkClick={onLinkClick} isProRole={effectiveProRole} mode={mode} isPatient={isPatient} />
-    </div>
-  );
-}
-
-function BrainEmoji({ collapsed }: { collapsed: boolean }) {
-  return (
-    <div className="relative flex-shrink-0">
-      <motion.div className="absolute -inset-1.5 rounded-full" style={{ background: "radial-gradient(circle, hsl(45 100% 50% / 0.3), transparent 70%)" }} animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
-      <motion.span className="text-lg leading-none select-none relative z-10" animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} style={{ filter: "drop-shadow(0 0 6px hsl(45 100% 50% / 0.5))" }}>🧠</motion.span>
     </div>
   );
 }
@@ -237,6 +218,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useNutritionistRealtime();
   useRefetchOnFocus();
 
+  const contentFallback = (
+    <LayoutFallbackCard title="Erro no carregamento" description="Esta seção encontrou um problema técnico. Tente recarregar." />
+  );
+
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background">
@@ -256,7 +241,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <UserAvatarMenu initials={initials} profileName={profileName} signOut={signOut} navigate={navigate} />
           </div>
         </div>
-        <main className="pt-16 pb-safe p-4 max-w-7xl mx-auto">{children}</main>
+        <main className="pt-16 pb-safe p-4 max-w-7xl mx-auto">
+          <ErrorBoundary section={`PageContent:${location.pathname}`} fallback={contentFallback}>
+            {children}
+          </ErrorBoundary>
+        </main>
       </div>
     );
   }
@@ -264,7 +253,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex bg-background">
       <motion.aside initial={false} animate={{ width: collapsed ? 72 : 260 }} transition={{ duration: 0.2 }} className={`fixed left-0 top-0 h-screen border-r flex flex-col z-50 ${mode === 'advanced' ? 'border-amber-500/20 bg-card' : mode === 'pro' ? 'border-blue-500/20 bg-card' : 'border-green-700/20 bg-card'}`}>
-        <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={(v: boolean) => setCollapsed(v)} />
+        <ErrorBoundary section="Layout:DesktopSidebar" fallback={<SidebarFallback />}>
+          <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={(v: boolean) => setCollapsed(v)} />
+        </ErrorBoundary>
       </motion.aside>
       <main className="flex-1 transition-all duration-200" style={{ marginLeft: collapsed ? 72 : 260 }}>
         <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur-sm sticky top-0 z-40">
@@ -276,8 +267,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <UserAvatarMenu initials={initials} profileName={profileName} signOut={signOut} navigate={navigate} />
           </div>
         </div>
-        <div className="p-6 max-w-7xl mx-auto">{children}</div>
+        <div className="p-6 max-w-7xl mx-auto">
+          <ErrorBoundary section={`PageContent:${location.pathname}`} fallback={contentFallback}>
+            <StabilityZone name="Dashboard Area">
+              {children}
+            </StabilityZone>
+          </ErrorBoundary>
+        </div>
       </main>
+      {!isPatient && (
+        <ErrorBoundary section="ClinicalAIEntity" fallback={null}>
+          <ClinicalAIEntity />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }
