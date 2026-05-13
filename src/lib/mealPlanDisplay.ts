@@ -5,6 +5,11 @@ export type DisplayMealPlanItem = Tables<"meal_plan_items"> & {
   edit_metadata?: Record<string, any> | null;
   substitution_group_id?: string | null;
   is_primary?: boolean | null;
+  // --- V3 SOBERANIA ---
+  display_quantity?: string | number | null;
+  display_unit?: string | null;
+  clinical_mass_g?: number | null;
+  editor_version?: string | null;
 };
 
 export interface MealSubstitutionOption {
