@@ -42,6 +42,33 @@ const SovereignDashboard = () => {
     setLoading(false);
   };
 
+  const runAudit = async () => {
+    setLoading(true);
+    toast.info("Iniciando varredura de soberania...");
+    
+    try {
+      // Busca planos recentes para auditar
+      const { data: plans } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .limit(5);
+
+      if (plans) {
+        for (const plan of plans) {
+          await SovereignAuditScanner.scanPlanIntegrity(plan);
+        }
+      }
+      
+      toast.success("Auditoria concluída. Incidentes registrados na telemetria.");
+      await fetchLogs();
+    } catch (err) {
+      toast.error("Falha ao executar auditoria.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchLogs();
     
@@ -66,6 +93,33 @@ const SovereignDashboard = () => {
     }
   };
 
+  const getClassificationBadge = (log: SovereignLog) => {
+    const classification = log.metadata?.classification;
+    if (!classification) return null;
+
+    const colors: Record<string, string> = {
+      'LEGADO/ZUMBI': 'bg-purple-500',
+      'RISCO OPERACIONAL': 'bg-amber-500',
+      'BOMBA RELÓGIO': 'bg-red-600',
+      'MUTADOR SILENCIOSO': 'bg-indigo-500',
+      'RUNTIME NÃO SOBERANO': 'bg-slate-700'
+    };
+
+    const icons: Record<string, any> = {
+      'LEGADO/ZUMBI': <Ghost className="w-3 h-3" />,
+      'RISCO OPERACIONAL': <Zap className="w-3 h-3" />,
+      'BOMBA RELÓGIO': <Bomb className="w-3 h-3" />,
+      'MUTADOR SILENCIOSO': <Fingerprint className="w-3 h-3" />,
+      'RUNTIME NÃO SOBERANO': <Lock className="w-3 h-3" />
+    };
+
+    return (
+      <Badge className={`${colors[classification] || 'bg-slate-500'} gap-1 text-[10px]`}>
+        {icons[classification]} {classification}
+      </Badge>
+    );
+  };
+
   const getEventBadge = (type: string) => {
     return <Badge variant="outline" className="text-[10px] uppercase font-mono">{type.replace(/_/g, ' ')}</Badge>;
   };
@@ -78,12 +132,18 @@ const SovereignDashboard = () => {
             <Shield className="text-primary w-8 h-8" />
             Central de Incidentes Soberana
           </h1>
-          <p className="text-muted-foreground">Monitoramento de integridade clínica e runtime determinístico.</p>
+          <p className="text-muted-foreground">Monitoramento de integridade clínica e runtime determinístico (SRE Clínico).</p>
         </div>
-        <Button onClick={fetchLogs} variant="outline" size="sm" className="gap-2">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={runAudit} variant="secondary" size="sm" className="gap-2 border-primary/20">
+            <ScanSearch className="w-4 h-4" />
+            Executar Auditoria Viva
+          </Button>
+          <Button onClick={fetchLogs} variant="outline" size="sm" className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
