@@ -44,6 +44,8 @@ export interface MealItem extends Food {
   display_unit?: string; // UI unit label
   blockId?: string; // Weekly block reference (governance)
   manual_override?: boolean; // If true, ignore weekly block propagation
+  substitution_group_id?: string;
+  correlation_id?: string;
   selectedUnit?: string;
   substitutions: Food[];
   description?: string;
