@@ -2,7 +2,7 @@ import { Meal, MealItem, Food, MealTemplate } from "../types";
 import { normalizeFood } from "../utils/normalization";
 import { calculateItemMacros } from "@/lib/nutricore_v2/helpers";
 
-const makeInstanceId = () => Math.random().toString(36).substring(2, 10);
+const makeInstanceId = () => crypto.randomUUID();
 
 /**
  * Interface para os parâmetros de ajuste clínico.

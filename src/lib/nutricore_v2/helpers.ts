@@ -85,20 +85,22 @@ export const getFoodCategory = (food: any): string => {
 const resolveMacroGrams = (item: any, quantity: number) => {
   // 🛡️ SOBERANIA CLÍNICA: Se temos a massa clínica, ela governa absolutamente
   if (item.clinical_mass_g !== undefined && item.clinical_mass_g !== null) {
-    return item.clinical_mass_g;
+    return Number(item.clinical_mass_g);
   }
 
-  const portionValue = Number(item.portionValue) || 1;
-  const rawGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
-    ? quantity * portionValue
-    : quantity;
-
-  // Proteção contra explosão de unidade (ex: 100 ovos por engano)
-  if (rawGrams > 10000 && quantity > 1000 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
-     return quantity; // Fallback
+  // Se não temos clinical_mass_g, tentamos derivar da quantity + portionValue
+  // Mas NUNCA adivinhamos se o dado estiver ausente.
+  const portionValue = Number(item.portionValue);
+  
+  if (item.measurementType === 'unit' || item.measurementType === 'spoon') {
+    if (!portionValue || portionValue <= 0) {
+      console.error('[V3-MOTOR] Item missing portionValue for unit/spoon measurement:', item.name);
+      return 0; // Falha explícita
+    }
+    return quantity * portionValue;
   }
 
-  return Math.max(0, rawGrams);
+  return Math.max(0, quantity);
 };
 
 export const calculateItemMacros = (item: any, quantity: number) => {
@@ -190,17 +192,19 @@ export const getSubstitutionsWithGrams = (request: any): any[] => {
       
       equivalentGrams = Math.round(equivalentGrams);
 
+      // 🛡️ SOBERANIA CLÍNICA: A unidade é derivada estritamente da estrutura do candidato, sem regex.
       let unidade = `${equivalentGrams}g`;
-      if (candidate.measurementType === 'unit' && candidate.portionValue) {
+      if (candidate.measurementType === 'unit' && candidate.portionValue > 0) {
         const units = Math.round((equivalentGrams / candidate.portionValue) * 10) / 10;
         if (units >= 0.1) {
-          const unitLabel = candidate.name.toLowerCase().includes('ovo') ? (units === 1 ? 'unidade' : 'unidades') : (candidate.portionLabel || 'unidade');
+          const unitLabel = candidate.portionUnitLabel || candidate.portionLabel || 'unidade';
           unidade = `${units} ${unitLabel} (${equivalentGrams}g)`;
         }
-      } else if (candidate.measurementType === 'spoon') {
-        const spoonWeight = candidate.portionValue || 15;
+      } else if (candidate.measurementType === 'spoon' && candidate.portionValue > 0) {
+        const spoonWeight = candidate.portionValue;
         const spoons = Math.round((equivalentGrams / spoonWeight) * 10) / 10;
-        unidade = `${spoons} colheres (${equivalentGrams}g)`;
+        const spoonLabel = candidate.portionUnitLabel || 'colher(es)';
+        unidade = `${spoons} ${spoonLabel} (${equivalentGrams}g)`;
       }
 
       const ratioKcal = candidate.kcal_100g !== undefined ? equivalentGrams / 100 : equivalentGrams / (candidate.portionValue || 100);

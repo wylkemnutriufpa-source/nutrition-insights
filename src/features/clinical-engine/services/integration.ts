@@ -120,7 +120,7 @@ export async function createPlanWithV3(
 
         mealItems.push({
           ...food,
-          instanceId: Math.random().toString(36).substring(7),
+          instanceId: crypto.randomUUID(),
           quantity,
           imageUrl: img.url,
           substitutions
@@ -129,7 +129,7 @@ export async function createPlanWithV3(
     }
 
     return {
-      id: Math.random().toString(36).substring(7),
+      id: crypto.randomUUID(),
       name: dist.meal_type.replace('_', ' '),
       type: dist.meal_type,
       time: dist.time,
@@ -186,7 +186,7 @@ export async function createPlanWithV3(
   }
 
   return {
-    id: Math.random().toString(36).substring(7),
+    id: crypto.randomUUID(),
     patient_id: patientMetrics.id,
     mode,
     meals: finalMeals,
@@ -248,7 +248,7 @@ export async function migratePlanV2toV3(
 
       return {
         ...food,
-        instanceId: Math.random().toString(36).substring(7),
+        instanceId: crypto.randomUUID(),
         quantity,
         imageUrl: img.url,
         substitutions
@@ -256,7 +256,7 @@ export async function migratePlanV2toV3(
     }));
 
     return {
-      id: v2Meal.id || Math.random().toString(36).substring(7),
+      id: v2Meal.id || crypto.randomUUID(),
       name: v2Meal.nome || v2Meal.name || 'Refeição',
       type: v2Meal.tipo || v2Meal.type || 'outros',
       time: v2Meal.horario || v2Meal.time || '00:00',

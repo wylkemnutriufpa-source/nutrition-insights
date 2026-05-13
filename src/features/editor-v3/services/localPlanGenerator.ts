@@ -62,9 +62,7 @@ export async function generateAndSaveLocalPlan(
         weight = Number(answers.weight);
         weightSource = 'anamnese';
       } else {
-        weight = 60;
-        weightSource = 'dynamic_fallback';
-        console.warn('[localPlanGenerator] ⚠ Nenhum peso encontrado em profile/history/assessment/anamnese — usando fallback dinâmico 60kg.');
+        throw new Error(`Impossível gerar plano: Peso do paciente não encontrado em nenhuma fonte (Perfil, Histórico, Avaliação ou Anamnese).`);
       }
     }
 
@@ -73,7 +71,7 @@ export async function generateAndSaveLocalPlan(
     let height = Number(profile.current_height_cm || 0);
     if (height <= 0) height = Number(answers.height || 0);
     if (height <= 0 && assessment?.height) height = Number(assessment.height);
-    if (height <= 0) height = 170; // Fallback final
+    if (height <= 0) throw new Error(`Impossível gerar plano: Altura do paciente não encontrada.`);
 
     const context: PatientContext = {
       id: profile.id,
@@ -125,7 +123,7 @@ export async function generateAndSaveLocalPlan(
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
-          meal_type: meal.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_') as any,
+          meal_type: meal.type || 'snack',
           calories_target: safeKcal,
           protein_target: Math.min(500, Number(item.protein) || 0),
           carbs_target: Math.min(800, Number(item.carbs) || 0),

@@ -79,7 +79,7 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
             
             newItems.push({
               id: veggieFood.id,
-              instanceId: Math.random().toString(36).substring(2, 10),
+              instanceId: crypto.randomUUID(),
               name: veggieFood.name,
               kcal: macros.kcal,
               calories: macros.kcal,
@@ -109,7 +109,7 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
               
               newItems.push({
                 id: fatFood.id,
-                instanceId: Math.random().toString(36).substring(2, 10),
+                instanceId: crypto.randomUUID(),
                 name: fatFood.name,
                 kcal: macros.kcal,
                 calories: macros.kcal,

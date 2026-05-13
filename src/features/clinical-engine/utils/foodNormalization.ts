@@ -3,87 +3,59 @@ import { Food, MealItem } from "../types/clinical-types";
 /**
  * Normalizes food units and measurements.
  * Implementation of FitJourney V3 - Step 1 & 2
+ * 
+ * SOBERANIA CLÍNICA: Esta função NÃO deve mais "adivinhar" unidades baseada no nome.
+ * Se não houver unidade explícita, retorna gramas.
  */
 export const normalizeFoodMeasurement = (item: MealItem | Food): { 
   displayUnit: string; 
   displayQuantity: number;
   normalizedGrams: number;
 } => {
-  const name = item.name.toLowerCase();
-  let grams = (item as MealItem).quantity || (item as Food).portionValue || 100;
+  // 1. Prioridade absoluta: clinical_mass_g se disponível
+  const grams = (item as MealItem).clinical_mass_g ?? (item as MealItem).quantity ?? (item as Food).portionValue ?? 0;
   
-  // Se já temos uma unidade de exibição definida no item (V3), usamos ela
+  if (grams <= 0) {
+    console.warn(`[V3-NORMALIZER] Item com massa inválida: ${item.name}`, item);
+    // Não inventamos massa. Retornamos o que temos ou falhamos.
+  }
+
+  // 2. Se já temos uma unidade de exibição definida no item (V3), usamos ela
   if ((item as MealItem).portionUnitLabel) {
     const label = (item as MealItem).portionUnitLabel!;
-    if (label.includes('Unid.') || label.includes('unid')) {
-      // Para unidades P, M, G, calculamos quantas "unidades" isso representa
-      // Mas geralmente no V3 o usuário quer ver "1 Unid. P"
+    
+    // Se for Unidade (P/M/G), assumimos que a quantity já representa o número de unidades
+    if (label.toLowerCase().includes('unid')) {
       return {
         displayUnit: label,
-        displayQuantity: 1,
+        displayQuantity: (item as MealItem).quantity || 1,
         normalizedGrams: grams
       };
     }
-    if (label.includes('colher')) {
-      const units = Math.round(grams / 15);
-      return {
-        displayUnit: label,
-        displayQuantity: units || 1,
-        normalizedGrams: grams
-      };
-    }
-  }
 
-  // Basic unit mapping (Fallback)
-  if (name.includes('arroz')) {
-    const spoonWeight = 25;
-    const units = Math.round(grams / spoonWeight);
+    // Se for colher, mantemos a unidade, mas a quantidade de exibição deve ser calculada 
+    // SE e SOMENTE SE tivermos o portionValue (fator de conversão)
+    if (label.toLowerCase().includes('colher') && item.portionValue > 0) {
+      const units = grams / item.portionValue;
+      return {
+        displayUnit: label,
+        displayQuantity: Number(units.toFixed(1)),
+        normalizedGrams: grams
+      };
+    }
+
+    // Caso contrário, usamos a unidade do label com a quantidade original
     return {
-      displayUnit: units <= 1 ? 'colher de sopa' : 'colheres de sopa',
-      displayQuantity: units || 1,
+      displayUnit: label,
+      displayQuantity: (item as MealItem).quantity || 1,
       normalizedGrams: grams
     };
   }
 
-  if (name.includes('feijão')) {
-    const spoonWeight = 30;
-    const units = Math.round(grams / spoonWeight);
-    return {
-      displayUnit: units <= 1 ? 'colher de sopa' : 'colheres de sopa',
-      displayQuantity: units || 1,
-      normalizedGrams: grams
-    };
-  }
-
-  if (name.includes('frango') || name.includes('carne') || name.includes('peixe')) {
-    // Para carnes, se for por volta de 100g, podemos chamar de "filé" ou "pedaço"
-    // Mas geralmente o usuário prefere apenas gramas se não houver unidade clara
-    // Por enquanto mantemos gramas para carnes a menos que venha do V3 com unidade
-  }
-
-  if (name.includes('pão') || name.includes('fatia')) {
-    const sliceWeight = 25;
-    const slices = Math.round(grams / sliceWeight);
-    return {
-      displayUnit: slices === 1 ? 'fatia' : 'fatias',
-      displayQuantity: slices || 1,
-      normalizedGrams: (slices || 1) * sliceWeight
-    };
-  }
-
-  if (name.includes('ovo') || name.includes('unidade')) {
-    const eggWeight = 50;
-    const units = Math.round(grams / eggWeight);
-    return {
-      displayUnit: units === 1 ? 'unidade' : 'unidades',
-      displayQuantity: units || 1,
-      normalizedGrams: (units || 1) * eggWeight
-    };
-  }
-
+  // 3. Fallback Passivo (Sem adivinhação por nome)
   return {
-    displayUnit: 'g',
-    displayQuantity: grams,
+    displayUnit: item.portionUnitLabel || 'g',
+    displayQuantity: (item as MealItem).quantity || grams,
     normalizedGrams: grams
   };
 };
@@ -93,35 +65,28 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
  * Implementation of FitJourney V3 - Step 3
  */
 export const recalculateMacros = (item: Food, quantityGrams: number) => {
-  // We assume the values in the database are per 100g if not specified, 
-  // or we use the portionValue if available.
+  // 🛡️ SOBERANIA CLÍNICA: Falhar explicitamente se dados nutricionais base faltarem
+  if (!item.kcal && !item.calories && !item.protein && !item.carbs && !item.fat) {
+     console.error('[V3-MOTOR] Food without nutrition data:', item.name);
+     return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  }
+
   const baseGrams = item.portionValue || 100;
   const ratio = quantityGrams / baseGrams;
 
   return {
-    calories: Math.round(item.calories * ratio),
-    protein: Number((item.protein * ratio).toFixed(1)),
-    carbs: Number((item.carbs * ratio).toFixed(1)),
-    fat: Number((item.fat * ratio).toFixed(1))
+    calories: Math.round((item.kcal || item.calories || 0) * ratio),
+    protein: Number(((item.protein || 0) * ratio).toFixed(1)),
+    carbs: Number(((item.carbs || 0) * ratio).toFixed(1)),
+    fat: Number(((item.fat || 0) * ratio).toFixed(1))
   };
 };
 
 /**
  * Applies clinical minimums and corrections
- * Implementation of FitJourney V3 - Step 2 & 4
+ * 🛑 REMOVIDO: O sistema não deve mais "corrigir" gramagens arbitrariamente.
  */
 export const applyClinicalSafety = (foodName: string, grams: number): number => {
-  const name = foodName.toLowerCase();
-  
-  // Cheese minimum 15g (approx 1 slice)
-  if (name.includes('queijo') && grams < 10) {
-    return 15;
-  }
-
-  // Protein source minimums
-  if ((name.includes('frango') || name.includes('carne') || name.includes('peixe')) && grams < 50) {
-    return 80; // Standard minimum portion for main protein
-  }
-
-  return grams;
+  // Apenas garantimos que não seja negativo
+  return Math.max(0, grams);
 };

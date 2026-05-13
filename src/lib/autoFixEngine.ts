@@ -177,72 +177,10 @@ function syncMealDescription(description: string | null | undefined, mealType: s
   return finalizeMealDescription(description, mealType, isGainGoal);
 }
 
-function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTarget: number, isGainGoal: boolean): void {
-  if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
-
-  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(isGainGoal);
-
-  const mealTargets = new Map<string, number>();
-  let assigned = 0;
-
-  for (const mealType of MEAL_ORDER) {
-    const items = dayItems.filter((item) => item.meal_type === mealType);
-    if (items.length === 0) continue;
-    const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
-    const target = Math.min(proteinCaps[mealType] ?? baseTarget, baseTarget);
-    mealTargets.set(mealType, target);
-    assigned += target;
-  }
-
-  let residual = Math.round(dailyProteinTarget - assigned);
-  for (const mealType of RESIDUAL_PRIORITY) {
-    if (residual <= 0) break;
-    if (!mealTargets.has(mealType)) continue;
-    const current = mealTargets.get(mealType) || 0;
-    const cap = proteinCaps[mealType] ?? current;
-    const room = Math.max(0, cap - current);
-    if (room <= 0) continue;
-    const add = Math.min(room, residual);
-    mealTargets.set(mealType, current + add);
-    residual -= add;
-  }
-
-  for (const [mealType, rawTarget] of mealTargets.entries()) {
-    const items = dayItems.filter((item) => item.meal_type === mealType && !isItemProtected(item));
-    if (items.length === 0) continue;
-
-    const mealCap = proteinCaps[mealType] ?? rawTarget;
-    const target = Math.max(0, Math.min(rawTarget, mealCap));
-    const currentTotal = items.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
-
-    if (currentTotal <= 0) {
-      const base = Math.floor(target / items.length);
-      let remaining = target;
-      items.forEach((item, index) => {
-        const next = index === items.length - 1 ? remaining : base;
-        item.protein_target = Math.max(0, next);
-        remaining -= next;
-      });
-      continue;
-    }
-
-    let scaledSum = 0;
-    let largestIndex = 0;
-    let largestValue = 0;
-    items.forEach((item, index) => {
-      const current = Number(item.protein_target) || 0;
-      const next = Math.max(0, Math.round(current * (target / currentTotal)));
-      item.protein_target = next;
-      scaledSum += next;
-      if (current > largestValue) {
-        largestValue = current;
-        largestIndex = index;
-      }
-    });
-
-    const correction = target - scaledSum;
-    items[largestIndex].protein_target = Math.max(0, (Number(items[largestIndex].protein_target) || 0) + correction);
-  }
+function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], _dailyProteinTarget: number, _isGainGoal: boolean): void {
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais recalcular metas proteicas.
+  // A soberania do cálculo reside exclusivamente no Motor V3.
+  return;
 }
 
 // ── Fix: Replace blocked foods ──────────────────────────────
@@ -319,78 +257,22 @@ function fixItemBlockedFoods(item: MealPlanItem): { fixed: MealPlanItem; changes
 
 function fixBreakfastComplexity(
   items: MealPlanItem[],
-  dayOfWeek: number,
-  mealType: string,
-  isGainGoal: boolean
+  _dayOfWeek: number,
+  _mealType: string,
+  _isGainGoal: boolean
 ): { items: MealPlanItem[]; changes: AutoFixChange[] } {
-  const changes: AutoFixChange[] = [];
-  let result = [...items];
-  const maxItems = isGainGoal ? 4 : 3;
-
-  if (result.length > maxItems) {
-    const removed = result.splice(maxItems);
-    changes.push({
-      type: "breakfast_fixed",
-      mealType,
-      dayOfWeek,
-      from: `${result.length + removed.length} itens`,
-      to: `${result.length} itens (máx ${maxItems})`,
-      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
-    });
-  }
-
-  // Check excess protein at breakfast for weight loss
-  if (!isGainGoal) {
-    const totalProtein = result.reduce((sum, i) => sum + (i.protein_target || 0), 0);
-    if (totalProtein > 30) {
-      // Scale down protein items
-      const factor = 30 / totalProtein;
-      for (const item of result) {
-        if (item.protein_target && item.protein_target > 10) {
-          const oldP = item.protein_target;
-          item.protein_target = Math.round(item.protein_target * factor);
-          item.calories_target = Math.round((item.calories_target || 0) * 0.9);
-          changes.push({
-            type: "breakfast_fixed",
-            mealType,
-            dayOfWeek,
-            from: `${oldP}g proteína`,
-            to: `${item.protein_target}g proteína`,
-            detail: "Proteína reduzida no café da manhã para emagrecimento",
-          });
-        }
-      }
-    }
-  }
-
-  return { items: result, changes };
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais alterar a estrutura do café da manhã.
+  return { items, changes: [] };
 }
-
-// ── Fix: Snack simplification ───────────────────────────────
 
 function fixSnackComplexity(
   items: MealPlanItem[],
-  dayOfWeek: number,
-  mealType: string,
-  isGainGoal: boolean
+  _dayOfWeek: number,
+  _mealType: string,
+  _isGainGoal: boolean
 ): { items: MealPlanItem[]; changes: AutoFixChange[] } {
-  const changes: AutoFixChange[] = [];
-  let result = [...items];
-  const maxItems = isGainGoal ? 3 : 2;
-
-  if (result.length > maxItems) {
-    const removed = result.splice(maxItems);
-    changes.push({
-      type: "snack_fixed",
-      mealType,
-      dayOfWeek,
-      from: `${result.length + removed.length} itens`,
-      to: `${result.length} itens (máx ${maxItems})`,
-      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
-    });
-  }
-
-  return { items: result, changes };
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais alterar a estrutura dos lanches.
+  return { items, changes: [] };
 }
 
 // ── Fix: Main meal standardization ──────────────────────────
@@ -416,42 +298,11 @@ const BRAZILIAN_CARBS = [
 
 function fixMainMealStandardization(
   items: MealPlanItem[],
-  dayOfWeek: number,
-  mealType: string
+  _dayOfWeek: number,
+  _mealType: string
 ): { items: MealPlanItem[]; changes: AutoFixChange[] } {
-  const changes: AutoFixChange[] = [];
-  let result = [...items];
-
-  // Check if has Brazilian protein
-  const allText = result.map(i => normalize(`${i.title} ${i.description || ""}`)).join(" ");
-  const hasProtein = BRAZILIAN_PROTEINS.some(p => allText.includes(normalize(p)));
-  const hasCarb = BRAZILIAN_CARBS.some(c => allText.includes(normalize(c)));
-
-  if (!hasProtein || !hasCarb) {
-    changes.push({
-      type: "main_meal_standardized",
-      mealType,
-      dayOfWeek,
-      from: hasProtein ? "sem carboidrato brasileiro" : "sem proteína brasileira",
-      to: hasProtein ? "adicionar arroz/batata/macarrão" : "adicionar frango/carne/peixe",
-      detail: "Refeição principal deve ter base brasileira (proteína + carbo)",
-    });
-  }
-
-  // Reduce excess items
-  if (result.length > 5) {
-    const removed = result.splice(5);
-    changes.push({
-      type: "complexity_reduced",
-      mealType,
-      dayOfWeek,
-      from: `${result.length + removed.length} itens`,
-      to: `${result.length} itens`,
-      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
-    });
-  }
-
-  return { items: result, changes };
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais adivinhar base brasileira ou reduzir itens.
+  return { items, changes: [] };
 }
 
 // ── Main: Auto-fix meal plan ─────────────────────────────────

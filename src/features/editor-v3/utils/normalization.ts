@@ -37,81 +37,18 @@ export function normalizeFood(food: any): Food {
     tracer.trace(`Clinical Mass Frozen: ${name}`, { mass: f.clinical_mass_g });
   }
 
-  // PARTE 1 — MEDIDAS CASEIRAS (PADRONIZAÇÃO URGENTE)
+  // PARTE 1 — MEDIDAS CASEIRAS (PADRONIZAÇÃO)
+  // 🛑 REMOVIDO: O sistema não deve mais "adivinhar" medidas por nome de string (ex: 'ovo' -> 50g).
+  // Apenas garantimos que o objeto Food tenha estrutura válida.
   if (wasGram) {
-    let newPortionValue = f.portionValue;
-    let newMeasurementType = f.measurementType;
-    let newPortionLabel = f.portionLabel;
-
-    if (name.includes('ovo') || name.includes('omelete')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 50; 
-      newPortionLabel = 'unidade';
-    } else if (name.includes('banana')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 90; 
-      newPortionLabel = 'unidade M';
-    } else if (name.includes('maçã')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 150; 
-      newPortionLabel = 'unidade M';
-    } else if (name.includes('pão integral') || name.includes('pão de forma')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 25; 
-      newPortionLabel = 'fatia';
-    } else if (name.includes('pão francês')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 50; 
-      newPortionLabel = 'unidade';
-    } else if (name.includes('azeite') || name.includes('manteiga')) {
-      newMeasurementType = 'spoon';
-      newPortionValue = name.includes('azeite') ? 5 : 10; 
-      newPortionLabel = name.includes('azeite') ? 'fio' : 'colher de sopa';
-    } else if (name.includes('arroz') || name.includes('feijão') || name.includes('macarrão')) {
-      newMeasurementType = 'spoon';
-      newPortionValue = 25; 
-      newPortionLabel = 'colher de sopa';
-    } else if (name.includes('iogurte')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 170; 
-      newPortionLabel = 'pote';
-    } else if (name.includes('whey') || name.includes('suplemento')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 30; 
-      newPortionLabel = 'scoop';
-    } else if (name.includes('frango') || name.includes('carne') || name.includes('peixe')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 150; 
-      newPortionLabel = 'filé M';
-    }
-
-    // Só converte quantity se for a primeira vez (wasGram) e tivermos um teto clínico
-    if (newMeasurementType !== 'gram' && wasGram && initialQuantity > 5) {
-      // Se já temos clinical_mass_g, usamos ele para garantir que a conversão não seja recursiva
-      const sourceMass = f.clinical_mass_g || initialQuantity;
-      f.quantity = Math.round((sourceMass / (newPortionValue || 1)) * 10) / 10;
-      
-      tracer.trace(`Display Conversion: ${name}`, { 
-        from: `${sourceMass}g`, 
-        to: `${f.quantity} ${newPortionLabel}`,
-        factor: newPortionValue 
-      });
-    }
-
-    f.measurementType = newMeasurementType;
-    f.portionValue = newPortionValue;
-    f.portionLabel = newPortionLabel;
+    f.measurementType = f.measurementType || 'gram';
+    f.portionValue = f.portionValue || 100;
+    f.portionLabel = f.portionLabel || '100g';
   }
 
-  // Se não tem tipo, inferir
+  // Se não tem tipo, default para gramas (sem inferência por nome)
   if (!f.measurementType) {
-    if (name.includes('leite') || name.includes('suco') || name.includes('bebida') || name.includes('água') || name.includes('ml')) {
-      f.measurementType = 'ml';
-    } else if (name.includes('aveia') || name.includes('granola') || name.includes('pasta') || name.includes('colher')) {
-      f.measurementType = 'spoon';
-    } else {
-      f.measurementType = 'gram';
-    }
+    f.measurementType = 'gram';
   }
 
   // Fallbacks de labels
@@ -190,7 +127,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
     };
 
     mealsArray = Object.entries(itemsByMealType).map(([type, items]) => ({
-      id: Math.random().toString(36).substring(2, 9),
+      id: crypto.randomUUID(),
       name: mealTypeLabels[type] || type,
       time: type === 'breakfast' ? '08:00' : (type === 'lunch' ? '12:00' : (type === 'dinner' ? '20:00' : '00:00')),
       items: items
@@ -212,7 +149,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
       
       return {
         ...normalized,
-        instanceId: normalized.instanceId || Math.random().toString(36).substring(2, 10),
+        instanceId: normalized.instanceId || crypto.randomUUID(),
         quantity: normalized.quantity ?? 1,
         clinical_mass_g: normalized.clinical_mass_g ?? (normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1))),
         substitutions: (normalized.substitutions || []).map((sub: any) => normalizeFood(sub))
@@ -221,7 +158,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
 
     return {
       ...meal,
-      id: meal.id || Math.random().toString(36).substring(2, 9),
+      id: meal.id || crypto.randomUUID(),
       name: meal.name || 'Nova Refeição',
       items: items,
       time: meal.time || '00:00'
@@ -312,7 +249,7 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
 
       return {
         ...normalized,
-        instanceId: (item as any).instanceId || Math.random().toString(36).substring(2, 10),
+        instanceId: (item as any).instanceId || crypto.randomUUID(),
         quantity,
         blockId: (item as any).blockId || generatedBlockId,
         clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? quantity : (quantity * (normalized.portionValue || 1))),

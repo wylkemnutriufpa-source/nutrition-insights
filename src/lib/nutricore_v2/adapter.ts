@@ -53,13 +53,18 @@ export class NutriCoreV3Adapter {
     console.info(`[NutriCore-Adapter] Mapping Patient: Weight ${context.weight}kg, Goal ${context.goal} -> ${goal}`);
 
     return {
-      weight_kg: context.weight && context.weight > 0
-        ? context.weight
-        : (() => {
-            console.warn('[NutriCore-Adapter] ⚠ context.weight ausente — usando fallback dinâmico 60kg. Verifique a cadeia de priorização (profile → history → assessment → anamnese).');
-            return 60;
-          })(),
-      height_cm: context.height || 170,
+      weight_kg: (() => {
+        if (!context.weight || context.weight <= 0) {
+          throw new Error(`Dados Clínicos Incompletos: Peso do paciente não encontrado (${context.name})`);
+        }
+        return context.weight;
+      })(),
+      height_cm: (() => {
+        if (!context.height || context.height <= 0) {
+          throw new Error(`Dados Clínicos Incompletos: Altura do paciente não encontrada (${context.name})`);
+        }
+        return context.height;
+      })(),
       age_years: context.age || 30,
       sex: context.gender === 'female' ? 'feminino' : 'masculino',
       activity_level: activity,
@@ -119,6 +124,11 @@ export class NutriCoreV3Adapter {
       const BREAKFAST_ROTATION = ["Pão", "Tapioca", "Cuscuz"];
 
       for (let dayIdx = 0; dayIdx < loops; dayIdx++) {
+        const currentDayOfWeek = dayIdx + 1; // 1-7
+        if (isWeekly && !currentDayOfWeek) {
+           throw new Error("Erro de Governança: day_of_week obrigatório em modo semanal.");
+        }
+
         // Criar preferências rotativas para este dia específico
         const dayPrefs = [
           PROTEIN_ROTATION[dayIdx % PROTEIN_ROTATION.length],
@@ -212,7 +222,7 @@ export class NutriCoreV3Adapter {
               portionUnit: portionLabel,
               portionLabel: portionLabel,
               measurementType: measurementType as any,
-              instanceId: Math.random().toString(36).substring(2, 10),
+              instanceId: crypto.randomUUID(),
               quantity, 
               clinical_mass_g: item.grams, // 🛡️ Congelamento na fonte (Motor V3)
               substitutions
@@ -221,14 +231,24 @@ export class NutriCoreV3Adapter {
 
           const bestImage = await getBestMealImage(mealName, v3Items);
             
+          const typeMap: Record<string, 'breakfast' | 'snack' | 'lunch' | 'dinner' | 'supper'> = {
+            'cafe_da_manha': 'breakfast',
+            'lanche_da_manha': 'snack',
+            'almoço': 'lunch',
+            'lanche_da_tarde': 'snack',
+            'jantar': 'dinner',
+            'ceia': 'supper'
+          };
+            
           return {
-            id: Math.random().toString(36).substring(2, 9),
+            id: crypto.randomUUID(),
             name: mealName,
+            type: typeMap[slot.type] || 'snack',
             time: slot.time,
             items: v3Items,
             imageUrl: bestImage.url,
             imageSource: bestImage.source
-          };
+          } as V3Meal;
         }));
         allGeneratedMeals.push(...dayMeals);
       }
