@@ -138,7 +138,12 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
   const totals = useMemo(() => {
     // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo
     // Evita explosão de macros se substituições vazarem para a lista principal
-    const primaryOnly = items.filter(i => i.is_primary !== false);
+    const primaryOnly = items.filter(i => {
+      if (i.is_primary === false) return false;
+      if (i.is_primary === true) return true;
+      if (i.metadata?.substitution_group_id) return false;
+      return true;
+    });
     
     return {
       calories: primaryOnly.reduce((s, i) => s + safeNum(i.calories_target ?? i.metadata?.calories_target ?? i.metadata?.calories), 0),
