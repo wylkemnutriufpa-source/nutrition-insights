@@ -428,8 +428,22 @@ export default function PatientMealPlan() {
         if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
       } catch { /* ignore */ }
 
-      const pdfItems = buildPdfItemsForDailyPlan(allItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[];
-      const primaryTotals = calculatePrimaryTotals(pdfItems as any);
+      // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
+      let pdfItems: MealPlanItem[] = [];
+      let primaryTotals: any = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+      if (plan.editor_version === 'v3') {
+        pdfItems = allItems; // No V3, allItems já estão filtrados/estruturados pelo snapshot
+        primaryTotals = {
+          calories: plan.total_target_calories,
+          protein: plan.total_target_protein,
+          carbs: plan.total_target_carbs,
+          fat: plan.total_target_fat,
+        };
+      } else {
+        pdfItems = buildPdfItemsForDailyPlan(allItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[];
+        primaryTotals = calculatePrimaryTotals(pdfItems as any);
+      }
 
       const data: PremiumMealPlanPDFData = {
         planTitle: plan.title || "Plano Alimentar",
