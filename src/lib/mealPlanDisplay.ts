@@ -103,20 +103,45 @@ export function getAvailablePlanDays(items: DisplayMealPlanItem[]): number[] {
   return DAY_ORDER.filter((day) => days.has(day));
 }
 
+/**
+ * Deduplica itens idênticos persistidos múltiplas vezes (legacy: planos single_day
+ * com day_of_week=NULL gravam 7x o mesmo item, um por dia da semana).
+ * Mantém apenas a primeira ocorrência por chave (meal_type|title|is_primary|substitution_group_id).
+ */
+function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem[] {
+  const seen = new Set<string>();
+  const out: DisplayMealPlanItem[] = [];
+  for (const item of items) {
+    const key = [
+      String(item.meal_type ?? ""),
+      String(item.title ?? "").trim().toLowerCase(),
+      isPrimaryMealItem(item) ? "p" : "s",
+      String(item.substitution_group_id ?? ""),
+      String((item as any).scheduled_time ?? ""),
+    ].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
 export function selectCanonicalDayItems(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
   if (items.length === 0) return [];
 
   const hasConcreteDays = items.some((item) => item.day_of_week !== null && item.day_of_week !== undefined);
-  if (!hasConcreteDays) return items;
+  if (!hasConcreteDays) return dedupeIdenticalItems(items);
 
   if (requestedDay !== undefined) {
     const sameDay = items.filter((item) => item.day_of_week === requestedDay);
-    if (sameDay.some(isPrimaryMealItem)) return sameDay;
+    if (sameDay.some(isPrimaryMealItem)) return dedupeIdenticalItems(sameDay);
   }
 
   const availableDays = getAvailablePlanDays(items);
   const fallbackDay = availableDays[0];
-  return fallbackDay !== undefined ? items.filter((item) => item.day_of_week === fallbackDay) : items;
+  return fallbackDay !== undefined
+    ? dedupeIdenticalItems(items.filter((item) => item.day_of_week === fallbackDay))
+    : dedupeIdenticalItems(items);
 }
 
 export function buildDailyDisplayItems(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
