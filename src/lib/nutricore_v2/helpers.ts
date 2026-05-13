@@ -94,7 +94,7 @@ const resolveMacroGrams = (item: any, quantity: number) => {
     : quantity;
 
   // Proteção contra explosão de unidade (ex: 100 ovos por engano)
-  if (rawGrams > 1000 && quantity > 100 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
+  if (rawGrams > 10000 && quantity > 1000 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
      return quantity; // Fallback
   }
 
@@ -120,7 +120,7 @@ export const calculateItemMacros = (item: any, quantity: number) => {
   };
 
   // 🛑 ANTI-EXPLOSION: Absolute sanity check
-  if (result.kcal > 3000) {
+  if (result.kcal > 10000) {
      console.error('[V3-MOTOR] Clinical Explosion Detected:', item.name, grams, 'g');
      return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
   }

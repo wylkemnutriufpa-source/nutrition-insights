@@ -205,7 +205,7 @@ const EditorV3Page = () => {
       if (!prev) return null;
       setIsModalDirty(true);
       
-      const merged = { ...prev, ...updates };
+      const merged = { ...prev, ...updates, manual_override: true };
       
       // 🛡️ SOBERANIA CLÍNICA NO DRAFT: Sincronizar massa clínica para preview real-time
       if (updates.quantity !== undefined || updates.measurementType !== undefined || updates.portionValue !== undefined) {
@@ -3076,7 +3076,7 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = 5;
+                            const step = 1;
                             updateLocalDraft({ quantity: Math.max(0, localDraft.quantity - step) });
                           }}
                         >
@@ -3084,7 +3084,7 @@ const EditorV3Page = () => {
                         </Button>
                         <Input 
                           type="number" 
-                          step="5"
+                          step="1"
                           value={localDraft.quantity} 
                           onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })}
                           className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50 text-center"
@@ -3094,7 +3094,7 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = 5;
+                            const step = 1;
                             updateLocalDraft({ quantity: localDraft.quantity + step });
                           }}
                         >
