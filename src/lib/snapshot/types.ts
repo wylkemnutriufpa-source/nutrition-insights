@@ -57,6 +57,9 @@ export interface SnapshotItem {
   /** Macros DEFINITIVOS gravados no momento da publicação (não recalcular) */
   macros: SnapshotMacros;
   substitutions: SnapshotSubstitution[];
+  clinical_mass_g: number | null;
+  display_quantity: number | null;
+  display_unit: string | null;
 }
 
 export interface SnapshotMeal {

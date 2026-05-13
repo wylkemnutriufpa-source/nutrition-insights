@@ -266,6 +266,7 @@ export async function buildMealPlanSnapshot(
         planRow.template_version != null ? Number(planRow.template_version) : null,
       generation_source: (planRow.generation_source as string) ?? null,
       protocol_used: (planRow.protocol_used as string) ?? null,
+      editor_version: "v3",
     },
     patient_context: {
       id: planRow.patient_id,

@@ -76,7 +76,7 @@ export const SnapshotPlanMetadataSchema = z.object({
   template_version: z.number().nullable(),
   generation_source: z.string().nullable(),
   protocol_used: z.string().nullable(),
-  editor_version: z.string().optional().default("v3"), // OBRIGATÓRIO NA BLINDAGEM
+  editor_version: z.string().optional().default("v3"),
 });
 
 export const MealPlanSnapshotV1Schema = z.object({
