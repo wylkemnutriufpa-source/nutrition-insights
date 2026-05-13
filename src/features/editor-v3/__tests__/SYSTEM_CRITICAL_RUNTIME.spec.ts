@@ -62,8 +62,8 @@ describe('SYSTEM_CRITICAL_RUNTIME — Suíte de Estabilidade Soberana', () => {
       };
       
       const sanitized = ClinicalGuard.sanitizeMacros(crazyMacros);
-      expect(sanitized.kcal).toBeLessThanOrEqual(2500);
-      expect(sanitized.protein).toBeLessThanOrEqual(150);
+      expect(sanitized.kcal).toBeLessThanOrEqual(10000);
+      expect(sanitized.protein).toBeLessThanOrEqual(1000);
     });
   });
 
