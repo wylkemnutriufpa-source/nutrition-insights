@@ -25,6 +25,16 @@ interface MealSubstitutionModalProps {
   mealPlanId: string;
   patientId: string;
   onSubstitute: (food: FoodItem, originalTitle: string) => void;
+  /** 🛡️ SOBERANIA V3: Opções pré-definidas pelo nutricionista no snapshot */
+  options?: Array<{
+    id: string;
+    title: string;
+    description?: string | null;
+    calories_target?: number | null;
+    protein_target?: number | null;
+    carbs_target?: number | null;
+    fat_target?: number | null;
+  }>;
 }
 
 interface ComponentBlock {
