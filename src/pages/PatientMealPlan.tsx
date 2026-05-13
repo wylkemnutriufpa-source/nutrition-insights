@@ -194,14 +194,14 @@ export default function PatientMealPlan() {
 
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (snapshotData?.editor_version === 'v3') {
-      if (!snapshotData.snapshot || (!snapshotData.snapshot.days && !snapshotData.snapshot.meals)) {
+      const snapshot = snapshotData.snapshot as any;
+      if (!snapshot || (!snapshot.days && !snapshot.meals)) {
         console.error(`[CRITICAL] V3 Plan ${planData.id} missing snapshot in Patient App.`);
         toast.error("Erro ao carregar os dados clínicos do plano.");
         setLoading(false);
         return;
       }
 
-      const snapshot = snapshotData.snapshot as any;
       const currentDow = new Date(date + "T12:00:00").getDay();
       const flatItems: any[] = [];
 
