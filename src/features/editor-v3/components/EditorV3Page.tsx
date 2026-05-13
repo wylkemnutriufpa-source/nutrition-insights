@@ -218,20 +218,15 @@ const EditorV3Page = () => {
       if (!prev) return null;
       setIsModalDirty(true);
       
-      // Padronização absoluta: Garantir que quantidades sejam sempre arredondadas (steps de 1g)
+      // Sincronização de massa clínica para preview real-time (Decimais permitidos)
       const sanitizedUpdates = { ...updates };
-      if (sanitizedUpdates.quantity !== undefined) {
-        sanitizedUpdates.quantity = Math.round(sanitizedUpdates.quantity);
-      }
-      
       const merged = { ...prev, ...sanitizedUpdates, manual_override: true };
       
-      // 🛡️ SOBERANIA CLÍNICA NO DRAFT: Sincronizar massa clínica para preview real-time
       if (sanitizedUpdates.quantity !== undefined || sanitizedUpdates.measurementType !== undefined || sanitizedUpdates.portionValue !== undefined) {
         const pValue = Number(merged.portionValue) || 1;
         merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
-          ? merged.quantity
-          : Math.round(merged.quantity * pValue);
+          ? Number(merged.quantity)
+          : Number(merged.quantity) * pValue;
       }
       
       return merged;
@@ -3100,15 +3095,15 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = 1;
-                            updateLocalDraft({ quantity: Math.max(0, localDraft.quantity - step) });
+                            const step = localDraft.measurementType === 'gram' ? 1 : 0.5;
+                            updateLocalDraft({ quantity: Math.max(0, Number(localDraft.quantity) - step) });
                           }}
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
                         <Input 
                           type="number" 
-                          step="1"
+                          step="0.1"
                           value={localDraft.quantity} 
                           onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })}
                           className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50 text-center"
@@ -3118,8 +3113,8 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = 1;
-                            updateLocalDraft({ quantity: localDraft.quantity + step });
+                            const step = localDraft.measurementType === 'gram' ? 1 : 0.5;
+                            updateLocalDraft({ quantity: Number(localDraft.quantity) + step });
                           }}
                         >
                           <Plus className="w-4 h-4" />
@@ -3137,30 +3132,30 @@ const EditorV3Page = () => {
                             // Lógica de Peso para Medidas Caseiras
                             const name = localDraft.name.toLowerCase();
                             let newQuantity = localDraft.quantity;
+                            let newPortionValue = localDraft.portionValue || 100;
                             
                             if (val === 'Unid. P') {
-                              if (name.includes('banana')) newQuantity = 60;
-                              else if (name.includes('maçã')) newQuantity = 80;
-                              else if (name.includes('ovo')) newQuantity = 40;
-                              else newQuantity = 50;
+                              newPortionValue = name.includes('banana') ? 60 : (name.includes('maçã') ? 80 : (name.includes('ovo') ? 40 : 50));
+                              newQuantity = 1;
                             } else if (val === 'Unid. M') {
-                              if (name.includes('banana')) newQuantity = 100;
-                              else if (name.includes('maçã')) newQuantity = 130;
-                              else if (name.includes('ovo')) newQuantity = 50;
-                              else newQuantity = 100;
+                              newPortionValue = name.includes('banana') ? 100 : (name.includes('maçã') ? 130 : (name.includes('ovo') ? 50 : 100));
+                              newQuantity = 1;
                             } else if (val === 'Unid. G') {
-                              if (name.includes('banana')) newQuantity = 150;
-                              else if (name.includes('maçã')) newQuantity = 200;
-                              else if (name.includes('ovo')) newQuantity = 65;
-                              else newQuantity = 150;
+                              newPortionValue = name.includes('banana') ? 150 : (name.includes('maçã') ? 200 : (name.includes('ovo') ? 65 : 150));
+                              newQuantity = 1;
                             } else if (val === 'colher(es)') {
-                              newQuantity = 15;
-                            } 
+                              newPortionValue = name.includes('azeite') || name.includes('óleo') ? 13 : 15;
+                              newQuantity = 1;
+                            } else if (val === 'Gramas') {
+                              newPortionValue = 100;
+                              newQuantity = 100;
+                            }
                             
                             updateLocalDraft({ 
                               measurementType: unitType as any,
                               portionUnitLabel: unitLabel,
-                              quantity: newQuantity
+                              quantity: newQuantity,
+                              portionValue: newPortionValue
                             });
                           }}
                         >

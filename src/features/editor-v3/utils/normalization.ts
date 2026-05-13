@@ -101,6 +101,15 @@ export function normalizeFood(food: any): Food {
     fat: f.fat || 0
   });
 
+  // 🛡️ MACRO PURIFICATION: Se não temos macros por 100g, inferimos agora para o Motor V3
+  if (f.kcal_100g === undefined || f.kcal_100g === 0) {
+    const pValue = Number(f.portionValue) || 100;
+    f.kcal_100g = (f.measurementType === 'gram' || f.measurementType === 'ml') ? f.kcal : (f.kcal / (pValue / 100));
+    f.protein_100g = (f.measurementType === 'gram' || f.measurementType === 'ml') ? f.protein : (f.protein / (pValue / 100));
+    f.carb_100g = (f.measurementType === 'gram' || f.measurementType === 'ml') ? f.carbs : (f.carbs / (pValue / 100));
+    f.fat_100g = (f.measurementType === 'gram' || f.measurementType === 'ml') ? f.fat : (f.fat / (pValue / 100));
+  }
+
   f.kcal = cleanMacros.kcal;
   f.protein = cleanMacros.protein;
   f.carbs = cleanMacros.carbs;

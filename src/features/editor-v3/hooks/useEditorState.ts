@@ -656,8 +656,8 @@ export const useEditorState = create<EditorState>()(
                   if (updates.quantity !== undefined) {
                      const pValue = Number(merged.portionValue) || 1;
                      merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
-                       ? merged.quantity
-                       : merged.quantity * pValue;
+                       ? Number(merged.quantity)
+                       : Number(merged.quantity) * pValue;
                   }
 
                   const newMacros = calculateItemMacros(merged, merged.quantity);
@@ -688,8 +688,8 @@ export const useEditorState = create<EditorState>()(
                     if (propagatedUpdates.quantity !== undefined) {
                       const pValue = Number(merged.portionValue) || 1;
                       merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
-                        ? merged.quantity
-                        : merged.quantity * pValue;
+                        ? Number(merged.quantity)
+                        : Number(merged.quantity) * pValue;
                     }
 
                     const newMacros = calculateItemMacros(merged, merged.quantity);
@@ -763,8 +763,8 @@ export const useEditorState = create<EditorState>()(
                       const pValue = i.portionValue || 1;
                       const newClinicalMass = clinical_mass_g ?? 
                         ((i.measurementType === 'gram' || i.measurementType === 'ml')
-                          ? quantity
-                          : quantity * pValue);
+                          ? Number(quantity)
+                          : Number(quantity) * pValue);
 
                       const updatedItem = { 
                         ...i, 
