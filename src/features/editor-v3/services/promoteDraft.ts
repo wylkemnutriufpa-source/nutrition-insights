@@ -211,9 +211,7 @@ export async function promoteDraftToMealPlan(
         is_manually_edited: true,
         is_locked: (item as any).locked || false,
         is_primary: true,
-            substitution_group_id: groupId,
-            // 🛡️ FASE 4: Sanitização de sub.id
-            id: isUuid(sub.instanceId || sub.id) ? (sub.instanceId || sub.id) : crypto.randomUUID(),
+        substitution_group_id: groupId,
         edit_metadata: {
           ...item,
           display_quantity: item.quantity,
@@ -225,6 +223,7 @@ export async function promoteDraftToMealPlan(
       if (item.substitutions && Array.isArray(item.substitutions)) {
         item.substitutions.forEach((sub: any) => {
           itemsRows.push({
+            id: isUuid(sub.instanceId || sub.id) ? (sub.instanceId || sub.id) : crypto.randomUUID(),
             meal_plan_id: plan.id,
             tenant_id: draft.tenant_id,
             meal_type: mealType,
