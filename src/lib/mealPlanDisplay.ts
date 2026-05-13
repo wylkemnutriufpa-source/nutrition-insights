@@ -41,15 +41,17 @@ function getItemTime(item: DisplayMealPlanItem): string {
 }
 
 export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
-  // 🛡️ SOBERANIA V3: Se for explicitamente falso, nunca é primário.
+  // 🛡️ SOBERANIA V3: Se o campo is_primary estiver definido, ele é a fonte da verdade.
   if (item.is_primary === false) return false;
   if (item.is_primary === true) return true;
   
-  // 🛡️ ANTI-VAZAMENTO: Se tiver substitution_group_id e is_primary for nulo/indefinido,
-  // no modelo V3/V2 ele deve ser tratado como substituição (não primário).
-  if (item.substitution_group_id) return false;
+  // 🛡️ COMPATIBILIDADE V2/LEGADO: Se não temos is_primary (null/undefined), 
+  // checamos se o item tem um substitution_group_id. 
+  // No V2, itens primários não tinham esse ID, apenas as substituições tinham.
+  // No V3, mesmo o primário tem o ID do grupo, mas o V3 SEMPRE define is_primary: true/false.
+  if (item.substitution_group_id && item.is_primary === null) return false;
   
-  // Fallback para itens legados sem qualquer marcação: assume primário
+  // Fallback final: Se nada indicar que é substituição, assume-se primário.
   return true;
 }
 
