@@ -216,7 +216,12 @@ export async function promoteDraftToMealPlan(
             is_manually_edited: false,
             is_locked: false,
             is_primary: false,
-            substitution_group_id: groupId
+            substitution_group_id: groupId,
+            edit_metadata: {
+              ...sub,
+              display_quantity: sub.suggestedQuantity || sub.portionValue || 100,
+              display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g'
+            }
           });
         });
       }
