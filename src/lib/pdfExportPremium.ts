@@ -575,68 +575,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   const displayTotals = calculateDisplayTotals(data);
   const isWeeklyMode = data.planMode === 'weekly';
   
-  // Agrupar itens por dia para detectar se temos apenas um template de 1 dia
-  const originalGroupedByDay = (data.items || []).reduce((acc, item) => {
-    const dayKey = item.day_of_week ?? -1;
-    if (!acc[dayKey]) acc[dayKey] = [];
-    acc[dayKey].push(item);
-    return acc;
-  }, {} as Record<number, MealPlanPDFItem[]>);
+  // SOBERANIA V3: O PDF é um renderizador PASSIVO. Ele não rotaciona, não expande e não infere.
+  // Ele apenas organiza os itens recebidos por dia e refeição.
+  const printItems = data.items || [];
 
-  const distinctDays = Object.keys(originalGroupedByDay).filter(d => d !== '-1');
-  const isSingleDayTemplate = distinctDays.length <= 1;
-
-  let printItems: MealPlanPDFItem[] = [];
-
-  if (isWeeklyMode && isSingleDayTemplate) {
-    // 🚀 LÓGICA DE ROTAÇÃO SEMANAL: Expandir 1 dia para 7 dias rotacionando substituições
-    const dayOrder = [1, 2, 3, 4, 5, 6, 0];
-    const templateDay = Number(distinctDays[0] || 0);
-    const templateItems = originalGroupedByDay[templateDay] || originalGroupedByDay[-1] || [];
-    
-    // Identificar grupos de substituição no template sem misturar refeições de tipos diferentes
-    const groups: Record<string, { primary: MealPlanPDFItem, subs: MealPlanPDFItem[] }> = {};
-    templateItems.forEach(item => {
-      const gId = getMealGroupKey(item);
-      if (!groups[gId]) groups[gId] = { primary: item, subs: [] };
-      if (item.is_primary !== false) groups[gId].primary = item;
-      else groups[gId].subs.push(item);
-    });
-
-    // Gerar 7 dias rotacionando
-    dayOrder.forEach((day, dayIdx) => {
-      Object.values(groups).forEach(group => {
-        const options = [group.primary, ...group.subs];
-        // Rotacionar: cada dia pega o próximo item da lista de opções
-        const selected = options[dayIdx % options.length];
-        
-        // Adicionar o selecionado como primário para este dia específico
-        printItems.push({
-          ...selected,
-          day_of_week: day,
-          is_primary: true
-        });
-        
-        // Adicionar as outras opções como substitutos (opcional, mas bom para o paciente ver)
-        options.filter(o => o !== selected).forEach(o => {
-          printItems.push({
-            ...o,
-            day_of_week: day,
-            is_primary: false
-          });
-        });
-      });
-    });
-  } else {
-    // Modo Diário ou já possui múltiplos dias: Flattening normal dos grupos para o dia atual
-    printItems = getPrimaryDailyItems(data.items || []).flatMap((primary) => {
-      const primaryGroupKey = getMealGroupKey(primary);
-      const relatedSubs = (data.items || [])
-        .filter(item => item !== primary && item.is_primary === false && getMealGroupKey(item) === primaryGroupKey)
-        .slice(0, 5);
-      return [primary, ...relatedSubs];
-    });
-  }
   const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
     const canonicalType = resolveCanonicalMealType(mType);
     const mealInfo = MEAL_LABELS[String(canonicalType)] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
