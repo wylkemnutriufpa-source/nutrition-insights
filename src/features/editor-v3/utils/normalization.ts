@@ -155,7 +155,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
       
       return {
         ...normalized,
-        instanceId: normalized.instanceId || Math.random().toString(36).substring(2, 10),
+        instanceId: normalized.instanceId || crypto.randomUUID(),
         quantity: normalized.quantity ?? 1,
         clinical_mass_g: normalized.clinical_mass_g ?? (normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1))),
         substitutions: (normalized.substitutions || []).map((sub: any) => normalizeFood(sub))
