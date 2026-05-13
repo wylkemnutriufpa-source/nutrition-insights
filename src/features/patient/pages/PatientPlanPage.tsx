@@ -327,7 +327,12 @@ export const PatientPlanPage = () => {
                           )}
                           <div>
                             <span className="font-medium group-hover:text-emerald-400 transition-colors">{item.name}</span>
-                            <p className="text-xs text-gray-500">Medida caseira recomendada</p>
+                            <p className="text-xs text-gray-500">
+                              {plan.editor_version === 'v3' 
+                                ? `${item.display_quantity || item.quantity || ''} ${item.display_unit || item.portionUnitLabel || ''} ${item.clinical_mass_g ? `(${item.clinical_mass_g}g)` : ''}`
+                                : 'Medida caseira recomendada'
+                              }
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
