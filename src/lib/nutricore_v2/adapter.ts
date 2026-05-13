@@ -77,7 +77,12 @@ export class NutriCoreV3Adapter {
       const engineInput = this.mapPatientToEngine(context);
       const engineResult = runEngine(engineInput);
       
-      console.log(`[NutriCore-Adapter] Engine Result: ${engineResult.target_kcal} kcal calculated.`);
+      console.log(`\n=== STAGE 1: NutriCoreV3 Targets ===`);
+      console.log(`Target Kcal: ${engineResult.target_kcal}`);
+      console.log(`Target Protein: ${engineResult.macros.protein_g}g`);
+      console.log(`Target Carbs: ${engineResult.macros.carb_g}g`);
+      console.log(`Target Fat: ${engineResult.macros.fat_g}g`);
+      console.log(`Rationale: ${engineResult.rationale.join(' | ')}`);
 
       const targetKcal = engineResult.target_kcal || 2000;
 
@@ -188,6 +193,8 @@ export class NutriCoreV3Adapter {
             const portionValue = portion.portionValue;
             const portionLabel = portion.portionLabel;
 
+            console.log(`[ClinicalAudit] Item: ${item.name} | Mass: ${item.grams}g | Prot: ${totalProtein}g | Kcal: ${totalKcal}`);
+
             return {
               id: item.foodId,
               name: item.name,
@@ -213,7 +220,7 @@ export class NutriCoreV3Adapter {
           });
 
           const bestImage = await getBestMealImage(mealName, v3Items);
-
+            
           return {
             id: Math.random().toString(36).substring(2, 9),
             name: mealName,
