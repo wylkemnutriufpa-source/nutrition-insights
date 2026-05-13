@@ -168,33 +168,28 @@ export default function PatientMealPlan() {
 
       const planData = result as any;
     
-    // Buscar editor_version e snapshot para garantir soberania
-    const { data: snapshotData } = await supabase
-      .from('meal_plans')
-      .select('editor_version, snapshot, total_target_calories, total_target_protein, total_target_carbs, total_target_fat')
-      .eq('id', planData.id)
-      .maybeSingle();
-
+    // Agora o RPC resolve_patient_meal_plan já retorna os dados necessários (snapshot, editor_version, targets)
+    // eliminando a necessidade de uma segunda query e resolvendo problemas de RLS/UUID.
     setPlan({
       id: planData.id,
       title: planData.title,
       start_date: planData.start_date,
       totals_status: planData.totals_status,
       plan_mode: planData.plan_mode,
-      editor_version: snapshotData?.editor_version,
-      snapshot: snapshotData?.snapshot,
-      total_target_calories: snapshotData?.total_target_calories,
-      total_target_protein: snapshotData?.total_target_protein,
-      total_target_carbs: snapshotData?.total_target_carbs,
-      total_target_fat: snapshotData?.total_target_fat,
+      editor_version: planData.editor_version,
+      snapshot: planData.snapshot,
+      total_target_calories: planData.total_target_calories,
+      total_target_protein: planData.total_target_protein,
+      total_target_carbs: planData.total_target_carbs,
+      total_target_fat: planData.total_target_fat,
     } as any);
 
     let resolvedItems: MealPlanItem[] = [];
     let resolvedAllItems: MealPlanItem[] = [];
 
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
-    if (snapshotData?.editor_version === 'v3') {
-      const snapshot = snapshotData.snapshot as any;
+    if (planData.editor_version === 'v3' || planData.editor_version === 'V3') {
+      const snapshot = planData.snapshot as any;
       if (!snapshot || (!snapshot.days && !snapshot.meals)) {
         console.error(`[CRITICAL] V3 Plan ${planData.id} missing snapshot in Patient App.`);
         toast.error("Erro ao carregar os dados clínicos do plano.");
