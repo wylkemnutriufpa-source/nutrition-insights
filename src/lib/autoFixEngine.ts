@@ -298,42 +298,11 @@ const BRAZILIAN_CARBS = [
 
 function fixMainMealStandardization(
   items: MealPlanItem[],
-  dayOfWeek: number,
-  mealType: string
+  _dayOfWeek: number,
+  _mealType: string
 ): { items: MealPlanItem[]; changes: AutoFixChange[] } {
-  const changes: AutoFixChange[] = [];
-  let result = [...items];
-
-  // Check if has Brazilian protein
-  const allText = result.map(i => normalize(`${i.title} ${i.description || ""}`)).join(" ");
-  const hasProtein = BRAZILIAN_PROTEINS.some(p => allText.includes(normalize(p)));
-  const hasCarb = BRAZILIAN_CARBS.some(c => allText.includes(normalize(c)));
-
-  if (!hasProtein || !hasCarb) {
-    changes.push({
-      type: "main_meal_standardized",
-      mealType,
-      dayOfWeek,
-      from: hasProtein ? "sem carboidrato brasileiro" : "sem proteína brasileira",
-      to: hasProtein ? "adicionar arroz/batata/macarrão" : "adicionar frango/carne/peixe",
-      detail: "Refeição principal deve ter base brasileira (proteína + carbo)",
-    });
-  }
-
-  // Reduce excess items
-  if (result.length > 5) {
-    const removed = result.splice(5);
-    changes.push({
-      type: "complexity_reduced",
-      mealType,
-      dayOfWeek,
-      from: `${result.length + removed.length} itens`,
-      to: `${result.length} itens`,
-      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
-    });
-  }
-
-  return { items: result, changes };
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais adivinhar base brasileira ou reduzir itens.
+  return { items, changes: [] };
 }
 
 // ── Main: Auto-fix meal plan ─────────────────────────────────
