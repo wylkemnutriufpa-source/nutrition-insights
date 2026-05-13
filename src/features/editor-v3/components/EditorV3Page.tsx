@@ -3073,6 +3073,7 @@ const EditorV3Page = () => {
                         </Button>
                         <Input 
                           type="number" 
+                          step="1"
                           value={localDraft.quantity} 
                           onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })}
                           className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50 text-center"
