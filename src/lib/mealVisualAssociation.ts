@@ -96,7 +96,8 @@ function extractFoodFromDescription(description: string, aliasMap: Map<string, s
 }
 
 /**
- * Core matching function with strict priority ordering.
+ * Core matching function — PASSIVE ONLY.
+ * No generic fallbacks or text guessing.
  */
 function findMatch(title: string, aliasMap: Map<string, string>, description?: string): string | null {
   const norm = normalize(title);
@@ -116,16 +117,6 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
   // === PRIORITY 2: Longest sub-phrase match (Verified Sources) ===
   const phraseMatch = findBestAliasMatch(norm, aliasMap);
   if (phraseMatch) return phraseMatch;
-
-  // === PRIORITY 3: Strict keyword matching (No generic fallbacks) ===
-  const words = norm.split(/\s+/);
-  for (const word of words) {
-    if (CARB_KEYWORDS.has(word) || ACCESSORY_WORDS.has(word)) continue;
-    if (word.length < 3) continue;
-    
-    // EXCLUSIVELY via alias map, no generic string fallbacks
-    if (aliasMap.has(word)) return aliasMap.get(word)!;
-  }
 
   return null;
 }

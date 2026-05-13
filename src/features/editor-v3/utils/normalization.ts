@@ -197,65 +197,62 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
 
 /**
  * Busca a melhor imagem no banco meal_visual_library.
+ * V3 SOBERANO: Prioriza resolução por IDs (food_id, recipe_id)
  */
 export async function getBestMealImage(mealName: string, items: any[]): Promise<{ url: string; source: 'manual' | 'auto' | 'fallback' }> {
   try {
-    const cleanMealName = mealName.toLowerCase();
-    const principalItem = items.find(i => 
-      ['frango', 'carne', 'peixe', 'ovo', 'tilápia', 'marmita', 'omelete', 'escondidinho', 'massa'].some(p => i.name.toLowerCase().includes(p))
-    ) || items[0];
+    const principalItem = items[0];
+    if (!principalItem) return { url: FALLBACK_MEAL_IMAGE, source: 'fallback' };
 
-    const searchTerm = principalItem ? principalItem.name.toLowerCase() : cleanMealName;
-    
-    const { data: results } = await supabase
-      .from('meal_visual_library')
-      .select('image_url, name, category')
-      .or(`name.ilike.%${searchTerm}%,name.ilike.%${cleanMealName}%`)
-      .limit(5);
+    // 🛡️ RESOLUÇÃO SOBERANA POR ID (Prioridade 1)
+    if (principalItem.visual_library_item_id || principalItem.id) {
+      const targetId = principalItem.visual_library_item_id || principalItem.id;
+      const { data: libraryItem } = await supabase
+        .from('meal_visual_library')
+        .select('image_url')
+        .eq('id', targetId)
+        .eq('is_active', true)
+        .maybeSingle();
 
-    if (results && results.length > 0) {
-      const valid = results.find(r => r.image_url);
-      if (valid) return { url: valid.image_url, source: 'auto' };
+      if (libraryItem?.image_url) {
+        return { url: libraryItem.image_url, source: 'auto' };
+      }
     }
 
+    // 🛡️ RESOLUÇÃO POR SLUG/NAME EXATO (Prioridade 2)
+    const cleanName = principalItem.name.toLowerCase().trim();
+    const { data: nameMatch } = await supabase
+      .from('meal_visual_library')
+      .select('image_url')
+      .eq('name', cleanName.replace(/\s+/g, '-'))
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (nameMatch?.image_url) {
+      return { url: nameMatch.image_url, source: 'auto' };
+    }
+
+    // 🛡️ FALLBACK CLÍNICO PASSIVO (Sem heurística de "adivinhação")
+    const cleanMealName = mealName.toLowerCase();
     const isBreakfast = cleanMealName.includes('café') || cleanMealName.includes('desjejum');
     const isLunch = cleanMealName.includes('almoço');
     const isDinner = cleanMealName.includes('jantar');
-    const isSnack = cleanMealName.includes('lanche');
-    const isSupper = cleanMealName.includes('ceia');
-
-    let fallbackTerm = 'fruta';
-    if (isBreakfast) fallbackTerm = 'pao-frances';
-    if (isLunch || isDinner) fallbackTerm = 'arroz-feijao-frango';
-    if (isSnack) fallbackTerm = 'iogurte-natural';
-    if (isSupper) fallbackTerm = 'banana-com-canela';
     
-    if (searchTerm.includes('frango')) fallbackTerm = 'frango';
-    if (searchTerm.includes('carne')) fallbackTerm = 'carne';
-    if (searchTerm.includes('peixe')) fallbackTerm = 'peixe';
-    if (searchTerm.includes('ovo')) fallbackTerm = 'pao-com-ovo';
-    
-    const { data: fallbackResults } = await supabase
-      .from('meal_visual_library')
-      .select('image_url')
-      .ilike('name', `%${fallbackTerm}%`)
-      .limit(1);
-
-    if (fallbackResults?.[0]?.image_url) {
-      return { url: fallbackResults[0].image_url, source: 'fallback' };
-    }
+    let fallbackPath = 'fruta.jpg';
+    if (isBreakfast) fallbackPath = 'pao-frances.jpg';
+    else if (isLunch || isDinner) fallbackPath = 'arroz-feijao-frango.jpg';
 
     return { 
-      url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/fruta.jpg', 
+      url: `${STORAGE_BASE_URL}/${fallbackPath}`, 
       source: 'fallback' 
     };
   } catch (err) {
-    return { 
-      url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/fruta.jpg', 
-      source: 'fallback' 
-    };
+    return { url: FALLBACK_MEAL_IMAGE, source: 'fallback' };
   }
 }
+
+const STORAGE_BASE_URL = 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library';
+const FALLBACK_MEAL_IMAGE = `${STORAGE_BASE_URL}/fruta.jpg`;
 
 /**
  * Normaliza uma lista de refeições.
