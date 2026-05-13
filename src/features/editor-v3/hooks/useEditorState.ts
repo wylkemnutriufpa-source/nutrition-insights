@@ -688,8 +688,8 @@ export const useEditorState = create<EditorState>()(
                     if (propagatedUpdates.quantity !== undefined) {
                       const pValue = Number(merged.portionValue) || 1;
                       merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
-                        ? merged.quantity
-                        : merged.quantity * pValue;
+                        ? Number(merged.quantity)
+                        : Number(merged.quantity) * pValue;
                     }
 
                     const newMacros = calculateItemMacros(merged, merged.quantity);
