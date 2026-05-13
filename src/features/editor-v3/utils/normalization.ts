@@ -255,7 +255,7 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
 
       return {
         ...normalized,
-        instanceId: (item as any).instanceId || Math.random().toString(36).substring(2, 10),
+        instanceId: (item as any).instanceId || crypto.randomUUID(),
         quantity,
         blockId: (item as any).blockId || generatedBlockId,
         clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? quantity : (quantity * (normalized.portionValue || 1))),
