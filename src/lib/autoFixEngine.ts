@@ -1022,6 +1022,10 @@ export async function autoFixMealPlan(
       is_manually_edited: (fi as any).is_manually_edited || false,
       is_locked: (fi as any).is_locked || false,
       was_auto_corrected: !isItemProtected(fi),
+      // 🛡️ BLINDAGEM V3: Preservar metadados clínicos e gramagens dinâmicas
+      edit_metadata: (fi as any).edit_metadata || null,
+      clinical_mass_g: (fi as any).clinical_mass_g || null,
+      substitution_group_id: (fi as any).substitution_group_id || null,
     }));
 
     const { error: insertErr } = await supabase.from("meal_plan_items").insert(newItems);
@@ -1098,6 +1102,16 @@ export async function autoFixMealPlan(
       protein_target: fi.protein_target,
       carbs_target: fi.carbs_target,
       fat_target: fi.fat_target,
+      tenant_id: tenantId,
+      item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
+      is_manually_edited: (fi as any).is_manually_edited || false,
+      is_locked: (fi as any).is_locked || false,
+      was_auto_corrected: !isItemProtected(fi),
+      // 🛡️ BLINDAGEM V3: Preservar metadados clínicos e gramagens dinâmicas
+      edit_metadata: (fi as any).edit_metadata || null,
+      clinical_mass_g: (fi as any).clinical_mass_g || null,
+      substitution_group_id: (fi as any).substitution_group_id || null,
+    }));
       tenant_id: tenantId,
       item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
       is_manually_edited: (fi as any).is_manually_edited || false,
