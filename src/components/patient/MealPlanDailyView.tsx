@@ -277,9 +277,10 @@ const MealItemCard = memo(function MealItemCard({
             </div>
             <div className="mt-1">
               {(() => {
-                const editMeta = (item as any).edit_metadata;
+                const editMeta = (item as any).edit_metadata || item.metadata;
                 const isV3 = item.editor_version === "v3";
 
+                // V3 prioritization: display_quantity > clinical_mass_g > fallback
                 if (isV3) {
                   const dQty = item.display_quantity || editMeta?.display_quantity;
                   const dUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
@@ -292,7 +293,7 @@ const MealItemCard = memo(function MealItemCard({
                     );
                   }
                   
-                  const cMass = item.clinical_mass_g || (item as any).clinical_mass_g;
+                  const cMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
                   if (cMass) {
                     return (
                       <p className="text-xs font-bold text-primary mb-0.5">
@@ -303,9 +304,10 @@ const MealItemCard = memo(function MealItemCard({
                   return null;
                 }
 
+                // V2 Fallback
                 const displayQuantity = item.display_quantity || editMeta?.display_quantity;
                 const displayUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
-                const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g;
+                const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
 
                 if (displayQuantity) {
                   return (
@@ -318,7 +320,7 @@ const MealItemCard = memo(function MealItemCard({
                 if (clinicalMass) {
                   return (
                     <p className="text-xs font-bold text-primary mb-0.5">
-                      {formatDisplayPortion({ ...item, grams: clinicalMass } as any)}
+                      {clinicalMass}g
                     </p>
                   );
                 }

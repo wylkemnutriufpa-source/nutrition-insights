@@ -77,7 +77,7 @@ export default function DailyMealPlanInline() {
 
       const currentItems = (itemsData || []) as MealPlanItem[];
       // Modelo GLOBAL: mostra apenas itens marcados como primários para o dia atual simplificado
-      setItems(currentItems.filter(i => (i as any).is_primary));
+      setItems(currentItems.filter(i => (i as any).is_primary && !(i as any).is_substitution));
 
       const { data: completionsData } = await supabase
         .from("meal_item_completions")
