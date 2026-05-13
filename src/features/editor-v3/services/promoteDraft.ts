@@ -286,8 +286,10 @@ export async function promoteDraftToMealPlan(
   // Garante soberania visual para o Patient App
   try {
     await generateAndPersistMealPlanSnapshot(plan.id);
-  } catch (snapshotErr) {
-    console.warn("[Promote-Snapshot] Falha ao gerar snapshot (não-bloqueante):", snapshotErr);
+  } catch (snapshotErr: any) {
+    console.error("[Promote-Snapshot] Falha crítica ao gerar snapshot:", snapshotErr);
+    // V3 MANDATORY SNAPSHOT: Bloqueamos se o snapshot falhar para evitar inconsistência operacional
+    throw new Error(`Falha na Soberania V3: O snapshot visual não pôde ser gerado (${snapshotErr.message}).`);
   }
 
   // Log de acesso soberano

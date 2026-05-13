@@ -165,7 +165,7 @@ export async function buildMealPlanSnapshot(
     .select(
       "id, current_weight, current_weight_kg, current_height_cm, activity_level, goal"
     )
-    .eq("id", planRow.patient_id)
+    .or(`id.eq.${planRow.patient_id},user_id.eq.${planRow.patient_id}`)
     .maybeSingle();
 
   // 4. Agrupar itens por dia → refeição
