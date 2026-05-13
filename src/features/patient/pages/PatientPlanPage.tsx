@@ -77,7 +77,30 @@ export const PatientPlanPage = () => {
   };
   
   const handleOpenSubstitution = (item: any, mealId: string) => {
-    // Tenta encontrar o alimento correspondente no banco de dados NutriCore V2
+    // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
+    if (plan?.editor_version === 'v3') {
+      // No V3, usamos APENAS o que o nutricionista definiu como substitutos válidos no snapshot
+      const snapshotSubs = item.substitutions || [];
+      
+      if (snapshotSubs.length === 0) {
+        toast.error('O nutricionista não definiu substituições para este item.');
+        return;
+      }
+
+      // Convertemos o formato do snapshot para o formato esperado pelo modal (compatibilidade visual)
+      const mappedSubs = snapshotSubs.map((food: any) => ({
+        food,
+        grams: item.clinical_mass_g || item.quantity || 100, // Mantém a massa clínica ou quantidade
+        unit_label: food.portionUnitLabel || 'unidade'
+      }));
+
+      setSubstitutions(mappedSubs);
+      setSelectedItem({ item, mealId });
+      setShowSubModal(true);
+      return;
+    }
+
+    // --- LEGADO V1/V2 ---
     const baseFood = BASE_FOODS.find(f => 
       f.name.toLowerCase() === item.name.toLowerCase() || 
       item.name.toLowerCase().includes(f.name.toLowerCase())
@@ -88,10 +111,7 @@ export const PatientPlanPage = () => {
       return;
     }
 
-    // Calcula gramas aproximadas se não houver no item (padrão 100g se zero)
-    // No V3, item.quantity costuma ser as gramas reais.
     const grams = item.quantity || 100;
-    
     const subs = getSubstitutions(baseFood, BASE_FOODS, grams);
     setSubstitutions(subs);
     setSelectedItem({ item, mealId });
