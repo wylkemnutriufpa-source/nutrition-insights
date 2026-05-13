@@ -82,7 +82,7 @@ export const ClinicalGuard = {
   sanitizeMacros: (macros: { kcal: number, protein: number, carbs: number, fat: number }) => {
     return {
       kcal: Math.max(0, Math.min(2500, macros.kcal)),      // Max 2500kcal por item (muito improvável)
-      protein: Math.max(0, Math.min(150, macros.protein)), // Max 150g de proteína por item
+      protein: Math.max(0, Math.min(250, macros.protein)), // Max 250g de proteína por item
       carbs: Math.max(0, Math.min(300, macros.carbs)),     // Max 300g de carbo por item
       fat: Math.max(0, Math.min(100, macros.fat))          // Max 100g de gordura por item
     };
