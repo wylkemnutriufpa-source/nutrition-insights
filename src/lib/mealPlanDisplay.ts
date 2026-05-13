@@ -72,14 +72,19 @@ function groupItems(items: DisplayMealPlanItem[]): GroupedMeal[] {
   const groups = new Map<string, DisplayMealPlanItem[]>();
 
   for (const item of sortPlanItems(items)) {
-    const groupId = item.substitution_group_id || item.id; // Use item.id as fallback if no groupId, assuming it is a UUID
+    // 🛡️ ANTI-VAZAMENTO: Substituições órfãs (sem group_id) são ignoradas no dashboard principal.
+    // Isso evita que itens de troca apareçam como se fossem refeições principais.
+    if (item.is_primary === false && !item.substitution_group_id) continue;
+    
+    const groupId = item.substitution_group_id || item.id; 
     const current = groups.get(groupId) || [];
     current.push(item);
     groups.set(groupId, current);
   }
 
   return Array.from(groups.entries()).map(([groupId, groupItems]) => {
-    const primary = groupItems.find(isPrimaryMealItem) || groupItems[0];
+    // 🛡️ SOBERANIA V3: O primário deve ser quem tem is_primary: true ou o primeiro candidato válido.
+    const primary = groupItems.find(i => i.is_primary === true) || groupItems.find(isPrimaryMealItem) || groupItems[0];
     const substitutions = groupItems
       .filter((item) => item.id !== primary.id)
       .filter((item) => !isPrimaryMealItem(item) || !!item.substitution_group_id)
