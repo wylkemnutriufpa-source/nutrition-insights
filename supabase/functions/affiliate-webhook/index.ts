@@ -85,17 +85,12 @@ serve(async (req) => {
         } catch (_) { /* ignore */ }
       }
     } else if (!webhookSecret) {
-      // Fallback: no webhook secret configured — accept JSON body (legacy/internal mode)
-      // ⚠️ Less secure, only for internal calls
-      log("WARNING: No STRIPE_WEBHOOK_SECRET configured — accepting unverified request");
-      const body = await req.json();
-      event_type = body.event_type;
-      invoice_id = body.invoice_id;
-      subscription_id = body.subscription_id;
-      customer_email = body.customer_email;
-      amount = body.amount;
-      user_id = body.user_id;
-      ip_address = body.ip_address;
+      // Hard fail: webhook signature verification is mandatory in production
+      log("REJECTED: STRIPE_WEBHOOK_SECRET is not configured");
+      return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else {
       // Has webhook secret but no signature header — reject
       log("REJECTED: Missing stripe-signature header");

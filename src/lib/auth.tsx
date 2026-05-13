@@ -186,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log(`[RASTREADOR] Auth state change event: ${event}`);
+        if (import.meta.env.DEV) console.log(`[Auth] state change: ${event}`);
         if (event === "INITIAL_SESSION") return;
         
         setSession(currentSession);
@@ -194,12 +194,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
 
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
-          console.log(`[RASTREADOR] Fetching data for user: ${currentUser.id}`);
+          if (import.meta.env.DEV) console.log("[Auth] fetching profile for current user");
           fetchData(currentUser.id).catch((e) => {
             if (import.meta.env.DEV) console.error("[Auth] state fetch:", e);
           });
         } else if (event === "SIGNED_OUT") {
-          console.warn("[RASTREADOR] User SIGNED_OUT event detected");
+          if (import.meta.env.DEV) console.warn("[Auth] signed out");
           setProfile(null);
           setRoles(null);
           setSubscription(defaultSubscription);
@@ -218,7 +218,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
           (payload) => {
             if (mounted) {
-              console.log("[Auth] Profile update detected via Realtime", payload.new);
+              if (import.meta.env.DEV) {
+                const summary = { user_id: (payload.new as any)?.user_id, updated_at: (payload.new as any)?.updated_at };
+                console.log("[Auth] profile updated via realtime", summary);
+              }
               setProfile(payload.new as Profile);
             }
           }
@@ -259,7 +262,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     : "basic";
 
   useEffect(() => {
-    console.log(`[DEBUG] useAuth experienceMode calculated: ${experienceMode} | profileMode: ${profile?.experience_mode}`);
+    if (import.meta.env.DEV) {
+      console.log(`[Auth] experienceMode=${experienceMode}`);
+    }
   }, [experienceMode, profile?.experience_mode]);
 
   return (

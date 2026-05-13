@@ -49,8 +49,8 @@ Deno.serve(async (req) => {
     }
 
     const userRoles = (roles || []).map((r: { role: string }) => r.role);
-    if (!userRoles.includes("admin") && !userRoles.includes("nutritionist")) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
+    if (!userRoles.includes("admin")) {
+      return new Response(JSON.stringify({ error: "Forbidden — admin only" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

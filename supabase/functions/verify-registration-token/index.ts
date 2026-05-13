@@ -13,8 +13,15 @@ serve(async (req) => {
     const { nutriId, signature } = await req.json();
     if (!nutriId || !signature) throw new Error("nutriId and signature are required");
 
-    const secret = Deno.env.get("REGISTRATION_SIGNING_SECRET") || "fallback-secret-for-dev";
-    
+    const secret = Deno.env.get("REGISTRATION_SIGNING_SECRET");
+    if (!secret) {
+      console.error("[verify-registration-token] REGISTRATION_SIGNING_SECRET is not configured");
+      return new Response(
+        JSON.stringify({ error: "Signing secret not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       "raw",
@@ -23,17 +30,20 @@ serve(async (req) => {
       false,
       ["sign"]
     );
-    
-    const expectedSignatureBuffer = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      encoder.encode(nutriId)
-    );
-    
-    const hashArray = Array.from(new Uint8Array(expectedSignatureBuffer));
-    const expectedSignature = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
-    const isValid = signature === expectedSignature;
+    const expectedSignatureBuffer = await crypto.subtle.sign(
+      "HMAC", key, encoder.encode(nutriId)
+    );
+
+    const expectedSignature = Array.from(new Uint8Array(expectedSignatureBuffer))
+      .map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    // constant-time comparison
+    let diff = expectedSignature.length ^ signature.length;
+    for (let i = 0; i < Math.min(expectedSignature.length, signature.length); i++) {
+      diff |= expectedSignature.charCodeAt(i) ^ signature.charCodeAt(i);
+    }
+    const isValid = diff === 0;
 
     return new Response(
       JSON.stringify({ isValid }),

@@ -1,3 +1,6 @@
+import { requireUser, requireRole } from "../_shared/auth-guard.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -9,11 +12,17 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const caller = await requireUser(req).catch((r) => { throw r; });
+    requireRole(caller, "nutritionist", "admin");
+
+    const rl = await checkRateLimit("firecrawl-search", caller.id, 30, 600);
+    if (!rl.allowed) return rateLimitResponse();
+
     const { query, options } = await req.json();
 
-    if (!query) {
+    if (!query || typeof query !== "string" || query.length > 500) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Query is required' }),
+        JSON.stringify({ success: false, error: 'Valid query is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -26,8 +35,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Searching:', query);
-
     const response = await fetch('https://api.firecrawl.dev/v1/search', {
       method: 'POST',
       headers: {
@@ -36,7 +43,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         query,
-        limit: options?.limit || 10,
+        limit: Math.min(options?.limit || 10, 50),
         lang: options?.lang,
         country: options?.country,
         tbs: options?.tbs,
@@ -47,7 +54,6 @@ Deno.serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Firecrawl API error:', data);
       return new Response(
         JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -58,7 +64,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    console.error('Error searching:', error);
+    if (error instanceof Response) return error;
     const errorMessage = error instanceof Error ? error.message : 'Failed to search';
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
