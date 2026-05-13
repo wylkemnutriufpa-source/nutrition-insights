@@ -5,6 +5,11 @@ export type DisplayMealPlanItem = Tables<"meal_plan_items"> & {
   edit_metadata?: Record<string, any> | null;
   substitution_group_id?: string | null;
   is_primary?: boolean | null;
+  // --- V3 SOBERANIA ---
+  display_quantity?: string | number | null;
+  display_unit?: string | null;
+  clinical_mass_g?: number | null;
+  editor_version?: string | null;
 };
 
 export interface MealSubstitutionOption {
@@ -36,7 +41,17 @@ function getItemTime(item: DisplayMealPlanItem): string {
 }
 
 export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
-  return item.is_primary !== false;
+  // 🛡️ SOBERANIA V3: Se for explicitamente falso, não é primário.
+  // Se for nulo ou indefinido, assumimos primário APENAS se não houver substitution_group_id
+  // ou se for o primeiro item de um grupo.
+  if (item.is_primary === false) return false;
+  if (item.is_primary === true) return true;
+  
+  // Heurística de fallback: Se tem substitution_group_id mas is_primary é nulo, 
+  // provavelmente é uma substituição (pois itens primários V3 sempre recebem is_primary: true)
+  if (item.substitution_group_id && item.is_primary === null) return false;
+  
+  return true;
 }
 
 export function sortPlanItems<T extends DisplayMealPlanItem>(items: T[]): T[] {

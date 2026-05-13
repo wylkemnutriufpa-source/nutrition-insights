@@ -69,7 +69,7 @@ export default function NextMealWidget() {
 
       const itemsQuery = supabase
         .from("meal_plan_items")
-        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week")
+        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week, is_primary")
         .eq("meal_plan_id", plan.id);
       
       // Se não for single_day, filtra por dia
@@ -108,11 +108,13 @@ export default function NextMealWidget() {
       if (!selectedMeal || !grouped[selectedMeal]) { setLoading(false); return; }
 
       const mealItems = grouped[selectedMeal];
-      const totalKcal = mealItems.reduce((s, i) => s + safeNum(i?.calories_target), 0);
-      const totalProtein = mealItems.reduce((s, i) => s + safeNum(i?.protein_target), 0);
-      const totalCarbs = mealItems.reduce((s, i) => s + safeNum(i?.carbs_target), 0);
-      const totalFat = mealItems.reduce((s, i) => s + safeNum(i?.fat_target), 0);
-      const summary = mealItems.slice(0, 3).map((i) => i?.title || "Alimento").join(", ");
+      // 🛡️ SOBERANIA V3: Filtramos apenas itens primários para evitar explosão de macros
+      const primaryMealItems = mealItems.filter(i => (i as any).is_primary !== false);
+      const totalKcal = primaryMealItems.reduce((s, i) => s + safeNum(i?.calories_target), 0);
+      const totalProtein = primaryMealItems.reduce((s, i) => s + safeNum(i?.protein_target), 0);
+      const totalCarbs = primaryMealItems.reduce((s, i) => s + safeNum(i?.carbs_target), 0);
+      const totalFat = primaryMealItems.reduce((s, i) => s + safeNum(i?.fat_target), 0);
+      const summary = primaryMealItems.slice(0, 3).map((i) => i?.title || "Alimento").join(", ");
 
       const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
       const mealHTime = MEAL_TIMES[selectedMeal] || "12:00";
