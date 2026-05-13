@@ -73,6 +73,30 @@ function groupItems(items: DisplayMealPlanItem[]): GroupedMeal[] {
   });
 }
 
+/**
+ * Filtra grupos de substituição idênticos para evitar explosão de macros
+ * em planos com dados duplicados (legado/bug de persistência).
+ */
+export function dedupeGroups(groups: GroupedMeal[]): GroupedMeal[] {
+  const seen = new Set<string>();
+  const unique: GroupedMeal[] = [];
+  
+  for (const group of groups) {
+    const key = [
+      String(group.primary.meal_type ?? ""),
+      String(group.primary.title ?? "").trim().toLowerCase(),
+      String(group.primary.calories_target ?? (group.primary as any).metadata?.calories_target ?? (group.primary as any).metadata?.calories ?? ""),
+      String(group.substitutions.length)
+    ].join("|");
+    
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(group);
+    }
+  }
+  return unique;
+}
+
 function withSubstitutionMetadata(group: GroupedMeal): DisplayMealPlanItem {
   const options: MealSubstitutionOption[] = group.substitutions.map((item) => ({
     id: item.id,
@@ -145,13 +169,18 @@ export function selectCanonicalDayItems(items: DisplayMealPlanItem[], requestedD
 }
 
 export function buildDailyDisplayItems(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
-  return groupItems(selectCanonicalDayItems(items, requestedDay))
+  const canonicalItems = selectCanonicalDayItems(items, requestedDay);
+  const groups = dedupeGroups(groupItems(canonicalItems));
+  
+  return groups
     .filter((group) => isPrimaryMealItem(group.primary))
     .map(withSubstitutionMetadata);
 }
 
 export function buildWeeklyDisplayDays(items: DisplayMealPlanItem[]): Array<{ day: number; items: DisplayMealPlanItem[] }> {
-  const canonicalGroups = groupItems(selectCanonicalDayItems(items));
+  // Para visualização semanal de um plano legado (day_of_week NULL), 
+  // dedupamos os grupos primeiro para não mostrar 480 itens.
+  const canonicalGroups = dedupeGroups(groupItems(selectCanonicalDayItems(items)));
 
   return DAY_ORDER.map((day, dayIndex) => ({
     day,
@@ -191,7 +220,8 @@ export function buildWeeklyDisplayDays(items: DisplayMealPlanItem[]): Array<{ da
 }
 
 export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
-  const primaryItems = groupItems(items).map((group) => group.primary).filter(isPrimaryMealItem);
+  const groups = dedupeGroups(groupItems(items));
+  const primaryItems = groups.map((group) => group.primary).filter(isPrimaryMealItem);
   return primaryItems.reduce(
     (acc, item) => ({
       calories: acc.calories + asNumber(item.calories_target ?? (item as any).metadata?.calories_target ?? (item as any).metadata?.calories),
@@ -205,5 +235,5 @@ export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
 
 export function buildPdfItemsForDailyPlan(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
   const dayItems = selectCanonicalDayItems(items, requestedDay);
-  return groupItems(dayItems).flatMap((group) => [group.primary, ...group.substitutions]);
+  return dedupeGroups(groupItems(dayItems)).flatMap((group) => [group.primary, ...group.substitutions]);
 }
