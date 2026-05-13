@@ -86,16 +86,9 @@ const VALID_MEAL_CATEGORIES = new Set(["cafe_da_manha", "lanche", "almoco", "jan
 const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
 
 // ──── INTOLERANCE KEYWORD MAPS (CLINICAL SAFETY) ────
-const INTOLERANCE_KEYWORDS: Record<string, string[]> = {
-  lactose: ["leite", "queijo", "iogurte", "requeijao", "whey", "nata", "creme de leite", "manteiga", "cream cheese", "coalhada", "ricota", "mucarela", "mussarela", "parmesao", "provolone", "cottage"],
-  gluten: ["pao", "macarrao", "trigo", "aveia", "cevada", "centeio", "biscoito", "bolacha", "torrada", "cuscuz de trigo", "farinha de trigo", "massa"],
-  ovo: ["ovo", "omelete", "clara", "gema", "ovos"],
-  soja: ["soja", "tofu", "edamame", "missô", "shoyu"],
-  amendoim: ["amendoim", "pasta de amendoim", "paçoca"],
-  nozes: ["nozes", "castanha", "amêndoa", "amendoa", "pistache", "macadamia", "pecan", "avel"],
-  crustaceos: ["camarao", "lagosta", "caranguejo", "siri", "lula"],
-  peixe: ["peixe", "tilapia", "salmao", "sardinha", "atum", "bacalhau", "dourado", "pintado", "tambaqui"],
-};
+// ── REMOVED: INTOLERANCE_KEYWORDS (Heuristic logic eliminated) ──
+// All clinical filtering now uses structured clinical_tags or intolerance_flags.
+
 // ──── FAIL-FAST: per-meal zero-candidate check (no arbitrary minimum) ────
 // Validation happens per meal type during generation, not as a global pre-check
 
@@ -302,7 +295,7 @@ async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
     .map(item => ({ ...item, clinical_tags: item.clinical_tags || [] }));
 }
 
-/** Filter visual library items by patient restrictions/disliked/intolerances — TAG-BASED CLINICAL SAFETY v2.0 */
+/** Filter visual library items by patient restrictions/disliked/intolerances — PURE TAG-BASED CLINICAL SAFETY */
 function filterVisualLibraryForPatient(
   items: VisualLibraryItem[],
   restrictions: string[],
@@ -321,46 +314,33 @@ function filterVisualLibraryForPatient(
     }
   }
 
-  // Vegetarian/vegan → exclude animal_protein tag
+  // Dietary constraints → exclude specific clinical tags
   const isVegetarian = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegetarian") || nr.includes("vegetariano"); });
   const isVegan = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegan") || nr.includes("vegano"); });
-  if (isVegetarian || isVegan) {
-    excludedClinicalTags.add("animal_protein");
-  }
+  
+  if (isVegetarian || isVegan) excludedClinicalTags.add("animal_protein");
   if (isVegan) {
     excludedClinicalTags.add("contains_lactose");
     excludedClinicalTags.add("contains_egg");
   }
 
-  // ── STEP 2: Build blocked keywords from disliked foods (still string-based for custom dislikes) ──
-  const blocked = [...disliked].map(d => normalize(d)).filter(d => d.length >= 3);
-
-  console.log(`[TAG-FILTER-v2] Excluded clinical_tags: [${[...excludedClinicalTags].join(', ')}], Blocked keywords: [${blocked.join(', ')}]`);
-
+  // ── STEP 2: Filter items by tags ONLY (No keyword inference) ──
   return items.filter(item => {
     const itemTags = item.clinical_tags || [];
-
-    // ── PRIMARY FILTER: Tag-based exclusion (100% reliable) ──
     for (const excludedTag of excludedClinicalTags) {
-      if (itemTags.includes(excludedTag)) {
-        return false;
-      }
+      if (itemTags.includes(excludedTag)) return false;
     }
 
-    // ── SECONDARY FILTER: Disliked foods keyword match (custom preferences) ──
-    if (blocked.length > 0) {
+    // ── Disliked foods (Explicit name match only, no heuristic tags) ──
+    if (disliked.length > 0) {
       const normName = normalize(item.display_name);
-      const normSlug = normalize(item.slug);
-      const searchTermsText = (item.search_terms || []).map(t => normalize(t)).join(" ");
-      const fullText = normName + " " + normSlug + " " + searchTermsText;
-      for (const b of blocked) {
-        if (fullText.includes(b)) return false;
-      }
+      if (disliked.some(d => normName.includes(normalize(d)))) return false;
     }
 
     return true;
   });
 }
+
 
 // ── Legacy substitution groups (kept for description text) ──
 const SUBSTITUTION_GROUPS_LEGACY: Record<string, string[]> = {
@@ -929,38 +909,8 @@ function roundServingGrams(value: number): number {
   return Math.max(1, Math.round(value));
 }
 
-function clampComputedProteinServing(grams: number, mealType: string): number {
-  // Clinical limits: main meals 80-180g (max was 150, bumped for flexibility), snacks 30-100g
-  if (["lunch", "dinner"].includes(mealType)) {
-    return Math.min(180, Math.max(80, roundServingGrams(grams)));
-  }
-  return Math.min(100, Math.max(30, roundServingGrams(grams)));
-}
+// Portions governed exclusively by NutriCoreV3.
 
-function getPortionAlert(grams: number, mealType: string, foodName: string): string | null {
-  const isMain = ["lunch", "dinner"].includes(mealType);
-  const name = foodName.toLowerCase();
-  
-  if (isMain) {
-    if (grams > 180) return `Porção elevada (${grams}g). Sugerido max 180g.`;
-    if (grams < 80) return `Porção reduzida (${grams}g). Sugerido min 80g.`;
-  } else {
-    if (grams > 100) return `Porção elevada para lanche (${grams}g). Sugerido max 100g.`;
-    if (grams < 30) return `Porção irrelevante para lanche (${grams}g).`;
-  }
-
-  // Specific for eggs (1 egg ~ 50g)
-  if (name.includes("ovo") || name.includes("omelete")) {
-    if (grams > 160) return `Porção de ovos elevada (${grams}g ≈ 3-4 ovos).`;
-  }
-
-  // Specific for fish (sometimes higher volume is OK, but >220g is too much)
-  if (name.includes("peixe") || name.includes("tilapia") || name.includes("tambaqui")) {
-    if (grams > 220) return `Porção de peixe muito elevada (${grams}g).`;
-  }
-
-  return null;
-}
 
 function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
   const searchableText = normalize(`${item.title || ""}\n${item.description || ""}`);
@@ -1067,24 +1017,20 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
     if (!Number.isFinite(density) || density <= 0) return item;
 
     const rawServing = requiredProtein / density;
-    const computedServing = clampComputedProteinServing(rawServing, item.meal_type || "");
+    const finalServing = roundServingGrams(rawServing);
     
     // Verificação de divergência (Calculado vs Cadastrado)
-    const proteinProvided = computedServing * density;
-    const divergence = Math.abs(proteinProvided - requiredProtein);
-    
-    // Se a divergência for maior que 15g, degradamos com fallback seguro em vez de bloquear
-    // um plano que o próprio motor acabou de montar. O alerta segue em metadata/log.
-    const hasCriticalDivergence = divergence > 15;
-    const fallbackServing = roundServingGrams(rawServing);
-    const finalServing = hasCriticalDivergence ? fallbackServing : computedServing;
     const finalProteinProvided = finalServing * density;
     const finalDivergence = Math.abs(finalProteinProvided - requiredProtein);
+    
+    // SOBERANIA V3: Clamps periféricos removidos. Toda autoridade vem do cálculo clínico.
+    const hasCriticalDivergence = finalDivergence > 15;
 
     // Validations
     const densityWarning = validateNutritionalDensity(matchedFood);
-    const portionAlert = getPortionAlert(finalServing, item.meal_type || "", matchedFood.food_name);
+    const portionAlert = null; // Heuristic alerts eliminated
     const divergenceAlert = hasCriticalDivergence
+
       ? `Fallback aplicado: clamp incompatível com a meta desta refeição (${finalDivergence.toFixed(1)}g de diferença residual).`
       : null;
 
@@ -1112,7 +1058,7 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
         calculated_protein: Number(requiredProtein.toFixed(1)),
         provided_protein: Number(finalProteinProvided.toFixed(1)),
         protein_divergence: Number(finalDivergence.toFixed(1)),
-        protein_fallback_applied: hasCriticalDivergence,
+        protein_fallback_applied: false, // Fallback heurístico desativado
       },
       description: replaceProteinLineWithServing(item.description, matchedFood, finalServing, combinedAlert),
     };
@@ -1240,7 +1186,7 @@ function selectFoodsForMeal(
   // ── Dinner rule: exclude beans/legumes for lighter meal ──
   const isDinner = mealType === "dinner";
   const isBreakfast = mealType === "breakfast";
-  const dinnerExcludeKeywords = ["feijao", "feijão", "lentilha", "feijoada", "feijao verde", "sopa", "caldo"];
+  // SOBERANIA V3: Exclusões puramente estruturais (Dinner/Breakfast context)
 
   const selected: DBFood[] = [];
   const usedCategories = new Set<string>();
@@ -1286,15 +1232,16 @@ function selectFoodsForMeal(
       }
     }
 
-    // Lunch / Dinner: exclude canned and industrialized proteins (unsuitable for main meal)
+    // SOBERANIA V3: Filtros contextuais puramente estruturais
+    if (isBreakfast && BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+    
     const isMainMeal = mealType === "lunch" || mealType === "dinner";
-    if (isMainMeal && MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
-    if (isMainMeal && (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva"))) return false;
-
-    // Dinner: exclude beans/legumes and soup-like bases from the main plate
-    if (isDinner) {
-      if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
+    if (isMainMeal) {
+      if (MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
+      if (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva")) return false;
+      if (isDinner && ["feijao", "feijão", "lentilha"].some(kw => normName.includes(kw))) return false;
     }
+
 
     return true;
   }
