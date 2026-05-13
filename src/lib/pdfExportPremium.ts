@@ -510,20 +510,28 @@ function buildPremiumCSS(): string {
       /* Linhas de Refeição */
       .meal-row {
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        margin-bottom: 8px;
+        border-radius: 12px;
+        margin-bottom: 12px;
         overflow: hidden;
         background: #ffffff;
-        page-break-inside: avoid;
+        page-break-inside: auto;
       }
 
       .meal-header-row {
         background: #f8fafc;
-        padding: 8px 14px;
+        padding: 10px 16px;
         border-bottom: 1px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
         align-items: center;
+      }
+
+      .meal-group-container {
+        page-break-inside: avoid;
+        margin-bottom: 16px;
+      }
+      .meal-group-container:last-child {
+        margin-bottom: 0;
       }
 
       .meal-title-group {
