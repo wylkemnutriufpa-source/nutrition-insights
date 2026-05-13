@@ -126,22 +126,42 @@ export const patientService = {
 
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (data.editor_version === 'v3') {
-      if (!data.snapshot || !data.snapshot.meals) {
+      const snapshot = data.snapshot as any;
+      if (!snapshot || (!snapshot.days && !snapshot.meals)) {
         console.error(`[CRITICAL] V3 Plan (token) missing snapshot. Access blocked.`);
         throw new Error("Erro crítico: Os dados deste plano estão indisponíveis no momento (Snapshot Missing).");
       }
 
-      const snapshot = data.snapshot;
+      const currentDow = new Date().getDay();
+      const dayData = snapshot.days?.find((d: any) => d.day_of_week === currentDow) || snapshot.days?.[0];
+      
+      const mappedMeals = (dayData?.meals || snapshot.meals || []).map((m: any) => ({
+        id: m.meal_type || m.id,
+        name: m.meal_type || m.name,
+        time: '',
+        items: (m.items || []).map((it: any) => ({
+          id: it.id || it.instanceId,
+          name: it.title || it.name,
+          kcal: Number(it.macros?.kcal || it.kcal || 0),
+          protein: Number(it.macros?.protein_g || it.protein || 0),
+          carbs: Number(it.macros?.carbs_g || it.carbs || 0),
+          fat: Number(it.macros?.fat_g || it.fat || 0),
+          portionValue: it.display_quantity || it.quantity || 1,
+          portionUnitLabel: it.display_unit || it.portionUnitLabel || 'unidade',
+          imageUrl: it.image_url || it.imageUrl
+        }))
+      }));
+
       return {
         id: data.id,
         patient_id: data.patient_id,
         patient_name: patientData?.notes || 'Paciente',
         goal: patientData?.status || '',
-        calories_target: Number(snapshot.calories_target || data.total_target_calories || 0),
-        protein_target: Number(snapshot.protein_target || data.total_target_protein || 0),
-        carbs_target: Number(snapshot.carbs_target || data.total_target_carbs || 0),
-        fat_target: Number(snapshot.fat_target || data.total_target_fat || 0),
-        meals: snapshot.meals,
+        calories_target: Number(snapshot.targets?.kcal || data.total_target_calories || 0),
+        protein_target: Number(snapshot.targets?.protein_g || data.total_target_protein || 0),
+        carbs_target: Number(snapshot.targets?.carbs_g || data.total_target_carbs || 0),
+        fat_target: Number(snapshot.targets?.fat_g || data.total_target_fat || 0),
+        meals: mappedMeals,
         created_at: data.created_at,
         sharing_token: data.sharing_token,
         editor_version: 'v3'
