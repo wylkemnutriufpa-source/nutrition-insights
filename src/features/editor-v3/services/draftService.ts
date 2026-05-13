@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
 import { normalizeMeals, normalizeV2ToV3 } from '../utils/normalization';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
+import { logSovereignEvent } from '@/lib/runtimeGovernance';
 
 export interface DraftRecord {
   id: string;
@@ -159,6 +160,7 @@ export async function loadOrCreateDraft(
     console.error(`[FATAL-IDENTITY] Patient ID inválido no loadOrCreateDraft: ${patientId}`);
     // Não abortamos a criação do draft para não quebrar a UI, mas logamos como crítico
     await logCriticalFailure('identity_breach', `Tentativa de criar rascunho com ID transitório: ${patientId}`, { nutritionistId });
+    await logSovereignEvent("ERROR", "identity_breach", { patientId, nutritionistId, context: "loadOrCreateDraft" });
   }
 
   const { data: created, error: insErr } = await supabase

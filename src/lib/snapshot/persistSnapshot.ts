@@ -44,7 +44,7 @@ export async function generateAndPersistMealPlanSnapshot(
     if (error) {
       const errMsg = `[FATAL-SNAPSHOT] RPC persist_meal_plan_snapshot failed: ${error.message} (Code: ${error.code})`;
       console.error(errMsg, { planId, correlationId: getCorrelationId() });
-      await logSovereignEvent("ERROR", "SNAPSHOT_PERSIST_FAILED", { planId, error: error.message, code: error.code });
+      await logSovereignEvent("ERROR", "snapshot_persist_failed", { planId, error: error.message, code: error.code });
       throw new Error(errMsg);
     }
 
