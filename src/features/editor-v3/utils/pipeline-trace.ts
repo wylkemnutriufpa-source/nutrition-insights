@@ -55,10 +55,10 @@ export const ClinicalGuard = {
   clampQuantity: (quantity: number, name: string = 'alimento', type: string = 'gram'): number => {
     // Limites superiores e inferiores baseados no tipo
     const limits: Record<string, { min: number, max: number }> = {
-      gram: { min: 1, max: 800 },    // Máximo 800g por item individual
-      ml: { min: 1, max: 1000 },     // Máximo 1L por item individual
-      unit: { min: 0.1, max: 20 },    // Máximo 20 unidades
-      spoon: { min: 0.5, max: 40 },   // Máximo 40 colheres
+      gram: { min: 1, max: 10000 },    // Máximo 10kg por item (explosão absurda)
+      ml: { min: 1, max: 10000 },     // Máximo 10L por item (explosão absurda)
+      unit: { min: 0.1, max: 1000 },   // Máximo 1000 unidades
+      spoon: { min: 0.1, max: 1000 },  // Máximo 1000 colheres
     };
 
     const limit = limits[type] || limits.gram;
