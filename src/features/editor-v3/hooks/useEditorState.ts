@@ -684,8 +684,9 @@ export const useEditorState = create<EditorState>()(
                     const { instanceId: _, id: __, ...propagatedUpdates } = updates as any;
                     const merged = { ...i, ...propagatedUpdates };
                     
+                    // 🛡️ SOBERANIA CLÍNICA: Propagação semanal garantindo massa clínica idêntica
                     if (propagatedUpdates.quantity !== undefined) {
-                      const pValue = merged.portionValue || 1;
+                      const pValue = Number(merged.portionValue) || 1;
                       merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
                         ? merged.quantity
                         : merged.quantity * pValue;
