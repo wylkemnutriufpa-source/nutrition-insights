@@ -712,77 +712,79 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     });
   }
   const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
-    const subGroups: Record<string, MealPlanPDFItem[]> = {};
+    const canonicalType = resolveCanonicalMealType(mType);
+    const mealInfo = MEAL_LABELS[String(canonicalType)] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
+
+    // Agrupar por grupo de substituição para manter a lógica de "item principal + suas trocas"
+    const groups: Record<string, MealPlanPDFItem[]> = {};
     const orphans: MealPlanPDFItem[] = [];
     
     typeItems.forEach(item => {
-      if (item.substitution_group_id) {
-        const groupKey = getMealGroupKey(item);
-        if (!subGroups[groupKey]) subGroups[groupKey] = [];
-        subGroups[groupKey].push(item);
+      const gId = item.substitution_group_id;
+      if (gId) {
+        if (!groups[gId]) groups[gId] = [];
+        groups[gId].push(item);
       } else {
         orphans.push(item);
       }
     });
 
-    const canonicalType = resolveCanonicalMealType(mType);
-    const mealInfo = MEAL_LABELS[String(canonicalType)] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
+    const totalKcal = typeItems.filter(i => i.is_primary).reduce((sum, i) => sum + (i.calories_target || 0), 0);
 
-    const renderGroup = (groupItems: MealPlanPDFItem[]) => {
+    const renderGroupContent = (groupItems: MealPlanPDFItem[]) => {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
       const substitutions = groupItems.filter(i => i !== primary);
-      const substitutionTotals = substitutions.reduce((acc, sub) => ({
-        calories: acc.calories + roundMacro(sub.calories_target),
-        protein: acc.protein + roundMacro(sub.protein_target),
-        carbs: acc.carbs + roundMacro(sub.carbs_target),
-        fat: acc.fat + roundMacro(sub.fat_target),
-      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
+      
       const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
       const showTitle = primary.title && !sameAsLabel;
-      return `
-        <div class="meal-row">
-          <div class="meal-header-row">
-            <div class="meal-title-group">
-              <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.label}</span>
-              ${showTitle ? `<span class="meal-primary-title">${escapeHtml(primary.title)}</span>` : ""}
-            </div>
-            <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
-          </div>
-          <div class="meal-body">
-            <div class="food-list">
-              ${primary.description && !primary.description.includes('(') ? formatDescription(primary.description) : (primary.description ? `<div class="food-line"><span class="food-bullet"></span><span>${escapeHtml(primary.description)}</span></div>` : "")}
-            </div>
 
-            ${substitutions.length > 0 ? `
-              <div class="substitution-box">
-                <div class="sub-header">Opções de Substituição</div>
-                ${substitutions.map(sub => {
-                  const detail = formatSubstitutionDetail(sub, primary);
-                  return `
-                  <div class="sub-item">
-                    <div>
-                      <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
-                      ${detail ? `<span style="font-size: 9px; color: #64748b;"> — ${escapeHtml(detail)}</span>` : ""}
-                    </div>
-                    <span style="color: #999; font-size: 9px;">${sub.calories_target || 0} kcal</span>
-                  </div>
-                `}).join("")}
-                <div class="sub-item" style="font-weight: 700; color: #856404; border-bottom: none; margin-top: 3px; padding-top: 5px; border-top: 1px solid #f3e9d2;">
-                  <span>Macros não considerados:</span>
-                  <span style="margin-left: 4px;">${substitutionTotals.calories} kcal · P ${substitutionTotals.protein}g · C ${substitutionTotals.carbs}g · G ${substitutionTotals.fat}g</span>
-                </div>
-              </div>
-            ` : ""}
+      return `
+        <div class="meal-group-container" style="margin-bottom: 12px; last-child { margin-bottom: 0; }">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+            <div style="font-weight: 700; color: #1e293b; font-size: 11px;">
+              ${showTitle ? escapeHtml(primary.title) : ""}
+            </div>
+            <div style="font-size: 10px; font-weight: 600; color: #D4A84B;">${primary.calories_target || 0} kcal</div>
           </div>
+          
+          <div class="food-list" style="margin-left: 4px; border-left: 2px solid #f1f5f9; padding-left: 10px;">
+            ${primary.description ? formatDescription(primary.description) : ""}
+          </div>
+
+          ${substitutions.length > 0 ? `
+            <div class="substitution-box" style="margin-left: 10px; background: #fafafa; border: 1px dashed #e2e8f0;">
+              <div class="sub-header" style="color: #64748b;">Opções de Troca</div>
+              ${substitutions.map(sub => {
+                const detail = formatSubstitutionDetail(sub, primary);
+                return `
+                <div class="sub-item" style="border-bottom: 1px solid #f1f5f9;">
+                  <div>
+                    <span style="font-weight: 500;">${escapeHtml(sub.title)}</span>
+                    ${detail ? `<span style="font-size: 9px; color: #94a3b8;"> — ${escapeHtml(detail)}</span>` : ""}
+                  </div>
+                  <span style="color: #cbd5e1; font-size: 9px;">${sub.calories_target || 0} kcal</span>
+                </div>
+              `}).join("")}
+            </div>
+          ` : ""}
         </div>
       `;
     };
 
-    const sortedSubGroups = Object.keys(subGroups).sort().map(key => renderGroup(subGroups[key]));
-    const renderedOrphans = orphans.map(i => renderGroup([i]));
-    
-    return [...sortedSubGroups, ...renderedOrphans].join("");
+    return `
+      <div class="meal-row">
+        <div class="meal-header-row">
+          <div class="meal-title-group">
+            <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.label}</span>
+          </div>
+          <div class="meal-kcal-badge">${Math.round(totalKcal)} kcal</div>
+        </div>
+        <div class="meal-body">
+          ${Object.values(groups).map(g => renderGroupContent(g)).join("")}
+          ${orphans.map(i => renderGroupContent([i])).join("")}
+        </div>
+      </div>
+    `;
   };
 
 
