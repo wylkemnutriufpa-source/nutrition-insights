@@ -320,7 +320,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
         <DialogFooter className="mt-8 flex gap-3 sm:justify-center">
           <Button 
             onClick={() => {
-              // snapshot is naturally discarded because we don't restore it
+              isApplyingRef.current = true;
               onClose();
             }}
             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl h-12"
@@ -330,6 +330,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
           <Button 
             variant="outline" 
             onClick={() => {
+              isApplyingRef.current = false;
               onApply(initialMeals);
               onClose();
             }}
