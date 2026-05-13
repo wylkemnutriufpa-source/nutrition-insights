@@ -229,7 +229,7 @@ export default function PatientDetail() {
                 carbs_target: Math.round(Number(item.carbs) || 0),
                 fat_target: Math.round(Number(item.fat) || 0),
                 is_primary: true,
-                substitution_group_id: item.instanceId,
+              substitution_group_id: item.id || item.instanceId,
                 day_of_week: dayNum
               };
               
