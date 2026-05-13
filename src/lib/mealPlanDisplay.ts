@@ -73,6 +73,30 @@ function groupItems(items: DisplayMealPlanItem[]): GroupedMeal[] {
   });
 }
 
+/**
+ * Filtra grupos de substituição idênticos para evitar explosão de macros
+ * em planos com dados duplicados (legado/bug de persistência).
+ */
+export function dedupeGroups(groups: GroupedMeal[]): GroupedMeal[] {
+  const seen = new Set<string>();
+  const unique: GroupedMeal[] = [];
+  
+  for (const group of groups) {
+    const key = [
+      String(group.primary.meal_type ?? ""),
+      String(group.primary.title ?? "").trim().toLowerCase(),
+      String(group.primary.calories_target ?? (group.primary as any).metadata?.calories_target ?? (group.primary as any).metadata?.calories ?? ""),
+      String(group.substitutions.length)
+    ].join("|");
+    
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(group);
+    }
+  }
+  return unique;
+}
+
 function withSubstitutionMetadata(group: GroupedMeal): DisplayMealPlanItem {
   const options: MealSubstitutionOption[] = group.substitutions.map((item) => ({
     id: item.id,
