@@ -55,14 +55,34 @@ function DiffBadge({ diff, unit }: { diff: number; unit: string }) {
 }
 
 export default function MealSubstitutionModal({
-  open, onOpenChange, mealTitle, mealPlanItemId, mealPlanId, patientId, onSubstitute,
+  open, onOpenChange, mealTitle, mealPlanItemId, mealPlanId, patientId, onSubstitute, options = [],
 }: MealSubstitutionModalProps) {
   const [selected, setSelected] = useState<{ original: FoodItem; replacement: FoodItem } | null>(null);
   const [confirming, setConfirming] = useState(false);
 
   const components: ComponentBlock[] = useMemo(() => {
-    // No novo modelo GLOBAL, as substituições já vêm do banco de dados na tabela meal_plan_items
-    // mas mantemos o suporte para substituições inteligentes por similaridade se necessário.
+    // 🛡️ SOBERANIA V3: Prioridade total para as opções definidas pelo nutricionista.
+    // Se existem opções no snapshot (metadata), usamos apenas elas e não fazemos busca inteligente fuzzy.
+    if (options && options.length > 0) {
+      return [{
+        current: { name: mealTitle, portion: "", calories: 0, protein: 0, carbs: 0, fat: 0, category: "" },
+        groupLabel: "Sugestões do Nutricionista",
+        substitutions: options.map(opt => ({
+          food: {
+            name: opt.title,
+            portion: opt.description || "",
+            calories: Number(opt.calories_target || 0),
+            protein: Number(opt.protein_target || 0),
+            carbs: Number(opt.carbs_target || 0),
+            fat: Number(opt.fat_target || 0),
+            category: "substitution"
+          },
+          labels: []
+        }))
+      }];
+    }
+
+    // Fallback para o modelo legado / inteligente por similaridade se não houver opções pré-definidas.
     const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const query = norm(mealTitle);
     const direct = FOOD_DATABASE.find(f => {
@@ -70,7 +90,6 @@ export default function MealSubstitutionModal({
       return n === query || query.includes(n) || n.includes(query);
     });
 
-    // ... lógica mantida para compatibilidade
     const fuzzyFoods = findFoodsInTitle(mealTitle);
     const seen = new Set<string>();
     const foods: FoodItem[] = [];
@@ -79,7 +98,7 @@ export default function MealSubstitutionModal({
       if (!seen.has(f.name)) { foods.push(f); seen.add(f.name); }
     }
 
-    const blocks = foods.slice(0, 3).map(food => {
+    return foods.slice(0, 3).map(food => {
       const group = getFoodGroup(food.name);
       const subs = getValidSubstitutions(food.name, undefined, 4);
       return {
@@ -88,9 +107,7 @@ export default function MealSubstitutionModal({
         substitutions: subs,
       };
     }).filter(c => c.substitutions.length > 0);
-
-    return blocks;
-  }, [mealTitle]);
+  }, [mealTitle, options]);
 
   const handleConfirm = async () => {
     if (!selected) return;
