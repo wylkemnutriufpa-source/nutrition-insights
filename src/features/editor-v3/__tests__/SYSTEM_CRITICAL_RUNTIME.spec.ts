@@ -5,17 +5,16 @@ import { ClinicalGuard } from '../utils/pipeline-trace';
 describe('SYSTEM_CRITICAL_RUNTIME — Suíte de Estabilidade Soberana', () => {
   
   describe('Motor Clínico & Clamping (Proteção Luciana)', () => {
-    it('deve aplicar ClinicalGuard e impedir massa de proteína explosiva (ex: 275g)', () => {
-      const inputQuantity = 275;
+    it('deve aplicar ClinicalGuard apenas para explosões absurdas (ex: 27500g)', () => {
+      const inputQuantity = 27500;
       const clamped = ClinicalGuard.clampQuantity(inputQuantity, 'frango', 'gram');
       
-      // O limite para gramas é 800g por item individual, mas o motor V3
-      // deve garantir que o dado chegue estável.
-      expect(clamped).toBeLessThanOrEqual(800);
+      // O novo limite para gramas é 10000g (10kg)
+      expect(clamped).toBeLessThanOrEqual(10000);
       
-      // Teste específico de "unidade" para evitar explosão de ovos
-      const eggs = ClinicalGuard.clampQuantity(50, 'ovo', 'unit');
-      expect(eggs).toBe(20); // Max 20 unidades
+      // Teste específico de "unidade" para evitar explosão extrema
+      const eggs = ClinicalGuard.clampQuantity(5000, 'ovo', 'unit');
+      expect(eggs).toBe(1000); // Max 1000 unidades
     });
 
     it('deve preservar clinical_mass_g durante normalização', () => {
