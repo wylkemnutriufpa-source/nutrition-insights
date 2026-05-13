@@ -57,5 +57,19 @@ export const SovereignFatalGuard = {
       message: `BLOQUEIO SOBERANO: Inferência clínica proibida: ${detail}`,
       metadata: { classification: 'RISCO OPERACIONAL' }
     });
+  },
+
+  /**
+   * Bloqueia qualquer tentativa de persistir IDs que não sejam UUIDs soberanos.
+   */
+  validateIdentity: (id: string, context: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      const errorMsg = `RUPTURA DE IDENTIDADE: ID inválido ("${id}") detectado em ${context}. Apenas UUIDs soberanos são permitidos para persistência.`;
+      console.error(`[FATAL GUARD] ${errorMsg}`);
+      
+      // Lança erro fatal para impedir o commit SQL
+      throw new Error(errorMsg);
+    }
   }
 };

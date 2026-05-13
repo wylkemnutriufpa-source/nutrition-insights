@@ -271,7 +271,8 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
       // 🛡️ GOVERNANÇA SEMANAL: Garantir que alimentos idênticos na mesma refeição tenham o mesmo blockId
       // Normalizamos o nome da refeição (ex: "Almoço Segunda" -> "almoço") para agrupar horizontalmente
       const baseMealName = meal.name.toLowerCase().split(' ')[0].split('-')[0].trim();
-      const generatedBlockId = `${baseMealName}-${normalized.id}`;
+      // 🛡️ GOVERNANÇA SEMANAL: blockId deve ser um UUID determinístico baseado na composição
+      const generatedBlockId = crypto.randomUUID(); // No FitJourney V3, cada bloco é uma entidade UUID única
 
       return {
         ...normalized,

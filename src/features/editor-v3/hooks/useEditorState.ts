@@ -86,7 +86,7 @@ const DEFAULT_MEALS: Meal[] = [
   { id: '6', name: 'Ceia', items: [], time: '22:00' },
 ];
 
-const makeInstanceId = () => Math.random().toString(36).substring(2, 10);
+const makeInstanceId = () => crypto.randomUUID();
 
 export const useEditorState = create<EditorState>()(
   persist(
@@ -310,7 +310,7 @@ export const useEditorState = create<EditorState>()(
           meals: [
             ...state.meals,
             {
-              id: Math.random().toString(36).substring(2, 9),
+              id: crypto.randomUUID(),
               name,
               items: [],
               time,
@@ -364,7 +364,7 @@ export const useEditorState = create<EditorState>()(
           meals: [
             ...state.meals,
             {
-              id: Math.random().toString(36).substring(2, 9),
+              id: crypto.randomUUID(),
               name: `Nova Refeição ${state.meals.length + 1}`,
               items: [],
               time: '00:00',
@@ -383,7 +383,7 @@ export const useEditorState = create<EditorState>()(
 
         const newMeal: Meal = {
           ...mealToDuplicate,
-          id: Math.random().toString(36).substring(2, 9),
+          id: crypto.randomUUID(),
           items: mealToDuplicate.items.map(item => ({
             ...item,
             instanceId: makeInstanceId()
