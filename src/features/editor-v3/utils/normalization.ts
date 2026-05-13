@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal, MealItem } from '../types';
 import { PipelineTrace, ClinicalGuard } from './pipeline-trace';
 import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
+import { SovereignFatalGuard } from '@/lib/sovereign-fatal-guards';
 
 const tracer = PipelineTrace.getInstance();
 
@@ -11,11 +12,17 @@ const tracer = PipelineTrace.getInstance();
  * FASE: PIPELINE PURIFICATION — Separação de Massa Clínica vs Display
  */
 export function normalizeFood(food: any): Food {
+  // 🛡️ BLOQUEIO SOBERANO: Impede reconstrução de payload se houver indícios de heurística textual
+  if (typeof food === 'string' || (food?.name && !food.id && !food.instanceId)) {
+    SovereignFatalGuard.blockLegacyNormalization('normalizeFood', food?.name || 'Unknown');
+  }
+
   const f = { ...food };
   const originalId = f.id || f.instanceId;
   
   tracer.trace(`Normalizing Food: ${f.name || 'Unknown'}`, { id: originalId, initial: { ...f } });
 
+  // ... (rest of function)
   // Garantir macros consistentes (kcal vs calories)
   if (f.kcal === undefined && f.calories !== undefined) f.kcal = f.calories;
   if (f.calories === undefined && f.kcal !== undefined) f.calories = f.kcal;
@@ -106,7 +113,10 @@ export function normalizeFood(food: any): Food {
  * Migration Guard: Converte dados do Editor V2 para V3 de forma segura.
  */
 export function normalizeV2ToV3(v2Data: any): Meal[] {
-  SovereignTelemetry.reportLegacyDetection('normalization_v3', 'V2_TO_V3_MIGRATION', { items_count: v2Data?.length });
+  // 🛡️ BLOQUEIO SOBERANO: Bloquear hidratação V2->V3 se detectado no runtime crítico
+  SovereignFatalGuard.blockLegacyNormalization('normalizeV2ToV3', 'Tentativa de hidratar V2 -> V3 em Runtime Soberano');
+  
+  // (O código abaixo torna-se inacessível em runtime se o guard acima disparar)
   console.log('[Migration Guard] Iniciando migração V2 -> V3');
   tracer.trace('Migration Start', { items_count: v2Data?.length });
   
