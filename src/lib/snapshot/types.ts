@@ -91,6 +91,7 @@ export interface SnapshotPlanMetadata {
   template_version: number | null;
   generation_source: string | null;
   protocol_used: string | null;
+  editor_version?: string;
 }
 
 export interface MealPlanSnapshotV1 {
