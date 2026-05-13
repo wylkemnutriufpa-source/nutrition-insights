@@ -324,8 +324,12 @@ export default function PatientMealPlan() {
       .gte("date", weekStart)
       .lte("date", weekEnd);
 
-    setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
-    setLoading(false);
+    } catch (err: any) {
+      console.error("[PatientApp] Fetch Error:", err);
+      toast.error(err.message || "Erro ao carregar dados do plano.");
+    } finally {
+      setLoading(false);
+    }
   }, [user, date, weekDates]);
 
   useEffect(() => { 
