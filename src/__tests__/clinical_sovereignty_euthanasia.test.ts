@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { ClinicalEngine } from "../supabase/functions/_shared/clinical-engine.ts";
-import { resolveMealTemplates, scaleTemplateToTarget } from "../supabase/functions/_shared/template-resolver.ts";
+import { ClinicalEngine } from "../../supabase/functions/_shared/clinical-engine.ts";
+import { resolveMealTemplates, scaleTemplateToTarget } from "../../supabase/functions/_shared/template-resolver.ts";
+
 
 describe("Eutanásia da Inteligência Clínica Paralela — Blindagem Soberana", () => {
   
