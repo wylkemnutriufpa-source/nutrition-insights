@@ -94,7 +94,7 @@ const resolveMacroGrams = (item: any, quantity: number) => {
     : quantity;
 
   // Proteção contra explosão de unidade (ex: 100 ovos por engano)
-  if (rawGrams > 1000 && quantity > 100 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
+  if (rawGrams > 10000 && quantity > 1000 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
      return quantity; // Fallback
   }
 
