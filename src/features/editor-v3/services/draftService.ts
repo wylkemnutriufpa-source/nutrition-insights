@@ -153,6 +153,14 @@ export async function loadOrCreateDraft(
   };
   const macros = computeMacros(payload.meals);
 
+  // 🛡️ TRACING SOBERANO — IDENTITY CHECK
+  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!isUuid(patientId)) {
+    console.error(`[FATAL-IDENTITY] Patient ID inválido no loadOrCreateDraft: ${patientId}`);
+    // Não abortamos a criação do draft para não quebrar a UI, mas logamos como crítico
+    await logCriticalFailure('identity_breach', `Tentativa de criar rascunho com ID transitório: ${patientId}`, { nutritionistId });
+  }
+
   const { data: created, error: insErr } = await supabase
     .from('v3_drafts' as any)
     .insert({
