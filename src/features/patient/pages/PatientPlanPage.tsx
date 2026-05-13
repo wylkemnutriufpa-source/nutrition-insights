@@ -31,18 +31,23 @@ export const PatientPlanPage = () => {
 
   useEffect(() => {
     const fetchPlan = async () => {
-      let data = null;
-      if (token) {
-        data = await patientService.getPlanByToken(token);
-      } else if (id) {
-        data = await patientService.getPlanById(id);
-      }
+      try {
+        let data = null;
+        if (token) {
+          data = await patientService.getPlanByToken(token);
+        } else if (id) {
+          data = await patientService.getPlanById(id);
+        }
 
-      if (data) {
-        setPlan(data);
-        const todayCompletions = await patientService.getTodayCompletions(data.id);
-        setCompletions(todayCompletions);
-        await patientService.logAccess(data.id, 'view');
+        if (data) {
+          setPlan(data);
+          const todayCompletions = await patientService.getTodayCompletions(data.id);
+          setCompletions(todayCompletions);
+          await patientService.logAccess(data.id, 'view');
+        }
+      } catch (err: any) {
+        console.error("[PatientApp] Plan Loading Error:", err);
+        toast.error(err.message || "Erro ao carregar o plano.");
       }
       setLoading(false);
     };
