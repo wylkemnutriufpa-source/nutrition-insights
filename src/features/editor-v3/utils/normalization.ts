@@ -46,15 +46,9 @@ export function normalizeFood(food: any): Food {
     f.portionLabel = f.portionLabel || '100g';
   }
 
-  // Se não tem tipo, inferir
+  // Se não tem tipo, default para gramas (sem inferência por nome)
   if (!f.measurementType) {
-    if (name.includes('leite') || name.includes('suco') || name.includes('bebida') || name.includes('água') || name.includes('ml')) {
-      f.measurementType = 'ml';
-    } else if (name.includes('aveia') || name.includes('granola') || name.includes('pasta') || name.includes('colher')) {
-      f.measurementType = 'spoon';
-    } else {
-      f.measurementType = 'gram';
-    }
+    f.measurementType = 'gram';
   }
 
   // Fallbacks de labels
