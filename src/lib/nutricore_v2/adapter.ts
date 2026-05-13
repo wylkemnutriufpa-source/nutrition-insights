@@ -226,14 +226,24 @@ export class NutriCoreV3Adapter {
 
           const bestImage = await getBestMealImage(mealName, v3Items);
             
+          const typeMap: Record<string, 'breakfast' | 'snack' | 'lunch' | 'dinner' | 'supper'> = {
+            'cafe_da_manha': 'breakfast',
+            'lanche_da_manha': 'snack',
+            'almoço': 'lunch',
+            'lanche_da_tarde': 'snack',
+            'jantar': 'dinner',
+            'ceia': 'supper'
+          };
+            
           return {
             id: crypto.randomUUID(),
             name: mealName,
+            type: typeMap[slot.type] || 'snack',
             time: slot.time,
             items: v3Items,
             imageUrl: bestImage.url,
             imageSource: bestImage.source
-          };
+          } as V3Meal;
         }));
         allGeneratedMeals.push(...dayMeals);
       }
