@@ -172,6 +172,7 @@ export async function promoteDraftToMealPlan(
 
       // 2.1) Item Primário
       itemsRows.push({
+        id: item.instanceId, // 🛡️ FASE 4: Identidade Soberana (instanceId persistente)
         meal_plan_id: plan.id,
         tenant_id: draft.tenant_id,
         meal_type: mealType,
