@@ -263,25 +263,12 @@ function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
 }
 
 function calculateDisplayTotals(data: PremiumMealPlanPDFData) {
-  const primaryDailyItems = getPrimaryDailyItems(data.items || []);
-  const calculated = primaryDailyItems.reduce((acc, item) => ({
-    calories: acc.calories + roundMacro(item.calories_target),
-    protein: acc.protein + roundMacro(item.protein_target),
-    carbs: acc.carbs + roundMacro(item.carbs_target),
-    fat: acc.fat + roundMacro(item.fat_target),
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-  const safeTarget = (target: number | undefined, calculatedValue: number, max: number) => {
-    const rounded = roundMacro(target);
-    if (calculatedValue > 0 && (rounded <= 0 || rounded > max)) return calculatedValue;
-    return rounded || calculatedValue;
-  };
-
+  // SOBERANIA V3: O PDF não recalcula nem corrige metas. Ele usa o que foi definido no editor.
   return {
-    calories: safeTarget(data.targetCalories, calculated.calories, 5000),
-    protein: safeTarget(data.targetProtein, calculated.protein, 350),
-    carbs: safeTarget(data.targetCarbs, calculated.carbs, 700),
-    fat: safeTarget(data.targetFat, calculated.fat, 250),
+    calories: Math.round(data.targetCalories || 0),
+    protein: Math.round(data.targetProtein || 0),
+    carbs: Math.round(data.targetCarbs || 0),
+    fat: Math.round(data.targetFat || 0),
   };
 }
 
