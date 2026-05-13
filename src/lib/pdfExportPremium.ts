@@ -140,12 +140,6 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
   return `item:${canonicalType}:${item.id || `${item.title}:${item.description || ""}`}`;
 }
 
-function isGenericSubstitutionDescription(description?: string): boolean {
-  const normalized = normalizeMealTypeKey(description);
-  if (!normalized) return true;
-  if (normalized === "substituicao" || normalized === "opcao_de_substituicao") return true;
-  return false;
-}
 
 function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem): string {
   // SOBERANIA V3: O PDF não interpreta porções, ele apenas exibe o que o snapshot enviou.
