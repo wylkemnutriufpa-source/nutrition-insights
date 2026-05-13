@@ -19,7 +19,7 @@ const shuffleArray = <T>(array: T[]): T[] => {
   return newArray;
 };
 
-const makeId = () => Math.random().toString(36).substring(2, 10);
+const makeId = () => crypto.randomUUID();
 
 const createMealItem = (food: Food | undefined, quantity: number): MealItem | null => {
   if (!food) return null;
