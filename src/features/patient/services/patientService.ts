@@ -27,13 +27,38 @@ export const patientService = {
 
     if (error || !rawData) return null;
     const data = rawData as any;
+    const patientData = data.nutritionist_patients;
+    
+    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
+    if (data.editor_version === 'v3') {
+      if (!data.snapshot || !data.snapshot.meals) {
+        console.error(`[CRITICAL] V3 Plan ${planId} missing snapshot. Access blocked to prevent drift.`);
+        // Telemetria seria disparada aqui
+        throw new Error("Erro crítico: Os dados deste plano estão indisponíveis no momento (Snapshot Missing).");
+      }
 
+      const snapshot = data.snapshot;
+      return {
+        id: data.id,
+        patient_id: data.patient_id,
+        patient_name: patientData?.notes || 'Paciente',
+        goal: patientData?.status || '',
+        calories_target: Number(snapshot.calories_target || data.total_target_calories || 0),
+        protein_target: Number(snapshot.protein_target || data.total_target_protein || 0),
+        carbs_target: Number(snapshot.carbs_target || data.total_target_carbs || 0),
+        fat_target: Number(snapshot.fat_target || data.total_target_fat || 0),
+        meals: snapshot.meals, // Consumo PASSIVO do snapshot
+        created_at: data.created_at,
+        sharing_token: data.sharing_token,
+        editor_version: 'v3'
+      } as any;
+    }
+
+    // Fallback para V1/V2 (Legacy Relational)
     const { data: items } = await supabase
       .from('meal_plan_items' as any)
       .select('*')
       .eq('meal_plan_id', planId);
-
-    const patientData = data.nutritionist_patients;
 
     return {
       id: data.id,
@@ -46,7 +71,8 @@ export const patientService = {
       fat_target: data.total_target_fat || 0,
       meals: this.groupItemsIntoMeals(items || []),
       created_at: data.created_at,
-      sharing_token: data.sharing_token
+      sharing_token: data.sharing_token,
+      editor_version: data.editor_version || 'v1'
     };
   },
 
