@@ -205,7 +205,7 @@ const EditorV3Page = () => {
       if (!prev) return null;
       setIsModalDirty(true);
       
-      const merged = { ...prev, ...updates };
+      const merged = { ...prev, ...updates, manual_override: true };
       
       // 🛡️ SOBERANIA CLÍNICA NO DRAFT: Sincronizar massa clínica para preview real-time
       if (updates.quantity !== undefined || updates.measurementType !== undefined || updates.portionValue !== undefined) {
