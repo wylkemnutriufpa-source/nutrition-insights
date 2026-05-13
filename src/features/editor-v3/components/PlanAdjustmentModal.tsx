@@ -126,8 +126,8 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        // Clicar fora ou esc -> Cancelar (restaurar snapshot)
-        onApply(initialMeals);
+        // 🛡️ SEGURANÇA TRANSACIONAL: Se o usuário fechar pelo backdrop ou ESC, cancelamos.
+        // Se fechar pelo botão "Aplicar", o estado já foi persistido via real-time preview.
         onClose();
       }
     }}>
