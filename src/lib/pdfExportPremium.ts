@@ -747,7 +747,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const showTitle = primary.title && !sameAsLabel;
 
       return `
-        <div class="meal-group-container" style="margin-bottom: 12px; last-child { margin-bottom: 0; }">
+        <div class="meal-group-container">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
             <div style="font-weight: 700; color: #1e293b; font-size: 11px;">
               ${showTitle ? escapeHtml(primary.title) : ""}
