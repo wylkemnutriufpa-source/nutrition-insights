@@ -1,0 +1,19 @@
+# FitJourney
+
+> Plataforma clínica inteligente de nutrição para nutricionistas, personal trainers e pacientes — gestão completa, motor clínico determinístico e gamificação.
+
+FitJourney unifica gestão de pacientes, geração de planos alimentares com motor clínico próprio (IFJ Engine), protocolos terapêuticos, acompanhamento longitudinal e engajamento gamificado em uma única plataforma multi-tenant.
+
+## Pages
+
+- [Home](/): Visão geral da plataforma, benefícios, planos e FAQ.
+- [Landing institucional](/landing): Apresentação completa do produto.
+- [Personal Trainers](/personal-landing): Módulo de treinos, alunos e performance.
+- [Projeto Biquíni Branco](/biquini-branco): Programa de transformação em 12 semanas.
+- [Preços](/pricing): Planos e valores.
+- [Entrar / Criar conta](/auth): Acesso de profissionais e pacientes.
+
+## Optional
+
+- [Termos de Uso](/terms)
+- [Política de Privacidade](/privacy)

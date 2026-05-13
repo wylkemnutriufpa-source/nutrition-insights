@@ -50,8 +50,22 @@ export default function PersonalLanding() {
   return (
     <div className="min-h-screen text-white overflow-hidden mesh-gradient-bg">
       <Helmet>
-        <title>FitJourney para Personal Trainers — Plataforma de Treinos e Performance</title>
+        <title>FitJourney — Treinos e Performance para Personal Trainers</title>
         <meta name="description" content="Gerencie treinos, alunos, adesão e performance em uma plataforma premium com gamificação e inteligência integrada." />
+        <link rel="canonical" href="https://www.fitjourney.com.br/personal-landing" />
+        <meta property="og:title" content="FitJourney — Treinos e Performance para Personal Trainers" />
+        <meta property="og:description" content="Gerencie treinos, alunos, adesão e performance em uma plataforma premium com gamificação e inteligência integrada." />
+        <meta property="og:url" content="https://www.fitjourney.com.br/personal-landing" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": "FitJourney para Personal Trainers",
+          "provider": { "@type": "Organization", "name": "FitJourney", "url": "https://www.fitjourney.com.br" },
+          "serviceType": "Plataforma de gestão de treinos e performance",
+          "areaServed": "BR",
+          "url": "https://www.fitjourney.com.br/personal-landing"
+        })}</script>
       </Helmet>
 
       {/* BG effects */}

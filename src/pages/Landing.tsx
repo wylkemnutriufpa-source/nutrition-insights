@@ -207,11 +207,19 @@ export default function Landing() {
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://fijourney.lovable.app" />
+        <meta property="og:url" content="https://www.fitjourney.com.br/" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDescription} />
-        <link rel="canonical" href="https://fijourney.lovable.app" />
+        <link rel="canonical" href="https://www.fitjourney.com.br/" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "FitJourney",
+          "url": "https://www.fitjourney.com.br",
+          "description": metaDescription,
+          "logo": "https://www.fitjourney.com.br/favicon.png"
+        })}</script>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
@@ -219,7 +227,7 @@ export default function Landing() {
           "applicationCategory": "HealthApplication",
           "operatingSystem": "Web",
           "description": metaDescription,
-          "url": "https://fijourney.lovable.app",
+          "url": "https://www.fitjourney.com.br",
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -227,6 +235,17 @@ export default function Landing() {
             "description": "Trial gratuito de 3 dias"
           }
         })}</script>
+        {Array.isArray(faqs) && faqs.length > 0 && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqs.map((f: any) => ({
+              "@type": "Question",
+              "name": f.q || f.question,
+              "acceptedAnswer": { "@type": "Answer", "text": f.a || f.answer }
+            }))
+          })}</script>
+        )}
       </Helmet>
 
       {/* ══════════ NAV ══════════ */}

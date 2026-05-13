@@ -40,6 +40,19 @@ export default function BiquiniBrancoLanding() {
       <Helmet>
         <title>Projeto Biquíni Branco — Transformação em 12 Semanas</title>
         <meta name="description" content="Programa de emagrecimento e definição corporal em 12 semanas com acompanhamento nutricional, IA e gamificação." />
+        <link rel="canonical" href="https://www.fitjourney.com.br/biquini-branco" />
+        <meta property="og:title" content="Projeto Biquíni Branco — Transformação em 12 Semanas" />
+        <meta property="og:description" content="Programa de emagrecimento e definição corporal em 12 semanas com acompanhamento nutricional, IA e gamificação." />
+        <meta property="og:url" content="https://www.fitjourney.com.br/biquini-branco" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": "Projeto Biquíni Branco",
+          "description": "Programa de emagrecimento e definição corporal em 12 semanas com acompanhamento nutricional, IA e gamificação.",
+          "brand": { "@type": "Brand", "name": "FitJourney" },
+          "url": "https://www.fitjourney.com.br/biquini-branco"
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
