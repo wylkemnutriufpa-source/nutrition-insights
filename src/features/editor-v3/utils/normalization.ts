@@ -160,7 +160,17 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
         ...normalized,
         instanceId: normalized.instanceId || crypto.randomUUID(),
         quantity: normalized.quantity ?? 1,
-        clinical_mass_g: normalized.clinical_mass_g ?? (normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1))),
+        clinical_mass_g: normalized.clinical_mass_g ?? (() => {
+          const fallback = normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1));
+          SovereignTelemetry.log({
+            runtime_source: 'normalization_v3_legacy_migration',
+            event_type: 'missing_clinical_mass',
+            severity: 'warning',
+            message: `Inferring clinical_mass_g for ${normalized.name} during V2 migration.`,
+            metadata: { name: normalized.name, fallback }
+          });
+          return fallback;
+        })(),
         substitutions: (normalized.substitutions || []).map((sub: any) => normalizeFood(sub))
       } as MealItem;
     });
