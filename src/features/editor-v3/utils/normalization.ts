@@ -106,6 +106,7 @@ export function normalizeFood(food: any): Food {
  * Migration Guard: Converte dados do Editor V2 para V3 de forma segura.
  */
 export function normalizeV2ToV3(v2Data: any): Meal[] {
+  SovereignTelemetry.reportLegacyDetection('normalization_v3', 'V2_TO_V3_MIGRATION', { items_count: v2Data?.length });
   console.log('[Migration Guard] Iniciando migração V2 -> V3');
   tracer.trace('Migration Start', { items_count: v2Data?.length });
   
