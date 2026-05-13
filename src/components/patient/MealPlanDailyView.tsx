@@ -37,6 +37,11 @@ interface MealPlanItem {
   image_url?: string | null;
   visual_library_item_id?: string | null;
   is_primary?: boolean;
+  // --- SOBERANIA V3 ---
+  editor_version?: string;
+  display_quantity?: string | number;
+  display_unit?: string;
+  clinical_mass_g?: number;
 }
 
 interface MealCompletion {
@@ -267,11 +272,33 @@ const MealItemCard = memo(function MealItemCard({
             <div className="mt-1">
               {(() => {
                 const editMeta = (item as any).edit_metadata;
-                const displayQuantity = editMeta?.display_quantity;
-                const displayUnit = editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
-                const clinicalMass = (item as any).clinical_mass_g;
+                const displayQuantity = item.display_quantity || editMeta?.display_quantity;
+                const displayUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
+                const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g;
 
-                // 1. Soberania: Metadata explícito
+                // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
+                if (item.editor_version === 'v3') {
+                  // No V3, priorizamos TOTALMENTE o que está no snapshot
+                  if (displayQuantity) {
+                    return (
+                      <p className="text-xs font-bold text-primary mb-0.5">
+                        {displayQuantity} {displayUnit}
+                        {clinicalMass ? ` (${clinicalMass}g)` : ''}
+                      </p>
+                    );
+                  }
+                  if (clinicalMass) {
+                    return (
+                      <p className="text-xs font-bold text-primary mb-0.5">
+                        {clinicalMass}g
+                      </p>
+                    );
+                  }
+                  // Se for V3 e não tiver nada, é erro mas tentamos mostrar o que der
+                  return null;
+                }
+
+                // --- LEGADO V1/V2 ---
                 if (displayQuantity) {
                   return (
                     <p className="text-xs font-bold text-primary mb-0.5">
@@ -280,7 +307,6 @@ const MealItemCard = memo(function MealItemCard({
                   );
                 }
 
-                // 2. Fallback: Re-calculado (Clinical Mass)
                 if (clinicalMass) {
                   return (
                     <p className="text-xs font-bold text-primary mb-0.5">

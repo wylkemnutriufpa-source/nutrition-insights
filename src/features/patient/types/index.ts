@@ -12,6 +12,7 @@ export interface PatientPlan {
   meals: Meal[];
   created_at: string;
   sharing_token?: string;
+  editor_version?: string;
 }
 
 export interface MealCompletion {

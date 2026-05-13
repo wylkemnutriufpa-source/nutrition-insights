@@ -31,18 +31,23 @@ export const PatientPlanPage = () => {
 
   useEffect(() => {
     const fetchPlan = async () => {
-      let data = null;
-      if (token) {
-        data = await patientService.getPlanByToken(token);
-      } else if (id) {
-        data = await patientService.getPlanById(id);
-      }
+      try {
+        let data = null;
+        if (token) {
+          data = await patientService.getPlanByToken(token);
+        } else if (id) {
+          data = await patientService.getPlanById(id);
+        }
 
-      if (data) {
-        setPlan(data);
-        const todayCompletions = await patientService.getTodayCompletions(data.id);
-        setCompletions(todayCompletions);
-        await patientService.logAccess(data.id, 'view');
+        if (data) {
+          setPlan(data);
+          const todayCompletions = await patientService.getTodayCompletions(data.id);
+          setCompletions(todayCompletions);
+          await patientService.logAccess(data.id, 'view');
+        }
+      } catch (err: any) {
+        console.error("[PatientApp] Plan Loading Error:", err);
+        toast.error(err.message || "Erro ao carregar o plano.");
       }
       setLoading(false);
     };
@@ -77,7 +82,30 @@ export const PatientPlanPage = () => {
   };
   
   const handleOpenSubstitution = (item: any, mealId: string) => {
-    // Tenta encontrar o alimento correspondente no banco de dados NutriCore V2
+    // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
+    if (plan?.editor_version === 'v3') {
+      // No V3, usamos APENAS o que o nutricionista definiu como substitutos válidos no snapshot
+      const snapshotSubs = item.substitutions || [];
+      
+      if (snapshotSubs.length === 0) {
+        toast.error('O nutricionista não definiu substituições para este item.');
+        return;
+      }
+
+      // Convertemos o formato do snapshot para o formato esperado pelo modal (compatibilidade visual)
+      const mappedSubs = snapshotSubs.map((food: any) => ({
+        food,
+        grams: item.clinical_mass_g || item.quantity || 100, // Mantém a massa clínica ou quantidade
+        unit_label: food.portionUnitLabel || 'unidade'
+      }));
+
+      setSubstitutions(mappedSubs);
+      setSelectedItem({ item, mealId });
+      setShowSubModal(true);
+      return;
+    }
+
+    // --- LEGADO V1/V2 ---
     const baseFood = BASE_FOODS.find(f => 
       f.name.toLowerCase() === item.name.toLowerCase() || 
       item.name.toLowerCase().includes(f.name.toLowerCase())
@@ -88,10 +116,7 @@ export const PatientPlanPage = () => {
       return;
     }
 
-    // Calcula gramas aproximadas se não houver no item (padrão 100g se zero)
-    // No V3, item.quantity costuma ser as gramas reais.
     const grams = item.quantity || 100;
-    
     const subs = getSubstitutions(baseFood, BASE_FOODS, grams);
     setSubstitutions(subs);
     setSelectedItem({ item, mealId });
@@ -107,7 +132,24 @@ export const PatientPlanPage = () => {
         ...meal,
         items: meal.items.map(item => {
           if (item.id !== selectedItem.item.id) return item;
-          // Substitui o item mantendo as calorias equivalentes
+          
+          // No V3, apenas trocamos o item pelos dados SOBERANOS do substituto
+          if (plan.editor_version === 'v3') {
+            return {
+              ...item,
+              ...sub.food,
+              name: sub.food.name,
+              // Mantemos os campos de macro que o editor-v3 usa
+              kcal: sub.food.kcal,
+              protein: sub.food.protein,
+              carbs: sub.food.carbs,
+              fat: sub.food.fat,
+              // Se houver clinical_mass_g no substituto ou original, preservamos
+              clinical_mass_g: sub.grams || item.clinical_mass_g
+            };
+          }
+
+          // Legado V1/V2 - Mantém o cálculo local por enquanto para não quebrar produção legada
           return {
             ...item,
             name: sub.food.name,
@@ -290,7 +332,12 @@ export const PatientPlanPage = () => {
                           )}
                           <div>
                             <span className="font-medium group-hover:text-emerald-400 transition-colors">{item.name}</span>
-                            <p className="text-xs text-gray-500">Medida caseira recomendada</p>
+                            <p className="text-xs text-gray-500">
+                              {plan.editor_version === 'v3' 
+                                ? `${item.display_quantity || item.quantity || ''} ${item.display_unit || item.portionUnitLabel || ''} ${item.clinical_mass_g ? `(${item.clinical_mass_g}g)` : ''}`
+                                : 'Medida caseira recomendada'
+                              }
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">

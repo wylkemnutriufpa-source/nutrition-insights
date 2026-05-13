@@ -40,6 +40,7 @@ import {
   buildPdfItemsForDailyPlan,
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
+  DAY_ORDER,
 } from "@/lib/mealPlanDisplay";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -50,6 +51,12 @@ interface MealPlan {
   start_date: string;
   totals_status?: string;
   plan_mode?: string;
+  editor_version?: string;
+  snapshot?: any;
+  total_target_calories?: number;
+  total_target_protein?: number;
+  total_target_carbs?: number;
+  total_target_fat?: number;
 }
 
 function getWeekDates(dateStr: string) {
@@ -143,47 +150,117 @@ export default function PatientMealPlan() {
     if (!user) return;
     setLoading(true);
 
-    const { data: result, error } = await supabase.rpc(
-      "resolve_patient_meal_plan",
-      { p_patient_id: user.id, p_date: date }
-    );
+    try {
+      const { data: result, error } = await supabase.rpc(
+        "resolve_patient_meal_plan",
+        { p_patient_id: user.id, p_date: date }
+      );
 
-    if (error || !result) {
-      setPlan(null);
-      setItems([]);
-      setAllItems([]);
-      setCompletions([]);
-      setWeekCompletions([]);
-      setLoading(false);
-      return;
-    }
+      if (error || !result) {
+        setPlan(null);
+        setItems([]);
+        setAllItems([]);
+        setCompletions([]);
+        setWeekCompletions([]);
+        setLoading(false);
+        return;
+      }
 
-    const planData = result as any;
+      const planData = result as any;
+    
+    // Buscar editor_version e snapshot para garantir soberania
+    const { data: snapshotData } = await supabase
+      .from('meal_plans')
+      .select('editor_version, snapshot, total_target_calories, total_target_protein, total_target_carbs, total_target_fat')
+      .eq('id', planData.id)
+      .maybeSingle();
+
     setPlan({
       id: planData.id,
       title: planData.title,
       start_date: planData.start_date,
       totals_status: planData.totals_status,
       plan_mode: planData.plan_mode,
-    });
+      editor_version: snapshotData?.editor_version,
+      snapshot: snapshotData?.snapshot,
+      total_target_calories: snapshotData?.total_target_calories,
+      total_target_protein: snapshotData?.total_target_protein,
+      total_target_carbs: snapshotData?.total_target_carbs,
+      total_target_fat: snapshotData?.total_target_fat,
+    } as any);
 
-    let resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
-    let resolvedAllItems = resolvedItems;
+    let resolvedItems: MealPlanItem[] = [];
+    let resolvedAllItems: MealPlanItem[] = [];
 
-    // Use a flag to avoid infinite loops when fetching full items
-    const hasItems = resolvedItems.length > 0;
-    
-    if (planData.id && !hasItems) {
-      const { data: fullItemsData, error: fullItemsError } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", planData.id);
+    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
+    if (snapshotData?.editor_version === 'v3') {
+      if (!snapshotData.snapshot || !(snapshotData.snapshot as any).meals) {
+        console.error(`[CRITICAL] V3 Plan ${planData.id} missing snapshot in Patient App.`);
+        toast.error("Erro ao carregar os dados clínicos do plano.");
+        setLoading(false);
+        return;
+      }
 
-      if (!fullItemsError && fullItemsData) {
-        const fullItems = fullItemsData as unknown as MealPlanItem[];
-        resolvedAllItems = fullItems;
+      const snapshot = snapshotData.snapshot as any;
+      // No V3, flattened items no snapshot contêm tudo que precisamos
+      // Precisamos converter a estrutura de Meals do snapshot para uma lista flat de MealPlanItem para compatibilidade com o Patient App
+      const currentDow = new Date(date + "T12:00:00").getDay();
+      
+      const flatItems: any[] = [];
+      snapshot.meals.forEach((meal: any) => {
+        // Se for modo semanal, filtramos pelo dia. Se for diário, pegamos todos.
+        const isWeekly = snapshot.selectionMode === 'week';
+        
+        meal.items.forEach((item: any) => {
+          // Filtro por dia se for semanal
+          if (isWeekly && item.day_of_week !== currentDow) return;
 
-        if (resolvedItems.length === 0 && fullItems.length > 0) {
+          flatItems.push({
+            ...item,
+            id: item.instanceId || item.id,
+            meal_type: meal.meal_type || meal.id,
+            title: item.name || item.title,
+            description: item.description || item.instructions,
+            calories_target: item.kcal,
+            protein_target: item.protein,
+            carbs_target: item.carbs,
+            fat_target: item.fat,
+            image_url: item.imageUrl,
+            day_of_week: item.day_of_week,
+            display_quantity: item.display_quantity || item.quantity,
+            display_unit: item.display_unit || item.portionUnitLabel,
+            clinical_mass_g: item.clinical_mass_g,
+            instanceId: item.instanceId,
+            blockId: item.blockId,
+            substitution_group_id: item.substitution_group_id || item.blockId,
+            correlation_id: item.correlation_id,
+            editor_version: 'v3',
+            edit_metadata: {
+              ...(item.edit_metadata || {}),
+              display_quantity: item.display_quantity || item.quantity,
+              display_unit: item.display_unit || item.portionUnitLabel,
+            }
+          });
+        });
+      });
+
+      resolvedAllItems = flatItems;
+      resolvedItems = flatItems;
+    } else {
+      // --- LEGADO V1/V2 ---
+      resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
+      resolvedAllItems = resolvedItems;
+
+      if (planData.id && resolvedItems.length === 0) {
+        const { data: fullItemsData, error: fullItemsError } = await supabase
+          .from("meal_plan_items")
+          .select("*")
+          .eq("meal_plan_id", planData.id);
+
+        if (!fullItemsError && fullItemsData) {
+          const fullItems = fullItemsData as unknown as MealPlanItem[];
+          resolvedAllItems = fullItems;
+
           const currentDow = new Date(date + "T12:00:00").getDay();
           const sameDayItems = fullItems.filter((item) => item.day_of_week === currentDow);
           if (sameDayItems.length > 0) {
@@ -196,25 +273,17 @@ export default function PatientMealPlan() {
             resolvedItems = firstAvailableDay !== undefined
               ? fullItems.filter((item) => item.day_of_week === firstAvailableDay)
               : fullItems;
-
-            console.warn(
-              `[PatientMealPlan] Plano ${planData.id} sem itens para day_of_week=${currentDow}. ` +
-              `Usando fallback do primeiro dia disponível (${String(firstAvailableDay)}).`,
-            );
           }
         }
       }
     }
 
-    if (planData.id && resolvedAllItems.length === resolvedItems.length) {
-      const { data: fullItemsData } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", planData.id);
-      if (fullItemsData?.length) resolvedAllItems = fullItemsData as unknown as MealPlanItem[];
+    // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
+    if (snapshotData?.editor_version === 'v3') {
+      setItems(resolvedItems);
+    } else {
+      setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
     }
-
-    setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
     setAllItems(resolvedAllItems);
 
     const { data: subsData } = await supabase
@@ -255,8 +324,12 @@ export default function PatientMealPlan() {
       .gte("date", weekStart)
       .lte("date", weekEnd);
 
-    setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
-    setLoading(false);
+    } catch (err: any) {
+      console.error("[PatientApp] Fetch Error:", err);
+      toast.error(err.message || "Erro ao carregar dados do plano.");
+    } finally {
+      setLoading(false);
+    }
   }, [user, date, weekDates]);
 
   useEffect(() => { 
@@ -372,8 +445,22 @@ export default function PatientMealPlan() {
         if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
       } catch { /* ignore */ }
 
-      const pdfItems = buildPdfItemsForDailyPlan(allItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[];
-      const primaryTotals = calculatePrimaryTotals(pdfItems as any);
+      // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
+      let pdfItems: MealPlanItem[] = [];
+      let primaryTotals: any = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+      if (plan.editor_version === 'v3') {
+        pdfItems = allItems; // No V3, allItems já estão filtrados/estruturados pelo snapshot
+        primaryTotals = {
+          calories: plan.total_target_calories,
+          protein: plan.total_target_protein,
+          carbs: plan.total_target_carbs,
+          fat: plan.total_target_fat,
+        };
+      } else {
+        pdfItems = buildPdfItemsForDailyPlan(allItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[];
+        primaryTotals = calculatePrimaryTotals(pdfItems as any);
+      }
 
       const data: PremiumMealPlanPDFData = {
         planTitle: plan.title || "Plano Alimentar",
@@ -447,7 +534,16 @@ export default function PatientMealPlan() {
     })).filter(g => g.items.length > 0),
   [overlayedItems]);
 
-  const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
+  const weeklyDisplayDays = useMemo(() => {
+    if (plan?.editor_version === 'v3') {
+      // No V3, apenas agrupamos os itens por dia da semana que já estão no allItems (snapshot flat)
+      return DAY_ORDER.map(day => ({
+        day,
+        items: allItems.filter(item => item.day_of_week === day)
+      }));
+    }
+    return buildWeeklyDisplayDays(allItems as any);
+  }, [allItems, plan?.editor_version]);
 
   // Memoized daily adherence
   const visibleCompletions = useMemo(() => {
@@ -464,14 +560,20 @@ export default function PatientMealPlan() {
   }, [visibleCompletions, items]);
 
   const getWeekDayAdherence = useCallback((dayDate: string, dayIdx: number) => {
-    const dayItems = buildDailyDisplayItems(allItems as any, dayIdx) as MealPlanItem[];
+    let dayItems: MealPlanItem[] = [];
+    if (plan?.editor_version === 'v3') {
+      dayItems = allItems.filter(item => item.day_of_week === dayIdx);
+    } else {
+      dayItems = buildDailyDisplayItems(allItems as any, dayIdx) as MealPlanItem[];
+    }
+    
     const dayComps = weekCompletions.filter(c => (c as any).date === dayDate);
     if (dayItems.length === 0) return { pct: 0, total: 0, done: 0 };
     const followed = dayComps.filter(c => c.adherence_status === "followed").length;
     const partial = dayComps.filter(c => c.adherence_status === "partial").length;
     const pct = ((followed * 100 + partial * 50) / (dayItems.length * 100)) * 100;
     return { pct, total: dayItems.length, done: dayComps.length };
-  }, [allItems, weekCompletions]);
+  }, [allItems, weekCompletions, plan?.editor_version]);
 
   if (loading) {
     return (

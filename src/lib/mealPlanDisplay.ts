@@ -23,7 +23,7 @@ type GroupedMeal = {
   substitutions: DisplayMealPlanItem[];
 };
 
-const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+export const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const MAX_PATIENT_SUBSTITUTIONS = 5;
 
 function asNumber(value: unknown): number {
