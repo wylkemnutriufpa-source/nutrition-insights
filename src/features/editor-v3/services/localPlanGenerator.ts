@@ -71,7 +71,7 @@ export async function generateAndSaveLocalPlan(
     let height = Number(profile.current_height_cm || 0);
     if (height <= 0) height = Number(answers.height || 0);
     if (height <= 0 && assessment?.height) height = Number(assessment.height);
-    if (height <= 0) height = 170; // Fallback final
+    if (height <= 0) throw new Error(`Impossível gerar plano: Altura do paciente não encontrada.`);
 
     const context: PatientContext = {
       id: profile.id,
