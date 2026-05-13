@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { 
   AlertCircle, Shield, History, Activity, Info, 
   AlertTriangle, ShieldAlert, RefreshCw, ScanSearch, 
-  Zodiac, Zap, Bomb, Ghost, Lock, Search 
+  Fingerprint, Zap, Bomb, Ghost, Lock, Search 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { SovereignAuditScanner } from '@/lib/sovereign-audit-scanner';
