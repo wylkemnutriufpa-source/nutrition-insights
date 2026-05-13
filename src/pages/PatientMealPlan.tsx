@@ -381,18 +381,34 @@ export default function PatientMealPlan() {
         nutritionistName,
         startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
         planMode: "single_day",
-        items: pdfItems.map(i => ({
-          mealType: i.meal_type || "lunch",
-          title: i.title || "Refeição",
-          description: i.description || undefined,
-          calories_target: i.calories_target || undefined,
-          protein_target: i.protein_target || undefined,
-          carbs_target: i.carbs_target || undefined,
-          fat_target: i.fat_target || undefined,
-          day_of_week: i.day_of_week ?? undefined,
-          is_primary: i.is_primary !== false,
-          substitution_group_id: (i as any).substitution_group_id || null,
-        })),
+        items: pdfItems.map(i => {
+          const editMeta = (i as any).edit_metadata;
+          const displayQuantity = editMeta?.display_quantity;
+          const displayUnit = editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
+          const clinicalMass = (i as any).clinical_mass_g;
+          
+          let resolvedDescription = i.description || "";
+          
+          // Only override if we have explicit metadata that is likely more accurate/structured
+          if (displayQuantity) {
+            resolvedDescription = `${displayQuantity} ${displayUnit}`;
+          } else if (clinicalMass) {
+            resolvedDescription = formatDisplayPortion({ ...i, grams: clinicalMass } as any);
+          }
+
+          return {
+            mealType: i.meal_type || "lunch",
+            title: i.title || "Refeição",
+            description: resolvedDescription || undefined,
+            calories_target: i.calories_target || undefined,
+            protein_target: i.protein_target || undefined,
+            carbs_target: i.carbs_target || undefined,
+            fat_target: i.fat_target || undefined,
+            day_of_week: i.day_of_week ?? undefined,
+            is_primary: i.is_primary !== false,
+            substitution_group_id: (i as any).substitution_group_id || null,
+          };
+        }),
         targetCalories: Math.round(primaryTotals.calories) || planFull?.total_target_calories || undefined,
         targetProtein: Math.round(primaryTotals.protein) || planFull?.total_target_protein || undefined,
         targetCarbs: Math.round(primaryTotals.carbs) || planFull?.total_target_carbs || undefined,
