@@ -59,6 +59,9 @@ import {
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
+// ── Feature Flags ─────────────────────────────────────────────
+const ENABLE_LEGACY_PROTEIN_REBALANCE = false;
+
 // ── Types ────────────────────────────────────────────────────
 
 export type AutoFixChangeType =
