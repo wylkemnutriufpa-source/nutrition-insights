@@ -58,6 +58,7 @@ const BiquiniBrancoLanding = lazy(() => import("../pages/BiquiniBrancoLanding"))
 const BiquiniBrancoDetail = lazy(() => import("../pages/BiquiniBrancoDetail"));
 const MyReferrals = lazy(() => import("../pages/MyReferrals"));
 const MyPublicProfile = lazy(() => import("../pages/MyPublicProfile"));
+const SovereignDashboard = lazy(() => import("../pages/SovereignDashboard"));
 
 export const AppRoutes = () => {
   const { authStatus, user } = useAuth();
