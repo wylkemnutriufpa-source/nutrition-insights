@@ -109,7 +109,20 @@ export const PatientPlanPage = () => {
       return;
     }
 
-    // --- LEGADO V1/V2 ---
+    // 🛡️ SOBERANIA V3: Bloquear busca em base local (BASE_FOODS)
+    if (plan.editor_version === 'v3') {
+      toast.error('Este plano requer substituições soberanas do nutricionista.');
+      SovereignTelemetry.log({
+        runtime_source: 'patient_plan_substitutions',
+        event_type: 'legacy_detected',
+        severity: 'critical',
+        message: `Tentativa de busca em BASE_FOODS bloqueada para plano V3: ${item.name}`,
+        metadata: { classification: 'LEGADO/ZUMBI' }
+      });
+      return;
+    }
+
+    // --- LEGADO V1/V2 (Somente para planos antigos) ---
     const baseFood = BASE_FOODS.find(f => 
       f.name.toLowerCase() === item.name.toLowerCase() || 
       item.name.toLowerCase().includes(f.name.toLowerCase())
@@ -125,7 +138,7 @@ export const PatientPlanPage = () => {
     setSubstitutions(subs);
     setSelectedItem({ item, mealId });
     setShowSubModal(true);
-  };
+
 
   const applySubstitution = (sub: any) => {
     if (!plan || !selectedItem) return;
