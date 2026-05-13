@@ -218,14 +218,20 @@ const EditorV3Page = () => {
       if (!prev) return null;
       setIsModalDirty(true);
       
-      const merged = { ...prev, ...updates, manual_override: true };
+      // Padronização absoluta: Garantir que quantidades sejam sempre arredondadas (steps de 1g)
+      const sanitizedUpdates = { ...updates };
+      if (sanitizedUpdates.quantity !== undefined) {
+        sanitizedUpdates.quantity = Math.round(sanitizedUpdates.quantity);
+      }
+      
+      const merged = { ...prev, ...sanitizedUpdates, manual_override: true };
       
       // 🛡️ SOBERANIA CLÍNICA NO DRAFT: Sincronizar massa clínica para preview real-time
-      if (updates.quantity !== undefined || updates.measurementType !== undefined || updates.portionValue !== undefined) {
+      if (sanitizedUpdates.quantity !== undefined || sanitizedUpdates.measurementType !== undefined || sanitizedUpdates.portionValue !== undefined) {
         const pValue = Number(merged.portionValue) || 1;
         merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
           ? merged.quantity
-          : merged.quantity * pValue;
+          : Math.round(merged.quantity * pValue);
       }
       
       return merged;
