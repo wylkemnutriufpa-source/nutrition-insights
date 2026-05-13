@@ -181,23 +181,65 @@ export default function PatientMealPlan() {
       total_target_fat: snapshotData?.total_target_fat,
     } as any);
 
-    let resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
-    let resolvedAllItems = resolvedItems;
+    let resolvedItems: MealPlanItem[] = [];
+    let resolvedAllItems: MealPlanItem[] = [];
 
-    // Use a flag to avoid infinite loops when fetching full items
-    const hasItems = resolvedItems.length > 0;
-    
-    if (planData.id && !hasItems) {
-      const { data: fullItemsData, error: fullItemsError } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", planData.id);
+    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
+    if (snapshotData?.editor_version === 'v3') {
+      if (!snapshotData.snapshot || !snapshotData.snapshot.meals) {
+        console.error(`[CRITICAL] V3 Plan ${planData.id} missing snapshot in Patient App.`);
+        toast.error("Erro ao carregar os dados clínicos do plano.");
+        setLoading(false);
+        return;
+      }
 
-      if (!fullItemsError && fullItemsData) {
-        const fullItems = fullItemsData as unknown as MealPlanItem[];
-        resolvedAllItems = fullItems;
+      const snapshot = snapshotData.snapshot;
+      // No V3, flattened items no snapshot contêm tudo que precisamos
+      // Precisamos converter a estrutura de Meals do snapshot para uma lista flat de MealPlanItem para compatibilidade com o Patient App
+      const currentDow = new Date(date + "T12:00:00").getDay();
+      
+      const flatItems: any[] = [];
+      snapshot.meals.forEach((meal: any) => {
+        // Se for modo semanal, filtramos pelo dia. Se for diário, pegamos todos.
+        const isWeekly = snapshot.selectionMode === 'week';
+        
+        meal.items.forEach((item: any) => {
+          // Filtro por dia se for semanal
+          if (isWeekly && item.day_of_week !== currentDow) return;
 
-        if (resolvedItems.length === 0 && fullItems.length > 0) {
+          flatItems.push({
+            ...item,
+            id: item.instanceId || item.id, // V3 usa instanceId como chave primária visual
+            meal_type: meal.meal_type || meal.id, // Mapeamento de tipo de refeição
+            title: item.name || item.title,
+            description: item.description || item.instructions,
+            calories_target: item.kcal,
+            protein_target: item.protein,
+            carbs_target: item.carbs,
+            fat_target: item.fat,
+            image_url: item.imageUrl,
+            day_of_week: item.day_of_week
+          });
+        });
+      });
+
+      resolvedAllItems = flatItems;
+      resolvedItems = flatItems;
+    } else {
+      // --- LEGADO V1/V2 ---
+      resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
+      resolvedAllItems = resolvedItems;
+
+      if (planData.id && resolvedItems.length === 0) {
+        const { data: fullItemsData, error: fullItemsError } = await supabase
+          .from("meal_plan_items")
+          .select("*")
+          .eq("meal_plan_id", planData.id);
+
+        if (!fullItemsError && fullItemsData) {
+          const fullItems = fullItemsData as unknown as MealPlanItem[];
+          resolvedAllItems = fullItems;
+
           const currentDow = new Date(date + "T12:00:00").getDay();
           const sameDayItems = fullItems.filter((item) => item.day_of_week === currentDow);
           if (sameDayItems.length > 0) {
@@ -210,22 +252,9 @@ export default function PatientMealPlan() {
             resolvedItems = firstAvailableDay !== undefined
               ? fullItems.filter((item) => item.day_of_week === firstAvailableDay)
               : fullItems;
-
-            console.warn(
-              `[PatientMealPlan] Plano ${planData.id} sem itens para day_of_week=${currentDow}. ` +
-              `Usando fallback do primeiro dia disponível (${String(firstAvailableDay)}).`,
-            );
           }
         }
       }
-    }
-
-    if (planData.id && resolvedAllItems.length === resolvedItems.length) {
-      const { data: fullItemsData } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", planData.id);
-      if (fullItemsData?.length) resolvedAllItems = fullItemsData as unknown as MealPlanItem[];
     }
 
     setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
