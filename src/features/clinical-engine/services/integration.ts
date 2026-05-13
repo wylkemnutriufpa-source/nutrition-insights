@@ -120,7 +120,7 @@ export async function createPlanWithV3(
 
         mealItems.push({
           ...food,
-          instanceId: Math.random().toString(36).substring(7),
+          instanceId: crypto.randomUUID(),
           quantity,
           imageUrl: img.url,
           substitutions
