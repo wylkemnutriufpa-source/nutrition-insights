@@ -602,8 +602,9 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
       const showTitle = primary.title && !sameAsLabel;
 
-      // 🛡️ SOBERANIA V3: Resolver porção
+      // 🛡️ SOBERANIA V3: Resolver porção (Lógica 1:1 com Dashboard)
       const isV3 = primary.editor_version === "v3" || (primary as any).editor_version === "V3";
+      
       const dQty = primary.display_quantity || "";
       const dUnit = primary.display_unit || "";
       const cMass = primary.clinical_mass_g || "";
@@ -614,6 +615,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       } else if (cMass) {
         portionHtml = `<div style="font-size: 10px; font-weight: 700; color: #6366f1; margin-bottom: 2px;">${cMass}g</div>`;
       }
+
 
       return `
         <div class="meal-group-container">
