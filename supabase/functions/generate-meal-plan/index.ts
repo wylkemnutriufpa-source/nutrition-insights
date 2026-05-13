@@ -86,16 +86,9 @@ const VALID_MEAL_CATEGORIES = new Set(["cafe_da_manha", "lanche", "almoco", "jan
 const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
 
 // ──── INTOLERANCE KEYWORD MAPS (CLINICAL SAFETY) ────
-const INTOLERANCE_KEYWORDS: Record<string, string[]> = {
-  lactose: ["leite", "queijo", "iogurte", "requeijao", "whey", "nata", "creme de leite", "manteiga", "cream cheese", "coalhada", "ricota", "mucarela", "mussarela", "parmesao", "provolone", "cottage"],
-  gluten: ["pao", "macarrao", "trigo", "aveia", "cevada", "centeio", "biscoito", "bolacha", "torrada", "cuscuz de trigo", "farinha de trigo", "massa"],
-  ovo: ["ovo", "omelete", "clara", "gema", "ovos"],
-  soja: ["soja", "tofu", "edamame", "missô", "shoyu"],
-  amendoim: ["amendoim", "pasta de amendoim", "paçoca"],
-  nozes: ["nozes", "castanha", "amêndoa", "amendoa", "pistache", "macadamia", "pecan", "avel"],
-  crustaceos: ["camarao", "lagosta", "caranguejo", "siri", "lula"],
-  peixe: ["peixe", "tilapia", "salmao", "sardinha", "atum", "bacalhau", "dourado", "pintado", "tambaqui"],
-};
+// ── REMOVED: INTOLERANCE_KEYWORDS (Heuristic logic eliminated) ──
+// All clinical filtering now uses structured clinical_tags or intolerance_flags.
+
 // ──── FAIL-FAST: per-meal zero-candidate check (no arbitrary minimum) ────
 // Validation happens per meal type during generation, not as a global pre-check
 
@@ -918,36 +911,9 @@ function roundServingGrams(value: number): number {
 
 function clampComputedProteinServing(grams: number, mealType: string): number {
   // Clinical limits: main meals 80-180g (max was 150, bumped for flexibility), snacks 30-100g
-  if (["lunch", "dinner"].includes(mealType)) {
-    return Math.min(180, Math.max(80, roundServingGrams(grams)));
-  }
-  return Math.min(100, Math.max(30, roundServingGrams(grams)));
-}
+// ── REMOVED: clampComputedProteinServing & getPortionAlert (Intelligence parity eliminated) ──
+// All clamps must be governed by ClinicalEngine guards.
 
-function getPortionAlert(grams: number, mealType: string, foodName: string): string | null {
-  const isMain = ["lunch", "dinner"].includes(mealType);
-  const name = foodName.toLowerCase();
-  
-  if (isMain) {
-    if (grams > 180) return `Porção elevada (${grams}g). Sugerido max 180g.`;
-    if (grams < 80) return `Porção reduzida (${grams}g). Sugerido min 80g.`;
-  } else {
-    if (grams > 100) return `Porção elevada para lanche (${grams}g). Sugerido max 100g.`;
-    if (grams < 30) return `Porção irrelevante para lanche (${grams}g).`;
-  }
-
-  // Specific for eggs (1 egg ~ 50g)
-  if (name.includes("ovo") || name.includes("omelete")) {
-    if (grams > 160) return `Porção de ovos elevada (${grams}g ≈ 3-4 ovos).`;
-  }
-
-  // Specific for fish (sometimes higher volume is OK, but >220g is too much)
-  if (name.includes("peixe") || name.includes("tilapia") || name.includes("tambaqui")) {
-    if (grams > 220) return `Porção de peixe muito elevada (${grams}g).`;
-  }
-
-  return null;
-}
 
 function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
   const searchableText = normalize(`${item.title || ""}\n${item.description || ""}`);
