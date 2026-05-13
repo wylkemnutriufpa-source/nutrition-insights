@@ -909,10 +909,7 @@ function roundServingGrams(value: number): number {
   return Math.max(1, Math.round(value));
 }
 
-function clampComputedProteinServing(grams: number, mealType: string): number {
-  // Clinical limits: main meals 80-180g (max was 150, bumped for flexibility), snacks 30-100g
-// ── REMOVED: clampComputedProteinServing & getPortionAlert (Intelligence parity eliminated) ──
-// All clamps must be governed by ClinicalEngine guards.
+// Portions governed exclusively by NutriCoreV3.
 
 
 function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
