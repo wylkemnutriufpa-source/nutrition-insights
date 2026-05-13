@@ -73,6 +73,16 @@ export async function promoteDraftToMealPlan(
   draft: DraftRecord,
   options?: { title?: string }
 ): Promise<PromoteResult> {
+  // 🛡️ Blindagem: Detectar rastro de motores legados
+  assertSovereignRuntime("promoteDraftToMealPlan");
+
+  const correlationId = getCorrelationId();
+  logSovereignEvent("INFO", "INICIANDO_PROMOCAO_DRAFT", {
+    draft_id: draft.id,
+    patient_id: draft.patient_id,
+    correlation_id: correlationId
+  });
+
   const meals = draft.payload?.meals ?? [];
   const today = new Date().toISOString().slice(0, 10);
   const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
