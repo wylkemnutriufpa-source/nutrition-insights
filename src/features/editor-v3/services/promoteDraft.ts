@@ -41,16 +41,7 @@ function buildItemTitle(item: MealItem): string {
 }
 
 function buildItemDescription(item: MealItem): string {
-  const quantity = item.quantity || 1;
-  const unit = item.portionUnitLabel || item.portionLabel || item.portionUnit || 'g';
-  
-  // Se o label já parece conter o número (ex: "100g", "2 fatias"), retornamos ele puro
-  if ((item.portionLabel && /\d/.test(item.portionLabel)) || (item.portionUnitLabel && /\d/.test(item.portionUnitLabel))) {
-    return item.portionLabel || item.portionUnitLabel || `${quantity}${unit}`;
-  }
-  
-  // Caso contrário, combinamos: "2 fatias"
-  return `${quantity} ${unit}`;
+  return formatDisplayPortion(item);
 }
 
 function sumMealMacros(meal: Meal) {
