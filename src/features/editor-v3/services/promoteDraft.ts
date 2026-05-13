@@ -185,8 +185,23 @@ export async function promoteDraftToMealPlan(
         cleanMacros = recalculated;
       }
 
-      // 🛡️ GUARD: Validar identidade do item antes da persistência
-      SovereignFatalGuard.validateIdentity(item.instanceId, `item.id [${item.name}]`);
+      // 🛡️ TRACING SOBERANO — RUPTURA DE IDENTIDADE
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+      
+      if (!isUuid(item.instanceId) || !isUuid(groupId)) {
+        console.error(`[FATAL-IDENTITY] ID INVÁLIDO DETECTADO NO PROMOTE`, {
+          item_name: item.name,
+          instanceId: item.instanceId,
+          instanceId_valid: isUuid(item.instanceId),
+          groupId: groupId,
+          groupId_valid: isUuid(groupId),
+          meal_type: mealType,
+          stack: new Error().stack
+        });
+        
+        // 🛡️ BLOQUEIO FATAL: Proibido contaminar persistência
+        throw new Error(`RUPTURA DE IDENTIDADE: ID transitório "${!isUuid(item.instanceId) ? item.instanceId : groupId}" tentando atingir SQL. Operação abortada.`);
+      }
 
       itemsRows.push({
         id: item.instanceId, // 🛡️ FASE 4: Identidade Soberana (instanceId persistente)
