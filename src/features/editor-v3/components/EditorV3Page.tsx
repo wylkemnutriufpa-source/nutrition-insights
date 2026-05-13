@@ -171,6 +171,19 @@ const EditorV3Page = () => {
   const [localDraft, setLocalDraft] = useState<MealItem | null>(null);
   const [isModalDirty, setIsModalDirty] = useState(false);
   
+  // 🛡️ SYNC SOBERANO: Sincronizar localDraft com alterações globais (ex: Ajustar Plano)
+  // Se o plano global mudar enquanto o modal está aberto, atualizamos o draft 
+  // exceto se o usuário já tiver editado manualmente (dirty)
+  useEffect(() => {
+    if (selectedItemState && !isModalDirty) {
+      const meal = meals.find(m => m.id === selectedItemState.mealId);
+      const item = meal?.items.find(i => i.instanceId === selectedItemState.instanceId);
+      if (item && JSON.stringify(item) !== JSON.stringify(localDraft)) {
+        setLocalDraft(JSON.parse(JSON.stringify(item)));
+      }
+    }
+  }, [meals, selectedItemState, isModalDirty, localDraft]);
+
   const selectedItem = useMemo(() => {
     if (!selectedItemState) return null;
     const meal = meals.find(m => m.id === selectedItemState.mealId);
