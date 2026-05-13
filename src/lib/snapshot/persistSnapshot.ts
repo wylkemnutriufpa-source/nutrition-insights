@@ -8,6 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { buildMealPlanSnapshot, BuildSnapshotOptions } from "./buildSnapshot";
 import { SNAPSHOT_SCHEMA_VERSION } from "./types";
+import { validateMealPlanSnapshot, logSovereignEvent } from "@/lib/runtimeGovernance";
 
 export interface PersistSnapshotResult {
   success: boolean;
@@ -25,6 +26,9 @@ export async function generateAndPersistMealPlanSnapshot(
 ): Promise<PersistSnapshotResult> {
   try {
     const snapshot = await buildMealPlanSnapshot(planId, options);
+    
+    // 🛡️ Blindagem Operacional: Validação rígida antes da persistência
+    validateMealPlanSnapshot(snapshot, "persist_snapshot");
 
     const { data, error } = await supabase.rpc(
       "persist_meal_plan_snapshot" as any,
