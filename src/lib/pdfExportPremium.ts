@@ -144,10 +144,6 @@ function isGenericSubstitutionDescription(description?: string): boolean {
   const normalized = normalizeMealTypeKey(description);
   if (!normalized) return true;
   if (normalized === "substituicao" || normalized === "opcao_de_substituicao") return true;
-  // Trata "100g" / "100 g" como placeholder genérico — qualquer substituição com porção fixa de 100g
-  // deve ser substituída pela porção equivalente real calculada a partir do item principal.
-  const trimmed = String(description || "").trim().toLowerCase().replace(/\s+/g, "");
-  if (trimmed === "100g" || trimmed === "100gramas") return true;
   return false;
 }
 
