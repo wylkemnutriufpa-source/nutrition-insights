@@ -191,7 +191,12 @@ export async function promoteDraftToMealPlan(
         is_manually_edited: true,
         is_locked: (item as any).locked || false,
         is_primary: true,
-        substitution_group_id: groupId
+        substitution_group_id: groupId,
+        edit_metadata: {
+          ...item,
+          display_quantity: item.quantity,
+          display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit
+        }
       });
 
       // 2.2) Substituições (se houver)
