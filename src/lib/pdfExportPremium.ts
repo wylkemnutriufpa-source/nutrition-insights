@@ -528,7 +528,7 @@ function buildPremiumCSS(): string {
 
       .meal-group-container {
         page-break-inside: avoid;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
       }
       .meal-group-container:last-child {
         margin-bottom: 0;
