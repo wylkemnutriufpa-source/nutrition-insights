@@ -120,7 +120,7 @@ export const calculateItemMacros = (item: any, quantity: number) => {
   };
 
   // 🛑 ANTI-EXPLOSION: Absolute sanity check
-  if (result.kcal > 3000) {
+  if (result.kcal > 10000) {
      console.error('[V3-MOTOR] Clinical Explosion Detected:', item.name, grams, 'g');
      return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
   }
