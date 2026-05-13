@@ -504,10 +504,7 @@ export default function DietTemplates() {
           if (opts.length === 0) continue;
 
           // Group id shared by primary + all substitution options
-          const groupId =
-            (typeof crypto !== "undefined" && (crypto as any).randomUUID)
-              ? (crypto as any).randomUUID()
-              : `grp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+          const groupId = crypto.randomUUID();
 
           opts.forEach((opt: any, idx: number) => {
             let finalName = opt?.name || b.label || "Item";
@@ -569,9 +566,7 @@ export default function DietTemplates() {
 
           // Group id for substitutions if they exist
           const groupId = legacySubs.length > 0 
-            ? ((typeof crypto !== "undefined" && (crypto as any).randomUUID)
-              ? (crypto as any).randomUUID()
-              : `grp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`)
+            ? crypto.randomUUID()
             : undefined;
 
           // Detect placeholder and replace with a recipe
