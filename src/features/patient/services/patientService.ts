@@ -73,6 +73,7 @@ export const patientService = {
             return {
               id: it.id || it.instanceId,
               name: it.title || it.name,
+              description: it.description || it.notes,
               kcal: Number(it.macros?.kcal || it.kcal || 0),
               protein: Number(it.macros?.protein_g || it.protein || 0),
               carbs: Number(it.macros?.carbs_g || it.carbs || 0),
