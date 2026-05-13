@@ -106,8 +106,13 @@ export default function ExpandableMealPlanCard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const todayItems = useMemo(() => allItems.filter(i => i.day_of_week === dayOfWeek), [allItems, dayOfWeek]);
-  const selectedDayItems = useMemo(() => allItems.filter(i => i.day_of_week === selectedDay), [allItems, selectedDay]);
+  const todayItems = useMemo(() => 
+    buildDailyDisplayItems(allItems as any, dayOfWeek), 
+  [allItems, dayOfWeek]);
+  
+  const selectedDayItems = useMemo(() => 
+    buildDailyDisplayItems(allItems as any, selectedDay), 
+  [allItems, selectedDay]);
 
   const dailyAdherence = useMemo(() => {
     if (todayItems.length === 0) return 0;
