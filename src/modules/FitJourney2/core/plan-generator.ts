@@ -12,7 +12,7 @@ export class PlanGenerator {
     const totalMacros = this.calculateTotal(meals);
 
     return { 
-      id: Math.random().toString(36).substring(2, 11),
+      id: crypto.randomUUID(),
       templateName: template.name,
       meals, 
       totalMacros 
@@ -33,7 +33,7 @@ export class PlanGenerator {
     const totalMacros = this.calculateTotal(meals);
 
     return { 
-      id: Math.random().toString(36).substring(2, 11),
+      id: crypto.randomUUID(),
       meals, 
       totalMacros 
     };

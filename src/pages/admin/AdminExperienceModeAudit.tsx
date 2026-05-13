@@ -320,7 +320,7 @@ export default function AdminExperienceModeAudit() {
       return;
     }
     const preset: FilterPreset = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `${Date.now()}-${crypto.randomUUID()}`,
       name,
       outcome,
       from,

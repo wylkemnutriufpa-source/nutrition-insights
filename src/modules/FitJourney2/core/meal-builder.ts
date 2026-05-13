@@ -28,7 +28,7 @@ export class MealBuilder {
   static createFromTemplateMeal(mealData: Omit<Meal, 'id'>): Meal {
     return {
       ...mealData,
-      id: Math.random().toString(36).substring(2, 11),
+      id: crypto.randomUUID(),
       totalMacros: this.calculateMacros(mealData.items)
     };
   }

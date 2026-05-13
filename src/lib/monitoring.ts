@@ -35,7 +35,7 @@ const SESSION_CORRELATION_ID = (() => {
   const key = 'fj_session_correlation_id';
   let id = sessionStorage.getItem(key);
   if (!id) {
-    id = `sid-${Math.random().toString(36).substring(2, 11)}-${Date.now()}`;
+    id = `sid-${crypto.randomUUID()}-${Date.now()}`;
     sessionStorage.setItem(key, id);
   }
   return id;

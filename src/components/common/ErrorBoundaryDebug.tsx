@@ -110,7 +110,7 @@ Component Stack: ${this.state.errorInfo?.componentStack}
           </div>
 
           <div className="mt-6 pt-6 border-t border-destructive/20 text-[10px] text-muted-foreground">
-            ID do Erro: {Math.random().toString(36).substr(2, 9).toUpperCase()} | 
+            ID do Erro: {crypto.randomUUID().toUpperCase()} | 
             Timestamp: {new Date().toISOString()} | 
             Navegador: {navigator.userAgent}
           </div>

@@ -57,7 +57,7 @@ export interface QueueStats {
 
 export function generateCorrelationId(): string {
   const ts = Date.now().toString(36);
-  const rnd = Math.random().toString(36).slice(2, 8);
+  const rnd = crypto.randomUUID();
   return `emc-${ts}-${rnd}`;
 }
 
