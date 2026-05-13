@@ -14,7 +14,7 @@ export const normalizeFoodMeasurement = (item: MealItem | Food): {
   normalizedGrams: number;
 } => {
   // 🛡️ BLOQUEIO SOBERANO: Impede normalização baseada em heurísticas se for detectada
-  if (!item.portionUnitLabel && !item.clinical_mass_g && (item as Food).portionValue === undefined) {
+  if (!item.portionUnitLabel && !('clinical_mass_g' in item) && (item as Food).portionValue === undefined) {
     SovereignFatalGuard.blockLegacyNormalization('normalizeFoodMeasurement', item.name);
   }
 
