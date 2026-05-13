@@ -150,22 +150,23 @@ export default function PatientMealPlan() {
     if (!user) return;
     setLoading(true);
 
-    const { data: result, error } = await supabase.rpc(
-      "resolve_patient_meal_plan",
-      { p_patient_id: user.id, p_date: date }
-    );
+    try {
+      const { data: result, error } = await supabase.rpc(
+        "resolve_patient_meal_plan",
+        { p_patient_id: user.id, p_date: date }
+      );
 
-    if (error || !result) {
-      setPlan(null);
-      setItems([]);
-      setAllItems([]);
-      setCompletions([]);
-      setWeekCompletions([]);
-      setLoading(false);
-      return;
-    }
+      if (error || !result) {
+        setPlan(null);
+        setItems([]);
+        setAllItems([]);
+        setCompletions([]);
+        setWeekCompletions([]);
+        setLoading(false);
+        return;
+      }
 
-    const planData = result as any;
+      const planData = result as any;
     
     // Buscar editor_version e snapshot para garantir soberania
     const { data: snapshotData } = await supabase
