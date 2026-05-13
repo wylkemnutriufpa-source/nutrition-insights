@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowRight, Stethoscope, Users, Dumbbell } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import LanguageSelector from "@/components/common/LanguageSelector";
+import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 
 type AuthMode = "login" | "forgot" | "register";
