@@ -83,8 +83,8 @@ export const getFoodCategory = (food: any): string => {
 };
 
 const resolveMacroGrams = (item: any, quantity: number) => {
-  // 🛡️ SOBERANIA CLÍNICA: Se temos a massa congelada, usamos ela como fonte da verdade
-  if (item.clinical_mass_g !== undefined && item.clinical_mass_g !== null && !item._is_editing_quantity) {
+  // 🛡️ SOBERANIA CLÍNICA: Se temos a massa clínica, ela governa absolutamente
+  if (item.clinical_mass_g !== undefined && item.clinical_mass_g !== null) {
     return item.clinical_mass_g;
   }
 
@@ -93,30 +93,16 @@ const resolveMacroGrams = (item: any, quantity: number) => {
     ? quantity * portionValue
     : quantity;
 
-  // Proteção contra explosão: se o cálculo resultar em algo > 1kg para um item comum, 
-  // e a quantidade for alta, pode haver drift de unidade.
+  // Proteção contra explosão de unidade (ex: 100 ovos por engano)
   if (rawGrams > 1000 && quantity > 100 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
-     console.warn(`[NutriCore] Unit explosion detected: ${quantity} ${item.measurementType}s of ${item.name}. Falling back to raw quantity as grams.`);
-     return quantity;
+     return quantity; // Fallback
   }
 
-  const kcal100 = Number(item.kcal_100g ?? item.calories_100g ?? 0);
-  const totalKcal = Number(item.kcal ?? item.calories ?? 0);
-  
-  // 🛡️ ANTI-EXPLOSION: Se as calorias totais forem absurdas, ignoramos para inferência
-  const safeTotalKcal = totalKcal > 3000 ? 0 : totalKcal;
-  
-  const inferredGrams = kcal100 > 0 && safeTotalKcal > 0 ? Math.round((safeTotalKcal / kcal100) * 100) : 0;
-  const canTrustInference = inferredGrams >= 5 && inferredGrams <= 800;
-
-  if (canTrustInference && (rawGrams > 800 || rawGrams / inferredGrams > 2)) return inferredGrams;
-  if (rawGrams > 1500 && !canTrustInference) return 150; // Fallback de segurança clínico
   return Math.max(0, rawGrams);
 };
 
 export const calculateItemMacros = (item: any, quantity: number) => {
   // 🛡️ BORDER GOVERNANCE: Macros MUST always derive from clinical_mass_g if available
-  // quantity passed here is display_quantity, but we prioritize internal state
   const grams = item.clinical_mass_g ?? resolveMacroGrams(item, quantity);
   
   const kcal100 = Number(item.kcal_100g ?? item.calories_100g ?? 0);
