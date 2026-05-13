@@ -37,6 +37,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   goalMetadata
 }) => {
   const [initialMeals, setInitialMeals] = useState<Meal[]>([]);
+  const isApplyingRef = React.useRef(false);
   
   // 🛡️ DETECTOR DE ESCOPO (DIÁRIO VS SEMANAL)
   const dayCount = useMemo(() => {
@@ -85,14 +86,15 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
     removeBeansOption: 'none'
   });
 
-  // Snapshot initial meals when opened and INITIALIZE TARGETS
+  // Snapshot initial meals ONLY ONCE when opened
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && initialMeals.length === 0) {
+      isApplyingRef.current = false;
       const currentMealsClone = JSON.parse(JSON.stringify(meals));
       setInitialMeals(currentMealsClone);
       
-      // Inicializar com os totais atuais calculados (média diária)
-      // Isso evita que comece em 0g ou 14.000g
+      // Initialize params with CURRENT totals (average per day)
+      // This prevents starting at 0g or 14,000g
       setParams({
         proteinTarget: Math.round(originalTotals.protein) || Math.round(goalMetadata.goalProtein || 120),
         carbTarget: Math.round(originalTotals.carbs) || Math.round(goalMetadata.goalCarbs || 150),
@@ -101,8 +103,11 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
         removeCarbsMeals: ['Almoço', 'Jantar'],
         removeBeansOption: 'none'
       });
+    } else if (!isOpen) {
+      // Clear snapshot when closed to allow fresh snapshot next time
+      setInitialMeals([]);
     }
-  }, [isOpen, originalTotals, goalMetadata]);
+  }, [isOpen]); // Only react to isOpen changes to prevent loops with meals/originalTotals
 
   // Real-time preview: apply to initial snapshot
   useEffect(() => {
@@ -123,8 +128,10 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        // Clicar fora ou esc -> Cancelar (restaurar snapshot)
-        onApply(initialMeals);
+        // Se fechar sem ser pelo botão "Aplicar", restauramos o estado inicial
+        if (!isApplyingRef.current) {
+          onApply(initialMeals);
+        }
         onClose();
       }
     }}>
@@ -150,7 +157,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('proteinTarget', -5)}
+                onClick={() => adjustNumeric('proteinTarget', -1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Minus size={16} />
@@ -161,7 +168,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('proteinTarget', 5)}
+                onClick={() => adjustNumeric('proteinTarget', 1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Plus size={16} />
@@ -184,7 +191,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('carbTarget', -10)}
+                onClick={() => adjustNumeric('carbTarget', -1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Minus size={16} />
@@ -195,7 +202,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('carbTarget', 10)}
+                onClick={() => adjustNumeric('carbTarget', 1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Plus size={16} />
@@ -218,7 +225,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('fatTarget', -5)}
+                onClick={() => adjustNumeric('fatTarget', -1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Minus size={16} />
@@ -229,7 +236,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('fatTarget', 5)}
+                onClick={() => adjustNumeric('fatTarget', 1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Plus size={16} />
@@ -314,7 +321,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
         <DialogFooter className="mt-8 flex gap-3 sm:justify-center">
           <Button 
             onClick={() => {
-              // snapshot is naturally discarded because we don't restore it
+              isApplyingRef.current = true;
               onClose();
             }}
             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl h-12"
@@ -324,6 +331,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
           <Button 
             variant="outline" 
             onClick={() => {
+              isApplyingRef.current = false;
               onApply(initialMeals);
               onClose();
             }}
