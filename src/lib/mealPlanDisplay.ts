@@ -41,16 +41,17 @@ function getItemTime(item: DisplayMealPlanItem): string {
 }
 
 export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
-  // 🛡️ SOBERANIA V3: Se for explicitamente falso, não é primário.
-  // Se for nulo ou indefinido, assumimos primário APENAS se não houver substitution_group_id
-  // ou se for o primeiro item de um grupo.
+  // 🛡️ SOBERANIA V3: Se o campo is_primary estiver definido, ele é a fonte da verdade.
   if (item.is_primary === false) return false;
   if (item.is_primary === true) return true;
   
-  // Heurística de fallback: Se tem substitution_group_id mas is_primary é nulo, 
-  // provavelmente é uma substituição (pois itens primários V3 sempre recebem is_primary: true)
+  // 🛡️ COMPATIBILIDADE V2/LEGADO: Se não temos is_primary (null/undefined), 
+  // checamos se o item tem um substitution_group_id. 
+  // No V2, itens primários não tinham esse ID, apenas as substituições tinham.
+  // No V3, mesmo o primário tem o ID do grupo, mas o V3 SEMPRE define is_primary: true/false.
   if (item.substitution_group_id && item.is_primary === null) return false;
   
+  // Fallback final: Se nada indicar que é substituição, assume-se primário.
   return true;
 }
 
@@ -71,14 +72,19 @@ function groupItems(items: DisplayMealPlanItem[]): GroupedMeal[] {
   const groups = new Map<string, DisplayMealPlanItem[]>();
 
   for (const item of sortPlanItems(items)) {
-    const groupId = item.substitution_group_id || item.id; // Use item.id as fallback if no groupId, assuming it is a UUID
+    // 🛡️ ANTI-VAZAMENTO: Substituições órfãs (sem group_id) são ignoradas no dashboard principal.
+    // Isso evita que itens de troca apareçam como se fossem refeições principais.
+    if (item.is_primary === false && !item.substitution_group_id) continue;
+    
+    const groupId = item.substitution_group_id || item.id; 
     const current = groups.get(groupId) || [];
     current.push(item);
     groups.set(groupId, current);
   }
 
   return Array.from(groups.entries()).map(([groupId, groupItems]) => {
-    const primary = groupItems.find(isPrimaryMealItem) || groupItems[0];
+    // 🛡️ SOBERANIA V3: O primário deve ser quem tem is_primary: true ou o primeiro candidato válido.
+    const primary = groupItems.find(i => i.is_primary === true) || groupItems.find(isPrimaryMealItem) || groupItems[0];
     const substitutions = groupItems
       .filter((item) => item.id !== primary.id)
       .filter((item) => !isPrimaryMealItem(item) || !!item.substitution_group_id)

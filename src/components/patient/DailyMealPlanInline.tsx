@@ -76,8 +76,15 @@ export default function DailyMealPlanInline() {
         .order("created_at");
 
       const currentItems = (itemsData || []) as MealPlanItem[];
-      // Modelo GLOBAL: mostra apenas itens marcados como primários para o dia atual simplificado
-      setItems(currentItems.filter(i => (i as any).is_primary && !(i as any).is_substitution));
+      // Modelo GLOBAL: mostra apenas itens marcados como primários para o dia atual simplificado.
+      // 🛡️ SOBERANIA V3: Filtra substituições (is_primary: false ou que possuem substitution_group_id).
+      setItems(currentItems.filter(i => {
+        const item = i as any;
+        if (item.is_primary === false) return false;
+        if (item.is_primary === true) return true;
+        if (item.substitution_group_id) return false;
+        return true;
+      }));
 
       const { data: completionsData } = await supabase
         .from("meal_item_completions")

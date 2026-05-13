@@ -109,7 +109,14 @@ export default function NextMealWidget() {
 
       const mealItems = grouped[selectedMeal];
       // 🛡️ SOBERANIA V3: Filtramos apenas itens primários para evitar explosão de macros
-      const primaryMealItems = mealItems.filter(i => (i as any).is_primary !== false);
+      // Itens que são substituições (is_primary: false ou possuem substitution_group_id) são ignorados nos macros.
+      const primaryMealItems = mealItems.filter(i => {
+        const item = i as any;
+        if (item.is_primary === false) return false;
+        if (item.is_primary === true) return true;
+        if (item.substitution_group_id) return false;
+        return true;
+      });
       const totalKcal = primaryMealItems.reduce((s, i) => s + safeNum(i?.calories_target), 0);
       const totalProtein = primaryMealItems.reduce((s, i) => s + safeNum(i?.protein_target), 0);
       const totalCarbs = primaryMealItems.reduce((s, i) => s + safeNum(i?.carbs_target), 0);

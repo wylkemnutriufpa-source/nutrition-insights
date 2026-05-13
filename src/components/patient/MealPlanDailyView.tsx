@@ -278,13 +278,31 @@ const MealItemCard = memo(function MealItemCard({
             <div className="mt-1">
               {(() => {
                 const editMeta = (item as any).edit_metadata || item.metadata;
-                const isV3 = item.editor_version === "v3";
+                const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3";
 
-                // V3 prioritization: display_quantity > clinical_mass_g > fallback
-                if (isV3) {
-                  const dQty = item.display_quantity || editMeta?.display_quantity;
-                  const dUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
-                  
+                // V3 prioritization: display_quantity > clinical_mass_g
+                const dQty = item.display_quantity || editMeta?.display_quantity;
+                const dUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
+                const cMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
+
+                if (isV3 && dQty) {
+                  return (
+                    <p className="text-xs font-bold text-primary mb-0.5">
+                      {dQty} {dUnit}
+                    </p>
+                  );
+                }
+                
+                if (isV3 && cMass && !dQty) {
+                  return (
+                    <p className="text-xs font-bold text-primary mb-0.5">
+                      {cMass}g
+                    </p>
+                  );
+                }
+
+                // V2 Fallback (only if not already rendered by V3 logic)
+                if (!isV3) {
                   if (dQty) {
                     return (
                       <p className="text-xs font-bold text-primary mb-0.5">
@@ -292,8 +310,6 @@ const MealItemCard = memo(function MealItemCard({
                       </p>
                     );
                   }
-                  
-                  const cMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
                   if (cMass) {
                     return (
                       <p className="text-xs font-bold text-primary mb-0.5">
@@ -301,28 +317,6 @@ const MealItemCard = memo(function MealItemCard({
                       </p>
                     );
                   }
-                  return null;
-                }
-
-                // V2 Fallback
-                const displayQuantity = item.display_quantity || editMeta?.display_quantity;
-                const displayUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
-                const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
-
-                if (displayQuantity) {
-                  return (
-                    <p className="text-xs font-bold text-primary mb-0.5">
-                      {displayQuantity} {displayUnit}
-                    </p>
-                  );
-                }
-
-                if (clinicalMass) {
-                  return (
-                    <p className="text-xs font-bold text-primary mb-0.5">
-                      {clinicalMass}g
-                    </p>
-                  );
                 }
 
                 return null;
@@ -330,9 +324,20 @@ const MealItemCard = memo(function MealItemCard({
 
               {item.description && (
                 <p className="text-xs text-muted-foreground line-clamp-6 whitespace-pre-line">
-                  {(item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && !item.is_primary
-                    ? `Substituição: ${item.title}`
-                    : item.description}
+                  {(() => {
+                    const desc = item.description || "";
+                    // 🛡️ ANTI-DUPLICAÇÃO: Se a descrição for apenas a gramagem que já renderizamos, limpamos.
+                    const qty = String(item.display_quantity || (item as any).edit_metadata?.display_quantity || "");
+                    const mass = String(item.clinical_mass_g || (item as any).clinical_mass_g || "");
+                    
+                    if (qty && desc.trim() === `${qty} ${item.display_unit || ""}`.trim()) return null;
+                    if (mass && desc.trim() === `${mass}g`.trim()) return null;
+                    
+                    if ((item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && !item.is_primary) {
+                      return `Substituição: ${item.title}`;
+                    }
+                    return desc;
+                  })()}
                 </p>
               )}
             </div>

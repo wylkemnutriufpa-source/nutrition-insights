@@ -281,11 +281,9 @@ export default function PatientMealPlan() {
     }
 
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-    if (planData.editor_version === 'v3' || planData.editor_version === 'V3') {
-      setItems(resolvedItems);
-    } else {
-      setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
-    }
+    // 🛡️ SOBERANIA V3: Mesmo para V3, usamos o pipeline de agrupamento para garantir que
+    // apenas itens primários apareçam no dashboard e substituições fiquem no metadata.
+    setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
     setAllItems(resolvedAllItems);
 
     const { data: subsData } = await supabase
@@ -913,6 +911,7 @@ export default function PatientMealPlan() {
             mealPlanItemId={substitutionItem?.id || ""}
             mealPlanId={plan?.id || ""}
             patientId={user?.id || ""}
+            options={(substitutionItem?.metadata as any)?.substitution_options}
             onSubstitute={(food: FoodItem, originalTitle: string) => {
               // Update overlay map — plan data stays untouched
               if (substitutionItem) {

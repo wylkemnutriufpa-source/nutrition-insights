@@ -272,8 +272,9 @@ export default function ExpandableMealPlanCard() {
                                     const isV3 = (item as any).editor_version === 'v3' || (item as any).editor_version === 'V3';
                                     const displayQuantity = item.display_quantity || editMeta?.display_quantity;
                                     const displayUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
-                                    
-                                    if (displayQuantity) {
+                                    const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
+
+                                    if (isV3 && displayQuantity) {
                                       return (
                                         <p className="text-[10px] font-bold text-primary leading-tight">
                                           {displayQuantity} {displayUnit}
@@ -281,20 +282,43 @@ export default function ExpandableMealPlanCard() {
                                       );
                                     }
                                     
-                                    const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g;
-                                    if (clinicalMass) {
+                                    if (isV3 && clinicalMass && !displayQuantity) {
                                       return (
                                         <p className="text-[10px] font-bold text-primary leading-tight">
                                           {clinicalMass}g
                                         </p>
                                       );
                                     }
+
+                                    if (!isV3) {
+                                      if (displayQuantity) {
+                                        return (
+                                          <p className="text-[10px] font-bold text-primary leading-tight">
+                                            {displayQuantity} {displayUnit}
+                                          </p>
+                                        );
+                                      }
+                                      if (clinicalMass) {
+                                        return (
+                                          <p className="text-[10px] font-bold text-primary leading-tight">
+                                            {clinicalMass}g
+                                          </p>
+                                        );
+                                      }
+                                    }
                                     
                                     return null;
                                   })()}
                                   {item.description && (
                                     <p className="text-[10px] text-muted-foreground whitespace-pre-line leading-snug">
-                                      {item.description}
+                                      {(() => {
+                                        const desc = item.description || "";
+                                        const qty = String(item.display_quantity || (item as any).edit_metadata?.display_quantity || "");
+                                        const mass = String(item.clinical_mass_g || (item as any).clinical_mass_g || "");
+                                        if (qty && desc.trim() === `${qty} ${item.display_unit || ""}`.trim()) return null;
+                                        if (mass && desc.trim() === `${mass}g`.trim()) return null;
+                                        return desc;
+                                      })()}
                                     </p>
                                   )}
                                 </div>
