@@ -1232,15 +1232,16 @@ function selectFoodsForMeal(
       }
     }
 
-    // Lunch / Dinner: exclude canned and industrialized proteins (unsuitable for main meal)
+    // SOBERANIA V3: Filtros contextuais puramente estruturais
+    if (isBreakfast && BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+    
     const isMainMeal = mealType === "lunch" || mealType === "dinner";
-    if (isMainMeal && MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
-    if (isMainMeal && (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva"))) return false;
-
-    // Dinner: exclude beans/legumes and soup-like bases from the main plate
-    if (isDinner) {
-      if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
+    if (isMainMeal) {
+      if (MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
+      if (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva")) return false;
+      if (isDinner && ["feijao", "feijão", "lentilha"].some(kw => normName.includes(kw))) return false;
     }
+
 
     return true;
   }
