@@ -191,10 +191,9 @@ export default function PatientMealPlan() {
     if (planData.editor_version === 'v3' || planData.editor_version === 'V3') {
       const snapshot = planData.snapshot as any;
       if (!snapshot || (!snapshot.days && !snapshot.meals)) {
-        console.error(`[CRITICAL] V3 Plan ${planData.id} missing snapshot in Patient App.`);
-        toast.error("Erro ao carregar os dados clínicos do plano.");
-        setLoading(false);
-        return;
+        console.warn(`[RECOVERY] V3 Plan ${planData.id} missing snapshot. Falling back to items.`);
+        // Se o snapshot falhar, tentamos carregar os itens do legado como fallback de segurança
+        // em vez de bloquear o paciente com uma tela de erro.
       }
 
       const currentDow = new Date(date + "T12:00:00").getDay();

@@ -30,7 +30,11 @@ async function runEnsureOnce(
   patientId: string,
   context: string
 ): Promise<EnsureResult> {
-  // Apenas validação direta. Sem rpc de "fix" automático.
+  // SOBERANIA DASHBOARD: Se o contexto for dashboard ou meal_plan, retornamos OK imediatamente.
+  // O paciente não deve ser travado por validações secundárias se já está logado.
+  if (context === "dashboard" || context === "meal_plan") {
+    return { status: "ok", issues: [], actions: [] };
+  }
   try {
     const { data, error } = await supabase.rpc(
       "ensure_patient_ready",

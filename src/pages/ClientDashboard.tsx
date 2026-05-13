@@ -208,7 +208,9 @@ export default function ClientDashboard() {
   }, [biquiniEnrollment]);
 
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
-  const shouldBlock = isPatient && !journeyLoading && journeyStatus && !isFluid && !lifecycle.showPlan;
+  // REMOÇÃO TOTAL DE GATE: O Dashboard nunca bloqueia o acesso se o paciente chegou aqui.
+  // Apenas mostramos um banner informativo se o cadastro estiver incompleto.
+  const shouldShowWarning = isPatient && !journeyLoading && journeyStatus && !isFluid && !lifecycle.showPlan;
 
   if (page.isLoading) {
     return (
@@ -224,7 +226,7 @@ export default function ClientDashboard() {
     <DashboardLayout>
       <SafeRender name="Conteúdo do Dashboard" data={[user, profile, dashData]}>
         <>
-          {shouldBlock && (
+          {shouldShowWarning && (
             <div className="max-w-7xl mx-auto px-4 pt-4">
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3 text-amber-500">

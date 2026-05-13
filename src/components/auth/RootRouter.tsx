@@ -119,26 +119,30 @@ export function RootRouter() {
       return <Navigate to="/consent" replace />;
     }
 
-    // 2. Onboarding concluído → Dashboard
-    if (onboardingCompleted === true) {
+    // 2. NOVA GOVERNANÇA SOBERANA: Se onboarding está completo OU se existe pState avançado, DASHBOARD.
+    // Não bloqueamos mais o dashboard por flags se o pState indica que o paciente já passou das fases iniciais.
+    const isAdvancedState = pState === "ready_for_plan" || pState === "plan_generated" || pState === "active_plan";
+    
+    if (onboardingCompleted === true || isAdvancedState) {
+      const finalTarget = (nextPath && nextPath !== "/" && !nextPath.startsWith("/admin")) ? nextPath : "/client/dashboard";
+      return <Navigate to={finalTarget} replace />;
+    }
+
+    // 3. Estados intermediários do Onboarding (Apenas se pState for inicial)
+    if (!pState || pState === "onboarding_slides") {
+      return <Navigate to="/onboarding/paciente" replace />;
+    }
+    
+    if (pState === "anamnesis") {
+      return <Navigate to="/anamnesis" replace />;
+    }
+
+    if (pState === "collecting_profile") {
       return <Navigate to="/client/dashboard" replace />;
     }
 
-    // 3. Estados intermediários do Onboarding
-    let target = "/client/dashboard";
-    
-    if (!pState || pState === "onboarding_slides") target = "/onboarding/paciente";
-    else if (pState === "anamnesis") target = "/anamnesis";
-    else if (pState === "collecting_profile" || pState === "active_plan" || pState === "plan_generated" || pState === "ready_for_plan") {
-      target = "/client/dashboard";
-    }
-
-    // Preservar deep links apenas se o onboarding estiver completo ou for uma rota pública
-    const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index" || nextPath === "/client/dashboard";
-    const isAdminPath = nextPath?.startsWith("/admin/");
-    const finalTarget = (nextPath && !isDefaultPath && !isAdminPath) ? nextPath : target;
-    
-    return <Navigate to={finalTarget} replace />;
+    // Fallback: Dashboard
+    return <Navigate to="/client/dashboard" replace />;
   }
 
   // Fallback absoluto
