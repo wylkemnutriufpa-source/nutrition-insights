@@ -37,6 +37,11 @@ interface MealPlanItem {
   image_url?: string | null;
   visual_library_item_id?: string | null;
   is_primary?: boolean;
+  // --- SOBERANIA V3 ---
+  editor_version?: string;
+  display_quantity?: string | number;
+  display_unit?: string;
+  clinical_mass_g?: number;
 }
 
 interface MealCompletion {
