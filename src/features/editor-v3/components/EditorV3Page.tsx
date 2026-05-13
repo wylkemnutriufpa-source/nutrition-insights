@@ -3095,15 +3095,15 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = 1;
-                            updateLocalDraft({ quantity: Math.max(0, localDraft.quantity - step) });
+                            const step = localDraft.measurementType === 'gram' ? 1 : 0.5;
+                            updateLocalDraft({ quantity: Math.max(0, Number(localDraft.quantity) - step) });
                           }}
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
                         <Input 
                           type="number" 
-                          step="1"
+                          step="0.1"
                           value={localDraft.quantity} 
                           onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })}
                           className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black focus:border-emerald-500/50 text-center"
@@ -3113,8 +3113,8 @@ const EditorV3Page = () => {
                           size="icon" 
                           className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/10 text-white"
                           onClick={() => {
-                            const step = 1;
-                            updateLocalDraft({ quantity: localDraft.quantity + step });
+                            const step = localDraft.measurementType === 'gram' ? 1 : 0.5;
+                            updateLocalDraft({ quantity: Number(localDraft.quantity) + step });
                           }}
                         >
                           <Plus className="w-4 h-4" />
