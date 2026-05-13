@@ -262,6 +262,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-2"><WorkspaceContextSwitcher collapsed={collapsed} /></div>
           <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden lg:flex items-center gap-2 h-9 border-border/60 hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all px-4"
+              onClick={openCommandPalette}
+            >
+              <Search className="w-4 h-4" />
+              <span className="text-xs font-medium">Buscar...</span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </Button>
             <SyncButton />
             <SystemHealthBadge />
             <NotificationBell />
