@@ -34,6 +34,13 @@ export function normalizeFood(food: any): Food {
   // 🛡️ CONGELAMENTO DA MASSA CLÍNICA (Soberania do Motor)
   // Se for gramas e ainda não tiver clinical_mass_g, este é o ponto zero.
   if (wasGram && (f.clinical_mass_g === undefined || f.clinical_mass_g === null)) {
+    SovereignTelemetry.log({
+      runtime_source: 'normalization_v3',
+      event_type: 'missing_clinical_mass',
+      severity: 'warning',
+      message: `Food ${name} missing clinical_mass_g. Initializing with quantity ${initialQuantity}.`,
+      metadata: { id: originalId, name, quantity: initialQuantity }
+    });
     f.clinical_mass_g = initialQuantity;
     tracer.trace(`Clinical Mass Frozen: ${name}`, { mass: f.clinical_mass_g });
   }
