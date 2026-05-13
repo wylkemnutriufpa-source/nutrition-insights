@@ -127,7 +127,24 @@ export const PatientPlanPage = () => {
         ...meal,
         items: meal.items.map(item => {
           if (item.id !== selectedItem.item.id) return item;
-          // Substitui o item mantendo as calorias equivalentes
+          
+          // No V3, apenas trocamos o item pelos dados SOBERANOS do substituto
+          if (plan.editor_version === 'v3') {
+            return {
+              ...item,
+              ...sub.food,
+              name: sub.food.name,
+              // Mantemos os campos de macro que o editor-v3 usa
+              kcal: sub.food.kcal,
+              protein: sub.food.protein,
+              carbs: sub.food.carbs,
+              fat: sub.food.fat,
+              // Se houver clinical_mass_g no substituto ou original, preservamos
+              clinical_mass_g: sub.grams || item.clinical_mass_g
+            };
+          }
+
+          // Legado V1/V2 - Mantém o cálculo local por enquanto para não quebrar produção legada
           return {
             ...item,
             name: sub.food.name,
