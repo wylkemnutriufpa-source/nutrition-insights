@@ -122,7 +122,7 @@ export function isAtOrPast(currentStatus: string, checkpoint: string): boolean {
 
 // ─── DEFAULT PASSWORD POLICY ────────────────────────────────────────────────
 
-export const DEFAULT_STRONG_PASSWORD = "Fit@2026!";
+// SECURITY: hardcoded default password removed. Use generateTemporaryPassword() from src/lib/passwords.ts
 
 // ─── SYSTEM CONSTANTS ───────────────────────────────────────────────────────
 

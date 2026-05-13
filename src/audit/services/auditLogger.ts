@@ -33,13 +33,14 @@ export function logClinicalEvent(params: {
     patientId: params.patient_id
   };
 
-  // Log no console estruturado para diagnóstico real
-  const color = log.level === 'error' || log.level === 'security' ? 'color: #ff0000; font-weight: bold' : 'color: #00ff00';
-  console.groupCollapsed(`%c[FJ:AUDIT] [${log.level.toUpperCase()}] ${log.module}:${log.action}`, color);
-  console.log('Payload:', log.data);
-  console.log('Timestamp:', log.timestamp);
-  if (log.patientId) console.log('Patient:', log.patientId);
-  console.groupEnd();
+  // Console output only in development; production logs must be persisted server-side.
+  if (import.meta.env?.DEV) {
+    const color = log.level === 'error' || log.level === 'security' ? 'color: #ff0000; font-weight: bold' : 'color: #00ff00';
+    console.groupCollapsed(`%c[FJ:AUDIT] [${log.level.toUpperCase()}] ${log.module}:${log.action}`, color);
+    console.log('Timestamp:', log.timestamp);
+    if (log.patientId) console.log('Patient:', log.patientId.slice(0, 8) + '…');
+    console.groupEnd();
+  }
 
   // Opcional: Persistir em tabela de auditoria real via Supabase
   // Isso será ativado se houver conexão disponível

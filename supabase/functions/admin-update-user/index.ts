@@ -117,7 +117,10 @@ Deno.serve(async (req) => {
       }
 
       case "reset_password": {
-        const newPassword = payload?.password || "Fit@2026!";
+        const newPassword = payload?.password;
+        if (!newPassword || typeof newPassword !== "string" || newPassword.length < 10) {
+          throw new Error("A new password (min 10 chars) must be provided explicitly");
+        }
         const { error: pwErr } = await adminClient.auth.admin.updateUserById(target_user_id, {
           password: newPassword,
         });
