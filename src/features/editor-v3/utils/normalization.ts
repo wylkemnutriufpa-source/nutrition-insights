@@ -133,7 +133,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
     };
 
     mealsArray = Object.entries(itemsByMealType).map(([type, items]) => ({
-      id: Math.random().toString(36).substring(2, 9),
+      id: crypto.randomUUID(),
       name: mealTypeLabels[type] || type,
       time: type === 'breakfast' ? '08:00' : (type === 'lunch' ? '12:00' : (type === 'dinner' ? '20:00' : '00:00')),
       items: items
