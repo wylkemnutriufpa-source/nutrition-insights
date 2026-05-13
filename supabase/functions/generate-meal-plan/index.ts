@@ -1186,7 +1186,7 @@ function selectFoodsForMeal(
   // ── Dinner rule: exclude beans/legumes for lighter meal ──
   const isDinner = mealType === "dinner";
   const isBreakfast = mealType === "breakfast";
-  const dinnerExcludeKeywords = ["feijao", "feijão", "lentilha", "feijoada", "feijao verde", "sopa", "caldo"];
+  // SOBERANIA V3: Exclusões puramente estruturais (Dinner/Breakfast context)
 
   const selected: DBFood[] = [];
   const usedCategories = new Set<string>();
