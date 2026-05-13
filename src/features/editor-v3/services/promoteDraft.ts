@@ -166,7 +166,7 @@ export async function promoteDraftToMealPlan(
       
       // Se detectarmos explosão óbvia, usamos o motor para recalcular do zero
       let cleanMacros = rawMacros;
-      if (rawMacros.kcal > 3000 || rawMacros.protein > 150) {
+      if (rawMacros.kcal > 10000 || rawMacros.protein > 1000) {
         console.warn(`[Promote-Guard] Explosion detected on item ${item.name}. Recalculating...`);
         const recalculated = calculateItemMacros(item, item.quantity || 1);
         cleanMacros = recalculated;
