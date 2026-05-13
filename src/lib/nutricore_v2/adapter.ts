@@ -193,6 +193,8 @@ export class NutriCoreV3Adapter {
             const portionValue = portion.portionValue;
             const portionLabel = portion.portionLabel;
 
+            console.log(`[ClinicalAudit] Item: ${item.name} | Mass: ${item.grams}g | Prot: ${totalProtein}g | Kcal: ${totalKcal}`);
+
             return {
               id: item.foodId,
               name: item.name,
