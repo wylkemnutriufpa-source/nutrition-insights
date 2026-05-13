@@ -18,9 +18,11 @@ interface MealPlanPDFItem {
   visual_image_url?: string;
   is_primary?: boolean;
   substitution_group_id?: string | null;
-  grams?: number;
-  suggestedQuantity?: number;
-  portionLabel?: string;
+  // --- SOBERANIA V3 ---
+  display_quantity?: string | number | null;
+  display_unit?: string | null;
+  clinical_mass_g?: number | null;
+  editor_version?: string | null;
 }
 
 export interface PremiumMealPlanPDFData {
