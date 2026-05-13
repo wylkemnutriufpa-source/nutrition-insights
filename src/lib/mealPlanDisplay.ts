@@ -199,45 +199,20 @@ export function buildDailyDisplayItems(items: DisplayMealPlanItem[], requestedDa
 }
 
 export function buildWeeklyDisplayDays(items: DisplayMealPlanItem[]): Array<{ day: number; items: DisplayMealPlanItem[] }> {
-  // Para visualização semanal de um plano legado (day_of_week NULL), 
-  // dedupamos os grupos primeiro para não mostrar 480 itens.
-  const canonicalGroups = dedupeGroups(groupItems(selectCanonicalDayItems(items)));
-
-  return DAY_ORDER.map((day, dayIndex) => ({
-    day,
-    items: canonicalGroups.map((group) => {
-      const options = [group.primary, ...group.substitutions];
-      const selected = options[dayIndex % Math.max(options.length, 1)] || group.primary;
-      const isSubstitution = selected.id !== group.primary.id;
-      const itemForDay: DisplayMealPlanItem = {
-        ...group.primary,
-        ...selected,
-        id: group.primary.id,
-        day_of_week: day,
-        calories_target: group.primary.calories_target,
-        protein_target: group.primary.protein_target,
-        carbs_target: group.primary.carbs_target,
-        fat_target: group.primary.fat_target,
-        is_primary: true,
-        metadata: {
-          ...((group.primary as any).metadata || {}),
-          substitution_group_id: group.groupId,
-          substitution_options: group.substitutions.map((item) => ({
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            calories_target: item.calories_target,
-            protein_target: item.protein_target,
-            carbs_target: item.carbs_target,
-            fat_target: item.fat_target,
-          })),
-          weekly_variant_source_id: selected.id,
-          weekly_variant_is_substitution: isSubstitution,
-        },
-      };
-      return itemForDay;
-    }),
-  }));
+  const days = [1, 2, 3, 4, 5, 6, 0];
+  
+  return days.map((day) => {
+    // Para cada dia, construímos os itens diários normalmente.
+    // Isso garante que substituições fiquem dentro do metadata e apenas o primário apareça.
+    const dayItems = buildDailyDisplayItems(items, day);
+    
+    // 🛡️ SOBERANIA SEMANAL: Se o plano for legado (repetido), buildDailyDisplayItems já cuida
+    // de selecionar o dia correto ou o fallback.
+    return {
+      day,
+      items: dayItems
+    };
+  });
 }
 
 export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
