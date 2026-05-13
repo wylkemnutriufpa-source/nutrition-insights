@@ -12,13 +12,11 @@ function normalize(t: string): string {
 
 /**
  * 🛑 NEUTRALIZADO: Não escalamos mais quantidades via REGEX.
- * A descrição deve ser gerada passivamente a partir dos dados do item.
  */
 export function scaleDescriptionQuantities(
   description: string | null | undefined,
-  factor: number
+  _factor: number
 ): string | null | undefined {
-  // Retorna a descrição original sem mutação
   return description;
 }
 
@@ -26,7 +24,6 @@ export function scaleDescriptionQuantities(
  * 🛑 NEUTRALIZADO: Não inferimos mais porções via nome.
  */
 export function resolveDisplayPortion(foodName: string, basePortion: string, grams: number): string {
-  // Se temos gramas, usamos gramas. Se temos porção base, usamos ela.
   if (basePortion) return basePortion;
   return grams > 0 ? `${grams}g` : '';
 }
@@ -39,6 +36,7 @@ function clampProteinLineToStandardPortion(line: string): string {
 }
 
 export function isMainMealType(mealType: string): boolean {
+  if (!mealType) return false;
   const MAIN_MEAL_TYPES = new Set(["lunch", "dinner", "almoço", "jantar"]);
   return MAIN_MEAL_TYPES.has(mealType.toLowerCase());
 }
@@ -50,10 +48,42 @@ export function isProteinLine(line: string): boolean {
 }
 
 /**
+ * 🛑 STUB: Mantido para compatibilidade de assinatura.
+ */
+export function hasBeverage(_description: string): boolean {
+  return false;
+}
+
+/**
+ * 🛑 STUB: Mantido para compatibilidade de assinatura.
+ */
+export function getDefaultBeverageLine(_mealType: string): string | null {
+  return null;
+}
+
+/**
+ * 🛑 STUB: Mantido para compatibilidade de assinatura.
+ */
+export function standardProteinPortion(_mealType: string, _isGainGoal: boolean): number {
+  return 150;
+}
+
+/**
+ * 🛑 STUB: Mantido para compatibilidade de assinatura.
+ */
+export function roundScaledQuantity(value: number, _unit: string): number {
+  return value;
+}
+
+/**
  * Sync logic: Mantido apenas para compatibilidade de assinatura, mas sem mutação.
  */
 export function syncProteinDescriptionPortions(
   description: string | null | undefined,
+  _mealType?: string,
+  _nextProtein?: number,
+  _previousProtein?: number,
+  _isGainGoal?: boolean,
 ): string | null | undefined {
   return description;
 }
@@ -61,10 +91,9 @@ export function syncProteinDescriptionPortions(
 /**
  * Estrutura a descrição final de forma passiva.
  */
-export function finalizeMealDescription(description: string): string {
+export function finalizeMealDescription(description: string, _mealType?: string, _isGainGoal?: boolean): string {
   if (!description) return "";
   
-  // Apenas limpeza estrutural básica
   return description
     .split("\n")
     .map(l => l.trim())
@@ -77,19 +106,21 @@ export function finalizeMealDescription(description: string): string {
  */
 export function buildFoodDescriptionFromItems(
   foods: Array<{ food_name: string; portion_grams?: number; portion_reference?: string; quantity?: number; portion_unit?: string }>,
+  _scaleFactor: number = 1
 ): string {
-  return foods.map(f => {
+  const result = foods.map(f => {
     const name = f.food_name;
     const unit = f.portion_unit || f.portion_reference || 'g';
     const qty = f.quantity || f.portion_grams || 0;
     
-    // Formatação passiva: "Alimento — Quantidade Unidade"
     return `• ${name} — ${qty}${unit.includes(' ') || /\d/.test(unit) ? '' : ' '}${unit}`;
   }).join("\n");
+
+  return result;
 }
 
 export function isGenericDescription(desc: string): boolean {
-  const trimmed = desc.trim();
+  const trimmed = (desc || "").trim();
   if (/^\d+\s*(g|ml|kcal)$/i.test(trimmed)) return true;
   return false;
 }
