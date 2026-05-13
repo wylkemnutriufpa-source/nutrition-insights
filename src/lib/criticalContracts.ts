@@ -11,6 +11,8 @@
  * 4. Nenhuma quebra silenciosa (Erro sempre visível).
  */
 
+import { MealPlanSnapshotV1Schema } from "./snapshot/zodSchema";
+
 export const system_anti_cascade_mode = true;
 
 export type ContractResult = {
@@ -126,12 +128,23 @@ export function uiConsistencyContract(s: UIStatusSnapshot): ContractResult {
   return { ok: v.length === 0, contractId: "ui_consistency", violations: v };
 }
 
+export function mealPlanSnapshotContract(s: any): ContractResult {
+  const v: string[] = [];
+  try {
+    MealPlanSnapshotV1Schema.parse(s);
+  } catch (err: any) {
+    v.push(`Contract Violation: Snapshot inválido — ${err.message}`);
+  }
+  return { ok: v.length === 0, contractId: "meal_plan_snapshot", violations: v };
+}
+
 export const CRITICAL_CONTRACTS = {
   draft_integrity: draftIntegrityContract,
   clinical_validity: clinicalValidityContract,
   engine_determinism: engineDeterminismContract,
   persistence_safety: persistenceSafetyContract,
   ui_consistency: uiConsistencyContract,
+  meal_plan_snapshot: mealPlanSnapshotContract,
 } as const;
 
 export type CriticalContractId = keyof typeof CRITICAL_CONTRACTS;
