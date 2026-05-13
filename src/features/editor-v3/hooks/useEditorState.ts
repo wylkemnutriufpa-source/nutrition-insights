@@ -763,8 +763,8 @@ export const useEditorState = create<EditorState>()(
                       const pValue = i.portionValue || 1;
                       const newClinicalMass = clinical_mass_g ?? 
                         ((i.measurementType === 'gram' || i.measurementType === 'ml')
-                          ? quantity
-                          : quantity * pValue);
+                          ? Number(quantity)
+                          : Number(quantity) * pValue);
 
                       const updatedItem = { 
                         ...i, 
