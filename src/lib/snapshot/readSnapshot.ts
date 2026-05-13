@@ -18,6 +18,7 @@ import {
   MealPlanSnapshotV1,
   SNAPSHOT_SCHEMA_VERSION,
 } from "./types";
+import { validateMealPlanSnapshot, logSovereignEvent } from "@/lib/runtimeGovernance";
 
 export interface SnapshotReadResult {
   planId: string;
@@ -64,14 +65,11 @@ export async function readMealPlanSnapshot(
     const raw = (data as any).snapshot;
     if (!raw || typeof raw !== "object") return empty("snapshot_absent");
 
-    // Validação MÍNIMA de shape — não normaliza, apenas confirma presença.
-    if (
-      typeof raw.schema_version !== "string" ||
-      !Array.isArray(raw.days) ||
-      !raw.plan ||
-      !raw.targets
-    ) {
-      return empty("snapshot_invalid_shape");
+    // 🛡️ Blindagem Operacional: Validação rígida de contrato
+    try {
+      validateMealPlanSnapshot(raw, "read_snapshot");
+    } catch (err: any) {
+      return empty(`validation_error:${err.message}`);
     }
 
     if (raw.schema_version !== SNAPSHOT_SCHEMA_VERSION) {
