@@ -7,13 +7,37 @@ import { ptBR } from "date-fns/locale";
  */
 function cleanClinicalText(text: string): string {
   if (!text) return "";
-  const auditMarkers = ["AUDITORIA CLÍNICA", "TRILHA DE REGRAS", "Motor de Cálculo", "Clinical Engine", "Timestamp:", "Protocolo:", "MEAL_KCAL_SPLIT", "Status: Validado"];
-  let cleaned = text.replace(/[Ø=Ý]+/g, "");
+  
+  const auditMarkers = [
+    "AUDITORIA CLÍNICA",
+    "TRILHA DE REGRAS",
+    "Motor de Cálculo",
+    "Clinical Engine",
+    "Timestamp:",
+    "Protocolo:",
+    "MEAL_KCAL_SPLIT",
+    "Status: Validado",
+    "Divergência Detectada",
+    "Hash:",
+    "Engine:"
+  ];
+
+  let cleaned = text;
+  
+  // Remove technical symbols
+  cleaned = cleaned.replace(/[Ø=Ý]+/g, "");
+  // Remove emojis and pictographs for PDF compatibility
+  cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}]/gu, "");
+  // Remove control characters
+  cleaned = cleaned.replace(/[\u0000-\u001F\u007F]/g, " ");
+
   const lines = cleaned.split("\n");
   const filteredLines = lines.filter(line => {
-    const upperLine = line.toUpperCase();
+    const upperLine = line.toUpperCase().trim();
+    if (!upperLine) return false;
     return !auditMarkers.some(marker => upperLine.includes(marker.toUpperCase()));
   });
+
   return filteredLines.join("\n").trim();
 }
 
