@@ -59,6 +59,9 @@ import {
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
+// ── Feature Flags ─────────────────────────────────────────────
+const ENABLE_LEGACY_PROTEIN_REBALANCE = false;
+
 // ── Types ────────────────────────────────────────────────────
 
 export type AutoFixChangeType =
@@ -869,7 +872,32 @@ export async function autoFixMealPlan(
   for (const day of uniqueDays) {
     const dayItems = finalItems.filter(i => (i.day_of_week ?? 0) === day);
     const dailyProteinTarget = targetProt > 0 ? targetProt : dayItems.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
-    rebalanceProteinTargetsByMeal(dayItems, dailyProteinTarget, isGainGoal);
+    
+    // 🔍 AUDITORIA CLÍNICA: Estado da proteína antes do rebalanceamento
+    const lunchItem = dayItems.find(i => isMealType(i.meal_type, "lunch", "almoco"));
+    const dinnerItem = dayItems.find(i => isMealType(i.meal_type, "dinner", "jantar"));
+    
+    console.info(`[ClinicalGuard] Day ${day} BEFORE Rebalance:`, {
+      dailyProteinTarget,
+      almoco_proteina: lunchItem?.protein_target,
+      jantar_proteina: dinnerItem?.protein_target,
+      massa_clinica: dayItems.reduce((s, i) => s + (Number(i.calories_target) || 0), 0) + "kcal"
+    });
+
+    if (ENABLE_LEGACY_PROTEIN_REBALANCE) {
+      rebalanceProteinTargetsByMeal(dayItems, dailyProteinTarget, isGainGoal);
+      
+      const lunchAfter = dayItems.find(i => isMealType(i.meal_type, "lunch", "almoco"));
+      const dinnerAfter = dayItems.find(i => isMealType(i.meal_type, "dinner", "jantar"));
+
+      console.info(`[ClinicalGuard] Day ${day} AFTER Rebalance:`, {
+        almoco_proteina: lunchAfter?.protein_target,
+        jantar_proteina: dinnerAfter?.protein_target,
+        massa_clinica: dayItems.reduce((s, i) => s + (Number(i.calories_target) || 0), 0) + "kcal"
+      });
+    } else {
+      console.info(`[ClinicalGuard] Legacy Protein Rebalance SKIPPED (ENABLE_LEGACY_PROTEIN_REBALANCE = false)`);
+    }
   }
 
   for (const item of finalItems as Array<MealPlanItem & {
