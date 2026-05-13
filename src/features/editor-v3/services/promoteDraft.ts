@@ -10,6 +10,7 @@
  *   - Marmitas mantêm `is_locked = true` no item oficial
  */
 import { supabase } from '@/integrations/supabase/client';
+import { SovereignFatalGuard } from "@/lib/sovereign-fatal-guards";
 import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
