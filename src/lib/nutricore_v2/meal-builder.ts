@@ -61,10 +61,13 @@ export function buildMeal(
     return matches[index];
   };
 
-  // 🛡️ Fator de escala blindado: clamp 0.4x – 3.0x (permitindo dietas de até ~3000-3500kcal)
-  const rawScale = (targetMacros.kcal || 0) / 400;
+  // 🛡️ Fator de escala blindado: calculado dinamicamente com base nos alvos da refeição
+  // Evita o magic number 400 que causava explosão linear em metas altas.
+  // Base aproximada de uma refeição padrão (Frango 150g, Arroz 100g, Feijão 100g) ≈ 550kcal
+  const BASE_MEAL_KCAL = isLunchOrDinner ? 550 : isBreakfast ? 350 : 200;
+  const rawScale = (targetMacros.kcal || 0) / BASE_MEAL_KCAL;
   const scale = Number.isFinite(rawScale) && rawScale > 0
-    ? Math.max(0.3, Math.min(3.0, rawScale))
+    ? Math.max(0.4, Math.min(2.5, rawScale)) // Clamp 0.4x - 2.5x para segurança clínica
     : 1;
 
   // PARTE 2 — TEMPLATES FUNCIONAIS (LOGICA DE PLOTAGEM DETERMINISTICA COM VARIEDADE)
