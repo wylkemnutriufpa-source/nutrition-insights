@@ -174,7 +174,6 @@ function escapeHtml(str: string): string {
 function cleanClinicalText(text: string): string {
   if (!text) return "";
   
-  // Remove technical audit blocks often added by clinical engine for transparency but not meant for patients
   const auditMarkers = [
     "AUDITORIA CLÍNICA",
     "TRILHA DE REGRAS",
@@ -183,22 +182,25 @@ function cleanClinicalText(text: string): string {
     "Timestamp:",
     "Protocolo:",
     "MEAL_KCAL_SPLIT",
-    "Status: Validado"
+    "Status: Validado",
+    "Divergência Detectada",
+    "Hash:",
+    "Engine:"
   ];
 
   let cleaned = text;
   
-  // Remove símbolos técnicos e emojis que não renderizam corretamente nos PDFs
+  // Remove technical symbols
   cleaned = cleaned.replace(/[Ø=Ý]+/g, "");
-  // Remove emojis (planos suplementares Unicode) e símbolos pictográficos
+  // Remove emojis and pictographs for PDF compatibility
   cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}]/gu, "");
-  // Remove caracteres de controle
+  // Remove control characters
   cleaned = cleaned.replace(/[\u0000-\u001F\u007F]/g, " ");
 
-  // If we find any audit marker, we try to remove the line
   const lines = cleaned.split("\n");
   const filteredLines = lines.filter(line => {
-    const upperLine = line.toUpperCase();
+    const upperLine = line.toUpperCase().trim();
+    if (!upperLine) return false;
     return !auditMarkers.some(marker => upperLine.includes(marker.toUpperCase()));
   });
 
