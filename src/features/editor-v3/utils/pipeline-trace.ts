@@ -6,6 +6,8 @@
  * fisiológicos sejam respeitados.
  */
 
+import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
+
 export interface PipelineTraceStep {
   stage: string;
   data: any;
