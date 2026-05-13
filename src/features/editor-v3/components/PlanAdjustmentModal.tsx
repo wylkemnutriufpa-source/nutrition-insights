@@ -153,7 +153,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('proteinTarget', -5)}
+                onClick={() => adjustNumeric('proteinTarget', -1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Minus size={16} />
@@ -164,7 +164,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('proteinTarget', 5)}
+                onClick={() => adjustNumeric('proteinTarget', 1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Plus size={16} />
@@ -187,7 +187,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('carbTarget', -10)}
+                onClick={() => adjustNumeric('carbTarget', -1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Minus size={16} />
@@ -198,7 +198,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('carbTarget', 10)}
+                onClick={() => adjustNumeric('carbTarget', 1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Plus size={16} />
@@ -221,7 +221,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('fatTarget', -5)}
+                onClick={() => adjustNumeric('fatTarget', -1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Minus size={16} />
@@ -232,7 +232,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => adjustNumeric('fatTarget', 5)}
+                onClick={() => adjustNumeric('fatTarget', 1)}
                 className="h-10 w-10 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl"
               >
                 <Plus size={16} />
