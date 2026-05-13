@@ -184,6 +184,7 @@ export async function buildMealPlanSnapshot(
       fat_g: num(it.fat_target),
     };
 
+    const meta = it.edit_metadata as Record<string, any> | null;
     meals.get(meal)!.push({
       id: it.id,
       title: it.title,
@@ -197,6 +198,9 @@ export async function buildMealPlanSnapshot(
         it.target_percentage != null ? num(it.target_percentage) : null,
       macros,
       substitutions: extractSubstitutions(it.edit_metadata),
+      clinical_mass_g: meta?.clinical_mass_g !== undefined ? num(meta.clinical_mass_g) : (it as any).grams !== undefined ? num((it as any).grams) : null,
+      display_quantity: meta?.display_quantity !== undefined ? num(meta.display_quantity) : meta?.quantity !== undefined ? num(meta.quantity) : null,
+      display_unit: meta?.display_unit ?? meta?.portionUnitLabel ?? meta?.portionLabel ?? null,
     });
   }
 
@@ -262,6 +266,7 @@ export async function buildMealPlanSnapshot(
         planRow.template_version != null ? Number(planRow.template_version) : null,
       generation_source: (planRow.generation_source as string) ?? null,
       protocol_used: (planRow.protocol_used as string) ?? null,
+      editor_version: "v3",
     },
     patient_context: {
       id: planRow.patient_id,

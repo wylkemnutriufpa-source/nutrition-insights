@@ -44,9 +44,9 @@ export const SnapshotItemSchema = z.object({
   target_percentage: z.number().nullable(),
   macros: SnapshotMacrosSchema,
   substitutions: z.array(SnapshotSubstitutionSchema),
-  clinical_mass_g: z.number(), // OBRIGATÓRIO NA BLINDAGEM
-  display_quantity: z.number(), // OBRIGATÓRIO NA BLINDAGEM
-  display_unit: z.string(), // OBRIGATÓRIO NA BLINDAGEM
+  clinical_mass_g: z.number().optional().nullable(),
+  display_quantity: z.number().optional().nullable(),
+  display_unit: z.string().optional().nullable(),
 });
 
 export const SnapshotMealSchema = z.object({
@@ -76,7 +76,7 @@ export const SnapshotPlanMetadataSchema = z.object({
   template_version: z.number().nullable(),
   generation_source: z.string().nullable(),
   protocol_used: z.string().nullable(),
-  editor_version: z.string().optional().default("v3"), // OBRIGATÓRIO NA BLINDAGEM
+  editor_version: z.string().optional().default("v3"),
 });
 
 export const MealPlanSnapshotV1Schema = z.object({

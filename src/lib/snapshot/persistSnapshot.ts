@@ -8,7 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { buildMealPlanSnapshot, BuildSnapshotOptions } from "./buildSnapshot";
 import { SNAPSHOT_SCHEMA_VERSION } from "./types";
-import { validateMealPlanSnapshot, logSovereignEvent } from "@/lib/runtimeGovernance";
+import { validateMealPlanSnapshot, logSovereignEvent, getCorrelationId } from "@/lib/runtimeGovernance";
 
 export interface PersistSnapshotResult {
   success: boolean;
@@ -42,16 +42,17 @@ export async function generateAndPersistMealPlanSnapshot(
     );
 
     if (error) {
-      console.error("[snapshot] persist RPC error:", error);
-      return { success: false, error: error.message };
+      const errMsg = `[FATAL-SNAPSHOT] RPC persist_meal_plan_snapshot failed: ${error.message} (Code: ${error.code})`;
+      console.error(errMsg, { planId, correlationId: getCorrelationId() });
+      await logSovereignEvent("ERROR", "snapshot_persist_failed", { planId, error: error.message, code: error.code });
+      throw new Error(errMsg);
     }
 
     const result = data as Record<string, unknown> | null;
     if (result && result.success === false) {
-      return {
-        success: false,
-        error: (result.error as string) ?? "persist_failed",
-      };
+      const errMsg = `[FATAL-SNAPSHOT] RPC logic failure: ${result.error || 'unknown_error'}`;
+      console.error(errMsg, { planId });
+      throw new Error(errMsg);
     }
 
     return { success: true, hash: snapshot.hash };

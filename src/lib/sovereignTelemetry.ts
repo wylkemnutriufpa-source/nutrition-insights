@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type SovereignEventType = 
   | 'snapshot_invalid'
+  | 'snapshot_persist_failed'
+  | 'identity_breach'
   | 'schema_violation'
   | 'hydration_blocked'
   | 'legacy_detected'

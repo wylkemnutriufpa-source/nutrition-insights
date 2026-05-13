@@ -113,6 +113,12 @@ export async function promoteDraftToMealPlan(
     .or(`id.eq.${draft.patient_id},user_id.eq.${draft.patient_id}`)
     .maybeSingle();
 
+  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!isUuid(draft.patient_id)) {
+    console.error(`[FATAL-IDENTITY] Patient ID inválido no promoteDraft: ${draft.patient_id}`);
+    return { ok: false, error: `RUPTURA DE IDENTIDADE: Patient ID "${draft.patient_id}" não é um UUID soberano.` };
+  }
+
   const authUserId = profile?.user_id || draft.patient_id;
   const profileId = profile?.id || draft.patient_id;
 

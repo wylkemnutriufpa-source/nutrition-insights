@@ -1,5 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { loadOrCreateDraft, saveDraft } from './draftService';
+import { promoteDraftToMealPlan } from './promoteDraft';
+import { buildMealPlanSnapshot } from '@/lib/snapshot/buildSnapshot';
+import { MealPlanSnapshotV1Schema } from '@/lib/snapshot/zodSchema';
 import type { Meal } from '../types';
 
 /**
@@ -11,6 +14,8 @@ export async function runV3IntegrationTests(patientId: string) {
     step1_loadOrCreate: false,
     step2_persistence: false,
     step3_saveAction: false,
+    step4_promotion: false,
+    step5_snapshotValidation: false,
     errors: [] as string[]
   };
 
@@ -49,6 +54,29 @@ export async function runV3IntegrationTests(patientId: string) {
       results.step3_saveAction = true;
     } else {
       throw new Error('Save action failed to return valid record');
+    }
+
+    // 4. Validar promoção (draft -> meal_plan)
+    console.log('Test 4: promoteDraftToMealPlan...');
+    const promoteRes = await promoteDraftToMealPlan(saved as any);
+    if (promoteRes.ok && promoteRes.mealPlanId) {
+      console.log('✅ Promoted to:', promoteRes.mealPlanId);
+      results.step4_promotion = true;
+
+      // 5. Validar Snapshot
+      console.log('Test 5: snapshot building & schema validation...');
+      const snapshot = await buildMealPlanSnapshot(promoteRes.mealPlanId);
+      const validation = MealPlanSnapshotV1Schema.safeParse(snapshot);
+      
+      if (validation.success) {
+        console.log('✅ Snapshot validado pelo Zod schema');
+        results.step5_snapshotValidation = true;
+      } else {
+        console.error('❌ Snapshot schema violation:', validation.error.format());
+        throw new Error(`Snapshot schema violation: ${JSON.stringify(validation.error.format())}`);
+      }
+    } else {
+      throw new Error(`Promotion failed: ${promoteRes.error}`);
     }
 
   } catch (err: any) {
