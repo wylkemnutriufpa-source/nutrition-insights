@@ -179,63 +179,10 @@ export function invalidateValidatedFoodsCache(): void {
 }
 
 // ── ALIMENTOS EXPLICITAMENTE PROIBIDOS ──
-// Estes alimentos NÃO devem ser usados mesmo que existam em algum lugar.
-// São itens que o nutricionista rejeitou explicitamente.
 export const EXPLICITLY_BANNED_FOODS = [
-  "queijo minas",
-  "cottage",
-  "queijo cottage",
-  "peito de peru",
-  "peru defumado",
-  "blanquet",
-  "blanquet de peru",
-  "ricota",
-  "ricota importada",
-  "salmão",
-  "salmon",
-  "atum fresco",
-  "kefir",
-  "quinoa",
-  "quinua",
-  "amaranto",
-  "macadâmia",
-  "pistache",
-  "framboesa",
-  "mirtilo",
-  "blueberry",
-  "cranberry",
-  "tofu",
-  "tempeh",
-  "edamame",
-  "granola premium",
-  "mix de nuts",
-  "trail mix",
-  "azeite trufado",
-  "vinagre balsâmico",
-  "pasta de amendoim importada",
-  "manteiga de amêndoa",
-  "whey protein",
-  "caseína",
-  "wrap integral",
-  "pão artesanal",
-  "leite de amêndoa",
-  "leite de coco",
-  "leite de aveia",
-  "abacate toast",
-  "overnight oats",
-  "cream cheese",
-  "philadelphia",
-  "iogurte grego importado",
-  "coalhada",
-  "kombucha",
-  "semente de chia importada",
-  "hemp seed",
-  "tahini",
-  "hummus",
-  "burrata",
-  "brie",
-  "camembert",
-  "gorgonzola",
+  "queijo minas", "cottage", "queijo cottage", "peito de peru", "peru defumado",
+  "blanquet", "ricota", "salmao", "kefir", "quinoa", "amaranto", "tofu", "tempeh",
+  "edamame", "kombucha", "tahini", "hummus", "burrata", "brie", "camembert", "gorgonzola"
 ];
 
 /**
@@ -244,4 +191,13 @@ export const EXPLICITLY_BANNED_FOODS = [
 export function isExplicitlyBanned(foodName: string): boolean {
   const n = normalize(foodName);
   return EXPLICITLY_BANNED_FOODS.some(banned => n.includes(normalize(banned)));
+}
+
+/**
+ * V3 SOBERANO: Clinical Tag matching (PASSIVE)
+ * Substitui INTOLERANCE_KEYWORDS regex por structured tagging.
+ */
+export function checkIntoleranceByTags(foodTags: string[], patientAllergies: string[]): boolean {
+  if (!foodTags || !patientAllergies) return false;
+  return foodTags.some(tag => patientAllergies.includes(tag));
 }

@@ -213,16 +213,11 @@ function calcMetrics(p: any) {
 }
 
 function resolveFood(item: TItem, foods: any[]): any | null {
-  const cands = [item.name, ...(item.aliases ?? [])];
+  const cands = [item.name]; // Only exact name match for sovereign determinism
   for (const c of cands) {
     const t = c.trim().toLowerCase();
     const ex = foods.find((f) => String(f.name).trim().toLowerCase() === t);
     if (ex) return ex;
-  }
-  for (const c of cands) {
-    const n = c.trim().toLowerCase();
-    const p = foods.find((f) => String(f.name).trim().toLowerCase().includes(n));
-    if (p) return p;
   }
   return null;
 }

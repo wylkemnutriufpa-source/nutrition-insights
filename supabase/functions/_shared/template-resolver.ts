@@ -288,17 +288,22 @@ function clampPortion(name: string, portion: number): number {
   return Math.max(min, Math.min(max, portion));
 }
 
+/**
+ * Scale a template's foods_structure to match target kcal.
+ * V3 SOBERANO: PASSIVE scaling only.
+ */
 export function scaleTemplateToTarget(
   template: ResolvedTemplate,
   targetKcal: number,
 ): { foods: ScaledFoodItem[]; scaleFactor: number } {
+  // 🛡️ BLOQUEIO SOBERANO: Se o template não tem macros base, não escalamos (evita adivinhação)
   if (!template.kcal_base || template.kcal_base === 0) {
     return {
       foods: template.foods_structure
-        .filter(f => f.name && f.name.trim().length > 0) // GUARDRAIL 3: skip empty names
+        .filter(f => f.name && f.name.trim().length > 0)
         .map(f => ({
           name: f.name,
-          portion_grams: clampPortion(f.name, f.portion_grams),
+          portion_grams: f.portion_grams,
           calories: f.calories,
           protein: f.protein,
           carbs: f.carbs,
@@ -309,34 +314,15 @@ export function scaleTemplateToTarget(
     };
   }
 
-  let scaleFactor = targetKcal / template.kcal_base;
-  // Clinical safety clamp: 0.3x – 2.5x
-  scaleFactor = Math.max(0.3, Math.min(2.5, scaleFactor));
+  const scaleFactor = targetKcal / template.kcal_base;
 
   const foods: ScaledFoodItem[] = template.foods_structure
-    .filter(f => f.name && f.name.trim().length > 0) // GUARDRAIL 3: skip empty names
+    .filter(f => f.name && f.name.trim().length > 0)
     .map(food => {
-      const basePortion = Number(food.portion_grams) || 100; // guard undefined/NaN
-      let newPortion = Math.round(basePortion * scaleFactor);
-      newPortion = Math.max(10, Math.min(500, newPortion));
-      // GUARDRAIL 2: Enforce min AND max portion by food category
-      newPortion = clampPortion(food.name, newPortion);
-
-      const hasPerGram = food.calories_per_gram != null && food.calories_per_gram > 0;
-
-      if (hasPerGram) {
-        return {
-          name: food.name,
-          portion_grams: newPortion,
-          calories: Math.round(newPortion * (food.calories_per_gram || 0)),
-          protein: Math.round(newPortion * (food.protein_per_gram || 0) * 10) / 10,
-          carbs: Math.round(newPortion * (food.carbs_per_gram || 0) * 10) / 10,
-          fat: Math.round(newPortion * (food.fat_per_gram || 0) * 10) / 10,
-          original_portion: basePortion,
-        };
-      }
-
+      const basePortion = Number(food.portion_grams) || 100;
+      const newPortion = Math.round(basePortion * scaleFactor);
       const portionRatio = basePortion > 0 ? newPortion / basePortion : 1;
+
       return {
         name: food.name,
         portion_grams: newPortion,
