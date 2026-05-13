@@ -98,13 +98,10 @@ describe("SOVEREIGN_FINAL_VALIDATION — Prova Real de Runtime", () => {
       assertSovereignRuntime("legacy_regex_test");
     };
     
-    // O assertSovereignRuntime no meu mock simplificado em runtimeGovernance.ts 
-    // checa strings como "regex" no stack.
     expect(() => legacyLogic()).toThrow("[SOVEREIGN_VIOLATION] Uso de motor legado detectado");
   });
 
   it("Fase 3: Gera telemetria estruturada durante a validação", () => {
-    // A telemetria é logada no console, podemos verificar se a função não explode
     expect(() => logSovereignEvent("INFO", "TEST_EVENT", { correlation_id: "test-id" })).not.toThrow();
   });
 
@@ -112,9 +109,8 @@ describe("SOVEREIGN_FINAL_VALIDATION — Prova Real de Runtime", () => {
     const validated = validateMealPlanSnapshot(mockValidSnapshot, "patient_app_access");
     const item = validated.days[0].meals[0].items[0];
     
-    // A soberania garante que o que está no snapshot é o que será exibido
-    expect(item.kcal).toBe(mockValidSnapshot.days[0].meals[0].items[0].macros.kcal);
-    expect(item.protein_g).toBe(mockValidSnapshot.days[0].meals[0].items[0].macros.protein_g);
+    expect(item.macros.kcal).toBe(mockValidSnapshot.days[0].meals[0].items[0].macros.kcal);
+    expect(item.macros.protein_g).toBe(mockValidSnapshot.days[0].meals[0].items[0].macros.protein_g);
   });
 
 });
