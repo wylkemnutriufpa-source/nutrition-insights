@@ -32,6 +32,10 @@ export interface MealItemInput {
   was_auto_corrected?: boolean;
   is_primary?: boolean;
   substitution_group_id?: string | null;
+  display_quantity?: number | null;
+  portion_label?: string | null;
+  clinical_mass_g?: number | null;
+  edit_metadata?: any | null;
   /** Foods used to compose this item — used to auto-build description if missing */
   foods?: string[];
 }
@@ -95,6 +99,10 @@ export function buildMealItems(inputs: MealItemInput[]): BuildResult {
       was_auto_corrected: input.was_auto_corrected || false,
       is_primary: input.is_primary ?? true,
       substitution_group_id: input.substitution_group_id ?? null,
+      display_quantity: input.display_quantity ?? null,
+      portion_label: input.portion_label ?? null,
+      clinical_mass_g: input.clinical_mass_g ?? null,
+      edit_metadata: input.edit_metadata ?? null,
     } as any);
   }
 
