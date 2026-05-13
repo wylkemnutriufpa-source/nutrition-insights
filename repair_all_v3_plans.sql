@@ -41,7 +41,7 @@ BEGIN
                                             'display_unit', i2.edit_metadata->>'display_unit'
                                         )
                                     )
-                                )
+                                ) as meal_data
                                 FROM meal_plan_items i2
                                 WHERE i2.meal_plan_id = p.id AND COALESCE(i2.day_of_week, 0) = sub.day_val
                                 GROUP BY i2.meal_type
