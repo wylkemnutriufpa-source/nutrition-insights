@@ -1092,8 +1092,8 @@ const EditorV3Page = () => {
         const groupId = item.instanceId;
         mealItems.push({
           mealType: mType,
-          title: m.name,
-          description: item.name,
+          title: item.name, // 🛡️ SOBERANIA V3: Título é o nome do alimento
+          description: item.description || "", // 🛡️ SOBERANIA V3: Descrição são as notas/instruções
           display_quantity: item.quantity,
           display_unit: item.display_unit || item.portionLabel,
           clinical_mass_g: resolveDisplayGrams(item),
@@ -1112,8 +1112,8 @@ const EditorV3Page = () => {
           item.substitutions.forEach(sub => {
             mealItems.push({
               mealType: mType,
-              title: sub.name,
-              description: sub.name,
+              title: sub.name, // 🛡️ SOBERANIA V3: Nome do alimento de troca
+              description: (sub as any).description || "",
               display_quantity: (sub as any).suggestedQuantity || (sub as any).quantity || (sub as any).portionValue,
               display_unit: (sub as any).display_unit || (sub as any).portionLabel || (sub as any).portionUnitLabel,
               clinical_mass_g: resolveDisplayGrams(sub as any),
