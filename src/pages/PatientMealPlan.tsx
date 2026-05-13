@@ -50,6 +50,12 @@ interface MealPlan {
   start_date: string;
   totals_status?: string;
   plan_mode?: string;
+  editor_version?: string;
+  snapshot?: any;
+  total_target_calories?: number;
+  total_target_protein?: number;
+  total_target_carbs?: number;
+  total_target_fat?: number;
 }
 
 function getWeekDates(dateStr: string) {
