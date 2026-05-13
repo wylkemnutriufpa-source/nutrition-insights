@@ -1,4 +1,4 @@
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
+// PDF Export Premium V3 - Sovereign Passive Renderer
 
 /**
  * Premium Meal Plan PDF Export — FitJourney v2.0
@@ -18,9 +18,11 @@ interface MealPlanPDFItem {
   visual_image_url?: string;
   is_primary?: boolean;
   substitution_group_id?: string | null;
-  grams?: number;
-  suggestedQuantity?: number;
-  portionLabel?: string;
+  // --- SOBERANIA V3 ---
+  display_quantity?: string | number | null;
+  display_unit?: string | null;
+  clinical_mass_g?: number | null;
+  editor_version?: string | null;
 }
 
 export interface PremiumMealPlanPDFData {
@@ -138,79 +140,18 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
   return `item:${canonicalType}:${item.id || `${item.title}:${item.description || ""}`}`;
 }
 
-function isGenericSubstitutionDescription(description?: string): boolean {
-  const normalized = normalizeMealTypeKey(description);
-  if (!normalized) return true;
-  if (normalized === "substituicao" || normalized === "opcao_de_substituicao") return true;
-  // Trata "100g" / "100 g" como placeholder genérico — qualquer substituição com porção fixa de 100g
-  // deve ser substituída pela porção equivalente real calculada a partir do item principal.
-  const trimmed = String(description || "").trim().toLowerCase().replace(/\s+/g, "");
-  if (trimmed === "100g" || trimmed === "100gramas") return true;
-  return false;
-}
-
-function getFoodKcalPer100(title?: string): number {
-  const normalized = normalizeMealTypeKey(title);
-  const match = BASE_FOODS.find(food => {
-    const candidate = normalizeMealTypeKey(food.name);
-    return candidate === normalized || candidate.includes(normalized) || normalized.includes(candidate);
-  });
-  return match?.kcal_100g || 0;
-}
-
-function parsePositiveGrams(text?: string): number {
-  const matches = [...String(text || "").matchAll(/(\d+(?:[,.]\d+)?)\s*g\b/gi)]
-    .map(match => Math.round(Number(match[1].replace(",", ".")) || 0))
-    .filter(value => value > 0);
-  return matches[0] || 0;
-}
-
-function hasInvalidZeroGramPortion(text?: string): boolean {
-  return /(?:^|[\s(—-])0\s*g\b/i.test(String(text || ""));
-}
-
-function stripDuplicatedTitle(title: string, detail: string): string {
-  const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return detail.replace(new RegExp(`^\\s*${escapedTitle}\\s*[—:-]\\s*`, "i"), "").trim();
-}
-
-function formatEquivalentPortion(title: string, grams: number): string {
-  const safeGrams = Math.max(1, Math.round(grams));
-  const normalized = normalizeMealTypeKey(title);
-  if (normalized.includes("banana")) return `1 unidade média (${safeGrams}g)`;
-  if (normalized.includes("maca") || normalized.includes("pera") || normalized.includes("laranja")) return `1 unidade média (${safeGrams}g)`;
-  if (normalized.includes("mamao")) return `1 fatia média (${safeGrams}g)`;
-  if (normalized.includes("ovo")) return `${Math.max(1, Math.round(safeGrams / 50))} unidade(s) (${safeGrams}g)`;
-  return `${safeGrams}g`;
-}
-
-function inferEquivalentPortion(item: MealPlanPDFItem, referenceKcal?: number): string {
-  const explicitGrams = Number(item.grams ?? item.suggestedQuantity ?? 0);
-  if (explicitGrams > 0) return formatEquivalentPortion(item.title, explicitGrams);
-
-  const descriptionGrams = parsePositiveGrams(item.description);
-  if (descriptionGrams > 0 && !isGenericSubstitutionDescription(item.description)) {
-    return formatEquivalentPortion(item.title, descriptionGrams);
-  }
-
-  const kcalPer100 = getFoodKcalPer100(item.title);
-  const kcal = Number(referenceKcal || item.calories_target || 0);
-  if (kcalPer100 > 0 && kcal > 0) {
-    return formatEquivalentPortion(item.title, Math.round((kcal / kcalPer100) * 100));
-  }
-
-  return "";
-}
 
 function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem): string {
-  if (sub.description && !isGenericSubstitutionDescription(sub.description) && !hasInvalidZeroGramPortion(sub.description)) {
-    return stripDuplicatedTitle(sub.title, sub.description);
-  }
-  const inferred = inferEquivalentPortion(sub, primary.calories_target);
-  if (inferred) return `Porção equivalente: ${inferred}`;
-  const primaryPortion = primary.description || "";
-  if (/\d/.test(primaryPortion)) return `Porção equivalente: ${primaryPortion}`;
-  return "";
+  // SOBERANIA V3: O PDF não interpreta porções, ele apenas exibe o que o snapshot enviou.
+  const dQty = sub.display_quantity || "";
+  const dUnit = sub.display_unit || "";
+  const cMass = sub.clinical_mass_g || "";
+  
+  if (dQty) return `${dQty} ${dUnit}`.trim();
+  if (cMass) return `${cMass}g`.trim();
+  
+  // Fallback: Se não houver campos V3, tenta limpar a descrição se ela já contiver a porção
+  return sub.description || "";
 }
 
 function escapeHtml(str: string): string {
@@ -227,7 +168,6 @@ function escapeHtml(str: string): string {
 function cleanClinicalText(text: string): string {
   if (!text) return "";
   
-  // Remove technical audit blocks often added by clinical engine for transparency but not meant for patients
   const auditMarkers = [
     "AUDITORIA CLÍNICA",
     "TRILHA DE REGRAS",
@@ -236,22 +176,25 @@ function cleanClinicalText(text: string): string {
     "Timestamp:",
     "Protocolo:",
     "MEAL_KCAL_SPLIT",
-    "Status: Validado"
+    "Status: Validado",
+    "Divergência Detectada",
+    "Hash:",
+    "Engine:"
   ];
 
   let cleaned = text;
   
-  // Remove símbolos técnicos e emojis que não renderizam corretamente nos PDFs
+  // Remove technical symbols
   cleaned = cleaned.replace(/[Ø=Ý]+/g, "");
-  // Remove emojis (planos suplementares Unicode) e símbolos pictográficos
+  // Remove emojis and pictographs for PDF compatibility
   cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}]/gu, "");
-  // Remove caracteres de controle
+  // Remove control characters
   cleaned = cleaned.replace(/[\u0000-\u001F\u007F]/g, " ");
 
-  // If we find any audit marker, we try to remove the line
   const lines = cleaned.split("\n");
   const filteredLines = lines.filter(line => {
-    const upperLine = line.toUpperCase();
+    const upperLine = line.toUpperCase().trim();
+    if (!upperLine) return false;
     return !auditMarkers.some(marker => upperLine.includes(marker.toUpperCase()));
   });
 
@@ -295,46 +238,17 @@ function roundMacro(value: unknown): number {
 }
 
 function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
-  const groupedByDay = items.reduce((acc, item) => {
-    const dayKey = item.day_of_week ?? -1;
-    if (!acc[dayKey]) acc[dayKey] = [];
-    acc[dayKey].push(item);
-    return acc;
-  }, {} as Record<number, MealPlanPDFItem[]>);
-
-  const dayOrder = [1, 2, 3, 4, 5, 6, 0, -1];
-  const selectedDay = dayOrder.find(day => groupedByDay[day]?.some(item => item.is_primary !== false)) ?? Number(Object.keys(groupedByDay)[0] ?? -1);
-  const dayItems = groupedByDay[selectedDay] || items;
-  const groups = new Map<string, MealPlanPDFItem[]>();
-
-  dayItems.forEach((item) => {
-    const key = getMealGroupKey(item);
-    groups.set(key, [...(groups.get(key) || []), item]);
-  });
-
-  return Array.from(groups.values()).map(group => group.find(item => item.is_primary !== false) || group[0]);
+  // 🛡️ SOBERANIA V3: Filtra apenas itens que são primários
+  return items.filter(item => item.is_primary === true);
 }
 
 function calculateDisplayTotals(data: PremiumMealPlanPDFData) {
-  const primaryDailyItems = getPrimaryDailyItems(data.items || []);
-  const calculated = primaryDailyItems.reduce((acc, item) => ({
-    calories: acc.calories + roundMacro(item.calories_target),
-    protein: acc.protein + roundMacro(item.protein_target),
-    carbs: acc.carbs + roundMacro(item.carbs_target),
-    fat: acc.fat + roundMacro(item.fat_target),
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-  const safeTarget = (target: number | undefined, calculatedValue: number, max: number) => {
-    const rounded = roundMacro(target);
-    if (calculatedValue > 0 && (rounded <= 0 || rounded > max)) return calculatedValue;
-    return rounded || calculatedValue;
-  };
-
+  // SOBERANIA V3: O PDF não recalcula nem corrige metas. Ele usa o que foi definido no editor.
   return {
-    calories: safeTarget(data.targetCalories, calculated.calories, 5000),
-    protein: safeTarget(data.targetProtein, calculated.protein, 350),
-    carbs: safeTarget(data.targetCarbs, calculated.carbs, 700),
-    fat: safeTarget(data.targetFat, calculated.fat, 250),
+    calories: Math.round(data.targetCalories || 0),
+    protein: Math.round(data.targetProtein || 0),
+    carbs: Math.round(data.targetCarbs || 0),
+    fat: Math.round(data.targetFat || 0),
   };
 }
 
@@ -657,68 +571,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   const displayTotals = calculateDisplayTotals(data);
   const isWeeklyMode = data.planMode === 'weekly';
   
-  // Agrupar itens por dia para detectar se temos apenas um template de 1 dia
-  const originalGroupedByDay = (data.items || []).reduce((acc, item) => {
-    const dayKey = item.day_of_week ?? -1;
-    if (!acc[dayKey]) acc[dayKey] = [];
-    acc[dayKey].push(item);
-    return acc;
-  }, {} as Record<number, MealPlanPDFItem[]>);
+  // SOBERANIA V3: O PDF é um renderizador PASSIVO. Ele não rotaciona, não expande e não infere.
+  // Ele apenas organiza os itens recebidos por dia e refeição.
+  const printItems = data.items || [];
 
-  const distinctDays = Object.keys(originalGroupedByDay).filter(d => d !== '-1');
-  const isSingleDayTemplate = distinctDays.length <= 1;
-
-  let printItems: MealPlanPDFItem[] = [];
-
-  if (isWeeklyMode && isSingleDayTemplate) {
-    // 🚀 LÓGICA DE ROTAÇÃO SEMANAL: Expandir 1 dia para 7 dias rotacionando substituições
-    const dayOrder = [1, 2, 3, 4, 5, 6, 0];
-    const templateDay = Number(distinctDays[0] || 0);
-    const templateItems = originalGroupedByDay[templateDay] || originalGroupedByDay[-1] || [];
-    
-    // Identificar grupos de substituição no template sem misturar refeições de tipos diferentes
-    const groups: Record<string, { primary: MealPlanPDFItem, subs: MealPlanPDFItem[] }> = {};
-    templateItems.forEach(item => {
-      const gId = getMealGroupKey(item);
-      if (!groups[gId]) groups[gId] = { primary: item, subs: [] };
-      if (item.is_primary !== false) groups[gId].primary = item;
-      else groups[gId].subs.push(item);
-    });
-
-    // Gerar 7 dias rotacionando
-    dayOrder.forEach((day, dayIdx) => {
-      Object.values(groups).forEach(group => {
-        const options = [group.primary, ...group.subs];
-        // Rotacionar: cada dia pega o próximo item da lista de opções
-        const selected = options[dayIdx % options.length];
-        
-        // Adicionar o selecionado como primário para este dia específico
-        printItems.push({
-          ...selected,
-          day_of_week: day,
-          is_primary: true
-        });
-        
-        // Adicionar as outras opções como substitutos (opcional, mas bom para o paciente ver)
-        options.filter(o => o !== selected).forEach(o => {
-          printItems.push({
-            ...o,
-            day_of_week: day,
-            is_primary: false
-          });
-        });
-      });
-    });
-  } else {
-    // Modo Diário ou já possui múltiplos dias: Flattening normal dos grupos para o dia atual
-    printItems = getPrimaryDailyItems(data.items || []).flatMap((primary) => {
-      const primaryGroupKey = getMealGroupKey(primary);
-      const relatedSubs = (data.items || [])
-        .filter(item => item !== primary && item.is_primary === false && getMealGroupKey(item) === primaryGroupKey)
-        .slice(0, 5);
-      return [primary, ...relatedSubs];
-    });
-  }
   const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
     const canonicalType = resolveCanonicalMealType(mType);
     const mealInfo = MEAL_LABELS[String(canonicalType)] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
@@ -746,6 +602,19 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
       const showTitle = primary.title && !sameAsLabel;
 
+      // 🛡️ SOBERANIA V3: Resolver porção
+      const isV3 = primary.editor_version === "v3" || (primary as any).editor_version === "V3";
+      const dQty = primary.display_quantity || "";
+      const dUnit = primary.display_unit || "";
+      const cMass = primary.clinical_mass_g || "";
+      
+      let portionHtml = "";
+      if (dQty) {
+        portionHtml = `<div style="font-size: 10px; font-weight: 700; color: #6366f1; margin-bottom: 2px;">${dQty} ${dUnit}</div>`;
+      } else if (cMass) {
+        portionHtml = `<div style="font-size: 10px; font-weight: 700; color: #6366f1; margin-bottom: 2px;">${cMass}g</div>`;
+      }
+
       return `
         <div class="meal-group-container">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
@@ -756,6 +625,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           </div>
           
           <div class="food-list" style="margin-left: 4px; border-left: 2px solid #f1f5f9; padding-left: 10px;">
+            ${portionHtml}
             ${primary.description ? formatDescription(primary.description) : ""}
           </div>
 
@@ -763,12 +633,12 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <div class="substitution-box" style="margin-left: 10px; background: #fafafa; border: 1px dashed #e2e8f0;">
               <div class="sub-header" style="color: #64748b;">Opções de Troca</div>
               ${substitutions.map(sub => {
-                const detail = formatSubstitutionDetail(sub, primary);
+                const subPortion = formatSubstitutionDetail(sub, primary);
                 return `
                 <div class="sub-item" style="border-bottom: 1px solid #f1f5f9;">
                   <div>
                     <span style="font-weight: 500;">${escapeHtml(sub.title)}</span>
-                    ${detail ? `<span style="font-size: 9px; color: #94a3b8;"> — ${escapeHtml(detail)}</span>` : ""}
+                    ${subPortion ? `<span style="font-size: 9px; color: #94a3b8;"> — ${escapeHtml(subPortion)}</span>` : ""}
                   </div>
                   <span style="color: #cbd5e1; font-size: 9px;">${sub.calories_target || 0} kcal</span>
                 </div>

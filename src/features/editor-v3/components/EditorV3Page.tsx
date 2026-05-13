@@ -1093,15 +1093,18 @@ const EditorV3Page = () => {
         mealItems.push({
           mealType: mType,
           title: m.name,
-          description: `${item.name} — ${formatPortion(item)}`,
-          grams: resolveDisplayGrams(item),
+          description: item.name,
+          display_quantity: item.quantity,
+          display_unit: item.display_unit || item.portionLabel,
+          clinical_mass_g: resolveDisplayGrams(item),
           calories_target: Math.round(Number(item.kcal) || 0),
           protein_target: Math.round(Number(item.protein) || 0),
           carbs_target: Math.round(Number(item.carbs) || 0),
           fat_target: Math.round(Number(item.fat) || 0),
           is_primary: true,
           substitution_group_id: groupId,
-          day_of_week: dayNum !== null ? dayNum : undefined
+          day_of_week: dayNum !== null ? dayNum : undefined,
+          editor_version: "v3"
         });
 
         // Só inclui substituições no modo Diário, como solicitado
@@ -1109,17 +1112,19 @@ const EditorV3Page = () => {
           item.substitutions.forEach(sub => {
             mealItems.push({
               mealType: mType,
-          title: sub.name,
-          description: `${sub.name} — ${formatPortion(sub as any)}`,
-          grams: resolveDisplayGrams(sub as any),
-          suggestedQuantity: (sub as any).suggestedQuantity,
-          calories_target: Math.round(Number(sub.kcal) || 0),
+              title: sub.name,
+              description: sub.name,
+              display_quantity: (sub as any).suggestedQuantity || (sub as any).quantity || (sub as any).portionValue,
+              display_unit: (sub as any).display_unit || (sub as any).portionLabel || (sub as any).portionUnitLabel,
+              clinical_mass_g: resolveDisplayGrams(sub as any),
+              calories_target: Math.round(Number(sub.kcal) || 0),
               protein_target: Math.round(Number(sub.protein) || 0),
               carbs_target: Math.round(Number(sub.carbs) || 0),
               fat_target: Math.round(Number(sub.fat) || 0),
               is_primary: false,
               substitution_group_id: groupId,
-              day_of_week: dayNum !== null ? dayNum : undefined
+              day_of_week: dayNum !== null ? dayNum : undefined,
+              editor_version: "v3"
             });
           });
         }
