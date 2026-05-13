@@ -124,6 +124,11 @@ export class NutriCoreV3Adapter {
       const BREAKFAST_ROTATION = ["Pão", "Tapioca", "Cuscuz"];
 
       for (let dayIdx = 0; dayIdx < loops; dayIdx++) {
+        const currentDayOfWeek = dayIdx + 1; // 1-7
+        if (isWeekly && !currentDayOfWeek) {
+           throw new Error("Erro de Governança: day_of_week obrigatório em modo semanal.");
+        }
+
         // Criar preferências rotativas para este dia específico
         const dayPrefs = [
           PROTEIN_ROTATION[dayIdx % PROTEIN_ROTATION.length],
