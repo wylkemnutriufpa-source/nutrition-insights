@@ -177,72 +177,10 @@ function syncMealDescription(description: string | null | undefined, mealType: s
   return finalizeMealDescription(description, mealType, isGainGoal);
 }
 
-function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTarget: number, isGainGoal: boolean): void {
-  if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
-
-  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(isGainGoal);
-
-  const mealTargets = new Map<string, number>();
-  let assigned = 0;
-
-  for (const mealType of MEAL_ORDER) {
-    const items = dayItems.filter((item) => item.meal_type === mealType);
-    if (items.length === 0) continue;
-    const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
-    const target = Math.min(proteinCaps[mealType] ?? baseTarget, baseTarget);
-    mealTargets.set(mealType, target);
-    assigned += target;
-  }
-
-  let residual = Math.round(dailyProteinTarget - assigned);
-  for (const mealType of RESIDUAL_PRIORITY) {
-    if (residual <= 0) break;
-    if (!mealTargets.has(mealType)) continue;
-    const current = mealTargets.get(mealType) || 0;
-    const cap = proteinCaps[mealType] ?? current;
-    const room = Math.max(0, cap - current);
-    if (room <= 0) continue;
-    const add = Math.min(room, residual);
-    mealTargets.set(mealType, current + add);
-    residual -= add;
-  }
-
-  for (const [mealType, rawTarget] of mealTargets.entries()) {
-    const items = dayItems.filter((item) => item.meal_type === mealType && !isItemProtected(item));
-    if (items.length === 0) continue;
-
-    const mealCap = proteinCaps[mealType] ?? rawTarget;
-    const target = Math.max(0, Math.min(rawTarget, mealCap));
-    const currentTotal = items.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
-
-    if (currentTotal <= 0) {
-      const base = Math.floor(target / items.length);
-      let remaining = target;
-      items.forEach((item, index) => {
-        const next = index === items.length - 1 ? remaining : base;
-        item.protein_target = Math.max(0, next);
-        remaining -= next;
-      });
-      continue;
-    }
-
-    let scaledSum = 0;
-    let largestIndex = 0;
-    let largestValue = 0;
-    items.forEach((item, index) => {
-      const current = Number(item.protein_target) || 0;
-      const next = Math.max(0, Math.round(current * (target / currentTotal)));
-      item.protein_target = next;
-      scaledSum += next;
-      if (current > largestValue) {
-        largestValue = current;
-        largestIndex = index;
-      }
-    });
-
-    const correction = target - scaledSum;
-    items[largestIndex].protein_target = Math.max(0, (Number(items[largestIndex].protein_target) || 0) + correction);
-  }
+function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], _dailyProteinTarget: number, _isGainGoal: boolean): void {
+  // 🛑 NEUTRALIZADO: O AutoFix não deve mais recalcular metas proteicas.
+  // A soberania do cálculo reside exclusivamente no Motor V3.
+  return;
 }
 
 // ── Fix: Replace blocked foods ──────────────────────────────
