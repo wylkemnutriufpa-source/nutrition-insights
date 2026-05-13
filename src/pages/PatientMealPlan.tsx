@@ -209,8 +209,8 @@ export default function PatientMealPlan() {
 
           flatItems.push({
             ...item,
-            id: item.instanceId || item.id, // V3 usa instanceId como chave primária visual
-            meal_type: meal.meal_type || meal.id, // Mapeamento de tipo de refeição
+            id: item.instanceId || item.id,
+            meal_type: meal.meal_type || meal.id,
             title: item.name || item.title,
             description: item.description || item.instructions,
             calories_target: item.kcal,
@@ -218,7 +218,15 @@ export default function PatientMealPlan() {
             carbs_target: item.carbs,
             fat_target: item.fat,
             image_url: item.imageUrl,
-            day_of_week: item.day_of_week
+            day_of_week: item.day_of_week,
+            display_quantity: item.display_quantity || item.quantity,
+            display_unit: item.display_unit || item.portionUnitLabel,
+            clinical_mass_g: item.clinical_mass_g,
+            edit_metadata: {
+              ...(item.edit_metadata || {}),
+              display_quantity: item.display_quantity || item.quantity,
+              display_unit: item.display_unit || item.portionUnitLabel,
+            }
           });
         });
       });
