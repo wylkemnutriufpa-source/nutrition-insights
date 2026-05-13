@@ -164,7 +164,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
 
     return {
       ...meal,
-      id: meal.id || Math.random().toString(36).substring(2, 9),
+      id: meal.id || crypto.randomUUID(),
       name: meal.name || 'Nova Refeição',
       items: items,
       time: meal.time || '00:00'
