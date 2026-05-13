@@ -84,9 +84,12 @@ export class ClinicalEngine {
       macros = calculateMacros(targetKcal, input.goal, input.weight);
     }
 
-    // 3. Resolver Refeições (Delegar para o motor de templates visuais por enquanto)
-    // Nota: Em Etapas posteriores, moveremos a lógica de composição de refeições para cá.
-    
+    // 3. Clinical Guards (Soberania V3)
+    // Abort if any residual parallel intelligence or impossible macro distribution is detected.
+    if (targetKcal < 800 || macros.protein > 350) {
+      throw new Error(`CLINICAL_ABORT: Macro distribution violation (Kcal: ${targetKcal}, P: ${macros.protein}g)`);
+    }
+
     return {
       engine_version: this.VERSION,
       protocol_used: strategyId,
@@ -97,7 +100,7 @@ export class ClinicalEngine {
         target_kcal: targetKcal,
         macros
       },
-      meals: [] // Preenchido pelo orquestrador
+      meals: [] 
     };
   }
 }

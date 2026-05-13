@@ -235,58 +235,10 @@ export function resolveMealTemplates(
  * Scale a template's foods_structure to match target kcal.
  * Returns scaled food items with updated macros.
  */
-// ── GUARDRAIL 2: Minimum AND Maximum portion clamps by food category ──
-const MIN_PORTION_BY_CATEGORY: Record<string, number> = {
-  protein: 60,   // proteínas principais: 60g mínimo
-  carb: 30,      // carboidratos: 30g mínimo
-  fruit: 80,     // frutas: 80g mínimo
-  vegetable: 50, // vegetais: 50g mínimo
-  egg: 50,       // ovos: ~1 unidade (50g)
-  bread: 40,     // pão: ~1 unidade (40g)
-  dairy: 100,    // laticínios: 100g mínimo
-  fat: 10,       // gorduras: 10g mínimo
-  other: 20,     // outros: 20g mínimo
-};
+// ── REMOVED: Portions are now governed EXCLUSIVELY by NutriCoreV3 ──
+// Portions are scaled linearly in scaleTemplateToTarget and optionally validated/clamped by ClinicalEngine.
+// Local heuristics (clampPortion, PORTION_CATEGORY_KEYWORDS) are eliminated to prevent parallel intelligence.
 
-const MAX_PORTION_BY_CATEGORY: Record<string, number> = {
-  protein: 180,  // proteínas: máx 180g (evita porções irreais)
-  carb: 200,     // carboidratos: máx 200g
-  fruit: 250,    // frutas: máx 250g
-  vegetable: 200,// vegetais: máx 200g
-  egg: 150,      // ovos: máx ~3 unidades
-  bread: 100,    // pão: máx ~2 fatias
-  dairy: 250,    // laticínios: máx 250g
-  fat: 15,       // azeite/óleo: máx 15g (1 colher de sopa)
-  nuts: 40,      // oleaginosas: máx 40g
-  other: 200,    // outros: máx 200g
-};
-
-const PORTION_CATEGORY_KEYWORDS: Record<string, string[]> = {
-  protein: ["frango", "carne", "bife", "tilapia", "peixe", "porco", "sardinha", "alcatra", "sobrecoxa", "lombo", "patinho"],
-  egg: ["ovo", "omelete", "clara"],
-  bread: ["pao", "tapioca", "cuscuz", "torrada"],
-  fruit: ["banana", "maca", "mamao", "laranja", "morango", "goiaba", "melancia", "abacaxi", "manga", "tangerina", "fruta"],
-  vegetable: ["alface", "tomate", "brocolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha", "salada", "verdura", "rucula"],
-  carb: ["arroz", "macarrao", "batata", "macaxeira", "inhame", "mandioca", "farinha", "farofa"],
-  dairy: ["iogurte", "leite", "queijo", "requeijao"],
-  fat: ["azeite", "oleo"],
-  nuts: ["castanha", "amendoim", "pasta de amendoim", "amendoa", "nozes"],
-};
-
-function classifyFoodForPortion(name: string): string {
-  const norm = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-  for (const [category, keywords] of Object.entries(PORTION_CATEGORY_KEYWORDS)) {
-    if (keywords.some(kw => norm.includes(kw))) return category;
-  }
-  return "other";
-}
-
-function clampPortion(name: string, portion: number): number {
-  const cat = classifyFoodForPortion(name);
-  const min = MIN_PORTION_BY_CATEGORY[cat] || MIN_PORTION_BY_CATEGORY.other;
-  const max = MAX_PORTION_BY_CATEGORY[cat] || MAX_PORTION_BY_CATEGORY.other;
-  return Math.max(min, Math.min(max, portion));
-}
 
 /**
  * Scale a template's foods_structure to match target kcal.

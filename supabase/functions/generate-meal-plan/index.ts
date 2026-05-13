@@ -302,7 +302,7 @@ async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
     .map(item => ({ ...item, clinical_tags: item.clinical_tags || [] }));
 }
 
-/** Filter visual library items by patient restrictions/disliked/intolerances — TAG-BASED CLINICAL SAFETY v2.0 */
+/** Filter visual library items by patient restrictions/disliked/intolerances — PURE TAG-BASED CLINICAL SAFETY */
 function filterVisualLibraryForPatient(
   items: VisualLibraryItem[],
   restrictions: string[],
@@ -321,46 +321,33 @@ function filterVisualLibraryForPatient(
     }
   }
 
-  // Vegetarian/vegan → exclude animal_protein tag
+  // Dietary constraints → exclude specific clinical tags
   const isVegetarian = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegetarian") || nr.includes("vegetariano"); });
   const isVegan = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegan") || nr.includes("vegano"); });
-  if (isVegetarian || isVegan) {
-    excludedClinicalTags.add("animal_protein");
-  }
+  
+  if (isVegetarian || isVegan) excludedClinicalTags.add("animal_protein");
   if (isVegan) {
     excludedClinicalTags.add("contains_lactose");
     excludedClinicalTags.add("contains_egg");
   }
 
-  // ── STEP 2: Build blocked keywords from disliked foods (still string-based for custom dislikes) ──
-  const blocked = [...disliked].map(d => normalize(d)).filter(d => d.length >= 3);
-
-  console.log(`[TAG-FILTER-v2] Excluded clinical_tags: [${[...excludedClinicalTags].join(', ')}], Blocked keywords: [${blocked.join(', ')}]`);
-
+  // ── STEP 2: Filter items by tags ONLY (No keyword inference) ──
   return items.filter(item => {
     const itemTags = item.clinical_tags || [];
-
-    // ── PRIMARY FILTER: Tag-based exclusion (100% reliable) ──
     for (const excludedTag of excludedClinicalTags) {
-      if (itemTags.includes(excludedTag)) {
-        return false;
-      }
+      if (itemTags.includes(excludedTag)) return false;
     }
 
-    // ── SECONDARY FILTER: Disliked foods keyword match (custom preferences) ──
-    if (blocked.length > 0) {
+    // ── Disliked foods (Explicit name match only, no heuristic tags) ──
+    if (disliked.length > 0) {
       const normName = normalize(item.display_name);
-      const normSlug = normalize(item.slug);
-      const searchTermsText = (item.search_terms || []).map(t => normalize(t)).join(" ");
-      const fullText = normName + " " + normSlug + " " + searchTermsText;
-      for (const b of blocked) {
-        if (fullText.includes(b)) return false;
-      }
+      if (disliked.some(d => normName.includes(normalize(d)))) return false;
     }
 
     return true;
   });
 }
+
 
 // ── Legacy substitution groups (kept for description text) ──
 const SUBSTITUTION_GROUPS_LEGACY: Record<string, string[]> = {
