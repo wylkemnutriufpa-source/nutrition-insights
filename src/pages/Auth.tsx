@@ -192,6 +192,17 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
+      <Helmet>
+        <title>Entrar ou criar conta — FitJourney</title>
+        <meta name="description" content="Acesse o FitJourney: plataforma de nutrição inteligente para profissionais e pacientes. Login seguro com e-mail ou Google." />
+        <link rel="canonical" href="https://www.fitjourney.com.br/auth" />
+        <meta property="og:title" content="Entrar ou criar conta — FitJourney" />
+        <meta property="og:description" content="Acesse o FitJourney: plataforma de nutrição inteligente para profissionais e pacientes." />
+        <meta property="og:url" content="https://www.fitjourney.com.br/auth" />
+        <meta property="og:type" content="website" />
+        <meta name="robots" content="noindex,follow" />
+      </Helmet>
+
       {/* Language Selector */}
       <div className="absolute top-4 right-4 z-20">
         <LanguageSelector />
