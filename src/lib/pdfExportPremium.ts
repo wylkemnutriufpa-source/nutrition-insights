@@ -697,6 +697,19 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
       const showTitle = primary.title && !sameAsLabel;
 
+      // 🛡️ SOBERANIA V3: Resolver porção
+      const isV3 = primary.editor_version === "v3" || (primary as any).editor_version === "V3";
+      const dQty = primary.display_quantity || "";
+      const dUnit = primary.display_unit || "";
+      const cMass = primary.clinical_mass_g || "";
+      
+      let portionHtml = "";
+      if (dQty) {
+        portionHtml = `<div style="font-size: 10px; font-weight: 700; color: #6366f1; margin-bottom: 2px;">${dQty} ${dUnit}</div>`;
+      } else if (cMass) {
+        portionHtml = `<div style="font-size: 10px; font-weight: 700; color: #6366f1; margin-bottom: 2px;">${cMass}g</div>`;
+      }
+
       return `
         <div class="meal-group-container">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
@@ -707,6 +720,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           </div>
           
           <div class="food-list" style="margin-left: 4px; border-left: 2px solid #f1f5f9; padding-left: 10px;">
+            ${portionHtml}
             ${primary.description ? formatDescription(primary.description) : ""}
           </div>
 
@@ -714,12 +728,12 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <div class="substitution-box" style="margin-left: 10px; background: #fafafa; border: 1px dashed #e2e8f0;">
               <div class="sub-header" style="color: #64748b;">Opções de Troca</div>
               ${substitutions.map(sub => {
-                const detail = formatSubstitutionDetail(sub, primary);
+                const subPortion = formatSubstitutionDetail(sub, primary);
                 return `
                 <div class="sub-item" style="border-bottom: 1px solid #f1f5f9;">
                   <div>
                     <span style="font-weight: 500;">${escapeHtml(sub.title)}</span>
-                    ${detail ? `<span style="font-size: 9px; color: #94a3b8;"> — ${escapeHtml(detail)}</span>` : ""}
+                    ${subPortion ? `<span style="font-size: 9px; color: #94a3b8;"> — ${escapeHtml(subPortion)}</span>` : ""}
                   </div>
                   <span style="color: #cbd5e1; font-size: 9px;">${sub.calories_target || 0} kcal</span>
                 </div>
