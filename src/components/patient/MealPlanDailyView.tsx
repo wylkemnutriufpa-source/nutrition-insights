@@ -264,22 +264,42 @@ const MealItemCard = memo(function MealItemCard({
                 </Badge>
               )}
             </div>
-            {(item.description || (item as any).edit_metadata?.display_quantity) && (
-              <div className="mt-1">
-                {(item as any).edit_metadata?.display_quantity && (
-                  <p className="text-xs font-bold text-primary mb-0.5">
-                    {(item as any).edit_metadata.display_quantity} {(item as any).edit_metadata.display_unit || ''}
-                  </p>
-                )}
-                {item.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-6 whitespace-pre-line">
-                    {(item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && !item.is_primary 
-                      ? `Substituição: ${item.title}` 
-                      : item.description}
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="mt-1">
+              {(() => {
+                const editMeta = (item as any).edit_metadata;
+                const displayQuantity = editMeta?.display_quantity;
+                const displayUnit = editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
+                const clinicalMass = (item as any).clinical_mass_g;
+
+                // 1. Soberania: Metadata explícito
+                if (displayQuantity) {
+                  return (
+                    <p className="text-xs font-bold text-primary mb-0.5">
+                      {displayQuantity} {displayUnit}
+                    </p>
+                  );
+                }
+
+                // 2. Fallback: Re-calculado (Clinical Mass)
+                if (clinicalMass) {
+                  return (
+                    <p className="text-xs font-bold text-primary mb-0.5">
+                      {formatDisplayPortion({ ...item, grams: clinicalMass } as any)}
+                    </p>
+                  );
+                }
+
+                return null;
+              })()}
+
+              {item.description && (
+                <p className="text-xs text-muted-foreground line-clamp-6 whitespace-pre-line">
+                  {(item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && !item.is_primary
+                    ? `Substituição: ${item.title}`
+                    : item.description}
+                </p>
+              )}
+            </div>
             {impacts.length > 0 && !focusMode && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {impacts.map(tag => {
