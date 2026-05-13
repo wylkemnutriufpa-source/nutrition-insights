@@ -652,9 +652,9 @@ export const useEditorState = create<EditorState>()(
                 if (i.instanceId === instanceId) {
                   const merged = { ...i, ...updates };
                   
-                  // Se a quantidade mudou, recalcular clinical_mass_g
+                  // 🛡️ SOBERANIA CLÍNICA: Quando a quantidade muda, recalcular clinical_mass_g IMEDIATAMENTE
                   if (updates.quantity !== undefined) {
-                     const pValue = merged.portionValue || 1;
+                     const pValue = Number(merged.portionValue) || 1;
                      merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
                        ? merged.quantity
                        : merged.quantity * pValue;
