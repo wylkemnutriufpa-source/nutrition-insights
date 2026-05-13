@@ -218,10 +218,8 @@ export class NutriCoreV3Adapter {
           });
 
           const bestImage = await getBestMealImage(mealName, v3Items);
-
-            console.log(`[ClinicalAudit] Item: ${item.name} | Mass: ${item.grams}g | Prot: ${totalProtein}g | Kcal: ${totalKcal}`);
             
-            return {
+          return {
             id: Math.random().toString(36).substring(2, 9),
             name: mealName,
             time: slot.time,
