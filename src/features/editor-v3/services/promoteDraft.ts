@@ -15,6 +15,7 @@ import type { DraftRecord } from './draftService';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 import { validatePlanBeforePublish } from '@/lib/planSafetyNet';
 import { formatDisplayPortion, resolveDisplayGrams } from '@/lib/nutricore_v2/portion-display';
+import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
 
 type ClinicalMealType =
   | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
@@ -246,6 +247,14 @@ export async function promoteDraftToMealPlan(
       promoted_at: new Date().toISOString(),
     })
     .eq('id', draft.id);
+
+  // 🛡️ Onda 1: Snapshot imutável (Shadow Mode)
+  // Garante soberania visual para o Patient App
+  try {
+    await generateAndPersistMealPlanSnapshot(plan.id);
+  } catch (snapshotErr) {
+    console.warn("[Promote-Snapshot] Falha ao gerar snapshot (não-bloqueante):", snapshotErr);
+  }
 
   // Log de acesso: Exportação/Promoção de draft para plano oficial
   await supabase.from('access_logs').insert({
