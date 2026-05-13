@@ -110,7 +110,7 @@ export const PatientPlanPage = () => {
     }
 
     // 🛡️ SOBERANIA V3: Bloquear busca em base local (BASE_FOODS)
-    if (plan.editor_version === 'v3') {
+    if (plan?.editor_version === 'v3') {
       toast.error('Este plano requer substituições soberanas do nutricionista.');
       SovereignTelemetry.log({
         runtime_source: 'patient_plan_substitutions',
@@ -138,6 +138,7 @@ export const PatientPlanPage = () => {
     setSubstitutions(subs);
     setSelectedItem({ item, mealId });
     setShowSubModal(true);
+  };
 
 
   const applySubstitution = (sub: any) => {
