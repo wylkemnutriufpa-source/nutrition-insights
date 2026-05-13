@@ -37,70 +37,13 @@ export function normalizeFood(food: any): Food {
     tracer.trace(`Clinical Mass Frozen: ${name}`, { mass: f.clinical_mass_g });
   }
 
-  // PARTE 1 — MEDIDAS CASEIRAS (PADRONIZAÇÃO URGENTE)
+  // PARTE 1 — MEDIDAS CASEIRAS (PADRONIZAÇÃO)
+  // 🛑 REMOVIDO: O sistema não deve mais "adivinhar" medidas por nome de string (ex: 'ovo' -> 50g).
+  // Apenas garantimos que o objeto Food tenha estrutura válida.
   if (wasGram) {
-    let newPortionValue = f.portionValue;
-    let newMeasurementType = f.measurementType;
-    let newPortionLabel = f.portionLabel;
-
-    if (name.includes('ovo') || name.includes('omelete')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 50; 
-      newPortionLabel = 'unidade';
-    } else if (name.includes('banana')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 90; 
-      newPortionLabel = 'unidade M';
-    } else if (name.includes('maçã')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 150; 
-      newPortionLabel = 'unidade M';
-    } else if (name.includes('pão integral') || name.includes('pão de forma')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 25; 
-      newPortionLabel = 'fatia';
-    } else if (name.includes('pão francês')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 50; 
-      newPortionLabel = 'unidade';
-    } else if (name.includes('azeite') || name.includes('manteiga')) {
-      newMeasurementType = 'spoon';
-      newPortionValue = name.includes('azeite') ? 5 : 10; 
-      newPortionLabel = name.includes('azeite') ? 'fio' : 'colher de sopa';
-    } else if (name.includes('arroz') || name.includes('feijão') || name.includes('macarrão')) {
-      newMeasurementType = 'spoon';
-      newPortionValue = 25; 
-      newPortionLabel = 'colher de sopa';
-    } else if (name.includes('iogurte')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 170; 
-      newPortionLabel = 'pote';
-    } else if (name.includes('whey') || name.includes('suplemento')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 30; 
-      newPortionLabel = 'scoop';
-    } else if (name.includes('frango') || name.includes('carne') || name.includes('peixe')) {
-      newMeasurementType = 'unit';
-      newPortionValue = 150; 
-      newPortionLabel = 'filé M';
-    }
-
-    // Só converte quantity se for a primeira vez (wasGram) e tivermos um teto clínico
-    if (newMeasurementType !== 'gram' && wasGram && initialQuantity > 5) {
-      // Se já temos clinical_mass_g, usamos ele para garantir que a conversão não seja recursiva
-      const sourceMass = f.clinical_mass_g || initialQuantity;
-      f.quantity = Math.round((sourceMass / (newPortionValue || 1)) * 10) / 10;
-      
-      tracer.trace(`Display Conversion: ${name}`, { 
-        from: `${sourceMass}g`, 
-        to: `${f.quantity} ${newPortionLabel}`,
-        factor: newPortionValue 
-      });
-    }
-
-    f.measurementType = newMeasurementType;
-    f.portionValue = newPortionValue;
-    f.portionLabel = newPortionLabel;
+    f.measurementType = f.measurementType || 'gram';
+    f.portionValue = f.portionValue || 100;
+    f.portionLabel = f.portionLabel || '100g';
   }
 
   // Se não tem tipo, inferir
