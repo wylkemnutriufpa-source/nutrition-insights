@@ -84,6 +84,8 @@ export const patientService = {
         patient_id,
         created_at,
         sharing_token,
+        editor_version,
+        snapshot,
         total_target_calories,
         total_target_protein,
         total_target_carbs,
