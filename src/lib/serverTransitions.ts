@@ -13,6 +13,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
+import { logSovereignEvent } from "./runtimeGovernance";
 
 /**
  * Onda 1 — Snapshot determinístico:
