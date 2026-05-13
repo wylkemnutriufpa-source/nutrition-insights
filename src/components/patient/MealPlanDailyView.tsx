@@ -135,12 +135,18 @@ function isCurrentMeal(timeRange: string): boolean {
 
 // ── Macro Summary Bar (memoized) ──
 const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: { items: MealPlanItem[], totalsStatus?: string }) {
-  const totals = useMemo(() => ({
-    calories: items.reduce((s, i) => s + safeNum(i.calories_target ?? i.metadata?.calories_target ?? i.metadata?.calories), 0),
-    protein: items.reduce((s, i) => s + safeNum(i.protein_target ?? i.metadata?.protein_target ?? i.metadata?.protein), 0),
-    carbs: items.reduce((s, i) => s + safeNum(i.carbs_target ?? i.metadata?.carbs_target ?? i.metadata?.carbs), 0),
-    fat: items.reduce((s, i) => s + safeNum(i.fat_target ?? i.metadata?.fat_target ?? i.metadata?.fat), 0),
-  }), [items]);
+  const totals = useMemo(() => {
+    // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo
+    // Evita explosão de macros se substituições vazarem para a lista principal
+    const primaryOnly = items.filter(i => i.is_primary !== false);
+    
+    return {
+      calories: primaryOnly.reduce((s, i) => s + safeNum(i.calories_target ?? i.metadata?.calories_target ?? i.metadata?.calories), 0),
+      protein: primaryOnly.reduce((s, i) => s + safeNum(i.protein_target ?? i.metadata?.protein_target ?? i.metadata?.protein), 0),
+      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.carbs_target ?? i.metadata?.carbs_target ?? i.metadata?.carbs), 0),
+      fat: primaryOnly.reduce((s, i) => s + safeNum(i.fat_target ?? i.metadata?.fat_target ?? i.metadata?.fat), 0),
+    };
+  }, [items]);
 
   const isIncomplete = totalsStatus === 'incomplete' || (totals.calories === 0 && items.length > 0);
 
