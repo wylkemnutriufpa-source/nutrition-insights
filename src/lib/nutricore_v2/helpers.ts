@@ -85,20 +85,22 @@ export const getFoodCategory = (food: any): string => {
 const resolveMacroGrams = (item: any, quantity: number) => {
   // 🛡️ SOBERANIA CLÍNICA: Se temos a massa clínica, ela governa absolutamente
   if (item.clinical_mass_g !== undefined && item.clinical_mass_g !== null) {
-    return item.clinical_mass_g;
+    return Number(item.clinical_mass_g);
   }
 
-  const portionValue = Number(item.portionValue) || 1;
-  const rawGrams = (item.measurementType === 'unit' || item.measurementType === 'spoon')
-    ? quantity * portionValue
-    : quantity;
-
-  // Proteção contra explosão de unidade (ex: 100 ovos por engano)
-  if (rawGrams > 10000 && quantity > 1000 && (item.measurementType === 'unit' || item.measurementType === 'spoon')) {
-     return quantity; // Fallback
+  // Se não temos clinical_mass_g, tentamos derivar da quantity + portionValue
+  // Mas NUNCA adivinhamos se o dado estiver ausente.
+  const portionValue = Number(item.portionValue);
+  
+  if (item.measurementType === 'unit' || item.measurementType === 'spoon') {
+    if (!portionValue || portionValue <= 0) {
+      console.error('[V3-MOTOR] Item missing portionValue for unit/spoon measurement:', item.name);
+      return 0; // Falha explícita
+    }
+    return quantity * portionValue;
   }
 
-  return Math.max(0, rawGrams);
+  return Math.max(0, quantity);
 };
 
 export const calculateItemMacros = (item: any, quantity: number) => {
