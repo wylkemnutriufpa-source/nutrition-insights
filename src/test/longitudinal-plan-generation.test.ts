@@ -93,7 +93,7 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     const plan = generatePlan(initialPatient, 1);
     const result = WeeklyPlanSchema.safeParse(plan);
     if (!result.success) {
-      console.error(result.error.errors);
+      console.error(result.error.issues);
     }
     expect(result.success).toBe(true);
 
@@ -106,7 +106,7 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     const badResult = WeeklyPlanSchema.safeParse(badPlan);
     expect(badResult.success).toBe(false);
     if (!badResult.success) {
-      expect(badResult.error.errors[0].message).toContain("match total calories");
+      expect(badResult.error.issues[0].message).toContain("match total calories");
     }
   });
 
