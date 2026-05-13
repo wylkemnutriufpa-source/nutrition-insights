@@ -184,6 +184,7 @@ export const patientService = {
             ).map((sub: any) => ({
               id: sub.id,
               name: sub.title || sub.name,
+              description: sub.description || sub.notes,
               kcal: Number(sub.macros?.kcal || sub.kcal || 0),
               protein: Number(sub.macros?.protein_g || sub.protein || 0),
               carbs: Number(sub.macros?.carbs_g || sub.carbs || 0),
@@ -196,6 +197,7 @@ export const patientService = {
             return {
               id: it.id || it.instanceId,
               name: it.title || it.name,
+              description: it.description || it.notes,
               kcal: Number(it.macros?.kcal || it.kcal || 0),
               protein: Number(it.macros?.protein_g || it.protein || 0),
               carbs: Number(it.macros?.carbs_g || it.carbs || 0),
