@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal, MealItem } from '../types';
 import { PipelineTrace, ClinicalGuard } from './pipeline-trace';
+import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
 
 const tracer = PipelineTrace.getInstance();
 
@@ -33,6 +34,13 @@ export function normalizeFood(food: any): Food {
   // 🛡️ CONGELAMENTO DA MASSA CLÍNICA (Soberania do Motor)
   // Se for gramas e ainda não tiver clinical_mass_g, este é o ponto zero.
   if (wasGram && (f.clinical_mass_g === undefined || f.clinical_mass_g === null)) {
+    SovereignTelemetry.log({
+      runtime_source: 'normalization_v3',
+      event_type: 'missing_clinical_mass',
+      severity: 'warning',
+      message: `Food ${name} missing clinical_mass_g. Initializing with quantity ${initialQuantity}.`,
+      metadata: { id: originalId, name, quantity: initialQuantity }
+    });
     f.clinical_mass_g = initialQuantity;
     tracer.trace(`Clinical Mass Frozen: ${name}`, { mass: f.clinical_mass_g });
   }
@@ -98,6 +106,7 @@ export function normalizeFood(food: any): Food {
  * Migration Guard: Converte dados do Editor V2 para V3 de forma segura.
  */
 export function normalizeV2ToV3(v2Data: any): Meal[] {
+  SovereignTelemetry.reportLegacyDetection('normalization_v3', 'V2_TO_V3_MIGRATION', { items_count: v2Data?.length });
   console.log('[Migration Guard] Iniciando migração V2 -> V3');
   tracer.trace('Migration Start', { items_count: v2Data?.length });
   
@@ -151,7 +160,17 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
         ...normalized,
         instanceId: normalized.instanceId || crypto.randomUUID(),
         quantity: normalized.quantity ?? 1,
-        clinical_mass_g: normalized.clinical_mass_g ?? (normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1))),
+        clinical_mass_g: normalized.clinical_mass_g ?? (() => {
+          const fallback = normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1));
+          SovereignTelemetry.log({
+            runtime_source: 'normalization_v3_legacy_migration',
+            event_type: 'missing_clinical_mass',
+            severity: 'warning',
+            message: `Inferring clinical_mass_g for ${normalized.name} during V2 migration.`,
+            metadata: { name: normalized.name, fallback }
+          });
+          return fallback;
+        })(),
         substitutions: (normalized.substitutions || []).map((sub: any) => normalizeFood(sub))
       } as MealItem;
     });
@@ -252,7 +271,17 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
         instanceId: (item as any).instanceId || crypto.randomUUID(),
         quantity,
         blockId: (item as any).blockId || generatedBlockId,
-        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (normalized.measurementType === 'gram' ? quantity : (quantity * (normalized.portionValue || 1))),
+        clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (() => {
+          const fallback = normalized.measurementType === 'gram' ? quantity : (quantity * (normalized.portionValue || 1));
+          SovereignTelemetry.log({
+            runtime_source: 'normalization_v3',
+            event_type: 'missing_clinical_mass',
+            severity: 'warning',
+            message: `Inferring clinical_mass_g for ${normalized.name} during hydration.`,
+            metadata: { name: normalized.name, fallback, source: 'normalizeMeals' }
+          });
+          return fallback;
+        })(),
         substitutions: (item as any).substitutions || [] 
       } as MealItem;
     })

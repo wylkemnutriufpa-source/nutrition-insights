@@ -109,7 +109,7 @@ export const refinePlanWithScore = (
           const newItem: MealItem = {
             ...protein,
             ...macros,
-            instanceId: Math.random().toString(36).substring(2, 10),
+            instanceId: crypto.randomUUID(),
             quantity: safeQuantity,
             locked: false,
             substitutions: [] // Garantindo contrato V3

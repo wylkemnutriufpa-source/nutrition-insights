@@ -17848,6 +17848,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sovereign_runtime_logs: {
+        Row: {
+          correlation_id: string | null
+          created_at: string | null
+          editor_version: string | null
+          event_type: string
+          id: string
+          message: string
+          metadata: Json | null
+          runtime_source: string
+          severity: string
+          snapshot_version: string | null
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string | null
+          editor_version?: string | null
+          event_type: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          runtime_source: string
+          severity: string
+          snapshot_version?: string | null
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string | null
+          editor_version?: string | null
+          event_type?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          runtime_source?: string
+          severity?: string
+          snapshot_version?: string | null
+        }
+        Relationships: []
+      }
       state_consistency_logs: {
         Row: {
           calculated_state:

@@ -6,6 +6,8 @@
  * fisiológicos sejam respeitados.
  */
 
+import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
+
 export interface PipelineTraceStep {
   stage: string;
   data: any;
@@ -64,12 +66,24 @@ export const ClinicalGuard = {
     const limit = limits[type] || limits.gram;
     
     if (quantity > limit.max) {
-      console.warn(`[ClinicalGuard] OVERFLOW DETECTED: ${name} (${quantity}${type}) exceeds max ${limit.max}. Clamping.`);
+      SovereignTelemetry.log({
+        runtime_source: 'ClinicalGuard',
+        event_type: 'missing_clinical_mass',
+        severity: 'warning',
+        message: `OVERFLOW DETECTED: ${name} (${quantity}${type}) exceeds max ${limit.max}. Clamping.`,
+        metadata: { quantity, limit: limit.max, type, name }
+      });
       return limit.max;
     }
     
     if (quantity < limit.min && quantity > 0) {
-      console.warn(`[ClinicalGuard] UNDERFLOW DETECTED: ${name} (${quantity}${type}) below min ${limit.min}. Clamping.`);
+      SovereignTelemetry.log({
+        runtime_source: 'ClinicalGuard',
+        event_type: 'missing_clinical_mass',
+        severity: 'info',
+        message: `UNDERFLOW DETECTED: ${name} (${quantity}${type}) below min ${limit.min}. Clamping.`,
+        metadata: { quantity, limit: limit.min, type, name }
+      });
       return limit.min;
     }
 
