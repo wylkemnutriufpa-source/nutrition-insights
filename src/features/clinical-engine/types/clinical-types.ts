@@ -31,6 +31,7 @@ export interface Food {
 export interface MealItem extends Food {
   instanceId: string;
   quantity: number; 
+  clinical_mass_g?: number; // SOBERANIA CLÍNICA: A massa real em gramas independente da unidade de exibição
   selectedUnit?: string;
   substitutions: Food[]; // Definido como obrigatório para consistência do contrato V3
   description?: string;
