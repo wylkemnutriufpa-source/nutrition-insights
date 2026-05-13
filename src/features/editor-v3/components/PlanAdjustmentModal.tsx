@@ -85,14 +85,14 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
     removeBeansOption: 'none'
   });
 
-  // Snapshot initial meals when opened and INITIALIZE TARGETS
+  // Snapshot initial meals ONLY ONCE when opened
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && initialMeals.length === 0) {
       const currentMealsClone = JSON.parse(JSON.stringify(meals));
       setInitialMeals(currentMealsClone);
       
-      // Inicializar com os totais atuais calculados (média diária)
-      // Isso evita que comece em 0g ou 14.000g
+      // Initialize params with CURRENT totals (average per day)
+      // This prevents starting at 0g or 14,000g
       setParams({
         proteinTarget: Math.round(originalTotals.protein) || Math.round(goalMetadata.goalProtein || 120),
         carbTarget: Math.round(originalTotals.carbs) || Math.round(goalMetadata.goalCarbs || 150),
@@ -101,8 +101,11 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
         removeCarbsMeals: ['Almoço', 'Jantar'],
         removeBeansOption: 'none'
       });
+    } else if (!isOpen) {
+      // Clear snapshot when closed to allow fresh snapshot next time
+      setInitialMeals([]);
     }
-  }, [isOpen, originalTotals, goalMetadata]);
+  }, [isOpen]); // Only react to isOpen changes to prevent loops with meals/originalTotals
 
   // Real-time preview: apply to initial snapshot
   useEffect(() => {
