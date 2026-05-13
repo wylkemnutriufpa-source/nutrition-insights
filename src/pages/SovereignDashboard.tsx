@@ -4,8 +4,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Shield, History, Activity, Info, AlertTriangle, ShieldAlert, RefreshCw } from 'lucide-react';
+import { 
+  AlertCircle, Shield, History, Activity, Info, 
+  AlertTriangle, ShieldAlert, RefreshCw, ScanSearch, 
+  Zodiac, Zap, Bomb, Ghost, Lock, Search 
+} from 'lucide-react';
 import { format } from 'date-fns';
+import { SovereignAuditScanner } from '@/lib/sovereign-audit-scanner';
+import { toast } from 'sonner';
 
 interface SovereignLog {
   id: string;
