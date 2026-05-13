@@ -229,6 +229,11 @@ export default function PatientMealPlan() {
             display_quantity: item.display_quantity || item.quantity,
             display_unit: item.display_unit || item.portionUnitLabel,
             clinical_mass_g: item.clinical_mass_g,
+            instanceId: item.instanceId,
+            blockId: item.blockId,
+            substitution_group_id: item.substitution_group_id || item.blockId,
+            correlation_id: item.correlation_id,
+            editor_version: 'v3',
             edit_metadata: {
               ...(item.edit_metadata || {}),
               display_quantity: item.display_quantity || item.quantity,
