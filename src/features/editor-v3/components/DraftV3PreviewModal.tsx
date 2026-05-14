@@ -182,7 +182,7 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
                             <h4 className="text-sm font-bold text-white uppercase truncate tracking-tight">{item.name}</h4>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-[10px] font-bold text-emerald-500/60 uppercase">{Math.round(item.kcal || 0)} kcal</span>
-                              <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">• {item.clinical_mass_g || item.quantity}{item.unit || 'g'}</span>
+                              <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">• {item.clinical_mass_g || item.quantity}{item.display_unit || item.portionUnitLabel || 'g'}</span>
                             </div>
                           </div>
 
@@ -195,7 +195,7 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
                                 className="w-16 h-full bg-transparent border-none text-center text-xs font-black p-0 focus-visible:ring-0"
                               />
                               <div className="px-3 border-l border-white/10 flex items-center justify-center bg-white/5">
-                                <span className="text-[9px] font-black text-white/30 uppercase">{item.unit || 'g'}</span>
+                                <span className="text-[9px] font-black text-white/30 uppercase">{item.display_unit || item.portionUnitLabel || 'g'}</span>
                               </div>
                             </div>
 
