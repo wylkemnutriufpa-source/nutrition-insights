@@ -66,6 +66,7 @@ import {
 } from 'lucide-react';
 import { safeGeneratePDF } from '../services/pdfService';
 import { type PremiumMealPlanPDFData, buildPremiumMealPlanHTML } from '@/lib/pdfExportPremium';
+import { generateV3PlainText } from '../services/plainTextService';
 import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 
 import PlanAdjustmentModal from './PlanAdjustmentModal';
