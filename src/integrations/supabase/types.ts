@@ -19836,6 +19836,7 @@ export type Database = {
           active: boolean | null
           carbs_base: number | null
           category: string | null
+          composition: Json | null
           created_at: string | null
           fats_base: number | null
           id: string
@@ -19853,6 +19854,7 @@ export type Database = {
           active?: boolean | null
           carbs_base?: number | null
           category?: string | null
+          composition?: Json | null
           created_at?: string | null
           fats_base?: number | null
           id?: string
@@ -19870,6 +19872,7 @@ export type Database = {
           active?: boolean | null
           carbs_base?: number | null
           category?: string | null
+          composition?: Json | null
           created_at?: string | null
           fats_base?: number | null
           id?: string

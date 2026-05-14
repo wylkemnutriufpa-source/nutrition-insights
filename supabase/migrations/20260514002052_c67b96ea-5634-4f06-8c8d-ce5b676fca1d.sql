@@ -1,0 +1,1 @@
+ALTER TABLE public.v3_library_items ADD COLUMN composition JSONB;
