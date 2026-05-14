@@ -2046,6 +2046,12 @@ const EditorV3Page = () => {
 
               <div className="flex items-center gap-3">
                 <Button 
+                  onClick={() => setShowControlledDelivery(true)}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest h-11 px-6 rounded-xl shadow-lg shadow-blue-600/20 gap-2 border-b-2 border-blue-800"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Entregar Manualmente
+                </Button>
+                <Button 
                   onClick={() => setV3LibraryTab('templates')}
                   className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-11 px-6 rounded-xl shadow-lg shadow-emerald-500/20 gap-2"
                 >
