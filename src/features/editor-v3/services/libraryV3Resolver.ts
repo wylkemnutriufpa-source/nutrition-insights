@@ -44,9 +44,9 @@ export class LibraryV3Resolver {
         *,
         images:v3_library_images(*)
       `)
-      .contains('meal_type', [context.mealSlot.toLowerCase()]) // Filtro estrito por tipo de refeição
+      .contains('meal_type', [context.mealSlot.toLowerCase()])
       .contains('objective_tags', [context.goal])
-      .eq('active', true);
+      .eq('active', true) as { data: LibraryV3Item[] | null, error: any };
 
     if (error || !items || items.length === 0) {
       console.warn('[LibraryV3Resolver] No library items found for cluster/context');

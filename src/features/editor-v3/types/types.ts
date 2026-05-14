@@ -33,6 +33,9 @@ export interface Food {
   ingredients?: any[];
   instructions?: string;
   isVisualLibraryItem?: boolean;
+  isVisualLibraryParent?: boolean; // V3: Define se este item governa a imagem da refeição
+  library_item_slug?: string;      // V3: Referência ao slug da biblioteca soberana
+  composition_metadata?: any;      // V3: Estrutura da refeição (ingredientes, pesos base)
   nutritionistId?: string;
 }
 
