@@ -1,4 +1,5 @@
 import type { Tables } from "@/integrations/supabase/types";
+import { SovereignTelemetry } from "./sovereignTelemetry";
 
 export type DisplayMealPlanItem = Tables<"meal_plan_items"> & {
   metadata?: Record<string, any> | null;
@@ -58,6 +59,40 @@ export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
   return true;
 }
 
+/**
+ * 🛡️ HIERARCHY INTEGRITY ASSERTIONS
+ * Garante que a soberania dos metadados de hierarquia seja respeitada.
+ */
+export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: string): void {
+  const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3";
+  
+  // 1. Regra de BlockId (Obrigatório em V3)
+  const blockId = (item as any).blockId || (item as any).edit_metadata?.blockId;
+  if (isV3 && !blockId) {
+    SovereignTelemetry.log({
+      runtime_source: `hierarchy_guard_${context}`,
+      event_type: 'missing_block_id',
+      severity: 'critical',
+      message: `HIERARCHY_GUARD: item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3.`,
+      metadata: { item_id: item.id, title: item.title, context }
+    });
+    // Não abortamos o render total para não quebrar a UI do paciente, 
+    // mas logamos como crítico para auditoria.
+  }
+
+  // 2. Regra de Is Primary vs Dashboard
+  // Se is_primary for falso, ele NUNCA deve ser o owner de um slot
+  if (item.is_primary === false && !item.substitution_group_id) {
+    SovereignTelemetry.log({
+      runtime_source: `hierarchy_guard_${context}`,
+      event_type: 'schema_violation',
+      severity: 'warning',
+      message: `HIERARCHY_GUARD: item substituto "${item.title}" sem substitution_group_id detectado como órfão.`,
+      metadata: { item_id: item.id, title: item.title, context }
+    });
+  }
+}
+
 export function sortPlanItems<T extends DisplayMealPlanItem>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     const aDay = a.day_of_week === 0 ? 7 : (a.day_of_week ?? 99);
@@ -75,6 +110,9 @@ function groupItems(items: DisplayMealPlanItem[]): GroupedMeal[] {
   const groups = new Map<string, DisplayMealPlanItem[]>();
 
   for (const item of sortPlanItems(items)) {
+    // 🛡️ ASSERT: Auditoria de integridade antes do agrupamento
+    assertHierarchyIntegrity(item, "groupItems");
+
     // 🛡️ ANTI-VAZAMENTO: Substituições órfãs (sem group_id) são ignoradas no dashboard principal.
     // Isso evita que itens de troca apareçam como se fossem refeições principais.
     if (item.is_primary === false && !item.substitution_group_id) continue;
@@ -219,8 +257,18 @@ export function buildWeeklyDisplayDays(items: DisplayMealPlanItem[]): Array<{ da
 }
 
 export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
+  // 🛡️ ASSERT: Auditoria em massa para o cálculo de macros
+  items.forEach(item => assertHierarchyIntegrity(item, "calculatePrimaryTotals"));
+
   const groups = dedupeGroups(groupItems(items));
-  const primaryItems = groups.map((group) => group.primary).filter(isPrimaryMealItem);
+  // Filtro reforçado: Apenas o item primário de cada grupo entra no cálculo
+  const primaryItems = groups.map((group) => group.primary).filter(item => {
+    // Soberania absoluta: Se is_primary for false, está fora.
+    if (item.is_primary === false) return false;
+    // Se for primário (ou nulo mas isPrimaryMealItem), está dentro.
+    return isPrimaryMealItem(item);
+  });
+
   return primaryItems.reduce(
     (acc, item) => ({
       calories: acc.calories + asNumber(item.calories_target ?? (item as any).metadata?.calories_target ?? (item as any).metadata?.calories),
@@ -234,5 +282,8 @@ export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
 
 export function buildPdfItemsForDailyPlan(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
   const dayItems = selectCanonicalDayItems(items, requestedDay);
+  // 🛡️ ASSERT: Auditoria antes de gerar PDF
+  dayItems.forEach(item => assertHierarchyIntegrity(item, "buildPdfItemsForDailyPlan"));
+  
   return dedupeGroups(groupItems(dayItems)).flatMap((group) => [group.primary, ...group.substitutions]);
 }
