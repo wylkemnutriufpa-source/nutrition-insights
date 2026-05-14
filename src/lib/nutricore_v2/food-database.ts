@@ -33,7 +33,7 @@ export const BASE_FOODS: Food[] = [
   // Carboidratos
   { id: "5", name: "Arroz Branco Cozido", category: "carb", protein_100g: 2.5, carb_100g: 28, fat_100g: 0.2, kcal_100g: 130, base_grams: 100, unit: "g" },
   { id: "6", name: "Batata Doce Cozida", category: "carb", protein_100g: 1.6, carb_100g: 20, fat_100g: 0.1, kcal_100g: 86, base_grams: 100, unit: "g" },
-  { id: "7", name: "Feijão Carioca Cozido", category: "carb", protein_100g: 4.8, carb_100g: 14, fat_100g: 0.5, kcal_100g: 76, base_grams: 100, unit: "g" },
+  { id: "7", name: "Feijão Carioca Cozido", category: "legume", protein_100g: 4.8, carb_100g: 14, fat_100g: 0.5, kcal_100g: 76, base_grams: 100, unit: "g" },
   { id: "8", name: "Aveia em Flocos", category: "carb", protein_100g: 14, carb_100g: 67, fat_100g: 8, kcal_100g: 394, base_grams: 30, unit: "g" },
   { id: "18", name: "Pão Francês", category: "carb", protein_100g: 8, carb_100g: 58, fat_100g: 3, kcal_100g: 300, base_grams: 50, unit: "unid (50g)" },
   { id: "23", name: "Pão Integral", category: "carb", protein_100g: 9, carb_100g: 48, fat_100g: 3, kcal_100g: 260, base_grams: 50, unit: "2 fatias (50g)" },
