@@ -230,14 +230,27 @@ export function processSmartTemplate(
       weeklyMeals.push(newMeal);
     });
 
-    return weeklyMeals;
+    return weeklyMeals.map(m => {
+      const score = calculateHumanMealScore(m, template.name, styleContract);
+      if (score.status === 'absurd') {
+        console.warn(`[SmartTemplate] Refeição semanal rejeitada por violação de estilo: ${m.name}`, score.reasons);
+      }
+      return m;
+    });
   }
 
   // Retorno padrão para dia único
-  return [{
+  const finalMeal = {
     id: makeInstanceId(),
     name: template.name,
     items: finalItems,
     time: slot === 'breakfast' ? "08:00" : (slot === 'lunch' ? "12:00" : (slot === 'dinner' ? "20:00" : "16:00"))
-  }];
+  };
+
+  const finalScore = calculateHumanMealScore(finalMeal, template.name, styleContract);
+  if (finalScore.status === 'absurd') {
+    console.warn(`[SmartTemplate] Refeição única rejeitada por violação de estilo: ${finalMeal.name}`, finalScore.reasons);
+  }
+
+  return [finalMeal];
 }
