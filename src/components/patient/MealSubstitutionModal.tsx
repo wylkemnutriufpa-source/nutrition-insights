@@ -58,10 +58,11 @@ function DiffBadge({ diff, unit }: { diff: number; unit: string }) {
 }
 
 export default function MealSubstitutionModal({
-  open, onOpenChange, mealTitle, mealPlanItemId, mealPlanId, patientId, onSubstitute, options = [],
+  open, onOpenChange, mealTitle, mealPlanItemId, mealPlanId, patientId, onSubstitute, options = [], mealSlot,
 }: MealSubstitutionModalProps) {
   const [selected, setSelected] = useState<{ original: FoodItem; replacement: FoodItem } | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const normalizedSlot = useMemo(() => normalizeSlot(mealSlot), [mealSlot]);
 
   const components: ComponentBlock[] = useMemo(() => {
     // 🛡️ SOBERANIA V3: Prioridade total para as opções definidas pelo nutricionista.
