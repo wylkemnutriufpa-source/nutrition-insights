@@ -141,10 +141,10 @@ export class WeeklyFatigueGuard {
     for (const item of meal.items) {
       const group = getFoodGroup(item.name);
       
-      // Regra: Não repetir proteína dominante > 3x na semana (ex: frango todo dia)
+      // Regra: Não repetir proteína dominante > 2x na semana (ex: frango todo dia)
       if (group?.startsWith('proteina')) {
         const count = this.dominantProteins[group] || 0;
-        if (count >= 3) {
+        if (count >= 2) {
           return { canAdd: false, reason: `Excesso de repetição da proteína: ${group}` };
         }
       }
