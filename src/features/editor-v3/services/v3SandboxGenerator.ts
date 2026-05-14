@@ -9,6 +9,7 @@ export interface SandboxRequest {
   patientContext: Partial<PatientContext>;
   mealSlots?: MealSlot[];
   templateSlug?: string;
+  isWeekly?: boolean;
 }
 
 /**
