@@ -240,6 +240,9 @@ function roundMacro(value: unknown): number {
 }
 
 function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
+  // 🛡️ ASSERT: Auditoria de hierarquia antes de processar PDF
+  items.forEach(item => assertHierarchyIntegrity(item as unknown as DisplayMealPlanItem, "pdfExportPremium_items"));
+
   // 🛡️ SOBERANIA V3: Filtra apenas itens que são primários
   return items.filter(item => item.is_primary === true);
 }
