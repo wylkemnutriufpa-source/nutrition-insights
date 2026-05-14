@@ -683,7 +683,7 @@ function PatientGrid({ patients, onOpenResumo, onNavigate, toggleStatus, setAssi
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(320px,1fr))]">
       {sorted.map((p, idx) => (
         <PatientCard key={p.id} p={p} idx={idx} onOpenResumo={onOpenResumo} onNavigate={onNavigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
