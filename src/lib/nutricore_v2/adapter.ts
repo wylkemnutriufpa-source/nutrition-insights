@@ -168,7 +168,7 @@ export class NutriCoreV3Adapter {
             {
               restrictions: context.restrictions,
               preferences: dayPrefs,
-              seed: daySeed
+              seed: mealSeed
             }
           );
 

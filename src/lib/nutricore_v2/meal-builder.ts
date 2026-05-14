@@ -52,6 +52,17 @@ export function buildMeal(
 
   let allowedDb = foodDb.filter(f => !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase())));
 
+  // 🛡️ CLINICAL BREAKFAST GUARD: Strictly exclude heavy proteins/lunch items from breakfast
+  if (isBreakfast) {
+    allowedDb = allowedDb.filter(f => {
+      const n = f.name.toLowerCase();
+      const isHeavy = n.includes("arroz") || n.includes("feijão") || n.includes("carne") || 
+                      n.includes("peixe") || n.includes("frango") || n.includes("tilápia") ||
+                      n.includes("estrogonoff") || n.includes("macarrão");
+      return !isHeavy;
+    });
+  }
+
   const findRandom = (db: Food[], predicate: (f: Food) => boolean) => {
     const matches = db.filter(predicate);
     if (matches.length === 0) return undefined;
