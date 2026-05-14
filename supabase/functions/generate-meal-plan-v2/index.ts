@@ -395,6 +395,18 @@ Deno.serve(async (req) => {
       planId = newPlan.id;
     }
 
+    // Idempotência: se reusamos um plano existente, limpa itens antigos antes de inserir.
+    // Evita acúmulo/duplicação em re-gerações sucessivas.
+    if (existing_plan_id) {
+      const { error: delErr } = await supabase
+        .from("meal_plan_items")
+        .delete()
+        .eq("meal_plan_id", planId);
+      if (delErr) {
+        console.warn("[generate-meal-plan-v2] dedupe-delete warn:", delErr.message);
+      }
+    }
+
     const itemsToInsert = built.meals.map((m) => ({
       meal_plan_id: planId,
       tenant_id: link.tenant_id,
