@@ -139,6 +139,9 @@ export function processSmartTemplate(
     const slot = normalizeSlot(template.name) ?? normalizeSlot((template as any).meal_type) ?? null;
 
     days.forEach((day, index) => {
+      // O day_of_week segue o padrão: Segunda=1, Terça=2, ..., Sábado=6, Domingo=0
+      const currentDayOfWeek = DAY_ORDER[index];
+
       // Para cada dia, tentamos trocar um item por uma de suas substituições
       const dayItems = finalItems.map(item => {
         if (index > 0 && item.substitutions && item.substitutions.length > 0) {
@@ -186,8 +189,9 @@ export function processSmartTemplate(
         id: makeInstanceId(),
         name: `${template.name} (${day})`,
         items: dayItems,
-        time: "08:00" // Default
-      });
+        time: "08:00", // Default
+        day_of_week: currentDayOfWeek, // 🛡️ SOBERANIA: Define explicitamente o dia da semana
+      } as any);
     });
 
     return weeklyMeals;
