@@ -1,7 +1,8 @@
-// PDF Export Premium V3 - Sovereign Passive Renderer
+// PDF Export V3 Soberano - Passive Renderer
+// ESTA VERSÃO É 100% BASEADA EM SNAPSHOTS V3
 
 /**
- * Premium Meal Plan PDF Export — FitJourney v2.0
+ * Premium Meal Plan PDF Export — FitJourney V3 Soberano
  */
 
 interface MealPlanPDFItem {
