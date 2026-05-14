@@ -8,6 +8,7 @@ import {
   FREE_PORTION_MAX_GRAMS,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
+import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
 
 export interface LibraryV3Item {
   id: string;
@@ -164,15 +165,18 @@ export class LibraryV3Resolver {
       })
       .filter(Boolean) as MealItem[];
 
+    // 🛡️ HUMAN_SCORE_GUARD: Rejeita refeições que não parecem humanas.
+    const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot);
+    if (humanResult.status === 'absurd') {
+      console.warn(`[LibraryV3Resolver] REJECTED ABSURD MEAL: ${baseItem.title}`, humanResult.reasons);
+      // Se tivermos mais candidatos, poderíamos tentar o próximo, mas para simplificar
+      // vamos logar e retornar null para o motor tentar outro cluster ou fallback.
+      return null;
+    }
+
     // 6. Montagem da Refeição
     return {
-      id: crypto.randomUUID(),
-      name: baseItem.title,
-      items: scaledItems,
-      imageUrl: imageUrl || '',
-      imageSource: 'auto',
-      time: '00:00' // Será preenchido pelo distribuidor
-    };
+      // ... keep existing code
   }
 
   private static generateHash(str: string): number {
