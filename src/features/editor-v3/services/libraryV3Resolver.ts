@@ -95,6 +95,7 @@ export class LibraryV3Resolver {
         portionLabel: 'g',
         portionUnitLabel: 'g',
         isVisualLibraryItem: true,
+        portionMode: baseItem.portion_mode,
         library_item_slug: baseItem.slug,
         isVisualLibraryParent: comp === composition[0], // O primeiro item costuma ser o principal
         substitutions: []
