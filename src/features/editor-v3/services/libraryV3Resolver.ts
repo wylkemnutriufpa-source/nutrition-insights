@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Meal, MealItem } from "../types";
+import { Meal, MealItem, TemplateStyleContract } from "../types";
 import { clampScaleFactor, clampItemGrams, clampItemKcal } from "@/lib/macroSafety";
 import {
   isFoodAllowedInSlot,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
 import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+import { getStyleContract } from "@/lib/templateStyles";
 
 export interface LibraryV3Item {
   id: string;
@@ -41,9 +42,11 @@ export class LibraryV3Resolver {
   static async resolveMealStructure(
     clusterSlug: string, 
     targetKcal: number, 
-    context: { goal: string; planId: string; day: string; mealSlot: string; integrityThreshold?: number }
+    context: { goal: string; planId: string; day: string; mealSlot: string; integrityThreshold?: number; family?: string; styleContract?: TemplateStyleContract }
   ): Promise<Meal | null> {
     console.log(`[LibraryV3Resolver] Resolving structure for cluster: ${clusterSlug} (Target: ${targetKcal}kcal)`);
+
+    const styleContract = context.styleContract || getStyleContract(context.family, context.mealSlot);
 
     const threshold = context.integrityThreshold || 1.5; // Limite padrão de expansão de porção
 
@@ -171,7 +174,7 @@ export class LibraryV3Resolver {
       .filter(Boolean) as MealItem[];
 
     // 🛡️ HUMAN_SCORE_GUARD: Rejeita refeições que não parecem humanas.
-    const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot);
+    const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot, styleContract);
     
     // Log de Telemetria Clínica (Rejeições)
     if (humanResult.status === 'absurd') {

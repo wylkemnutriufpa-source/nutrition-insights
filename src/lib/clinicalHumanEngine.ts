@@ -5,7 +5,7 @@
  * das refeições, além da matemática nutricional.
  */
 
-import { Meal, MealItem } from "@/features/editor-v3/types";
+import { Meal, MealItem, TemplateStyleContract } from "@/features/editor-v3/types";
 import { SubstitutionGroup, getFoodGroup } from "./substitutionGroups";
 import { MealSlot, normalizeSlot } from "./mealTypeIntegrity";
 
@@ -52,7 +52,11 @@ export interface HumanScoreResult {
 /**
  * Calcula o score de humanidade de uma refeição.
  */
-export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string): HumanScoreResult {
+export function calculateHumanMealScore(
+  meal: Partial<Meal>, 
+  slotInput: string,
+  styleContract?: TemplateStyleContract
+): HumanScoreResult {
   const slot = normalizeSlot(slotInput);
   if (!slot) return { score: 100, status: 'human', reasons: [] };
 
@@ -153,6 +157,43 @@ export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string):
     if (!hasProtein) {
       score -= 50;
       reasons.push('Violação Clínica: Refeição principal sem fonte de proteína');
+    }
+  }
+
+  // 4.1. Validação de Contrato de Estilo (Soberania de Identidade)
+  if (styleContract) {
+    items.forEach(item => {
+      const group = getFoodGroup(item.name);
+      
+      // Bloqueio por Grupo Proibido no Contrato
+      if (group && styleContract.forbidden_groups?.includes(group)) {
+        score -= 50;
+        reasons.push(`Contrato Style: Grupo ${group} proibido neste template (${item.name})`);
+      }
+
+      // Bloqueio por Keyword Proibida
+      if (styleContract.forbidden_keywords?.some(k => new RegExp(`\\b${k}\\b`, 'i').test(item.name))) {
+        score -= 60;
+        reasons.push(`Contrato Style: Alimento viola a identidade do template: ${item.name}`);
+      }
+
+      // Check de Densidade
+      if (styleContract.meal_density_profile === 'high' && items.length < 2 && !getFoodGroup(item.name)?.startsWith('proteina')) {
+        score -= 20;
+        reasons.push('Contrato Style: Refeição muito leve para um template de alta densidade');
+      }
+    });
+
+    // Check de Grupos Obrigatórios/Permitidos (se especificado)
+    if (styleContract.allowed_groups && styleContract.allowed_groups.length > 0) {
+      const hasAllowed = items.some(item => {
+        const group = getFoodGroup(item.name);
+        return group && styleContract.allowed_groups?.includes(group);
+      });
+      if (!hasAllowed) {
+        score -= 30;
+        reasons.push('Contrato Style: Refeição não contém nenhum grupo característico do template');
+      }
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { V3DietTemplate, KcalProfile } from "../types/types";
+import { getStyleContract } from "@/lib/templateStyles";
 
 const KCAL_PROFILES: KcalProfile[] = [
   { kcal: 1200, meal_intensity: 'low', satiety_level: 4, protein_density: 'standard' },
@@ -21,6 +22,7 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
     template_type: 'visual_v3',
     objective: 'hipertrofia',
     family: 'hipertrofia',
+    style_contract: getStyleContract('hipertrofia') || undefined,
     meal_distribution: [
       { slot: 'cafe_da_manha', time: '08:00' },
       { slot: 'almoço', time: '12:30' },
@@ -48,6 +50,7 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
     template_type: 'visual_v3',
     objective: 'emagrecimento',
     family: 'emagrecimento',
+    style_contract: getStyleContract('emagrecimento') || undefined,
     meal_distribution: [
       { slot: 'cafe_da_manha', time: '08:30' },
       { slot: 'almoço', time: '13:00' },

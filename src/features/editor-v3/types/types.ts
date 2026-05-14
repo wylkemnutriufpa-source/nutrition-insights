@@ -139,7 +139,22 @@ export interface KcalProfile {
   };
 }
 
-export type TemplateFamily = 'hipertrofia' | 'emagrecimento' | 'performance' | 'saude_geral';
+export type TemplateFamily = 'hipertrofia' | 'emagrecimento' | 'performance' | 'saude_geral' | 'low_carb';
+
+export interface TemplateStyleContract {
+  allowed_clusters?: string[];
+  forbidden_clusters?: string[];
+  allowed_groups?: string[];
+  forbidden_groups?: string[];
+  forbidden_keywords?: string[];
+  meal_density_profile?: 'low' | 'medium' | 'high';
+  substitution_policy?: 'strict' | 'loose' | 'clinical_only';
+  visual_style?: string;
+  repetition_policy?: {
+    max_weekly_repeats?: number;
+    protein_diversity_required?: boolean;
+  };
+}
 
 export interface V3DietTemplate {
   id: string;
@@ -149,6 +164,7 @@ export interface V3DietTemplate {
   template_type: string;
   objective: string;
   family?: TemplateFamily;
+  style_contract?: TemplateStyleContract; // NOVO: Soberania de Identidade Clínica
   meal_distribution: Array<{ slot: string; time: string }>;
   cluster_map: Record<string, string>;
   kcal_profiles: number[] | KcalProfile[];

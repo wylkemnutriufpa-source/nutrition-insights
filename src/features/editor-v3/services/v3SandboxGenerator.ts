@@ -122,7 +122,9 @@ export class V3SandboxGenerator {
             planId,
             day: dayId,
             mealSlot: slot.type,
-            integrityThreshold: template?.meal_integrity_threshold
+            integrityThreshold: template?.meal_integrity_threshold,
+            family: template?.family,
+            styleContract: template?.style_contract
           }
         );
 

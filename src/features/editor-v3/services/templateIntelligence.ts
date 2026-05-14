@@ -1,4 +1,4 @@
-import { Meal, MealItem, Food, MealTemplate } from "../types";
+import { Meal, MealItem, Food, MealTemplate, TemplateStyleContract } from "../types";
 import { normalizeFood } from "../utils/normalization";
 import { calculateItemMacros } from "@/lib/nutricore_v2/helpers";
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
@@ -9,7 +9,8 @@ import {
   normalizeSlot,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
-import { WeeklyFatigueGuard } from "@/lib/clinicalHumanEngine";
+import { WeeklyFatigueGuard, calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+import { getStyleContract } from "@/lib/templateStyles";
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -25,6 +26,7 @@ export interface TemplateAdjustmentParams {
   goalFat?: number;
   goalCalories?: number;
   isWeeklyMode?: boolean;
+  styleContract?: TemplateStyleContract;
 }
 
 /**
@@ -41,6 +43,8 @@ export function processSmartTemplate(
   // 🛡️ REGRAS DE TEMPLATE: O slot agora é detectado com maior rigor para evitar drift.
   const templateName = template.name.toLowerCase();
   const slot = normalizeSlot(templateName) || 'breakfast';
+
+  const styleContract = params.styleContract || getStyleContract((template as any).family, slot);
 
   // 1. Plotagem inicial dos itens do template com HUMAN_SCORE_GUARD
   const baseItems: MealItem[] = template.items.map((f) => {
@@ -166,11 +170,22 @@ export function processSmartTemplate(
         if (index > 0 && item.substitutions && item.substitutions.length > 0) {
           // 🛡️ Filtra apenas substituições válidas para o slot
           const validSubs = slot
-            ? item.substitutions.filter((s: any) =>
-                isFoodAllowedInSlot(s.name || "", getFoodGroup(s.name || ""), slot, {
+            ? item.substitutions.filter((s: any) => {
+                // Check basic slot integrity
+                const isAllowed = isFoodAllowedInSlot(s.name || "", getFoodGroup(s.name || ""), slot, {
                   source: "templateIntelligence.weeklyVariation",
-                }),
-              )
+                });
+                if (!isAllowed) return false;
+
+                // Check template style contract
+                if (styleContract) {
+                  const group = getFoodGroup(s.name);
+                  if (group && styleContract.forbidden_groups?.includes(group)) return false;
+                  if (styleContract.forbidden_keywords?.some(k => new RegExp(`\\b${k}\\b`, 'i').test(s.name))) return false;
+                }
+                
+                return true;
+              })
             : item.substitutions;
 
           if (validSubs.length === 0) {
@@ -226,14 +241,27 @@ export function processSmartTemplate(
       weeklyMeals.push(newMeal);
     });
 
-    return weeklyMeals;
+    return weeklyMeals.map(m => {
+      const score = calculateHumanMealScore(m, template.name, styleContract);
+      if (score.status === 'absurd') {
+        console.warn(`[SmartTemplate] Refeição semanal rejeitada por violação de estilo: ${m.name}`, score.reasons);
+      }
+      return m;
+    });
   }
 
   // Retorno padrão para dia único
-  return [{
+  const finalMeal = {
     id: makeInstanceId(),
     name: template.name,
     items: finalItems,
     time: slot === 'breakfast' ? "08:00" : (slot === 'lunch' ? "12:00" : (slot === 'dinner' ? "20:00" : "16:00"))
-  }];
+  };
+
+  const finalScore = calculateHumanMealScore(finalMeal, template.name, styleContract);
+  if (finalScore.status === 'absurd') {
+    console.warn(`[SmartTemplate] Refeição única rejeitada por violação de estilo: ${finalMeal.name}`, finalScore.reasons);
+  }
+
+  return [finalMeal];
 }
