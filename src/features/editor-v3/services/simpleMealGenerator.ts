@@ -180,13 +180,12 @@ export class SimpleMealGenerator {
     return {
       id: crypto.randomUUID(),
       name,
-      type,
       items,
       time: this.getDefaultTime(type),
       day_of_week: day !== null ? day : undefined,
       imageUrl: "",
       imageSource: "auto"
-    };
+    } as Meal;
   }
 
   private static getSimpleSubstitutions(food: any, quantity: number, pool: any[]): any[] {
