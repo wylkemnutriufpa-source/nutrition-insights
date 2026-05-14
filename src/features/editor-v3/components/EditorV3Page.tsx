@@ -647,22 +647,24 @@ const EditorV3Page = () => {
   }, [v3LibrarySearch, v3LibraryTab, v3LibraryMealFilter]);
 
   const handleApplyV3Profile = async (kcal: number, isWeekly: boolean = false) => {
-    if (!selectedV3Template) return;
-    
     setIsGeneratingGlobal(true);
     try {
       const modeText = isWeekly ? 'Semanal' : 'Diário';
-      toast.loading(`Gerando rascunho V3 ${modeText}: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
+      toast.loading(`Gerando plano V3 ${modeText} (${kcal} kcal)...`, { id: 'v3-gen' });
       
-      const v3Meals = await V3SandboxGenerator.generateDraft({
-        templateSlug: selectedV3Template.slug,
-        isWeekly,
-        patientContext: {
-          ...patientContext,
-          calories_target: kcal,
-          goal: selectedV3Template.objective
-        }
-      });
+      const context = {
+        ...patientContext,
+        calories_target: kcal,
+        id: patientId || 'sandbox',
+        name: patientContext?.name || 'Paciente',
+        goal: patientContext?.goal || 'maintenance',
+        weight: patientContext?.weight || 70,
+        height: patientContext?.height || 170,
+        restrictions: patientContext?.restrictions || [],
+        preferences: patientContext?.preferences || []
+      };
+
+      const v3Meals = SimpleMealGenerator.generatePlan(context as any, isWeekly);
 
       if (v3Meals && v3Meals.length > 0) {
         setV3DraftMeals(v3Meals);
@@ -670,7 +672,7 @@ const EditorV3Page = () => {
         toast.dismiss('v3-gen');
       }
     } catch (err: any) {
-      console.error('[V3-UI] Error generating V3 draft:', err);
+      console.error('[V3-UI] Error generating V3 plan:', err);
       toast.error(`Erro ao gerar plano V3: ${err.message}`, { id: 'v3-gen' });
     } finally {
       setIsGeneratingGlobal(false);
