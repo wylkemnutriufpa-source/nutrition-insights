@@ -1,6 +1,7 @@
 
 import { Meal, MealItem, Food } from '../types';
 import { isProtein, isCarb, isVegetable, isFat, calculateItemMacros, getFoodCategory } from '@/lib/nutricore_v2/helpers';
+import { normalizeSlot } from '@/lib/mealTypeIntegrity';
 import { BASE_FOODS } from '@/lib/nutricore_v2/food-database';
 import { clampScaleFactor, clampItemGrams, clampItemKcal } from '@/lib/macroSafety';
 
@@ -28,11 +29,11 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
   // 4. Remove Beans
   if (params.removeBeansOption !== 'none') {
     newMeals = newMeals.map(meal => {
-      const mealName = meal.name.toLowerCase();
+      const slot = normalizeSlot(meal.name);
       const shouldRemove = 
         params.removeBeansOption === 'total' || 
-        (params.removeBeansOption === 'almoco' && mealName.includes('almoço')) ||
-        (params.removeBeansOption === 'jantar' && mealName.includes('jantar'));
+        (params.removeBeansOption === 'almoco' && slot === 'lunch') ||
+        (params.removeBeansOption === 'jantar' && slot === 'dinner');
 
       if (shouldRemove) {
         return {
