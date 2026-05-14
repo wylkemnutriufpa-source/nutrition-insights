@@ -72,7 +72,7 @@ export interface PromoteResult {
  */
 export async function promoteDraftToMealPlan(
   draft: DraftRecord,
-  options?: { title?: string }
+  options?: { title?: string, v3_sandbox_delivery?: boolean }
 ): Promise<PromoteResult> {
   // 🛡️ Blindagem: Detectar rastro de motores legados
   assertSovereignRuntime("promoteDraftToMealPlan");
