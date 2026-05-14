@@ -78,6 +78,7 @@ import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
 import { V3DietTemplate } from '../types/types';
+import { calculateHumanMealScore } from '@/lib/clinicalHumanEngine';
 
 
 
@@ -2113,8 +2114,19 @@ const EditorV3Page = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {dayMeals.map((meal, mIdx) => (
-                          <Card key={`${day}-${meal.id}-${mIdx}`} className="bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group">
-                            {meal.imageUrl && (
+                          const humanScore = calculateHumanMealScore(meal, meal.name);
+                          const isAbsurd = humanScore.status === 'absurd';
+
+                          return (
+                            <Card key={`${day}-${meal.id}-${mIdx}`} className={cn(
+                              "bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group",
+                              isAbsurd && "border-rose-500/50 bg-rose-500/5"
+                            )}>
+                              {isAbsurd && (
+                                <div className="absolute top-4 left-4 z-10">
+                                  <Badge variant="destructive" className="animate-pulse">❌ Violação Clínica</Badge>
+                                </div>
+                              )}
                               <div className="relative w-full h-32 overflow-hidden">
                                 <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 to-transparent opacity-60" />
