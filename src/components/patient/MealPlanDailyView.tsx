@@ -461,14 +461,14 @@ const MealItemCard = memo(function MealItemCard({
                   ))}
                 </div>
               )}
-              {!isBasic && (
+              {!isBasic && (item.metadata?.substitution_count > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}
                   className="flex items-center gap-1.5 mt-1 px-3 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary/10 transition-all w-full justify-center shadow-sm"
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5" />
-                  Trocar Opção
+                  Trocar Opção ({item.metadata?.substitution_count || (item as any).edit_metadata?.substitution_count})
                 </button>
               )}
             </div>
