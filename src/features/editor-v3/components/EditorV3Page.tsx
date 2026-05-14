@@ -2311,9 +2311,12 @@ const EditorV3Page = () => {
                   </div>
                 )}
               </div>
-            </ScrollArea>
-          </Card>
+            </div>
+          </ScrollArea>
         </aside>
+
+        <ScrollArea className="flex-1 px-8 pt-8 pb-32">
+
 
         <div className="space-y-12">
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
