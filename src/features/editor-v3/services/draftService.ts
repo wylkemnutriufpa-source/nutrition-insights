@@ -98,12 +98,20 @@ export async function loadOrCreateDraft(
     // Silently ignore 409/conflicts in logs
   }
 
-  // 1. Tentar encontrar rascunho ativo ou último promovido para evitar "plano sumiu"
+  // 1. Tentar encontrar rascunho ativo ou último promovido (Busca Híbrida: profile_id ou user_id)
+  const { data: profilesRes } = await supabase
+    .from('profiles')
+    .select('id, user_id')
+    .or(`id.eq.${patientId},user_id.eq.${patientId}`)
+    .maybeSingle();
+
+  const patientIds = profilesRes ? [profilesRes.id, profilesRes.user_id] : [patientId];
+
   const { data: existing, error: findErr } = await supabase
     .from('v3_drafts' as any)
     .select('*')
     .eq('nutritionist_id', nutritionistId)
-    .eq('patient_id', patientId)
+    .in('patient_id', patientIds)
     .in('draft_status', ['editing', 'promoted'])
     .order('updated_at', { ascending: false })
     .limit(1)
