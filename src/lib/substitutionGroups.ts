@@ -342,6 +342,7 @@ export const SUBSTITUTION_GROUP_LABELS: Record<SubstitutionGroup, string> = {
   "proteina-leve": "🍳 Proteína Leve",
   "proteina-peixe": "🐟 Peixes & Frutos do Mar",
   "carbo-almoco": "🍚 Carboidrato Almoço",
+  "carbo-legume": "🌱 Leguminosas",
   "carbo-tuberoso": "🥔 Tubérculos",
   "carbo-cereal": "🌾 Pães & Cereais",
   "cafe-classico": "☕ Café da Manhã",
