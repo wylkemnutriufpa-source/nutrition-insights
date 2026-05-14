@@ -204,8 +204,12 @@ export async function promoteDraftToMealPlan(
         console.warn(`[IDENTITY-RECOVERY] Item ID "${item.instanceId}" corrigido para UUID soberano.`);
       }
 
+      // 🛡️ V3 IMAGE SOVEREIGNTY: paciente precisa enxergar a imagem.
+      // Prioridade: imagem do item → imagem da refeição (meal.imageUrl).
+      const itemImageUrl = (item as any).imageUrl || meal.imageUrl || null;
+
       itemsRows.push({
-        id: itemInstanceId, // 🛡️ FASE 4: Identidade Soberana
+        id: itemInstanceId,
         meal_plan_id: plan.id,
         tenant_id: draft.tenant_id,
         meal_type: mealType,
@@ -215,6 +219,7 @@ export async function promoteDraftToMealPlan(
         protein_target: Number((cleanMacros.protein || 0).toFixed(1)),
         carbs_target: Number((cleanMacros.carbs || 0).toFixed(1)),
         fat_target: Number((cleanMacros.fat || 0).toFixed(1)),
+        image_url: itemImageUrl,
         item_origin: 'manual',
         is_manually_edited: true,
         is_locked: (item as any).locked || false,
@@ -222,6 +227,8 @@ export async function promoteDraftToMealPlan(
         substitution_group_id: groupId,
         edit_metadata: {
           ...item,
+          imageUrl: itemImageUrl,
+          mealImageUrl: meal.imageUrl || null,
           display_quantity: item.quantity,
           display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit
         }
