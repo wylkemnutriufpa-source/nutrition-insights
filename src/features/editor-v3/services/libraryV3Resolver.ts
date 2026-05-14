@@ -2,6 +2,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Meal, MealItem } from "../types";
 import { clampScaleFactor, clampItemGrams, clampItemKcal } from "@/lib/macroSafety";
+import {
+  isFoodAllowedInSlot,
+  isFreePortionFood,
+  FREE_PORTION_MAX_GRAMS,
+} from "@/lib/mealTypeIntegrity";
+import { getFoodGroup } from "@/lib/substitutionGroups";
 
 export interface LibraryV3Item {
   id: string;
