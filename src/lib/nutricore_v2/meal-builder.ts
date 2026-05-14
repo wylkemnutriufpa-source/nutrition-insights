@@ -58,6 +58,17 @@ export function buildMeal(
       const n = f.name.toLowerCase();
       const isHeavy = n.includes("arroz") || n.includes("feijão") || n.includes("carne") || 
                       n.includes("peixe") || n.includes("frango") || n.includes("tilápia") ||
+                      n.includes("estrogonoff") || n.includes("macarrão") || n.includes("lentilha");
+      return !isHeavy;
+    });
+  }
+
+  // 🛡️ CLINICAL BREAKFAST GUARD: Strictly exclude heavy proteins/lunch items from breakfast
+  if (isBreakfast) {
+    allowedDb = allowedDb.filter(f => {
+      const n = f.name.toLowerCase();
+      const isHeavy = n.includes("arroz") || n.includes("feijão") || n.includes("carne") || 
+                      n.includes("peixe") || n.includes("frango") || n.includes("tilápia") ||
                       n.includes("estrogonoff") || n.includes("macarrão");
       return !isHeavy;
     });
