@@ -6,6 +6,7 @@
  */
 
 import { FOOD_DATABASE, type FoodItem } from "@/components/meals/FoodAutocomplete";
+import { isFoodAllowedInSlot } from "./mealTypeIntegrity";
 
 // ── Substitution Group Definitions ──
 export type SubstitutionGroup =
