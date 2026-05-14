@@ -60,6 +60,7 @@ export interface SnapshotItem {
   clinical_mass_g: number | null;
   display_quantity: number | null;
   display_unit: string | null;
+  block_id: string | null;
 }
 
 export interface SnapshotMeal {
