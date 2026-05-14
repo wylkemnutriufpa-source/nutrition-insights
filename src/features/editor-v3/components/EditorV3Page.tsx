@@ -2318,6 +2318,7 @@ const EditorV3Page = () => {
 
 
 
+
         <div className="space-y-12">
           {(() => { if (process.env.NODE_ENV === 'development') console.log('[V3-UI] Rendering meals count:', meals.length); return null; })()}
           
