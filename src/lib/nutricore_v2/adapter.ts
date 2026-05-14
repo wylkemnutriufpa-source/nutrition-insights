@@ -119,9 +119,9 @@ export class NutriCoreV3Adapter {
       const loops = isWeekly ? 7 : 1;
       const allGeneratedMeals: V3Meal[] = [];
 
-      const PROTEIN_ROTATION = ["Frango", "Tilápia", "Carne", "Ovo"];
+      const PROTEIN_ROTATION = ["Frango", "Patinho", "Sobrecoxa", "Peixe Branco"];
       const CARB_ROTATION = ["Arroz", "Batata Doce", "Macarrão", "Mandioca"];
-      const BREAKFAST_ROTATION = ["Pão", "Tapioca", "Cuscuz"];
+      const BREAKFAST_ROTATION = ["Pão Integral", "Tapioca", "Cuscuz", "Aveia"];
 
       for (let dayIdx = 0; dayIdx < loops; dayIdx++) {
         const currentDayOfWeek = dayIdx + 1; // 1-7
@@ -130,10 +130,13 @@ export class NutriCoreV3Adapter {
         }
 
         // Criar preferências rotativas para este dia específico
+        // Criar preferências rotativas contextuais
+        const dayProteins = ["Frango", "Carne", "Peixe", "Ovo"];
+        const dayCarbs = ["Arroz", "Batata", "Macarrão", "Mandioca"];
+        
         const dayPrefs = [
-          PROTEIN_ROTATION[dayIdx % PROTEIN_ROTATION.length],
-          CARB_ROTATION[dayIdx % CARB_ROTATION.length],
-          BREAKFAST_ROTATION[dayIdx % BREAKFAST_ROTATION.length],
+          dayProteins[dayIdx % dayProteins.length],
+          dayCarbs[dayIdx % dayCarbs.length],
           ...(context.preferences || [])
         ];
 
