@@ -142,9 +142,12 @@ export class LibraryV3Resolver {
         const quantity = clampItemGrams(rawQty);
         const macroScale = isFree ? quantity / (baseGrams || 100) : safeScale;
 
+        const instanceId = crypto.randomUUID();
         return {
           id: baseItem.id,
-          instanceId: crypto.randomUUID(),
+          instanceId: instanceId,
+          blockId: instanceId, // 🛡️ SOBERANIA: Cada componente é seu próprio bloco primário
+          substitution_group_id: instanceId,
           name: comp.name,
           kcal: clampItemKcal(Math.round(comp.kcal * macroScale)),
           protein: Math.round(comp.protein * macroScale * 10) / 10,
@@ -156,10 +159,11 @@ export class LibraryV3Resolver {
           portionValue: 100,
           portionLabel: 'g',
           portionUnitLabel: 'g',
+          is_primary: true, // 🛡️ REFEIÇÃO GERADA É SEMPRE PRIMÁRIA INICIALMENTE
           isVisualLibraryItem: true,
           portionMode: isFree ? 'free' : baseItem.portion_mode,
           library_item_slug: baseItem.slug,
-          isVisualLibraryParent: comp === composition[0], // O primeiro item costuma ser o principal
+          isVisualLibraryParent: comp === composition[0], 
           substitutions: []
         } as any;
       })
