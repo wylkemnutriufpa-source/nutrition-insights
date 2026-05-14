@@ -829,20 +829,30 @@ export const useEditorState = create<EditorState>()(
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
 
-        // No V3, se tivermos contexto do paciente, priorizamos as metas calculadas pelo NutriCore
+      generateMeal: async (mealId, goal, baseCalories = 2000) => {
+        const { meals, patientContext, patientId } = get();
+        const meal = meals.find(m => m.id === mealId);
+        if (!meal) return;
+
         const finalCalories = patientContext?.calories_target || baseCalories;
         const finalGoal = patientContext?.goal || goal;
 
-        const newItems = await generateMealWithEngine(
-          meal, 
-          finalGoal, 
-          finalCalories, 
-          availableFoods, 
-          patientContext?.protocol_type || 'default_v3',
-          patientContext || undefined
-        );
+        const context = {
+          ...patientContext,
+          calories_target: finalCalories,
+          id: patientId || 'sandbox',
+          name: patientContext?.name || 'Paciente',
+          goal: finalGoal,
+          weight: patientContext?.weight || 70,
+          height: patientContext?.height || 170,
+          restrictions: patientContext?.restrictions || [],
+          preferences: patientContext?.preferences || []
+        };
 
-        // PARTE 1 - Imagem correspondente para refeição avulsa
+        const allGenerated = SimpleMealGenerator.generatePlan(context as any, false);
+        const sourceMeal = allGenerated.find(m => m.name === meal.name) || allGenerated[0];
+        const newItems = sourceMeal.items;
+
         const bestImage = await getBestMealImage(meal.name, newItems);
         
         set((state) => ({
