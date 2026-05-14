@@ -268,7 +268,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Button
               variant="outline"
               size="sm"
-              className="hidden lg:flex items-center gap-2 h-9 border-border/60 hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all px-4"
+              className="hidden md:flex items-center gap-2 h-9 border-border/60 hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all px-4"
               onClick={openCommandPalette}
             >
               <Search className="w-4 h-4" />
