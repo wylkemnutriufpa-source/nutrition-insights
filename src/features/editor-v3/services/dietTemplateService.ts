@@ -18,7 +18,7 @@ export class DietTemplateService {
       return [];
     }
 
-    return data as V3DietTemplate[];
+    return (data as unknown) as V3DietTemplate[];
   }
 
   /**
@@ -36,7 +36,7 @@ export class DietTemplateService {
       return null;
     }
 
-    return data as V3DietTemplate;
+    return (data as unknown) as V3DietTemplate;
   }
 
   /**
@@ -54,6 +54,6 @@ export class DietTemplateService {
       return [];
     }
 
-    return data as V3DietTemplate[];
+    return (data as unknown) as V3DietTemplate[];
   }
 }
