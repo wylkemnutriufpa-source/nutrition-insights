@@ -28,11 +28,15 @@ const SLOT_ALIASES: Record<string, MealSlot> = {
   breakfast: "breakfast",
   cafe_da_manha: "breakfast",
   "café_da_manhã": "breakfast",
+  "cafe da manha": "breakfast",
+  "café da manhã": "breakfast",
   cafe: "breakfast",
 
   morning_snack: "morning_snack",
   lanche_da_manha: "morning_snack",
   "lanche_da_manhã": "morning_snack",
+  "lanche da manha": "morning_snack",
+  "lanche da manhã": "morning_snack",
   lanchemanha: "morning_snack",
 
   lunch: "lunch",
@@ -42,6 +46,7 @@ const SLOT_ALIASES: Record<string, MealSlot> = {
   afternoon_snack: "afternoon_snack",
   snack: "afternoon_snack",
   lanche_da_tarde: "afternoon_snack",
+  "lanche da tarde": "afternoon_snack",
   lanche: "afternoon_snack",
 
   dinner: "dinner",
