@@ -3418,6 +3418,50 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_telemetry: {
+        Row: {
+          content: Json | null
+          created_at: string | null
+          event_type: string
+          human_score: number | null
+          id: string
+          meal_plan_id: string | null
+          meal_slot: string | null
+          patient_id: string | null
+          reasons: string[] | null
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string | null
+          event_type: string
+          human_score?: number | null
+          id?: string
+          meal_plan_id?: string | null
+          meal_slot?: string | null
+          patient_id?: string | null
+          reasons?: string[] | null
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string | null
+          event_type?: string
+          human_score?: number | null
+          id?: string
+          meal_plan_id?: string | null
+          meal_slot?: string | null
+          patient_id?: string | null
+          reasons?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_telemetry_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cluster_protocol_matrix: {
         Row: {
           avg_adherence: number | null
@@ -7028,6 +7072,9 @@ export type Database = {
           description: string | null
           edit_metadata: Json | null
           fat_target: number | null
+          human_reasons: string[] | null
+          human_score: number | null
+          human_status: string | null
           id: string
           image_url: string | null
           is_locked: boolean
@@ -7052,6 +7099,9 @@ export type Database = {
           description?: string | null
           edit_metadata?: Json | null
           fat_target?: number | null
+          human_reasons?: string[] | null
+          human_score?: number | null
+          human_status?: string | null
           id?: string
           image_url?: string | null
           is_locked?: boolean
@@ -7076,6 +7126,9 @@ export type Database = {
           description?: string | null
           edit_metadata?: Json | null
           fat_target?: number | null
+          human_reasons?: string[] | null
+          human_score?: number | null
+          human_status?: string | null
           id?: string
           image_url?: string | null
           is_locked?: boolean
@@ -7536,6 +7589,7 @@ export type Database = {
       meal_plans: {
         Row: {
           adherence_score: number | null
+          clinical_audit_status: string | null
           clinical_score: number | null
           clinical_status: string | null
           correlation_id: string | null
@@ -7554,6 +7608,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_global_model: boolean | null
+          is_humanized: boolean | null
           is_sharing_enabled: boolean
           last_validated_at: string | null
           nutritionist_id: string
@@ -7601,6 +7656,7 @@ export type Database = {
         }
         Insert: {
           adherence_score?: number | null
+          clinical_audit_status?: string | null
           clinical_score?: number | null
           clinical_status?: string | null
           correlation_id?: string | null
@@ -7619,6 +7675,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
+          is_humanized?: boolean | null
           is_sharing_enabled?: boolean
           last_validated_at?: string | null
           nutritionist_id: string
@@ -7666,6 +7723,7 @@ export type Database = {
         }
         Update: {
           adherence_score?: number | null
+          clinical_audit_status?: string | null
           clinical_score?: number | null
           clinical_status?: string | null
           correlation_id?: string | null
@@ -7684,6 +7742,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
+          is_humanized?: boolean | null
           is_sharing_enabled?: boolean
           last_validated_at?: string | null
           nutritionist_id?: string

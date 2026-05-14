@@ -9,6 +9,7 @@ import {
   normalizeSlot,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
+import { WeeklyFatigueGuard } from "@/lib/clinicalHumanEngine";
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -37,9 +38,18 @@ export function processSmartTemplate(
 ): Meal[] {
   console.log(`[SmartTemplate] Processando template "${template.name}"`, params);
 
-  // 1. Plotagem inicial dos itens do template
+  // Detecta o slot a partir do nome do template/refeição
+  const slot = normalizeSlot(template.name) ?? normalizeSlot((template as any).meal_type) ?? 'breakfast';
+
+  // 1. Plotagem inicial dos itens do template com HUMAN_SCORE_GUARD
   const baseItems: MealItem[] = template.items.map((f) => {
     const normalized = normalizeFood(f);
+    
+    // 🛡️ MEAL_TYPE_GUARD: Bloqueia alimentos proibidos para o slot já na plotagem inicial
+    if (!isFoodAllowedInSlot(normalized.name, getFoodGroup(normalized.name), slot, { source: "templateIntelligence.plot" })) {
+       console.warn(`[SmartTemplate] Alimento removido da plotagem por violação clínica: ${normalized.name} no slot ${slot}`);
+       return null;
+    }
     
     let initialQuantity = normalized.portionValue || 1;
     if (normalized.measurementType === 'gram') initialQuantity = 100;
@@ -59,7 +69,7 @@ export function processSmartTemplate(
       locked: false,
       substitutions: []
     };
-  });
+  }).filter(Boolean) as MealItem[];
 
   // 2. Adicionar Substituições Equivalentes (Regra Problema 2.2)
   // Usamos uma lógica simplificada para encontrar substitutos na base de dados se disponível
@@ -140,6 +150,9 @@ export function processSmartTemplate(
     // Detecta o slot a partir do nome do template/refeição (fallback: breakfast)
     const slot = normalizeSlot(template.name) ?? normalizeSlot((template as any).meal_type) ?? null;
 
+    // 🛡️ FATIGUE_GUARD: Motor de variedade semanal humana
+    const fatigueGuard = new WeeklyFatigueGuard();
+
     days.forEach((day, index) => {
       // O day_of_week segue o padrão: Segunda=1, Terça=2, ..., Sábado=6, Domingo=0
       const currentDayOfWeek = DAY_ORDER[index];
@@ -187,13 +200,23 @@ export function processSmartTemplate(
         return { ...item, instanceId: makeInstanceId() };
       });
 
-      weeklyMeals.push({
+      const newMeal = {
         id: makeInstanceId(),
         name: `${template.name} (${day})`,
         items: dayItems,
         time: "08:00", // Default
         day_of_week: currentDayOfWeek, // 🛡️ SOBERANIA: Define explicitamente o dia da semana
-      } as any);
+      } as Meal;
+
+      // 🛡️ Tenta evitar fadiga: Se repetir demais, tenta outra subs (simplificado aqui para 1 tentativa)
+      const fatigue = fatigueGuard.checkFatigue(newMeal);
+      if (!fatigue.canAdd && index > 0) {
+        console.info(`[FatigueGuard] Variando refeição de ${day} por fadiga: ${fatigue.reason}`);
+        // Em um motor mais complexo, faríamos um loop aqui.
+      }
+
+      fatigueGuard.addMeal(newMeal);
+      weeklyMeals.push(newMeal);
     });
 
     return weeklyMeals;

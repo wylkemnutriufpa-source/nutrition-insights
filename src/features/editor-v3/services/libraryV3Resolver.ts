@@ -8,6 +8,7 @@ import {
   FREE_PORTION_MAX_GRAMS,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
+import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
 
 export interface LibraryV3Item {
   id: string;
@@ -163,6 +164,24 @@ export class LibraryV3Resolver {
         } as any;
       })
       .filter(Boolean) as MealItem[];
+
+    // 🛡️ HUMAN_SCORE_GUARD: Rejeita refeições que não parecem humanas.
+    const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot);
+    
+    // Log de Telemetria Clínica (Rejeições)
+    if (humanResult.status === 'absurd') {
+      console.warn(`[LibraryV3Resolver] REJECTED ABSURD MEAL: ${baseItem.title}`, humanResult.reasons);
+      
+      await (supabase.from('clinical_telemetry') as any).insert({
+        event_type: 'meal_rejected',
+        meal_slot: context.mealSlot,
+        content: { title: baseItem.title, items: scaledItems },
+        reasons: humanResult.reasons,
+        human_score: humanResult.score
+      });
+
+      return null;
+    }
 
     // 6. Montagem da Refeição
     return {
