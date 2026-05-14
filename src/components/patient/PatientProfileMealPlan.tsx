@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChefHat, RefreshCw, Eye, FileDown, Calendar } from "lucide-react";
 import {
-  MacroSummary, MealGroup,
+  MacroSummary, MealGroup, MealSlotCard,
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion, type MealDetailData,
 } from "@/components/patient/MealPlanDailyView";
+import { MealSlotModal } from "@/components/patient/MealSlotModal";
+import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+
 import {
   buildDailyDisplayItems,
   buildWeeklyDisplayDays,
