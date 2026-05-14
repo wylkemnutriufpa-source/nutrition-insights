@@ -130,6 +130,9 @@ export async function promoteDraftToMealPlan(
     .eq('patient_id', authUserId);
 
   // 1) INSERT-FIRST: cria o meal_plan oficial já PUBLICADO
+  const isWeeklyMode = meals.some(m => m.selectionMode === 'week');
+  const planMode = isWeeklyMode ? 'weekly' : 'single_day';
+
   const { data: plan, error: planErr } = await supabase
     .from('meal_plans')
     .insert({
@@ -140,7 +143,7 @@ export async function promoteDraftToMealPlan(
       start_date: today,
       plan_status: 'published_to_patient',
       is_active: true,
-      plan_mode: 'single_day',
+      plan_mode: planMode,
       total_target_calories: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || null,
       total_target_protein: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || null,
       total_target_carbs: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || null,
