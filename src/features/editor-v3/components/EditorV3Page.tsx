@@ -977,7 +977,47 @@ const EditorV3Page = () => {
   const handleRevert = () => {
     revertToLastSaved();
     setShowRevertConfirm(false);
+  const handleControlledDelivery = async (targetPatientId: string) => {
+    setIsGeneratingGlobal(true);
+    try {
+      toast.loading(`Entregando plano V3 para o paciente...`, { id: 'v3-delivery' });
+      
+      // 1. Garantir que temos um draft atualizado para o contexto do paciente
+      const freshDraft = await loadOrCreateDraft(targetPatientId, meals);
+      if (!freshDraft) {
+        throw new Error('Falha ao sincronizar draft para o novo paciente.');
+      }
+
+      // 2. Promover com a flag de delivery controlado
+      const result = await promoteDraftToMealPlan(
+        { ...freshDraft, payload: { meals, version: 1, patient_context: patientContext, nutritional_score: nutritionalScore, confidence: confidence } },
+        { v3_sandbox_delivery: true }
+      );
+
+      if (result.ok) {
+        toast.success('Plano V3 entregue com sucesso sob governança controlada!', { id: 'v3-delivery' });
+        
+        // Log de governança
+        addAuditEntry({
+          type: 'system_action',
+          description: `CONTROLLED_DELIVERY: Plano V3 entregue para ${targetPatientId}`,
+          source: 'system',
+          metadata: { targetPatientId, kcal: totalMacros.kcal, version: 'v3_soberano' }
+        });
+
+        // Opcional: navegar para o paciente
+        navigate(`/patients/${targetPatientId}`);
+      } else {
+        throw new Error(result.error || 'Erro desconhecido na promoção.');
+      }
+    } catch (err: any) {
+      console.error('[V3-ControlledDelivery] Error:', err);
+      toast.error(`Falha na entrega: ${err.message}`, { id: 'v3-delivery' });
+    } finally {
+      setIsGeneratingGlobal(false);
+    }
   };
+
 
   const handleGlobalGenerate = (replace: boolean) => {
     setReplaceExistingFlag(replace);
