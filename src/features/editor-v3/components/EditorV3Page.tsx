@@ -61,7 +61,7 @@ import {
   Sparkles, Save, Package, ChefHat, Clock,
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
-  Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard, Target,
+  Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard, Target, ShieldCheck,
   User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy, Library, Soup, Coffee, UtensilsCrossed, Moon, Sun, ShoppingCart
 } from 'lucide-react';
 import { safeGeneratePDF } from '../services/pdfService';
