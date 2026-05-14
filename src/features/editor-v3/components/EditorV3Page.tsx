@@ -649,7 +649,7 @@ const EditorV3Page = () => {
     
     setIsGeneratingGlobal(true);
     try {
-      toast.loading(`Gerando plano V3: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
+      toast.loading(`Gerando rascunho V3: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
       
       const v3Meals = await V3SandboxGenerator.generateDraft({
         templateSlug: selectedV3Template.slug,
@@ -661,8 +661,9 @@ const EditorV3Page = () => {
       });
 
       if (v3Meals && v3Meals.length > 0) {
-        setMeals(v3Meals);
-        toast.success(`Plano V3 Soberano gerado com sucesso!`, { id: 'v3-gen' });
+        setV3DraftMeals(v3Meals);
+        setShowV3DraftPreview(true);
+        toast.dismiss('v3-gen');
       }
     } catch (err: any) {
       console.error('[V3-UI] Error generating V3 draft:', err);
@@ -670,6 +671,12 @@ const EditorV3Page = () => {
     } finally {
       setIsGeneratingGlobal(false);
     }
+  };
+
+  const handleApproveDraft = (approvedMeals: Meal[]) => {
+    setMeals(approvedMeals);
+    toast.success(`Plano V3 Soberano aplicado com sucesso!`);
+    setShowV3DraftPreview(false);
   };
 
   useEffect(() => {
