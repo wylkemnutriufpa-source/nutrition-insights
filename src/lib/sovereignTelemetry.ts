@@ -20,7 +20,8 @@ export type SovereignEventType =
   | 'missing_metadata'
   | 'missing_instance_id'
   | 'missing_block_id'
-  | 'missing_day_of_week';
+  | 'missing_day_of_week'
+  | 'implicit_block_generation';
 
 export type SovereignSeverity = 'info' | 'warning' | 'critical';
 
