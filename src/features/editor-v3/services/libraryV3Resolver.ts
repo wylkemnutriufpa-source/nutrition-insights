@@ -87,21 +87,23 @@ export class LibraryV3Resolver {
 
     // 2. Filtro de Integridade Clínica (Scaling Humano)
     // Filtramos itens onde o scaling factor estaria dentro do threshold
+    // RELAXADO: Se o item puder ser escalado até 2.5x, ele é candidato.
     let candidates = items.filter(item => {
       const scale = targetKcal / (item.kcal_base || 400);
-      return scale >= 0.5 && scale <= threshold;
+      return scale >= 0.4 && scale <= Math.max(2.5, threshold);
     });
 
-    // Se nenhum item servir, pegamos o que tiver o kcal_base mais próximo
-    if (candidates.length === 0) {
-      console.info('[LibraryV3Resolver] No item within threshold. Picking closest kcal_base.');
-      candidates = [...items].sort((a, b) => 
+    // Se nenhum item servir ou poucos candidatos, pegamos o que tiver o kcal_base mais próximo
+    if (candidates.length < 3) {
+      console.info('[LibraryV3Resolver] Few candidates within threshold. Expanding search.');
+      const sortedByKcal = [...items].sort((a, b) => 
         Math.abs(targetKcal - (a.kcal_base || 400)) - Math.abs(targetKcal - (b.kcal_base || 400))
-      ).slice(0, 3);
+      );
+      candidates = sortedByKcal.slice(0, 5);
     }
 
-    // 3. Escolha determinística da refeição
-    const seed = `${context.planId}-${context.day}-${context.mealSlot}`;
+    // 3. Escolha determinística da refeição (Injetando entropia temporal e de plano)
+    const seed = `${context.planId}-${context.day}-${context.mealSlot}-${context.goal}`;
     const hash = this.generateHash(seed);
     const baseItem = candidates[hash % candidates.length];
 

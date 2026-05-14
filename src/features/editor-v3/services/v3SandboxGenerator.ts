@@ -103,15 +103,34 @@ export class V3SandboxGenerator {
       const dayId = dayIndex !== null ? `day-${dayIndex}` : 'sandbox-day';
       
       for (const slot of distributed) {
-        // Mapeamento de Cluster
+        // Mapeamento de Cluster Dinâmico para aumentar variedade
         let clusterSlug = 'almoco_tradicional';
         
         if (template && template.cluster_map && template.cluster_map[slot.type]) {
           clusterSlug = template.cluster_map[slot.type];
         } else {
-          if (slot.type.includes('cafe')) clusterSlug = 'cafe_tradicional';
-          else if (slot.type.includes('lanche')) clusterSlug = 'lanche_pratico';
-          else clusterSlug = 'almoco_tradicional';
+          // Lógica de Rodízio de Clusters se não houver template
+          const isLunch = slot.type === 'almoço';
+          const isDinner = slot.type === 'jantar';
+          const isSnack = slot.type.includes('lanche');
+          const isBreakfast = slot.type.includes('cafe');
+          const isSupper = slot.type === 'ceia';
+
+          if (isBreakfast) {
+            const breakfastClusters = ['cafe_tradicional', 'cafe_proteico', 'cafe_leve', 'cafe_premium'];
+            clusterSlug = breakfastClusters[Math.abs(this.generateHash(`${dayId}-${slot.type}`)) % breakfastClusters.length];
+          } else if (isLunch) {
+            const lunchClusters = ['almoco_tradicional', 'almoco_premium', 'almoco_elaborado'];
+            clusterSlug = lunchClusters[Math.abs(this.generateHash(`${dayId}-${slot.type}`)) % lunchClusters.length];
+          } else if (isDinner) {
+            const dinnerClusters = ['almoco_tradicional', 'almoco_premium', 'jantar_leve', 'jantar_regional'];
+            clusterSlug = dinnerClusters[Math.abs(this.generateHash(`${dayId}-${slot.type}`)) % dinnerClusters.length];
+          } else if (isSnack) {
+            const snackClusters = ['lanche_pratico', 'lanche_leve', 'lanche_proteico'];
+            clusterSlug = snackClusters[Math.abs(this.generateHash(`${dayId}-${slot.type}`)) % snackClusters.length];
+          } else if (isSupper) {
+            clusterSlug = 'lanche_leve';
+          }
         }
 
         const meal = await LibraryV3Resolver.resolveMealStructure(
@@ -139,5 +158,15 @@ export class V3SandboxGenerator {
 
     console.info(`[Sandbox-V3] Simulation Complete. Generated ${sandboxMeals.length} meals.`);
     return sandboxMeals;
+  }
+
+  private static generateHash(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
   }
 }

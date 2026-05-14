@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NutriCoreV3Adapter } from "@/lib/nutricore_v2/adapter";
 import { PatientContext, Meal } from "../types";
 import { clampItemKcal, assertSafeMacro, MACRO_SAFETY_LIMITS } from "@/lib/macroSafety";
+import { getBaseFoods } from "../utils/dataFetcher";
 
 export async function generateAndSaveLocalPlan(
   patientId: string,
@@ -90,8 +91,11 @@ export async function generateAndSaveLocalPlan(
       fat_target: Number(anamnesis?.computed_fat) || Number(assessment?.fat_target) || 60
     };
 
-    // 2. Generate plan using NutriCore V3 Adapter (LOCAL)
-    const v3Meals = await NutriCoreV3Adapter.generateElitePlan(context, []);
+    // 2. Get available foods for variety
+    const availableFoods = await getBaseFoods();
+
+    // 3. Generate plan using NutriCore V3 Adapter (LOCAL)
+    const v3Meals = await NutriCoreV3Adapter.generateElitePlan(context, availableFoods as any);
 
 
     const { data: mealPlan, error: promoteError } = await supabase

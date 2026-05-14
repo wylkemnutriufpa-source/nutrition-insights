@@ -1,25 +1,25 @@
 {
-  "summary": "Summary:",
+  "summary": "Summary:\nColumns:\n+ meal_plan_items.human_reasons\n+ meal_plan_items.human_score\n+ meal_plan_items.human_status\n+ meal_plans.clinical_audit_status\n+ meal_plans.is_humanized",
   "details": {
-    "timestamp": "2026-05-14T03:00:46.218Z",
+    "timestamp": "2026-05-14T20:24:32.649Z",
     "duration": "0.0s",
-    "lastSnapshotMigration": "20260513160825_b9361614-40bc-42c3-819e-ebb95b159022.sql",
-    "lastActualMigration": "20260514022704_d6fb2698-71f4-4836-829a-f74006a53098.sql",
+    "lastSnapshotMigration": "20260514022704_d6fb2698-71f4-4836-829a-f74006a53098.sql",
+    "lastActualMigration": "20260514150348_8567b7bc-49b2-407b-92d7-03ad865402c7.sql",
     "missingMigrations": [
-      "20260513183057_b833b9bf-e83c-4a18-8c1a-25e0b720bb5d.sql",
-      "20260513183921_e5002165-54a4-458f-838b-d28bb8cfc243.sql",
-      "20260513184735_1c989605-6a5b-4bf8-88a2-f6594550aa19.sql",
-      "20260513191901_6ec2961a-3cde-40b3-bccd-7da090086926.sql",
-      "20260513192556_801ca8d2-899b-4928-bf1a-2482924b018e.sql",
-      "20260513235951_da5b0131-a82c-42b2-8d1c-030a027f3edb.sql",
-      "20260514002052_c67b96ea-5634-4f06-8c8d-ce5b676fca1d.sql",
-      "20260514002148_250d8694-68ae-4271-bfea-bf89fa1ab22d.sql",
-      "20260514004648_8dd3e90a-cb56-44a9-8569-2623e07edea0.sql",
-      "20260514004832_385d2cce-a1f9-458f-9f0b-12f8ceff6817.sql",
-      "20260514004909_8c5f32ea-c930-499b-af03-213d0c2ce98b.sql",
-      "20260514015517_26577c58-534a-4fb3-9db2-981a740e0f28.sql",
-      "20260514022704_d6fb2698-71f4-4836-829a-f74006a53098.sql"
+      "20260514143113_c9db8c1e-a60b-4067-8132-1ac8529696cb.sql",
+      "20260514150348_8567b7bc-49b2-407b-92d7-03ad865402c7.sql"
     ],
-    "diffResults": []
+    "diffResults": [
+      {
+        "table": "meal_plan_items",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "human_reasons, human_score, human_status"
+      },
+      {
+        "table": "meal_plans",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "clinical_audit_status, is_humanized"
+      }
+    ]
   }
 }
