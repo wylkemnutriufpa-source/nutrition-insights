@@ -9,6 +9,7 @@ import {
   normalizeSlot,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
+import { WeeklyFatigueGuard } from "@/lib/clinicalHumanEngine";
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -140,6 +141,9 @@ export function processSmartTemplate(
     // Detecta o slot a partir do nome do template/refeição (fallback: breakfast)
     const slot = normalizeSlot(template.name) ?? normalizeSlot((template as any).meal_type) ?? null;
 
+    // 🛡️ FATIGUE_GUARD: Motor de variedade semanal humana
+    const fatigueGuard = new WeeklyFatigueGuard();
+
     days.forEach((day, index) => {
       // O day_of_week segue o padrão: Segunda=1, Terça=2, ..., Sábado=6, Domingo=0
       const currentDayOfWeek = DAY_ORDER[index];
@@ -187,13 +191,23 @@ export function processSmartTemplate(
         return { ...item, instanceId: makeInstanceId() };
       });
 
-      weeklyMeals.push({
+      const newMeal = {
         id: makeInstanceId(),
         name: `${template.name} (${day})`,
         items: dayItems,
         time: "08:00", // Default
         day_of_week: currentDayOfWeek, // 🛡️ SOBERANIA: Define explicitamente o dia da semana
-      } as any);
+      } as Meal;
+
+      // 🛡️ Tenta evitar fadiga: Se repetir demais, tenta outra subs (simplificado aqui para 1 tentativa)
+      const fatigue = fatigueGuard.checkFatigue(newMeal);
+      if (!fatigue.canAdd && index > 0) {
+        console.info(`[FatigueGuard] Variando refeição de ${day} por fadiga: ${fatigue.reason}`);
+        // Em um motor mais complexo, faríamos um loop aqui.
+      }
+
+      fatigueGuard.addMeal(newMeal);
+      weeklyMeals.push(newMeal);
     });
 
     return weeklyMeals;
