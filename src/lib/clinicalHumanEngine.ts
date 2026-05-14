@@ -33,6 +33,7 @@ const GROUP_HUMAN_AFFINITY: Record<SubstitutionGroup, Partial<Record<MealSlot, n
   "proteina-almoco": { lunch: 1.0, dinner: 0.9, breakfast: 0.0, supper: 0.2 },
   "proteina-peixe": { lunch: 1.0, dinner: 1.0, breakfast: 0.0 },
   "carbo-almoco": { lunch: 1.0, dinner: 0.8, breakfast: 0.0 },
+  "carbo-legume": { lunch: 1.0, dinner: 0.9, breakfast: 0.0 },
   "carbo-tuberoso": { lunch: 1.0, dinner: 0.9, breakfast: 0.1 },
   "salada-base": { lunch: 1.0, dinner: 1.0, breakfast: 0.0 },
   "lanche-proteico": { afternoon_snack: 1.0, morning_snack: 0.8, breakfast: 0.4 },
