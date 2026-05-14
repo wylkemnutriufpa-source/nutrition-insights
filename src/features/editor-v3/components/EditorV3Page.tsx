@@ -1234,6 +1234,21 @@ const EditorV3Page = () => {
     }
   };
 
+  const handleViewPlainText = () => {
+    if (!meals.length) {
+      toast.error("Nenhum item para visualizar");
+      return;
+    }
+    const text = generateV3PlainText(meals, patientContext?.name || "Paciente");
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `plano-alimentar-${patientContext?.name || 'paciente'}.txt`;
+    a.click();
+    toast.success("Plano exportado em Texto Simples!");
+  };
+
   const handleFixPlan = async () => {
     if (!patientContext) return;
     setIsGeneratingGlobal(true);
