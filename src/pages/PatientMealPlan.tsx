@@ -237,7 +237,7 @@ export default function PatientMealPlan() {
           };
 
           // 1. Mapeia o item primário
-          const blockId = item.substitution_group_id || item.blockId || item.id || item.instanceId;
+          const blockId = item.block_id || item.blockId || item.substitution_group_id || item.id || item.instanceId;
           flatItems.push({
             ...item,
             ...common,
@@ -283,8 +283,8 @@ export default function PatientMealPlan() {
                 display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel,
                 clinical_mass_g: sub.clinical_mass_g || sub.suggestedQuantity,
                 instanceId: sub.instanceId || crypto.randomUUID(),
-                blockId: blockId, // Pertence ao mesmo bloco do primário
-                substitution_group_id: blockId,
+                blockId: sub.block_id || sub.blockId || blockId, // Pertence ao mesmo bloco do primário
+                substitution_group_id: sub.block_id || sub.blockId || blockId,
                 is_primary: false,
                 is_substitution: true,
                 edit_metadata: {
@@ -335,7 +335,8 @@ export default function PatientMealPlan() {
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
     // 🛡️ SOBERANIA V3: Mesmo para V3, usamos o pipeline de agrupamento para garantir que
     // apenas itens primários apareçam no dashboard e substituições fiquem no metadata.
-    setItems(buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[]);
+    const dailyItems = buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay());
+    setItems(dailyItems as MealPlanItem[]);
     setAllItems(resolvedAllItems);
 
     const { data: subsData } = await supabase
