@@ -119,7 +119,6 @@ export default function ClientDashboard() {
     isStreakAtRisk
   } = useEngagement();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
-  const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
