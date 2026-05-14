@@ -219,7 +219,7 @@ export async function promoteDraftToMealPlan(
         meal_plan_id: plan.id,
         tenant_id: draft.tenant_id,
         meal_type: mealType,
-        day_of_week: meal.day_of_week ?? null,
+        day_of_week: meal.day_of_week ?? 0,
         title: buildItemTitle(item),
         description: buildItemDescription(item),
         calories_target: Math.round(cleanMacros.kcal || 0),
