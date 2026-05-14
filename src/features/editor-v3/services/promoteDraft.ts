@@ -248,6 +248,7 @@ export async function promoteDraftToMealPlan(
             protein_target: Number((sub.protein || 0).toFixed(1)),
             carbs_target: Number((sub.carbs || 0).toFixed(1)),
             fat_target: Number((sub.fat || 0).toFixed(1)),
+            image_url: sub.imageUrl || null,
             item_origin: 'auto',
             is_manually_edited: false,
             is_locked: false,
