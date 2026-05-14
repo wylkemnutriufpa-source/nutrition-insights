@@ -13,6 +13,7 @@ import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RootRouter } from "@/components/auth/RootRouter";
 import { LP } from "./RouteHelpers";
+import { SandboxV3Guard } from "./SandboxV3Guard";
 
 // Domain Routes
 import { authRoutes } from "./auth.routes";
