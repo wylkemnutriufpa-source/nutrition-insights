@@ -9,6 +9,7 @@ export interface LibraryV3Item {
   title: string;
   meal_type: string[];
   category: string;
+  cluster_slug?: string; // NOVO
   objective_tags: string[];
   kcal_base: number;
   protein_base: number;
@@ -50,15 +51,24 @@ export class LibraryV3Resolver {
 
     const libMealType = slotToType[context.mealSlot.toLowerCase()] || context.mealSlot.toLowerCase();
 
-    const { data: items, error } = await supabase
+    const query = supabase
       .from('v3_library_items')
       .select(`
         *,
         images:v3_library_images(*)
       `)
-      .contains('meal_type', [libMealType])
-      .contains('objective_tags', [context.goal])
-      .eq('active', true) as { data: LibraryV3Item[] | null, error: any };
+      .eq('active', true);
+
+    // Prioridade 1: Filtrar por Cluster se fornecido
+    if (clusterSlug) {
+      query.eq('cluster_slug', clusterSlug);
+    } else {
+      // Fallback: Mapeamento de slot se não houver cluster
+      query.contains('meal_type', [libMealType]);
+      query.contains('objective_tags', [context.goal]);
+    }
+
+    const { data: items, error } = await query as { data: LibraryV3Item[] | null, error: any };
 
     if (error || !items || items.length === 0) {
       console.warn('[LibraryV3Resolver] No library items found for cluster/context');
