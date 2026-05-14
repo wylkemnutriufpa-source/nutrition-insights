@@ -2381,10 +2381,10 @@ const EditorV3Page = () => {
             })
           ) : (
             meals.map((meal, index) => (
-
-            "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-6 rounded-[32px] border transition-all",
-            activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-[0_0_40px_-15px_rgba(16,185,129,0.1)]" : "bg-neutral-900/30 border-white/5 hover:border-white/10"
-          )} style={{ animationDelay: `${index * 100}ms` }}>
+              <section key={meal.id} className={cn(
+                "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-6 rounded-[32px] border transition-all",
+                activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-[0_0_40px_-15px_rgba(16,185,129,0.1)]" : "bg-neutral-900/30 border-white/5 hover:border-white/10"
+              )} style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex flex-col mb-6">
               {meal.imageUrl && (
                 <div className="relative w-full h-56 mb-6 rounded-2xl overflow-hidden group/img shadow-2xl">
