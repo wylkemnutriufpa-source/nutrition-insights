@@ -8,6 +8,8 @@ import {
   isBreakfastProtein,
   getFoodCategory 
 } from "./helpers";
+import { isFoodAllowedInSlot } from "../mealTypeIntegrity";
+import { getFoodGroup } from "../substitutionGroups";
 
 export interface Substitution {
   food: Food;
