@@ -41,8 +41,8 @@ const V3LibrarySandbox = () => {
       setGoal(template.objective);
       // Sugerir uma kcal do perfil se disponível
       if (template.kcal_profiles && template.kcal_profiles.length > 0) {
-        // Pega uma kcal intermediária (ex: 2000) ou a mais próxima do atual
-        const defaultKcal = template.kcal_profiles.includes(2000) ? 2000 : template.kcal_profiles[0];
+        const profileValues = template.kcal_profiles.map(p => typeof p === 'number' ? p : p.kcal);
+        const defaultKcal = profileValues.includes(2000) ? 2000 : profileValues[0];
         setKcal(defaultKcal);
       }
     }
