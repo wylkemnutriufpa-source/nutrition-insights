@@ -4,7 +4,8 @@ export type FoodCategory =
   | "fat"
   | "fruit"
   | "vegetable"
-  | "dairy";
+  | "dairy"
+  | "legume";
 
 export interface Food {
   id: string;
