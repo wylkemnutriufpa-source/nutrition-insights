@@ -216,6 +216,7 @@ export async function promoteDraftToMealPlan(
         meal_plan_id: plan.id,
         tenant_id: draft.tenant_id,
         meal_type: mealType,
+        day_of_week: meal.day_of_week ?? null,
         title: buildItemTitle(item),
         description: buildItemDescription(item),
         calories_target: Math.round(cleanMacros.kcal || 0),
@@ -233,7 +234,8 @@ export async function promoteDraftToMealPlan(
           imageUrl: itemImageUrl,
           mealImageUrl: meal.imageUrl || null,
           display_quantity: item.quantity,
-          display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit
+          display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit,
+          day_of_week: meal.day_of_week ?? null,
         }
       });
 
