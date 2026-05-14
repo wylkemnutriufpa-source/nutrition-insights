@@ -72,6 +72,7 @@ import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 import PlanAdjustmentModal from './PlanAdjustmentModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { TemplateV3Modal } from './TemplateV3Modal';
+import { ControlledDeliveryModal } from './ControlledDeliveryModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
 import { V3DietTemplate } from '../types/types';
