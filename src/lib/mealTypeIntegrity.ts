@@ -111,6 +111,12 @@ export const SLOT_ALLOWED_GROUPS: Record<MealSlot, SubstitutionGroup[]> = {
     "carbo-tuberoso",
     "salada-base",
   ],
+  evening_snack: [
+    "ceia-leve",
+    "laticinio-leve",
+    "fruta-acida",
+    "proteina-leve",
+  ],
   supper: [
     "ceia-leve",
     "laticinio-leve",
