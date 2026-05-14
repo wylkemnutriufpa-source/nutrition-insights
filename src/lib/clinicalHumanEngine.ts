@@ -126,6 +126,14 @@ export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string):
      }
   }
 
+  // Bloqueio Ceia
+  if (slot === 'supper') {
+     if (items.some(i => heavyLunchRegex.test(i.name))) {
+       score = 0;
+       reasons.push('Bloqueio Absoluto: Ceia deve ser leve (sem arroz/feijão/carne pesada)');
+     }
+  }
+
   // Bloqueio Almoço/Jantar
   if (slot === 'lunch' || slot === 'dinner') {
     if (items.some(i => snackRegex.test(i.name))) {
