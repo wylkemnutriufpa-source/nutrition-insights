@@ -245,7 +245,7 @@ export const useEditorState = create<EditorState>()(
           (meal.items || []).forEach(item => {
             try {
               // 🛡️ PIPELINE PURIFICATION: Usar clinical_mass_g se disponível para evitar drift
-              const calculationQuantity = item.clinical_mass_g !== undefined 
+              const calculationQuantity = item.clinical_mass_g !== undefined && item.clinical_mass_g > 0
                 ? (item.measurementType === 'gram' || item.measurementType === 'ml' ? item.clinical_mass_g : item.quantity)
                 : item.quantity;
 
@@ -653,7 +653,7 @@ export const useEditorState = create<EditorState>()(
                   const merged = { ...i, ...updates };
                   
                   // 🛡️ SOBERANIA CLÍNICA: Quando a quantidade muda, recalcular clinical_mass_g IMEDIATAMENTE
-                  if (updates.quantity !== undefined) {
+                  if (updates.quantity !== undefined || updates.measurementType !== undefined || updates.portionValue !== undefined) {
                      const pValue = Number(merged.portionValue) || 1;
                      merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
                        ? Number(merged.quantity)
@@ -685,7 +685,7 @@ export const useEditorState = create<EditorState>()(
                     const merged = { ...i, ...propagatedUpdates };
                     
                     // 🛡️ SOBERANIA CLÍNICA: Propagação semanal garantindo massa clínica idêntica
-                    if (propagatedUpdates.quantity !== undefined) {
+                    if (propagatedUpdates.quantity !== undefined || propagatedUpdates.measurementType !== undefined || propagatedUpdates.portionValue !== undefined) {
                       const pValue = Number(merged.portionValue) || 1;
                       merged.clinical_mass_g = (merged.measurementType === 'gram' || merged.measurementType === 'ml')
                         ? Number(merged.quantity)
