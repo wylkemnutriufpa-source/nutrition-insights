@@ -38,9 +38,18 @@ export function processSmartTemplate(
 ): Meal[] {
   console.log(`[SmartTemplate] Processando template "${template.name}"`, params);
 
-  // 1. Plotagem inicial dos itens do template
+  // Detecta o slot a partir do nome do template/refeição
+  const slot = normalizeSlot(template.name) ?? normalizeSlot((template as any).meal_type) ?? 'breakfast';
+
+  // 1. Plotagem inicial dos itens do template com HUMAN_SCORE_GUARD
   const baseItems: MealItem[] = template.items.map((f) => {
     const normalized = normalizeFood(f);
+    
+    // 🛡️ MEAL_TYPE_GUARD: Bloqueia alimentos proibidos para o slot já na plotagem inicial
+    if (!isFoodAllowedInSlot(normalized.name, getFoodGroup(normalized.name), slot, { source: "templateIntelligence.plot" })) {
+       console.warn(`[SmartTemplate] Alimento removido da plotagem por violação clínica: ${normalized.name} no slot ${slot}`);
+       return null;
+    }
     
     let initialQuantity = normalized.portionValue || 1;
     if (normalized.measurementType === 'gram') initialQuantity = 100;
@@ -60,7 +69,7 @@ export function processSmartTemplate(
       locked: false,
       substitutions: []
     };
-  });
+  }).filter(Boolean) as MealItem[];
 
   // 2. Adicionar Substituições Equivalentes (Regra Problema 2.2)
   // Usamos uma lógica simplificada para encontrar substitutos na base de dados se disponível
