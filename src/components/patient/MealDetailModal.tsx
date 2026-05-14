@@ -1108,6 +1108,18 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             <span className="text-[8px] text-muted-foreground/70 leading-none">
                               Sugestão: {m.requested}{m.unit}
                             </span>
+                          </div>
+                        )}
+
+                        {/* Tooltip de assistência */}
+                        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] p-2 rounded-lg shadow-xl border border-border opacity-0 group-hover/macro:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                          {status === "OK" ? "✓ Macros em conformidade" : `Assistente: Diferença de ${Math.abs(diff)}${m.unit}`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
