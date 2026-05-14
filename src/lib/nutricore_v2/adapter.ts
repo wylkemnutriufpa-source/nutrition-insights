@@ -129,19 +129,10 @@ export class NutriCoreV3Adapter {
            throw new Error("Erro de Governança: day_of_week obrigatório em modo semanal.");
         }
 
-        // Criar preferências rotativas para este dia específico
-        // Criar preferências rotativas contextuais
-        const dayProteins = ["Frango", "Carne", "Peixe", "Ovo"];
-        const dayCarbs = ["Arroz", "Batata", "Macarrão", "Mandioca"];
-        
-        const dayPrefs = [
-          dayProteins[dayIdx % dayProteins.length],
-          dayCarbs[dayIdx % dayCarbs.length],
-          ...(context.preferences || [])
-        ];
-
         const daySeed = 42 + dayIdx; // Seed fixa para determinismo por dia
-        const dayMeals = await Promise.all(distributed.map(async (slot) => {
+        const dayMeals = await Promise.all(distributed.map(async (slot, slotIdx) => {
+          const mealSeed = daySeed + (slotIdx * 7.5); // 🛡️ VARIETY GUARD: Offset por refeição para evitar Lunch == Dinner
+          
           // Mapeamento robusto de nomes para o Editor V3
           const nameMap: Record<string, string> = {
             'cafe_da_manha': 'Café da Manhã',
@@ -167,7 +158,11 @@ export class NutriCoreV3Adapter {
             finalDb,
             {
               restrictions: context.restrictions,
-              preferences: dayPrefs,
+              preferences: [
+                PROTEIN_ROTATION[dayIdx % PROTEIN_ROTATION.length],
+                CARB_ROTATION[dayIdx % CARB_ROTATION.length],
+                ...(context.preferences || [])
+              ],
               seed: mealSeed
             }
           );
@@ -179,6 +174,8 @@ export class NutriCoreV3Adapter {
             const totalFat = Number(item.macros.fat_g.toFixed(1));
             
             const foodObj = finalDb.find(f => f.id === item.foodId);
+            const primaryBlockId = crypto.randomUUID(); // 🛡️ Hierarchy Ownership
+            
             let substitutions: any[] = [];
             
             if (foodObj) {
@@ -196,7 +193,10 @@ export class NutriCoreV3Adapter {
                 portionUnit: 'g',
                 portionLabel: s.unit_label,
                 measurementType: 'gram',
-                suggestedQuantity: s.grams
+                suggestedQuantity: s.grams,
+                blockId: primaryBlockId, // 🛡️ SOBERANIA: Substituição herda o bloco do primário
+                is_primary: false,
+                is_substitution: true
               }));
             }
 
@@ -228,8 +228,8 @@ export class NutriCoreV3Adapter {
               instanceId: crypto.randomUUID(),
               quantity, 
               clinical_mass_g: item.grams, // 🛡️ Congelamento na fonte (Motor V3)
-              blockId: crypto.randomUUID(), // 🛡️ Hierarchy Ownership: Todo item gerado nasce com seu bloco
-              substitution_group_id: crypto.randomUUID(), // 🛡️ Isolamento de substituições
+              blockId: primaryBlockId, // 🛡️ Hierarchy Ownership: Todo item gerado nasce com seu bloco
+              substitution_group_id: primaryBlockId, // 🛡️ Isolamento de substituições
               is_primary: true,
               substitutions
             };
