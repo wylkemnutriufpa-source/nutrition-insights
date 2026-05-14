@@ -1682,21 +1682,29 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     {equivalentSubstitutions.length} opções
                   </Badge>
                 </div>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {equivalentSubstitutions.map((option, idx) => (
-                    <div key={option.id || `${option.title}-${idx}`} className="rounded-lg bg-secondary/40 p-3">
-                      <div className="flex items-start justify-between gap-3">
+                    <div key={option.id || `${option.title}-${idx}`} className="rounded-2xl bg-secondary/30 p-4 border border-white/5 hover:border-primary/20 transition-all group/sub">
+                      <div className="flex flex-col gap-3">
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground">{option.title}</p>
+                          <p className="text-sm font-black uppercase italic tracking-tight text-foreground group-hover/sub:text-primary transition-colors">{option.title}</p>
                           {option.description && (
-                            <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line">{option.description}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1 whitespace-pre-line leading-relaxed">{option.description}</p>
                           )}
                         </div>
-                        <div className="grid grid-cols-2 gap-1 text-[10px] text-muted-foreground shrink-0 text-right">
-                          <span>{fmtMacro(option.calories_target ?? 0)} kcal</span>
-                          <span>P {fmtMacro(option.protein_target ?? 0)}g</span>
-                          <span>C {fmtMacro(option.carbs_target ?? 0)}g</span>
-                          <span>G {fmtMacro(option.fat_target ?? 0)}g</span>
+                        <div className="flex items-center gap-3 pt-2 border-t border-white/5">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] uppercase font-black text-muted-foreground">Kcal</span>
+                            <span className="text-xs font-bold">{Math.round(option.calories_target ?? 0)}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] uppercase font-black text-muted-foreground">Prot</span>
+                            <span className="text-xs font-bold text-red-500/70">{fmtMacro(option.protein_target ?? 0)}g</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] uppercase font-black text-muted-foreground">Carb</span>
+                            <span className="text-xs font-bold text-amber-500/70">{fmtMacro(option.carbs_target ?? 0)}g</span>
+                          </div>
                         </div>
                       </div>
                     </div>

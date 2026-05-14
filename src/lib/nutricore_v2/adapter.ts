@@ -115,34 +115,19 @@ export class NutriCoreV3Adapter {
 
       const finalDb = foodDb.length > 5 ? foodDb : BASE_FOODS;
       
-      // Se for modo semanal, geramos variações para cada dia (7 x 6 = 42 refeições)
       const loops = isWeekly ? 7 : 1;
       const allGeneratedMeals: V3Meal[] = [];
 
       const PROTEIN_ROTATION = ["Frango", "Patinho", "Sobrecoxa", "Peixe Branco"];
       const CARB_ROTATION = ["Arroz", "Batata Doce", "Macarrão", "Mandioca"];
-      const BREAKFAST_ROTATION = ["Pão Integral", "Tapioca", "Cuscuz", "Aveia"];
 
       for (let dayIdx = 0; dayIdx < loops; dayIdx++) {
-        const currentDayOfWeek = dayIdx + 1; // 1-7
-        if (isWeekly && !currentDayOfWeek) {
-           throw new Error("Erro de Governança: day_of_week obrigatório em modo semanal.");
-        }
+        const currentDayOfWeek = dayIdx + 1; 
 
-        // Criar preferências rotativas para este dia específico
-        // Criar preferências rotativas contextuais
-        const dayProteins = ["Frango", "Carne", "Peixe", "Ovo"];
-        const dayCarbs = ["Arroz", "Batata", "Macarrão", "Mandioca"];
-        
-        const dayPrefs = [
-          dayProteins[dayIdx % dayProteins.length],
-          dayCarbs[dayIdx % dayCarbs.length],
-          ...(context.preferences || [])
-        ];
-
-        const daySeed = 42 + dayIdx; // Seed fixa para determinismo por dia
-        const dayMeals = await Promise.all(distributed.map(async (slot) => {
-          // Mapeamento robusto de nomes para o Editor V3
+        const daySeed = 42 + dayIdx;
+        const dayMeals = await Promise.all(distributed.map(async (slot, slotIdx) => {
+          const mealSeed = daySeed + (slotIdx * 7.7); // 🛡️ VARIETY GUARD: Offset por refeição para evitar Lunch == Dinner
+          
           const nameMap: Record<string, string> = {
             'cafe_da_manha': 'Café da Manhã',
             'lanche_da_manha': 'Lanche da Manhã',
@@ -154,7 +139,6 @@ export class NutriCoreV3Adapter {
           
           const mealName = nameMap[slot.type] || slot.type.charAt(0).toUpperCase() + slot.type.slice(1).replace(/_/g, ' ');
           
-          // Gerar refeição com variedade determinística para cada dia do loop
           const plannedMeal = buildMeal(
             slot.type,
             slot.time,
@@ -167,69 +151,63 @@ export class NutriCoreV3Adapter {
             finalDb,
             {
               restrictions: context.restrictions,
-              preferences: dayPrefs,
-              seed: daySeed
+              preferences: [
+                PROTEIN_ROTATION[dayIdx % PROTEIN_ROTATION.length],
+                CARB_ROTATION[dayIdx % CARB_ROTATION.length],
+                ...(context.preferences || [])
+              ],
+              seed: mealSeed
             }
           );
 
           const v3Items = plannedMeal.items.map(item => {
-            const totalKcal = Math.round(item.macros.kcal);
-            const totalProtein = Number(item.macros.protein_g.toFixed(1));
-            const totalCarbs = Number(item.macros.carb_g.toFixed(1));
-            const totalFat = Number(item.macros.fat_g.toFixed(1));
-            
             const foodObj = finalDb.find(f => f.id === item.foodId);
-            let substitutions: any[] = [];
+            const primaryGroupId = crypto.randomUUID(); // 🛡️ Hierarchy Ownership
             
+            let substitutions: any[] = [];
             if (foodObj) {
               const subs = getSubstitutions(foodObj, finalDb, item.grams, context.restrictions, mealName);
               substitutions = subs.map(s => ({
                 id: s.food.id,
                 name: s.food.name,
-                kcal: s.food.kcal_100g,
-                calories: s.food.kcal_100g,
-                protein: s.food.protein_100g,
-                carbs: s.food.carb_100g,
-                fat: s.food.fat_100g,
+                kcal: Math.round(s.food.kcal_100g * (s.grams / 100)),
+                calories: Math.round(s.food.kcal_100g * (s.grams / 100)),
+                protein: Number((s.food.protein_100g * (s.grams / 100)).toFixed(1)),
+                carbs: Number((s.food.carb_100g * (s.grams / 100)).toFixed(1)),
+                fat: Number((s.food.fat_100g * (s.grams / 100)).toFixed(1)),
                 portionValue: 100,
                 portionUnitLabel: 'g',
                 portionUnit: 'g',
                 portionLabel: s.unit_label,
                 measurementType: 'gram',
-                suggestedQuantity: s.grams
+                suggestedQuantity: s.grams,
+                is_primary: false,
+                is_substitution: true,
+                substitution_group_id: primaryGroupId,
+                blockId: primaryGroupId
               }));
             }
 
             const portion = convertGramsToHousehold(item.name, item.grams);
-            const measurementType = portion.measurementType;
-            const quantity = portion.quantity;
-            const portionValue = portion.portionValue;
-            const portionLabel = portion.portionLabel;
-
-            console.log(`[ClinicalAudit] Item: ${item.name} | Mass: ${item.grams}g | Prot: ${totalProtein}g | Kcal: ${totalKcal}`);
 
             return {
               id: item.foodId,
               name: item.name,
-              kcal: totalKcal,
-              calories: totalKcal,
-              protein: totalProtein,
-              carbs: totalCarbs,
-              fat: totalFat,
-              kcal_100g: foodObj?.kcal_100g || totalKcal,
-              protein_100g: foodObj?.protein_100g || totalProtein,
-              carb_100g: foodObj?.carb_100g || totalCarbs,
-              fat_100g: foodObj?.fat_100g || totalFat,
-              portionValue,
-              portionUnitLabel: portionLabel,
-              portionUnit: portionLabel,
-              portionLabel: portionLabel,
-              measurementType: measurementType as any,
+              kcal: Math.round(item.macros.kcal),
+              calories: Math.round(item.macros.kcal),
+              protein: Number(item.macros.protein_g.toFixed(1)),
+              carbs: Number(item.macros.carb_g.toFixed(1)),
+              fat: Number(item.macros.fat_g.toFixed(1)),
+              portionValue: portion.portionValue,
+              portionUnitLabel: portion.portionLabel,
+              portionUnit: portion.portionLabel,
+              portionLabel: portion.portionLabel,
+              measurementType: portion.measurementType as any,
               instanceId: crypto.randomUUID(),
-              quantity, 
-              clinical_mass_g: item.grams, // 🛡️ Congelamento na fonte (Motor V3)
-              blockId: crypto.randomUUID(), // 🛡️ Hierarchy Ownership: Todo item gerado nasce com seu bloco
-              substitution_group_id: crypto.randomUUID(), // 🛡️ Isolamento de substituições
+              quantity: portion.quantity, 
+              clinical_mass_g: item.grams,
+              blockId: primaryGroupId, 
+              substitution_group_id: primaryGroupId, 
               is_primary: true,
               substitutions
             };
