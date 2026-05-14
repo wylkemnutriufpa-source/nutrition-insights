@@ -58,8 +58,8 @@ const FOOD_GROUP_MAP: Record<string, SubstitutionGroup> = {
   // Carbo almoço (arroz, massa)
   "Arroz branco": "carbo-almoco",
   "Arroz integral": "carbo-almoco",
-  "Feijão carioca": "carbo-almoco",
-  "Feijão preto": "carbo-almoco",
+  "Feijão carioca": "carbo-legume",
+  "Feijão preto": "carbo-legume",
   "Macarrão integral": "carbo-almoco",
   "Macarrão branco": "carbo-almoco",
   "Quinoa cozida": "carbo-almoco",
