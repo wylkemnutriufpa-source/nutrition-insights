@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260514022704_d6fb2698-71f4-4836-829a-f74006a53098.sql",
-  "migrationsCount": 721,
+  "lastMigration": "20260514150348_8567b7bc-49b2-407b-92d7-03ad865402c7.sql",
+  "migrationsCount": 723,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -11,6 +11,9 @@
       "description",
       "edit_metadata",
       "fat_target",
+      "human_reasons",
+      "human_score",
+      "human_status",
       "id",
       "image_url",
       "is_locked",
@@ -29,6 +32,7 @@
     ],
     "meal_plans": [
       "adherence_score",
+      "clinical_audit_status",
       "clinical_score",
       "clinical_status",
       "correlation_id",
@@ -47,6 +51,7 @@
       "id",
       "is_active",
       "is_global_model",
+      "is_humanized",
       "is_sharing_enabled",
       "last_validated_at",
       "nutritionist_id",
