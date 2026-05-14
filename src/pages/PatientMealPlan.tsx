@@ -104,7 +104,18 @@ function StreakBadge({ count }: { count: number }) {
 }
 
 export default function PatientMealPlan() {
-  const { user } = useAuth();
+  const { user, isAdmin, isNutritionist, isPersonal, isPatient } = useAuth();
+  const navigate = useNavigate();
+
+  // HARD GUARD SOBERANO: Bloqueio imediato de contaminação de contexto Pro -> Patient
+  useEffect(() => {
+    const isPro = isNutritionist || isPersonal || isAdmin;
+    if (isPro && !isPatient) {
+      console.warn("[SECURITY] Bloqueio imediato PatientMealPlan: Perfil Profissional detectado em rota de paciente.");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isPatient, isNutritionist, isPersonal, isAdmin, navigate]);
+
   const { isBasic } = useExperienceUI();
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
