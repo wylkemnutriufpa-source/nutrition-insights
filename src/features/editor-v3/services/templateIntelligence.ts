@@ -194,6 +194,9 @@ export function processSmartTemplate(
           return {
             ...sub,
             instanceId: makeInstanceId(),
+            blockId: item.blockId,
+            substitution_group_id: item.substitution_group_id,
+            is_primary: true,
             quantity: subQty,
             ...macros,
             calories: macros.kcal,
