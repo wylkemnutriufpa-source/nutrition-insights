@@ -1036,6 +1036,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       getMacroStatusLabel(visual.carbs, carbs) !== "OK" ||
                       getMacroStatusLabel(visual.fat, fat) !== "OK";
                     
+                    // SOBERANIA: Paciente nunca vê alertas de divergência técnica
+                    if (isPatient) return null;
+
                     return isAnyInconsistent && (
                       <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/20">
                         <AlertTriangle className="w-2.5 h-2.5 mr-1" /> Divergência detectada
