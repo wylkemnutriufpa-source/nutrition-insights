@@ -172,7 +172,7 @@ export class LibraryV3Resolver {
     if (humanResult.status === 'absurd') {
       console.warn(`[LibraryV3Resolver] REJECTED ABSURD MEAL: ${baseItem.title}`, humanResult.reasons);
       
-      await supabase.from('clinical_telemetry').insert({
+      await (supabase.from('clinical_telemetry') as any).insert({
         event_type: 'meal_rejected',
         meal_slot: context.mealSlot,
         content: { title: baseItem.title, items: scaledItems },
