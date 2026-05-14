@@ -185,7 +185,7 @@ export async function promoteDraftToMealPlan(
       }
 
       const mealType = mealNameToType(meal.name);
-
+      
       // 🛡️ FINAL CLINICAL SANITIZATION: Garante que NADA explodido chegue à persistência
       // Mesmo que o editor esteja dirty, o ClinicalGuard limpa aqui.
       const rawMacros = {
@@ -234,11 +234,13 @@ export async function promoteDraftToMealPlan(
         substitution_group_id: groupId,
         edit_metadata: {
           ...item,
+          blockId,
           imageUrl: itemImageUrl,
           mealImageUrl: meal.imageUrl || null,
           display_quantity: item.quantity,
           display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit,
           day_of_week: meal.day_of_week ?? null,
+          editor_version: 'v3',
         }
       });
 
@@ -265,9 +267,11 @@ export async function promoteDraftToMealPlan(
             substitution_group_id: groupId,
             edit_metadata: {
               ...sub,
+              blockId,
               display_quantity: sub.suggestedQuantity || sub.portionValue || 100,
               display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g',
               day_of_week: meal.day_of_week ?? null,
+              editor_version: 'v3',
             }
           });
         });
