@@ -1418,7 +1418,7 @@ const EditorV3Page = () => {
     setGeneratingMealId(mealId);
     try {
       // Usar a engine via hook useEditorState
-      generateMeal(mealId, patientContext?.goal || 'manutencao', baseFoods);
+      generateMeal(mealId, patientContext?.goal || 'manutencao');
       // O hook já lida com o toast de sucesso
     } catch (error) {
       console.error('[V3-UI] Error generating meal:', error);
