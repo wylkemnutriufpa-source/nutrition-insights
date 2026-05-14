@@ -15,7 +15,7 @@ async function seedLibraryV3() {
   ];
 
   for (const c of clusters) {
-    await supabase.from('v3_clusters').upsert(c, { onConflict: 'cluster_slug' });
+    await supabase.from('v3_clusters').upsert(c as any, { onConflict: 'cluster_slug' });
   }
 
   // 2. Items
@@ -92,15 +92,20 @@ async function seedLibraryV3() {
   ];
 
   for (const item of items) {
-    const { data: inserted } = await supabase.from('v3_library_items').upsert(item, { onConflict: 'slug' }).select('id').single();
+    const { data: inserted, error: upsertError } = await supabase.from('v3_library_items').upsert(item as any, { onConflict: 'slug' }).select('id').single();
     
+    if (upsertError) {
+      console.error(`Error upserting ${item.slug}:`, upsertError);
+      continue;
+    }
+
     if (inserted) {
       // Add fake image for testing
       await supabase.from('v3_library_images').upsert({
         item_slug: item.slug,
         image_asset: `https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/${item.slug}.jpg`,
         active: true
-      }, { onConflict: ['item_slug', 'image_asset'] } as any);
+      } as any, { onConflict: ['item_slug', 'image_asset'] } as any);
     }
   }
 
