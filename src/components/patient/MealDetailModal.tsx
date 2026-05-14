@@ -211,7 +211,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     }
   }, [open]);
 
+  const { user, isPatient, isNutritionist, isAdmin } = useAuth();
   const { showMacros, showTechnicalDetails, isBasic } = useExperienceUI();
+  
+  // Soberania: se for paciente, nunca mostra detalhes técnicos ou auditoria
+  const canSeeInternalAudit = !isPatient && (isNutritionist || isAdmin || showTechnicalDetails);
+  
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageSearch, setImageSearch] = useState("");
