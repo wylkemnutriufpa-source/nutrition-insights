@@ -14,6 +14,7 @@ export type SubstitutionGroup =
   | "proteina-leve"
   | "proteina-peixe"
   | "carbo-almoco"
+  | "carbo-legume"
   | "carbo-tuberoso"
   | "carbo-cereal"
   | "cafe-classico"
@@ -57,6 +58,8 @@ const FOOD_GROUP_MAP: Record<string, SubstitutionGroup> = {
   // Carbo almoço (arroz, massa)
   "Arroz branco": "carbo-almoco",
   "Arroz integral": "carbo-almoco",
+  "Feijão carioca": "carbo-legume",
+  "Feijão preto": "carbo-legume",
   "Macarrão integral": "carbo-almoco",
   "Macarrão branco": "carbo-almoco",
   "Quinoa cozida": "carbo-almoco",
@@ -339,6 +342,7 @@ export const SUBSTITUTION_GROUP_LABELS: Record<SubstitutionGroup, string> = {
   "proteina-leve": "🍳 Proteína Leve",
   "proteina-peixe": "🐟 Peixes & Frutos do Mar",
   "carbo-almoco": "🍚 Carboidrato Almoço",
+  "carbo-legume": "🌱 Leguminosas",
   "carbo-tuberoso": "🥔 Tubérculos",
   "carbo-cereal": "🌾 Pães & Cereais",
   "cafe-classico": "☕ Café da Manhã",

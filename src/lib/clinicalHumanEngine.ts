@@ -33,6 +33,7 @@ const GROUP_HUMAN_AFFINITY: Record<SubstitutionGroup, Partial<Record<MealSlot, n
   "proteina-almoco": { lunch: 1.0, dinner: 0.9, breakfast: 0.0, supper: 0.2 },
   "proteina-peixe": { lunch: 1.0, dinner: 1.0, breakfast: 0.0 },
   "carbo-almoco": { lunch: 1.0, dinner: 0.8, breakfast: 0.0 },
+  "carbo-legume": { lunch: 1.0, dinner: 0.9, breakfast: 0.0 },
   "carbo-tuberoso": { lunch: 1.0, dinner: 0.9, breakfast: 0.1 },
   "salada-base": { lunch: 1.0, dinner: 1.0, breakfast: 0.0 },
   "lanche-proteico": { afternoon_snack: 1.0, morning_snack: 0.8, breakfast: 0.4 },
@@ -207,29 +208,49 @@ export function calculateHumanMealScore(
 
 /**
  * Weekly Fatigue Guard
- * Impede repetição excessiva de itens ou estruturas.
+ * Impede repetição excessiva de itens ou estruturas, mas permite rotação natural.
  */
 export class WeeklyFatigueGuard {
   private history: Record<string, number> = {}; // item_name -> count
   private dominantProteins: Record<string, number> = {}; // group -> count
+  private mealStructures: Record<string, number> = {}; // structure_hash -> count
 
   constructor() {}
 
+  /**
+   * Gera um hash simples da estrutura da refeição (nomes dos itens ordenados)
+   */
+  private getStructureHash(meal: Meal): string {
+    return meal.items
+      .map(i => i.name)
+      .sort()
+      .join('|');
+  }
+
   checkFatigue(meal: Meal): { canAdd: boolean; reason?: string } {
+    const structureHash = this.getStructureHash(meal);
+    
+    // 🛡️ ANTI-CLONE: Não permite a exata mesma refeição mais de 2x na semana (ex: 7 dias de strogonoff)
+    if ((this.mealStructures[structureHash] || 0) >= 2) {
+      return { canAdd: false, reason: `Refeição idêntica detectada (limite 2x): ${meal.name}` };
+    }
+
     for (const item of meal.items) {
       const group = getFoodGroup(item.name);
       
-      // Regra: Não repetir proteína dominante > 2x na semana (ex: frango todo dia)
+      // Regra: Proteína dominante (Frango, Carne, Peixe) limitada a 3x na semana no mesmo slot
       if (group?.startsWith('proteina')) {
         const count = this.dominantProteins[group] || 0;
-        if (count >= 2) {
+        if (count >= 3) {
           return { canAdd: false, reason: `Excesso de repetição da proteína: ${group}` };
         }
       }
 
-      // Regra: Não repetir exatamente o mesmo item > 4x na semana
+      // Regra: Não repetir exatamente o mesmo item isolado > 5x na semana (ex: banana pode repetir mais que frango)
+      const isFruit = group?.startsWith('fruta');
+      const limit = isFruit ? 6 : 4; 
       const itemCount = this.history[item.name] || 0;
-      if (itemCount >= 4) {
+      if (itemCount >= limit) {
         return { canAdd: false, reason: `Item repetido excessivamente: ${item.name}` };
       }
     }
@@ -238,6 +259,9 @@ export class WeeklyFatigueGuard {
   }
 
   addMeal(meal: Meal) {
+    const structureHash = this.getStructureHash(meal);
+    this.mealStructures[structureHash] = (this.mealStructures[structureHash] || 0) + 1;
+
     meal.items.forEach(item => {
       this.history[item.name] = (this.history[item.name] || 0) + 1;
       const group = getFoodGroup(item.name);
