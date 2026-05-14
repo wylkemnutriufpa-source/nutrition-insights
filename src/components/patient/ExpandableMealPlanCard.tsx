@@ -261,114 +261,18 @@ export default function ExpandableMealPlanCard() {
                       <span className="text-[10px] font-bold">{Math.round(dailyAdherence)}%</span>
                     </div>
                   </div>
-                  {groupedToday.map(({ key, label, icon, items }) => (
+                  {groupedToday.map(({ key, label, icon, time, items }) => (
                     <div key={key} className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-primary text-xs">{icon}</span>
-                        <span className="text-[11px] font-semibold">{label}</span>
-                      </div>
-                      {items.map(item => {
-                        const comp = completions.find(c => c.meal_plan_item_id === item.id);
-                        const status = comp?.adherence_status;
-                        return (
-                          <div key={item.id} className="flex items-start gap-2 pl-5">
-                            {status === "followed" ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
-                              : status === "partial" ? <MinusCircle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
-                              : status === "not_followed" ? <AlertCircle className="w-3 h-3 text-red-500 shrink-0 mt-0.5" />
-                              : <Circle className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className={`text-xs font-medium truncate ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
-                                  {item.title}
-                                </span>
-                                {(() => {
-                                  const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
-                                  if (cal === null || cal === undefined) return null;
-                                  return (
-                                    <div className="flex items-center gap-1 ml-auto shrink-0">
-                                      <span className="text-[9px] text-muted-foreground">{fmtMacro(cal)}kcal</span>
-                                      {isCalorieClamped(cal) && (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger>
-                                              <Info className="w-2.5 h-2.5 text-amber-500" />
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p className="text-[10px]">
-                                                Ajustado para {getCalorieClampValue(cal)} kcal (limite de segurança).
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              {(item.description || (item as any).edit_metadata?.display_quantity) && (
-                                <div className="mt-0.5">
-                                  {(() => {
-                                    const editMeta = (item as any).edit_metadata;
-                                    const isV3 = (item as any).editor_version === 'v3' || (item as any).editor_version === 'V3';
-                                    const displayQuantity = item.display_quantity || editMeta?.display_quantity;
-                                    const displayUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
-                                    const clinicalMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
-
-                                    if (isV3 && displayQuantity) {
-                                      return (
-                                        <p className="text-[10px] font-bold text-primary leading-tight">
-                                          {displayQuantity} {displayUnit}
-                                        </p>
-                                      );
-                                    }
-                                    
-                                    if (isV3 && clinicalMass && !displayQuantity) {
-                                      return (
-                                        <p className="text-[10px] font-bold text-primary leading-tight">
-                                          {clinicalMass}g
-                                        </p>
-                                      );
-                                    }
-
-                                    if (!isV3) {
-                                      if (displayQuantity) {
-                                        return (
-                                          <p className="text-[10px] font-bold text-primary leading-tight">
-                                            {displayQuantity} {displayUnit}
-                                          </p>
-                                        );
-                                      }
-                                      if (clinicalMass) {
-                                        return (
-                                          <p className="text-[10px] font-bold text-primary leading-tight">
-                                            {clinicalMass}g
-                                          </p>
-                                        );
-                                      }
-                                    }
-                                    
-                                    return null;
-                                  })()}
-                                  {item.description && (
-                                    <p className="text-[10px] text-muted-foreground whitespace-pre-line leading-snug">
-                                      {(() => {
-                                        const desc = item.description || "";
-                                        const qty = String(item.display_quantity || (item as any).edit_metadata?.display_quantity || "");
-                                        const mass = String(item.clinical_mass_g || (item as any).clinical_mass_g || "");
-                                        if (qty && desc.trim() === `${qty} ${item.display_unit || ""}`.trim()) return null;
-                                        if (mass && desc.trim() === `${mass}g`.trim()) return null;
-                                        return desc;
-                                      })()}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                      <MealSlotCard
+                        mealType={{ key, label, icon, time }}
+                        items={items as any}
+                        completions={completions}
+                        isCurrent={false} // Card is already within its own context
+                        onClick={() => setSelectedSlot({ type: key, items: items as any })}
+                      />
                     </div>
                   ))}
+
                 </TabsContent>
 
                 {/* WEEKLY view */}
