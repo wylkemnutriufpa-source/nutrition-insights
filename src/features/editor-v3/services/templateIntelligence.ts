@@ -26,6 +26,7 @@ export interface TemplateAdjustmentParams {
   goalFat?: number;
   goalCalories?: number;
   isWeeklyMode?: boolean;
+  styleContract?: TemplateStyleContract;
 }
 
 /**
@@ -38,6 +39,8 @@ export function processSmartTemplate(
   baseFoods: Food[] = []
 ): Meal[] {
   console.log(`[SmartTemplate] Processando template "${template.name}"`, params);
+
+  const styleContract = params.styleContract || getStyleContract((template as any).family);
 
   // 🛡️ REGRAS DE TEMPLATE: O slot agora é detectado com maior rigor para evitar drift.
   const templateName = template.name.toLowerCase();
