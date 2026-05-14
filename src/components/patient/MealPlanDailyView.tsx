@@ -650,37 +650,49 @@ const MealSlotCard = memo(function MealSlotCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center mt-2">
         <div className="flex -space-x-2">
-          {items.slice(0, 3).map((item, idx) => (
+          {items.map((item, idx) => (
             <div 
               key={item.id} 
-              className="w-6 h-6 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden"
+              className="w-8 h-8 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden shadow-sm"
               title={item.title}
             >
               {item.image_url ? (
                 <img src={item.image_url} alt="" className="w-full h-full object-cover" />
               ) : (
-                <Utensils className="w-3 h-3 text-muted-foreground" />
+                <div className="w-full h-full bg-primary/5 flex items-center justify-center">
+                  <Utensils className="w-4 h-4 text-primary/40" />
+                </div>
               )}
             </div>
           ))}
-          {items.length > 3 && (
-            <div className="w-6 h-6 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-[8px] font-bold">
-              +{items.length - 3}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] text-muted-foreground font-semibold truncate">
+            {items.map(i => i.title).join(" + ")}
+          </p>
+          {items.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold uppercase tracking-tighter">
+                {items.length} {items.length === 1 ? "Item" : "Itens"}
+              </span>
+              <span className="text-[9px] text-muted-foreground font-medium">
+                Toque para ver substituições
+              </span>
             </div>
           )}
         </div>
-        <p className="text-[10px] text-muted-foreground font-medium flex-1 truncate">
-          {items.map(i => i.title).join(", ")}
-        </p>
         
         {isFullyFollowed ? (
-          <Badge className="bg-emerald-500/20 text-emerald-600 border-none text-[9px] font-bold uppercase py-0 h-5">
-            Concluída ✓
-          </Badge>
+          <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 px-2 py-1 rounded-lg">
+             <CheckCircle2 className="w-3.5 h-3.5" />
+             <span className="text-[10px] font-bold uppercase">Concluída</span>
+          </div>
         ) : (
-          <ArrowRightLeft className="w-3.5 h-3.5 text-primary/40" />
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <ArrowRightLeft className="w-4 h-4" />
+          </div>
         )}
       </div>
     </motion.div>
@@ -705,10 +717,9 @@ const MealGroup = memo(function MealGroup({
   const { isBasic } = useExperienceUI();
   const isCurrent = isCurrentMeal(mealType.time);
   
-  // 🛡️ SOBERANIA V3: Se estivermos em modo de acoplamento (ou se o nutricionista desejar), 
-  // mostramos o SlotCard ao invés de listar todos os itens.
-  // Por padrão, se houver mais de um item no grupo, usamos o acoplamento para limpar a UI.
-  const useCoupledView = items.length > 1 && onOpenSlot;
+  // 🛡️ SOBERANIA V3: Sempre usamos a visão acoplada se o handler onOpenSlot estiver disponível,
+  // garantindo que a "Refeição" seja a unidade principal de interação, como solicitado.
+  const useCoupledView = !!onOpenSlot;
 
   if (useCoupledView) {
     return (
