@@ -14,6 +14,7 @@ import {
   getValidSubstitutions, getFoodGroup, SUBSTITUTION_GROUP_LABELS,
   SMART_LABEL_CONFIG, findFoodsInTitle,
 } from "@/lib/substitutionGroups";
+import { normalizeSlot, isFoodAllowedInSlot } from "@/lib/mealTypeIntegrity";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
