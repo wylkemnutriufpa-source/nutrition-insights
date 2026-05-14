@@ -475,6 +475,7 @@ export default function ExpandableMealPlanCard() {
           mealPlanItemId={substitutingItem.id}
           mealPlanId={plan?.id || ""}
           patientId={user?.id || ""}
+          mealSlot={(substitutingItem as any)?.meal_type}
           options={substitutingItem.metadata?.substitution_options}
           onSubstitute={() => {
             fetchData();
