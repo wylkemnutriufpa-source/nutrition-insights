@@ -21,6 +21,7 @@ export type MealSlot =
   | "lunch"
   | "afternoon_snack"
   | "dinner"
+  | "evening_snack"
   | "supper";
 
 /** Aliases comuns vindos do banco / UI normalizados para o slot canônico */
@@ -28,11 +29,15 @@ const SLOT_ALIASES: Record<string, MealSlot> = {
   breakfast: "breakfast",
   cafe_da_manha: "breakfast",
   "café_da_manhã": "breakfast",
+  "cafe da manha": "breakfast",
+  "café da manhã": "breakfast",
   cafe: "breakfast",
 
   morning_snack: "morning_snack",
   lanche_da_manha: "morning_snack",
   "lanche_da_manhã": "morning_snack",
+  "lanche da manha": "morning_snack",
+  "lanche da manhã": "morning_snack",
   lanchemanha: "morning_snack",
 
   lunch: "lunch",
@@ -42,6 +47,7 @@ const SLOT_ALIASES: Record<string, MealSlot> = {
   afternoon_snack: "afternoon_snack",
   snack: "afternoon_snack",
   lanche_da_tarde: "afternoon_snack",
+  "lanche da tarde": "afternoon_snack",
   lanche: "afternoon_snack",
 
   dinner: "dinner",
@@ -105,6 +111,12 @@ export const SLOT_ALLOWED_GROUPS: Record<MealSlot, SubstitutionGroup[]> = {
     "carbo-tuberoso",
     "salada-base",
   ],
+  evening_snack: [
+    "ceia-leve",
+    "laticinio-leve",
+    "fruta-acida",
+    "proteina-leve",
+  ],
   supper: [
     "ceia-leve",
     "laticinio-leve",
@@ -125,13 +137,20 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bcarne moída\b/i,
     /\btil[aá]pia\b/i,
     /\bsalm[aã]o\b/i,
+    /\bpeixe\b/i,
+    /\bfrango grelhado\b/i,
+    /\bfrango assado\b/i,
     /\bmacarr[aã]o\b/i,
-    /\bp[aã]o de queijo grande\b/i, // permitido apenas em versão pequena, fora do guard
+    /\bp[aã]o de queijo grande\b/i, 
     /\bsopa\b/i,
     /\bmandioca\b/i,
     /\binhame\b/i,
     /\bbatata doce\b/i,
     /\bbatata inglesa\b/i,
+    /\bstrogonoff\b/i,
+    /\bparmegiana\b/i,
+    /\bomellete de carne\b/i,
+    /\bomellete de frango\b/i,
   ],
   morning_snack: [
     /\barroz\b/i,
@@ -171,6 +190,18 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bvitamina\b/i,
     /\bgranola\b/i,
     /\bpanqueca\b/i,
+  ],
+  evening_snack: [
+    /\barroz\b/i,
+    /\bfeij[aã]o\b/i,
+    /\bpicanha\b/i,
+    /\bbife\b/i,
+    /\bmacarr[aã]o\b/i,
+    /\btil[aá]pia\b/i,
+    /\bbatata doce\b/i,
+    /\bbatata inglesa\b/i,
+    /\bmandioca\b/i,
+    /\binhame\b/i,
   ],
   supper: [
     /\barroz\b/i,

@@ -8,6 +8,8 @@ import {
   isBreakfastProtein,
   getFoodCategory 
 } from "./helpers";
+import { isFoodAllowedInSlot } from "../mealTypeIntegrity";
+import { getFoodGroup } from "../substitutionGroups";
 
 export interface Substitution {
   food: Food;
@@ -55,15 +57,20 @@ export function getSubstitutions(
     if (candCategory !== category) return false;
     if (f.id === food.id) return false;
     
-    // 🛡️ Governança de Contexto de Refeição (Anti-Tilápia no Café)
+    // 🛡️ Governança de Contexto de Refeição Soberana (Anti-Arroz/Tilápia no Café)
     if (mealType) {
+      if (!isFoodAllowedInSlot(f.name, getFoodGroup(f.name), mealType, {
+        source: "nutricore_v2.getSubstitutions",
+      })) {
+        return false;
+      }
+      
+      // Regra adicional legada para segurança de proteínas pesadas
       const isMorningOrSnack = mealType.toLowerCase().includes('café') || 
                                mealType.toLowerCase().includes('lanche') || 
                                mealType.toLowerCase().includes('ceia');
       
       if (isMorningOrSnack) {
-        // Se for café/lanche, não sugerir proteínas pesadas (peixe, carne, frango) 
-        // a menos que o alimento original JÁ SEJA uma proteína pesada.
         if (isHeavyProtein(candName) && !isHeavyProtein(name)) return false;
       }
     }
