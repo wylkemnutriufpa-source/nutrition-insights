@@ -74,6 +74,7 @@ import PlanAdjustmentModal from './PlanAdjustmentModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { TemplateV3Modal } from './TemplateV3Modal';
 import { ControlledDeliveryModal } from './ControlledDeliveryModal';
+import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
 import { V3DietTemplate } from '../types/types';
@@ -172,7 +173,9 @@ const EditorV3Page = () => {
   const [v3LibrarySearch, setV3LibrarySearch] = useState('');
   const [v3LibraryTab, setV3LibraryTab] = useState<'foods' | 'ready' | 'templates'>('foods');
   const [v3LibraryMealFilter, setV3LibraryMealFilter] = useState<string | null>(null);
-  
+  const [showV3DraftPreview, setShowV3DraftPreview] = useState(false);
+  const [v3DraftMeals, setV3DraftMeals] = useState<Meal[]>([]);
+
   const [selectedDietType, setSelectedDietType] = useState<string | null>(null);
   const [replaceExistingFlag, setReplaceExistingFlag] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
@@ -646,7 +649,7 @@ const EditorV3Page = () => {
     
     setIsGeneratingGlobal(true);
     try {
-      toast.loading(`Gerando plano V3: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
+      toast.loading(`Gerando rascunho V3: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
       
       const v3Meals = await V3SandboxGenerator.generateDraft({
         templateSlug: selectedV3Template.slug,
@@ -658,8 +661,9 @@ const EditorV3Page = () => {
       });
 
       if (v3Meals && v3Meals.length > 0) {
-        setMeals(v3Meals);
-        toast.success(`Plano V3 Soberano gerado com sucesso!`, { id: 'v3-gen' });
+        setV3DraftMeals(v3Meals);
+        setShowV3DraftPreview(true);
+        toast.dismiss('v3-gen');
       }
     } catch (err: any) {
       console.error('[V3-UI] Error generating V3 draft:', err);
@@ -667,6 +671,12 @@ const EditorV3Page = () => {
     } finally {
       setIsGeneratingGlobal(false);
     }
+  };
+
+  const handleApproveDraft = (approvedMeals: Meal[]) => {
+    setMeals(approvedMeals);
+    toast.success(`Plano V3 Soberano aplicado com sucesso!`);
+    setShowV3DraftPreview(false);
   };
 
   useEffect(() => {
@@ -1519,6 +1529,14 @@ const EditorV3Page = () => {
         onClose={() => setShowV3TemplateModal(false)}
         template={selectedV3Template}
         onSelectProfile={handleApplyV3Profile}
+      />
+
+      <DraftV3PreviewModal
+        isOpen={showV3DraftPreview}
+        onClose={() => setShowV3DraftPreview(false)}
+        draftMeals={v3DraftMeals}
+        onApprove={handleApproveDraft}
+        patientName={patientContext?.name || "Paciente"}
       />
 
       <header className="bg-neutral-950/80 border-b border-white/5 py-3 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
