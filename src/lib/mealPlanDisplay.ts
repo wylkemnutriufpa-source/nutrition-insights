@@ -62,26 +62,28 @@ export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
 /**
  * 🛡️ HIERARCHY INTEGRITY ASSERTIONS
  * Garante que a soberania dos metadados de hierarquia seja respeitada.
+ * NUNCA permite que metadados críticos sejam perdidos ou normalizados incorretamente.
  */
 export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: string): void {
   const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3";
   
-  // 1. Regra de BlockId (Obrigatório em V3)
+  // 1. Regra de BlockId (Obrigatório e Imutável em V3)
   const blockId = (item as any).blockId || (item as any).edit_metadata?.blockId;
   if (isV3 && !blockId) {
     SovereignTelemetry.log({
       runtime_source: `hierarchy_guard_${context}`,
       event_type: 'missing_block_id',
       severity: 'critical',
-      message: `HIERARCHY_GUARD: item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3.`,
+      message: `HIERARCHY_GUARD: item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3. BLOQUEIO DE RENDER.`,
       metadata: { item_id: item.id, title: item.title, context }
     });
-    // Não abortamos o render total para não quebrar a UI do paciente, 
-    // mas logamos como crítico para auditoria.
+    // RUPTURA CRÍTICA: Se for V3 e não houver blockId, o sistema não sabe como agrupar.
+    // Lançamos erro para disparar o ErrorBoundary e impedir UI inconsistente.
+    throw new Error(`Critical Hierarchy Failure: Item "${item.title}" is missing blockId in V3 runtime.`);
   }
 
   // 2. Regra de Is Primary vs Dashboard
-  // Se is_primary for falso, ele NUNCA deve ser o owner de um slot
+  // Se is_primary for falso, ele NUNCA deve ser o owner de um slot ou entrar em macros.
   if (item.is_primary === false && !item.substitution_group_id) {
     SovereignTelemetry.log({
       runtime_source: `hierarchy_guard_${context}`,
@@ -95,6 +97,10 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
 
 export function sortPlanItems<T extends DisplayMealPlanItem>(items: T[]): T[] {
   return [...items].sort((a, b) => {
+    // 🛡️ ASSERT: Auditoria de integridade durante a ordenação
+    assertHierarchyIntegrity(a, "sortPlanItems_A");
+    assertHierarchyIntegrity(b, "sortPlanItems_B");
+
     const aDay = a.day_of_week === 0 ? 7 : (a.day_of_week ?? 99);
     const bDay = b.day_of_week === 0 ? 7 : (b.day_of_week ?? 99);
     if (aDay !== bDay) return aDay - bDay;
