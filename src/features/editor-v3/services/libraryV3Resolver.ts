@@ -54,7 +54,8 @@ export class LibraryV3Resolver {
       'almoço': 'lunch',
       'lanche_da_tarde': 'snack',
       'jantar': 'dinner',
-      'ceia': 'supper'
+      'ceia': 'supper',
+      'evening_snack': 'supper'
     };
 
     const libMealType = slotToType[context.mealSlot.toLowerCase()] || context.mealSlot.toLowerCase();
