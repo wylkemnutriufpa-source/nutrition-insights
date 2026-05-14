@@ -201,6 +201,7 @@ export async function buildMealPlanSnapshot(
       clinical_mass_g: meta?.clinical_mass_g !== undefined ? num(meta.clinical_mass_g) : (it as any).grams !== undefined ? num((it as any).grams) : null,
       display_quantity: meta?.display_quantity !== undefined ? num(meta.display_quantity) : meta?.quantity !== undefined ? num(meta.quantity) : null,
       display_unit: meta?.display_unit ?? meta?.portionUnitLabel ?? meta?.portionLabel ?? null,
+      block_id: (it.edit_metadata as any)?.blockId || it.substitution_group_id || null,
     });
   }
 
