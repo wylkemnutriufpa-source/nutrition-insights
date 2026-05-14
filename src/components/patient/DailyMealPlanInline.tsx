@@ -24,6 +24,7 @@ import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
 
 
 import type { MealDetailData } from "@/components/patient/MealPlanDailyView";
+import { buildDailyDisplayItems } from "@/lib/mealPlanDisplay";
 
 interface MealPlan {
   id: string;
