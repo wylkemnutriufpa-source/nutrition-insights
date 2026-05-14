@@ -794,35 +794,29 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      generatePlan: async (goal, baseCalories, availableFoods, replaceExisting = false) => {
-        let currentMeals = get().meals;
-
-        const { patientContext } = get();
+      generatePlan: async (goal, baseCalories, replaceExisting = false) => {
+        const { patientContext, patientId } = get();
         
-        // No V3, se tivermos contexto do paciente, priorizamos as metas calculadas pelo NutriCore
         const finalCalories = patientContext?.calories_target || baseCalories;
         const finalGoal = patientContext?.goal || goal;
 
-        if (replaceExisting) {
-          currentMeals = DEFAULT_MEALS.map(m => ({ ...m, items: [], imageUrl: undefined }));
-        }
+        const context = {
+          ...patientContext,
+          calories_target: finalCalories,
+          id: patientId || 'sandbox',
+          name: patientContext?.name || 'Paciente',
+          goal: finalGoal,
+          weight: patientContext?.weight || 70,
+          height: patientContext?.height || 170,
+          restrictions: patientContext?.restrictions || [],
+          preferences: patientContext?.preferences || []
+        };
 
-        const newMeals = await generatePlanWithEngine(
-          currentMeals, 
-          finalGoal, 
-          finalCalories, 
-          availableFoods, 
-          patientContext?.protocol_type || 'default_v3',
-          patientContext || undefined
-        );
+        const newMeals = SimpleMealGenerator.generatePlan(context as any, false);
         
-        // PARTE 1 & 3 - Plotagem com imagens correspondentes (Lote)
         const mealsWithImages = await Promise.all(newMeals.map(async (meal) => {
-          if (meal.items.length > 0 && !meal.imageUrl) {
-             const bestImage = await getBestMealImage(meal.name, meal.items);
-             return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
-          }
-          return meal;
+          const bestImage = await getBestMealImage(meal.name, meal.items);
+          return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
         }));
 
         set({ meals: mealsWithImages, planStatus: 'draft' });
@@ -830,7 +824,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Plano estruturado para ${finalGoal} com ${Math.round(finalCalories)}kcal`);
       },
 
-      generateMeal: async (mealId, goal, availableFoods, baseCalories = 2000) => {
+      generateMeal: async (mealId, goal, baseCalories = 2000) => {
         const { meals, patientContext } = get();
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
