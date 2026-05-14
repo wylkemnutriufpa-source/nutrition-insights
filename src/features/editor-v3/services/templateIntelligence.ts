@@ -1,4 +1,4 @@
-import { Meal, MealItem, Food, MealTemplate } from "../types";
+import { Meal, MealItem, Food, MealTemplate, TemplateStyleContract } from "../types";
 import { normalizeFood } from "../utils/normalization";
 import { calculateItemMacros } from "@/lib/nutricore_v2/helpers";
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
@@ -9,7 +9,8 @@ import {
   normalizeSlot,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
-import { WeeklyFatigueGuard } from "@/lib/clinicalHumanEngine";
+import { WeeklyFatigueGuard, calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+import { getStyleContract } from "@/lib/templateStyles";
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
