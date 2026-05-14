@@ -296,6 +296,8 @@ export default function DailyMealPlanInline() {
             focusMode={false}
             onSetAdherence={setAdherence}
             onOpenDetail={setSelectedMeal}
+            onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
+            onOpenSubstitution={setSubstitutingItem}
           />
         ))}
       </div>
@@ -304,16 +306,45 @@ export default function DailyMealPlanInline() {
       {!isBasic && (
         <Card className="p-3 text-center border-border/50 bg-muted/5">
           <p className="text-[10px] text-muted-foreground italic">
-            💡 Clique na refeição para ver detalhes ou marcar como seguida.
+            💡 Clique na refeição para ver detalhes ou trocar opções.
           </p>
         </Card>
       )}
+
+      <MealSlotModal
+        open={!!selectedSlot}
+        onOpenChange={(open) => !open && setSelectedSlot(null)}
+        mealType={selectedSlot?.type || ""}
+        items={selectedSlot?.items || []}
+        completions={completions}
+        onSetAdherence={setAdherence}
+        onOpenDetail={setSelectedMeal}
+        onOpenSubstitution={setSubstitutingItem}
+      />
 
       <MealDetailModal
         open={!!selectedMeal}
         onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
         meal={selectedMeal}
       />
+
+      {substitutingItem && (
+        <MealSubstitutionModal
+          open={!!substitutingItem}
+          onOpenChange={(open) => !open && setSubstitutingItem(null)}
+          mealTitle={substitutingItem.title}
+          mealPlanItemId={substitutingItem.id}
+          mealPlanId={plan?.id || ""}
+          patientId={user?.id || ""}
+          options={substitutingItem.metadata?.substitution_options}
+          onSubstitute={(food, original) => {
+            // Re-fetch data to show the substitution
+            fetchData(true);
+            setSubstitutingItem(null);
+          }}
+        />
+      )}
     </div>
   );
 }
+
