@@ -177,6 +177,7 @@ const EditorV3Page = () => {
   const [patientSearch, setPatientSearch] = useState('');
   
   const [debugMode, setDebugMode] = useState(false);
+  const [showControlledDelivery, setShowControlledDelivery] = useState(false);
   const [isEditingAntro, setIsEditingAntro] = useState(false);
   const [editAntroValues, setEditAntroValues] = useState({ weight: 0, height: 0, goal: 'Manutenção' });
   const [isSavingAntro, setIsSavingAntro] = useState(false);
