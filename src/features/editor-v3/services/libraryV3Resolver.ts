@@ -176,7 +176,13 @@ export class LibraryV3Resolver {
 
     // 6. Montagem da Refeição
     return {
-      // ... keep existing code
+      id: crypto.randomUUID(),
+      name: baseItem.title,
+      items: scaledItems,
+      imageUrl: imageUrl || '',
+      imageSource: 'auto',
+      time: '00:00' // Será preenchido pelo distribuidor
+    };
   }
 
   private static generateHash(str: string): number {
