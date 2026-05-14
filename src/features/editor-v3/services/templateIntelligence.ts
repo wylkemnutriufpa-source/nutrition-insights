@@ -1,6 +1,7 @@
 import { Meal, MealItem, Food, MealTemplate } from "../types";
 import { normalizeFood } from "../utils/normalization";
 import { calculateItemMacros } from "@/lib/nutricore_v2/helpers";
+import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
 
 const makeInstanceId = () => crypto.randomUUID();
 
@@ -56,24 +57,17 @@ export function processSmartTemplate(
   const itemsWithSubs = baseItems.map(item => {
     if (baseFoods.length === 0) return item;
 
-    // Buscar 3 substitutos da mesma categoria
-    const subs = baseFoods
-      .filter(f => f.category === item.category && f.name !== item.name)
-      .slice(0, 3)
-      .map(s => {
-        // Calcular equivalência baseada no kcal do alimento (que já é normalizado na V3)
-        const ratio = (item.kcal || 0) / (s.kcal || 1); 
-        const equivGrams = Math.max(10, Math.round((s.portionValue || 100) * ratio / 5) * 5); 
-        return {
-          ...s,
-          suggestedQuantity: equivGrams,
-          portionLabel: `${equivGrams}g`
-        };
-      });
-
+    // Usar o motor soberano de substituições do NutriCore V3
+    const mealType = template.name; // O nome do template geralmente indica a refeição (ex: "Café da Manhã")
+    const subs = getSubstitutions(item, baseFoods, item.quantity, [], mealType);
+    
     return {
       ...item,
-      substitutions: subs
+      substitutions: subs.map(s => ({
+        ...s.food,
+        suggestedQuantity: s.grams,
+        portionLabel: s.unit_label
+      })) as any
     };
   });
 
