@@ -184,6 +184,18 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bgranola\b/i,
     /\bpanqueca\b/i,
   ],
+  evening_snack: [
+    /\barroz\b/i,
+    /\bfeij[aã]o\b/i,
+    /\bpicanha\b/i,
+    /\bbife\b/i,
+    /\bmacarr[aã]o\b/i,
+    /\btil[aá]pia\b/i,
+    /\bbatata doce\b/i,
+    /\bbatata inglesa\b/i,
+    /\bmandioca\b/i,
+    /\binhame\b/i,
+  ],
   supper: [
     /\barroz\b/i,
     /\bfeij[aã]o\b/i,
