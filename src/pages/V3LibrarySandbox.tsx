@@ -105,9 +105,10 @@ const V3LibrarySandbox = () => {
                     <SelectValue placeholder="Kcal" />
                   </SelectTrigger>
                   <SelectContent>
-                    {selectedTemplate?.kcal_profiles?.map(k => (
-                      <SelectItem key={k} value={k.toString()}>{k} kcal</SelectItem>
-                    )) || (
+                    {selectedTemplate?.kcal_profiles?.map((k, idx) => {
+                      const val = typeof k === 'number' ? k : k.kcal;
+                      return <SelectItem key={`${val}-${idx}`} value={val.toString()}>{val} kcal</SelectItem>
+                    }) || (
                       <>
                         <SelectItem value="1500">1500 kcal</SelectItem>
                         <SelectItem value="2000">2000 kcal</SelectItem>
