@@ -22545,6 +22545,7 @@ export type Database = {
         }
         Returns: Json
       }
+      repair_orphaned_published_plans: { Args: never; Returns: Json }
       reprocess_dead_letter_job: { Args: { dlq_id: string }; Returns: string }
       reset_onboarding_pipeline: {
         Args: {
