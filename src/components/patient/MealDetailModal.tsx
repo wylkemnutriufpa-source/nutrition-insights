@@ -7,8 +7,9 @@ import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
   ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
-  SlidersHorizontal, ArrowRightLeft,
+  SlidersHorizontal, ArrowRightLeft, User, ShieldCheck,
 } from "lucide-react";
+import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
