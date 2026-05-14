@@ -100,23 +100,52 @@ export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string):
     reasons.push('Combinação improvável: Leguminosa + Laticínio');
   }
 
-  // 4. Bloqueios Absolutos (Regras do Usuário)
-  const hasFish = items.some(i => /\b(til[aá]pia|peixe|salm[aã]o|pescada|linguado|atum)\b/i.test(i.name));
-  if (slot === 'breakfast' && hasFish) {
-    score = 0;
-    reasons.push('Bloqueio Absoluto: Peixe no café da manhã');
+  // 4. Bloqueios Absolutos (Regras Soberanas do Usuário)
+  const fishRegex = /\b(til[aá]pia|peixe|salm[aã]o|pescada|linguado|atum)\b/i;
+  const heavyLunchRegex = /\b(arroz|feij[aã]o|macarr[aã]o|picanha|bife|carne mo[íi]da|carne bovina)\b/i;
+  const snackRegex = /\b(p[aã]o franc[eê]s|bolo|granola|aveia|iogurte|vitamina)\b/i;
+  const fruitRegex = /\b(fruta|ma[çc][aã]|banana|mam[aã]o|melancia|laranja|pera)\b/i;
+
+  // Bloqueio Café da Manhã
+  if (slot === 'breakfast') {
+    if (items.some(i => fishRegex.test(i.name))) {
+      score = 0;
+      reasons.push('Bloqueio Absoluto: Peixe no café da manhã');
+    }
+    if (items.some(i => heavyLunchRegex.test(i.name))) {
+      score = 0;
+      reasons.push('Bloqueio Absoluto: Almoço pesado no café da manhã');
+    }
   }
 
-  const hasHeavyLunch = items.some(i => /\b(arroz|feij[aã]o|macarr[aã]o|picanha)\b/i.test(i.name));
-  if (slot === 'breakfast' && hasHeavyLunch) {
-    score = 0;
-    reasons.push('Bloqueio Absoluto: Almoço pesado no café da manhã');
+  // Bloqueio Lanches
+  if (slot === 'morning_snack' || slot === 'afternoon_snack' || slot === 'evening_snack') {
+     if (items.some(i => heavyLunchRegex.test(i.name))) {
+       score = 0;
+       reasons.push('Bloqueio Absoluto: Lanche não pode conter prato principal (arroz/feijão/carne pesada)');
+     }
   }
 
-  const hasSnackInMain = items.some(i => /\b(p[aã]o franc[eê]s|bolo|granola)\b/i.test(i.name));
-  if ((slot === 'lunch' || slot === 'dinner') && hasSnackInMain) {
-    score -= 60;
-    reasons.push('Alimento de lanche em refeição principal (Bloqueado)');
+  // Bloqueio Almoço/Jantar
+  if (slot === 'lunch' || slot === 'dinner') {
+    if (items.some(i => snackRegex.test(i.name))) {
+      score = 0;
+      reasons.push('Bloqueio Absoluto: Alimento de lanche (pão/bolo/granola) em refeição principal');
+    }
+    
+    // Regra: Almoço não pode ser APENAS fruta
+    const allFruits = items.every(i => fruitRegex.test(i.name));
+    if (allFruits) {
+      score = 0;
+      reasons.push('Bloqueio Absoluto: Almoço/Jantar não pode ser composto apenas por frutas');
+    }
+
+    // Regra: Almoço precisa de proteína
+    const hasProtein = items.some(i => getFoodGroup(i.name)?.startsWith('proteina'));
+    if (!hasProtein) {
+      score -= 50;
+      reasons.push('Violação Clínica: Refeição principal sem fonte de proteína');
+    }
   }
 
   // 5. Determinação do Status
