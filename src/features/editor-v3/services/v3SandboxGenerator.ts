@@ -80,8 +80,9 @@ export class V3SandboxGenerator {
       slots = request.mealSlots || [
         { type: 'cafe_da_manha', time: '08:00' },
         { type: 'almoço', time: '13:00' },
-        { type: 'lanche_da_tarde', time: '16:00' },
-        { type: 'jantar', time: '19:30' }
+        { type: 'lanche_da_tarde', time: '16:30' },
+        { type: 'jantar', time: '20:00' },
+        { type: 'ceia', time: '22:30' }
       ];
     }
     

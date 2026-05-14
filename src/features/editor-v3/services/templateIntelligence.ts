@@ -38,8 +38,9 @@ export function processSmartTemplate(
 ): Meal[] {
   console.log(`[SmartTemplate] Processando template "${template.name}"`, params);
 
-  // Detecta o slot a partir do nome do template/refeição
-  const slot = normalizeSlot(template.name) ?? normalizeSlot((template as any).meal_type) ?? 'breakfast';
+  // 🛡️ REGRAS DE TEMPLATE: O slot agora é detectado com maior rigor para evitar drift.
+  const templateName = template.name.toLowerCase();
+  const slot = normalizeSlot(templateName) || 'breakfast';
 
   // 1. Plotagem inicial dos itens do template com HUMAN_SCORE_GUARD
   const baseItems: MealItem[] = template.items.map((f) => {
@@ -210,7 +211,7 @@ export function processSmartTemplate(
         id: makeInstanceId(),
         name: `${template.name} (${day})`,
         items: dayItems,
-        time: "08:00", // Default
+        time: slot === 'breakfast' ? "08:00" : (slot === 'lunch' ? "12:00" : (slot === 'dinner' ? "20:00" : "16:00")),
         day_of_week: currentDayOfWeek, // 🛡️ SOBERANIA: Define explicitamente o dia da semana
       } as Meal;
 
@@ -233,6 +234,6 @@ export function processSmartTemplate(
     id: makeInstanceId(),
     name: template.name,
     items: finalItems,
-    time: "08:00"
+    time: slot === 'breakfast' ? "08:00" : (slot === 'lunch' ? "12:00" : (slot === 'dinner' ? "20:00" : "16:00"))
   }];
 }

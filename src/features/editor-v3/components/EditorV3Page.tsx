@@ -78,6 +78,7 @@ import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
 import { V3DietTemplate } from '../types/types';
+import { calculateHumanMealScore } from '@/lib/clinicalHumanEngine';
 
 
 
@@ -2112,38 +2113,71 @@ const EditorV3Page = () => {
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {dayMeals.map((meal, mIdx) => (
-                          <Card key={`${day}-${meal.id}-${mIdx}`} className="bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group">
-                            {meal.imageUrl && (
+                        {dayMeals.map((meal, mIdx) => {
+                          const humanScore = calculateHumanMealScore(meal, meal.name);
+                          const isAbsurd = humanScore.status === 'absurd';
+
+                          return (
+                            <Card key={`${day}-${meal.id}-${mIdx}`} className={cn(
+                              "bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group relative",
+                              isAbsurd && "border-rose-500/50 bg-rose-500/5"
+                            )}>
+                              {isAbsurd && (
+                                <div className="absolute top-4 left-4 z-10">
+                                  <Badge variant="destructive" className="animate-pulse">❌ Violação Clínica</Badge>
+                                </div>
+                              )}
+                              
                               <div className="relative w-full h-32 overflow-hidden">
-                                <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                {meal.imageUrl && (
+                                  <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 to-transparent opacity-60" />
                                 <div className="absolute bottom-3 left-4">
                                   <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{meal.time}</span>
                                   <h4 className="text-sm font-black text-white uppercase tracking-tight">{meal.name}</h4>
                                 </div>
                               </div>
-                            )}
-                            <div className="p-4 space-y-2">
-                              {meal.items.map(item => (
-                                <div key={item.instanceId} className="flex justify-between items-center text-[11px] p-2 hover:bg-white/5 rounded-lg cursor-pointer" onClick={() => setSelectedItem({ mealId: meal.id, item })}>
-                                  <span className="text-white/60 font-bold line-clamp-1">{item.name}</span>
-                                  <span className="text-emerald-500 font-black ml-2 whitespace-nowrap">{formatPortion(item)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </Card>
-                        ))}
+
+                              <div className="p-4 space-y-2">
+                                {meal.items.map(item => (
+                                  <div key={item.instanceId} className="flex justify-between items-center text-[11px] p-2 hover:bg-white/5 rounded-lg cursor-pointer" onClick={() => setSelectedItem({ mealId: meal.id, item })}>
+                                    <span className="text-white/60 font-bold line-clamp-1">{item.name}</span>
+                                    <span className="text-emerald-500 font-black ml-2 whitespace-nowrap">{formatPortion(item)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </Card>
+                          );
+                        })}
                       </div>
                     </div>
                   );
                 })
               ) : (
-                meals.map((meal, index) => (
-                  <section key={meal.id} className={cn(
-                    "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-8 rounded-[3rem] border transition-all",
-                    activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-2xl shadow-emerald-500/5" : "bg-neutral-900/30 border-white/5 hover:border-white/10"
-                  )}>
+                meals.map((meal, index) => {
+                  const humanScore = calculateHumanMealScore(meal, meal.name);
+                  const isAbsurd = humanScore.status === 'absurd';
+
+                  return (
+                    <section key={meal.id} className={cn(
+                      "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-8 rounded-[3rem] border transition-all relative",
+                      activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-2xl shadow-emerald-500/5" : "bg-neutral-900/30 border-white/5 hover:border-white/10",
+                      isAbsurd && "border-rose-500/50 bg-rose-500/10"
+                    )}>
+                      {isAbsurd && (
+                        <div className="absolute top-8 right-8 z-20 flex flex-col items-end gap-2">
+                          <Badge variant="destructive" className="h-8 px-4 text-xs font-black uppercase animate-pulse">❌ Violação Clínica Detectada</Badge>
+                          <div className="bg-rose-950/80 border border-rose-500/30 p-3 rounded-2xl max-w-xs shadow-2xl backdrop-blur-md text-right">
+                            <p className="text-[10px] font-black uppercase text-rose-300 mb-2 tracking-widest">Motivos:</p>
+                            {humanScore.reasons.map((r, i) => (
+                              <p key={i} className="text-[10px] text-white/80 leading-relaxed">
+                                {r}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     <div className="flex flex-col md:flex-row gap-10">
                       <div className="w-full md:w-72 shrink-0">
                         <div className="relative aspect-square rounded-[2.5rem] overflow-hidden group/img shadow-2xl border border-white/5 group-hover:border-emerald-500/20 transition-all">
@@ -2201,8 +2235,9 @@ const EditorV3Page = () => {
                       </div>
                     </div>
                   </section>
-                ))
-              )}
+                );
+              })
+            )}
 
               <Button onClick={addMeal} variant="ghost" className="w-full py-16 border-2 border-dashed border-white/5 rounded-[3rem] hover:border-emerald-500/20 hover:bg-emerald-500/5 text-white/20 hover:text-emerald-400 font-black gap-4 transition-all flex flex-col items-center">
                 <Plus className="w-10 h-10" />

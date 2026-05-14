@@ -23,6 +23,7 @@ import { validateDraftIntegrity, validateClinicalValidity } from '../../security
 import { logClinicalEvent } from '../../audit/services/auditLogger';
 import { processSmartTemplate } from '../services/templateIntelligence';
 import { validatePersistedState } from '../security/storeGuard';
+import { normalizeSlot } from '@/lib/mealTypeIntegrity';
 
 
 interface EditorState {
@@ -929,13 +930,27 @@ export const useEditorState = create<EditorState>()(
         if (viewMode === 'weekly') {
           set({ meals: smartMeals, planStatus: 'draft' });
         } else {
-          // No modo diário, se o template tiver apenas 1 refeição, tentamos acoplar ou substituir a ativa
+          // No modo diário, o template é acoplado ou substitui se for plano completo
           if (smartMeals.length === 1) {
-             set((state) => ({
-               meals: [...state.meals, smartMeals[0]],
-               planStatus: 'draft'
-             }));
+             const mealToApply = smartMeals[0];
+             const slotType = normalizeSlot(mealToApply.name) || 'breakfast';
+             
+             set((state) => {
+               // 🛡️ REGRAS DE TEMPLATE: Se já existe um slot desse tipo, substituímos apenas os itens para manter a estrutura.
+               const existingMeal = state.meals.find(m => normalizeSlot(m.name) === slotType);
+               if (existingMeal) {
+                 return {
+                   meals: state.meals.map(m => m.id === existingMeal.id ? { ...m, items: mealToApply.items, imageUrl: mealToApply.imageUrl } : m),
+                   planStatus: 'draft'
+                 };
+               }
+               return {
+                 meals: [...state.meals, mealToApply],
+                 planStatus: 'draft'
+               };
+             });
           } else {
+             // Template de plano completo: redefinir todos os slots soberanos
              set({ meals: smartMeals, planStatus: 'draft' });
           }
         }
