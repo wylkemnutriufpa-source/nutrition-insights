@@ -41,6 +41,9 @@ export const BASE_FOODS: Food[] = [
   { id: "23", name: "Pão Integral", category: "carb", protein_100g: 9, carb_100g: 48, fat_100g: 3, kcal_100g: 260, base_grams: 50, unit: "2 fatias (50g)" },
   { id: "19", name: "Tapioca (Goma)", category: "carb", protein_100g: 0, carb_100g: 54, fat_100g: 0, kcal_100g: 220, base_grams: 60, unit: "g" },
   { id: "20", name: "Cuscuz de Milho", category: "carb", protein_100g: 2.5, carb_100g: 25, fat_100g: 0.5, kcal_100g: 110, base_grams: 100, unit: "g" },
+  { id: "26", name: "Macarrão Integral", category: "carb", protein_100g: 5, carb_100g: 25, fat_100g: 1, kcal_100g: 130, base_grams: 100, unit: "g" },
+  { id: "27", name: "Mandioca Cozida", category: "carb", protein_100g: 0.6, carb_100g: 30, fat_100g: 0.3, kcal_100g: 125, base_grams: 100, unit: "g" },
+  { id: "28", name: "Inhame Cozido", category: "carb", protein_100g: 1.5, carb_100g: 23, fat_100g: 0.2, kcal_100g: 100, base_grams: 100, unit: "g" },
 
   // Gorduras
   { id: "9", name: "Azeite de Oliva Extra Virgem", category: "fat", protein_100g: 0, carb_100g: 0, fat_100g: 100, kcal_100g: 884, base_grams: 13, unit: "colher de sopa (13ml)" },
