@@ -385,7 +385,7 @@ function PatientCard({ p, idx, onOpenResumo, onNavigate, toggleStatus, setAssign
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.04 }}
       whileHover={{ y: -2 }}
-      className={`glass-premium rounded-xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow`}
+      className={`glass-premium rounded-xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 min-w-0 overflow-hidden ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow`}
       onClick={() => onOpenResumo(p)}
     >
       {isInactive && (
