@@ -19716,6 +19716,60 @@ export type Database = {
         }
         Relationships: []
       }
+      v3_diet_templates: {
+        Row: {
+          active: boolean | null
+          cluster_map: Json
+          created_at: string | null
+          description: string | null
+          editable: boolean | null
+          id: string
+          kcal_profiles: Json | null
+          meal_distribution: Json
+          objective: string
+          slug: string
+          substitutions_enabled: boolean | null
+          template_type: string | null
+          title: string
+          updated_at: string | null
+          visual_style: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          cluster_map: Json
+          created_at?: string | null
+          description?: string | null
+          editable?: boolean | null
+          id?: string
+          kcal_profiles?: Json | null
+          meal_distribution: Json
+          objective: string
+          slug: string
+          substitutions_enabled?: boolean | null
+          template_type?: string | null
+          title: string
+          updated_at?: string | null
+          visual_style?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          cluster_map?: Json
+          created_at?: string | null
+          description?: string | null
+          editable?: boolean | null
+          id?: string
+          kcal_profiles?: Json | null
+          meal_distribution?: Json
+          objective?: string
+          slug?: string
+          substitutions_enabled?: boolean | null
+          template_type?: string | null
+          title?: string
+          updated_at?: string | null
+          visual_style?: string | null
+        }
+        Relationships: []
+      }
       v3_drafts: {
         Row: {
           created_at: string
