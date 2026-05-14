@@ -174,7 +174,7 @@ export class LibraryV3Resolver {
       .filter(Boolean) as MealItem[];
 
     // 🛡️ HUMAN_SCORE_GUARD: Rejeita refeições que não parecem humanas.
-    const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot);
+    const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot, styleContract);
     
     // Log de Telemetria Clínica (Rejeições)
     if (humanResult.status === 'absurd') {
