@@ -1,5 +1,6 @@
 // PDF Export V3 Soberano - Passive Renderer
 // ESTA VERSÃO É 100% BASEADA EM SNAPSHOTS V3
+import { assertHierarchyIntegrity, DisplayMealPlanItem } from "./mealPlanDisplay";
 
 /**
  * Premium Meal Plan PDF Export — FitJourney V3 Soberano
