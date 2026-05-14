@@ -13,6 +13,7 @@ import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RootRouter } from "@/components/auth/RootRouter";
 import { LP } from "./RouteHelpers";
+import { SandboxV3Guard } from "./SandboxV3Guard";
 
 // Domain Routes
 import { authRoutes } from "./auth.routes";
@@ -98,7 +99,7 @@ export const AppRoutes = () => {
       <Route path="/my-referrals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyReferrals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyPublicProfile /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/sovereign" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SovereignDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/sandbox-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><V3LibrarySandbox /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/sandbox-v3" element={<SandboxV3Guard><Suspense fallback={<PageLoader />}><V3LibrarySandbox /></Suspense></SandboxV3Guard>} />
 
       {/* Onboarding */}
       <Route path="/onboarding" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><OnboardingEntry /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />

@@ -7,7 +7,7 @@ import { logAudit } from "@/lib/auditLog";
 import { logError } from "@/lib/monitoring";
 import { safeLocalStorage } from "@/lib/safeStorage";
 
-type AppRole = Database["public"]["Enums"]["app_role"];
+type AppRole = Database["public"]["Enums"]["app_role"] | "admin_master";
 
 interface Profile {
   id: string;
@@ -47,6 +47,7 @@ interface AuthContextType {
   isPersonal: boolean;
   isPatient: boolean;
   isAdmin: boolean;
+  isAdminMaster: boolean;
   isLojista: boolean;
   subscription: SubscriptionState;
   signOut: () => Promise<void>;
@@ -105,8 +106,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (import.meta.env.DEV) {
         console.error("[Auth] fetchData error (non-fatal):", e);
       }
-      // CRITICAL: Don't clear roles on failure if we already have them, 
-      // as this triggers the "Ghost Redirect" to dashboard.
       setRoles(prev => prev ?? []);
       setTenantId(prev => prev);
       setTenant(prev => prev);
@@ -142,20 +141,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setMode = async (m: string) => {
     if (!user) return;
-    
-    // Otimismo: atualiza localmente primeiro
     setProfile(prev => prev ? { ...prev, experience_mode: m } : null);
-
     const { error } = await supabase
       .from("profiles")
       .update({ experience_mode: m } as any)
       .eq("user_id", user.id);
-    
     if (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error updating mode:", error);
-      }
-      // Revert if error
+      if (import.meta.env.DEV) console.error("Error updating mode:", error);
       await fetchData(user.id);
       throw error;
     }
@@ -163,7 +155,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-
     const initialize = async () => {
       setLoading(true);
       try {
@@ -181,25 +172,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) setLoading(false);
       }
     };
-
     initialize();
-
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         if (import.meta.env.DEV) console.log(`[Auth] state change: ${event}`);
         if (event === "INITIAL_SESSION") return;
-        
         setSession(currentSession);
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
-
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
-          if (import.meta.env.DEV) console.log("[Auth] fetching profile for current user");
           fetchData(currentUser.id).catch((e) => {
             if (import.meta.env.DEV) console.error("[Auth] state fetch:", e);
           });
         } else if (event === "SIGNED_OUT") {
-          if (import.meta.env.DEV) console.warn("[Auth] signed out");
           setProfile(null);
           setRoles(null);
           setSubscription(defaultSubscription);
@@ -207,28 +192,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     );
-
-    // Realtime Profile Sync
     let profileChannel: any = null;
     if (user?.id) {
       profileChannel = supabase
         .channel(`auth-profile-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
-          (payload) => {
-            if (mounted) {
-              if (import.meta.env.DEV) {
-                const summary = { user_id: (payload.new as any)?.user_id, updated_at: (payload.new as any)?.updated_at };
-                console.log("[Auth] profile updated via realtime", summary);
-              }
-              setProfile(payload.new as Profile);
-            }
-          }
-        )
-        .subscribe();
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` }, (payload) => {
+          if (mounted) setProfile(payload.new as Profile);
+        }).subscribe();
     }
-
     return () => {
       mounted = false;
       authSubscription.unsubscribe();
@@ -238,34 +209,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     invalidateMenuCache();
-    // Clear workspace and context related data
     localStorage.removeItem("fj_workspace_context");
     localStorage.removeItem("fj_last_path");
-    
-    // Hard clear of any session state to prevent loops
     sessionStorage.clear();
-    
     await supabase.auth.signOut();
   };
 
   const authStatus: AuthStatus = loading ? "loading" : error ? "error" : user ? "authenticated" : "unauthenticated";
-
   const isNutritionist = roles?.includes("nutritionist") ?? false;
   const isPersonal = roles?.includes("personal") ?? false;
   const isAdmin = (roles as string[] | null)?.includes("admin") ?? false;
+  const isAdminMaster = (roles as string[] | null)?.includes("admin_master") ?? false;
   const isPatient = roles?.includes("patient") ?? false;
   const isLojista = (roles as string[] | null)?.includes("lojista") ?? false;
-
-  const experienceRole: "nutritionist" | "patient" = (isNutritionist || isPersonal || isAdmin) ? "nutritionist" : "patient";
-  const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode === "pro" || profile?.experience_mode === "advanced") 
-    ? profile.experience_mode as any
-    : "basic";
-
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.log(`[Auth] experienceMode=${experienceMode}`);
-    }
-  }, [experienceMode, profile?.experience_mode]);
+  const experienceRole: "nutritionist" | "patient" = (isNutritionist || isPersonal || isAdmin || isAdminMaster) ? "nutritionist" : "patient";
+  const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode === "pro" || profile?.experience_mode === "advanced") ? profile.experience_mode as any : "basic";
 
   return (
     <AuthContext.Provider
@@ -280,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isPersonal,
         isPatient,
         isAdmin,
+        isAdminMaster,
         isLojista,
         subscription,
         signOut,
@@ -312,6 +271,7 @@ export function useAuth() {
       isPersonal: false,
       isPatient: false,
       isAdmin: false,
+      isAdminMaster: false,
       isLojista: false,
       subscription: defaultSubscription,
       signOut: async () => {},
