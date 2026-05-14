@@ -142,11 +142,12 @@ export class LibraryV3Resolver {
         const quantity = clampItemGrams(rawQty);
         const macroScale = isFree ? quantity / (baseGrams || 100) : safeScale;
 
+        const instanceId = crypto.randomUUID();
         return {
           id: baseItem.id,
-          instanceId: crypto.randomUUID(),
-          blockId: baseItem.substitutions_group || baseItem.id, // 🛡️ SOBERANIA: Garante agrupamento
-          substitution_group_id: baseItem.substitutions_group || baseItem.id,
+          instanceId: instanceId,
+          blockId: instanceId, // 🛡️ SOBERANIA: Cada componente é seu próprio bloco primário
+          substitution_group_id: instanceId,
           name: comp.name,
           kcal: clampItemKcal(Math.round(comp.kcal * macroScale)),
           protein: Math.round(comp.protein * macroScale * 10) / 10,
