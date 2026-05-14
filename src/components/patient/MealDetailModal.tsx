@@ -1103,10 +1103,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     const diff = Math.round(Number(m.value) - m.requested);
                     
                     return (
-                      <div key={m.label} className="relative rounded-xl bg-secondary/60 p-3 text-center border border-transparent hover:border-border transition-all group/macro">
+                      <div key={m.label} className="relative rounded-xl bg-secondary/60 p-2 sm:p-3 text-center border border-transparent hover:border-border transition-all group/macro min-w-0">
                         <div className="flex justify-center mb-1.5">{m.icon}</div>
-                        <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                        <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
+                        <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{m.label}</p>
+                        <p className="font-bold text-sm sm:text-base truncate">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
                         
                         {canSeeInternalAudit && status !== "OK" && (
                           <div className="mt-1 flex flex-col items-center gap-0.5 animate-in fade-in slide-in-from-top-1">
