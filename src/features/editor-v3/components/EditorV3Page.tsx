@@ -977,6 +977,7 @@ const EditorV3Page = () => {
   const handleRevert = () => {
     revertToLastSaved();
     setShowRevertConfirm(false);
+  };
   const handleControlledDelivery = async (targetPatientId: string) => {
     setIsGeneratingGlobal(true);
     try {
