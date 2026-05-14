@@ -90,40 +90,47 @@ export class V3SandboxGenerator {
     // 5. Resolução Soberana (LibraryV3Resolver)
     const sandboxMeals: Meal[] = [];
     const planId = 'sandbox-plan';
-    const day = 'sandbox-day';
-
+    
     // Se o template tem um perfil específico para a kcal alvo, podemos extrair regras dele
     const activeProfile = template?.kcal_profiles?.find(p => 
       typeof p === 'object' && p.kcal === context.calories_target
     );
 
-    for (const slot of distributed) {
-      // Mapeamento de Cluster
-      let clusterSlug = 'almoco_tradicional';
+    const daysToGenerate = request.isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [null];
+
+    for (const dayIndex of daysToGenerate) {
+      const dayId = dayIndex !== null ? `day-${dayIndex}` : 'sandbox-day';
       
-      if (template && template.cluster_map && template.cluster_map[slot.type]) {
-        clusterSlug = template.cluster_map[slot.type];
-      } else {
-        if (slot.type.includes('cafe')) clusterSlug = 'cafe_tradicional';
-        else if (slot.type.includes('lanche')) clusterSlug = 'lanche_pratico';
-        else clusterSlug = 'almoco_tradicional';
-      }
-
-      const meal = await LibraryV3Resolver.resolveMealStructure(
-        clusterSlug,
-        slot.macros.calories,
-        {
-          goal: context.goal!,
-          planId,
-          day,
-          mealSlot: slot.type,
-          integrityThreshold: template?.meal_integrity_threshold
+      for (const slot of distributed) {
+        // Mapeamento de Cluster
+        let clusterSlug = 'almoco_tradicional';
+        
+        if (template && template.cluster_map && template.cluster_map[slot.type]) {
+          clusterSlug = template.cluster_map[slot.type];
+        } else {
+          if (slot.type.includes('cafe')) clusterSlug = 'cafe_tradicional';
+          else if (slot.type.includes('lanche')) clusterSlug = 'lanche_pratico';
+          else clusterSlug = 'almoco_tradicional';
         }
-      );
 
-      if (meal) {
-        meal.time = slot.time;
-        sandboxMeals.push(meal);
+        const meal = await LibraryV3Resolver.resolveMealStructure(
+          clusterSlug,
+          slot.macros.calories,
+          {
+            goal: context.goal!,
+            planId,
+            day: dayId,
+            mealSlot: slot.type,
+            integrityThreshold: template?.meal_integrity_threshold
+          }
+        );
+
+        if (meal) {
+          meal.time = slot.time;
+          meal.day_of_week = dayIndex !== null ? dayIndex : undefined;
+          meal.selectionMode = request.isWeekly ? 'week' : 'day';
+          sandboxMeals.push(meal);
+        }
       }
     }
 
