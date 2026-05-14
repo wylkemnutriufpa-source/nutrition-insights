@@ -151,6 +151,8 @@ export async function promoteDraftToMealPlan(
         editor_v3: true,
         promoted_from_draft_id: draft.id,
         promoted_at: new Date().toISOString(),
+        v3_sandbox_delivery: options?.v3_sandbox_delivery || false,
+        delivered_via: options?.v3_sandbox_delivery ? 'ControlledClinicalDelivery' : 'StandardPromote'
       },
     } as any)
     .select('id, sharing_token')
