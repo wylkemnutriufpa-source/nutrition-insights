@@ -2656,7 +2656,9 @@ const EditorV3Page = () => {
             <Plus className="w-5 h-5" /> Nova Refeição
           </Button>
         </div>
-      </main>
+      </ScrollArea>
+    </main>
+
 
       <Dialog open={showMainAddModal} onOpenChange={setShowMainAddModal}>
         <DialogContent className="sm:max-w-[95vw] max-w-full h-[90vh] p-0 overflow-hidden border border-white/10 bg-black/95 flex flex-col rounded-3xl backdrop-blur-3xl shadow-2xl">
