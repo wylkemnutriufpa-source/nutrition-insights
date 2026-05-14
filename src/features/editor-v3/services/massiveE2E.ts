@@ -102,7 +102,8 @@ export class LibraryV3MassiveE2E {
       clusterStats[cluster].total++;
 
       // Validation: Human Scaling
-      const scaleFactor = mainItem ? (mainItem.kcal / (mainItem.kcal_base || mainItem.kcal)) : 1;
+      const mainItemKcalBase = (mainItem as any)?.kcal_base || mainItem?.kcal || 1;
+      const scaleFactor = mainItem ? (mainItem.kcal / mainItemKcalBase) : 1;
       const isScalingValid = scaleFactor >= 0.5 && scaleFactor <= (template.meal_integrity_threshold || 1.8);
       
       if (isScalingValid) {
