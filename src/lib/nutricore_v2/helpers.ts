@@ -12,6 +12,19 @@ export const isProtein = (name: string): boolean => {
          n.includes('salmão') || n.includes('atum') || n.includes('omelete') ||
          n.includes('suplemento de proteína');
 };
+export const isHeavyProtein = (name: string): boolean => {
+  const n = name.toLowerCase();
+  return n.includes('frango') || n.includes('carne') || n.includes('peixe') || 
+         n.includes('tilápia') || n.includes('salmão') || n.includes('atum') || 
+         n.includes('patinho') || n.includes('lombo') || n.includes('músculo') || 
+         n.includes('alcatra');
+};
+
+export const isBreakfastProtein = (name: string): boolean => {
+  const n = name.toLowerCase();
+  return n.includes('ovo') || n.includes('whey') || n.includes('queijo') || 
+         n.includes('iogurte') || n.includes('omelete') || n.includes('cottage');
+};
 
 export const isComplexCarb = (name: string): boolean => {
   const n = name.toLowerCase();

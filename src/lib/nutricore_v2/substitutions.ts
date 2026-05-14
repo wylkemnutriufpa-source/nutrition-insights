@@ -4,6 +4,8 @@ import {
   isFruit as checkIsFruit,
   isBreadLike as checkIsBread,
   isComplexCarb as checkIsCarb,
+  isHeavyProtein,
+  isBreakfastProtein,
   getFoodCategory 
 } from "./helpers";
 
@@ -53,6 +55,19 @@ export function getSubstitutions(
     if (candCategory !== category) return false;
     if (f.id === food.id) return false;
     
+    // 🛡️ Governança de Contexto de Refeição (Anti-Tilápia no Café)
+    if (mealType) {
+      const isMorningOrSnack = mealType.toLowerCase().includes('café') || 
+                               mealType.toLowerCase().includes('lanche') || 
+                               mealType.toLowerCase().includes('ceia');
+      
+      if (isMorningOrSnack) {
+        // Se for café/lanche, não sugerir proteínas pesadas (peixe, carne, frango) 
+        // a menos que o alimento original JÁ SEJA uma proteína pesada.
+        if (isHeavyProtein(candName) && !isHeavyProtein(name)) return false;
+      }
+    }
+
     // Bloquear restrições
     if (restrictions.some(r => candName.includes(r.toLowerCase()))) return false;
 
