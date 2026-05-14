@@ -110,6 +110,7 @@ export const SLOT_ALLOWED_GROUPS: Record<MealSlot, SubstitutionGroup[]> = {
     "proteina-peixe",
     "proteina-leve",
     "carbo-almoco",
+    "carbo-legume",
     "carbo-tuberoso",
     "salada-base",
   ],
