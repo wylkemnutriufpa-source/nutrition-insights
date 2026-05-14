@@ -22,6 +22,7 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
     template_type: 'visual_v3',
     objective: 'hipertrofia',
     family: 'hipertrofia',
+    style_contract: getStyleContract('hipertrofia') || undefined,
     meal_distribution: [
       { slot: 'cafe_da_manha', time: '08:00' },
       { slot: 'almoço', time: '12:30' },
