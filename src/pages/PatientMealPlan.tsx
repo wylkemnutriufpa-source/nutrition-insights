@@ -875,7 +875,10 @@ export default function PatientMealPlan() {
                           onSetAdherence={(item, status) => setAdherence(item, status, dayDate)}
                           onOpenDetail={setSelectedMeal}
                           onOpenSubstitution={setSubstitutionItem}
-                          onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
+                          // 🛡️ SOBERANIA V3: No modo semanal, "desacoplamos" a visualização 
+                          // para mostrar a lista de itens de cada dia individualmente,
+                          // conforme solicitado (as substituições ficam dentro de cada item).
+                          onOpenSlot={undefined}
                         />
                       ))}
                     </section>

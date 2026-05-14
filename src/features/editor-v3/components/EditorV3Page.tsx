@@ -644,15 +644,17 @@ const EditorV3Page = () => {
     return () => clearTimeout(timer);
   }, [v3LibrarySearch, v3LibraryTab, v3LibraryMealFilter]);
 
-  const handleApplyV3Profile = async (kcal: number) => {
+  const handleApplyV3Profile = async (kcal: number, isWeekly: boolean = false) => {
     if (!selectedV3Template) return;
     
     setIsGeneratingGlobal(true);
     try {
-      toast.loading(`Gerando rascunho V3: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
+      const modeText = isWeekly ? 'Semanal' : 'Diário';
+      toast.loading(`Gerando rascunho V3 ${modeText}: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
       
       const v3Meals = await V3SandboxGenerator.generateDraft({
         templateSlug: selectedV3Template.slug,
+        isWeekly,
         patientContext: {
           ...patientContext,
           calories_target: kcal,

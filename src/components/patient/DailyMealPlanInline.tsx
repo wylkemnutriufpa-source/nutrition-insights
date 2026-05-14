@@ -24,6 +24,7 @@ import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
 
 
 import type { MealDetailData } from "@/components/patient/MealPlanDailyView";
+import { buildDailyDisplayItems } from "@/lib/mealPlanDisplay";
 
 interface MealPlan {
   id: string;
@@ -82,15 +83,15 @@ export default function DailyMealPlanInline() {
         .order("created_at");
 
       const currentItems = (itemsData || []) as MealPlanItem[];
-      // Modelo GLOBAL: mostra apenas itens marcados como primários para o dia atual simplificado.
-      // 🛡️ SOBERANIA V3: Filtra substituições (is_primary: false ou que possuem substitution_group_id).
-      setItems(currentItems.filter(i => {
-        const item = i as any;
-        if (item.is_primary === false) return false;
-        if (item.is_primary === true) return true;
-        if (item.substitution_group_id) return false;
-        return true;
-      }));
+      
+      // 🛡️ SOBERANIA V3: Usar o pipeline oficial de exibição diária que lida com:
+      // 1. Filtragem por dia da semana
+      // 2. Agrupamento de substituições (Coupling)
+      // 3. Deduplicação de itens legados
+      const dayOfWeek = new Date(date + "T12:00:00").getDay();
+      const displayItems = buildDailyDisplayItems(currentItems as any, dayOfWeek);
+      
+      setItems(displayItems as MealPlanItem[]);
 
       const { data: completionsData } = await supabase
         .from("meal_item_completions")

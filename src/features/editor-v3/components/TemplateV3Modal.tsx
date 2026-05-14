@@ -19,7 +19,7 @@ interface TemplateV3ModalProps {
   isOpen: boolean;
   onClose: () => void;
   template: V3DietTemplate | null;
-  onSelectProfile: (profileKcal: number) => void;
+  onSelectProfile: (profileKcal: number, isWeekly: boolean) => void;
 }
 
 export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
@@ -36,7 +36,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
 
   const handleSelect = () => {
     if (selectedKcal) {
-      onSelectProfile(selectedKcal);
+      onSelectProfile(selectedKcal, viewMode === 'weekly');
       onClose();
     }
   };

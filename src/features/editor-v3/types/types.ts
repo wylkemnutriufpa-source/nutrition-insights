@@ -72,6 +72,7 @@ export interface Meal {
   name: string;
   items: MealItem[];
   daySubstitutions?: Record<string, string>;
+  day_of_week?: number; // 0-6 (0=Domingo, 1=Segunda, etc.)
   selectionMode?: 'day' | 'week';
   time?: string;
   icon?: string;
