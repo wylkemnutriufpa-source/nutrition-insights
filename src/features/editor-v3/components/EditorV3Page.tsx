@@ -2352,71 +2352,135 @@ const EditorV3Page = () => {
       </Dialog>
 
       <Dialog open={!!localDraft} onOpenChange={(v) => !v && handleCloseModal()}>
-        <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
+        <DialogContent className="max-w-4xl bg-black border-white/10 p-0 overflow-hidden rounded-3xl shadow-2xl">
           {localDraft && (
-            <div className="p-8">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                    {localDraft.imageUrl ? <img src={localDraft.imageUrl} alt={localDraft.name} className="w-full h-full object-cover rounded-xl" /> : <Apple className="w-8 h-8 text-emerald-500" />}
+            <div className="flex flex-col h-full">
+              <div className="p-8 border-b border-white/5 bg-neutral-900/30 flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-inner">
+                    {localDraft.imageUrl ? (
+                      <img src={localDraft.imageUrl} alt={localDraft.name} className="w-full h-full object-cover rounded-2xl" />
+                    ) : (
+                      <Apple className="w-10 h-10 text-emerald-500" />
+                    )}
                   </div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">{localDraft.name}</h2>
+                  <div>
+                    <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-black uppercase tracking-widest px-2 mb-2">Edição de Alimento</Badge>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">{localDraft.name}</h2>
+                  </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleCloseModal()} className="text-white/40 hover:text-white rounded-full"><X className="w-6 h-6" /></Button>
+                <Button variant="ghost" size="icon" onClick={handleCloseModal} className="text-white/20 hover:text-white rounded-full h-12 w-12 hover:bg-white/5 transition-all">
+                  <X size={24} />
+                </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                    <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block mb-3">Quantidade e Medida</Label>
-                    <div className="flex items-center gap-4">
-                        <Input 
-                          type="number" 
-                          step="0.1" 
-                          value={localDraft.quantity} 
-                          onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })} 
-                          className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black text-center" 
-                        />
-                        <Select 
-                          value={localDraft.portionUnitLabel || 'Gramas'} 
-                          onValueChange={(val) => {
-                            const opt = MEASURE_OPTIONS.find(o => o.unit === val);
-                            updateLocalDraft({ 
-                              portionUnitLabel: val,
-                              portionUnit: val,
-                              measurementType: opt?.type || localDraft.measurementType,
-                              portionValue: opt?.type === 'gram' ? 1 : localDraft.portionValue
-                            });
-                          }}
-                        >
-                          <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-xl font-black">
-                            <SelectValue placeholder="Unidade" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-black border-white/10 text-white">
-                            {MEASURE_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.unit} value={opt.unit} className="font-bold">
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-8">
+                  <div className="bg-white/5 rounded-3xl p-8 border border-white/10 shadow-2xl">
+                    <Label className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.2em] block mb-6">Ajuste de Porção</Label>
+                    <div className="flex flex-col gap-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <span className="text-[9px] font-black text-white/30 uppercase block mb-2 ml-1">Quantidade</span>
+                          <Input 
+                            type="number" 
+                            step="0.1" 
+                            value={localDraft.quantity} 
+                            onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })} 
+                            className="h-16 bg-black border-white/10 text-white rounded-2xl text-2xl font-black text-center focus:border-emerald-500/50 transition-all" 
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-[9px] font-black text-white/30 uppercase block mb-2 ml-1">Medida</span>
+                          <Select 
+                            value={localDraft.portionUnitLabel || 'Gramas'} 
+                            onValueChange={(val) => {
+                              const opt = MEASURE_OPTIONS.find(o => o.unit === val);
+                              updateLocalDraft({ 
+                                portionUnitLabel: val,
+                                portionUnit: val,
+                                measurementType: opt?.type || localDraft.measurementType,
+                                portionValue: opt?.type === 'gram' ? 1 : localDraft.portionValue
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="h-16 bg-black border-white/10 text-white rounded-2xl font-black text-sm">
+                              <SelectValue placeholder="Unidade" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-neutral-900 border-white/10 text-white">
+                              {MEASURE_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.unit} value={opt.unit} className="font-bold">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/5">
+                        <div className="text-center">
+                          <span className="text-[8px] font-black text-white/20 uppercase block mb-1">Calorias</span>
+                          <span className="text-lg font-black text-white italic">{Math.round(localDraft.kcal || 0)}</span>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-[8px] font-black text-white/20 uppercase block mb-1">Proteína</span>
+                          <span className="text-lg font-black text-emerald-500 italic">{localDraft.protein}g</span>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-[8px] font-black text-white/20 uppercase block mb-1">Carbos</span>
+                          <span className="text-lg font-black text-blue-500 italic">{localDraft.carbs}g</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <Button onClick={handleCommitModal} disabled={!isModalDirty} className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl shadow-lg">Salvar Alterações</Button>
+
+                  <div className="flex gap-4">
+                    <Button onClick={() => {
+                      if (selectedItemState) removeFood(selectedItemState.mealId, selectedItemState.instanceId);
+                      handleCloseModal();
+                    }} variant="ghost" className="flex-1 h-16 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500/10 font-black uppercase tracking-widest rounded-2xl gap-2">
+                      <Trash2 size={18} /> Remover
+                    </Button>
+                    <Button onClick={handleCommitModal} disabled={!isModalDirty} className="flex-[2] h-16 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.2)] gap-2">
+                      <CheckCircle2 size={18} /> Salvar Alterações
+                    </Button>
+                  </div>
                 </div>
                 
-                <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                    <Label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-4 block">Substituições</Label>
-                    <ScrollArea className="h-64">
-                       <div className="space-y-2">
-                         {smartSubstitutions.map((sub) => (
-                           <button key={sub.id} onClick={() => updateLocalDraft(sub as any)} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 transition-all text-left">
-                             <span className="text-xs font-bold text-white">{sub.name}</span>
-                             <span className="text-[9px] font-black text-white/30">{sub.kcal} kcal</span>
-                           </button>
-                         ))}
-                       </div>
-                    </ScrollArea>
+                <div className="flex flex-col h-full bg-white/5 rounded-3xl p-8 border border-white/10 shadow-inner">
+                  <Label className="text-[11px] font-black text-blue-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                    <RefreshCcw size={14} /> Substituições Sugeridas
+                  </Label>
+                  <ScrollArea className="flex-1 -mx-2 px-2">
+                    <div className="space-y-3">
+                      {smartSubstitutions.length > 0 ? (
+                        smartSubstitutions.map((sub) => (
+                          <button 
+                            key={sub.id} 
+                            onClick={() => updateLocalDraft(sub as any)} 
+                            className="w-full group flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-blue-500/50 hover:bg-black/60 transition-all text-left"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-blue-500/20 transition-all">
+                                {sub.imageUrl ? <img src={sub.imageUrl} alt={sub.name} className="w-full h-full object-cover rounded-lg" /> : <RefreshCw size={16} className="text-white/20" />}
+                              </div>
+                              <div>
+                                <p className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">{sub.name}</p>
+                                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{sub.kcal} kcal • {sub.protein}g P</p>
+                              </div>
+                            </div>
+                            <ChevronRight size={16} className="text-white/10 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                          </button>
+                        ))
+                      ) : (
+                        <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-20">
+                          <RefreshCcw size={32} className="animate-spin-slow" />
+                          <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma substituição carregada</p>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
               </div>
             </div>
