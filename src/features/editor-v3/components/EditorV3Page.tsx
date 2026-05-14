@@ -15,6 +15,7 @@ import {
   searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
 } from '../utils/dataFetcher';
 import { getBestMealImage } from '../utils/normalization';
+import { logClinicalEvent } from '../../audit/services/auditLogger';
 import { 
   calculateNutritionalScore, validatePlanClinically 
 } from '../../clinical-engine';
@@ -61,7 +62,7 @@ import {
   Sparkles, Save, Package, ChefHat, Clock,
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
-  Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
+  Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard, Target, ShieldCheck,
   User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy, Library, Soup, Coffee, UtensilsCrossed, Moon, Sun, ShoppingCart
 } from 'lucide-react';
 import { safeGeneratePDF } from '../services/pdfService';
@@ -72,6 +73,7 @@ import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 import PlanAdjustmentModal from './PlanAdjustmentModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { TemplateV3Modal } from './TemplateV3Modal';
+import { ControlledDeliveryModal } from './ControlledDeliveryModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
 import { V3DietTemplate } from '../types/types';
@@ -176,6 +178,7 @@ const EditorV3Page = () => {
   const [patientSearch, setPatientSearch] = useState('');
   
   const [debugMode, setDebugMode] = useState(false);
+  const [showControlledDelivery, setShowControlledDelivery] = useState(false);
   const [isEditingAntro, setIsEditingAntro] = useState(false);
   const [editAntroValues, setEditAntroValues] = useState({ weight: 0, height: 0, goal: 'Manutenção' });
   const [isSavingAntro, setIsSavingAntro] = useState(false);
@@ -976,6 +979,61 @@ const EditorV3Page = () => {
     revertToLastSaved();
     setShowRevertConfirm(false);
   };
+  const handleControlledDelivery = async (targetPatientId: string) => {
+    setIsGeneratingGlobal(true);
+    try {
+      toast.loading(`Entregando plano V3 para o paciente...`, { id: 'v3-delivery' });
+      
+      // 1. Garantir que temos um draft atualizado para o contexto do paciente
+      const freshDraft = await loadOrCreateDraft(targetPatientId, meals);
+      if (!freshDraft) {
+        throw new Error('Falha ao sincronizar draft para o novo paciente.');
+      }
+
+      // 2. Promover com a flag de delivery controlado
+      const result = await promoteDraftToMealPlan(
+        { ...freshDraft, payload: { meals, version: 1, patient_context: patientContext, nutritional_score: nutritionalScore, confidence: confidence } },
+        { v3_sandbox_delivery: true }
+      );
+
+      if (result.ok) {
+        toast.success('Plano V3 entregue com sucesso sob governança controlada!', { id: 'v3-delivery' });
+        
+        // 🛡️ GOVERNANÇA CLÍNICA SOBERANA: Log de Auditoria Formal
+        await logClinicalEvent({
+          type: 'audit_log',
+          action: 'CONTROLLED_DELIVERY',
+          resource: 'editor-v3',
+          patient_id: targetPatientId,
+          severity: 'info',
+          details: {
+            v3_sandbox_delivery: true,
+            kcal_target: totalMacros.kcal,
+            template_slug: selectedV3Template?.slug || 'none',
+            delivery_mode: 'controlled_clinical_delivery',
+            timestamp: new Date().toISOString()
+          }
+        });
+
+        addAuditEntry({
+          type: 'system_action',
+          description: `CONTROLLED_DELIVERY: Plano V3 entregue para ${targetPatientId}`,
+          source: 'system',
+          metadata: { targetPatientId, kcal: totalMacros.kcal, version: 'v3_soberano' }
+        });
+
+        navigate(`/patients/${targetPatientId}`);
+      } else {
+        throw new Error(result.error || 'Erro desconhecido na promoção.');
+      }
+    } catch (err: any) {
+      console.error('[V3-ControlledDelivery] Error:', err);
+      toast.error(`Falha na entrega: ${err.message}`, { id: 'v3-delivery' });
+    } finally {
+      setIsGeneratingGlobal(false);
+    }
+  };
+
 
   const handleGlobalGenerate = (replace: boolean) => {
     setReplaceExistingFlag(replace);
@@ -2003,6 +2061,12 @@ const EditorV3Page = () => {
 
               <div className="flex items-center gap-3">
                 <Button 
+                  onClick={() => setShowControlledDelivery(true)}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest h-11 px-6 rounded-xl shadow-lg shadow-blue-600/20 gap-2 border-b-2 border-blue-800"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Entregar Manualmente
+                </Button>
+                <Button 
                   onClick={() => setV3LibraryTab('templates')}
                   className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-11 px-6 rounded-xl shadow-lg shadow-emerald-500/20 gap-2"
                 >
@@ -2295,6 +2359,12 @@ const EditorV3Page = () => {
           setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t));
           setIsTemplateEditorOpen(false);
         }}
+      />
+      <ControlledDeliveryModal
+        isOpen={showControlledDelivery}
+        onClose={() => setShowControlledDelivery(false)}
+        onDeliver={handleControlledDelivery}
+        planPreview={meals}
       />
     </div>
   );

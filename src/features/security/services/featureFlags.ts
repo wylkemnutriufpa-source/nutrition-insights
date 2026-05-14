@@ -3,7 +3,8 @@ export const FEATURE_FLAGS = {
   editorV3: true,
   clinicalMode: true,
   audit: true,
-  system_stability_mode: true
+  system_stability_mode: true,
+  V3_CONTROLLED_DELIVERY: true
 };
 
 export type FeatureFlag = keyof typeof FEATURE_FLAGS;
