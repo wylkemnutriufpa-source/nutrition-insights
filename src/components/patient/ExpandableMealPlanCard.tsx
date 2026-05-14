@@ -15,8 +15,14 @@ import {
 } from "lucide-react";
 import {
   MEAL_TYPES, DAYS,
-  type MealPlanItem, type MealCompletion,
+  type MealPlanItem, type MealCompletion, type AdherenceStatus,
+  MealSlotCard,
 } from "@/components/patient/MealPlanDailyView";
+import { MealSlotModal } from "@/components/patient/MealSlotModal";
+import { MealDetailModal } from "@/components/patient/MealDetailModal";
+import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+import { toast } from "sonner";
+
 import { 
   buildDailyDisplayItems,
   calculatePrimaryTotals 
