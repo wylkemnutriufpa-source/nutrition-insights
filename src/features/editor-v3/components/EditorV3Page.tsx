@@ -2311,11 +2311,11 @@ const EditorV3Page = () => {
                   </div>
                 )}
               </div>
-            </div>
-          </ScrollArea>
-        </aside>
+            </ScrollArea>
+          </aside>
 
-        <ScrollArea className="flex-1 px-8 pt-8 pb-32">
+          <ScrollArea className="flex-1 px-8 pt-8 pb-32">
+
 
 
         <div className="space-y-12">
