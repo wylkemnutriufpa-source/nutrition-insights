@@ -403,7 +403,8 @@ const MealItemCard = memo(function MealItemCard({
                   </Badge>
                 )}
 
-                {isMacroInconsistent(item.calories_target || 0, item.protein_target || 0, item.carbs_target || 0, item.fat_target || 0) && (
+                {/* SOBERANIA: Paciente nunca vê alertas de inconsistência técnica */}
+                {!isBasic && isMacroInconsistent(item.calories_target || 0, item.protein_target || 0, item.carbs_target || 0, item.fat_target || 0) && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
