@@ -211,7 +211,10 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                         focusMode={false}
                         onSetAdherence={() => {}}
                         onOpenDetail={(meal) => setSelectedMeal(meal as any)}
+                        onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
+                        onOpenSubstitution={setSubstitutingItem}
                       />
+
                     ))}
                   </div>
                 </div>
