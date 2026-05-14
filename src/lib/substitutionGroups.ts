@@ -14,6 +14,7 @@ export type SubstitutionGroup =
   | "proteina-leve"
   | "proteina-peixe"
   | "carbo-almoco"
+  | "carbo-legume"
   | "carbo-tuberoso"
   | "carbo-cereal"
   | "cafe-classico"
