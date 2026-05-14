@@ -43,6 +43,8 @@ import {
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
   DAY_ORDER,
+  assertHierarchyIntegrity,
+  type DisplayMealPlanItem
 } from "@/lib/mealPlanDisplay";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -228,8 +230,11 @@ export default function PatientMealPlan() {
         meals = snapshot.meals || [];
       }
 
+      // 🛡️ ASSERT: Auditoria de hierarquia durante a hidratação do Snapshot
       meals.forEach((meal: any) => {
         meal.items.forEach((item: any) => {
+          assertHierarchyIntegrity(item as unknown as DisplayMealPlanItem, "PatientMealPlan_snapshot");
+          
           const common = {
             meal_type: meal.meal_type || meal.id,
             day_of_week: currentDow,

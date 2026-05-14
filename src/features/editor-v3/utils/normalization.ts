@@ -278,10 +278,20 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
       );
       
       // 🛡️ GOVERNANÇA SEMANAL: Garantir que alimentos idênticos na mesma refeição tenham o mesmo blockId
-      // Normalizamos o nome da refeição (ex: "Almoço Segunda" -> "almoço") para agrupar horizontalmente
       const baseMealName = meal.name.toLowerCase().split(' ')[0].split('-')[0].trim();
-      // 🛡️ GOVERNANÇA SEMANAL: blockId deve ser um UUID determinístico baseado na composição
-      const generatedBlockId = crypto.randomUUID(); // No FitJourney V3, cada bloco é uma entidade UUID única
+      // 🛡️ GOVERNANÇA SEMANAL: blockId deve ser preservado. Só geramos se for absolutamente novo.
+      const existingBlockId = (item as any).blockId || (item as any).substitution_group_id;
+      const generatedBlockId = existingBlockId || crypto.randomUUID();
+
+      if (!existingBlockId) {
+        SovereignTelemetry.log({
+          runtime_source: 'normalization_v3',
+          event_type: 'implicit_block_generation',
+          severity: 'warning',
+          message: `Gerando blockId implícito para "${normalized.name}". Possível perda de hierarquia.`,
+          metadata: { name: normalized.name, meal: meal.name }
+        });
+      }
 
       return {
         ...normalized,

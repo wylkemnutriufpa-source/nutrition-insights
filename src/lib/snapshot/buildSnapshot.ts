@@ -12,6 +12,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { assertHierarchyIntegrity, DisplayMealPlanItem } from "../mealPlanDisplay";
 import {
   MealPlanSnapshotV1,
   SNAPSHOT_SCHEMA_VERSION,
@@ -183,6 +184,9 @@ export async function buildMealPlanSnapshot(
       carbs_g: num(it.carbs_target),
       fat_g: num(it.fat_target),
     };
+
+    // 🛡️ ASSERT: Auditoria de hierarquia antes de gerar Snapshot
+    assertHierarchyIntegrity(it as unknown as DisplayMealPlanItem, "buildMealPlanSnapshot");
 
     const meta = it.edit_metadata as Record<string, any> | null;
     meals.get(meal)!.push({

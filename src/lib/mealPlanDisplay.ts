@@ -65,33 +65,36 @@ export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
  * NUNCA permite que metadados críticos sejam perdidos ou normalizados incorretamente.
  */
 export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: string): void {
-  const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3";
+  const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3" || (item as any).edit_metadata?.editor_version === "v3";
   
   // 1. Regra de BlockId (Obrigatório e Imutável em V3)
-  const blockId = (item as any).blockId || (item as any).edit_metadata?.blockId;
+  const blockId = (item as any).blockId || (item as any).edit_metadata?.blockId || item.substitution_group_id;
+  
   if (isV3 && !blockId) {
+    const errorMsg = `HIERARCHY_GUARD: item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3. BLOQUEIO FATAL.`;
     SovereignTelemetry.log({
       runtime_source: `hierarchy_guard_${context}`,
       event_type: 'missing_block_id',
       severity: 'critical',
-      message: `HIERARCHY_GUARD: item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3. BLOQUEIO DE RENDER.`,
-      metadata: { item_id: item.id, title: item.title, context }
+      message: errorMsg,
+      metadata: { item_id: item.id, title: item.title, context, is_primary: item.is_primary }
     });
-    // RUPTURA CRÍTICA: Se for V3 e não houver blockId, o sistema não sabe como agrupar.
-    // Lançamos erro para disparar o ErrorBoundary e impedir UI inconsistente.
-    throw new Error(`Critical Hierarchy Failure: Item "${item.title}" is missing blockId in V3 runtime.`);
+    
+    // RUPTURA CRÍTICA: O sistema não deve processar itens V3 sem hierarquia.
+    throw new Error(`Critical Hierarchy Failure: Item "${item.title}" is missing blockId in V3 runtime [Context: ${context}].`);
   }
 
-  // 2. Regra de Is Primary vs Dashboard
-  // Se is_primary for falso, ele NUNCA deve ser o owner de um slot ou entrar em macros.
+  // 2. Regra de Ownership (Substituições devem herdar blockId e group_id)
   if (item.is_primary === false && !item.substitution_group_id) {
+    const errorMsg = `HIERARCHY_GUARD: item substituto "${item.title}" (ID: ${item.id}) sem substitution_group_id.`;
     SovereignTelemetry.log({
       runtime_source: `hierarchy_guard_${context}`,
       event_type: 'schema_violation',
-      severity: 'warning',
-      message: `HIERARCHY_GUARD: item substituto "${item.title}" sem substitution_group_id detectado como órfão.`,
+      severity: 'critical',
+      message: errorMsg,
       metadata: { item_id: item.id, title: item.title, context }
     });
+    throw new Error(`Critical Hierarchy Failure: Substitution item "${item.title}" is missing group ownership [Context: ${context}].`);
   }
 }
 

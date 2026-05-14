@@ -175,12 +175,15 @@ export async function promoteDraftToMealPlan(
       // 🛡️ FASE 4: IDENTIDADE SOBERANA — SANITIZAÇÃO
       const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
-      const rawGroupId = item.substitution_group_id || item.blockId || crypto.randomUUID();
+      // 🛡️ HIERARCHY PERSISTENCE: Preserva o blockId original do Editor V3
+      const blockId = item.blockId;
+      const rawGroupId = item.substitution_group_id || blockId || crypto.randomUUID();
       const groupId = isUuid(rawGroupId) ? rawGroupId : crypto.randomUUID();
       
-      if (!isUuid(rawGroupId)) {
-        console.warn(`[IDENTITY-RECOVERY] Substitution Group ID "${rawGroupId}" corrigido para UUID soberano.`);
+      if (!blockId) {
+        console.warn(`[HIERARCHY-RECOVERY] Item ${item.name} sem blockId durante promoção. Gerando novo.`);
       }
+
       const mealType = mealNameToType(meal.name);
       
       // 🛡️ FINAL CLINICAL SANITIZATION: Garante que NADA explodido chegue à persistência
@@ -231,11 +234,13 @@ export async function promoteDraftToMealPlan(
         substitution_group_id: groupId,
         edit_metadata: {
           ...item,
+          blockId,
           imageUrl: itemImageUrl,
           mealImageUrl: meal.imageUrl || null,
           display_quantity: item.quantity,
           display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit,
           day_of_week: meal.day_of_week ?? null,
+          editor_version: 'v3',
         }
       });
 
@@ -262,9 +267,11 @@ export async function promoteDraftToMealPlan(
             substitution_group_id: groupId,
             edit_metadata: {
               ...sub,
+              blockId,
               display_quantity: sub.suggestedQuantity || sub.portionValue || 100,
               display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g',
               day_of_week: meal.day_of_week ?? null,
+              editor_version: 'v3',
             }
           });
         });

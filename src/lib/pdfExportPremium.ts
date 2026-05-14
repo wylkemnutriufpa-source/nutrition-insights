@@ -1,5 +1,6 @@
 // PDF Export V3 Soberano - Passive Renderer
 // ESTA VERSÃO É 100% BASEADA EM SNAPSHOTS V3
+import { assertHierarchyIntegrity, DisplayMealPlanItem } from "./mealPlanDisplay";
 
 /**
  * Premium Meal Plan PDF Export — FitJourney V3 Soberano
@@ -239,6 +240,9 @@ function roundMacro(value: unknown): number {
 }
 
 function getPrimaryDailyItems(items: MealPlanPDFItem[]): MealPlanPDFItem[] {
+  // 🛡️ ASSERT: Auditoria de hierarquia antes de processar PDF
+  items.forEach(item => assertHierarchyIntegrity(item as unknown as DisplayMealPlanItem, "pdfExportPremium_items"));
+
   // 🛡️ SOBERANIA V3: Filtra apenas itens que são primários
   return items.filter(item => item.is_primary === true);
 }
