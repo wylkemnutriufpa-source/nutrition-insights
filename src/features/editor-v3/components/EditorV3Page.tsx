@@ -2155,11 +2155,28 @@ const EditorV3Page = () => {
                   );
                 })
               ) : (
-                meals.map((meal, index) => (
-                  <section key={meal.id} className={cn(
-                    "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-8 rounded-[3rem] border transition-all",
-                    activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-2xl shadow-emerald-500/5" : "bg-neutral-900/30 border-white/5 hover:border-white/10"
-                  )}>
+                  const humanScore = calculateHumanMealScore(meal, meal.name);
+                  const isAbsurd = humanScore.status === 'absurd';
+
+                  return (
+                    <section key={meal.id} className={cn(
+                      "group animate-in fade-in slide-in-from-bottom-4 duration-700 p-8 rounded-[3rem] border transition-all relative",
+                      activeMealId === meal.id ? "bg-neutral-900 border-emerald-500/30 shadow-2xl shadow-emerald-500/5" : "bg-neutral-900/30 border-white/5 hover:border-white/10",
+                      isAbsurd && "border-rose-500/50 bg-rose-500/10"
+                    )}>
+                      {isAbsurd && (
+                        <div className="absolute top-8 right-8 z-20 flex flex-col items-end gap-2">
+                          <Badge variant="destructive" className="h-8 px-4 text-xs font-black uppercase animate-pulse">❌ Violação Clínica Detectada</Badge>
+                          <div className="bg-rose-950/80 border border-rose-500/30 p-3 rounded-2xl max-w-xs shadow-2xl backdrop-blur-md">
+                            <p className="text-[10px] font-black uppercase text-rose-300 mb-2 tracking-widest">Motivos:</p>
+                            {humanScore.reasons.map((r, i) => (
+                              <p key={i} className="text-[10px] text-white/80 leading-relaxed flex gap-2">
+                                <span className="text-rose-500">•</span> {r}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     <div className="flex flex-col md:flex-row gap-10">
                       <div className="w-full md:w-72 shrink-0">
                         <div className="relative aspect-square rounded-[2.5rem] overflow-hidden group/img shadow-2xl border border-white/5 group-hover:border-emerald-500/20 transition-all">
