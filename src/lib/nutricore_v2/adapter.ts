@@ -228,6 +228,9 @@ export class NutriCoreV3Adapter {
               instanceId: crypto.randomUUID(),
               quantity, 
               clinical_mass_g: item.grams, // 🛡️ Congelamento na fonte (Motor V3)
+              blockId: crypto.randomUUID(), // 🛡️ Hierarchy Ownership: Todo item gerado nasce com seu bloco
+              substitution_group_id: crypto.randomUUID(), // 🛡️ Isolamento de substituições
+              is_primary: true,
               substitutions
             };
           });
