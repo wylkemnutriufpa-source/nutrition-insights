@@ -167,10 +167,19 @@ export class LibraryV3Resolver {
 
     // 🛡️ HUMAN_SCORE_GUARD: Rejeita refeições que não parecem humanas.
     const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot);
+    
+    // Log de Telemetria Clínica (Rejeições)
     if (humanResult.status === 'absurd') {
       console.warn(`[LibraryV3Resolver] REJECTED ABSURD MEAL: ${baseItem.title}`, humanResult.reasons);
-      // Se tivermos mais candidatos, poderíamos tentar o próximo, mas para simplificar
-      // vamos logar e retornar null para o motor tentar outro cluster ou fallback.
+      
+      await supabase.from('clinical_telemetry').insert({
+        event_type: 'meal_rejected',
+        meal_slot: context.mealSlot,
+        content: { title: baseItem.title, items: scaledItems },
+        reasons: humanResult.reasons,
+        human_score: humanResult.score
+      });
+
       return null;
     }
 
