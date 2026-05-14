@@ -537,15 +537,8 @@ export default function PatientMealPlan() {
   [overlayedItems]);
 
   const weeklyDisplayDays = useMemo(() => {
-    if (plan?.editor_version === 'v3') {
-      // No V3, apenas agrupamos os itens por dia da semana que já estão no allItems (snapshot flat)
-      return DAY_ORDER.map(day => ({
-        day,
-        items: allItems.filter(item => item.day_of_week === day)
-      }));
-    }
     return buildWeeklyDisplayDays(allItems as any);
-  }, [allItems, plan?.editor_version]);
+  }, [allItems]);
 
   // Memoized daily adherence
   const visibleCompletions = useMemo(() => {
