@@ -311,6 +311,18 @@ export function getValidSubstitutions(
     candidates = candidates.filter(f => f.protein >= context.minProtein!);
   }
 
+  // 🛡️ MEAL_TYPE_GUARD: filtra candidatos que não são válidos no slot atual.
+  // Bloqueia "tilápia no café", "arroz no café", "pão no almoço", etc.
+  if (context?.slot) {
+    // Import dinâmico evita ciclo na inicialização
+    const { isFoodAllowedInSlot } = require("./mealTypeIntegrity") as typeof import("./mealTypeIntegrity");
+    candidates = candidates.filter(f =>
+      isFoodAllowedInSlot(f.name, getFoodGroup(f.name), context.slot!, {
+        source: "substitutionGroups.getValidSubstitutions",
+      }),
+    );
+  }
+
   // Sort by caloric proximity
   candidates.sort((a, b) =>
     Math.abs(a.calories - currentMatch.calories) - Math.abs(b.calories - currentMatch.calories)
