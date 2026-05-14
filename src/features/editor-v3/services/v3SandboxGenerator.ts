@@ -52,7 +52,9 @@ export class V3SandboxGenerator {
       protein_g: context.protein_target || engineResult.macros.protein_g,
       carb_g: context.carbs_target || engineResult.macros.carb_g,
       fat_g: context.fat_target || engineResult.macros.fat_g,
-      calories: context.calories_target || engineResult.target_kcal
+      protein_kcal: (context.protein_target || engineResult.macros.protein_g) * 4,
+      carb_kcal: (context.carbs_target || engineResult.macros.carb_g) * 4,
+      fat_kcal: (context.fat_target || engineResult.macros.fat_g) * 9
     };
 
     // 3. Distribuição de Macros

@@ -38,13 +38,25 @@ export class LibraryV3Resolver {
     console.log(`[LibraryV3Resolver] Resolving structure for cluster: ${clusterSlug} (Target: ${targetKcal}kcal)`);
 
     // 1. Busca itens candidatos no cluster
+    // Mapeamento de slot do editor para tipo da biblioteca
+    const slotToType: Record<string, string> = {
+      'cafe_da_manha': 'breakfast',
+      'lanche_da_manha': 'snack',
+      'almoço': 'lunch',
+      'lanche_da_tarde': 'snack',
+      'jantar': 'dinner',
+      'ceia': 'supper'
+    };
+
+    const libMealType = slotToType[context.mealSlot.toLowerCase()] || context.mealSlot.toLowerCase();
+
     const { data: items, error } = await supabase
       .from('v3_library_items')
       .select(`
         *,
         images:v3_library_images(*)
       `)
-      .contains('meal_type', [context.mealSlot.toLowerCase()])
+      .contains('meal_type', [libMealType])
       .contains('objective_tags', [context.goal])
       .eq('active', true) as { data: LibraryV3Item[] | null, error: any };
 
