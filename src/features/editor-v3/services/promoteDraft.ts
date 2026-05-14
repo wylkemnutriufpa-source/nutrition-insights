@@ -247,6 +247,7 @@ export async function promoteDraftToMealPlan(
             meal_plan_id: plan.id,
             tenant_id: draft.tenant_id,
             meal_type: mealType,
+            day_of_week: meal.day_of_week ?? null,
             title: sub.name,
             description: sub.portionLabel || `${sub.suggestedQuantity || sub.portionValue || 100}g`,
             calories_target: Math.round(sub.kcal || sub.calories || 0),
@@ -262,7 +263,8 @@ export async function promoteDraftToMealPlan(
             edit_metadata: {
               ...sub,
               display_quantity: sub.suggestedQuantity || sub.portionValue || 100,
-              display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g'
+              display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g',
+              day_of_week: meal.day_of_week ?? null,
             }
           });
         });
