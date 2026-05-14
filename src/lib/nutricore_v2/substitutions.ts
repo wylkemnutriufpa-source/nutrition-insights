@@ -65,9 +65,6 @@ export function getSubstitutions(
         // Se for café/lanche, não sugerir proteínas pesadas (peixe, carne, frango) 
         // a menos que o alimento original JÁ SEJA uma proteína pesada.
         if (isHeavyProtein(candName) && !isHeavyProtein(name)) return false;
-      } else {
-        // No almoço/jantar, se o original for proteína pesada, preferir proteínas pesadas
-        if (isHeavyProtein(name) && isBreakfastProtein(candName)) return false;
       }
     }
 
