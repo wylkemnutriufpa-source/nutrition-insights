@@ -270,7 +270,7 @@ export async function promoteDraftToMealPlan(
               blockId,
               display_quantity: sub.suggestedQuantity || sub.portionValue || 100,
               display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g',
-              day_of_week: meal.day_of_week ?? null,
+              day_of_week: meal.day_of_week ?? 0,
               editor_version: 'v3',
             }
           });
