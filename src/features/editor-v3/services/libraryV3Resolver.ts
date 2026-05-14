@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Meal, MealItem } from "../types";
+import { Meal, MealItem, TemplateStyleContract } from "../types";
 import { clampScaleFactor, clampItemGrams, clampItemKcal } from "@/lib/macroSafety";
 import {
   isFoodAllowedInSlot,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
 import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+import { getStyleContract } from "@/lib/templateStyles";
 
 export interface LibraryV3Item {
   id: string;
