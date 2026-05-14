@@ -97,10 +97,10 @@ async function seedLibraryV3() {
     if (inserted) {
       // Add fake image for testing
       await supabase.from('v3_library_images').upsert({
-        library_item_id: inserted.id,
+        item_slug: item.slug,
         image_asset: `https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/${item.slug}.jpg`,
         active: true
-      }, { onConflict: 'library_item_id,image_asset' });
+      }, { onConflict: ['item_slug', 'image_asset'] } as any);
     }
   }
 
