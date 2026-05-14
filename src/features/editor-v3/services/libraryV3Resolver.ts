@@ -42,9 +42,11 @@ export class LibraryV3Resolver {
   static async resolveMealStructure(
     clusterSlug: string, 
     targetKcal: number, 
-    context: { goal: string; planId: string; day: string; mealSlot: string; integrityThreshold?: number }
+    context: { goal: string; planId: string; day: string; mealSlot: string; integrityThreshold?: number; family?: string; styleContract?: TemplateStyleContract }
   ): Promise<Meal | null> {
     console.log(`[LibraryV3Resolver] Resolving structure for cluster: ${clusterSlug} (Target: ${targetKcal}kcal)`);
+
+    const styleContract = context.styleContract || getStyleContract(context.family);
 
     const threshold = context.integrityThreshold || 1.5; // Limite padrão de expansão de porção
 
