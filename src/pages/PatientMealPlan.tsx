@@ -215,33 +215,32 @@ export default function PatientMealPlan() {
       const currentDow = new Date(date + "T12:00:00").getDay();
       const flatItems: any[] = [];
 
-      // 🛡️ Blindagem: Suportar estrutura de dias (V1.0.0) ou legado de transição (meals top-level)
-      // Para planos 'single_day', se não encontrar o dia específico, pega o primeiro disponível
-      let meals = [];
-      if (snapshot.days) {
-        const dayMatch = snapshot.days.find((d: any) => d.day_of_week === currentDow);
-        if (dayMatch) {
-          meals = dayMatch.meals || [];
-        } else if (planData.plan_mode === 'single_day' && snapshot.days.length > 0) {
-          // Fallback para o único dia disponível em planos de dia único
-          meals = snapshot.days[0].meals || [];
-        }
-      } else {
-        meals = snapshot.meals || [];
-      }
+      // 🛡️ Snapshot V3: hidrata TODOS os dias quando o plano é semanal.
+      // Antes só hidratava o dia atual e o weekly acabava repetindo/copiadando a mesma estrutura.
+      const snapshotDays = Array.isArray(snapshot.days) ? snapshot.days : null;
+      const daysToHydrate = snapshotDays
+        ? (planData.plan_mode === 'single_day'
+            ? [snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0]].filter(Boolean)
+            : snapshotDays)
+        : [{ day_of_week: currentDow, meals: snapshot.meals || [] }];
 
       // 🛡️ ASSERT: Auditoria de hierarquia durante a hidratação do Snapshot
-      meals.forEach((meal: any) => {
-        meal.items.forEach((item: any) => {
+      daysToHydrate.forEach((dayNode: any) => {
+        const meals = dayNode?.meals || [];
+        const hydratedDay = dayNode?.day_of_week ?? currentDow;
+        meals.forEach((meal: any) => {
+          (meal.items || []).forEach((item: any) => {
           assertHierarchyIntegrity(item as unknown as DisplayMealPlanItem, "PatientMealPlan_snapshot");
+          const isPrimary = item.is_primary !== false && item.is_substitution !== true;
           
           const common = {
             meal_type: meal.meal_type || meal.id,
-            day_of_week: currentDow,
+            day_of_week: hydratedDay,
             editor_version: 'v3',
           };
 
-          // 1. Mapeia o item primário
+          // 1. Mapeia o item preservando a soberania primário/substituição do snapshot.
+          // Bug anterior: todo item do snapshot virava primário, somando substituições no dia.
           const blockId = item.block_id || item.blockId || item.substitution_group_id || item.id || item.instanceId;
           flatItems.push({
             ...item,
@@ -260,8 +259,8 @@ export default function PatientMealPlan() {
             instanceId: item.instanceId,
             blockId: blockId,
             substitution_group_id: blockId,
-            is_primary: true,
-            is_substitution: false,
+            is_primary: isPrimary,
+            is_substitution: !isPrimary,
             correlation_id: item.correlation_id,
             edit_metadata: {
               ...(item.edit_metadata || {}),
@@ -270,8 +269,8 @@ export default function PatientMealPlan() {
             }
           });
 
-          // 2. Mapeia as substituições acopladas (se houver)
-          if (item.substitutions && Array.isArray(item.substitutions)) {
+          // 2. Mapeia substituições acopladas apenas quando o parent é primário.
+          if (isPrimary && item.substitutions && Array.isArray(item.substitutions)) {
             item.substitutions.forEach((sub: any) => {
               flatItems.push({
                 ...sub,
@@ -300,6 +299,7 @@ export default function PatientMealPlan() {
               });
             });
           }
+        });
         });
       });
 
@@ -381,6 +381,7 @@ export default function PatientMealPlan() {
       .eq("meal_plan_id", planData.id)
       .gte("date", weekStart)
       .lte("date", weekEnd);
+    setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
 
     } catch (err: any) {
       console.error("[PatientApp] Fetch Error:", err);
