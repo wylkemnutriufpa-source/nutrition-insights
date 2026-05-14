@@ -91,6 +91,11 @@ export class V3SandboxGenerator {
     const planId = 'sandbox-plan';
     const day = 'sandbox-day';
 
+    // Se o template tem um perfil específico para a kcal alvo, podemos extrair regras dele
+    const activeProfile = template?.kcal_profiles?.find(p => 
+      typeof p === 'object' && p.kcal === context.calories_target
+    );
+
     for (const slot of distributed) {
       // Mapeamento de Cluster
       let clusterSlug = 'almoco_tradicional';
@@ -98,7 +103,6 @@ export class V3SandboxGenerator {
       if (template && template.cluster_map && template.cluster_map[slot.type]) {
         clusterSlug = template.cluster_map[slot.type];
       } else {
-        // Fallback Legado / Heurística de Sandbox
         if (slot.type.includes('cafe')) clusterSlug = 'cafe_tradicional';
         else if (slot.type.includes('lanche')) clusterSlug = 'lanche_pratico';
         else clusterSlug = 'almoco_tradicional';
@@ -111,7 +115,8 @@ export class V3SandboxGenerator {
           goal: context.goal!,
           planId,
           day,
-          mealSlot: slot.type
+          mealSlot: slot.type,
+          integrityThreshold: template?.meal_integrity_threshold
         }
       );
 
