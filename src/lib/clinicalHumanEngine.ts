@@ -58,7 +58,7 @@ export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string):
 
   let score = 100;
   const reasons: string[] = [];
-  const items = meal.items || [];
+  const items = (meal.items || []) as MealItem[];
 
   if (items.length === 0) return { score: 0, status: 'absurd', reasons: ['Refeição vazia'] };
 
@@ -79,8 +79,8 @@ export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string):
 
   // 2. Validação de Volume (Human Limits)
   items.forEach(item => {
-    // Alface/Vegetais > 200g é visualmente absurdo para um prato normal
-    if (item.quantity > 250 && item.name.toLowerCase().includes('alface')) {
+    // Alface/Vegetais > 250g é visualmente absurdo para um prato normal
+    if (item.quantity > 250 && /\b(alface|r[uú]cula|folhas)\b/i.test(item.name)) {
       score -= 30;
       reasons.push(`Volume excessivo de ${item.name} (${item.quantity}g)`);
     }
@@ -93,16 +93,35 @@ export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string):
   });
 
   // 3. Coerência de Combinação (Ex: Feijão + Iogurte)
-  const hasLegume = items.some(i => i.name.toLowerCase().includes('feijão') || i.name.toLowerCase().includes('grao de bico'));
-  const hasDairy = items.some(i => i.name.toLowerCase().includes('iogurte') || i.name.toLowerCase().includes('leite'));
+  const hasLegume = items.some(i => /\b(feij[aã]o|gr[aã]o de bico|lentilha)\b/i.test(i.name));
+  const hasDairy = items.some(i => /\b(iogurte|leite|coalhada)\b/i.test(i.name));
   if (hasLegume && hasDairy) {
     score -= 40;
     reasons.push('Combinação improvável: Leguminosa + Laticínio');
   }
 
-  // 4. Determinação do Status
+  // 4. Bloqueios Absolutos (Regras do Usuário)
+  const hasFish = items.some(i => /\b(til[aá]pia|peixe|salm[aã]o|pescada|linguado|atum)\b/i.test(i.name));
+  if (slot === 'breakfast' && hasFish) {
+    score = 0;
+    reasons.push('Bloqueio Absoluto: Peixe no café da manhã');
+  }
+
+  const hasHeavyLunch = items.some(i => /\b(arroz|feij[aã]o|macarr[aã]o|picanha)\b/i.test(i.name));
+  if (slot === 'breakfast' && hasHeavyLunch) {
+    score = 0;
+    reasons.push('Bloqueio Absoluto: Almoço pesado no café da manhã');
+  }
+
+  const hasSnackInMain = items.some(i => /\b(p[aã]o franc[eê]s|bolo|granola)\b/i.test(i.name));
+  if ((slot === 'lunch' || slot === 'dinner') && hasSnackInMain) {
+    score -= 60;
+    reasons.push('Alimento de lanche em refeição principal (Bloqueado)');
+  }
+
+  // 5. Determinação do Status
   let status: HumanScoreResult['status'] = 'human';
-  if (score < 40) status = 'absurd';
+  if (score < 30) status = 'absurd';
   else if (score < 75) status = 'robotic';
 
   return { score: Math.max(0, score), status, reasons };
@@ -122,7 +141,7 @@ export class WeeklyFatigueGuard {
     for (const item of meal.items) {
       const group = getFoodGroup(item.name);
       
-      // Regra: Não repetir proteína dominante > 3x na semana
+      // Regra: Não repetir proteína dominante > 3x na semana (ex: frango todo dia)
       if (group?.startsWith('proteina')) {
         const count = this.dominantProteins[group] || 0;
         if (count >= 3) {
