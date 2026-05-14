@@ -145,8 +145,8 @@ export function buildMeal(
     const protein = findRandom(allowedDb, f => f.name.toLowerCase().includes("frango")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("carne")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("peixe"));
     const carb = findRandom(allowedDb, f => f.name.toLowerCase().includes("arroz")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("batata")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("macarrão"));
     const legume = findRandom(allowedDb, f => f.name.toLowerCase().includes("feijão")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("lentilha")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("grão de bico"));
-    const veg = findRandom(allowedDb, f => f.name.toLowerCase().includes("brócolis")) || findRandom(allowedDb, f => f.category === "vegetable");
-    const fat = findRandom(allowedDb, f => f.name.toLowerCase().includes("azeite"));
+    const veg = findRandom(allowedDb, f => f.name.toLowerCase().includes("brócolis")) || findRandom(allowedDb, f => f.category === "vegetable") || findRandom(allowedDb, f => f.name.toLowerCase().includes("salada"));
+    const fat = findRandom(allowedDb, f => f.name.toLowerCase().includes("azeite")) || findRandom(allowedDb, f => f.name.toLowerCase().includes("abacate"));
 
     if (protein) items.push(createPlannedItem(protein, Math.min(350, Math.max(80, roundTo5(150 * scale))), foodDb, type));
     if (carb) items.push(createPlannedItem(carb, Math.min(450, Math.max(50, roundTo5(100 * scale))), foodDb, type));
