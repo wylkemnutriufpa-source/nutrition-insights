@@ -41,8 +41,8 @@ const V3LibrarySandbox = () => {
       setGoal(template.objective);
       // Sugerir uma kcal do perfil se disponível
       if (template.kcal_profiles && template.kcal_profiles.length > 0) {
-        // Pega uma kcal intermediária (ex: 2000) ou a mais próxima do atual
-        const defaultKcal = template.kcal_profiles.includes(2000) ? 2000 : template.kcal_profiles[0];
+        const profileValues = template.kcal_profiles.map(p => typeof p === 'number' ? p : p.kcal);
+        const defaultKcal = profileValues.includes(2000) ? 2000 : profileValues[0];
         setKcal(defaultKcal);
       }
     }
@@ -105,9 +105,10 @@ const V3LibrarySandbox = () => {
                     <SelectValue placeholder="Kcal" />
                   </SelectTrigger>
                   <SelectContent>
-                    {selectedTemplate?.kcal_profiles?.map(k => (
-                      <SelectItem key={k} value={k.toString()}>{k} kcal</SelectItem>
-                    )) || (
+                    {selectedTemplate?.kcal_profiles?.map((k, idx) => {
+                      const val = typeof k === 'number' ? k : k.kcal;
+                      return <SelectItem key={`${val}-${idx}`} value={val.toString()}>{val} kcal</SelectItem>
+                    }) || (
                       <>
                         <SelectItem value="1500">1500 kcal</SelectItem>
                         <SelectItem value="2000">2000 kcal</SelectItem>
@@ -149,6 +150,49 @@ const V3LibrarySandbox = () => {
               <div className="flex items-center gap-1.5 italic">
                 "{selectedTemplate.description}"
               </div>
+            </div>
+          )}
+
+          {selectedTemplate && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <Label className="text-[10px] font-bold uppercase text-slate-400 block mb-2">Família Clínica</Label>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="font-bold text-slate-700 capitalize">{selectedTemplate.family || 'Geral'}</span>
+                </div>
+              </div>
+              
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <Label className="text-[10px] font-bold uppercase text-slate-400 block mb-2">Integrity Threshold</Label>
+                <div className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4 text-amber-500" />
+                  <span className="font-bold text-slate-700">{selectedTemplate.meal_integrity_threshold || 1.5}x</span>
+                </div>
+              </div>
+
+              {selectedTemplate.kcal_profiles?.find(p => typeof p === 'object' && p.kcal === kcal) && (
+                <>
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <Label className="text-[10px] font-bold uppercase text-slate-400 block mb-2">Intensidade do Perfil</Label>
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-indigo-500" />
+                      <span className="font-bold text-slate-700 capitalize">
+                        {(selectedTemplate.kcal_profiles.find(p => typeof p === 'object' && p.kcal === kcal) as any).meal_intensity}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <Label className="text-[10px] font-bold uppercase text-slate-400 block mb-2">Densidade Proteica</Label>
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4 text-red-500" />
+                      <span className="font-bold text-slate-700 capitalize">
+                        {(selectedTemplate.kcal_profiles.find(p => typeof p === 'object' && p.kcal === kcal) as any).protein_density}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </header>

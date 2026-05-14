@@ -122,12 +122,23 @@ export interface DraftPayload {
   confidence?: PlanConfidence;
 }
 
-export interface MealTemplate {
-  id: string;
-  name: string;
-  description: string;
-  items: Food[];
+export interface KcalProfile {
+  kcal: number;
+  distribution_rules?: {
+    protein_ratio: number;
+    carb_ratio: number;
+    fat_ratio: number;
+  };
+  meal_intensity?: 'low' | 'medium' | 'high';
+  satiety_level?: number;
+  protein_density?: 'standard' | 'high' | 'ultra';
+  scaling_ranges?: {
+    min: number;
+    max: number;
+  };
 }
+
+export type TemplateFamily = 'hipertrofia' | 'emagrecimento' | 'performance' | 'saude_geral';
 
 export interface V3DietTemplate {
   id: string;
@@ -136,11 +147,20 @@ export interface V3DietTemplate {
   description: string;
   template_type: string;
   objective: string;
+  family?: TemplateFamily;
   meal_distribution: Array<{ slot: string; time: string }>;
   cluster_map: Record<string, string>;
-  kcal_profiles: number[];
+  kcal_profiles: number[] | KcalProfile[];
   visual_style: string;
   substitutions_enabled: boolean;
   editable: boolean;
   active: boolean;
+  meal_integrity_threshold?: number; // 0.5 to 2.0 (factor)
+}
+
+export interface MealTemplate {
+  id: string;
+  name: string;
+  description: string;
+  items: Food[];
 }
