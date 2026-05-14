@@ -19890,6 +19890,7 @@ export type Database = {
           active: boolean | null
           carbs_base: number | null
           category: string | null
+          cluster_slug: string | null
           composition: Json | null
           created_at: string | null
           fats_base: number | null
@@ -19908,6 +19909,7 @@ export type Database = {
           active?: boolean | null
           carbs_base?: number | null
           category?: string | null
+          cluster_slug?: string | null
           composition?: Json | null
           created_at?: string | null
           fats_base?: number | null
@@ -19926,6 +19928,7 @@ export type Database = {
           active?: boolean | null
           carbs_base?: number | null
           category?: string | null
+          cluster_slug?: string | null
           composition?: Json | null
           created_at?: string | null
           fats_base?: number | null
