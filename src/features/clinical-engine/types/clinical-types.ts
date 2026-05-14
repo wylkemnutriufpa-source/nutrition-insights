@@ -33,6 +33,9 @@ export interface MealItem extends Food {
   quantity: number; 
   clinical_mass_g?: number; // SOBERANIA CLÍNICA: A massa real em gramas independente da unidade de exibição
   selectedUnit?: string;
+  blockId?: string; // Weekly block reference (governance)
+  substitution_group_id?: string; // ID do grupo de substituição (Hierarchy Ownership)
+  is_primary?: boolean; // Define se é o item principal do bloco
   substitutions: Food[]; // Definido como obrigatório para consistência do contrato V3
   description?: string;
   instructions?: string;
