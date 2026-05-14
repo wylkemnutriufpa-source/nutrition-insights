@@ -74,7 +74,8 @@ export const SLOT_ALLOWED_GROUPS: Record<MealSlot, SubstitutionGroup[]> = {
     "laticinio-proteico",
     "laticinio-leve",
     "gordura-oleaginosa",
-    "proteina-leve", // ovo, whey, peito de peru — OK no café
+    "proteina-leve",
+    "carbo-tuberoso", // Permitir macaxeira/inhame no café
   ],
   morning_snack: [
     "fruta-doce",
@@ -141,12 +142,7 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bfrango grelhado\b/i,
     /\bfrango assado\b/i,
     /\bmacarr[aã]o\b/i,
-    /\bp[aã]o de queijo grande\b/i, 
     /\bsopa\b/i,
-    /\bmandioca\b/i,
-    /\binhame\b/i,
-    /\bbatata doce\b/i,
-    /\bbatata inglesa\b/i,
     /\bstrogonoff\b/i,
     /\bparmegiana\b/i,
     /\bomellete de carne\b/i,
@@ -159,6 +155,9 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bbife\b/i,
     /\bsopa\b/i,
     /\bmacarr[aã]o\b/i,
+    /\bcarne\b/i,
+    /\bfrango\b/i,
+    /\bpeixe\b/i,
   ],
   lunch: [
     /\bp[aã]o\b/i,
@@ -179,6 +178,9 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bbife\b/i,
     /\bsopa\b/i,
     /\bmacarr[aã]o\b/i,
+    /\bcarne\b/i,
+    /\bfrango\b/i,
+    /\bpeixe\b/i,
   ],
   dinner: [
     /\bp[aã]o\b/i,
@@ -197,11 +199,9 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bpicanha\b/i,
     /\bbife\b/i,
     /\bmacarr[aã]o\b/i,
-    /\btil[aá]pia\b/i,
-    /\bbatata doce\b/i,
-    /\bbatata inglesa\b/i,
-    /\bmandioca\b/i,
-    /\binhame\b/i,
+    /\bcarne\b/i,
+    /\bfrango\b/i,
+    /\bpeixe\b/i,
   ],
   supper: [
     /\barroz\b/i,
@@ -209,11 +209,9 @@ export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
     /\bpicanha\b/i,
     /\bbife\b/i,
     /\bmacarr[aã]o\b/i,
-    /\btil[aá]pia\b/i,
-    /\bbatata doce\b/i,
-    /\bbatata inglesa\b/i,
-    /\bmandioca\b/i,
-    /\binhame\b/i,
+    /\bcarne\b/i,
+    /\bfrango\b/i,
+    /\bpeixe\b/i,
   ],
 };
 
