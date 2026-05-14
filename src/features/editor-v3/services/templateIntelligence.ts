@@ -40,7 +40,7 @@ export function processSmartTemplate(
 ): Meal[] {
   console.log(`[SmartTemplate] Processando template "${template.name}"`, params);
 
-  const styleContract = params.styleContract || getStyleContract((template as any).family);
+  const styleContract = params.styleContract || getStyleContract((template as any).family, slot);
 
   // 🛡️ REGRAS DE TEMPLATE: O slot agora é detectado com maior rigor para evitar drift.
   const templateName = template.name.toLowerCase();
