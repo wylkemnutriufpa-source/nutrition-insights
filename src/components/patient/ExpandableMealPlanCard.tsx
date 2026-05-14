@@ -114,7 +114,37 @@ export default function ExpandableMealPlanCard() {
     setLoading(false);
   }, [user, date, weekDates]);
 
+  const setAdherence = useCallback(async (item: MealPlanItem, status: AdherenceStatus) => {
+    if (!user || !plan) return;
+    
+    const existing = completions.find(c => c.meal_plan_item_id === item.id);
+
+    if (existing && existing.adherence_status === status) {
+      setCompletions(prev => prev.filter(c => c.id !== existing.id));
+      await supabase.from("meal_item_completions").delete().eq("id", existing.id);
+      return;
+    }
+
+    if (existing) {
+      const updated = { ...existing, adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString() };
+      setCompletions(prev => prev.map(c => c.id === existing.id ? updated : c));
+      await supabase.from("meal_item_completions").update({
+        adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString(),
+      }).eq("id", existing.id);
+    } else {
+      const { data } = await supabase.from("meal_item_completions").insert({
+        patient_id: user.id, meal_plan_item_id: item.id, meal_plan_id: plan.id,
+        date: date, adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString(),
+      }).select().single();
+
+      if (data) {
+        setCompletions(prev => [...prev, data as unknown as MealCompletion]);
+      }
+    }
+  }, [user, plan, date, completions]);
+
   useEffect(() => { fetchData(); }, [fetchData]);
+
 
   const todayItems = useMemo(() => 
     buildDailyDisplayItems(allItems as any, dayOfWeek), 
