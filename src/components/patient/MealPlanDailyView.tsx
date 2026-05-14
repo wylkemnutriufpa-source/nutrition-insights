@@ -783,8 +783,9 @@ const MealGroup = memo(function MealGroup({
 
 
 export {
-  MacroSummary, MealItemCard, AdherenceCard, DateNavigator, MealGroup,
+  MacroSummary, MealItemCard, MealSlotCard, AdherenceCard, DateNavigator, MealGroup,
   MEAL_TYPES, DAYS, ADHERENCE_OPTIONS, IMPACT_TAGS,
   getImpactTags, getMotivationalMessage,
 };
+
 export type { MealPlanItem, MealCompletion, AdherenceStatus, MealDetailData };
