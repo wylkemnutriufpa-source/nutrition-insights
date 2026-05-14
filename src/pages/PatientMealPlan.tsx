@@ -249,6 +249,8 @@ export default function PatientMealPlan() {
             instanceId: item.instanceId,
             blockId: item.blockId,
             substitution_group_id: item.substitution_group_id || item.blockId,
+            is_primary: item.is_primary === true,
+            is_substitution: item.is_primary === false || !!item.substitution_group_id,
             correlation_id: item.correlation_id,
             editor_version: 'v3',
             edit_metadata: {
