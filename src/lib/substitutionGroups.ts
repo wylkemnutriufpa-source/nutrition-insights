@@ -249,6 +249,9 @@ interface ClinicalContext {
   restrictions?: string[]; // e.g. ["lactose", "gluten"]
   calorieRange?: { min: number; max: number };
   minProtein?: number;
+  /** 🛡️ MEAL_TYPE_GUARD: slot da refeição (breakfast, lunch, etc). Quando informado,
+   *  bloqueia candidatos que não pertencem a este slot, eliminando "tilápia no café". */
+  slot?: string;
 }
 
 export function getValidSubstitutions(
