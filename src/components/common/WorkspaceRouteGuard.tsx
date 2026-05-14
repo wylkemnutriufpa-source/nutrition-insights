@@ -82,9 +82,17 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     return <Navigate to="/client/dashboard" replace />;
   }
 
-  const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/patient-plan", "/patient/plan", "/checkin", "/meals", "/recipes", "/water-calculator", "/weight-calculator", "/patient-overview", "/checklist", "/appointments"];
+  const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/patient-plan", "/patient/plan", "/checkin", "/meals", "/recipes", "/water-calculator", "/weight-calculator", "/patient-overview", "/checklist", "/appointments", "/anamnesis", "/achievements", "/challenges", "/shopping-list", "/body-analysis", "/body-projection", "/checkin-panel", "/weekly-goals", "/weekly-report", "/weight-trajectory"];
+  
+  // BLOQUEIO SOBERANO: Profissionais (Pro) NUNCA acessam caminhos de paciente
+  if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && isPro && !isPatient) {
+    console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acesso Pro -> Patient Path (${location.pathname}). Redirecionando para /dashboard.`);
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Proteção para usuários sem role (não deveria acontecer, mas guardamos)
   if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
-    console.warn(`[RASTREADOR] Redirect para / disparado por: WorkspaceRouteGuard (Patient only paths)`);
+    console.warn(`[RASTREADOR] Redirect para / disparado por: WorkspaceRouteGuard (Patient only paths - Orphaned)`);
     return <Navigate to="/" replace />;
   }
 

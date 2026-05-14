@@ -95,20 +95,20 @@ export function RootRouter() {
     return <Navigate to="/auth" replace />;
   }
 
-  // 5. Decisão de destino
-  const effectiveRoles = roles && roles.length > 0 ? roles : ["patient"];
-  const isProRole = effectiveRoles.includes("nutritionist") || effectiveRoles.includes("personal") || effectiveRoles.includes("admin");
+  // 5. GOVERNANÇA DE ROLE SOBERANA (Anti-contaminação)
+  const isProRole = roles?.some(r => ["nutritionist", "personal", "admin", "admin_master", "lojista"].includes(r));
+  const isPatientRole = roles?.includes("patient");
   const savedContext = localStorage.getItem("fj_workspace_context");
 
-  // Flow Profissional
+  // Flow Profissional - Bloqueio de contaminação Patient
   if (isProRole && savedContext !== "patient") {
-    const target = (nextPath && nextPath !== "/admin/dashboard") ? nextPath : "/dashboard";
+    const target = (nextPath && nextPath !== "/admin/dashboard" && !nextPath.startsWith("/client")) ? nextPath : "/dashboard";
     console.warn(`[RASTREADOR] Redirect para ${target} disparado por: RootRouter (Pro Flow)`);
     return <Navigate to={target} replace />;
   }
 
   // Flow Paciente (Soberania do Onboarding Linear)
-  if (effectiveRoles.includes("patient")) {
+  if (isPatientRole) {
     const pState = (profile as any)?.patient_state;
     const onboardingCompleted = (profile as any)?.onboarding_completed;
     

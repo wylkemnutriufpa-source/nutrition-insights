@@ -86,7 +86,18 @@ const item = {
 };
 
 export default function ClientDashboard() {
-  const { user, profile, isPatient } = useAuth();
+  const { user, profile, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  // HARD GUARD SOBERANO: Bloqueio imediato de contaminação de contexto Pro -> Patient
+  useEffect(() => {
+    const isPro = isNutritionist || isPersonal || isAdmin;
+    if (isPro && !isPatient) {
+      console.warn("[SECURITY] Bloqueio imediato ClientDashboard: Perfil Profissional detectado em rota de paciente.");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isPatient, isNutritionist, isPersonal, isAdmin, navigate]);
+
   const { mode, isLoading, failedMode, retryLastMode, isFeatureEnabled } = useExperienceMode();
   const page = usePageState({ initialStatus: "loading" });
   
@@ -108,7 +119,6 @@ export default function ClientDashboard() {
     isStreakAtRisk
   } = useEngagement();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
-  const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
