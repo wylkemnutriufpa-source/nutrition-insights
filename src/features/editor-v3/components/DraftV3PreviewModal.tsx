@@ -109,9 +109,9 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px] font-black uppercase tracking-widest px-2">
-                      Draft Preview Soberano
+                      Rascunho V3 Soberano
                     </Badge>
-                    <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">• Auditoria Ativa</span>
+                    <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">• Totalmente Editável</span>
                   </div>
                   <DialogTitle className="text-3xl font-black italic uppercase tracking-tighter">
                     Revisar Plano: <span className="text-white/40">{patientName}</span>
