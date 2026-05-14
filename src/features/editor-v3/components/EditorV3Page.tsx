@@ -1821,23 +1821,198 @@ const EditorV3Page = () => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[350px_1fr_320px] gap-6 p-4 lg:p-6 pb-32">
+      <main className="flex-1 flex overflow-hidden max-w-[1600px] mx-auto w-full">
+        {/* COLUNA LATERAL: Biblioteca Clínica V3 */}
+        <aside className="w-80 border-r border-white/5 bg-neutral-900/40 flex flex-col shrink-0 overflow-hidden">
+          <div className="p-6 border-b border-white/5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/10 rounded-xl">
+                <Library className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase italic tracking-tight">Biblioteca Clínica V3</h3>
+                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest">Soberana & Dinâmica</p>
+              </div>
+            </div>
 
-        {/* Coluna Esquerda: Biblioteca (Library) */}
-        <aside className="hidden lg:flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
-          <Card className="flex-1 bg-neutral-900/50 border-white/5 rounded-3xl flex flex-col overflow-hidden backdrop-blur-sm shadow-xl">
-            <div className="p-5 pb-2">
-              <h3 className="text-xs font-black text-white/60 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-emerald-500" /> Biblioteca Clínica
-              </h3>
-              <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
-                <TabsList className="bg-white/5 w-full justify-start p-1 rounded-xl h-auto flex-wrap gap-1 mb-4 border border-white/5">
-                  <TabsTrigger value="food" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Alimentos</TabsTrigger>
-                  <TabsTrigger value="marmita" className="data-[state=active]:bg-blue-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Prontas</TabsTrigger>
-                  <TabsTrigger value="template" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Templates</TabsTrigger>
-                  <TabsTrigger value="visual" className="data-[state=active]:bg-rose-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8 px-3 transition-all flex-1">Imagens</TabsTrigger>
-                </TabsList>
-              </Tabs>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
+              <Input 
+                placeholder="Buscar na biblioteca..."
+                value={v3LibrarySearch}
+                onChange={(e) => setV3LibrarySearch(e.target.value)}
+                className="bg-white/5 border-white/10 h-9 pl-9 rounded-xl text-xs focus:border-emerald-500/50"
+              />
+            </div>
+          </div>
+
+          <div className="px-3 pt-4">
+            <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+              {[
+                { id: 'foods', label: 'Alimentos', icon: Apple },
+                { id: 'ready', label: 'Prontas', icon: Soup },
+                { id: 'templates', label: 'Templates', icon: Layers }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setV3LibraryTab(tab.id as any)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all",
+                    v3LibraryTab === tab.id ? "bg-white/5 text-emerald-500 shadow-sm" : "text-white/30 hover:text-white/60"
+                  )}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {v3LibraryTab === 'ready' && (
+            <div className="px-3 pt-3 flex flex-wrap gap-1.5">
+              {[
+                { id: null, label: 'Todas', icon: UtensilsCrossed },
+                { id: 'breakfast', label: 'Café', icon: Coffee },
+                { id: 'lunch', label: 'Almoço', icon: Sun },
+                { id: 'dinner', label: 'Jantar', icon: Moon },
+                { id: 'supper', label: 'Ceia', icon: ShoppingCart }
+              ].map(slot => (
+                <button
+                  key={slot.label}
+                  onClick={() => setV3LibraryMealFilter(slot.id)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg border text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5",
+                    v3LibraryMealFilter === slot.id 
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                      : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10"
+                  )}
+                >
+                  <slot.icon className="w-2.5 h-2.5" />
+                  {slot.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <ScrollArea className="flex-1 p-3">
+            <div className="space-y-3 pb-20">
+              {isSearchingV3Library ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-4 text-white/20">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Acessando Biblioteca...</p>
+                </div>
+              ) : v3LibraryTab === 'templates' ? (
+                v3Templates.map(template => (
+                  <button
+                    key={template.id}
+                    onClick={() => {
+                      setSelectedV3Template(template);
+                      setShowV3TemplateModal(true);
+                    }}
+                    className="w-full group text-left bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all p-4"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-all">
+                        <Target className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black uppercase italic tracking-tight truncate group-hover:text-emerald-400">{template.title}</p>
+                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest truncate">{template.objective}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {(template.kcal_profiles as any[]).slice(0, 4).map((p: any) => (
+                        <Badge key={typeof p === 'number' ? p : p.kcal} className="bg-black/40 text-white/40 border-white/5 text-[8px] uppercase font-black px-1.5 h-4">
+                          {typeof p === 'number' ? p : p.kcal}
+                        </Badge>
+                      ))}
+                    </div>
+                  </button>
+                ))
+              ) : v3LibraryItems.length > 0 ? (
+                v3LibraryItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (activeMealId) {
+                        const composition = item.composition || [{ name: item.title, kcal: item.kcal_base, protein: item.protein_base, carbs: item.carbs_base, fat: item.fats_base, base_grams: 100 }];
+                        const firstComp = composition[0];
+                        addFoodToMeal(activeMealId, {
+                          id: item.id,
+                          name: firstComp.name,
+                          kcal: firstComp.kcal,
+                          protein: firstComp.protein,
+                          carbs: firstComp.carbs,
+                          fat: firstComp.fat,
+                          portionValue: 100,
+                          portionUnitLabel: 'g',
+                          portionUnit: 'g',
+                          portionLabel: '100g',
+                          measurementType: 'gram',
+                          imageUrl: item.images?.[0]?.image_asset || undefined,
+                          isVisualLibraryItem: true,
+                          library_item_slug: item.slug
+                        } as any);
+                        toast.success(`${item.title} adicionado!`);
+                      } else {
+                        toast.info("Selecione uma refeição primeiro.");
+                      }
+                    }}
+                    className="w-full group flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                      {item.images?.[0]?.image_asset ? (
+                        <img src={item.images[0].image_asset} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="w-5 h-5 text-white/10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white text-[10px] truncate leading-tight group-hover:text-emerald-400">{item.title}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[8px] font-black text-white/30 uppercase tracking-tighter">{item.kcal_base} kcal</span>
+                        <Badge className="bg-emerald-500/5 text-emerald-500/40 border-0 text-[7px] uppercase font-black px-1 h-3">Escalável</Badge>
+                      </div>
+                    </div>
+                    <Plus className="w-3 h-3 text-white/20 group-hover:text-emerald-500" />
+                  </button>
+                ))
+              ) : (
+                <div className="py-20 flex flex-col items-center justify-center gap-4 text-white/10">
+                  <Search className="w-8 h-8 opacity-10" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Nenhum resultado</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </aside>
+
+        <ScrollArea className="flex-1 px-8 pt-8 pb-32">
+          <div className="max-w-4xl mx-auto space-y-12">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">Draft Soberano</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Editor V3 Elite</span>
+                  <div className="h-1 w-1 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Preview Real-Time</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button 
+                  onClick={() => setV3LibraryTab('templates')}
+                  className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-11 px-6 rounded-xl shadow-lg shadow-emerald-500/20 gap-2"
+                >
+                  <Target className="w-4 h-4" /> Templates
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-12">
+
 
               <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
