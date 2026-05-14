@@ -128,3 +128,19 @@ export interface MealTemplate {
   description: string;
   items: Food[];
 }
+
+export interface V3DietTemplate {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  template_type: string;
+  objective: string;
+  meal_distribution: Array<{ slot: string; time: string }>;
+  cluster_map: Record<string, string>;
+  kcal_profiles: number[];
+  visual_style: string;
+  substitutions_enabled: boolean;
+  editable: boolean;
+  active: boolean;
+}

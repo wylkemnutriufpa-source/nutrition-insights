@@ -3,10 +3,12 @@ import { LibraryV3Resolver } from "./libraryV3Resolver";
 import { distributeMacros, MealSlot } from "@/lib/nutricore_v2/meal-distribution";
 import { runEngine, EngineInput } from "@/lib/nutricore_v2/nutrition-engine";
 import { PatientContext, Meal } from "../types";
+import { DietTemplateService } from "./dietTemplateService";
 
 export interface SandboxRequest {
   patientContext: Partial<PatientContext>;
   mealSlots?: MealSlot[];
+  templateSlug?: string;
 }
 
 /**
@@ -16,18 +18,18 @@ export interface SandboxRequest {
  */
 export class V3SandboxGenerator {
   static async generateDraft(request: SandboxRequest): Promise<Meal[]> {
-    console.info(`[Sandbox-V3] Starting Simulation for ${request.patientContext.goal}`);
+    console.info(`[Sandbox-V3] Starting Simulation. Template: ${request.templateSlug || 'None'}`);
 
     // 1. Setup Contexto Clínico
     const context: PatientContext = {
       id: 'sandbox-id',
       name: 'Sandbox User',
-      goal: request.patientContext.goal || 'maintain',
+      goal: request.patientContext.goal || 'manutencao',
       weight: request.patientContext.weight || 75,
       height: request.patientContext.height || 175,
       age: request.patientContext.age || 30,
       gender: request.patientContext.gender || 'male',
-      activityLevel: request.patientContext.activityLevel || 'moderate',
+      activityLevel: request.patientContext.activityLevel || 'moderado',
       restrictions: request.patientContext.restrictions || [],
       preferences: request.patientContext.preferences || [],
       calories_target: request.patientContext.calories_target || 2000,
@@ -36,7 +38,17 @@ export class V3SandboxGenerator {
       fat_target: request.patientContext.fat_target || 60
     };
 
-    // 2. Rodar Motor Nutricional (V3)
+    // 2. Buscar Template se fornecido
+    let template = null;
+    if (request.templateSlug) {
+      template = await DietTemplateService.getTemplateBySlug(request.templateSlug);
+      if (template) {
+        console.info(`[Sandbox-V3] Using Template: ${template.title}`);
+        context.goal = template.objective;
+      }
+    }
+
+    // 3. Rodar Motor Nutricional (NutriCore)
     const engineInput: EngineInput = {
       weight_kg: context.weight,
       height_cm: context.height,
@@ -46,7 +58,6 @@ export class V3SandboxGenerator {
       goal: context.goal as any || 'manutencao'
     };
     
-    // Simular alvos se não fornecidos
     const engineResult = runEngine(engineInput);
     const targetMacros = {
       protein_g: context.protein_target || engineResult.macros.protein_g,
@@ -57,28 +68,41 @@ export class V3SandboxGenerator {
       fat_kcal: (context.fat_target || engineResult.macros.fat_g) * 9
     };
 
-    // 3. Distribuição de Macros
-    const defaultSlots: MealSlot[] = [
-      { type: 'cafe_da_manha', time: '08:00' },
-      { type: 'almoço', time: '13:00' },
-      { type: 'lanche_da_tarde', time: '16:00' },
-      { type: 'jantar', time: '19:30' }
-    ];
+    // 4. Distribuição de Macros (Slots)
+    let slots: MealSlot[] = [];
+    if (template && template.meal_distribution) {
+      slots = template.meal_distribution.map(d => ({
+        type: d.slot,
+        time: d.time
+      }));
+    } else {
+      slots = request.mealSlots || [
+        { type: 'cafe_da_manha', time: '08:00' },
+        { type: 'almoço', time: '13:00' },
+        { type: 'lanche_da_tarde', time: '16:00' },
+        { type: 'jantar', time: '19:30' }
+      ];
+    }
     
-    const slots = request.mealSlots || defaultSlots;
     const distributed = distributeMacros(targetMacros as any, slots);
 
-    // 4. Resolução de Estruturas pela Biblioteca V3 (Soberana)
+    // 5. Resolução Soberana (LibraryV3Resolver)
     const sandboxMeals: Meal[] = [];
     const planId = 'sandbox-plan';
     const day = 'sandbox-day';
 
     for (const slot of distributed) {
-      // Mapeamento de Cluster (Simplificado para Sandbox)
+      // Mapeamento de Cluster
       let clusterSlug = 'almoco_tradicional';
-      if (slot.type === 'cafe_da_manha') clusterSlug = 'cafe_tradicional';
-      if (slot.type === 'lanche_da_tarde') clusterSlug = 'lanche_pratico';
-      if (slot.type === 'jantar') clusterSlug = 'almoco_tradicional';
+      
+      if (template && template.cluster_map && template.cluster_map[slot.type]) {
+        clusterSlug = template.cluster_map[slot.type];
+      } else {
+        // Fallback Legado / Heurística de Sandbox
+        if (slot.type.includes('cafe')) clusterSlug = 'cafe_tradicional';
+        else if (slot.type.includes('lanche')) clusterSlug = 'lanche_pratico';
+        else clusterSlug = 'almoco_tradicional';
+      }
 
       const meal = await LibraryV3Resolver.resolveMealStructure(
         clusterSlug,
@@ -93,7 +117,6 @@ export class V3SandboxGenerator {
 
       if (meal) {
         meal.time = slot.time;
-        // Injetar macros do distribuidor para validação no sandbox
         sandboxMeals.push(meal);
       }
     }
