@@ -185,6 +185,9 @@ export async function buildMealPlanSnapshot(
       fat_g: num(it.fat_target),
     };
 
+    // 🛡️ ASSERT: Auditoria de hierarquia antes de gerar Snapshot
+    assertHierarchyIntegrity(it as unknown as DisplayMealPlanItem, "buildMealPlanSnapshot");
+
     const meta = it.edit_metadata as Record<string, any> | null;
     meals.get(meal)!.push({
       id: it.id,
