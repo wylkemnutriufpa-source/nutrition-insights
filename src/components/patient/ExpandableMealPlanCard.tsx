@@ -58,6 +58,10 @@ export default function ExpandableMealPlanCard() {
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
+  const [selectedSlot, setSelectedSlot] = useState<{ type: string; items: MealPlanItem[] } | null>(null);
+  const [selectedMeal, setSelectedMeal] = useState<any | null>(null);
+  const [substitutingItem, setSubstitutingItem] = useState<MealPlanItem | null>(null);
+
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const weekDates = useMemo(() => getWeekDates(date), [date]);
