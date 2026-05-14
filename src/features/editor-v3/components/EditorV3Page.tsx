@@ -2345,6 +2345,12 @@ const EditorV3Page = () => {
           setIsTemplateEditorOpen(false);
         }}
       />
+      <ControlledDeliveryModal
+        isOpen={showControlledDelivery}
+        onClose={() => setShowControlledDelivery(false)}
+        onDeliver={handleControlledDelivery}
+        planPreview={meals}
+      />
     </div>
   );
 };
