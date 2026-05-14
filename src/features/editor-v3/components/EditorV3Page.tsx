@@ -2113,13 +2113,13 @@ const EditorV3Page = () => {
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {dayMeals.map((meal, mIdx) => (
+                        {dayMeals.map((meal, mIdx) => {
                           const humanScore = calculateHumanMealScore(meal, meal.name);
                           const isAbsurd = humanScore.status === 'absurd';
 
                           return (
                             <Card key={`${day}-${meal.id}-${mIdx}`} className={cn(
-                              "bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group",
+                              "bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group relative",
                               isAbsurd && "border-rose-500/50 bg-rose-500/5"
                             )}>
                               {isAbsurd && (
@@ -2127,25 +2127,29 @@ const EditorV3Page = () => {
                                   <Badge variant="destructive" className="animate-pulse">❌ Violação Clínica</Badge>
                                 </div>
                               )}
+                              
                               <div className="relative w-full h-32 overflow-hidden">
-                                <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                {meal.imageUrl && (
+                                  <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 to-transparent opacity-60" />
                                 <div className="absolute bottom-3 left-4">
                                   <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{meal.time}</span>
                                   <h4 className="text-sm font-black text-white uppercase tracking-tight">{meal.name}</h4>
                                 </div>
                               </div>
-                            )}
-                            <div className="p-4 space-y-2">
-                              {meal.items.map(item => (
-                                <div key={item.instanceId} className="flex justify-between items-center text-[11px] p-2 hover:bg-white/5 rounded-lg cursor-pointer" onClick={() => setSelectedItem({ mealId: meal.id, item })}>
-                                  <span className="text-white/60 font-bold line-clamp-1">{item.name}</span>
-                                  <span className="text-emerald-500 font-black ml-2 whitespace-nowrap">{formatPortion(item)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </Card>
-                        ))}
+
+                              <div className="p-4 space-y-2">
+                                {meal.items.map(item => (
+                                  <div key={item.instanceId} className="flex justify-between items-center text-[11px] p-2 hover:bg-white/5 rounded-lg cursor-pointer" onClick={() => setSelectedItem({ mealId: meal.id, item })}>
+                                    <span className="text-white/60 font-bold line-clamp-1">{item.name}</span>
+                                    <span className="text-emerald-500 font-black ml-2 whitespace-nowrap">{formatPortion(item)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </Card>
+                          );
+                        })}
                       </div>
                     </div>
                   );
