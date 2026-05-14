@@ -146,80 +146,107 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-neutral-950">
             <ScrollArea className="flex-1 p-8">
               <div className="max-w-4xl mx-auto space-y-6">
-                {localMeals.map((meal) => (
-                  <div key={meal.id} className="group bg-neutral-900/40 border border-white/5 rounded-3xl overflow-hidden hover:border-emerald-500/20 transition-all">
-                    <div className="p-5 border-b border-white/5 flex items-center justify-between bg-neutral-900/20">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400">
-                          {getMealIcon(meal.name)}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <h3 className="text-lg font-black uppercase italic tracking-tight">{meal.name}</h3>
-                            <span className="text-[10px] font-black text-white/20 uppercase">{meal.time}</span>
+              <div className="max-w-4xl mx-auto space-y-10">
+                {(() => {
+                  const days = Array.from(new Set(localMeals.map(m => m.day_of_week ?? 0))).sort((a, b) => a - b);
+                  const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+                  return days.map(day => {
+                    const mealsForDay = localMeals.filter(m => (m.day_of_week ?? 0) === day);
+                    if (mealsForDay.length === 0) return null;
+
+                    return (
+                      <div key={day} className="space-y-6">
+                        {days.length > 1 && (
+                          <div className="flex items-center gap-3 px-4">
+                            <div className="h-px flex-1 bg-white/5" />
+                            <h2 className="text-xl font-black italic uppercase tracking-tighter text-emerald-400/60">
+                              {dayNames[day]}
+                            </h2>
+                            <div className="h-px flex-1 bg-white/5" />
                           </div>
-                          <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                            {meal.items.length} ITENS • {Math.round(meal.items.reduce((acc, i) => acc + (i.kcal || 0), 0))} KCAL
-                          </p>
+                        )}
+
+                        <div className="space-y-6">
+                          {mealsForDay.map((meal) => (
+                            <div key={meal.id} className="group bg-neutral-900/40 border border-white/5 rounded-3xl overflow-hidden hover:border-emerald-500/20 transition-all">
+                              <div className="p-5 border-b border-white/5 flex items-center justify-between bg-neutral-900/20">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400">
+                                    {getMealIcon(meal.name)}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <h3 className="text-lg font-black uppercase italic tracking-tight">{meal.name}</h3>
+                                      <span className="text-[10px] font-black text-white/20 uppercase">{meal.time}</span>
+                                    </div>
+                                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                                      {meal.items.length} ITENS • {Math.round(meal.items.reduce((acc, i) => acc + (i.kcal || 0), 0))} KCAL
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="p-4 space-y-2">
+                                {meal.items.map((item) => (
+                                  <div key={item.instanceId} className="flex items-center gap-4 p-3 bg-black/20 border border-white/5 rounded-2xl hover:bg-black/40 transition-all group/item">
+                                    <div className="w-10 h-10 rounded-xl bg-white/5 overflow-hidden flex-shrink-0">
+                                      {item.imageUrl ? (
+                                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover opacity-80" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <Utensils className="w-4 h-4 text-white/10" />
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="text-sm font-bold text-white uppercase truncate tracking-tight">{item.name}</h4>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[10px] font-bold text-emerald-500/60 uppercase">{Math.round(item.kcal || 0)} kcal</span>
+                                        <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">• {item.clinical_mass_g || item.quantity}{item.display_unit || item.portionUnitLabel || 'g'}</span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex items-center bg-black/40 border border-white/10 rounded-xl overflow-hidden h-9">
+                                        <Input 
+                                          type="number"
+                                          value={item.quantity || ''}
+                                          onChange={(e) => handleUpdateQuantity(meal.id, item.instanceId, Number(e.target.value))}
+                                          className="w-16 h-full bg-transparent border-none text-center text-xs font-black p-0 focus-visible:ring-0"
+                                        />
+                                        <div className="px-3 border-l border-white/10 flex items-center justify-center bg-white/5">
+                                          <span className="text-[9px] font-black text-white/30 uppercase">{item.display_unit || item.portionUnitLabel || 'g'}</span>
+                                        </div>
+                                      </div>
+
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={() => handleRemoveItem(meal.id, item.instanceId)}
+                                        className="h-9 w-9 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 text-white/20 transition-all"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full h-10 border border-dashed border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-white/20 hover:text-emerald-500 text-[10px] font-black uppercase tracking-widest rounded-2xl gap-2 mt-2"
+                                >
+                                  <Plus className="w-3.5 h-3.5" /> Adicionar Item ao Bloco
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="p-4 space-y-2">
-                      {meal.items.map((item) => (
-                        <div key={item.instanceId} className="flex items-center gap-4 p-3 bg-black/20 border border-white/5 rounded-2xl hover:bg-black/40 transition-all group/item">
-                          <div className="w-10 h-10 rounded-xl bg-white/5 overflow-hidden flex-shrink-0">
-                            {item.imageUrl ? (
-                              <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover opacity-80" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Utensils className="w-4 h-4 text-white/10" />
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-white uppercase truncate tracking-tight">{item.name}</h4>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] font-bold text-emerald-500/60 uppercase">{Math.round(item.kcal || 0)} kcal</span>
-                              <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">• {item.clinical_mass_g || item.quantity}{item.display_unit || item.portionUnitLabel || 'g'}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center bg-black/40 border border-white/10 rounded-xl overflow-hidden h-9">
-                              <Input 
-                                type="number"
-                                value={item.quantity || ''}
-                                onChange={(e) => handleUpdateQuantity(meal.id, item.instanceId, Number(e.target.value))}
-                                className="w-16 h-full bg-transparent border-none text-center text-xs font-black p-0 focus-visible:ring-0"
-                              />
-                              <div className="px-3 border-l border-white/10 flex items-center justify-center bg-white/5">
-                                <span className="text-[9px] font-black text-white/30 uppercase">{item.display_unit || item.portionUnitLabel || 'g'}</span>
-                              </div>
-                            </div>
-
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleRemoveItem(meal.id, item.instanceId)}
-                              className="h-9 w-9 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 text-white/20 transition-all"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-
-                      <Button 
-                        variant="ghost" 
-                        className="w-full h-10 border border-dashed border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-white/20 hover:text-emerald-500 text-[10px] font-black uppercase tracking-widest rounded-2xl gap-2 mt-2"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Adicionar Item ao Bloco
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  });
+                })()}
 
                 <div className="bg-amber-500/5 border border-amber-500/20 p-6 rounded-[2rem] flex gap-4">
                   <div className="p-3 bg-amber-500/20 rounded-2xl shrink-0 h-fit">
