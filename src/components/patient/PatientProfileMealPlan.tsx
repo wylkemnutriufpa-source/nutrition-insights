@@ -178,8 +178,11 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                 focusMode={false}
                 onSetAdherence={() => {}} // Professional doesn't set adherence here
                 onOpenDetail={(meal) => setSelectedMeal(meal as any)}
+                onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
+                onOpenSubstitution={setSubstitutingItem}
               />
             ))}
+
           </div>
         ) : (
           <div className="space-y-8">
