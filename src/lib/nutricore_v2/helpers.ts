@@ -80,7 +80,8 @@ export const getFoodCategory = (food: any): string => {
     if (cat === 'carb') return 'carboidrato';
     if (cat === 'fruit') return 'fruta';
     if (cat === 'fat') return 'gordura';
-    if (cat === 'vegetable') return 'legume';
+    if (cat === 'vegetable') return 'vegetal';
+    if (cat === 'legume') return 'leguminosa';
     return cat;
   }
   const name = food.name.toLowerCase();
