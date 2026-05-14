@@ -2,6 +2,13 @@ import { Meal, MealItem, Food, MealTemplate } from "../types";
 import { normalizeFood } from "../utils/normalization";
 import { calculateItemMacros } from "@/lib/nutricore_v2/helpers";
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
+import {
+  isFoodAllowedInSlot,
+  isFreePortionFood,
+  FREE_PORTION_MAX_GRAMS,
+  normalizeSlot,
+} from "@/lib/mealTypeIntegrity";
+import { getFoodGroup } from "@/lib/substitutionGroups";
 
 const makeInstanceId = () => crypto.randomUUID();
 
