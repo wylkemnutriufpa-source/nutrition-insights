@@ -119,30 +119,50 @@ export class LibraryV3Resolver {
       base_grams: 100 
     }];
 
-    const scaledItems: MealItem[] = composition.map((comp: any) => {
-      const quantity = clampItemGrams(Math.round((comp.base_grams || 100) * safeScale));
-      
-      return {
-        id: baseItem.id,
-        instanceId: crypto.randomUUID(),
-        name: comp.name,
-        kcal: clampItemKcal(Math.round(comp.kcal * safeScale)),
-        protein: Math.round(comp.protein * safeScale * 10) / 10,
-        carbs: Math.round(comp.carbs * safeScale * 10) / 10,
-        fat: Math.round(comp.fats * safeScale * 10) / 10,
-        quantity,
-        clinical_mass_g: quantity,
-        measurementType: 'gram',
-        portionValue: 100,
-        portionLabel: 'g',
-        portionUnitLabel: 'g',
-        isVisualLibraryItem: true,
-        portionMode: baseItem.portion_mode,
-        library_item_slug: baseItem.slug,
-        isVisualLibraryParent: comp === composition[0], // O primeiro item costuma ser o principal
-        substitutions: []
-      } as any;
-    });
+    const scaledItems: MealItem[] = composition
+      .map((comp: any) => {
+        const compName = String(comp.name || "");
+        // 🛡️ MEAL_TYPE_GUARD: bloqueia item proibido para o slot (telemetria + descarta).
+        if (
+          !isFoodAllowedInSlot(compName, getFoodGroup(compName), context.mealSlot, {
+            source: "libraryV3Resolver.scaledItems",
+            correlationId: context.planId,
+          })
+        ) {
+          return null;
+        }
+
+        // 🛡️ FREE_PORTION_GUARD: vegetais não escalam — porção fixa, sem inflar.
+        const isFree = isFreePortionFood(compName, getFoodGroup(compName));
+        const baseGrams = comp.base_grams || 100;
+        const rawQty = isFree
+          ? Math.min(baseGrams, FREE_PORTION_MAX_GRAMS)
+          : Math.round(baseGrams * safeScale);
+        const quantity = clampItemGrams(rawQty);
+        const macroScale = isFree ? quantity / (baseGrams || 100) : safeScale;
+
+        return {
+          id: baseItem.id,
+          instanceId: crypto.randomUUID(),
+          name: comp.name,
+          kcal: clampItemKcal(Math.round(comp.kcal * macroScale)),
+          protein: Math.round(comp.protein * macroScale * 10) / 10,
+          carbs: Math.round(comp.carbs * macroScale * 10) / 10,
+          fat: Math.round(comp.fats * macroScale * 10) / 10,
+          quantity,
+          clinical_mass_g: quantity,
+          measurementType: 'gram',
+          portionValue: 100,
+          portionLabel: 'g',
+          portionUnitLabel: 'g',
+          isVisualLibraryItem: true,
+          portionMode: isFree ? 'free' : baseItem.portion_mode,
+          library_item_slug: baseItem.slug,
+          isVisualLibraryParent: comp === composition[0], // O primeiro item costuma ser o principal
+          substitutions: []
+        } as any;
+      })
+      .filter(Boolean) as MealItem[];
 
     // 6. Montagem da Refeição
     return {
