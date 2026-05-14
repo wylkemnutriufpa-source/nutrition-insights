@@ -1707,7 +1707,7 @@ const EditorV3Page = () => {
                 <Button 
                   size="sm" 
                   onClick={handlePromotionRequest}
-                  disabled={promoting || !draftId}
+                  disabled={promoting || (!draftId && !isSandbox)}
                   className="h-10 px-6 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all gap-2 shadow-xl shadow-blue-600/20 border-b-2 border-blue-800"
                 >
                   {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
