@@ -1034,7 +1034,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <div className="flex items-center gap-2">
                   <Flame className="w-5 h-5 text-primary" />
                   <h4 className="font-semibold text-base">Metas da Refeição</h4>
-                  {(() => {
+                  {!isBasic && (() => {
                     const visual = calculateVisualMacrosFromDescription(meal.description || "");
                     const isAnyInconsistent = 
                       getMacroStatusLabel(visual.protein, protein) !== "OK" ||
