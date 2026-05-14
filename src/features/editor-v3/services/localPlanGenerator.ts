@@ -120,10 +120,19 @@ export async function generateAndSaveLocalPlan(
         const safeKcal = clampItemKcal(Math.round(Number(item.kcal) || 0));
         assertSafeMacro(safeKcal, `Item "${item.name}" kcal`);
 
+        const mealTypeMap: Record<string, string> = {
+          'Café da Manhã': 'breakfast',
+          'Lanche da Manhã': 'snack',
+          'Almoço': 'lunch',
+          'Lanche da Tarde': 'snack',
+          'Jantar': 'dinner',
+          'Ceia': 'supper'
+        };
+
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
-          meal_type: meal.type || 'snack',
+          meal_type: mealTypeMap[meal.name] || 'snack',
           calories_target: safeKcal,
           protein_target: Math.min(500, Number(item.protein) || 0),
           carbs_target: Math.min(800, Number(item.carbs) || 0),
