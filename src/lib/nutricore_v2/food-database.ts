@@ -54,6 +54,10 @@ export const BASE_FOODS: Food[] = [
   { id: "12", name: "Banana Prata", category: "fruit", protein_100g: 1.3, carb_100g: 26, fat_100g: 0.1, kcal_100g: 98, base_grams: 100, unit: "g" },
   { id: "13", name: "Maçã", category: "fruit", protein_100g: 0.3, carb_100g: 14, fat_100g: 0.2, kcal_100g: 52, base_grams: 100, unit: "g" },
   { id: "21", name: "Mamão Papaia", category: "fruit", protein_100g: 0.5, carb_100g: 11, fat_100g: 0.1, kcal_100g: 45, base_grams: 100, unit: "g" },
+  { id: "29", name: "Morango", category: "fruit", protein_100g: 0.7, carb_100g: 8, fat_100g: 0.3, kcal_100g: 32, base_grams: 100, unit: "g" },
+  { id: "30", name: "Abacaxi", category: "fruit", protein_100g: 0.5, carb_100g: 13, fat_100g: 0.1, kcal_100g: 50, base_grams: 100, unit: "g" },
+  { id: "31", name: "Lentilha Cozida", category: "legume", protein_100g: 9, carb_100g: 20, fat_100g: 0.4, kcal_100g: 116, base_grams: 100, unit: "g" },
+  { id: "32", name: "Grão de Bico Cozido", category: "legume", protein_100g: 8, carb_100g: 27, fat_100g: 2.6, kcal_100g: 164, base_grams: 100, unit: "g" },
 
   // Vegetais
   { id: "14", name: "Brócolis Cozido", category: "vegetable", protein_100g: 2.4, carb_100g: 4.4, fat_100g: 0.4, kcal_100g: 35, base_grams: 100, unit: "g" },
