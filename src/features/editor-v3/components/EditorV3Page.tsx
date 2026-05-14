@@ -1704,6 +1704,17 @@ const EditorV3Page = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={handleViewPlainText}
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white rounded-xl transition-all gap-2"
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Texto Simples</span>
+                  <span className="sm:hidden">Texto</span>
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
                   onClick={() => {
                     if (viewMode === 'weekly') {
                       handleSendWhatsApp();
