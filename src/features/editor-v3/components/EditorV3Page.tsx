@@ -173,7 +173,9 @@ const EditorV3Page = () => {
   const [v3LibrarySearch, setV3LibrarySearch] = useState('');
   const [v3LibraryTab, setV3LibraryTab] = useState<'foods' | 'ready' | 'templates'>('foods');
   const [v3LibraryMealFilter, setV3LibraryMealFilter] = useState<string | null>(null);
-  
+  const [showV3DraftPreview, setShowV3DraftPreview] = useState(false);
+  const [v3DraftMeals, setV3DraftMeals] = useState<Meal[]>([]);
+
   const [selectedDietType, setSelectedDietType] = useState<string | null>(null);
   const [replaceExistingFlag, setReplaceExistingFlag] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
