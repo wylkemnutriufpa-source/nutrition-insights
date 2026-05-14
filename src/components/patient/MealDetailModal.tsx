@@ -211,7 +211,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     }
   }, [open]);
 
+  const { user, isPatient, isNutritionist, isAdmin } = useAuth();
   const { showMacros, showTechnicalDetails, isBasic } = useExperienceUI();
+  
+  // Soberania: se for paciente, nunca mostra detalhes técnicos ou auditoria
+  const canSeeInternalAudit = !isPatient && (isNutritionist || isAdmin || showTechnicalDetails);
+  
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageSearch, setImageSearch] = useState("");
@@ -1012,7 +1017,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
               </Badge>
             )}
-            {showTechnicalDetails && source === "library" && (
+            {canSeeInternalAudit && source === "library" && (
               <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
                 Banco FitJourney
               </Badge>
@@ -1021,7 +1026,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         )}
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-8 space-y-6 max-h-[calc(90vh-160px)]">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 pb-8 space-y-6 max-h-[calc(90vh-160px)]">
           {/* Macros */}
           {showMacros && (hasMacros || editingMacros) && (
             <div className="space-y-3">
@@ -1029,13 +1034,16 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <div className="flex items-center gap-2">
                   <Flame className="w-5 h-5 text-primary" />
                   <h4 className="font-semibold text-base">Metas da Refeição</h4>
-                  {(() => {
+                  {!isBasic && (() => {
                     const visual = calculateVisualMacrosFromDescription(meal.description || "");
                     const isAnyInconsistent = 
                       getMacroStatusLabel(visual.protein, protein) !== "OK" ||
                       getMacroStatusLabel(visual.carbs, carbs) !== "OK" ||
                       getMacroStatusLabel(visual.fat, fat) !== "OK";
                     
+                    // SOBERANIA: Paciente nunca vê alertas de divergência técnica
+                    if (isPatient) return null;
+
                     return isAnyInconsistent && (
                       <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/20">
                         <AlertTriangle className="w-2.5 h-2.5 mr-1" /> Divergência detectada
@@ -1095,12 +1103,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     const diff = Math.round(Number(m.value) - m.requested);
                     
                     return (
-                      <div key={m.label} className="relative rounded-xl bg-secondary/60 p-3 text-center border border-transparent hover:border-border transition-all group/macro">
+                      <div key={m.label} className="relative rounded-xl bg-secondary/60 p-2 sm:p-3 text-center border border-transparent hover:border-border transition-all group/macro min-w-0">
                         <div className="flex justify-center mb-1.5">{m.icon}</div>
-                        <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                        <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
+                        <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{m.label}</p>
+                        <p className="font-bold text-sm sm:text-base truncate">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
                         
-                        {status !== "OK" && (
+                        {canSeeInternalAudit && status !== "OK" && (
                           <div className="mt-1 flex flex-col items-center gap-0.5 animate-in fade-in slide-in-from-top-1">
                             <span className={`text-[9px] font-bold ${color}`}>
                               {diff > 0 ? `+${diff}` : diff}{m.unit}
@@ -1112,9 +1120,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                         )}
 
                         {/* Tooltip de assistência */}
-                        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] p-2 rounded-lg shadow-xl border border-border opacity-0 group-hover/macro:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                          {status === "OK" ? "✓ Macros em conformidade" : `Assistente: Diferença de ${Math.abs(diff)}${m.unit}`}
-                        </div>
+                        {canSeeInternalAudit && (
+                          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] p-2 rounded-lg shadow-xl border border-border opacity-0 group-hover/macro:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                            {status === "OK" ? "✓ Macros em conformidade" : `Assistente: Diferença de ${Math.abs(diff)}${m.unit}`}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1123,8 +1133,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             </div>
           )}
 
-          {/* Clinical Human Rules Guard */}
-          {(() => {
+          {/* Clinical Human Rules Guard - SOBERANIA: Paciente nunca vê auditoria clínica */}
+          {canSeeInternalAudit && (() => {
             const mockItems = parseDescriptionLines(meal.description || "").foodLines.map(line => ({
               name: line.startsWith("•") ? line.slice(1).trim().split("—")[0].trim() : line.split("—")[0].trim(),
               quantity: parseInt(line.match(/—\s*(\d+)/)?.[1] || "100")
@@ -1176,8 +1186,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             );
           })()}
 
-          {/* Assistente de Sugestões Rápidas */}
-          {(() => {
+          {/* Assistente de Sugestões Rápidas - SOBERANIA: Paciente nunca vê ações corretivas sugeridas */}
+          {canSeeInternalAudit && (() => {
             const visual = calculateVisualMacrosFromDescription(meal.description || "");
             const delta = {
               protein: protein - visual.protein,
@@ -1901,6 +1911,18 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
           )}
         </div>
         
+        {/* Soberania: Botão de conclusão exclusivo para o paciente */}
+        {isPatient && (
+          <div className="p-6 pt-0 mt-auto border-t bg-background/80 backdrop-blur-sm sticky bottom-0">
+            <Button 
+              className="w-full h-12 text-sm font-bold gap-2 shadow-lg shadow-primary/20 rounded-xl"
+              onClick={() => onOpenChange(false)}
+            >
+              <Check className="w-5 h-5" />
+              Concluir Visualização
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
 
