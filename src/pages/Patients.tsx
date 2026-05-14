@@ -385,138 +385,139 @@ function PatientCard({ p, idx, onOpenResumo, onNavigate, toggleStatus, setAssign
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.04 }}
       whileHover={{ y: -2 }}
-      className={`glass-premium rounded-xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 min-w-0 overflow-hidden ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow`}
+      className={`glass-premium rounded-2xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 min-w-0 overflow-hidden ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow h-full flex flex-col`}
       onClick={() => onOpenResumo(p)}
     >
       {isInactive && (
-        <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+        <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground z-10">
           Fora das métricas
         </div>
       )}
-      <div className="flex items-start gap-3 mb-3">
-        <div className="relative w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-lg font-bold text-primary">
-            {displayName[0].toUpperCase()}
-          </span>
-          <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card animate-pulse ${isOnline ? 'bg-success' : 'bg-destructive'}`}
-            title={isOnline ? 'Online agora' : 'Offline'}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <h3 className="font-display font-semibold truncate min-w-0" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
-            {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={allPrestigePlans} size="sm" showLabel={false} />}
-            {p.requires_medical_review && (
-              <Badge variant="destructive" className="h-4 px-1.5 text-[9px] gap-0.5 animate-pulse flex-shrink-0">
-                <ShieldAlert className="w-2.5 h-2.5" /> Revisão
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${
-              !isInactive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-            }`}>
-              {!isInactive
-                ? p.expires_at
-                  ? (() => {
-                      const exp = new Date(p.expires_at);
-                      const now = new Date();
-                      const diffDays = Math.ceil((exp.getTime() - now.getTime()) / 86400000);
-                      const formatted = exp.toLocaleDateString("pt-BR");
-                      if (diffDays < 0) return `Vencido ${formatted}`;
-                      if (diffDays <= 7) return `Ativo até ${formatted} ⚠️`;
-                      return `Ativo até ${formatted}`;
-                    })()
-                  : "Ativo"
-                : "Inativo"
-              }
+      
+      {/* Header: Avatar + Info + Score */}
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex gap-3 min-w-0">
+          <div className="relative w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 border border-primary/20">
+            <span className="text-lg font-black text-primary">
+              {displayName[0].toUpperCase()}
             </span>
-            {!isInactive && p.expires_at && (() => {
-              const diffDays = Math.ceil((new Date(p.expires_at).getTime() - Date.now()) / 86400000);
-              if (diffDays < 0) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium whitespace-nowrap">Vencido</span>;
-              if (diffDays <= 7) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium whitespace-nowrap">{diffDays}d restantes</span>;
-              return null;
-            })()}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpiryTarget({ id: p.id, name: displayName, current: p.expires_at });
-              }}
-              className="text-muted-foreground hover:text-primary p-0.5 flex-shrink-0" title="Definir vencimento"
-            >
-              <CalendarDays className="w-3 h-3" />
-            </button>
-            {hasPrograms && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1 whitespace-nowrap">
-                <Target className="w-3 h-3" /> {p.programs!.length} programa{p.programs!.length > 1 ? "s" : ""}
+            <span
+              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card animate-pulse ${isOnline ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-muted'}`}
+              title={isOnline ? 'Online agora' : 'Offline'}
+            />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+              <h3 className="font-display font-bold text-base truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>
+                {displayName}
+              </h3>
+              {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={allPrestigePlans} size="sm" showLabel={false} />}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tight ${
+                !isInactive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+              }`}>
+                {!isInactive ? "Ativo" : "Inativo"}
               </span>
-            )}
-            {p.stats?.current_streak ? (
-              <span className="text-xs text-muted-foreground whitespace-nowrap">🔥 {p.stats.current_streak}d</span>
-            ) : null}
+              {p.expires_at && (
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  {new Date(p.expires_at).toLocaleDateString("pt-BR")}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <ScoreRing score={score} />
       </div>
 
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!p.patient_id) {
-              toast.error("ID do paciente não encontrado");
-              return;
-            }
-            onNavigate(p.patient_id);
-          }}
-          size="sm"
-          className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20 flex-1 min-w-0"
-        >
-          <User className="w-3.5 h-3.5" />
-          VER PERFIL
-        </Button>
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          <button
-            onClick={(e) => { e.stopPropagation(); onNavigate(`${p.patient_id}?section=plan`); }}
-            className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Plano Alimentar"
-          >
-            <FileText className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
-            className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Adicionar a programa"
-          >
-            <Target className="w-4 h-4" />
-          </button>
-          <button
-              onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
-              className="text-muted-foreground hover:text-foreground p-1.5 transition-colors" title={!isInactive ? "Desativar" : "Ativar"}
-          >
-              {!isInactive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-          </button>
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        </div>
+      {/* Quick Stats Row */}
+      <div className="flex items-center gap-3 mb-4 text-[11px] font-bold text-muted-foreground overflow-x-auto pb-1 no-scrollbar">
+        {p.stats?.current_streak ? (
+          <span className="flex items-center gap-1 bg-orange-500/5 text-orange-600 px-2 py-0.5 rounded-full whitespace-nowrap border border-orange-500/10">
+            🔥 {p.stats.current_streak}d
+          </span>
+        ) : null}
+        {hasPrograms && (
+          <span className="flex items-center gap-1 bg-primary/5 text-primary px-2 py-0.5 rounded-full whitespace-nowrap border border-primary/10">
+            <Target className="w-3 h-3" /> {p.programs!.length} Prog.
+          </span>
+        )}
+        {p.requires_medical_review && (
+          <span className="flex items-center gap-1 bg-destructive/5 text-destructive px-2 py-0.5 rounded-full whitespace-nowrap border border-destructive/10 animate-pulse">
+            <ShieldAlert className="w-3 h-3" /> Revisão
+          </span>
+        )}
       </div>
 
+      {/* Programs Badges - Compacted */}
       {hasPrograms && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {p.programs!.map(pg => (
-            <Badge key={pg.id} variant="outline" className="text-xs gap-1 pr-1">
-              <Target className="w-3 h-3" /> {pg.title}
+        <div className="flex flex-wrap gap-1 mb-4">
+          {p.programs!.slice(0, 2).map(pg => (
+            <Badge key={pg.id} variant="secondary" className="text-[9px] h-5 gap-1 pr-1 bg-muted/30 border-none font-bold">
+              {pg.title}
               <button
                 onClick={(e) => { e.stopPropagation(); removeFromProgram(p.patient_id, pg.id, pg.title); }}
-                className="ml-0.5 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
-                title={`Remover de ${pg.title}`}
+                className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
               >
-                <X className="w-3 h-3 text-destructive" />
+                <X className="w-2.5 h-2.5 text-destructive" />
               </button>
             </Badge>
           ))}
+          {p.programs!.length > 2 && (
+            <Badge variant="outline" className="text-[9px] h-5 border-none bg-muted/20 font-bold">
+              +{p.programs!.length - 2}
+            </Badge>
+          )}
         </div>
       )}
 
-      <ScoreBar score={score} label="Engajamento" />
+      {/* Main Actions Area */}
+      <div className="mt-auto space-y-3">
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!p.patient_id) {
+                toast.error("ID do paciente não encontrado");
+                return;
+              }
+              onNavigate(p.patient_id);
+            }}
+            className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-wider text-[10px] shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+          >
+            Abrir Prontuário
+          </Button>
+          
+          <div className="flex items-center bg-muted/30 rounded-xl p-1 gap-0.5 border border-white/5">
+            <button
+              onClick={(e) => { e.stopPropagation(); onNavigate(`${p.patient_id}?section=plan`); }}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-white transition-all"
+              title="Plano Alimentar"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-white transition-all"
+              title="Programas"
+            >
+              <Target className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpiryTarget({ id: p.id, name: displayName, current: p.expires_at });
+              }}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-white transition-all"
+              title="Vencimento"
+            >
+              <CalendarDays className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <ScoreBar score={score} label="Aderência Geral" />
+      </div>
 
       <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/50">
         <div className="text-center">
