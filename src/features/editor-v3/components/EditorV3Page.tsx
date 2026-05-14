@@ -66,6 +66,7 @@ import {
 } from 'lucide-react';
 import { safeGeneratePDF } from '../services/pdfService';
 import { type PremiumMealPlanPDFData, buildPremiumMealPlanHTML } from '@/lib/pdfExportPremium';
+import { generateV3PlainText } from '../services/plainTextService';
 import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 
 import PlanAdjustmentModal from './PlanAdjustmentModal';
@@ -1233,6 +1234,21 @@ const EditorV3Page = () => {
     }
   };
 
+  const handleViewPlainText = () => {
+    if (!meals.length) {
+      toast.error("Nenhum item para visualizar");
+      return;
+    }
+    const text = generateV3PlainText(meals, patientContext?.name || "Paciente");
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `plano-alimentar-${patientContext?.name || 'paciente'}.txt`;
+    a.click();
+    toast.success("Plano exportado em Texto Simples!");
+  };
+
   const handleFixPlan = async () => {
     if (!patientContext) return;
     setIsGeneratingGlobal(true);
@@ -1683,6 +1699,17 @@ const EditorV3Page = () => {
                   <Eye className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Visualizar PDF</span>
                   <span className="sm:hidden">Ver PDF</span>
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleViewPlainText}
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white rounded-xl transition-all gap-2"
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Texto Simples</span>
+                  <span className="sm:hidden">Texto</span>
                 </Button>
 
                 <Button 
