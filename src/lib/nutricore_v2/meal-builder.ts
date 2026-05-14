@@ -2,6 +2,10 @@ import { Food, FoodCategory } from "./food-database";
 import { MealType } from "./meal-distribution";
 import { Marmita } from "./marmitas-database";
 import { getSubstitutions, Substitution } from "./substitutions";
+import { 
+  isBreadLike, isBreakfastProtein, isHeavyProtein, 
+  isComplexCarb, isLegume, isVegetable 
+} from "./helpers";
 
 export interface PlannedItem {
   foodId: string;
