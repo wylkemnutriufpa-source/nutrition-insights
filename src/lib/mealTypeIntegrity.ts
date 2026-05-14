@@ -21,6 +21,7 @@ export type MealSlot =
   | "lunch"
   | "afternoon_snack"
   | "dinner"
+  | "evening_snack"
   | "supper";
 
 /** Aliases comuns vindos do banco / UI normalizados para o slot canônico */
