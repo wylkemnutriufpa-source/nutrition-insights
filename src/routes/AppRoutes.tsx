@@ -59,6 +59,7 @@ const BiquiniBrancoDetail = lazy(() => import("../pages/BiquiniBrancoDetail"));
 const MyReferrals = lazy(() => import("../pages/MyReferrals"));
 const MyPublicProfile = lazy(() => import("../pages/MyPublicProfile"));
 const SovereignDashboard = lazy(() => import("../pages/SovereignDashboard"));
+const V3LibrarySandbox = lazy(() => import("../pages/V3LibrarySandbox"));
 
 export const AppRoutes = () => {
   const { authStatus, user } = useAuth();
@@ -97,6 +98,7 @@ export const AppRoutes = () => {
       <Route path="/my-referrals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyReferrals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MyPublicProfile /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/sovereign" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SovereignDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/sandbox-v3" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><V3LibrarySandbox /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
 
       {/* Onboarding */}
       <Route path="/onboarding" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><OnboardingEntry /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
