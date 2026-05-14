@@ -1131,8 +1131,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             </div>
           )}
 
-          {/* Clinical Human Rules Guard */}
-          {(() => {
+          {/* Clinical Human Rules Guard - SOBERANIA: Paciente nunca vê auditoria clínica */}
+          {canSeeInternalAudit && (() => {
             const mockItems = parseDescriptionLines(meal.description || "").foodLines.map(line => ({
               name: line.startsWith("•") ? line.slice(1).trim().split("—")[0].trim() : line.split("—")[0].trim(),
               quantity: parseInt(line.match(/—\s*(\d+)/)?.[1] || "100")
@@ -1184,8 +1184,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             );
           })()}
 
-          {/* Assistente de Sugestões Rápidas */}
-          {(() => {
+          {/* Assistente de Sugestões Rápidas - SOBERANIA: Paciente nunca vê ações corretivas sugeridas */}
+          {canSeeInternalAudit && (() => {
             const visual = calculateVisualMacrosFromDescription(meal.description || "");
             const delta = {
               protein: protein - visual.protein,
