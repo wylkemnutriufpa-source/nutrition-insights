@@ -26,6 +26,8 @@ interface MealSubstitutionModalProps {
   mealPlanId: string;
   patientId: string;
   onSubstitute: (food: FoodItem, originalTitle: string) => void;
+  /** 🛡️ MEAL_TYPE_GUARD: slot da refeição (breakfast/lunch/...) para impedir cross-category */
+  mealSlot?: string;
   /** 🛡️ SOBERANIA V3: Opções pré-definidas pelo nutricionista no snapshot */
   options?: Array<{
     id: string;
