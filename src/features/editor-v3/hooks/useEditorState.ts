@@ -23,6 +23,7 @@ import { validateDraftIntegrity, validateClinicalValidity } from '../../security
 import { logClinicalEvent } from '../../audit/services/auditLogger';
 import { processSmartTemplate } from '../services/templateIntelligence';
 import { validatePersistedState } from '../security/storeGuard';
+import { normalizeSlot } from '@/lib/mealTypeIntegrity';
 
 
 interface EditorState {
