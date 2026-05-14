@@ -1,9 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { NutriCoreV3Adapter } from "@/lib/nutricore_v2/adapter";
+import { SimpleMealGenerator } from "./simpleMealGenerator";
 import { PatientContext, Meal } from "../types";
 import { clampItemKcal, assertSafeMacro, MACRO_SAFETY_LIMITS } from "@/lib/macroSafety";
-import { getBaseFoods } from "../utils/dataFetcher";
 
 export async function generateAndSaveLocalPlan(
   patientId: string,
@@ -91,11 +90,8 @@ export async function generateAndSaveLocalPlan(
       fat_target: Number(anamnesis?.computed_fat) || Number(assessment?.fat_target) || 60
     };
 
-    // 2. Get available foods for variety
-    const availableFoods = await getBaseFoods();
-
-    // 3. Generate plan using NutriCore V3 Adapter (LOCAL)
-    const v3Meals = await NutriCoreV3Adapter.generateElitePlan(context, availableFoods as any);
+    // 2. Generate plan using Simple Generator
+    const v3Meals = SimpleMealGenerator.generatePlan(context as any, false);
 
 
     const { data: mealPlan, error: promoteError } = await supabase
@@ -124,10 +120,19 @@ export async function generateAndSaveLocalPlan(
         const safeKcal = clampItemKcal(Math.round(Number(item.kcal) || 0));
         assertSafeMacro(safeKcal, `Item "${item.name}" kcal`);
 
+        const mealTypeMap: Record<string, string> = {
+          'Café da Manhã': 'breakfast',
+          'Lanche da Manhã': 'snack',
+          'Almoço': 'lunch',
+          'Lanche da Tarde': 'snack',
+          'Jantar': 'dinner',
+          'Ceia': 'supper'
+        };
+
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
           title: item.name,
-          meal_type: meal.type || 'snack',
+          meal_type: mealTypeMap[meal.name] || 'snack',
           calories_target: safeKcal,
           protein_target: Math.min(500, Number(item.protein) || 0),
           carbs_target: Math.min(800, Number(item.carbs) || 0),

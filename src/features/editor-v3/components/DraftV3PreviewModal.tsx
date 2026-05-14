@@ -109,9 +109,9 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px] font-black uppercase tracking-widest px-2">
-                      Draft Preview Soberano
+                      Rascunho V3 Soberano
                     </Badge>
-                    <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">• Auditoria Ativa</span>
+                    <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">• Totalmente Editável</span>
                   </div>
                   <DialogTitle className="text-3xl font-black italic uppercase tracking-tighter">
                     Revisar Plano: <span className="text-white/40">{patientName}</span>
@@ -256,9 +256,8 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
                   <div>
                     <h4 className="text-sm font-black uppercase italic text-amber-500 mb-1">Atenção Nutricional</h4>
                     <p className="text-xs text-white/50 leading-relaxed uppercase font-medium">
-                      Este rascunho foi gerado dinamicamente via <span className="text-white font-bold">V3 Sandbox</span>. 
-                      Verifique as porções e distribuições antes de aplicar ao prontuário do paciente.
-                      A alteração de quantidades impacta o score nutricional global.
+                      Este rascunho foi gerado para garantir coerência e variedade. 
+                      <span className="text-white font-bold ml-1">Você tem controle total</span>: edite as quantidades ou remova itens antes de aprovar.
                     </p>
                   </div>
                 </div>
