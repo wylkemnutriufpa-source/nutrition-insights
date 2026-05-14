@@ -164,18 +164,24 @@ export const adjustPlan = (meals: Meal[], params: PlanAdjustmentParams): Meal[] 
 
 const scaleMacronutrient = (meals: Meal[], category: string, targetTotal: number): Meal[] => {
   // Detectar quantos dias o plano cobre para calcular a média diária atual
-  const breakfasts = meals.filter(m => 
-    m.name.toLowerCase().includes('café') || 
-    m.name.toLowerCase().includes('desjejum') ||
-    m.name.includes('(Segunda)') || 
-    m.name.includes('(Terça)') ||
-    m.name.includes('(Quarta)') ||
-    m.name.includes('(Quinta)') ||
-    m.name.includes('(Sexta)') ||
-    m.name.includes('(Sábado)') ||
-    m.name.includes('(Domingo)')
-  );
-  const dayCount = Math.max(1, breakfasts.length);
+  const daySet = new Set<number>();
+  meals.forEach(m => {
+    if (m.day_of_week !== undefined && m.day_of_week !== null) {
+      daySet.add(m.day_of_week);
+    }
+  });
+
+  // Se as refeições não têm day_of_week explícito, tentamos inferir pelo nome
+  if (daySet.size === 0) {
+    const breakfasts = meals.filter(m => {
+      const slot = normalizeSlot(m.name);
+      return slot === 'breakfast';
+    });
+    const inferredCount = Math.max(1, breakfasts.length);
+    for (let i = 0; i < inferredCount; i++) daySet.add(i);
+  }
+
+  const dayCount = Math.max(1, daySet.size);
 
   const currentTotal = meals.reduce((acc, meal) => {
     return acc + meal.items.reduce((mAcc, item) => {
