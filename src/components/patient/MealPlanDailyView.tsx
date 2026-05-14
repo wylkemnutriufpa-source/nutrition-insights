@@ -586,10 +586,111 @@ const DateNavigator = memo(function DateNavigator({
   );
 });
 
+// ── Meal Slot Summary Card (New for V3 Coupling) ──
+const MealSlotCard = memo(function MealSlotCard({
+  mealType, items, completions, isCurrent, onClick
+}: {
+  mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
+  items: MealPlanItem[];
+  completions: MealCompletion[];
+  isCurrent: boolean;
+  onClick: () => void;
+}) {
+  const totals = useMemo(() => {
+    return items.reduce((acc, item) => {
+      const meta = item.metadata || {};
+      return {
+        calories: acc.calories + (item.calories_target ?? meta.calories_target ?? meta.calories ?? 0),
+        protein: acc.protein + (item.protein_target ?? meta.protein_target ?? meta.protein ?? 0),
+        carbs: acc.carbs + (item.carbs_target ?? meta.carbs_target ?? meta.carbs ?? 0),
+        fat: acc.fat + (item.fat_target ?? meta.fat_target ?? meta.fat ?? 0),
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  }, [items]);
+
+  const mealFollowedCount = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
+  const isFullyFollowed = mealFollowedCount === items.length && items.length > 0;
+
+  return (
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={`relative p-4 rounded-2xl border cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md ${
+        isFullyFollowed 
+          ? "bg-emerald-500/5 border-emerald-500/20" 
+          : isCurrent 
+            ? "bg-primary/5 border-primary/30 ring-1 ring-primary/20" 
+            : "bg-card/40 border-border/50"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+            isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"
+          }`}>
+            {mealType.icon}
+          </div>
+          <div>
+            <h3 className="font-display font-bold text-sm leading-tight">{mealType.label}</h3>
+            <p className="text-[10px] font-medium text-muted-foreground">{mealType.time}</p>
+          </div>
+        </div>
+        
+        <div className="text-right">
+          <div className="flex items-center gap-1.5 justify-end">
+            <Flame className="w-3.5 h-3.5 text-orange-500" />
+            <span className="text-sm font-bold text-orange-600">{Math.round(totals.calories)} kcal</span>
+          </div>
+          <div className="flex gap-3 mt-1 text-[10px] text-muted-foreground font-medium">
+            <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Math.round(totals.protein)}g</span>
+            <span className="flex items-center gap-0.5"><Wheat className="w-2.5 h-2.5 text-amber-400" />{Math.round(totals.carbs)}g</span>
+            <span className="flex items-center gap-0.5"><Droplets className="w-2.5 h-2.5 text-yellow-400" />{Math.round(totals.fat)}g</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex -space-x-2">
+          {items.slice(0, 3).map((item, idx) => (
+            <div 
+              key={item.id} 
+              className="w-6 h-6 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden"
+              title={item.title}
+            >
+              {item.image_url ? (
+                <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <Utensils className="w-3 h-3 text-muted-foreground" />
+              )}
+            </div>
+          ))}
+          {items.length > 3 && (
+            <div className="w-6 h-6 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-[8px] font-bold">
+              +{items.length - 3}
+            </div>
+          )}
+        </div>
+        <p className="text-[10px] text-muted-foreground font-medium flex-1 truncate">
+          {items.map(i => i.title).join(", ")}
+        </p>
+        
+        {isFullyFollowed ? (
+          <Badge className="bg-emerald-500/20 text-emerald-600 border-none text-[9px] font-bold uppercase py-0 h-5">
+            Concluída ✓
+          </Badge>
+        ) : (
+          <ArrowRightLeft className="w-3.5 h-3.5 text-primary/40" />
+        )}
+      </div>
+    </motion.div>
+  );
+});
+
 // ── Meal Group (memoized) ──
 const MealGroup = memo(function MealGroup({
   mealType, items, completions, justCompleted, focusMode,
-  onSetAdherence, onOpenDetail, onOpenSubstitution,
+  onSetAdherence, onOpenDetail, onOpenSubstitution, onOpenSlot,
 }: {
   mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
   items: MealPlanItem[];
@@ -599,11 +700,27 @@ const MealGroup = memo(function MealGroup({
   onSetAdherence: (item: MealPlanItem, status: AdherenceStatus) => void;
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
+  onOpenSlot?: (mealType: string, items: MealPlanItem[]) => void;
 }) {
   const { isBasic } = useExperienceUI();
-  const mealFollowed = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
-  const mealPartial = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "partial")).length;
   const isCurrent = isCurrentMeal(mealType.time);
+  
+  // 🛡️ SOBERANIA V3: Se estivermos em modo de acoplamento (ou se o nutricionista desejar), 
+  // mostramos o SlotCard ao invés de listar todos os itens.
+  // Por padrão, se houver mais de um item no grupo, usamos o acoplamento para limpar a UI.
+  const useCoupledView = items.length > 1 && onOpenSlot;
+
+  if (useCoupledView) {
+    return (
+      <MealSlotCard
+        mealType={mealType}
+        items={items}
+        completions={completions}
+        isCurrent={isCurrent}
+        onClick={() => onOpenSlot && onOpenSlot(mealType.key, items)}
+      />
+    );
+  }
 
   return (
     <div 
@@ -636,8 +753,8 @@ const MealGroup = memo(function MealGroup({
         </div>
 
         <div className="flex gap-1">
-          {mealFollowed > 0 && <Badge className="bg-emerald-500/20 text-emerald-600 text-[10px]">{mealFollowed}✓</Badge>}
-          {mealPartial > 0 && <Badge className="bg-amber-500/20 text-amber-600 text-[10px]">{mealPartial}~</Badge>}
+          {items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length > 0 && 
+            <Badge className="bg-emerald-500/20 text-emerald-600 text-[10px]">{items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length}✓</Badge>}
         </div>
       </div>
       <div className="space-y-2">
@@ -663,6 +780,7 @@ const MealGroup = memo(function MealGroup({
     </div>
   );
 });
+
 
 export {
   MacroSummary, MealItemCard, AdherenceCard, DateNavigator, MealGroup,
