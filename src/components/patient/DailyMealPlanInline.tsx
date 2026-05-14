@@ -43,6 +43,9 @@ export default function DailyMealPlanInline() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ type: string; items: MealPlanItem[] } | null>(null);
+  const [substitutingItem, setSubstitutingItem] = useState<MealPlanItem | null>(null);
+
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
