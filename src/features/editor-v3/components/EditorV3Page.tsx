@@ -62,7 +62,7 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy, Library, Soup, Coffee, UtensilsCrossed, Moon, Sun, ShoppingCart
 } from 'lucide-react';
 import { safeGeneratePDF } from '../services/pdfService';
 import { type PremiumMealPlanPDFData, buildPremiumMealPlanHTML } from '@/lib/pdfExportPremium';
@@ -71,6 +71,10 @@ import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
 
 import PlanAdjustmentModal from './PlanAdjustmentModal';
 import TemplateEditorModal from './TemplateEditorModal';
+import { TemplateV3Modal } from './TemplateV3Modal';
+import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
+import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
+import { V3DietTemplate } from '../types/types';
 
 
 
@@ -158,6 +162,15 @@ const EditorV3Page = () => {
   const [isGeneratingGlobal, setIsGeneratingGlobal] = useState(false);
   const [showDietTypeModal, setShowDietTypeModal] = useState(false);
   const [showCalorieModal, setShowCalorieModal] = useState(false);
+  const [showV3TemplateModal, setShowV3TemplateModal] = useState(false);
+  const [v3Templates, setV3Templates] = useState<V3DietTemplate[]>([]);
+  const [selectedV3Template, setSelectedV3Template] = useState<V3DietTemplate | null>(null);
+  const [v3LibraryItems, setV3LibraryItems] = useState<any[]>([]);
+  const [isSearchingV3Library, setIsSearchingV3Library] = useState(false);
+  const [v3LibrarySearch, setV3LibrarySearch] = useState('');
+  const [v3LibraryTab, setV3LibraryTab] = useState<'foods' | 'ready' | 'templates'>('foods');
+  const [v3LibraryMealFilter, setV3LibraryMealFilter] = useState<string | null>(null);
+  
   const [selectedDietType, setSelectedDietType] = useState<string | null>(null);
   const [replaceExistingFlag, setReplaceExistingFlag] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
@@ -602,6 +615,56 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [substitutionSearch]);
+
+  // V3 Library Search Effect
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (v3LibraryTab === 'foods' || v3LibraryTab === 'ready') {
+        setIsSearchingV3Library(true);
+        const results = await searchV3LibraryItems(
+          v3LibrarySearch, 
+          v3LibraryTab === 'ready' ? 'ready_meal' : undefined,
+          v3LibraryMealFilter || undefined
+        );
+        setV3LibraryItems(results);
+        setIsSearchingV3Library(false);
+      } else if (v3LibraryTab === 'templates') {
+        setIsSearchingV3Library(true);
+        const templates = await getV3Templates();
+        setV3Templates(templates);
+        setIsSearchingV3Library(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [v3LibrarySearch, v3LibraryTab, v3LibraryMealFilter]);
+
+  const handleApplyV3Profile = async (kcal: number) => {
+    if (!selectedV3Template) return;
+    
+    setIsGeneratingGlobal(true);
+    try {
+      toast.loading(`Gerando plano V3: ${selectedV3Template.title} (${kcal} kcal)...`, { id: 'v3-gen' });
+      
+      const v3Meals = await V3SandboxGenerator.generateDraft({
+        templateSlug: selectedV3Template.slug,
+        patientContext: {
+          ...patientContext,
+          calories_target: kcal,
+          goal: selectedV3Template.objective
+        }
+      });
+
+      if (v3Meals && v3Meals.length > 0) {
+        setMeals(v3Meals);
+        toast.success(`Plano V3 Soberano gerado com sucesso!`, { id: 'v3-gen' });
+      }
+    } catch (err: any) {
+      console.error('[V3-UI] Error generating V3 draft:', err);
+      toast.error(`Erro ao gerar plano V3: ${err.message}`, { id: 'v3-gen' });
+    } finally {
+      setIsGeneratingGlobal(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -1392,6 +1455,14 @@ const EditorV3Page = () => {
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col font-sans selection:bg-emerald-500/30 text-white">
+      {/* V3 Soberano Template Modal */}
+      <TemplateV3Modal 
+        isOpen={showV3TemplateModal}
+        onClose={() => setShowV3TemplateModal(false)}
+        template={selectedV3Template}
+        onSelectProfile={handleApplyV3Profile}
+      />
+
       <header className="bg-neutral-950/80 border-b border-white/5 py-3 px-6 backdrop-blur-xl sticky top-0 z-[60] shadow-2xl">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 w-full md:w-auto">
