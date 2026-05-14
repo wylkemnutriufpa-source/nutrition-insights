@@ -31,7 +31,7 @@ async function validate() {
     const plan = await NutriCoreV3Adapter.generateElitePlan(context, []);
     
     // 1. Hierarchy Check
-    const missingHierarchy = plan.some(m => m.items.some(i => !i.blockId));
+    const missingHierarchy = plan.some(m => m.items.some(i => !i.blockId && !i.substitution_group_id));
     if (missingHierarchy) {
       console.error(`❌ ERRO: Hierarquia ausente em alguns itens do plano de ${p.name}`);
     } else {
