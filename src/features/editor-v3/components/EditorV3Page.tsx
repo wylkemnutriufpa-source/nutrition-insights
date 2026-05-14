@@ -2120,16 +2120,21 @@ const EditorV3Page = () => {
                           const humanScore = calculateHumanMealScore(meal, meal.name);
                           const isAbsurd = humanScore.status === 'absurd';
 
+                          const isEmpty = meal.items.length === 0;
                           return (
                             <Card key={`${day}-${meal.id}-${mIdx}`} className={cn(
                               "bg-neutral-900/50 border-white/5 overflow-hidden rounded-[32px] hover:border-emerald-500/30 transition-all group relative",
-                              isAbsurd && "border-rose-500/50 bg-rose-500/5"
+                              isAbsurd && !isEmpty && "border-amber-500/30"
                             )}>
-                              {isAbsurd && (
+                              {isEmpty ? (
                                 <div className="absolute top-4 left-4 z-10">
-                                  <Badge variant="destructive" className="animate-pulse">❌ Violação Clínica</Badge>
+                                  <Badge variant="secondary" className="bg-white/10 text-white/70 border-0">Slot vazio — adicione itens</Badge>
                                 </div>
-                              )}
+                              ) : isAbsurd ? (
+                                <div className="absolute top-4 left-4 z-10">
+                                  <Badge variant="secondary" className="bg-amber-500/15 text-amber-300 border border-amber-500/30">⚠ Ajuste sugerido</Badge>
+                                </div>
+                              ) : null}
                               
                               <div className="relative w-full h-32 overflow-hidden">
                                 {meal.imageUrl && (
