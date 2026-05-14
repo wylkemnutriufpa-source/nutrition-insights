@@ -46,7 +46,7 @@ export class LibraryV3Resolver {
   ): Promise<Meal | null> {
     console.log(`[LibraryV3Resolver] Resolving structure for cluster: ${clusterSlug} (Target: ${targetKcal}kcal)`);
 
-    const styleContract = context.styleContract || getStyleContract(context.family);
+    const styleContract = context.styleContract || getStyleContract(context.family, context.mealSlot);
 
     const threshold = context.integrityThreshold || 1.5; // Limite padrão de expansão de porção
 
