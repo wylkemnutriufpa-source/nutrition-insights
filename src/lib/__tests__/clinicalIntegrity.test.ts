@@ -58,6 +58,9 @@ describe('Integridade NutriCore V3 — 3 Pacientes Distintos', () => {
     const context: PatientContext = {
       ...baseContext,
       weight: 55,
+      gender: 'female',
+      age: 40,
+      height: 160,
       goal: 'maintain'
     };
     const plan = await NutriCoreV3Adapter.generateElitePlan(context, []);
