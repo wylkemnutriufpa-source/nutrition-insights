@@ -2155,6 +2155,7 @@ const EditorV3Page = () => {
                   );
                 })
               ) : (
+                meals.map((meal, index) => {
                   const humanScore = calculateHumanMealScore(meal, meal.name);
                   const isAbsurd = humanScore.status === 'absurd';
 
@@ -2167,11 +2168,11 @@ const EditorV3Page = () => {
                       {isAbsurd && (
                         <div className="absolute top-8 right-8 z-20 flex flex-col items-end gap-2">
                           <Badge variant="destructive" className="h-8 px-4 text-xs font-black uppercase animate-pulse">❌ Violação Clínica Detectada</Badge>
-                          <div className="bg-rose-950/80 border border-rose-500/30 p-3 rounded-2xl max-w-xs shadow-2xl backdrop-blur-md">
+                          <div className="bg-rose-950/80 border border-rose-500/30 p-3 rounded-2xl max-w-xs shadow-2xl backdrop-blur-md text-right">
                             <p className="text-[10px] font-black uppercase text-rose-300 mb-2 tracking-widest">Motivos:</p>
                             {humanScore.reasons.map((r, i) => (
-                              <p key={i} className="text-[10px] text-white/80 leading-relaxed flex gap-2">
-                                <span className="text-rose-500">•</span> {r}
+                              <p key={i} className="text-[10px] text-white/80 leading-relaxed">
+                                {r}
                               </p>
                             ))}
                           </div>
