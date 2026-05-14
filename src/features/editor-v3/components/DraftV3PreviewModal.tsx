@@ -247,7 +247,9 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
                     );
                   });
                 })()}
+              </div>
 
+              <div className="max-w-4xl mx-auto mt-6">
                 <div className="bg-amber-500/5 border border-amber-500/20 p-6 rounded-[2rem] flex gap-4">
                   <div className="p-3 bg-amber-500/20 rounded-2xl shrink-0 h-fit">
                     <AlertTriangle className="w-6 h-6 text-amber-500" />
