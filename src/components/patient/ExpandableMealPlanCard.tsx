@@ -449,6 +449,40 @@ export default function ExpandableMealPlanCard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MealSlotModal
+        open={!!selectedSlot}
+        onOpenChange={(open) => !open && setSelectedSlot(null)}
+        mealType={selectedSlot?.type || ""}
+        items={selectedSlot?.items || []}
+        completions={completions}
+        onSetAdherence={setAdherence}
+        onOpenDetail={(meal) => setSelectedMeal(meal)}
+        onOpenSubstitution={setSubstitutingItem}
+      />
+
+      <MealDetailModal
+        open={!!selectedMeal}
+        onOpenChange={(open) => !open && setSelectedMeal(null)}
+        meal={selectedMeal}
+      />
+
+      {substitutingItem && (
+        <MealSubstitutionModal
+          open={!!substitutingItem}
+          onOpenChange={(open) => !open && setSubstitutingItem(null)}
+          mealTitle={substitutingItem.title}
+          mealPlanItemId={substitutingItem.id}
+          mealPlanId={plan?.id || ""}
+          patientId={user?.id || ""}
+          options={substitutingItem.metadata?.substitution_options}
+          onSubstitute={() => {
+            fetchData();
+            setSubstitutingItem(null);
+          }}
+        />
+      )}
     </Card>
   );
 }
+
