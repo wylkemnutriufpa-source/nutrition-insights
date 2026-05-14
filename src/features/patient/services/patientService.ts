@@ -78,6 +78,7 @@ export const patientService = {
               protein: Number(it.macros?.protein_g || it.protein || 0),
               carbs: Number(it.macros?.carbs_g || it.carbs || 0),
               fat: Number(it.macros?.fat_g || it.fat || 0),
+              quantity: it.quantity || it.display_quantity || 1,
               portionValue: it.display_quantity || it.quantity || 1,
               portionUnitLabel: it.display_unit || it.portionUnitLabel || 'unidade',
               imageUrl: it.image_url || it.imageUrl,
