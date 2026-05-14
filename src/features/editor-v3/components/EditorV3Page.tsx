@@ -2235,8 +2235,9 @@ const EditorV3Page = () => {
                       </div>
                     </div>
                   </section>
-                ))
-              )}
+                );
+              })
+            )}
 
               <Button onClick={addMeal} variant="ghost" className="w-full py-16 border-2 border-dashed border-white/5 rounded-[3rem] hover:border-emerald-500/20 hover:bg-emerald-500/5 text-white/20 hover:text-emerald-400 font-black gap-4 transition-all flex flex-col items-center">
                 <Plus className="w-10 h-10" />
