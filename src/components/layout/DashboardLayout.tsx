@@ -238,6 +238,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <FitJourneyLogo size="sm" />
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-10 w-10" onClick={openCommandPalette}>
+              <Search className="w-5 h-5 text-muted-foreground" />
+            </Button>
             <NotificationBell />
             <UserAvatarMenu initials={initials} profileName={profileName} signOut={signOut} navigate={navigate} />
           </div>
