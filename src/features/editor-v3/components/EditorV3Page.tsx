@@ -2332,11 +2332,34 @@ const EditorV3Page = () => {
                   <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                     <Label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block mb-3">Quantidade e Medida</Label>
                     <div className="flex items-center gap-4">
-                        <Input type="number" step="0.1" value={localDraft.quantity} onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })} className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black text-center" />
-                        <Select value={localDraft.portionUnitLabel || 'Gramas'} onValueChange={(val) => updateLocalDraft({ portionUnitLabel: val })}>
-                          <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-xl font-black"><SelectValue placeholder="Unidade" /></SelectTrigger>
+                        <Input 
+                          type="number" 
+                          step="0.1" 
+                          value={localDraft.quantity} 
+                          onChange={(e) => updateLocalDraft({ quantity: Number(e.target.value) })} 
+                          className="h-14 bg-white/5 border-white/10 text-white rounded-xl text-xl font-black text-center" 
+                        />
+                        <Select 
+                          value={localDraft.portionUnitLabel || 'Gramas'} 
+                          onValueChange={(val) => {
+                            const opt = MEASURE_OPTIONS.find(o => o.unit === val);
+                            updateLocalDraft({ 
+                              portionUnitLabel: val,
+                              portionUnit: val,
+                              measurementType: opt?.type || localDraft.measurementType,
+                              portionValue: opt?.type === 'gram' ? 1 : localDraft.portionValue
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-xl font-black">
+                            <SelectValue placeholder="Unidade" />
+                          </SelectTrigger>
                           <SelectContent className="bg-black border-white/10 text-white">
-                            {MEASURE_OPTIONS.map((opt) => <SelectItem key={opt.unit} value={opt.unit} className="font-bold">{opt.label}</SelectItem>)}
+                            {MEASURE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.unit} value={opt.unit} className="font-bold">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                     </div>
