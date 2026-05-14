@@ -1911,6 +1911,18 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
           )}
         </div>
         
+        {/* Soberania: Botão de conclusão exclusivo para o paciente */}
+        {isPatient && (
+          <div className="p-6 pt-0 mt-auto border-t bg-background/80 backdrop-blur-sm sticky bottom-0">
+            <Button 
+              className="w-full h-12 text-sm font-bold gap-2 shadow-lg shadow-primary/20 rounded-xl"
+              onClick={() => onOpenChange(false)}
+            >
+              <Check className="w-5 h-5" />
+              Concluir Visualização
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
 
