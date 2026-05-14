@@ -52,7 +52,11 @@ export interface HumanScoreResult {
 /**
  * Calcula o score de humanidade de uma refeição.
  */
-export function calculateHumanMealScore(meal: Partial<Meal>, slotInput: string): HumanScoreResult {
+export function calculateHumanMealScore(
+  meal: Partial<Meal>, 
+  slotInput: string,
+  styleContract?: TemplateStyleContract
+): HumanScoreResult {
   const slot = normalizeSlot(slotInput);
   if (!slot) return { score: 100, status: 'human', reasons: [] };
 
