@@ -145,7 +145,6 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
 
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-neutral-950">
             <ScrollArea className="flex-1 p-8">
-              <div className="max-w-4xl mx-auto space-y-6">
               <div className="max-w-4xl mx-auto space-y-10">
                 {(() => {
                   const days = Array.from(new Set(localMeals.map(m => m.day_of_week ?? 0))).sort((a, b) => a - b);
