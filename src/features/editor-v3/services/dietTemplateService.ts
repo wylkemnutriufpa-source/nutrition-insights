@@ -50,6 +50,7 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
     template_type: 'visual_v3',
     objective: 'emagrecimento',
     family: 'emagrecimento',
+    style_contract: getStyleContract('emagrecimento') || undefined,
     meal_distribution: [
       { slot: 'cafe_da_manha', time: '08:30' },
       { slot: 'almoço', time: '13:00' },
