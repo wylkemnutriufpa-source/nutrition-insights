@@ -2,7 +2,7 @@ import { runEngine, EngineInput, EngineResult, Goal, ActivityLevel } from './nut
 import { distributeMacros, MealSlot, DistributedMeal } from './meal-distribution';
 import { buildMeal, PlannedMeal } from './meal-builder';
 import { BASE_FOODS, Food } from './food-database';
-import { MARMITAS, Marmita } from './marmitas-database';
+import { MARMITA_RECIPES, Marmita } from './marmitas-database';
 import { getSubstitutions } from './substitutions';
 import { getBestMealImage } from '../../features/editor-v3/utils/normalization';
 import { convertGramsToHousehold } from './unit-converter';
