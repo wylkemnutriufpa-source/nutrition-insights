@@ -57,9 +57,25 @@ export function processSmartTemplate(
   const itemsWithSubs = baseItems.map(item => {
     if (baseFoods.length === 0) return item;
 
+    // Mapear para o formato do NutriCore V3 para cálculo de substituições
+    const mapToNutriCore = (f: any) => ({
+      id: f.id,
+      name: f.name,
+      category: f.category || 'any',
+      protein_100g: f.protein_100g || f.protein || 0,
+      carb_100g: f.carb_100g || f.carbs || 0,
+      fat_100g: f.fat_100g || f.fat || 0,
+      kcal_100g: f.kcal_100g || f.kcal || 0,
+      base_grams: 100,
+      unit: f.portionUnitLabel || 'g'
+    });
+
+    const coreItem = mapToNutriCore(item);
+    const coreDb = baseFoods.map(mapToNutriCore);
+
     // Usar o motor soberano de substituições do NutriCore V3
-    const mealType = template.name; // O nome do template geralmente indica a refeição (ex: "Café da Manhã")
-    const subs = getSubstitutions(item, baseFoods, item.quantity, [], mealType);
+    const mealType = template.name; 
+    const subs = getSubstitutions(coreItem as any, coreDb as any, item.quantity, [], mealType);
     
     return {
       ...item,
