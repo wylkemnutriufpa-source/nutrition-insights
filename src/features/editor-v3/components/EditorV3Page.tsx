@@ -77,6 +77,7 @@ import { ControlledDeliveryModal } from './ControlledDeliveryModal';
 import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
+import { SimpleMealGenerator } from '../services/simpleMealGenerator';
 import { V3DietTemplate } from '../types/types';
 import { calculateHumanMealScore } from '@/lib/clinicalHumanEngine';
 
