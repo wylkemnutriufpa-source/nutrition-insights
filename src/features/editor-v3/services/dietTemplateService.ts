@@ -2,6 +2,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { V3DietTemplate, KcalProfile } from "../types/types";
+import { getStyleContract } from "@/lib/templateStyles";
 
 const KCAL_PROFILES: KcalProfile[] = [
   { kcal: 1200, meal_intensity: 'low', satiety_level: 4, protein_density: 'standard' },
