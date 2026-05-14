@@ -30,9 +30,10 @@ import { formatDisplayPortion } from "@/lib/nutricore_v2/portion-display";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
-  MEAL_TYPES, DAYS,
+  MEAL_TYPES, DAYS, MealSlotCard,
   type MealPlanItem, type MealCompletion, type AdherenceStatus, type MealDetailData,
 } from "@/components/patient/MealPlanDailyView";
+import { MealSlotModal } from "@/components/patient/MealSlotModal";
 import { useEngagement } from "@/hooks/useEngagement";
 import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
 import {
@@ -113,6 +114,7 @@ export default function PatientMealPlan() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ type: string; items: MealPlanItem[] } | null>(null);
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -535,15 +537,8 @@ export default function PatientMealPlan() {
   [overlayedItems]);
 
   const weeklyDisplayDays = useMemo(() => {
-    if (plan?.editor_version === 'v3') {
-      // No V3, apenas agrupamos os itens por dia da semana que já estão no allItems (snapshot flat)
-      return DAY_ORDER.map(day => ({
-        day,
-        items: allItems.filter(item => item.day_of_week === day)
-      }));
-    }
     return buildWeeklyDisplayDays(allItems as any);
-  }, [allItems, plan?.editor_version]);
+  }, [allItems]);
 
   // Memoized daily adherence
   const visibleCompletions = useMemo(() => {
@@ -823,6 +818,7 @@ export default function PatientMealPlan() {
                       onSetAdherence={setAdherence}
                       onOpenDetail={setSelectedMeal}
                       onOpenSubstitution={setSubstitutionItem}
+                      onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
                     />
                   ))
                 ) : (
@@ -879,6 +875,7 @@ export default function PatientMealPlan() {
                           onSetAdherence={(item, status) => setAdherence(item, status, dayDate)}
                           onOpenDetail={setSelectedMeal}
                           onOpenSubstitution={setSubstitutionItem}
+                          onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
                         />
                       ))}
                     </section>
@@ -897,6 +894,17 @@ export default function PatientMealPlan() {
               </p>
             </div>
           </div>
+
+          <MealSlotModal
+            open={!!selectedSlot}
+            onOpenChange={(open) => { if (!open) setSelectedSlot(null); }}
+            mealType={selectedSlot?.type || ""}
+            items={selectedSlot?.items || []}
+            completions={completions}
+            onSetAdherence={setAdherence}
+            onOpenDetail={setSelectedMeal}
+            onOpenSubstitution={setSubstitutionItem}
+          />
 
           <MealDetailModal
             open={!!selectedMeal}
