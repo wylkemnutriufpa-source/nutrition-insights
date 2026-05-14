@@ -256,9 +256,8 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
                   <div>
                     <h4 className="text-sm font-black uppercase italic text-amber-500 mb-1">Atenção Nutricional</h4>
                     <p className="text-xs text-white/50 leading-relaxed uppercase font-medium">
-                      Este rascunho foi gerado dinamicamente via <span className="text-white font-bold">V3 Sandbox</span>. 
-                      Verifique as porções e distribuições antes de aplicar ao prontuário do paciente.
-                      A alteração de quantidades impacta o score nutricional global.
+                      Este rascunho foi gerado para garantir coerência e variedade. 
+                      <span className="text-white font-bold ml-1">Você tem controle total</span>: edite as quantidades ou remova itens antes de aprovar.
                     </p>
                   </div>
                 </div>
