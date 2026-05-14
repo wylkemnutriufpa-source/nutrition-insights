@@ -230,11 +230,18 @@ export default function PatientMealPlan() {
 
       meals.forEach((meal: any) => {
         meal.items.forEach((item: any) => {
+          const common = {
+            meal_type: meal.meal_type || meal.id,
+            day_of_week: currentDow,
+            editor_version: 'v3',
+          };
+
+          // 1. Mapeia o item primário
+          const blockId = item.substitution_group_id || item.blockId || item.id || item.instanceId;
           flatItems.push({
             ...item,
-            // 🛡️ Blindagem UUID: Preferir ID soberano da persistência sobre instanceId transitório
+            ...common,
             id: item.id || item.instanceId,
-            meal_type: meal.meal_type || meal.id,
             title: item.title || item.name,
             description: item.description || item.instructions,
             calories_target: item.macros?.kcal ?? item.kcal ?? 0,
@@ -242,23 +249,52 @@ export default function PatientMealPlan() {
             carbs_target: item.macros?.carbs_g ?? item.carbs ?? 0,
             fat_target: item.macros?.fat_g ?? item.fat ?? 0,
             image_url: item.image_url || item.imageUrl,
-            day_of_week: currentDow,
             display_quantity: item.display_quantity || item.quantity,
             display_unit: item.display_unit || item.portionUnitLabel,
             clinical_mass_g: item.clinical_mass_g,
             instanceId: item.instanceId,
-            blockId: item.blockId,
-            substitution_group_id: item.substitution_group_id || item.blockId,
-            is_primary: item.is_primary === true,
-            is_substitution: item.is_primary === false || !!item.substitution_group_id,
+            blockId: blockId,
+            substitution_group_id: blockId,
+            is_primary: true,
+            is_substitution: false,
             correlation_id: item.correlation_id,
-            editor_version: 'v3',
             edit_metadata: {
               ...(item.edit_metadata || {}),
               display_quantity: item.display_quantity || item.quantity,
               display_unit: item.display_unit || item.portionUnitLabel,
             }
           });
+
+          // 2. Mapeia as substituições acopladas (se houver)
+          if (item.substitutions && Array.isArray(item.substitutions)) {
+            item.substitutions.forEach((sub: any) => {
+              flatItems.push({
+                ...sub,
+                ...common,
+                id: sub.id || sub.instanceId || crypto.randomUUID(),
+                title: sub.title || sub.name,
+                description: sub.description || sub.instructions,
+                calories_target: sub.macros?.kcal ?? sub.kcal ?? 0,
+                protein_target: sub.macros?.protein_g ?? sub.protein ?? 0,
+                carbs_target: sub.macros?.carbs_g ?? sub.carbs ?? 0,
+                fat_target: sub.macros?.fat_g ?? sub.fat ?? 0,
+                image_url: sub.image_url || sub.imageUrl,
+                display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity,
+                display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel,
+                clinical_mass_g: sub.clinical_mass_g || sub.suggestedQuantity,
+                instanceId: sub.instanceId || crypto.randomUUID(),
+                blockId: blockId, // Pertence ao mesmo bloco do primário
+                substitution_group_id: blockId,
+                is_primary: false,
+                is_substitution: true,
+                edit_metadata: {
+                  ...(sub.edit_metadata || {}),
+                  display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity,
+                  display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel,
+                }
+              });
+            });
+          }
         });
       });
 
