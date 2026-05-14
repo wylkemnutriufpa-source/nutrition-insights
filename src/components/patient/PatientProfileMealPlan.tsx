@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChefHat, RefreshCw, Eye, FileDown, Calendar } from "lucide-react";
 import {
-  MacroSummary, MealGroup,
+  MacroSummary, MealGroup, MealSlotCard,
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion, type MealDetailData,
 } from "@/components/patient/MealPlanDailyView";
+import { MealSlotModal } from "@/components/patient/MealSlotModal";
+import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+
 import {
   buildDailyDisplayItems,
   buildWeeklyDisplayDays,
@@ -30,6 +33,9 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ type: string; items: MealPlanItem[] } | null>(null);
+  const [substitutingItem, setSubstitutingItem] = useState<MealPlanItem | null>(null);
+
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -172,8 +178,11 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                 focusMode={false}
                 onSetAdherence={() => {}} // Professional doesn't set adherence here
                 onOpenDetail={(meal) => setSelectedMeal(meal as any)}
+                onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
+                onOpenSubstitution={setSubstitutingItem}
               />
             ))}
+
           </div>
         ) : (
           <div className="space-y-8">
@@ -202,7 +211,10 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                         focusMode={false}
                         onSetAdherence={() => {}}
                         onOpenDetail={(meal) => setSelectedMeal(meal as any)}
+                        onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
+                        onOpenSubstitution={setSubstitutingItem}
                       />
+
                     ))}
                   </div>
                 </div>
@@ -212,6 +224,17 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         )}
       </div>
 
+      <MealSlotModal
+        open={!!selectedSlot}
+        onOpenChange={(open) => !open && setSelectedSlot(null)}
+        mealType={selectedSlot?.type || ""}
+        items={selectedSlot?.items || []}
+        completions={completions}
+        onSetAdherence={() => {}} 
+        onOpenDetail={(meal) => setSelectedMeal(meal as any)}
+        onOpenSubstitution={setSubstitutingItem}
+      />
+
       <MealDetailModal
         open={!!selectedMeal}
         onOpenChange={(open) => !open && setSelectedMeal(null)}
@@ -219,6 +242,23 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         onUpdateItem={handleUpdateItem}
         onChangeImage={handleChangeImage}
       />
+
+      {substitutingItem && (
+        <MealSubstitutionModal
+          open={!!substitutingItem}
+          onOpenChange={(open) => !open && setSubstitutingItem(null)}
+          mealTitle={substitutingItem.title}
+          mealPlanItemId={substitutingItem.id}
+          mealPlanId={activeMealPlanId || ""}
+          patientId={patientId}
+          options={substitutingItem.metadata?.substitution_options}
+          onSubstitute={() => {
+            fetchData();
+            setSubstitutingItem(null);
+          }}
+        />
+      )}
     </div>
   );
 }
+
