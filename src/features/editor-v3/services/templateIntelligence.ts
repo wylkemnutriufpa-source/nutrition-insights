@@ -10,6 +10,8 @@ import {
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
 
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
 const makeInstanceId = () => crypto.randomUUID();
 
 /**
