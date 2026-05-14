@@ -133,6 +133,7 @@ export async function generateAndSaveLocalPlan(
           meal_plan_id: mealPlan.id,
           title: item.name,
           meal_type: mealTypeMap[meal.name] || 'snack',
+          day_of_week: 0,
           calories_target: safeKcal,
           protein_target: Math.min(500, Number(item.protein) || 0),
           carbs_target: Math.min(800, Number(item.carbs) || 0),
