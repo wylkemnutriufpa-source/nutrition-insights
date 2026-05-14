@@ -2,6 +2,13 @@ import { Meal, MealItem, Food, MealTemplate } from "../types";
 import { normalizeFood } from "../utils/normalization";
 import { calculateItemMacros } from "@/lib/nutricore_v2/helpers";
 import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
+import {
+  isFoodAllowedInSlot,
+  isFreePortionFood,
+  FREE_PORTION_MAX_GRAMS,
+  normalizeSlot,
+} from "@/lib/mealTypeIntegrity";
+import { getFoodGroup } from "@/lib/substitutionGroups";
 
 const makeInstanceId = () => crypto.randomUUID();
 
@@ -122,30 +129,54 @@ export function processSmartTemplate(
 
   // 4. Geração de Variação Semanal (Regra Problema 2.5)
   // Se o modo semanal estiver ativo, geramos 7 dias baseados no template, mas com trocas
+  // 🛡️ MEAL_TYPE_GUARD: cada substituição é validada contra o slot da refeição
+  // para impedir contaminação (tilápia no café, arroz no café, etc).
   if (params.isWeeklyMode) {
     const weeklyMeals: Meal[] = [];
     const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-    
+
+    // Detecta o slot a partir do nome do template/refeição (fallback: breakfast)
+    const slot = normalizeSlot(template.name) ?? normalizeSlot((template as any).meal_type) ?? null;
+
     days.forEach((day, index) => {
       // Para cada dia, tentamos trocar um item por uma de suas substituições
       const dayItems = finalItems.map(item => {
         if (index > 0 && item.substitutions && item.substitutions.length > 0) {
-          // Escolha determinística baseada no dia para variação
-          const subIndex = (index - 1) % item.substitutions.length;
-          const sub = item.substitutions[subIndex];
-          
-          // Mantemos a mesma caloria do item original trocando pela gramatura equivalente do substituto
-          const ratio = item.kcal / (sub.kcal || 1); 
-          const subQty = (sub.portionValue || 100) * ratio;
+          // 🛡️ Filtra apenas substituições válidas para o slot
+          const validSubs = slot
+            ? item.substitutions.filter((s: any) =>
+                isFoodAllowedInSlot(s.name || "", getFoodGroup(s.name || ""), slot, {
+                  source: "templateIntelligence.weeklyVariation",
+                }),
+              )
+            : item.substitutions;
+
+          if (validSubs.length === 0) {
+            // Sem substituição válida → mantém o item original (não força troca proibida)
+            return { ...item, instanceId: makeInstanceId() };
+          }
+
+          const subIndex = (index - 1) % validSubs.length;
+          const sub = validSubs[subIndex];
+
+          // 🛡️ Vegetais (portion_mode=free) não escalam — mantêm porção fixa
+          const isFree = isFreePortionFood(sub.name || "", getFoodGroup(sub.name || ""));
+          let subQty: number;
+          if (isFree) {
+            subQty = Math.min(sub.portionValue || 80, FREE_PORTION_MAX_GRAMS);
+          } else {
+            const ratio = item.kcal / (sub.kcal || 1);
+            subQty = (sub.portionValue || 100) * ratio;
+          }
           const macros = calculateItemMacros(sub, subQty);
-          
+
           return {
             ...sub,
             instanceId: makeInstanceId(),
             quantity: subQty,
             ...macros,
             calories: macros.kcal,
-            substitutions: item.substitutions // Mantém a lista de trocas
+            substitutions: validSubs,
           } as MealItem;
         }
         return { ...item, instanceId: makeInstanceId() };
@@ -158,7 +189,7 @@ export function processSmartTemplate(
         time: "08:00" // Default
       });
     });
-    
+
     return weeklyMeals;
   }
 

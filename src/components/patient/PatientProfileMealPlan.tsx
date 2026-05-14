@@ -251,6 +251,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           mealPlanItemId={substitutingItem.id}
           mealPlanId={activeMealPlanId || ""}
           patientId={patientId}
+          mealSlot={(substitutingItem as any)?.meal_type}
           options={substitutingItem.metadata?.substitution_options}
           onSubstitute={() => {
             fetchData();

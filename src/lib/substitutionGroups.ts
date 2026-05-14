@@ -6,6 +6,7 @@
  */
 
 import { FOOD_DATABASE, type FoodItem } from "@/components/meals/FoodAutocomplete";
+import { isFoodAllowedInSlot } from "./mealTypeIntegrity";
 
 // ── Substitution Group Definitions ──
 export type SubstitutionGroup =
@@ -249,6 +250,9 @@ interface ClinicalContext {
   restrictions?: string[]; // e.g. ["lactose", "gluten"]
   calorieRange?: { min: number; max: number };
   minProtein?: number;
+  /** 🛡️ MEAL_TYPE_GUARD: slot da refeição (breakfast, lunch, etc). Quando informado,
+   *  bloqueia candidatos que não pertencem a este slot, eliminando "tilápia no café". */
+  slot?: string;
 }
 
 export function getValidSubstitutions(
@@ -306,6 +310,15 @@ export function getValidSubstitutions(
 
   if (context?.minProtein) {
     candidates = candidates.filter(f => f.protein >= context.minProtein!);
+  }
+
+  // 🛡️ MEAL_TYPE_GUARD: filtra candidatos que não são válidos no slot atual.
+  if (context?.slot) {
+    candidates = candidates.filter(f =>
+      isFoodAllowedInSlot(f.name, getFoodGroup(f.name), context.slot!, {
+        source: "substitutionGroups.getValidSubstitutions",
+      }),
+    );
   }
 
   // Sort by caloric proximity

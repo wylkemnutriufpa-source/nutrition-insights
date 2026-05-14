@@ -922,6 +922,7 @@ export default function PatientMealPlan() {
             mealPlanItemId={substitutionItem?.id || ""}
             mealPlanId={plan?.id || ""}
             patientId={user?.id || ""}
+            mealSlot={(substitutionItem as any)?.meal_type}
             options={(substitutionItem?.metadata as any)?.substitution_options}
             onSubstitute={(food: FoodItem, originalTitle: string) => {
               // Update overlay map — plan data stays untouched
