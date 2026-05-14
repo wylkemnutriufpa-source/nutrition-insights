@@ -15,6 +15,7 @@ import {
   searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
 } from '../utils/dataFetcher';
 import { getBestMealImage } from '../utils/normalization';
+import { logClinicalEvent } from '../../audit/services/auditLogger';
 import { 
   calculateNutritionalScore, validatePlanClinically 
 } from '../../clinical-engine';
