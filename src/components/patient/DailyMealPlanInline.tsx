@@ -19,6 +19,9 @@ import {
   type MealPlanItem, type MealCompletion, type AdherenceStatus,
 } from "@/components/patient/MealPlanDailyView";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
+import { MealSlotModal } from "@/components/patient/MealSlotModal";
+import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+
 
 import type { MealDetailData } from "@/components/patient/MealPlanDailyView";
 
