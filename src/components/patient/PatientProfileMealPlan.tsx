@@ -224,6 +224,17 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         )}
       </div>
 
+      <MealSlotModal
+        open={!!selectedSlot}
+        onOpenChange={(open) => !open && setSelectedSlot(null)}
+        mealType={selectedSlot?.type || ""}
+        items={selectedSlot?.items || []}
+        completions={completions}
+        onSetAdherence={() => {}} 
+        onOpenDetail={(meal) => setSelectedMeal(meal as any)}
+        onOpenSubstitution={setSubstitutingItem}
+      />
+
       <MealDetailModal
         open={!!selectedMeal}
         onOpenChange={(open) => !open && setSelectedMeal(null)}
@@ -231,6 +242,23 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         onUpdateItem={handleUpdateItem}
         onChangeImage={handleChangeImage}
       />
+
+      {substitutingItem && (
+        <MealSubstitutionModal
+          open={!!substitutingItem}
+          onOpenChange={(open) => !open && setSubstitutingItem(null)}
+          mealTitle={substitutingItem.title}
+          mealPlanItemId={substitutingItem.id}
+          mealPlanId={activeMealPlanId || ""}
+          patientId={patientId}
+          options={substitutingItem.metadata?.substitution_options}
+          onSubstitute={() => {
+            fetchData();
+            setSubstitutingItem(null);
+          }}
+        />
+      )}
     </div>
   );
 }
+
