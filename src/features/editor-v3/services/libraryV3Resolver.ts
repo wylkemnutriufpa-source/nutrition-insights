@@ -34,12 +34,13 @@ export class LibraryV3Resolver {
   static async resolveMealStructure(
     clusterSlug: string, 
     targetKcal: number, 
-    context: { goal: string; planId: string; day: string; mealSlot: string }
+    context: { goal: string; planId: string; day: string; mealSlot: string; integrityThreshold?: number }
   ): Promise<Meal | null> {
     console.log(`[LibraryV3Resolver] Resolving structure for cluster: ${clusterSlug} (Target: ${targetKcal}kcal)`);
 
+    const threshold = context.integrityThreshold || 1.5; // Limite padrão de expansão de porção
+
     // 1. Busca itens candidatos no cluster
-    // Mapeamento de slot do editor para tipo da biblioteca
     const slotToType: Record<string, string> = {
       'cafe_da_manha': 'breakfast',
       'lanche_da_manha': 'snack',
@@ -59,11 +60,9 @@ export class LibraryV3Resolver {
       `)
       .eq('active', true);
 
-    // Prioridade 1: Filtrar por Cluster se fornecido
     if (clusterSlug) {
       query.eq('cluster_slug', clusterSlug);
     } else {
-      // Fallback: Mapeamento de slot se não houver cluster
       query.contains('meal_type', [libMealType]);
       query.contains('objective_tags', [context.goal]);
     }
@@ -75,13 +74,28 @@ export class LibraryV3Resolver {
       return null;
     }
 
-    // 2. Escolha determinística da refeição baseada no seed (planId + day + slot)
+    // 2. Filtro de Integridade Clínica (Scaling Humano)
+    // Filtramos itens onde o scaling factor estaria dentro do threshold
+    let candidates = items.filter(item => {
+      const scale = targetKcal / (item.kcal_base || 400);
+      return scale >= 0.5 && scale <= threshold;
+    });
+
+    // Se nenhum item servir, pegamos o que tiver o kcal_base mais próximo
+    if (candidates.length === 0) {
+      console.info('[LibraryV3Resolver] No item within threshold. Picking closest kcal_base.');
+      candidates = [...items].sort((a, b) => 
+        Math.abs(targetKcal - (a.kcal_base || 400)) - Math.abs(targetKcal - (b.kcal_base || 400))
+      ).slice(0, 3);
+    }
+
+    // 3. Escolha determinística da refeição
     const seed = `${context.planId}-${context.day}-${context.mealSlot}`;
     const hash = this.generateHash(seed);
-    const baseItem = items[hash % items.length];
+    const baseItem = candidates[hash % candidates.length];
 
-    // 3. Cálculo do fator de escala dinâmico (Soberano)
-    const kcalBase = baseItem.kcal_base || 400; // Fallback seguro
+    // 4. Cálculo do fator de escala dinâmico (Soberano)
+    const kcalBase = baseItem.kcal_base || 400;
     const rawScale = targetKcal / kcalBase;
     const safeScale = clampScaleFactor(rawScale);
 
