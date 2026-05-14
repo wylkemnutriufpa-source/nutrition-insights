@@ -999,7 +999,22 @@ const EditorV3Page = () => {
       if (result.ok) {
         toast.success('Plano V3 entregue com sucesso sob governança controlada!', { id: 'v3-delivery' });
         
-        // Log de governança
+        // 🛡️ GOVERNANÇA CLÍNICA SOBERANA: Log de Auditoria Formal
+        await logClinicalEvent({
+          type: 'audit_log',
+          action: 'CONTROLLED_DELIVERY',
+          resource: 'editor-v3',
+          patient_id: targetPatientId,
+          severity: 'info',
+          details: {
+            v3_sandbox_delivery: true,
+            kcal_target: totalMacros.kcal,
+            template_slug: selectedV3Template?.slug || 'none',
+            delivery_mode: 'controlled_clinical_delivery',
+            timestamp: new Date().toISOString()
+          }
+        });
+
         addAuditEntry({
           type: 'system_action',
           description: `CONTROLLED_DELIVERY: Plano V3 entregue para ${targetPatientId}`,
@@ -1007,7 +1022,6 @@ const EditorV3Page = () => {
           metadata: { targetPatientId, kcal: totalMacros.kcal, version: 'v3_soberano' }
         });
 
-        // Opcional: navegar para o paciente
         navigate(`/patients/${targetPatientId}`);
       } else {
         throw new Error(result.error || 'Erro desconhecido na promoção.');
