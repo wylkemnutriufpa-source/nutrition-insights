@@ -65,6 +65,9 @@ export function processSmartTemplate(
       carbs: macros.carbs,
       fat: macros.fat,
       instanceId: makeInstanceId(),
+      blockId: (f as any).blockId || normalized.id || makeInstanceId(), // Preserve blockId
+      substitution_group_id: (f as any).substitution_group_id || (f as any).blockId || normalized.id,
+      is_primary: true, // Itens base do template são primários
       quantity: initialQuantity,
       locked: false,
       substitutions: []
