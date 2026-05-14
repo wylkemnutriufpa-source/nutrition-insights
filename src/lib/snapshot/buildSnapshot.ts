@@ -12,6 +12,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { assertHierarchyIntegrity, DisplayMealPlanItem } from "../mealPlanDisplay";
 import {
   MealPlanSnapshotV1,
   SNAPSHOT_SCHEMA_VERSION,
