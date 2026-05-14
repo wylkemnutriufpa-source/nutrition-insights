@@ -5,7 +5,7 @@
  * das refeições, além da matemática nutricional.
  */
 
-import { Meal, MealItem } from "@/features/editor-v3/types";
+import { Meal, MealItem, TemplateStyleContract } from "@/features/editor-v3/types";
 import { SubstitutionGroup, getFoodGroup } from "./substitutionGroups";
 import { MealSlot, normalizeSlot } from "./mealTypeIntegrity";
 
