@@ -170,11 +170,22 @@ export function processSmartTemplate(
         if (index > 0 && item.substitutions && item.substitutions.length > 0) {
           // 🛡️ Filtra apenas substituições válidas para o slot
           const validSubs = slot
-            ? item.substitutions.filter((s: any) =>
-                isFoodAllowedInSlot(s.name || "", getFoodGroup(s.name || ""), slot, {
+            ? item.substitutions.filter((s: any) => {
+                // Check basic slot integrity
+                const isAllowed = isFoodAllowedInSlot(s.name || "", getFoodGroup(s.name || ""), slot, {
                   source: "templateIntelligence.weeklyVariation",
-                }),
-              )
+                });
+                if (!isAllowed) return false;
+
+                // Check template style contract
+                if (styleContract) {
+                  const group = getFoodGroup(s.name);
+                  if (group && styleContract.forbidden_groups?.includes(group)) return false;
+                  if (styleContract.forbidden_keywords?.some(k => new RegExp(`\\b${k}\\b`, 'i').test(s.name))) return false;
+                }
+                
+                return true;
+              })
             : item.substitutions;
 
           if (validSubs.length === 0) {
