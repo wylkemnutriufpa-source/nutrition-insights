@@ -239,7 +239,7 @@ export async function promoteDraftToMealPlan(
           mealImageUrl: meal.imageUrl || null,
           display_quantity: item.quantity,
           display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit,
-          day_of_week: meal.day_of_week ?? null,
+          day_of_week: meal.day_of_week ?? 0,
           editor_version: 'v3',
         }
       });
