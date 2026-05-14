@@ -36,7 +36,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
 
   const handleSelect = () => {
     if (selectedKcal) {
-      onSelectProfile(selectedKcal);
+      onSelectProfile(selectedKcal, viewMode === 'weekly');
       onClose();
     }
   };
