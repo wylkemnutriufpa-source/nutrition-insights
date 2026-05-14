@@ -66,12 +66,20 @@ export default function MealSubstitutionModal({
 
   const components: ComponentBlock[] = useMemo(() => {
     // 🛡️ SOBERANIA V3: Prioridade total para as opções definidas pelo nutricionista.
-    // Se existem opções no snapshot (metadata), usamos apenas elas e não fazemos busca inteligente fuzzy.
+    // Se existem opções no snapshot (metadata), usamos apenas elas — mas ainda filtramos
+    // pelo slot da refeição para impedir que opções legadas contaminem o slot.
     if (options && options.length > 0) {
+      const filteredOptions = normalizedSlot
+        ? options.filter(opt =>
+            isFoodAllowedInSlot(opt.title || "", getFoodGroup(opt.title || ""), normalizedSlot, {
+              source: "MealSubstitutionModal.snapshotOptions",
+            }),
+          )
+        : options;
       return [{
         current: { name: mealTitle, portion: "", calories: 0, protein: 0, carbs: 0, fat: 0, category: "" },
         groupLabel: "Sugestões do Nutricionista",
-        substitutions: options.map(opt => ({
+        substitutions: filteredOptions.map(opt => ({
           food: {
             name: opt.title,
             portion: opt.description || "",
@@ -86,7 +94,7 @@ export default function MealSubstitutionModal({
       }];
     }
 
-    // Fallback para o modelo legado / inteligente por similaridade se não houver opções pré-definidas.
+    // Fallback fuzzy — também respeita o slot via context.slot
     const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const query = norm(mealTitle);
     const direct = FOOD_DATABASE.find(f => {
@@ -104,14 +112,18 @@ export default function MealSubstitutionModal({
 
     return foods.slice(0, 3).map(food => {
       const group = getFoodGroup(food.name);
-      const subs = getValidSubstitutions(food.name, undefined, 4);
+      const subs = getValidSubstitutions(
+        food.name,
+        normalizedSlot ? { slot: normalizedSlot } : undefined,
+        4,
+      );
       return {
         current: food,
         groupLabel: group ? SUBSTITUTION_GROUP_LABELS[group] : null,
         substitutions: subs,
       };
     }).filter(c => c.substitutions.length > 0);
-  }, [mealTitle, options]);
+  }, [mealTitle, options, normalizedSlot]);
 
   const handleConfirm = async () => {
     if (!selected) return;
