@@ -28,6 +28,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getWhatsAppInvitationMessage } from "@/utils/invitation";
 import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
+import PatientQuickSearch from "@/components/patients/PatientQuickSearch";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import {
