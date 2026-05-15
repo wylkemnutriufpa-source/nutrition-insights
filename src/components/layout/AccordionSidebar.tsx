@@ -122,10 +122,10 @@ function SideFlyout({
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         className="fixed inset-0 z-[106] flex items-center justify-center p-4 pointer-events-none"
       >
-        <div className="pointer-events-auto w-full max-w-md bg-card/98 backdrop-blur-2xl border border-border/50 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden">
+        <div className="pointer-events-auto w-full max-w-md bg-card/95 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)] overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-border/30 bg-gradient-to-r from-muted/40 to-transparent">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10 ring-1 ring-primary/20">
+          <div className="flex items-center gap-4 px-6 py-5 border-b border-white/5 bg-gradient-to-r from-primary/5 to-transparent">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-primary/10 ring-1 ring-primary/20 shadow-inner">
               <SectionIcon className={`w-4.5 h-4.5 ${colorClass}`} />
             </div>
             <div className="flex-1">

@@ -161,26 +161,26 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Metas Nutricionais do Dia</span>
       </div>
-      <div className="grid grid-cols-4 gap-2">
-        <div className="bg-orange-500/5 border border-orange-500/10 rounded-xl p-3 text-center transition-all hover:bg-orange-500/10 group">
+      <div className="grid grid-cols-4 gap-2.5">
+        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
           <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1 group-hover:scale-110 transition-transform" />
           <p className="text-[9px] text-muted-foreground font-medium uppercase">Kcal</p>
-          <p className="font-display font-bold text-sm text-orange-600" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
+          <p className="font-display font-black text-lg text-white" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
         </div>
-        <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 text-center transition-all hover:bg-red-500/10 group">
+        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
           <Beef className="w-4 h-4 mx-auto text-red-500 mb-1 group-hover:scale-110 transition-transform" />
           <p className="text-[9px] text-muted-foreground font-medium uppercase">Prot</p>
-          <p className="font-display font-bold text-sm text-red-600" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
+          <p className="font-display font-black text-lg text-white" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
         </div>
-        <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3 text-center transition-all hover:bg-amber-500/10 group">
+        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
           <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1 group-hover:scale-110 transition-transform" />
           <p className="text-[9px] text-muted-foreground font-medium uppercase">Carbs</p>
-          <p className="font-display font-bold text-sm text-amber-600" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
+          <p className="font-display font-black text-lg text-white" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
         </div>
-        <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-xl p-3 text-center transition-all hover:bg-yellow-500/10 group">
+        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
           <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1 group-hover:scale-110 transition-transform" />
           <p className="text-[9px] text-muted-foreground font-medium uppercase">Gord</p>
-          <p className="font-display font-bold text-sm text-yellow-600" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
+          <p className="font-display font-black text-lg text-white" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
         </div>
       </div>
       
@@ -234,7 +234,7 @@ const MealItemCard = memo(function MealItemCard({
         opacity: 1, y: 0,
         boxShadow: isJustDone ? "0 0 20px rgba(16,185,129,0.3)" : "none",
       }}
-      className={`relative rounded-2xl border overflow-hidden bg-card/40 backdrop-blur-sm group ${statusColor}`}
+      className={`relative rounded-[2.5rem] border overflow-hidden bg-neutral-900/40 backdrop-blur-md group ${statusColor}`}
     >
       {resolvedImage && (
         <div
@@ -363,7 +363,7 @@ const MealItemCard = memo(function MealItemCard({
               </div>
             )}
             {showMacros && (
-              <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-4 mt-3 py-3 border-t border-white/5 text-[11px] font-black uppercase tracking-wider text-white/30">
                 {(() => {
                   const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
                   if (cal === null || cal === undefined) return null;
@@ -523,15 +523,17 @@ const AdherenceCard = memo(function AdherenceCard({
   }
 
   return (
-    <motion.div className="glass rounded-2xl p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-primary" />
-          <span className="font-display font-semibold">Progresso do Dia</span>
+    <motion.div className="bg-neutral-900/60 border border-white/5 rounded-3xl p-6 backdrop-blur-md shadow-2xl" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+            <Flame className="w-6 h-6" />
+          </div>
+          <span className="font-black uppercase italic tracking-tighter text-white text-lg">Progresso do Dia</span>
         </div>
-        <span className="text-lg font-bold text-primary">{Math.round(dailyAdherence)}%</span>
+        <span className="text-2xl font-black italic text-primary">{Math.round(dailyAdherence)}%</span>
       </div>
-      <Progress value={dailyAdherence} className="h-3" />
+      <Progress value={dailyAdherence} className="h-3 bg-white/5 border border-white/5" indicatorClassName="bg-gradient-to-r from-primary to-emerald-400" />
       <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
         <div className="flex gap-3">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> {followedCount}</span>

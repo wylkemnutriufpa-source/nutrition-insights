@@ -35,12 +35,12 @@ export const MealCard: React.FC<MealCardProps> = ({
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
   return (
-    <div className="bg-neutral-900/50 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm group/meal">
+    <div className="bg-neutral-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-md group/meal hover:bg-neutral-900/60 hover:border-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 ease-out">
       {/* Header */}
-      <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-110 transition-transform">
-            <Utensils className="w-6 h-6" />
+      <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+        <div className="flex items-center gap-6">
+          <div className="w-14 h-14 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-110 group-hover/meal:bg-emerald-500/20 transition-all duration-500 shadow-inner">
+            <Utensils className="w-7 h-7" />
           </div>
           <div>
             <h3 className="text-lg font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors">
@@ -74,7 +74,7 @@ export const MealCard: React.FC<MealCardProps> = ({
       </div>
 
       {/* Items */}
-      <div className="p-6 space-y-3">
+      <div className="p-8 space-y-4">
         {meal.items.length > 0 ? (
           meal.items.map((item) => (
             <FoodItemRow 
@@ -97,7 +97,7 @@ export const MealCard: React.FC<MealCardProps> = ({
           <DialogTrigger asChild>
             <Button 
               variant="outline" 
-              className="w-full h-14 bg-white/5 border-dashed border-white/10 hover:bg-white/10 hover:border-emerald-500/50 text-white/40 hover:text-emerald-400 rounded-2xl transition-all mt-4 group/add"
+              className="w-full h-16 bg-white/[0.01] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-2xl transition-all mt-4 group/add"
             >
               <Plus className="w-5 h-5 mr-2 group-hover/add:scale-125 transition-transform" />
               <span className="uppercase text-[10px] font-black tracking-widest">Adicionar Alimento Real</span>

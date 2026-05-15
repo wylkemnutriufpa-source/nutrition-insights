@@ -287,17 +287,18 @@ function buildPremiumCSS(): string {
 
       /* Estilo Premium para o Header */
       .premium-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        padding: 22px 28px;
-        margin-bottom: 18px;
+        background: linear-gradient(135deg, #050505 0%, #111111 100%);
+        padding: 30px 40px;
+        margin-bottom: 25px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-radius: 0 0 40px 40px;
+        border-radius: 0 0 50px 50px;
         color: white;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
         position: relative;
         overflow: hidden;
+        border-bottom: 1px solid rgba(212, 168, 75, 0.2);
       }
 
       .premium-header::after {
