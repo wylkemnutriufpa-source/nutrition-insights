@@ -150,11 +150,12 @@ export default function EditorV3Page() {
                 clinical_mass_g: quantity,
                 substitutions: (subs || []).map(s => ({
                   ...s,
-                  imageUrl: s.images?.[0]?.image_url || s.composition?.imageUrl || null
+                  imageUrl: s.images?.[0]?.image_asset || (s.composition as any)?.imageUrl || null
                 })),
                 imageUrl,
                 ...macros
               }];
+
             } else {
               console.warn(`[EditorV3] No active items found for cluster: ${clusterSlug}`);
             }
