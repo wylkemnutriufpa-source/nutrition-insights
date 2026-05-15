@@ -76,8 +76,9 @@ export default function EditorV3Page() {
               .eq('active', true)
               .limit(10);
 
-            const quantity = food.portionValue || food.base_grams || 100;
+            const quantity = (food as any).portionValue || (food as any).base_grams || 100;
             const macros = calculateItemMacros(food, quantity);
+
             
             items = [{
               ...food,
