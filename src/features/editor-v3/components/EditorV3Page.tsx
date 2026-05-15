@@ -35,30 +35,8 @@ import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLev
 
 
 
-const SLOT_TRANSLATIONS: Record<string, string> = {
-  'breakfast': 'Café da Manhã',
-  'morning_snack': 'Lanche da Manhã',
-  'lunch': 'Almoço',
-  'afternoon_snack': 'Lanche da Tarde',
-  'snack': 'Lanche',
-  'dinner': 'Jantar',
-  'evening_snack': 'Ceia',
-  'supper': 'Ceia',
-  'pre_workout': 'Pré-Treino',
-  'post_workout': 'Pós-Treino',
-  'cafe_da_manha': 'Café da Manhã',
-  'lanche_da_manha': 'Lanche da Manhã',
-  'almoco': 'Almoço',
-  'almoço': 'Almoço',
-  'lanche_da_tarde': 'Lanche da Tarde',
-  'jantar': 'Jantar',
-  'ceia': 'Ceia'
-};
+import { translateSlot } from '../utils/translations';
 
-const translateSlot = (slot: string) => {
-  const normalized = slot.toLowerCase().replace(/ /g, '_');
-  return SLOT_TRANSLATIONS[normalized] || slot.replace(/_/g, ' ');
-};
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -116,38 +94,52 @@ export default function EditorV3Page() {
       const clusterMap = (selectedTemplate.cluster_map as any) || {};
       const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
       const newMeals: any[] = [];
+      const distribution = (selectedTemplate.meal_distribution as any[]) || [];
+
+      if (distribution.length === 0) {
+        throw new Error('Template sem distribuição de refeições configurada.');
+      }
 
       for (const day of days) {
-        for (const dist of (selectedTemplate.meal_distribution as any[])) {
+        for (const dist of distribution) {
           const slot = dist.slot;
           const clusterSlug = clusterMap[slot];
           let items: any[] = [];
 
           if (clusterSlug) {
-            const { data: libraryItems } = await (supabase
-              .from('v3_library_items') as any)
-              .select('*')
+            console.log(`[EditorV3] Plotting slot: ${slot} with cluster: ${clusterSlug}`);
+            
+            const { data: libraryItems, error: libError } = await supabase
+              .from('v3_library_items')
+              .select('*, images:v3_library_images(*)')
               .eq('cluster_slug', clusterSlug)
               .eq('active', true)
               .limit(1);
             
+            if (libError) {
+              console.error(`[EditorV3] Error fetching library item for cluster ${clusterSlug}:`, libError);
+            }
+
             if (libraryItems && libraryItems.length > 0) {
               const food = libraryItems[0];
-              const { data: subs } = await (supabase
-                .from('v3_library_items') as any)
-                .select('*')
+              
+              // Map images if available
+              const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
+
+              const { data: subs } = await supabase
+                .from('v3_library_items')
+                .select('*, images:v3_library_images(*)')
                 .eq('substitutions_group', food.substitutions_group)
                 .neq('id', food.id)
                 .eq('active', true)
                 .limit(5);
 
               // Calculate quantity based on total target calories and number of meals
-              const targetMealKcal = kcal / selectedTemplate.meal_distribution.length;
+              const targetMealKcal = kcal / distribution.length;
               let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
               
               // Safety limit to avoid "exploding calories"
-              // Limit quantity to a reasonable human amount (e.g. 1500g max per item)
-              quantity = Math.min(quantity, 1500);
+              quantity = Math.min(Math.max(quantity, 10), 2000); // Between 10g and 2kg
               
               const macros = calculateItemMacros(food, quantity);
               
@@ -156,21 +148,29 @@ export default function EditorV3Page() {
                 instanceId: crypto.randomUUID(),
                 quantity,
                 clinical_mass_g: quantity,
-                substitutions: subs || [],
+                substitutions: (subs || []).map(s => ({
+                  ...s,
+                  imageUrl: s.images?.[0]?.image_asset || (s.composition as any)?.imageUrl || null
+                })),
+                imageUrl,
                 ...macros
               }];
+
+            } else {
+              console.warn(`[EditorV3] No active items found for cluster: ${clusterSlug}`);
             }
           }
 
           newMeals.push({
             id: crypto.randomUUID(),
             name: translateSlot(slot),
-            time: dist.time,
+            time: dist.time || "08:00",
             day_of_week: day,
             items
           });
         }
       }
+
 
       store.hydrateMeals(newMeals);
       toast.success('Template plotado com sucesso!', { id: toastId });
@@ -311,11 +311,12 @@ export default function EditorV3Page() {
   };
 
   const handleAddMeal = () => {
-    const names = ["Café da Manhã", "Lanche", "Almoço", "Café da Tarde", "Jantar", "Ceia"];
+    const names = ["Café da Manhã", "Lanche", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
     const currentCount = store.meals.length;
     const name = names[currentCount % names.length];
     store.addMeal(name);
   };
+
 
   return (
     <DashboardLayout>

@@ -55,18 +55,22 @@ const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   cafe_da_manha: { label: "Café da Manhã", color: "#6366f1" },
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
   lanche_da_manha: { label: "Lanche da Manhã", color: "#10b981" },
+  snack_1: { label: "Lanche da Manhã", color: "#10b981" },
   lunch: { label: "Almoço", color: "#f59e0b" },
   almoco: { label: "Almoço", color: "#f59e0b" },
   afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
   lanche_da_tarde: { label: "Lanche da Tarde", color: "#ec4899" },
   snack: { label: "Lanche", color: "#ec4899" },
+  snack_2: { label: "Lanche da Tarde", color: "#ec4899" },
   pre_workout: { label: "Pré-Treino", color: "#ef4444" },
   post_workout: { label: "Pós-Treino", color: "#3b82f6" },
   dinner: { label: "Jantar", color: "#6366f1" },
   jantar: { label: "Jantar", color: "#6366f1" },
   evening_snack: { label: "Ceia", color: "#8b5cf6" },
   ceia: { label: "Ceia", color: "#8b5cf6" },
+  supper: { label: "Ceia", color: "#8b5cf6" },
 };
+
 
 const DAY_NAMES: Record<number, string> = {
   0: "Domingo",
@@ -108,19 +112,23 @@ const MEAL_TYPE_ALIASES: Record<string, CanonicalMealType> = {
   lanche_da_manha: "morning_snack",
   lanche_manha: "morning_snack",
   colacao: "morning_snack",
+  snack_1: "morning_snack",
   lunch: "lunch",
   almoco: "lunch",
   afternoon_snack: "afternoon_snack",
   lanche_da_tarde: "afternoon_snack",
   lanche_tarde: "afternoon_snack",
   snack: "afternoon_snack",
+  snack_2: "afternoon_snack",
   dinner: "dinner",
   jantar: "dinner",
   evening_snack: "evening_snack",
   ceia: "evening_snack",
+  supper: "evening_snack",
   lanche_da_noite: "evening_snack",
   lanche_noite: "evening_snack",
 };
+
 
 function normalizeMealTypeKey(type: unknown): string {
   return String(type || "")
