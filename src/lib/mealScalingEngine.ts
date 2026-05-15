@@ -76,10 +76,13 @@ export function scaleMealToTarget(
   template: MealTemplate,
   target: ScalingTarget
 ): ScaledMeal {
+  // SOBERANIA V3: Filtra a estrutura para remover substituições do cálculo principal
+  const primaryStructure = template.foods_structure.filter(f => !f.name.toLowerCase().includes('🔄') && !f.name.toLowerCase().includes('substitu'));
+
   if (!template.kcal_base || template.kcal_base === 0) {
     return {
       name: template.name,
-      foods: template.foods_structure.map(f => ({
+      foods: primaryStructure.map(f => ({
         ...f,
         original_portion: f.portion_grams,
       })),
@@ -99,7 +102,7 @@ export function scaleMealToTarget(
     Math.min(CLINICAL_LIMITS.MAX_SCALE_FACTOR, scaleFactor));
 
   // 3. Scale each food — use per-gram macros when available for precision
-  const scaledFoods: ScaledFoodItem[] = template.foods_structure.map(food => {
+  const scaledFoods: ScaledFoodItem[] = primaryStructure.map(food => {
     let newPortion = Math.round(food.portion_grams * scaleFactor);
     newPortion = Math.max(CLINICAL_LIMITS.MIN_PORTION_GRAMS, 
       Math.min(CLINICAL_LIMITS.MAX_SINGLE_PORTION_GRAMS, newPortion));

@@ -139,9 +139,15 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
     // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo
     // Evita explosão de macros se substituições vazarem para a lista principal
     const primaryOnly = items.filter(i => {
+      // Itens explicitamente marcados como não primários não entram
       if (i.is_primary === false) return false;
-      if (i.is_primary === true) return true;
-      if (i.metadata?.substitution_group_id) return false;
+      // Itens em grupos de substituição não entram
+      if (i.metadata?.substitution_group_id || (i as any).edit_metadata?.substitution_group_id) return false;
+      // Itens com "substituição" no título ou descrição são suspeitos e removidos se is_primary não for True
+      const lowerTitle = (i.title || "").toLowerCase();
+      const lowerDesc = (i.description || "").toLowerCase();
+      if ((lowerTitle.includes("substitu") || lowerDesc.includes("substitu")) && i.is_primary !== true) return false;
+      
       return true;
     });
     
