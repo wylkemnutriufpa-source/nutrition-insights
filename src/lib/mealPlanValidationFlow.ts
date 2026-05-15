@@ -1,5 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 // Removed obsolete autoFixEngine import
+export type AutoFixResult = {
+  success: boolean;
+  newPlanId: string | null;
+  inPlace: boolean;
+  changes: any[];
+  warnings: string[];
+  summary?: any;
+};
 import { isSimpleMode } from "@/lib/simpleModeFlag";
 
 export interface ClinicalValidationResult {

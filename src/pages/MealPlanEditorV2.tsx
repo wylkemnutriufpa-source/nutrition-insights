@@ -32,7 +32,7 @@ import { MealVisualLibraryModal } from "@/components/meal-editor-v2/MealVisualLi
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
 import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
-// Removed obsolete autoFixEngine import
+import { type AutoFixResult } from "@/lib/mealPlanValidationFlow";
 import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
 import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
 import { PlanReviewModal } from "@/components/meal-editor-v2/PlanReviewModal";
