@@ -27,7 +27,7 @@ describe("Marmitas Fixas — Unit Logic", () => {
         id: "tpl-1",
         meals: [
           {
-            meal_type: "lunch",
+            meal_type: "Almoço",
             title: "Almoço de Marmita",
             foods: [{ name: "Marmita do dia", calories: 0, protein: 0, carbs: 0, fat: 0 }]
           }

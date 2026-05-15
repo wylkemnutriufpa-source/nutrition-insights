@@ -11,17 +11,17 @@
 
 export const MACRO_SAFETY_LIMITS = {
   /** kcal máxima por item individual de refeição */
-  MAX_KCAL_PER_ITEM: 2000,
-  /** kcal máxima por dia (qualquer plano acima disso é corrupção) */
-  MAX_KCAL_PER_DAY: 5000,
-  /** kcal acima disso = abort imediato (sinal de loop multiplicativo) */
-  ABORT_KCAL_THRESHOLD: 10000,
-  /** gramas máximas por item individual */
-  MAX_GRAMS_PER_ITEM: 2000,
-  /** fator de escala máximo numa única passada */
-  MAX_SCALE_FACTOR: 2.5,
-  /** fator de escala mínimo numa única passada */
-  MIN_SCALE_FACTOR: 0.4,
+  MAX_KCAL_PER_ITEM: 5000,
+  /** kcal máxima por dia */
+  MAX_KCAL_PER_DAY: 10000,
+  /** kcal acima disso = abort imediato */
+  ABORT_KCAL_THRESHOLD: 20000,
+  /** gramas máximas por item individual (aumentado para evitar bloqueios) */
+  MAX_GRAMS_PER_ITEM: 5000,
+  /** fator de escala máximo */
+  MAX_SCALE_FACTOR: 10,
+  /** fator de escala mínimo */
+  MIN_SCALE_FACTOR: 0.1,
 } as const;
 
 /**

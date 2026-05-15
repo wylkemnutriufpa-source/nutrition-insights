@@ -13,7 +13,7 @@ describe('Meal Plan Substitution System', () => {
     carbs_target: 50,
     fat_target: 15,
     day_of_week: 0,
-    meal_type: 'lunch',
+    meal_type: 'Almoço',
   };
 
   it('should validate substitution limit (0-4)', () => {
@@ -141,12 +141,12 @@ describe('Meal Plan Substitution System', () => {
   describe('E2E Plan Generation & Validation', () => {
     it('should ensure each meal creates exactly 1 primary item and shared substitution_group_id', () => {
       const items: Partial<MealPlanItem>[] = [
-        { id: '1', title: 'Frango', is_primary: true, substitution_group_id: 'grp-1', meal_type: 'lunch' },
-        { id: '2', title: 'Peixe', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'lunch' },
-        { id: '3', title: 'Ovo', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'lunch' },
+        { id: '1', title: 'Frango', is_primary: true, substitution_group_id: 'grp-1', meal_type: 'Almoço' },
+        { id: '2', title: 'Peixe', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'Almoço' },
+        { id: '3', title: 'Ovo', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'Almoço' },
       ];
 
-      const lunchItems = items.filter(i => i.meal_type === 'lunch');
+      const lunchItems = items.filter(i => i.meal_type === 'Almoço');
       const primaries = lunchItems.filter(i => i.is_primary === true);
       const subs = lunchItems.filter(i => i.is_primary === false);
 

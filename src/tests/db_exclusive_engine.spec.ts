@@ -221,15 +221,15 @@ describe("DB-exclusive enforcement", () => {
 });
 
 describe("Meal selection compliance", () => {
-  const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const defaultMeals = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
 
   it("enabled meals controls which meals are generated", () => {
-    const enabledMeals = ["breakfast", "lunch", "dinner"];
+    const enabledMeals = ["Café da Manhã", "Almoço", "Jantar"];
     const mealTypes = enabledMeals.length > 0 ? enabledMeals : defaultMeals;
-    expect(mealTypes).toEqual(["breakfast", "lunch", "dinner"]);
-    expect(mealTypes).not.toContain("morning_snack");
-    expect(mealTypes).not.toContain("afternoon_snack");
-    expect(mealTypes).not.toContain("evening_snack");
+    expect(mealTypes).toEqual(["Café da Manhã", "Almoço", "Jantar"]);
+    expect(mealTypes).not.toContain("Lanche da Manhã");
+    expect(mealTypes).not.toContain("Lanche da Tarde");
+    expect(mealTypes).not.toContain("Ceia");
   });
 
   it("falls back to all 6 meals when enabledMeals is empty", () => {
@@ -240,7 +240,7 @@ describe("Meal selection compliance", () => {
   });
 
   it("does not generate extra meals beyond enabled list", () => {
-    const enabledMeals = ["breakfast", "lunch"];
+    const enabledMeals = ["Café da Manhã", "Almoço"];
     const mealTypes = enabledMeals.length > 0 ? enabledMeals : defaultMeals;
     const generated = mealTypes.map(m => ({ meal_type: m }));
     expect(generated).toHaveLength(2);

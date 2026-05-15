@@ -7,23 +7,23 @@ import type { DraftRecord } from './draftService';
 // Removed nutricore and snapshot imports
 
 type ClinicalMealType =
-  | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
+  | 'Café da Manhã' | 'Lanche da Manhã' | 'Almoço' | 'Lanche da Tarde' | 'Jantar' | 'Ceia';
 
 const NAME_TO_MEAL_TYPE: Record<string, ClinicalMealType> = {
-  'café da manhã': 'breakfast',
-  'cafe da manha': 'breakfast',
-  'lanche da manhã': 'morning_snack',
-  'lanche da manha': 'morning_snack',
-  'almoço': 'lunch',
-  'almoco': 'lunch',
-  'lanche da tarde': 'afternoon_snack',
-  'jantar': 'dinner',
-  'ceia': 'evening_snack',
+  'café da manhã': 'Café da Manhã',
+  'cafe da manha': 'Café da Manhã',
+  'lanche da manhã': 'Lanche da Manhã',
+  'lanche da manha': 'Lanche da Manhã',
+  'almoço': 'Almoço',
+  'almoco': 'Almoço',
+  'lanche da tarde': 'Lanche da Tarde',
+  'jantar': 'Jantar',
+  'ceia': 'Ceia',
 };
 
 function mealNameToType(name: string): ClinicalMealType {
   const norm = name.trim().toLowerCase();
-  return NAME_TO_MEAL_TYPE[norm] ?? 'lunch';
+  return NAME_TO_MEAL_TYPE[norm] ?? 'Almoço';
 }
 
 function buildItemTitle(item: MealItem): string {

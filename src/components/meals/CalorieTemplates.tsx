@@ -43,12 +43,12 @@ const MACRO_PROFILES = [
 
 // Meal distribution percentages
 const MEAL_DISTRIBUTION: { type: MealType; label: string; pct: number; icon: React.ReactNode }[] = [
-  { type: "breakfast", label: "Café da Manhã", pct: 0.20, icon: <Coffee className="w-3.5 h-3.5" /> },
-  { type: "morning_snack", label: "Lanche Manhã", pct: 0.10, icon: <Apple className="w-3.5 h-3.5" /> },
-  { type: "lunch", label: "Almoço", pct: 0.30, icon: <Utensils className="w-3.5 h-3.5" /> },
-  { type: "afternoon_snack", label: "Lanche Tarde", pct: 0.10, icon: <Cookie className="w-3.5 h-3.5" /> },
-  { type: "dinner", label: "Jantar", pct: 0.25, icon: <Moon className="w-3.5 h-3.5" /> },
-  { type: "evening_snack", label: "Ceia", pct: 0.05, icon: <Sun className="w-3.5 h-3.5" /> },
+  { type: "Café da Manhã", label: "Café da Manhã", pct: 0.20, icon: <Coffee className="w-3.5 h-3.5" /> },
+  { type: "Lanche da Manhã", label: "Lanche Manhã", pct: 0.10, icon: <Apple className="w-3.5 h-3.5" /> },
+  { type: "Almoço", label: "Almoço", pct: 0.30, icon: <Utensils className="w-3.5 h-3.5" /> },
+  { type: "Lanche da Tarde", label: "Lanche Tarde", pct: 0.10, icon: <Cookie className="w-3.5 h-3.5" /> },
+  { type: "Jantar", label: "Jantar", pct: 0.25, icon: <Moon className="w-3.5 h-3.5" /> },
+  { type: "Ceia", label: "Ceia", pct: 0.05, icon: <Sun className="w-3.5 h-3.5" /> },
 ];
 
 interface CalorieTemplatesProps {

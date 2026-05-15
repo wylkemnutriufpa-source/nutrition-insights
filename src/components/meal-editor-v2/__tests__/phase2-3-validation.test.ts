@@ -27,7 +27,7 @@ vi.mock("@/lib/mealVisualAssociation", () => ({
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 
 const PLAN_ID = "test-plan-001";
-const MEAL_TYPE = "lunch" as const;
+const MEAL_TYPE = "Almoço" as const;
 const DAY = 1;
 
 function resetStore() {
@@ -296,7 +296,7 @@ describe("Description & Macro Coherence", () => {
       meal_plan_id: PLAN_ID,
       title: "Pão com Ovo",
       description: "Pão francês (1 unidade (50g)) + Ovo mexido (2 unidades)",
-      meal_type: "breakfast",
+      meal_type: "Café da Manhã",
       day_of_week: DAY,
       calories_target: 330,
       protein_target: 17,
@@ -333,7 +333,7 @@ describe("Description & Macro Coherence", () => {
 
     const finalItems = useMealPlanEditorV2Store.getState().items;
     const lunch = finalItems.find(i => i.meal_type === MEAL_TYPE)!;
-    const breakfast = finalItems.find(i => i.meal_type === "breakfast")!;
+    const breakfast = finalItems.find(i => i.meal_type === "Café da Manhã")!;
 
     // Verify coherence
     expect(lunch.title).toBe("Peixe + Arroz + Salada");
@@ -363,7 +363,7 @@ describe("Full Integration Scenario", () => {
       meal_plan_id: PLAN_ID,
       title: "Banana",
       description: "1 unidade (100g)",
-      meal_type: "morning_snack",
+      meal_type: "Lanche da Manhã",
       day_of_week: DAY,
       calories_target: 89,
       protein_target: 1,
@@ -415,7 +415,7 @@ describe("Full Integration Scenario", () => {
     // Verify each item integrity
     const banana = items.find(i => i.title === "Banana")!;
     expect(banana.calories_target).toBe(89);
-    expect(banana.meal_type).toBe("morning_snack");
+    expect(banana.meal_type).toBe("Lanche da Manhã");
 
     const lunch = items.find(i => i.meal_type === MEAL_TYPE)!;
     expect(lunch.title).toBe("Frango + Macarrão + Salada");

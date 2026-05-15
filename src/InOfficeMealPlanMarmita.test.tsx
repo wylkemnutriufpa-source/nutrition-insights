@@ -108,7 +108,7 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
               total_protein: 40,
               total_carbs: 50,
               total_fat: 15,
-              items: [{ name: 'Frango com Batata', calories: 0, protein: 0, carbs: 0, fat: 0, meal_type: 'lunch' }]
+              items: [{ name: 'Frango com Batata', calories: 0, protein: 0, carbs: 0, fat: 0, meal_type: 'Almoço' }]
             }],
             error: null
           });

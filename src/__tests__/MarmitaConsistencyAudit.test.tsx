@@ -7,7 +7,7 @@ describe("ConsistencyReportModal — Auditoria de Marmitas", () => {
   const mockRecipes = [
     {
       name: "Frango com Batata Doce",
-      meal_type: "lunch",
+      meal_type: "Almoço",
       calories: 450,
       protein: 35,
       carbs: 45,
@@ -16,7 +16,7 @@ describe("ConsistencyReportModal — Auditoria de Marmitas", () => {
     },
     {
       name: "Patinho com Arroz Integral",
-      meal_type: "dinner",
+      meal_type: "Jantar",
       calories: 400,
       protein: 30,
       carbs: 40,
@@ -25,7 +25,7 @@ describe("ConsistencyReportModal — Auditoria de Marmitas", () => {
     },
     {
       name: "Marmita com Erro",
-      meal_type: "lunch",
+      meal_type: "Almoço",
       calories: 0,
       protein: 0,
       carbs: 0,

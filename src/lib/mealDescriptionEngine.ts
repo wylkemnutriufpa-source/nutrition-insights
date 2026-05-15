@@ -37,7 +37,7 @@ function clampProteinLineToStandardPortion(line: string): string {
 
 export function isMainMealType(mealType: string): boolean {
   if (!mealType) return false;
-  const MAIN_MEAL_TYPES = new Set(["lunch", "dinner", "almoço", "jantar"]);
+  const MAIN_MEAL_TYPES = new Set(["Almoço", "Jantar", "almoço", "jantar"]);
   return MAIN_MEAL_TYPES.has(mealType.toLowerCase());
 }
 

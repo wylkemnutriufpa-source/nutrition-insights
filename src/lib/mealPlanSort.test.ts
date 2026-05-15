@@ -4,9 +4,9 @@ import { sortMealPlanItems, type MealPlanItem } from "./mealPlanSort";
 describe("sortMealPlanItems", () => {
   it("should sort by day_of_week first (1-6, then 0)", () => {
     const items = [
-      { id: "0", day_of_week: 0, meal_type: "breakfast", is_primary: true } as any,
-      { id: "2", day_of_week: 2, meal_type: "breakfast", is_primary: true } as any,
-      { id: "1", day_of_week: 1, meal_type: "breakfast", is_primary: true } as any,
+      { id: "0", day_of_week: 0, meal_type: "Café da Manhã", is_primary: true } as any,
+      { id: "2", day_of_week: 2, meal_type: "Café da Manhã", is_primary: true } as any,
+      { id: "1", day_of_week: 1, meal_type: "Café da Manhã", is_primary: true } as any,
     ];
     const sorted = sortMealPlanItems(items);
     expect(sorted[0].id).toBe("1");
@@ -16,18 +16,18 @@ describe("sortMealPlanItems", () => {
 
   it("should sort by meal_type within the same day", () => {
     const items = [
-      { id: "lunch", day_of_week: 1, meal_type: "lunch", is_primary: true } as any,
-      { id: "breakfast", day_of_week: 1, meal_type: "breakfast", is_primary: true } as any,
+      { id: "Almoço", day_of_week: 1, meal_type: "Almoço", is_primary: true } as any,
+      { id: "Café da Manhã", day_of_week: 1, meal_type: "Café da Manhã", is_primary: true } as any,
     ];
     const sorted = sortMealPlanItems(items);
-    expect(sorted[0].id).toBe("breakfast");
-    expect(sorted[1].id).toBe("lunch");
+    expect(sorted[0].id).toBe("Café da Manhã");
+    expect(sorted[1].id).toBe("Almoço");
   });
 
   it("should sort primary items before substitutions within the same meal", () => {
     const items = [
-      { id: "sub", day_of_week: 1, meal_type: "lunch", is_primary: false } as any,
-      { id: "pri", day_of_week: 1, meal_type: "lunch", is_primary: true } as any,
+      { id: "sub", day_of_week: 1, meal_type: "Almoço", is_primary: false } as any,
+      { id: "pri", day_of_week: 1, meal_type: "Almoço", is_primary: true } as any,
     ];
     const sorted = sortMealPlanItems(items);
     expect(sorted[0].id).toBe("pri");
@@ -36,8 +36,8 @@ describe("sortMealPlanItems", () => {
 
   it("should sort by calories_target descending when everything else is equal", () => {
     const items = [
-      { id: "1", day_of_week: 1, meal_type: "lunch", is_primary: true, calories_target: 300 } as any,
-      { id: "2", day_of_week: 1, meal_type: "lunch", is_primary: true, calories_target: 500 } as any,
+      { id: "1", day_of_week: 1, meal_type: "Almoço", is_primary: true, calories_target: 300 } as any,
+      { id: "2", day_of_week: 1, meal_type: "Almoço", is_primary: true, calories_target: 500 } as any,
     ];
     const sorted = sortMealPlanItems(items);
     expect(sorted[0].id).toBe("2");
@@ -46,8 +46,8 @@ describe("sortMealPlanItems", () => {
 
   it("should use ID as a stable tie-breaker", () => {
     const items = [
-      { id: "b", day_of_week: 1, meal_type: "lunch", is_primary: true, calories_target: 500 } as any,
-      { id: "a", day_of_week: 1, meal_type: "lunch", is_primary: true, calories_target: 500 } as any,
+      { id: "b", day_of_week: 1, meal_type: "Almoço", is_primary: true, calories_target: 500 } as any,
+      { id: "a", day_of_week: 1, meal_type: "Almoço", is_primary: true, calories_target: 500 } as any,
     ];
     const sorted = sortMealPlanItems(items);
     expect(sorted[0].id).toBe("a");
@@ -55,9 +55,9 @@ describe("sortMealPlanItems", () => {
   });
 
   it("should maintain deterministic order regardless of input order", () => {
-    const itemA = { id: "a", day_of_week: 1, meal_type: "breakfast", is_primary: true, calories_target: 500 } as any;
-    const itemB = { id: "b", day_of_week: 1, meal_type: "lunch", is_primary: true, calories_target: 500 } as any;
-    const itemC = { id: "c", day_of_week: 2, meal_type: "breakfast", is_primary: true, calories_target: 200 } as any;
+    const itemA = { id: "a", day_of_week: 1, meal_type: "Café da Manhã", is_primary: true, calories_target: 500 } as any;
+    const itemB = { id: "b", day_of_week: 1, meal_type: "Almoço", is_primary: true, calories_target: 500 } as any;
+    const itemC = { id: "c", day_of_week: 2, meal_type: "Café da Manhã", is_primary: true, calories_target: 200 } as any;
 
     const order1 = sortMealPlanItems([itemC, itemB, itemA]);
     const order2 = sortMealPlanItems([itemA, itemC, itemB]);

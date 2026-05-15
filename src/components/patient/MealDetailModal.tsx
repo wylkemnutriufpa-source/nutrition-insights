@@ -9,7 +9,7 @@ import {
   ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
   SlidersHorizontal, ArrowRightLeft, User, ShieldCheck,
 } from "lucide-react";
-// Removed obsolete clinicalHumanEngine import
+// clinicalHumanEngine removed
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -78,12 +78,12 @@ interface MealDetailModalProps {
 }
 
 const MEAL_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
-  breakfast: { label: "Café da Manhã", emoji: "☕" },
-  morning_snack: { label: "Lanche da Manhã", emoji: "🍌" },
-  lunch: { label: "Almoço", emoji: "🍽️" },
-  afternoon_snack: { label: "Lanche da Tarde", emoji: "🍎" },
-  dinner: { label: "Jantar", emoji: "🌙" },
-  evening_snack: { label: "Ceia", emoji: "🫖" },
+  "Café da Manhã": { label: "Café da Manhã", emoji: "☕" },
+  "Lanche da Manhã": { label: "Lanche da Manhã", emoji: "🍌" },
+  "Almoço": { label: "Almoço", emoji: "🍽️" },
+  "Lanche da Tarde": { label: "Lanche da Tarde", emoji: "🍎" },
+  "Jantar": { label: "Jantar", emoji: "🌙" },
+  "Ceia": { label: "Ceia", emoji: "🫖" },
 };
 
 const GOAL_LABELS: Record<string, { label: string; color: string }> = {
@@ -182,8 +182,8 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
       const match = group.foods.find(f => nFood.includes(normalizeForMatch(f)));
       if (match) {
         // Skip groups that don't match meal context
-        if (mealType === "breakfast" && (groupKey === "protein_main" || groupKey === "carb_main")) continue;
-        if ((mealType === "lunch" || mealType === "dinner") && (groupKey === "protein_breakfast" || groupKey === "carb_breakfast")) continue;
+        if (mealType === "Café da Manhã" && (groupKey === "protein_main" || groupKey === "carb_main")) continue;
+        if ((mealType === "Almoço" || mealType === "Jantar") && (groupKey === "protein_breakfast" || groupKey === "carb_breakfast")) continue;
 
         const portion = linePortion || group.defaultPortion;
         const alternatives = group.foods

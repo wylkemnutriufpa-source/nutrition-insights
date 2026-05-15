@@ -33,9 +33,9 @@ interface RecipeRow {
 
 const MEAL_FILTERS = [
   { key: "all", label: "Todos" },
-  { key: "breakfast", label: "Café" },
-  { key: "lunch", label: "Almoço" },
-  { key: "dinner", label: "Jantar" },
+  { key: "Café da Manhã", label: "Café" },
+  { key: "Almoço", label: "Almoço" },
+  { key: "Jantar", label: "Jantar" },
   { key: "snack", label: "Lanche" },
 ];
 

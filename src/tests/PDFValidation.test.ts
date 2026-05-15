@@ -11,7 +11,7 @@ describe('PDF Export Validation', () => {
       items: [
         {
           id: '1',
-          mealType: 'breakfast',
+          mealType: 'Café da Manhã',
           title: 'Primary 1',
           calories_target: 300,
           protein_target: 20,
@@ -23,7 +23,7 @@ describe('PDF Export Validation', () => {
         },
         {
           id: '2',
-          mealType: 'breakfast',
+          mealType: 'Café da Manhã',
           title: 'Sub 1 of Group 1',
           calories_target: 100,
           protein_target: 5,
@@ -35,7 +35,7 @@ describe('PDF Export Validation', () => {
         },
         {
           id: '3',
-          mealType: 'breakfast',
+          mealType: 'Café da Manhã',
           title: 'Primary 2',
           calories_target: 400,
           protein_target: 30,
@@ -47,7 +47,7 @@ describe('PDF Export Validation', () => {
         },
         {
           id: '4',
-          mealType: 'breakfast',
+          mealType: 'Café da Manhã',
           title: 'Sub 1 of Group 2',
           calories_target: 50,
           protein_target: 2,

@@ -202,10 +202,10 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
 
       {/* Modals */}
       <MealVisualLibraryModal open={visualLibOpen} onOpenChange={setVisualLibOpen} />
-      <MealLibraryModal open={mealLibModalOpen} onOpenChange={setMealLibModalOpen} targetDay={1} targetMealType="breakfast" />
+      <MealLibraryModal open={mealLibModalOpen} onOpenChange={setMealLibModalOpen} targetDay={1} targetMealType="Café da Manhã" />
       <AutoGenerateModal open={autoGenOpen} onOpenChange={setAutoGenOpen} />
       <AssistedPlanModal open={assistedOpen} onOpenChange={setAssistedOpen} />
-      <MealLibrarySidebar open={librarySidebarOpen} onOpenChange={setLibrarySidebarOpen} targetDay={1} targetMealType="breakfast" />
+      <MealLibrarySidebar open={librarySidebarOpen} onOpenChange={setLibrarySidebarOpen} targetDay={1} targetMealType="Café da Manhã" />
     </div>
   );
 }

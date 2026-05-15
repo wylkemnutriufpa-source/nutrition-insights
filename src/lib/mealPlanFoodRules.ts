@@ -132,8 +132,8 @@ export function getProteinDistribution(isGainGoal: boolean) {
   return { shares, caps };
 }
 
-export const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-export const RESIDUAL_PRIORITY = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
+export const MEAL_ORDER = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
+export const RESIDUAL_PRIORITY = ["Almoço", "Jantar", "Ceia", "Café da Manhã", "Lanche da Manhã", "Lanche da Tarde"];
 
 export const MEAL_LIMITS = {
   maxFruitsPerMeal: 2,
@@ -155,42 +155,42 @@ export interface RealisticMealStructure {
 
 export const EMAGRECIMENTO_STRUCTURES: RealisticMealStructure[] = [
   {
-    mealType: "breakfast",
+    mealType: "Café da Manhã",
     requiredCategories: ["carb_simple", "protein_simple"],
     optionalCategories: ["fruit"],
     maxItems: 3,
     notes: "Café simples: pão+ovo, tapioca+ovo, cuscuz+queijo",
   },
   {
-    mealType: "morning_snack",
+    mealType: "Lanche da Manhã",
     requiredCategories: ["fruit"],
     optionalCategories: [],
     maxItems: 1,
     notes: "1 fruta padrão, nunca exagero",
   },
   {
-    mealType: "lunch",
+    mealType: "Almoço",
     requiredCategories: ["protein_main", "carb_main"],
     optionalCategories: ["vegetable", "legume"],
     maxItems: 5,
     notes: "Proteína + carboidrato + legume opcional",
   },
   {
-    mealType: "afternoon_snack",
+    mealType: "Lanche da Tarde",
     requiredCategories: ["fruit"],
     optionalCategories: ["dairy"],
     maxItems: 2,
     notes: "1 fruta ou fruta + iogurte",
   },
   {
-    mealType: "dinner",
+    mealType: "Jantar",
     requiredCategories: ["protein_main", "carb_main"],
     optionalCategories: ["vegetable"],
     maxItems: 4,
     notes: "Similar ao almoço, porção menor",
   },
   {
-    mealType: "evening_snack",
+    mealType: "Ceia",
     requiredCategories: ["dairy"],
     optionalCategories: [],
     maxItems: 1,
@@ -200,42 +200,42 @@ export const EMAGRECIMENTO_STRUCTURES: RealisticMealStructure[] = [
 
 export const GANHO_MASSA_STRUCTURES: RealisticMealStructure[] = [
   {
-    mealType: "breakfast",
+    mealType: "Café da Manhã",
     requiredCategories: ["carb_simple", "protein_reinforced"],
     optionalCategories: ["dairy"],
     maxItems: 4,
     notes: "Café reforçado: pão+2 ovos+queijo, omelete",
   },
   {
-    mealType: "morning_snack",
+    mealType: "Lanche da Manhã",
     requiredCategories: ["carb_simple", "protein_simple"],
     optionalCategories: ["fruit"],
     maxItems: 3,
     notes: "Repetir café ou variação proteica",
   },
   {
-    mealType: "lunch",
+    mealType: "Almoço",
     requiredCategories: ["protein_main", "carb_main", "legume"],
     optionalCategories: ["vegetable"],
     maxItems: 6,
     notes: "Maior quantidade de proteína e carb",
   },
   {
-    mealType: "afternoon_snack",
+    mealType: "Lanche da Tarde",
     requiredCategories: ["carb_simple", "protein_simple"],
     optionalCategories: ["fruit"],
     maxItems: 3,
     notes: "Lanche proteico: pão+ovo ou tapioca+queijo",
   },
   {
-    mealType: "dinner",
+    mealType: "Jantar",
     requiredCategories: ["protein_main", "carb_main"],
     optionalCategories: ["vegetable", "legume"],
     maxItems: 6,
     notes: "Mesma base do almoço",
   },
   {
-    mealType: "evening_snack",
+    mealType: "Ceia",
     requiredCategories: ["protein_simple"],
     optionalCategories: ["dairy"],
     maxItems: 2,
@@ -351,14 +351,14 @@ export function getRealisticOptions(mealType: string, goal: string) {
   const isLoss = ["lose_weight", "weight_loss", "emagrecimento", "deficit", "low_carb"].includes(goal);
 
   switch (mealType) {
-    case "breakfast":
+    case "Café da Manhã":
       return isLoss ? BREAKFAST_OPTIONS_EMAG : BREAKFAST_OPTIONS_MASSA;
-    case "morning_snack":
-    case "afternoon_snack":
-    case "evening_snack":
+    case "Lanche da Manhã":
+    case "Lanche da Tarde":
+    case "Ceia":
       return SNACK_OPTIONS;
-    case "lunch":
-    case "dinner":
+    case "Almoço":
+    case "Jantar":
       return isLoss ? MAIN_MEAL_OPTIONS_EMAG : MAIN_MEAL_OPTIONS_MASSA;
     default:
       return SNACK_OPTIONS;

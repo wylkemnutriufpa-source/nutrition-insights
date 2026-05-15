@@ -41,12 +41,12 @@ interface MealLibraryModalProps {
 
 // ── Constants ───────────────────────────────────────────────
 const MEAL_TABS: { key: string; label: string; icon: React.ReactNode }[] = [
-  { key: "breakfast", label: "Café", icon: <Coffee className="w-3.5 h-3.5" /> },
-  { key: "morning_snack", label: "Lanche M", icon: <Apple className="w-3.5 h-3.5" /> },
-  { key: "lunch", label: "Almoço", icon: <Utensils className="w-3.5 h-3.5" /> },
-  { key: "afternoon_snack", label: "Lanche T", icon: <Cookie className="w-3.5 h-3.5" /> },
-  { key: "dinner", label: "Jantar", icon: <Moon className="w-3.5 h-3.5" /> },
-  { key: "evening_snack", label: "Ceia", icon: <Sun className="w-3.5 h-3.5" /> },
+  { key: "Café da Manhã", label: "Café", icon: <Coffee className="w-3.5 h-3.5" /> },
+  { key: "Lanche da Manhã", label: "Lanche M", icon: <Apple className="w-3.5 h-3.5" /> },
+  { key: "Almoço", label: "Almoço", icon: <Utensils className="w-3.5 h-3.5" /> },
+  { key: "Lanche da Tarde", label: "Lanche T", icon: <Cookie className="w-3.5 h-3.5" /> },
+  { key: "Jantar", label: "Jantar", icon: <Moon className="w-3.5 h-3.5" /> },
+  { key: "Ceia", label: "Ceia", icon: <Sun className="w-3.5 h-3.5" /> },
 ];
 
 const GOAL_OPTIONS = [

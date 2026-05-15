@@ -78,7 +78,7 @@ describe('E2E: Proteção contra Dados Parciais (API returning 0/null)', () => {
               data: [
                 { 
                   id: 'item-zero', 
-                  meal_type: 'lunch', 
+                  meal_type: 'Almoço', 
                   title: 'Processando Macros...', 
                   calories_target: 0, // SIMULAÇÃO DE DADO ZERADO/PARCIAL
                   protein_target: 0, 

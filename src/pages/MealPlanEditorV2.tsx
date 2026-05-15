@@ -209,7 +209,7 @@ export default function MealPlanEditorV2() {
         startDate: new Date(plan.start_date || new Date()).toLocaleDateString("pt-BR"),
         planMode: plan.plan_mode || "weekly",
         items: store.items.map(i => ({
-          mealType: i.meal_type || "lunch",
+          mealType: i.meal_type || "Almoço",
           title: i.title || "Refeição",
           description: i.description || undefined,
           calories_target: i.calories_target || undefined,
@@ -1385,13 +1385,13 @@ export default function MealPlanEditorV2() {
             open={libraryOpen}
             onOpenChange={setLibraryOpen}
             targetDay={1}
-            targetMealType="breakfast"
+            targetMealType="Café da Manhã"
           />
           <MealLibraryModal
             open={mealLibModalOpen}
             onOpenChange={setMealLibModalOpen}
             targetDay={1}
-            targetMealType="breakfast"
+            targetMealType="Café da Manhã"
           />
           <AutoGenerateModal
             open={autoGenOpen}

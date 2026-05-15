@@ -26,7 +26,7 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     id: 'item-1',
     title: 'Marmita de Frango',
     description: 'Frango com batata doce',
-    meal_type: 'lunch',
+    meal_type: 'Almoço',
     calories_target: 400,
     protein_target: 30,
     carbs_target: 40,

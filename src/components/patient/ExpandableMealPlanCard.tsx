@@ -89,7 +89,7 @@ export default function ExpandableMealPlanCard() {
       .eq("meal_plan_id", planData.id)
       .order("created_at");
 
-    setAllItems(itemsData || []);
+    setAllItems((itemsData || []) as any[]);
 
     const { data: comps } = await supabase
       .from("meal_item_completions")

@@ -236,7 +236,7 @@ export default function DietTemplates() {
     if (data) {
       const formatted = data.map(r => ({
         name: r.name,
-        meal_type: r.meal_type || "lunch",
+        meal_type: r.meal_type || "Almoço",
         calories: r.fixed_calories || 0,
         protein: r.fixed_protein || 0,
         carbs: r.fixed_carbs || 0,
@@ -517,12 +517,12 @@ export default function DietTemplates() {
             // Detect placeholder and replace with a recipe
             const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
             if (isPlaceholder && mealRecipes.length > 0) {
-              const isLunch = mealType === "lunch" || mealType === "almoco" || mealType === "almoço";
+              const isLunch = mealType === "Almoço" || mealType === "almoco" || mealType === "almoço";
               const candidates = mealRecipes
                 .filter(r => {
                   const rt = r.meal_type?.toLowerCase() || "";
-                  if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "lunch";
-                  return rt === "jantar" || rt === "dinner";
+                  if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "Almoço";
+                  return rt === "jantar" || rt === "Jantar";
                 })
                 .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
               
@@ -572,12 +572,12 @@ export default function DietTemplates() {
           // Detect placeholder and replace with a recipe
           const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
           if (isPlaceholder && mealRecipes.length > 0) {
-            const isLunch = mealType === "lunch" || mealType === "almoco" || mealType === "almoço";
+            const isLunch = mealType === "Almoço" || mealType === "almoco" || mealType === "almoço";
             const candidates = mealRecipes
               .filter(r => {
                 const rt = r.meal_type?.toLowerCase() || "";
-                if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "lunch";
-                return rt === "jantar" || rt === "dinner";
+                if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "Almoço";
+                return rt === "jantar" || rt === "Jantar";
               })
               .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
             

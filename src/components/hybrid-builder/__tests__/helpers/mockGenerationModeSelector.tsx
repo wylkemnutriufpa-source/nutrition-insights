@@ -82,10 +82,10 @@ function getState(): MockState {
 export function buildRecipes(counts: RecipeCounts = {}) {
   const { lunch = 0, dinner = 0, fixedLunch = 0, fixedDinner = 0 } = counts;
   return [
-    ...Array.from({ length: lunch }, () => ({ meal_type: "lunch", is_fixed: false })),
-    ...Array.from({ length: dinner }, () => ({ meal_type: "dinner", is_fixed: false })),
-    ...Array.from({ length: fixedLunch }, () => ({ meal_type: "lunch", is_fixed: true })),
-    ...Array.from({ length: fixedDinner }, () => ({ meal_type: "dinner", is_fixed: true })),
+    ...Array.from({ length: lunch }, () => ({ meal_type: "Almoço", is_fixed: false })),
+    ...Array.from({ length: dinner }, () => ({ meal_type: "Jantar", is_fixed: false })),
+    ...Array.from({ length: fixedLunch }, () => ({ meal_type: "Almoço", is_fixed: true })),
+    ...Array.from({ length: fixedDinner }, () => ({ meal_type: "Jantar", is_fixed: true })),
   ];
 }
 

@@ -25,12 +25,12 @@ import { DayTabs } from "./DayTabs";
 import { DayContent } from "./DayContent";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
-  { key: "morning_snack", label: "Lanche da Manhã", icon: <Apple className="w-4 h-4" />, color: "text-green-500" },
-  { key: "lunch", label: "Almoço", icon: <Utensils className="w-4 h-4" />, color: "text-orange-500" },
-  { key: "afternoon_snack", label: "Lanche da Tarde", icon: <Cookie className="w-4 h-4" />, color: "text-pink-500" },
-  { key: "dinner", label: "Jantar", icon: <Moon className="w-4 h-4" />, color: "text-indigo-500" },
-  { key: "evening_snack", label: "Ceia", icon: <Sun className="w-4 h-4" />, color: "text-purple-500" },
+  { key: "Café da Manhã", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
+  { key: "Lanche da Manhã", label: "Lanche da Manhã", icon: <Apple className="w-4 h-4" />, color: "text-green-500" },
+  { key: "Almoço", label: "Almoço", icon: <Utensils className="w-4 h-4" />, color: "text-orange-500" },
+  { key: "Lanche da Tarde", label: "Lanche da Tarde", icon: <Cookie className="w-4 h-4" />, color: "text-pink-500" },
+  { key: "Jantar", label: "Jantar", icon: <Moon className="w-4 h-4" />, color: "text-indigo-500" },
+  { key: "Ceia", label: "Ceia", icon: <Sun className="w-4 h-4" />, color: "text-purple-500" },
 ];
 
 const DAYS = [
@@ -72,16 +72,16 @@ export function WeeklyGrid() {
 
   // Library sidebar
   const [libraryOpen, setLibraryOpen] = useState(false);
-  const [libraryTarget, setLibraryTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+  const [libraryTarget, setLibraryTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "Café da Manhã" });
 
   // Save template dialog
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
-  const [saveTemplateMealType, setSaveTemplateMealType] = useState<MealType>("breakfast");
+  const [saveTemplateMealType, setSaveTemplateMealType] = useState<MealType>("Café da Manhã");
 
   // Meal Library Modal (banco de refeições)
   const [mlModalOpen, setMlModalOpen] = useState(false);
-  const [mlModalTarget, setMlModalTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+  const [mlModalTarget, setMlModalTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "Café da Manhã" });
 
   const openMealLibraryModal = (day: number, mealType: MealType) => {
     setMlModalTarget({ day, mealType });

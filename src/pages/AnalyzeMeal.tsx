@@ -17,12 +17,12 @@ import AIUsageBadge from "@/components/common/AIUsageBadge";
 type MealType = Database["public"]["Enums"]["meal_type"];
 
 const mealTypes: { value: MealType; label: string }[] = [
-  { value: "breakfast", label: "☕ Café da manhã" },
-  { value: "morning_snack", label: "🍌 Lanche da manhã" },
-  { value: "lunch", label: "🍽️ Almoço" },
-  { value: "afternoon_snack", label: "🍎 Lanche da tarde" },
-  { value: "dinner", label: "🌙 Jantar" },
-  { value: "evening_snack", label: "🫖 Ceia" },
+  { value: "Café da Manhã", label: "☕ Café da manhã" },
+  { value: "Lanche da Manhã", label: "🍌 Lanche da manhã" },
+  { value: "Almoço", label: "🍽️ Almoço" },
+  { value: "Lanche da Tarde", label: "🍎 Lanche da tarde" },
+  { value: "Jantar", label: "🌙 Jantar" },
+  { value: "Ceia", label: "🫖 Ceia" },
 ];
 
 interface AnalysisResult {
@@ -40,7 +40,7 @@ export default function AnalyzeMeal() {
   const { user } = useAuth();
   const aiUsage = useAIUsage("analyze_meal");
   const [description, setDescription] = useState("");
-  const [mealType, setMealType] = useState<MealType>("lunch");
+  const [mealType, setMealType] = useState<MealType>("Almoço");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);

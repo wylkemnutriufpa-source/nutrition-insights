@@ -127,8 +127,8 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
         // Transform recipes into TemplateRow format
         const recipeTemplates: TemplateRow[] = (recipesRes.data || []).map(r => {
           const mType = r.meal_type?.toLowerCase();
-          let mealType = "lunch";
-          if (mType?.includes("jantar")) mealType = "dinner";
+          let mealType = "Almoço";
+          if (mType?.includes("jantar")) mealType = "Jantar";
           
           return {
             id: r.id,

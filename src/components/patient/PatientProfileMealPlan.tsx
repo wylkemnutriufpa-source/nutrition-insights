@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChefHat, RefreshCw, Eye, FileDown, Calendar, AlertTriangle, CheckCircle2 } from "lucide-react";
-// Removed clinicalHumanEngine import
+// clinicalHumanEngine removed
 import {
   MacroSummary, MealGroup, MealSlotCard,
   MEAL_TYPES, DAYS,
@@ -56,8 +56,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
       return;
     }
 
-    const allResolvedItems = (itemsData || []) as unknown as MealPlanItem[];
-    setAllItems(allResolvedItems);
+    const allResolvedItems = (itemsData || []) as any[];
+    setAllItems(allResolvedItems as any[]);
     
     // Group and filter items for the daily view
     setItems(buildDailyDisplayItems(allResolvedItems as any, dayOfWeek) as MealPlanItem[]);

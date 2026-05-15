@@ -79,9 +79,9 @@ export function classifyFoodSmart(foodName: string): SmartFoodCategory {
 /** Map smart category to the meal context filter for the DB. */
 function isCategoryAllowedForMeal(cat: SmartFoodCategory, mealType?: string): boolean {
   if (!mealType) return true;
-  const isMain = mealType === "lunch" || mealType === "dinner";
-  const isBreakfast = mealType === "breakfast";
-  const isSnack = mealType === "morning_snack" || mealType === "afternoon_snack" || mealType === "evening_snack";
+  const isMain = mealType === "Almoço" || mealType === "Jantar";
+  const isBreakfast = mealType === "Café da Manhã";
+  const isSnack = mealType === "Lanche da Manhã" || mealType === "Lanche da Tarde" || mealType === "Ceia";
 
   if (cat === "protein_main" && !isMain) return false;
   if (cat === "carb_main" && !isMain) return false;

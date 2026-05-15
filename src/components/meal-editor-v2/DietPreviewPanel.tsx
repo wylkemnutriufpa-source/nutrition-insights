@@ -29,7 +29,7 @@ export default function DietPreviewPanel() {
   const [previewDay, setPreviewDay] = useState(defaultDay);
 
   const dayItems = items.filter((i) => i.day_of_week === previewDay);
-  const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealTypes = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
 
   const totalKcal = dayItems.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = dayItems.reduce((s, i) => s + (i.protein_target || 0), 0);

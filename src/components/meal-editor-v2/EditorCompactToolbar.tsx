@@ -76,7 +76,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
       startDate: plan?.start_date ? new Date(plan.start_date).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR"),
       endDate: plan?.end_date ? new Date(plan.end_date).toLocaleDateString("pt-BR") : undefined,
       items: items.map(i => ({
-        mealType: i.meal_type || "lunch",
+        mealType: i.meal_type || "Almoço",
         title: i.title || "Refeição",
         description: i.description || undefined,
         calories_target: i.calories_target || undefined,
@@ -155,7 +155,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
       startDate: plan?.start_date ? new Date(plan.start_date).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR"),
       endDate: plan?.end_date ? new Date(plan.end_date).toLocaleDateString("pt-BR") : undefined,
       items: items.map(i => ({
-        mealType: i.meal_type || "lunch",
+        mealType: i.meal_type || "Almoço",
         title: i.title || "Refeição",
         description: i.description || undefined,
         calories_target: i.calories_target || undefined,
@@ -276,10 +276,10 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
 
       {/* Modals */}
       <MealVisualLibraryModal open={visualLibOpen} onOpenChange={setVisualLibOpen} />
-      <MealLibraryModal open={mealLibModalOpen} onOpenChange={setMealLibModalOpen} targetDay={1} targetMealType="breakfast" />
+      <MealLibraryModal open={mealLibModalOpen} onOpenChange={setMealLibModalOpen} targetDay={1} targetMealType="Café da Manhã" />
       <AutoGenerateModal open={autoGenOpen} onOpenChange={setAutoGenOpen} />
       <AssistedPlanModal open={assistedOpen} onOpenChange={setAssistedOpen} />
-      <MealLibrarySidebar open={librarySidebarOpen} onOpenChange={setLibrarySidebarOpen} targetDay={1} targetMealType="breakfast" />
+      <MealLibrarySidebar open={librarySidebarOpen} onOpenChange={setLibrarySidebarOpen} targetDay={1} targetMealType="Café da Manhã" />
 
       {/* Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>

@@ -302,7 +302,7 @@ function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
   if (isDietTemplate) {
     meals.forEach((meal: any) => {
       const title = (meal.title || "").toLowerCase();
-      const isLunch = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
+      const isLunch = title.includes("almoço") || title.includes("jantar") || title.includes("Almoço") || title.includes("Jantar");
       
       const allOptions = (meal.blocks || []).flatMap((b: any) => b.options || []);
       const legacySubs = (meal.foods || []).flatMap((f: any) => f.substitutions || []);

@@ -78,10 +78,10 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         setRecipeCounts((s) => ({ ...s, loading: false }));
         return;
       }
-      const lunch = (data || []).filter((r: any) => r.meal_type === "lunch").length;
-      const dinner = (data || []).filter((r: any) => r.meal_type === "dinner").length;
-      const fixedLunch = (data || []).filter((r: any) => r.meal_type === "lunch" && r.is_fixed).length;
-      const fixedDinner = (data || []).filter((r: any) => r.meal_type === "dinner" && r.is_fixed).length;
+      const lunch = (data || []).filter((r: any) => r.meal_type === "Almoço").length;
+      const dinner = (data || []).filter((r: any) => r.meal_type === "Jantar").length;
+      const fixedLunch = (data || []).filter((r: any) => r.meal_type === "Almoço" && r.is_fixed).length;
+      const fixedDinner = (data || []).filter((r: any) => r.meal_type === "Jantar" && r.is_fixed).length;
       setRecipeCounts({ lunch, dinner, fixedLunch, fixedDinner, loading: false });
       setAllRecipes(data || []);
     })();

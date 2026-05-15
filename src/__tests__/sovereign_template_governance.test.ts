@@ -6,7 +6,7 @@ describe("Sovereign Template Governance: Passive Layer Validation", () => {
   const mockTemplate = {
     id: "tpl-123",
     name: "Omelete de Frango",
-    meal_type: "breakfast",
+    meal_type: "Café da Manhã",
     kcal_base: 400,
     protein_base: 30,
     carbs_base: 10,
@@ -46,7 +46,7 @@ describe("Sovereign Template Governance: Passive Layer Validation", () => {
     const templates = [mockTemplate];
     const resolved = resolveMealTemplates(templates, {
       goal: "lose_weight",
-      mealType: "breakfast"
+      mealType: "Café da Manhã"
     });
 
     expect(resolved.length).toBe(1);

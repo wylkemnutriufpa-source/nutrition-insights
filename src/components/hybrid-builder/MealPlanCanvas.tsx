@@ -7,12 +7,12 @@ import type { PatientContext, ComposerMode, MacroTarget } from "@/lib/mealCompos
 
 
 const MEAL_SLOTS: { key: MealType; label: string; icon: React.ReactNode; calShare: number }[] = [
-  { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4 text-amber-500" />, calShare: 0.20 },
-  { key: "morning_snack", label: "Lanche Manhã", icon: <Apple className="w-4 h-4 text-green-500" />, calShare: 0.10 },
-  { key: "lunch", label: "Almoço", icon: <Utensils className="w-4 h-4 text-orange-500" />, calShare: 0.30 },
-  { key: "afternoon_snack", label: "Lanche Tarde", icon: <Cookie className="w-4 h-4 text-pink-500" />, calShare: 0.10 },
-  { key: "dinner", label: "Jantar", icon: <Moon className="w-4 h-4 text-indigo-500" />, calShare: 0.25 },
-  { key: "evening_snack", label: "Ceia", icon: <Sun className="w-4 h-4 text-purple-500" />, calShare: 0.05 },
+  { key: "Café da Manhã", label: "Café da Manhã", icon: <Coffee className="w-4 h-4 text-amber-500" />, calShare: 0.20 },
+  { key: "Lanche da Manhã", label: "Lanche Manhã", icon: <Apple className="w-4 h-4 text-green-500" />, calShare: 0.10 },
+  { key: "Almoço", label: "Almoço", icon: <Utensils className="w-4 h-4 text-orange-500" />, calShare: 0.30 },
+  { key: "Lanche da Tarde", label: "Lanche Tarde", icon: <Cookie className="w-4 h-4 text-pink-500" />, calShare: 0.10 },
+  { key: "Jantar", label: "Jantar", icon: <Moon className="w-4 h-4 text-indigo-500" />, calShare: 0.25 },
+  { key: "Ceia", label: "Ceia", icon: <Sun className="w-4 h-4 text-purple-500" />, calShare: 0.05 },
 ];
 
 const DAYS = [

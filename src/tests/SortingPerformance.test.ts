@@ -13,7 +13,7 @@ describe('Meal Plan Sorting Performance & Determinism', () => {
         calories_target: Math.floor(Math.random() * 1000),
         protein_target: Math.floor(Math.random() * 100),
         day_of_week: 1,
-        meal_type: 'breakfast'
+        meal_type: 'Café da Manhã'
       });
     }
     // Shuffle the items

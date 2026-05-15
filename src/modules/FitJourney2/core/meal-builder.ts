@@ -33,7 +33,7 @@ export class MealBuilder {
     };
   }
 
-  static createMarmitaMeal(type: 'lunch' | 'dinner', targetCalories: number): Meal {
+  static createMarmitaMeal(type: 'Almoço' | 'Jantar', targetCalories: number): Meal {
     const marmita = MARMITAS[Math.floor(Math.random() * MARMITAS.length)];
     return this.createFromTemplateMeal({
       name: marmita.name,
@@ -46,7 +46,7 @@ export class MealBuilder {
   static createBreakfast(targetCalories: number): Meal {
     return this.createFromTemplateMeal({
       name: 'Café da Manhã Balanceado',
-      type: 'breakfast',
+      type: 'Café da Manhã',
       items: [
         { foodId: 'p1', quantity: 50 },
         { foodId: 'o1', quantity: 100 },
