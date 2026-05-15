@@ -1986,11 +1986,7 @@ const EditorV3Page = () => {
                                 <div className="absolute top-4 left-4 z-10">
                                   <Badge variant="secondary" className="bg-white/10 text-white/70 border-0">Slot vazio — adicione itens</Badge>
                                 </div>
-                              ) : isAbsurd ? (
-                                <div className="absolute top-4 left-4 z-10">
-                                  <Badge variant="secondary" className="bg-amber-500/15 text-amber-300 border border-amber-500/30">⚠ Ajuste sugerido</Badge>
-                                </div>
-                              ) : null}
+                                ) : null}
                               
                               <div className="relative w-full h-32 overflow-hidden">
                                 {meal.imageUrl && (
@@ -2032,16 +2028,6 @@ const EditorV3Page = () => {
                       {isEmpty ? (
                         <div className="absolute top-8 right-8 z-20">
                           <Badge variant="secondary" className="bg-white/10 text-white/70 border-0 h-8 px-4 text-xs font-bold uppercase">Slot vazio — adicione itens</Badge>
-                        </div>
-                      ) : isAbsurd ? (
-                        <div className="absolute top-8 right-8 z-20 flex flex-col items-end gap-2">
-                          <Badge variant="secondary" className="h-8 px-4 text-xs font-black uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">⚠ Ajuste sugerido</Badge>
-                          <div className="bg-amber-950/60 border border-amber-500/20 p-3 rounded-2xl max-w-xs shadow-xl backdrop-blur-md text-right">
-                            <p className="text-[10px] font-black uppercase text-amber-300/80 mb-2 tracking-widest">Sugestões:</p>
-                            {humanScore.reasons.map((r, i) => (
-                              <p key={i} className="text-[10px] text-white/70 leading-relaxed">{r}</p>
-                            ))}
-                          </div>
                         </div>
                       ) : null}
                     <div className="flex flex-col md:flex-row gap-10">
