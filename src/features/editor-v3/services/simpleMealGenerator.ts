@@ -158,11 +158,18 @@ export class SimpleMealGenerator {
       const factor = quantity / 100;
 
       const instanceId = crypto.randomUUID();
+      
+      // 🛡️ SLOT SOVEREIGNTY (V3): 
+      // O groupId deve ser estável por slot da refeição (ex: lunch_protein) 
+      // para evitar explosão calórica se o motor rodar múltiplas vezes.
+      const slotId = `${type}_${key}_${idx}`;
+      
       items.push({
         id: food.name,
         instanceId,
-        blockId: instanceId,
+        blockId: slotId, // Usamos o slotId como blockId para agrupar substituições
         name: food.name,
+        category: key, // Preserva a categoria para o promoteDraft
         quantity,
         clinical_mass_g: quantity,
         kcal: Math.round(food.kcal * factor),
@@ -173,6 +180,7 @@ export class SimpleMealGenerator {
         portionValue: 100,
         portionLabel: "g",
         is_primary: true,
+        substitution_group_id: slotId,
         substitutions: this.getSimpleSubstitutions(food, quantity, pool)
       } as any);
     });
