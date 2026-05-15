@@ -151,7 +151,7 @@ const EditorV3Page = () => {
   const {
     draftId, syncState, initialMeals, initialAuditLog, lastSavedAt, sharingToken: draftSharingToken,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
-  } = useDraftSync(patientId ?? null, initialMealsInStore, initialMealsInStore, planId);
+  } = useDraftSync(patientId ?? null, initialMealsInStore, initialMealsInStore, resolvedPlanId);
 
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
