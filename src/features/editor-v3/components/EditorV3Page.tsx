@@ -75,7 +75,6 @@ import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
 import { V3TemplatePlotter } from '../services/v3TemplateEngine';
-import { calculateHumanMealScore } from '@/lib/clinicalHumanEngine';
 
 
 
