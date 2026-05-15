@@ -318,24 +318,10 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
 
         <DialogFooter className="mt-8 flex gap-3 sm:justify-center">
           <Button 
-            onClick={() => {
-              isApplyingRef.current = true;
-              onClose();
-            }}
+            onClick={() => onClose()}
             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl h-12"
           >
-            Aplicar Ajustes
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              isApplyingRef.current = false;
-              onApply(initialMeals);
-              onClose();
-            }}
-            className="flex-1 border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl h-12 uppercase font-black tracking-widest text-[10px]"
-          >
-            Cancelar
+            Fechar
           </Button>
         </DialogFooter>
       </DialogContent>
