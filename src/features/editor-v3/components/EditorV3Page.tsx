@@ -8,12 +8,17 @@ import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, Save, Plus, Target, Flame, 
   CheckCircle2, AlertCircle, Info, Send, Share2,
-  Trash2, Copy, MoreHorizontal, Settings
+  Trash2, Copy, MoreHorizontal, Settings, Library,
+  Layout, Search, Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { TemplateV3Modal } from './TemplateV3Modal';
+import { getV3Templates } from '../utils/v3DataFetcher';
+import { V3DietTemplate } from '../types/types';
+
 
 export default function EditorV3Page() {
   const { id } = useParams<{ id: string }>();
