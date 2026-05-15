@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, MealItem, Food } from '../types/types';
-import { calculateItemMacros, adjustSubstitutionsProportionally } from '@/lib/nutricore_v2/helpers';
+import { calculateItemMacros, adjustSubstitutionsProportionally, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 
 interface EditorState {
   meals: Meal[];
@@ -26,7 +26,9 @@ interface EditorState {
   addMeal: (name: string, time?: string) => void;
   removeMeal: (mealId: string) => void;
   updateMealHeader: (mealId: string, updates: Partial<Meal>) => void;
+  updateMealItemMacros: (mealId: string, itemInstanceId: string, targetValue: number, macroType: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
 }
+
 
 export const useEditorState = create<EditorState>()(
   persist(
@@ -54,7 +56,7 @@ export const useEditorState = create<EditorState>()(
             if (item.instanceId !== itemInstanceId) return item;
 
             const oldQty = item.clinical_mass_g || item.quantity || 100;
-            const updatedSubs = adjustSubstitutionsProportionally(item, oldQty, newQuantity);
+            const updatedSubs = adjustSubstitutionsProportionally(item.substitutions || [], oldQty, newQuantity);
             
             // Calculate new macros for the item itself
             const newMacros = calculateItemMacros(item, newQuantity);
@@ -132,8 +134,37 @@ export const useEditorState = create<EditorState>()(
         set({
           meals: meals.map(m => m.id === mealId ? { ...m, ...updates } : m)
         });
+      },
+
+      updateMealItemMacros: (mealId, itemInstanceId, targetValue, macroType) => {
+        const { meals } = get();
+        const updatedMeals = meals.map(meal => {
+          if (meal.id !== mealId) return meal;
+
+          const updatedItems = meal.items.map(item => {
+            if (item.instanceId !== itemInstanceId) return item;
+
+            const newQuantity = scaleItemToTarget(item, targetValue, macroType);
+            const oldQty = item.clinical_mass_g || item.quantity || 100;
+            const updatedSubs = adjustSubstitutionsProportionally(item.substitutions || [], oldQty, newQuantity);
+            const newMacros = calculateItemMacros(item, newQuantity);
+
+            return {
+              ...item,
+              quantity: newQuantity,
+              clinical_mass_g: newQuantity,
+              substitutions: updatedSubs,
+              ...newMacros
+            };
+          });
+
+          return { ...meal, items: updatedItems };
+        });
+
+        set({ meals: updatedMeals });
       }
     }),
+
     { 
       name: 'fitjourney-editor-v3-sovereign', 
       version: 2, 

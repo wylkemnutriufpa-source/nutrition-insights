@@ -21,6 +21,8 @@ import { V3DietTemplate } from '../types/types';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
+import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
+
 
 
 
@@ -50,13 +52,51 @@ export default function EditorV3Page() {
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
-      // In a real V3 system, we would fetch the specific meals for this template/kcal combo
-      // For now, let's construct a basic set of meals from the template's distribution
-      const newMeals = selectedTemplate.meal_distribution.map(dist => ({
-        id: crypto.randomUUID(),
-        name: dist.slot.replace(/_/g, ' '),
-        time: dist.time,
-        items: []
+      const clusterMap = selectedTemplate.cluster_map || {};
+      const newMeals = await Promise.all(selectedTemplate.meal_distribution.map(async (dist) => {
+        const clusterSlug = clusterMap[dist.slot];
+        let items: any[] = [];
+
+        if (clusterSlug) {
+          const { data: libraryItems } = await supabase
+            .from('v3_library_items')
+            .select('*')
+            .eq('cluster_slug', clusterSlug)
+            .eq('active', true)
+            .limit(1);
+          
+          if (libraryItems && libraryItems.length > 0) {
+            const food = libraryItems[0];
+            // Fetch equivalents for this initial item
+            const { data: subs } = await supabase
+              .from('v3_library_items')
+              .select('*')
+              .eq('substitutions_group', food.substitutions_group)
+              .neq('id', food.id)
+              .eq('active', true)
+              .limit(10);
+
+            const quantity = (food as any).portionValue || (food as any).base_grams || 100;
+            const macros = calculateItemMacros(food, quantity);
+
+            
+            items = [{
+              ...food,
+              instanceId: crypto.randomUUID(),
+              quantity,
+              clinical_mass_g: quantity,
+              substitutions: subs || [],
+              ...macros
+            }];
+          }
+        }
+
+        return {
+          id: crypto.randomUUID(),
+          name: dist.slot.replace(/_/g, ' '),
+          time: dist.time,
+          items
+        };
       }));
 
       store.hydrateMeals(newMeals);
@@ -66,6 +106,7 @@ export default function EditorV3Page() {
       toast.error('Erro ao aplicar template', { id: toastId });
     }
   };
+
 
 
   useEffect(() => {
@@ -299,10 +340,12 @@ export default function EditorV3Page() {
                   key={meal.id} 
                   meal={meal} 
                   onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
+                  onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
                   onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
                   onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
                   onRemoveMeal={() => store.removeMeal(meal.id)}
                 />
+
               ))}
 
               {/* Botão Adicionar Refeição */}

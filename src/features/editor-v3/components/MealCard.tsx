@@ -13,14 +13,17 @@ import {
 interface MealCardProps {
   meal: Meal;
   onUpdateQuantity: (itemInstanceId: string, newQty: number) => void;
+  onUpdateMacros: (itemInstanceId: string, val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemoveFood: (itemInstanceId: string) => void;
+
   onAddFood: (food: Food) => void;
   onRemoveMeal: () => void;
 }
 
 export const MealCard: React.FC<MealCardProps> = ({ 
-  meal, onUpdateQuantity, onRemoveFood, onAddFood, onRemoveMeal 
+  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal 
 }) => {
+
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const mealTotals = meal.items.reduce((acc, item) => {
@@ -78,8 +81,10 @@ export const MealCard: React.FC<MealCardProps> = ({
               key={item.instanceId} 
               item={item} 
               onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
+              onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
               onRemove={() => onRemoveFood(item.instanceId)}
             />
+
           ))
         ) : (
           <div className="py-10 text-center border-2 border-dashed border-white/5 rounded-2xl">

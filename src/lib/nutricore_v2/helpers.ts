@@ -8,10 +8,10 @@ import { Food, MealItem } from '@/features/editor-v3/types/types';
 export function calculateItemMacros(item: any, quantity: number = 100) {
   const factor = quantity / 100;
   
-  const baseKcal = item.kcal_100g ?? item.kcal ?? item.calories ?? 0;
-  const baseProtein = item.protein_100g ?? item.protein ?? item.protein_g ?? 0;
-  const baseCarbs = item.carb_100g ?? item.carbs ?? item.carbs_g ?? 0;
-  const baseFat = item.fat_100g ?? item.fat ?? item.fat_g ?? 0;
+  const baseKcal = Number(item.kcal_100g ?? item.kcal ?? item.calories ?? item.kcal_base ?? 0);
+  const baseProtein = Number(item.protein_100g ?? item.protein ?? item.protein_g ?? item.protein_base ?? 0);
+  const baseCarbs = Number(item.carb_100g ?? item.carbs ?? item.carbs_g ?? item.carbs_base ?? 0);
+  const baseFat = Number(item.fat_100g ?? item.fat ?? item.fat_g ?? item.fats_base ?? 0);
 
   return {
     kcal: baseKcal * factor,
@@ -22,27 +22,43 @@ export function calculateItemMacros(item: any, quantity: number = 100) {
 }
 
 /**
+ * Scales an item to reach a target macro (usually kcal or protein).
+ */
+export function scaleItemToTarget(item: any, targetValue: number, macroType: 'kcal' | 'protein' | 'carbs' | 'fat' = 'kcal') {
+  const currentMacros = calculateItemMacros(item, item.quantity || 100);
+  const currentValue = currentMacros[macroType];
+  
+  if (currentValue === 0) return item.quantity || 100;
+  
+  const ratio = targetValue / currentValue;
+  const newQuantity = Math.round((item.quantity || 100) * ratio);
+  
+  return newQuantity;
+}
+
+/**
  * Adjusts substitution quantities proportionally when the main item quantity changes.
  */
 export function adjustSubstitutionsProportionally(
-  mainItem: MealItem, 
+  substitutions: Food[], 
   oldQuantity: number, 
   newQuantity: number
 ): Food[] {
-  if (!mainItem.substitutions || mainItem.substitutions.length === 0) return [];
-  if (oldQuantity === 0) return mainItem.substitutions;
+  if (!substitutions || substitutions.length === 0) return [];
+  if (oldQuantity === 0) return substitutions;
 
   const ratio = newQuantity / oldQuantity;
 
-  return mainItem.substitutions.map(sub => {
-    // Substitutions in MealItem might not have clinical_mass_g, but Food has portionValue
+  return substitutions.map(sub => {
     const currentQty = (sub as any).clinical_mass_g || sub.portionValue || 100;
     const newQty = Math.round(currentQty * ratio);
     
     return {
       ...sub,
-      portionValue: newQty, // Update for UI
-      clinical_mass_g: newQty, // Update for math
+      portionValue: newQty,
+      clinical_mass_g: newQty,
+      ...calculateItemMacros(sub, newQty)
     };
   });
 }
+
