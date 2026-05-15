@@ -65,8 +65,21 @@ export const TEMPLATE_STYLE_REGISTRY: Record<TemplateFamily, TemplateStyleContra
   saude_geral: {
     meal_density_profile: 'medium',
     substitution_policy: 'loose'
+  },
+  cetogenica: {
+    meal_density_profile: 'high',
+    substitution_policy: 'strict'
+  },
+  mediterranea: {
+    meal_density_profile: 'medium',
+    substitution_policy: 'loose'
+  },
+  anti_inflamatoria: {
+    meal_density_profile: 'medium',
+    substitution_policy: 'strict'
   }
 };
+
 
 /**
  * Contratos Específicos por Slot (Identidade de Refeição)
