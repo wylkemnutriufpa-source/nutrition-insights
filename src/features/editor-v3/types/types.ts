@@ -139,7 +139,7 @@ export interface KcalProfile {
   };
 }
 
-export type TemplateFamily = 'hipertrofia' | 'emagrecimento' | 'performance' | 'saude_geral' | 'low_carb';
+export type TemplateFamily = 'hipertrofia' | 'emagrecimento' | 'performance' | 'saude_geral' | 'low_carb' | 'cetogenica' | 'mediterranea' | 'anti_inflamatoria';
 
 export interface TemplateStyleContract {
   allowed_clusters?: string[];
