@@ -31,22 +31,22 @@ interface VisualItem {
 }
 
 /** Maps meal_type to visual library categories */
-const MEAL_TYPE_TO_CATEGORIES: Record<MealType, string[]> = {
-  breakfast: ["cafe_da_manha"],
-  morning_snack: ["lanche", "frutas"],
-  lunch: ["almoco"],
-  afternoon_snack: ["lanche", "frutas"],
-  dinner: ["jantar"],
-  evening_snack: ["lanche", "frutas", "ceia"],
+const MEAL_TYPE_TO_CATEGORIES: Record<string, string[]> = {
+  "Café da Manhã": ["cafe_da_manha"],
+  "Lanche da Manhã": ["lanche", "frutas"],
+  "Almoço": ["almoco"],
+  "Lanche da Tarde": ["lanche", "frutas"],
+  "Jantar": ["jantar"],
+  "Ceia": ["lanche", "frutas", "ceia"],
 };
 
-const MEAL_TYPE_CONFIG: Record<MealType, { label: string; icon: React.ReactNode; color: string }> = {
-  breakfast: { label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
-  morning_snack: { label: "Lanche Manhã", icon: <Apple className="w-4 h-4" />, color: "text-green-500" },
-  lunch: { label: "Almoço", icon: <Utensils className="w-4 h-4" />, color: "text-orange-500" },
-  afternoon_snack: { label: "Lanche Tarde", icon: <Cookie className="w-4 h-4" />, color: "text-pink-500" },
-  dinner: { label: "Jantar", icon: <Moon className="w-4 h-4" />, color: "text-indigo-500" },
-  evening_snack: { label: "Ceia", icon: <Sun className="w-4 h-4" />, color: "text-purple-500" },
+const MEAL_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  "Café da Manhã": { label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
+  "Lanche da Manhã": { label: "Lanche Manhã", icon: <Apple className="w-4 h-4" />, color: "text-green-500" },
+  "Almoço": { label: "Almoço", icon: <Utensils className="w-4 h-4" />, color: "text-orange-500" },
+  "Lanche da Tarde": { label: "Lanche Tarde", icon: <Cookie className="w-4 h-4" />, color: "text-pink-500" },
+  "Jantar": { label: "Jantar", icon: <Moon className="w-4 h-4" />, color: "text-indigo-500" },
+  "Ceia": { label: "Ceia", icon: <Sun className="w-4 h-4" />, color: "text-purple-500" },
 };
 
 const ALL_MEAL_TYPES: MealType[] = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];

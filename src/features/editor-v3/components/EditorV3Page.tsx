@@ -139,9 +139,6 @@ export default function EditorV3Page() {
               const targetMealKcal = kcal / distribution.length;
               let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
               
-              // Calculation scale (no hard clamps)
-              let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
-              
               const macros = calculateItemMacros(food, quantity);
               
               items = [{

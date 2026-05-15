@@ -15,7 +15,7 @@ import { sortMealPlanItems } from "@/lib/mealPlanSort";
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
 export type MealPlanItem = Tables<"meal_plan_items">;
-export type MealType = Database["public"]["Enums"]["meal_type"];
+export type MealType = string;
 
 export type SyncStatus = "idle" | "saving" | "saved" | "error";
 
