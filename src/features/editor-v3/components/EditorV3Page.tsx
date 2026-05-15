@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useEditorState } from '../hooks/useEditorState';
@@ -9,7 +9,7 @@ import {
   ArrowLeft, Save, Plus, Target, Flame, 
   CheckCircle2, AlertCircle, Info, Send, Share2,
   Trash2, Copy, MoreHorizontal, Settings, Library,
-  Layout, Search, Loader2
+  Layout, Search, Loader2, User, Activity, Calculator
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,7 +21,9 @@ import { V3DietTemplate } from '../types/types';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
-import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
+import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
+import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
+
 
 
 
