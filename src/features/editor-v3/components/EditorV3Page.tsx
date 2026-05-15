@@ -257,10 +257,11 @@ export default function EditorV3Page() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney Editor Profissional</h1>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">Manual</Badge>
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">Estável</Badge>
               </div>
               <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mt-0.5">Gestão de templates clínicos e cálculo automático</p>
             </div>
+
 
           </div>
 
