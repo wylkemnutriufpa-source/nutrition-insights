@@ -21,6 +21,8 @@ import { V3DietTemplate } from '../types/types';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
+import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
+
 
 
 
