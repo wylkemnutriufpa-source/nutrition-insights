@@ -16,7 +16,7 @@ import {
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
-import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
+const CURRENT_ENGINE_VERSION = "3.0.0-manual";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 

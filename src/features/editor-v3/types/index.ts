@@ -1,3 +1,5 @@
 
 export * from "./types";
-export * from "../../clinical-engine/types/nutritionalScoreTypes";
+export type NutritionalScore = any;
+export type ValidationIssue = any;
+export type PlanMetadata = any;

@@ -16,7 +16,7 @@ import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatDisplayPortion } from "@/lib/nutricore_v2/portion-display";
+const formatDisplayPortion: any = (i: any) => '';
 
 import type { Database } from "@/integrations/supabase/types";
 

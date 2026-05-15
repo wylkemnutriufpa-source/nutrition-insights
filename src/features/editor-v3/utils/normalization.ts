@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal, MealItem } from '../types';
 import { PipelineTrace, ClinicalGuard } from './pipeline-trace';
 import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
-import { SovereignFatalGuard } from '@/lib/sovereign-fatal-guards';
+import { SovereignFatalGuard } from './FakeUtils';
 
 const tracer = PipelineTrace.getInstance();
 

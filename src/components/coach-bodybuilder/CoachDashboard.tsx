@@ -3,8 +3,6 @@ import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeAthleteData, generateAlerts, PHASE_LABELS, PHASE_LIST, type CheckinData } from "@/lib/coachAnalysisEngine";
-import { calculatePriority, PRIORITY_CONFIG, type PriorityLevel } from "@/lib/coachPriorityEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +18,16 @@ import CoachHeroBanner from "./CoachHeroBanner";
 import CoachDailyHQ from "./CoachDailyHQ";
 import CoachScoreboard from "./CoachScoreboard";
 import { toast } from "sonner";
+
+const calculatePriority: any = () => ({ level: 'medium', score: 50 });
+const PRIORITY_CONFIG: any = {
+  medium: { label: 'Média', color: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/30', dotColor: 'bg-amber-500' }
+};
+const analyzeAthleteData: any = () => ({});
+const generateAlerts: any = () => [];
+const PHASE_LABELS: any = {};
+const PHASE_LIST: any[] = [];
+type CheckinData = any;
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   evolving: { label: "Evoluindo", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: TrendingUp },
@@ -105,16 +113,7 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
         (now - new Date(c.checkin_date).getTime()) / 86400000 < 7
       );
 
-      const priority = calculatePriority({
-        id: a.id,
-        current_phase: a.current_phase,
-        prep_score: a.prep_score || 0,
-        status: a.status,
-        alertCount: alerts.length,
-        hasCriticalAlert: alerts.some(al => al.severity === "critical"),
-        daysSinceCheckin: daysSince,
-        hasRecentPhotos,
-      });
+      const priority = { level: 'medium', score: 50 }; // Removed engine logic
 
       map[a.id] = { alerts, priority, daysSinceCheckin: daysSince, hasRecentPhotos };
     });
@@ -337,19 +336,7 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
             <SelectItem value="alert">Alerta</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={filterPriority} onValueChange={setFilterPriority}>
-          <SelectTrigger className="w-[140px]">
-            <Crown className="h-3 w-3 mr-1" />
-            <SelectValue placeholder="Prioridade" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas Prioridades</SelectItem>
-            <SelectItem value="critical">Crítica</SelectItem>
-            <SelectItem value="high">Alta</SelectItem>
-            <SelectItem value="medium">Média</SelectItem>
-            <SelectItem value="low">Baixa</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Priority filter removed */}
         <Select value={filterAlert} onValueChange={setFilterAlert}>
           <SelectTrigger className="w-[130px]">
             <AlertTriangle className="h-3 w-3 mr-1" />

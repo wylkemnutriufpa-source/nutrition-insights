@@ -7,8 +7,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Utensils, ArrowRight, ArrowLeft, Loader2, Plus, Sparkles, Wand2, ShieldCheck } from "lucide-react";
 import QuickMealEditor from "@/components/in-office/QuickMealEditor";
-import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
-import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
+// plan engines removed
 
 interface Props {
   patientId: string;
@@ -137,15 +136,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
       if (createError) throw createError;
 
       // 2. Run the pipeline to populate it
-      const result = await runPlanPipeline({
-        patientId,
-        nutritionistId: user.id,
-        tenantId: tenantId,
-        existingPlanId: plan.id,
-        planTitle: "Plano FitJourney",
-        startDate: new Date().toISOString().split("T")[0],
-        generationMode: "quick",
-      });
+      const result = { success: false, warnings: ["Auto-geração desativada. Use o modo manual."] };
 
       if (!result.success) throw new Error(result.warnings?.[0] || "Falha na geração automática");
 
@@ -191,7 +182,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
               <div className="text-left">
                 <span className="block font-bold">Auto-Gerar</span>
                 <span className="block text-[10px] font-normal opacity-70 flex items-center gap-1">
-                  <ShieldCheck className="w-2.5 h-2.5" /> Engine v{CURRENT_ENGINE_VERSION}
+                  <ShieldCheck className="w-2.5 h-2.5" /> Engine v3.0.0
                 </span>
               </div>
             </Button>

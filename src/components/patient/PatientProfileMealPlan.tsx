@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChefHat, RefreshCw, Eye, FileDown, Calendar, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+// Removed clinicalHumanEngine import
 import {
   MacroSummary, MealGroup, MealSlotCard,
   MEAL_TYPES, DAYS,
@@ -144,30 +144,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         </div>
       </div>
 
-      {/* Clinical Human Audit Banner */}
-      {items.length > 0 && (
-        <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold">Auditório Clínico Humano</h4>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                Validação de Coerência e Variedade
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-              HUMAN SCORE: 94/100
-            </Badge>
-            <Button size="sm" className="bg-emerald-500 text-black hover:bg-emerald-600 text-[10px] font-bold h-7">
-              APROVAR PLANO
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Plan items view */}
 
       <MacroSummary items={items} />
 

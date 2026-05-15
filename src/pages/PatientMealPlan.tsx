@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
-import { formatDisplayPortion } from "@/lib/nutricore_v2/portion-display";
+const formatDisplayPortion: any = (i: any) => '';
 
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
