@@ -49,14 +49,14 @@ export const SLOT_ALLOWED_GROUPS: Record<MealSlot, SubstitutionGroup[]> = {
   "Ceia": ["ceia-leve", "laticinio-leve", "fruta-acida", "proteina-leve"],
 };
 
-/** Blacklist explícita por slot */
+/** Blacklist explícita por slot - Relaxada para soberania total do nutricionista */
 export const SLOT_BLACKLIST_KEYWORDS: Record<MealSlot, RegExp[]> = {
-  "Café da Manhã": [/\barroz\b/i, /\bfeij[aã]o\b/i, /\bpicanha\b/i, /\bbife\b/i, /\bfil[eé] mignon\b/i, /\bcarne moida\b/i, /\bcarne moída\b/i, /\btil[aá]pia\b/i, /\bsalm[aã]o\b/i, /\bpeixe\b/i, /\bfrango grelhado\b/i, /\bfrango assado\b/i, /\bmacarr[aã]o\b/i, /\bsopa\b/i],
-  "Lanche da Manhã": [/\barroz\b/i, /\bfeij[aã]o\b/i, /\bsopa\b/i, /\bmacarr[aã]o\b/i],
-  "Almoço": [/\bp[aã]o\b/i, /\btapioca\b/i, /\bcrepioca\b/i, /\bbolo\b/i, /\bcafé\b/i],
-  "Lanche da Tarde": [/\barroz\b/i, /\bfeij[aã]o\b/i, /\bsopa\b/i],
-  "Jantar": [/\bp[aã]o\b/i, /\btapioca\b/i, /\bcrepioca\b/i],
-  "Ceia": [/\barroz\b/i, /\bfeij[aã]o\b/i, /\bcarne\b/i],
+  "Café da Manhã": [],
+  "Lanche da Manhã": [],
+  "Almoço": [],
+  "Lanche da Tarde": [],
+  "Jantar": [],
+  "Ceia": [],
 };
 
 export function isGroupAllowedInSlot(group: SubstitutionGroup | null | undefined, slot: MealSlot): boolean {
