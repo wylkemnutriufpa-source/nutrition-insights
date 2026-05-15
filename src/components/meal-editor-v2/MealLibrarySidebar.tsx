@@ -485,9 +485,9 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
           </button>
         </div>
 
-        {/* My Templates Tab */}
         {activeTab === "my" && (
           <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Meal type filter chips */}
             {/* Meal type filter chips */}
             <div className="px-4 pt-2 pb-1 flex flex-wrap gap-1">
               <button
@@ -571,7 +571,8 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
         {/* Pre-built Templates Tab */}
         {activeTab === "prebuilt" && (
-          <ScrollArea className="flex-1 px-4 py-2">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <ScrollArea className="flex-1 px-4 py-2">
             {loadingDiet ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -626,9 +627,11 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
               </div>
             )}
           </ScrollArea>
-        )}
-      </SheetContent>
-    </Sheet>
+        </div>
+      )}
+    </div>
+  </SheetContent>
+</Sheet>
   );
 }
 
