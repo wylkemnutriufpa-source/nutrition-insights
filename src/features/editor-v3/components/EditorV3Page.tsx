@@ -50,13 +50,50 @@ export default function EditorV3Page() {
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
-      // In a real V3 system, we would fetch the specific meals for this template/kcal combo
-      // For now, let's construct a basic set of meals from the template's distribution
-      const newMeals = selectedTemplate.meal_distribution.map(dist => ({
-        id: crypto.randomUUID(),
-        name: dist.slot.replace(/_/g, ' '),
-        time: dist.time,
-        items: []
+      const clusterMap = selectedTemplate.cluster_map || {};
+      const newMeals = await Promise.all(selectedTemplate.meal_distribution.map(async (dist) => {
+        const clusterSlug = clusterMap[dist.slot];
+        let items: any[] = [];
+
+        if (clusterSlug) {
+          const { data: libraryItems } = await supabase
+            .from('v3_library_items')
+            .select('*')
+            .eq('cluster_slug', clusterSlug)
+            .eq('active', true)
+            .limit(1);
+          
+          if (libraryItems && libraryItems.length > 0) {
+            const food = libraryItems[0];
+            // Fetch equivalents for this initial item
+            const { data: subs } = await supabase
+              .from('v3_library_items')
+              .select('*')
+              .eq('substitutions_group', food.substitutions_group)
+              .neq('id', food.id)
+              .eq('active', true)
+              .limit(10);
+
+            const quantity = food.portionValue || food.base_grams || 100;
+            const macros = calculateItemMacros(food, quantity);
+            
+            items = [{
+              ...food,
+              instanceId: crypto.randomUUID(),
+              quantity,
+              clinical_mass_g: quantity,
+              substitutions: subs || [],
+              ...macros
+            }];
+          }
+        }
+
+        return {
+          id: crypto.randomUUID(),
+          name: dist.slot.replace(/_/g, ' '),
+          time: dist.time,
+          items
+        };
       }));
 
       store.hydrateMeals(newMeals);
@@ -66,6 +103,7 @@ export default function EditorV3Page() {
       toast.error('Erro ao aplicar template', { id: toastId });
     }
   };
+
 
 
   useEffect(() => {
