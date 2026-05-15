@@ -23,7 +23,7 @@ const mockItem = {
   id: "test-id",
   title: "Galinhada FIT",
   description: "Arroz com frango e legumes",
-  meal_type: "Jantar" as const,
+  meal_type: "Jantar" as any,
   day_of_week: 0,
   calories_target: 500,
   protein_target: 30,

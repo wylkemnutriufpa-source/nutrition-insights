@@ -42,7 +42,7 @@ const MACRO_PROFILES = [
 ];
 
 // Meal distribution percentages
-const MEAL_DISTRIBUTION: { type: MealType; label: string; pct: number; icon: React.ReactNode }[] = [
+const MEAL_DISTRIBUTION: { type: any; label: string; pct: number; icon: React.ReactNode }[] = [
   { type: "Café da Manhã", label: "Café da Manhã", pct: 0.20, icon: <Coffee className="w-3.5 h-3.5" /> },
   { type: "Lanche da Manhã", label: "Lanche Manhã", pct: 0.10, icon: <Apple className="w-3.5 h-3.5" /> },
   { type: "Almoço", label: "Almoço", pct: 0.30, icon: <Utensils className="w-3.5 h-3.5" /> },

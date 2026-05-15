@@ -67,7 +67,7 @@ interface MealDetailData {
   image_url?: string | null;
 }
 
-const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; time: string }[] = [
+const MEAL_TYPES: { key: any; label: string; icon: React.ReactNode; time: string }[] = [
   { key: "Café da Manhã", label: "Café da Manhã", icon: <Coffee className="w-5 h-5" />, time: "06:00 - 09:00" },
   { key: "Lanche da Manhã", label: "Lanche da Manhã", icon: <Apple className="w-5 h-5" />, time: "10:00 - 11:00" },
   { key: "Almoço", label: "Almoço", icon: <Utensils className="w-5 h-5" />, time: "12:00 - 14:00" },
