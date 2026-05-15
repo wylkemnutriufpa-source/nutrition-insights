@@ -107,7 +107,7 @@ export default function EditorV3Page() {
     
     try {
       const clusterMap = (selectedTemplate.cluster_map as any) || {};
-      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
+      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay]; // Use activeDay instead of [0] if not weekly
       const newMeals: any[] = [];
       const distribution = (selectedTemplate.meal_distribution as any[]) || [];
 
@@ -133,19 +133,29 @@ export default function EditorV3Page() {
         }
       });
       
-      console.log('[EditorV3] Library pre-fetched count:', libraryItems?.length);
+      console.log('[EditorV3] Library items found:', libraryItems?.length);
       console.log('[EditorV3] Cluster Map to plot:', clusterMap);
 
       for (const day of days) {
         for (const dist of distribution) {
           const slot = dist.slot;
-          const clusterSlug = clusterMap[slot] || clusterMap[slot.trim()] || Object.entries(clusterMap).find(([k]) => k.toLowerCase() === slot.toLowerCase())?.[1];
+          
+          // Match logic for slot keys: try exact, then trimmed, then case-insensitive with underscore/space normalization
+          const clusterSlug = clusterMap[slot] || 
+                             clusterMap[slot.trim()] || 
+                             Object.entries(clusterMap).find(([k]) => {
+                               const normK = k.toLowerCase().replace(/_/g, ' ').trim();
+                               const normSlot = slot.toLowerCase().replace(/_/g, ' ').trim();
+                               return normK === normSlot;
+                             })?.[1];
+          
           let items: any[] = [];
 
           if (clusterSlug) {
             const food = libraryMap.get(clusterSlug);
 
             if (food) {
+              console.log(`[EditorV3] Plotting food: ${food.title} for slot: ${slot}`);
               const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
               const targetMealKcal = kcal / distribution.length;
               let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
@@ -162,10 +172,10 @@ export default function EditorV3Page() {
                 ...macros
               }];
             } else {
-              console.warn(`[EditorV3] No food found for cluster slug: ${clusterSlug} in slot: ${slot}`);
+              console.warn(`[EditorV3] No food found in libraryMap for cluster slug: ${clusterSlug} (from slot: ${slot})`);
             }
           } else {
-            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}`);
+            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}. Available keys:`, Object.keys(clusterMap));
           }
 
           newMeals.push({
@@ -178,7 +188,10 @@ export default function EditorV3Page() {
         }
       }
 
-      store.hydrateMeals(newMeals);
+      // Merge with existing meals for OTHER days, but replace for selected days
+      const otherDayMeals = store.meals.filter(m => !days.includes(m.day_of_week || 0));
+      store.hydrateMeals([...otherDayMeals, ...newMeals]);
+      
       toast.success('Template plotado com sucesso!', { id: toastId });
     } catch (err) {
       console.error(err);
