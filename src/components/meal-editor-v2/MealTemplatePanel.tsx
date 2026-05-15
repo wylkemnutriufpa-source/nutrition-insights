@@ -49,7 +49,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_pao_ovo_cafe",
     title: "Pão com Ovo + Café",
     description: "Pão francês, ovo mexido e café com leite",
-    mealTypes: ["breakfast"],
+    mealTypes: ["Café da Manhã"],
     emoji: "🍳",
     foods: [
       { name: "Pão francês", portion: "1 unidade (50g)", calories: 150, protein: 5, carbs: 28, fat: 2 },
@@ -62,7 +62,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_tapioca_queijo",
     title: "Tapioca com Queijo",
     description: "Tapioca com queijo e café preto",
-    mealTypes: ["breakfast"],
+    mealTypes: ["Café da Manhã"],
     emoji: "🫓",
     foods: [
       { name: "Tapioca", portion: "2 colheres (40g)", calories: 140, protein: 0, carbs: 35, fat: 0 },
@@ -75,7 +75,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_cuscuz_ovo",
     title: "Cuscuz com Ovo",
     description: "Cuscuz nordestino com ovo e manteiga",
-    mealTypes: ["breakfast"],
+    mealTypes: ["Café da Manhã"],
     emoji: "🌽",
     foods: [
       { name: "Cuscuz", portion: "1 porção (100g)", calories: 170, protein: 4, carbs: 36, fat: 1 },
@@ -89,7 +89,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_fruta_iogurte",
     title: "Frutas com Iogurte",
     description: "Banana, maçã e iogurte natural",
-    mealTypes: ["morning_snack", "afternoon_snack"],
+    mealTypes: ["Lanche da Manhã", "Lanche da Tarde"],
     emoji: "🍌",
     foods: [
       { name: "Banana", portion: "1 unidade (100g)", calories: 89, protein: 1, carbs: 23, fat: 0 },
@@ -101,7 +101,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_fruta_simples",
     title: "Frutas Práticas",
     description: "Banana e maçã",
-    mealTypes: ["morning_snack", "afternoon_snack", "evening_snack"],
+    mealTypes: ["Lanche da Manhã", "Lanche da Tarde", "Ceia"],
     emoji: "🍎",
     foods: [
       { name: "Banana", portion: "1 unidade (100g)", calories: 89, protein: 1, carbs: 23, fat: 0 },
@@ -114,7 +114,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_frango_arroz_salada",
     title: "Frango + Arroz + Salada",
     description: "Peito de frango grelhado, arroz, feijão e salada verde",
-    mealTypes: ["lunch"],
+    mealTypes: ["Almoço"],
     emoji: "🍗",
     foods: [
       { name: "Peito de frango grelhado", portion: "150g", calories: 248, protein: 46, carbs: 0, fat: 5 },
@@ -128,7 +128,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_carne_pure",
     title: "Carne + Purê + Salada",
     description: "Carne moída, purê de batata e salada",
-    mealTypes: ["lunch"],
+    mealTypes: ["Almoço"],
     emoji: "🥩",
     foods: [
       { name: "Carne moída refogada", portion: "130g", calories: 260, protein: 30, carbs: 0, fat: 15 },
@@ -141,7 +141,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_peixe_legumes",
     title: "Peixe + Legumes",
     description: "Filé de peixe grelhado acompanhado de legumes no vapor",
-    mealTypes: ["lunch", "dinner"],
+    mealTypes: ["Almoço", "Jantar"],
     emoji: "🐟",
     foods: [
       { name: "Filé de peixe grelhado", portion: "150g", calories: 180, protein: 36, carbs: 0, fat: 3 },
@@ -155,7 +155,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_frango_batata_jantar",
     title: "Frango + Batata + Salada",
     description: "Peito de frango, batata cozida e salada (leve)",
-    mealTypes: ["dinner"],
+    mealTypes: ["Jantar"],
     emoji: "🍗",
     foods: [
       { name: "Peito de frango grelhado", portion: "130g", calories: 215, protein: 40, carbs: 0, fat: 4 },
@@ -168,7 +168,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_peixe_pouco_arroz",
     title: "Peixe + Pouco Arroz + Legumes",
     description: "Filé de peixe, porção reduzida de arroz integral e legumes",
-    mealTypes: ["dinner"],
+    mealTypes: ["Jantar"],
     emoji: "🐟",
     foods: [
       { name: "Filé de peixe grelhado", portion: "130g", calories: 156, protein: 31, carbs: 0, fat: 3 },
@@ -182,7 +182,7 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     id: "t_cha_fruta",
     title: "Chá + Fruta",
     description: "Chá de camomila e maçã",
-    mealTypes: ["evening_snack"],
+    mealTypes: ["Ceia"],
     emoji: "🫖",
     foods: [
       { name: "Chá de camomila", portion: "200ml", calories: 2, protein: 0, carbs: 0, fat: 0 },
@@ -201,7 +201,7 @@ const MEAL_TYPE_CONFIG: Record<MealType, { label: string; icon: React.ReactNode 
   evening_snack: { label: "Ceia", icon: <Sun className="w-4 h-4" /> },
 };
 
-const ALL_MEAL_TYPES: MealType[] = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+const ALL_MEAL_TYPES: MealType[] = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
 
 interface Props {
   day: number;
@@ -210,7 +210,7 @@ interface Props {
 export default function MealTemplatePanel({ day }: Props) {
   const { user } = useAuth();
   const { planId, addItem, substitutionCount, patientName } = useMealPlanEditorV2Store();
-  const [activeMealType, setActiveMealType] = useState<MealType>("breakfast");
+  const [activeMealType, setActiveMealType] = useState<MealType>("Café da Manhã");
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
   const [customTemplates, setCustomTemplates] = useState<MealTemplate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -236,9 +236,9 @@ export default function MealTemplatePanel({ day }: Props) {
           // Map database meal_type to store MealType
           const mType = recipe.meal_type?.toLowerCase();
           const mealTypes: MealType[] = [];
-          if (mType?.includes("almoco") || mType?.includes("almoço")) mealTypes.push("lunch");
-          if (mType?.includes("jantar")) mealTypes.push("dinner");
-          if (mealTypes.length === 0) mealTypes.push("lunch"); // Fallback
+          if (mType?.includes("almoco") || mType?.includes("almoço")) mealTypes.push("Almoço");
+          if (mType?.includes("jantar")) mealTypes.push("Jantar");
+          if (mealTypes.length === 0) mealTypes.push("Almoço"); // Fallback
 
           // Calculate totals if not present
           let totalCal = recipe.fixed_calories || 0;

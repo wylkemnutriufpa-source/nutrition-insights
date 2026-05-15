@@ -202,7 +202,7 @@ export default function MealAdherenceWidget({ patientId }: MealAdherenceWidgetPr
           <div className="grid grid-cols-2 gap-1.5">
             {Object.entries(perMealType)
               .sort(([a], [b]) => {
-                const order = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+                const order = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
                 return order.indexOf(a) - order.indexOf(b);
               })
               .map(([type, stats]) => {

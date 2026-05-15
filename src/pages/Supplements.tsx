@@ -54,11 +54,11 @@ interface Patient {
 const SUPPLEMENT_ICONS = ["💊", "🧴", "🫗", "🌿", "💉", "🧪", "🫧", "⚗️"];
 const TIMINGS = [
   { value: "morning", label: "Manhã (em jejum)" },
-  { value: "breakfast", label: "Café da manhã" },
-  { value: "lunch", label: "Almoço" },
+  { value: "Café da Manhã", label: "Café da manhã" },
+  { value: "Almoço", label: "Almoço" },
   { value: "pre_workout", label: "Pré-treino" },
   { value: "post_workout", label: "Pós-treino" },
-  { value: "dinner", label: "Jantar" },
+  { value: "Jantar", label: "Jantar" },
   { value: "night", label: "À noite / antes de dormir" },
 ];
 const FREQUENCIES = [

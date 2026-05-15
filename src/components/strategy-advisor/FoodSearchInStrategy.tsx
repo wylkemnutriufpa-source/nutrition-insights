@@ -85,7 +85,7 @@ export default function FoodSearchInStrategy({ mealType, onSelect, onClose }: Pr
     : [];
 
   const handleSelectFood = useCallback((food: FoodItem) => {
-    const resolvedMealType = mealType === "new" ? "afternoon_snack" : mealType;
+    const resolvedMealType = mealType === "new" ? "Lanche da Tarde" : mealType;
     onSelect({
       mealType: resolvedMealType,
       label: MEAL_TYPE_LABELS[resolvedMealType] || resolvedMealType,
@@ -98,7 +98,7 @@ export default function FoodSearchInStrategy({ mealType, onSelect, onClose }: Pr
   }, [mealType, onSelect]);
 
   const handleSelectVisual = useCallback((item: any) => {
-    const resolvedMealType = mealType === "new" ? "afternoon_snack" : mealType;
+    const resolvedMealType = mealType === "new" ? "Lanche da Tarde" : mealType;
     onSelect({
       mealType: resolvedMealType,
       label: MEAL_TYPE_LABELS[resolvedMealType] || resolvedMealType,

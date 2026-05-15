@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compareMealPlanCollections, haveMealPlanCollectionsChanged } from "./mealPlanPersistenceGuards";
 
-const mealType = "lunch" as const;
+const mealType = "Almoço" as const;
 
 const baseItems = [
   {

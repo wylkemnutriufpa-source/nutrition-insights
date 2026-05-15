@@ -64,7 +64,7 @@ describe('Substitution Grams Edit E2E', () => {
         <MemoryRouter>
           <MealSlotCard
             day={1}
-            mealType="lunch"
+            mealType="Almoço"
             label="Almoço"
             icon={null}
             items={[mockPrimary, mockSub]}

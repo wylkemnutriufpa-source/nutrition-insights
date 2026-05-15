@@ -60,7 +60,7 @@ export interface PatientContext {
 
 export type ComposerMode = "quick" | "smart" | "clinical";
 
-type MealSlotType = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
+type MealSlotType = "Café da Manhã" | "Lanche da Manhã" | "Almoço" | "Lanche da Tarde" | "Jantar" | "Ceia";
 
 // ── Category → Role mapping ──────────────────────────────────
 const CATEGORY_ROLE_MAP: Record<string, FoodRole> = {

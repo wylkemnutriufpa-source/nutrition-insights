@@ -182,8 +182,8 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
       const match = group.foods.find(f => nFood.includes(normalizeForMatch(f)));
       if (match) {
         // Skip groups that don't match meal context
-        if (mealType === "breakfast" && (groupKey === "protein_main" || groupKey === "carb_main")) continue;
-        if ((mealType === "lunch" || mealType === "dinner") && (groupKey === "protein_breakfast" || groupKey === "carb_breakfast")) continue;
+        if (mealType === "Café da Manhã" && (groupKey === "protein_main" || groupKey === "carb_main")) continue;
+        if ((mealType === "Almoço" || mealType === "Jantar") && (groupKey === "protein_breakfast" || groupKey === "carb_breakfast")) continue;
 
         const portion = linePortion || group.defaultPortion;
         const alternatives = group.foods

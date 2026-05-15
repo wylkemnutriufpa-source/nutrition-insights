@@ -548,7 +548,7 @@ export default function PatientMealPlan() {
           }
 
           return {
-            mealType: i.meal_type || "lunch",
+            mealType: i.meal_type || "Almoço",
             title: i.title || "Refeição",
             description: resolvedDescription || undefined,
             calories_target: i.calories_target || undefined,

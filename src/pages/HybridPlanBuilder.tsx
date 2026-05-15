@@ -286,7 +286,7 @@ export default function HybridPlanBuilder() {
         </div>
         <DragOverlay>{activeDragData && <div className="px-3 py-2 rounded-lg bg-card border border-primary shadow-lg text-xs font-medium">{activeDragData.label}</div>}</DragOverlay>
       </DndContext>
-      <SaveMealTemplateDialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen} items={store.items} mealType="breakfast" defaultName={plan.title} onSaved={() => {}} />
+      <SaveMealTemplateDialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen} items={store.items} mealType="Café da Manhã" defaultName={plan.title} onSaved={() => {}} />
       <AutoFixResultsModal open={showAutofixResults} onOpenChange={setShowAutofixResults} result={autofixResult || { success: true, changes: [], before: {} as any, after: {} as any, warnings: [], summary: {} as any }} wasAlreadyValid={autofixWasValid} />
       {validationResult && <ValidationCorrectionPanel result={validationResult} onClose={() => setValidationResult(null)} onCorrectionApplied={() => store.hydrate(plan.id, user!.id)} />}
     </DashboardLayout>

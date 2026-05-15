@@ -9,42 +9,42 @@ import type { SubstitutionGroup } from "./substitutionGroups";
 import { SovereignTelemetry } from "./sovereignTelemetry";
 
 export type MealSlot =
-  | "breakfast"
-  | "morning_snack"
-  | "lunch"
-  | "afternoon_snack"
-  | "dinner"
-  | "evening_snack"
+  | "Café da Manhã"
+  | "Lanche da Manhã"
+  | "Almoço"
+  | "Lanche da Tarde"
+  | "Jantar"
+  | "Ceia"
   | "supper";
 
 /** Aliases comuns vindos do banco / UI normalizados para o slot canônico */
 const SLOT_ALIASES: Record<string, MealSlot> = {
-  breakfast: "breakfast",
-  cafe_da_manha: "breakfast",
-  "café_da_manhã": "breakfast",
-  "cafe da manha": "breakfast",
-  "café da manhã": "breakfast",
-  cafe: "breakfast",
+  breakfast: "Café da Manhã",
+  cafe_da_manha: "Café da Manhã",
+  "café_da_manhã": "Café da Manhã",
+  "cafe da manha": "Café da Manhã",
+  "café da manhã": "Café da Manhã",
+  cafe: "Café da Manhã",
 
-  morning_snack: "morning_snack",
-  lanche_da_manha: "morning_snack",
-  "lanche_da_manhã": "morning_snack",
-  "lanche da manha": "morning_snack",
-  "lanche da manhã": "morning_snack",
-  lanchemanha: "morning_snack",
+  morning_snack: "Lanche da Manhã",
+  lanche_da_manha: "Lanche da Manhã",
+  "lanche_da_manhã": "Lanche da Manhã",
+  "lanche da manha": "Lanche da Manhã",
+  "lanche da manhã": "Lanche da Manhã",
+  lanchemanha: "Lanche da Manhã",
 
-  lunch: "lunch",
-  almoco: "lunch",
-  "almoço": "lunch",
+  lunch: "Almoço",
+  almoco: "Almoço",
+  "almoço": "Almoço",
 
-  afternoon_snack: "afternoon_snack",
-  snack: "afternoon_snack",
-  lanche_da_tarde: "afternoon_snack",
-  "lanche da tarde": "afternoon_snack",
-  lanche: "afternoon_snack",
+  afternoon_snack: "Lanche da Tarde",
+  snack: "Lanche da Tarde",
+  lanche_da_tarde: "Lanche da Tarde",
+  "lanche da tarde": "Lanche da Tarde",
+  lanche: "Lanche da Tarde",
 
-  dinner: "dinner",
-  jantar: "dinner",
+  dinner: "Jantar",
+  jantar: "Jantar",
 
   supper: "supper",
   ceia: "supper",

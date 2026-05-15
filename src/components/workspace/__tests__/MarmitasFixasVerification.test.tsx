@@ -47,8 +47,8 @@ const STATE: State = {
 
 function buildFixedRecipes(fixedLunch: number, fixedDinner: number): RecipeRow[] {
   return [
-    ...Array.from({ length: fixedLunch }, () => ({ meal_type: "lunch", is_fixed: true })),
-    ...Array.from({ length: fixedDinner }, () => ({ meal_type: "dinner", is_fixed: true })),
+    ...Array.from({ length: fixedLunch }, () => ({ meal_type: "Almoço", is_fixed: true })),
+    ...Array.from({ length: fixedDinner }, () => ({ meal_type: "Jantar", is_fixed: true })),
   ];
 }
 

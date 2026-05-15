@@ -27,7 +27,7 @@ export default function Meals() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    meal_type: "lunch" as MealType,
+    meal_type: "Almoço" as MealType,
     calories: "",
     protein: "",
     carbs: "",
@@ -36,12 +36,12 @@ export default function Meals() {
   const [submitting, setSubmitting] = useState(false);
 
   const mealTypes: { value: MealType; label: string }[] = [
-    { value: "breakfast", label: t("meals.breakfast") },
-    { value: "morning_snack", label: t("meals.morningSnack") },
-    { value: "lunch", label: t("meals.lunch") },
-    { value: "afternoon_snack", label: t("meals.afternoonSnack") },
-    { value: "dinner", label: t("meals.dinner") },
-    { value: "evening_snack", label: t("meals.eveningSnack") },
+    { value: "Café da Manhã", label: t("meals.breakfast") },
+    { value: "Lanche da Manhã", label: t("meals.morningSnack") },
+    { value: "Almoço", label: t("meals.lunch") },
+    { value: "Lanche da Tarde", label: t("meals.afternoonSnack") },
+    { value: "Jantar", label: t("meals.dinner") },
+    { value: "Ceia", label: t("meals.eveningSnack") },
   ];
 
   const fetchMeals = async () => {
@@ -106,7 +106,7 @@ export default function Meals() {
 
       toast.success(t("meals.registered"));
       setOpen(false);
-      setForm({ title: "", description: "", meal_type: "lunch", calories: "", protein: "", carbs: "", fat: "" });
+      setForm({ title: "", description: "", meal_type: "Almoço", calories: "", protein: "", carbs: "", fat: "" });
       fetchMeals();
     }
     setSubmitting(false);

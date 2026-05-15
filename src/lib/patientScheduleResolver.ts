@@ -195,12 +195,12 @@ export async function resolvePatientSchedule(patientId: string): Promise<Resolve
 function normalizeMealKey(key: string): string | null {
   const k = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   const map: Record<string, string> = {
-    cafe: "breakfast", "cafe_da_manha": "breakfast", breakfast: "breakfast", desjejum: "breakfast",
-    lanche_manha: "morning_snack", morning_snack: "morning_snack", "lanche da manha": "morning_snack",
-    almoco: "lunch", lunch: "lunch",
-    lanche_tarde: "afternoon_snack", afternoon_snack: "afternoon_snack", "lanche da tarde": "afternoon_snack",
-    jantar: "dinner", dinner: "dinner",
-    ceia: "evening_snack", evening_snack: "evening_snack", "lanche noturno": "evening_snack",
+    cafe: "Café da Manhã", "cafe_da_manha": "Café da Manhã", breakfast: "Café da Manhã", desjejum: "Café da Manhã",
+    lanche_manha: "Lanche da Manhã", morning_snack: "Lanche da Manhã", "lanche da manha": "Lanche da Manhã",
+    almoco: "Almoço", lunch: "Almoço",
+    lanche_tarde: "Lanche da Tarde", afternoon_snack: "Lanche da Tarde", "lanche da tarde": "Lanche da Tarde",
+    jantar: "Jantar", dinner: "Jantar",
+    ceia: "Ceia", evening_snack: "Ceia", "lanche noturno": "Ceia",
   };
   return map[k] || null;
 }

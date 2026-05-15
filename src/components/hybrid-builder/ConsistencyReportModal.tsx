@@ -28,10 +28,10 @@ interface Props {
 }
 
 export default function ConsistencyReportModal({ open, onOpenChange, recipes, targetKcal }: Props) {
-  const lunchCount = recipes.filter(r => r.meal_type === "lunch" || r.meal_type === "almoço").length;
-  const dinnerCount = recipes.filter(r => r.meal_type === "dinner" || r.meal_type === "jantar").length;
-  const fixedLunchCount = recipes.filter(r => (r.meal_type === "lunch" || r.meal_type === "almoço") && r.is_fixed).length;
-  const fixedDinnerCount = recipes.filter(r => (r.meal_type === "dinner" || r.meal_type === "jantar") && r.is_fixed).length;
+  const lunchCount = recipes.filter(r => r.meal_type === "Almoço" || r.meal_type === "almoço").length;
+  const dinnerCount = recipes.filter(r => r.meal_type === "Jantar" || r.meal_type === "jantar").length;
+  const fixedLunchCount = recipes.filter(r => (r.meal_type === "Almoço" || r.meal_type === "almoço") && r.is_fixed).length;
+  const fixedDinnerCount = recipes.filter(r => (r.meal_type === "Jantar" || r.meal_type === "jantar") && r.is_fixed).length;
 
   const hasIssues = recipes.some(r => r.calories === 0 || r.protein === 0);
 

@@ -68,12 +68,12 @@ interface MealDetailData {
 }
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; time: string }[] = [
-  { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-5 h-5" />, time: "06:00 - 09:00" },
-  { key: "morning_snack", label: "Lanche da Manhã", icon: <Apple className="w-5 h-5" />, time: "10:00 - 11:00" },
-  { key: "lunch", label: "Almoço", icon: <Utensils className="w-5 h-5" />, time: "12:00 - 14:00" },
-  { key: "afternoon_snack", label: "Lanche da Tarde", icon: <Cookie className="w-5 h-5" />, time: "15:00 - 17:00" },
-  { key: "dinner", label: "Jantar", icon: <Moon className="w-5 h-5" />, time: "18:00 - 20:00" },
-  { key: "evening_snack", label: "Ceia", icon: <Sun className="w-5 h-5" />, time: "21:00 - 22:00" },
+  { key: "Café da Manhã", label: "Café da Manhã", icon: <Coffee className="w-5 h-5" />, time: "06:00 - 09:00" },
+  { key: "Lanche da Manhã", label: "Lanche da Manhã", icon: <Apple className="w-5 h-5" />, time: "10:00 - 11:00" },
+  { key: "Almoço", label: "Almoço", icon: <Utensils className="w-5 h-5" />, time: "12:00 - 14:00" },
+  { key: "Lanche da Tarde", label: "Lanche da Tarde", icon: <Cookie className="w-5 h-5" />, time: "15:00 - 17:00" },
+  { key: "Jantar", label: "Jantar", icon: <Moon className="w-5 h-5" />, time: "18:00 - 20:00" },
+  { key: "Ceia", label: "Ceia", icon: <Sun className="w-5 h-5" />, time: "21:00 - 22:00" },
 ];
 
 const DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];

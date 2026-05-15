@@ -52,12 +52,12 @@ interface SavedTemplate {
 }
 
 const MEAL_TYPES: MealBlock[] = [
-  { type: "breakfast", label: "Café da Manhã", emoji: "☕", items: [] },
-  { type: "morning_snack", label: "Lanche da Manhã", emoji: "🍎", items: [] },
-  { type: "lunch", label: "Almoço", emoji: "🍽️", items: [] },
-  { type: "afternoon_snack", label: "Lanche da Tarde", emoji: "🥤", items: [] },
-  { type: "dinner", label: "Jantar", emoji: "🌙", items: [] },
-  { type: "evening_snack", label: "Ceia", emoji: "🥛", items: [] },
+  { type: "Café da Manhã", label: "Café da Manhã", emoji: "☕", items: [] },
+  { type: "Lanche da Manhã", label: "Lanche da Manhã", emoji: "🍎", items: [] },
+  { type: "Almoço", label: "Almoço", emoji: "🍽️", items: [] },
+  { type: "Lanche da Tarde", label: "Lanche da Tarde", emoji: "🥤", items: [] },
+  { type: "Jantar", label: "Jantar", emoji: "🌙", items: [] },
+  { type: "Ceia", label: "Ceia", emoji: "🥛", items: [] },
 ];
 
 interface Props {

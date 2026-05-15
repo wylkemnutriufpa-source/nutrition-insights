@@ -64,7 +64,7 @@ describe('Extended E2E Tests', () => {
       <TooltipProvider>
         <MealSlotCard 
           day={1} 
-          mealType="breakfast" 
+          mealType="Café da Manhã" 
           label="Café" 
           icon={null} 
           items={[

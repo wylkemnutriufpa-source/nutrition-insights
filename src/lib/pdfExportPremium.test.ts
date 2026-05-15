@@ -10,7 +10,7 @@ describe("PDF Export Premium - Macros Não Considerados", () => {
       startDate: "2023-01-01",
       items: [
         {
-          mealType: "lunch",
+          mealType: "Almoço",
           title: "Prato Principal",
           calories_target: 500,
           protein_target: 40,
@@ -20,7 +20,7 @@ describe("PDF Export Premium - Macros Não Considerados", () => {
           substitution_group_id: "group-1",
         },
         {
-          mealType: "lunch",
+          mealType: "Almoço",
           title: "Sub 1",
           calories_target: 300,
           protein_target: 20,
@@ -30,7 +30,7 @@ describe("PDF Export Premium - Macros Não Considerados", () => {
           substitution_group_id: "group-1",
         },
         {
-          mealType: "lunch",
+          mealType: "Almoço",
           title: "Sub 2",
           calories_target: 200,
           protein_target: 10,
@@ -66,10 +66,10 @@ describe("PDF Export Premium - Macros Não Considerados", () => {
       items: [
         { id: "lanche-tarde", mealType: "Lanche da Tarde", title: "Iogurte com fruta", description: "170g", calories_target: 150, is_primary: true },
         { id: "ceia", mealType: "ceia", title: "Gelatina", description: "1 pote", calories_target: 50, is_primary: true },
-        { id: "cafe-1", mealType: "breakfast", title: "Tapioca com ovo", description: "1 unidade", calories_target: 367, is_primary: true },
+        { id: "cafe-1", mealType: "Café da Manhã", title: "Tapioca com ovo", description: "1 unidade", calories_target: 367, is_primary: true },
         { id: "almoco-1", mealType: "Almoço", title: "Frango grelhado", description: "150g", calories_target: 383, is_primary: true },
         { id: "jantar-1", mealType: "Dinner", title: "Sopa de legumes", description: "1 prato", calories_target: 133, is_primary: true },
-        { id: "lanche-manha", mealType: "morning_snack", title: "Mamão", description: "1 fatia", calories_target: 100, is_primary: true },
+        { id: "lanche-manha", mealType: "Lanche da Manhã", title: "Mamão", description: "1 fatia", calories_target: 100, is_primary: true },
       ],
     };
 
@@ -92,10 +92,10 @@ describe("PDF Export Premium - Macros Não Considerados", () => {
       nutritionistName: "Dr. Nutri",
       startDate: "2026-05-11",
       items: [
-        { mealType: "breakfast", title: "Cuscuz com ovo", description: "1 fatia + 1 ovo", calories_target: 300, is_primary: true, substitution_group_id: "same-group" },
-        { mealType: "breakfast", title: "Pão com ovo", description: "Substituição", calories_target: 300, is_primary: false, substitution_group_id: "same-group" },
-        { mealType: "lunch", title: "Filé de tilápia", description: "150g", calories_target: 283, is_primary: true, substitution_group_id: "same-group" },
-        { mealType: "lunch", title: "Frango grelhado", description: "Substituição", calories_target: 283, is_primary: false, substitution_group_id: "same-group" },
+        { mealType: "Café da Manhã", title: "Cuscuz com ovo", description: "1 fatia + 1 ovo", calories_target: 300, is_primary: true, substitution_group_id: "same-group" },
+        { mealType: "Café da Manhã", title: "Pão com ovo", description: "Substituição", calories_target: 300, is_primary: false, substitution_group_id: "same-group" },
+        { mealType: "Almoço", title: "Filé de tilápia", description: "150g", calories_target: 283, is_primary: true, substitution_group_id: "same-group" },
+        { mealType: "Almoço", title: "Frango grelhado", description: "Substituição", calories_target: 283, is_primary: false, substitution_group_id: "same-group" },
       ],
     };
 

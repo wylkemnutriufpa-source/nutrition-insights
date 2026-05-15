@@ -49,7 +49,7 @@ const MEAL_TYPE_CONFIG: Record<MealType, { label: string; icon: React.ReactNode;
   evening_snack: { label: "Ceia", icon: <Sun className="w-4 h-4" />, color: "text-purple-500" },
 };
 
-const ALL_MEAL_TYPES: MealType[] = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+const ALL_MEAL_TYPES: MealType[] = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
 
 interface Props {
   day: number;
@@ -60,7 +60,7 @@ export default function MealClickToAddPanel({ day }: Props) {
   const [allItems, setAllItems] = useState<VisualItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [activeMealType, setActiveMealType] = useState<MealType>("breakfast");
+  const [activeMealType, setActiveMealType] = useState<MealType>("Café da Manhã");
   const [recentlyAdded, setRecentlyAdded] = useState<Set<string>>(new Set());
 
   // Fetch visual library once

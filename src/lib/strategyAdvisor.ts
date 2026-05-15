@@ -524,20 +524,20 @@ const STRATEGY_TEMPLATES: StrategyTemplate[] = [
 
 const MEAL_PREVIEWS: Record<string, Record<string, StrategyMealPreview[]>> = {
   loss: {
-    breakfast: [{ mealType: "breakfast", label: "☀️ Café da Manhã", description: "Pão integral + Ovo mexido + Café sem açúcar", calories: 230, protein: 12, carbs: 22, fat: 10 }],
-    morning_snack: [{ mealType: "morning_snack", label: "🍎 Lanche AM", description: "1 banana + 1 col. aveia", calories: 130, protein: 3, carbs: 28, fat: 2 }],
-    lunch: [{ mealType: "lunch", label: "🍽️ Almoço", description: "Frango grelhado + Arroz + Feijão + Salada", calories: 400, protein: 38, carbs: 38, fat: 8 }],
-    afternoon_snack: [{ mealType: "afternoon_snack", label: "🍪 Lanche PM", description: "1 maçã + Iogurte natural", calories: 150, protein: 6, carbs: 26, fat: 4 }],
-    dinner: [{ mealType: "dinner", label: "🌙 Jantar", description: "Tilápia grelhada + Batata cozida + Salada", calories: 310, protein: 32, carbs: 28, fat: 5 }],
-    evening_snack: [{ mealType: "evening_snack", label: "🫖 Ceia", description: "1 pote iogurte natural", calories: 100, protein: 6, carbs: 8, fat: 4 }],
+    breakfast: [{ mealType: "Café da Manhã", label: "☀️ Café da Manhã", description: "Pão integral + Ovo mexido + Café sem açúcar", calories: 230, protein: 12, carbs: 22, fat: 10 }],
+    morning_snack: [{ mealType: "Lanche da Manhã", label: "🍎 Lanche AM", description: "1 banana + 1 col. aveia", calories: 130, protein: 3, carbs: 28, fat: 2 }],
+    lunch: [{ mealType: "Almoço", label: "🍽️ Almoço", description: "Frango grelhado + Arroz + Feijão + Salada", calories: 400, protein: 38, carbs: 38, fat: 8 }],
+    afternoon_snack: [{ mealType: "Lanche da Tarde", label: "🍪 Lanche PM", description: "1 maçã + Iogurte natural", calories: 150, protein: 6, carbs: 26, fat: 4 }],
+    dinner: [{ mealType: "Jantar", label: "🌙 Jantar", description: "Tilápia grelhada + Batata cozida + Salada", calories: 310, protein: 32, carbs: 28, fat: 5 }],
+    evening_snack: [{ mealType: "Ceia", label: "🫖 Ceia", description: "1 pote iogurte natural", calories: 100, protein: 6, carbs: 8, fat: 4 }],
   },
   gain: {
-    breakfast: [{ mealType: "breakfast", label: "☀️ Café da Manhã", description: "2 fatias pão integral + 2 ovos + Queijo + Café com leite", calories: 430, protein: 22, carbs: 38, fat: 16 }],
-    morning_snack: [{ mealType: "morning_snack", label: "🍎 Lanche AM", description: "Pão integral + Ovo + Banana", calories: 280, protein: 12, carbs: 38, fat: 8 }],
-    lunch: [{ mealType: "lunch", label: "🍽️ Almoço", description: "200g Frango + 5 col. Arroz + 3 col. Feijão + Salada", calories: 580, protein: 48, carbs: 55, fat: 12 }],
-    afternoon_snack: [{ mealType: "afternoon_snack", label: "🍪 Lanche PM", description: "Banana + Pasta de amendoim + Leite", calories: 300, protein: 12, carbs: 34, fat: 12 }],
-    dinner: [{ mealType: "dinner", label: "🌙 Jantar", description: "170g Frango + 4 col. Arroz + Salada verde", calories: 460, protein: 42, carbs: 42, fat: 8 }],
-    evening_snack: [{ mealType: "evening_snack", label: "🫖 Ceia", description: "Leite + Aveia + Banana", calories: 230, protein: 8, carbs: 36, fat: 6 }],
+    breakfast: [{ mealType: "Café da Manhã", label: "☀️ Café da Manhã", description: "2 fatias pão integral + 2 ovos + Queijo + Café com leite", calories: 430, protein: 22, carbs: 38, fat: 16 }],
+    morning_snack: [{ mealType: "Lanche da Manhã", label: "🍎 Lanche AM", description: "Pão integral + Ovo + Banana", calories: 280, protein: 12, carbs: 38, fat: 8 }],
+    lunch: [{ mealType: "Almoço", label: "🍽️ Almoço", description: "200g Frango + 5 col. Arroz + 3 col. Feijão + Salada", calories: 580, protein: 48, carbs: 55, fat: 12 }],
+    afternoon_snack: [{ mealType: "Lanche da Tarde", label: "🍪 Lanche PM", description: "Banana + Pasta de amendoim + Leite", calories: 300, protein: 12, carbs: 34, fat: 12 }],
+    dinner: [{ mealType: "Jantar", label: "🌙 Jantar", description: "170g Frango + 4 col. Arroz + Salada verde", calories: 460, protein: 42, carbs: 42, fat: 8 }],
+    evening_snack: [{ mealType: "Ceia", label: "🫖 Ceia", description: "Leite + Aveia + Banana", calories: 230, protein: 8, carbs: 36, fat: 6 }],
   },
 };
 

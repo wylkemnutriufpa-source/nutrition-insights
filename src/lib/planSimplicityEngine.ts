@@ -264,7 +264,7 @@ export function calculatePlanSimplicityScore(items: MealItemForAudit[]): Simplic
     }
 
     // 4. Check breakfast complexity
-    if (mealType === "breakfast" || mealType === "cafe_da_manha") {
+    if (mealType === "Café da Manhã" || mealType === "cafe_da_manha") {
       if (mealItems.length > 3) {
         score -= 6;
         mealHasIssue = true;

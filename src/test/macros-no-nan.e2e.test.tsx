@@ -239,7 +239,7 @@ describe("<MealCard /> — refeição registrada com macros tóxicos", () => {
     render(
       <MealCard
         title="Almoço"
-        mealType="lunch"
+        mealType="Almoço"
         loggedAt={new Date().toISOString()}
         calories={toxic.calories as any}
         protein={toxic.protein as any}
