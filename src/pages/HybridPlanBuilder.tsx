@@ -34,7 +34,7 @@ import { QuickAdjustPanel } from "@/components/meal-editor-v2/QuickAdjustPanel";
 
 export default function HybridPlanBuilder() {
   const expandRecipeToItems = async (
-    recipe: { id: string; title: string; calories_per_serving?: number | null; protein_per_serving?: number | null; carbs_per_serving?: number | null; fat_per_serving?: number | null; image_url?: string | null },
+    recipe: { id: string; title: string; calorias_por_porcao?: number | null; proteinas_por_porcao?: number | null; carboidratos_por_porcao?: number | null; gorduras_por_porcao?: number | null; image_url?: string | null },
     planId: string,
     day: number,
     mealType: MealType,
@@ -58,10 +58,10 @@ export default function HybridPlanBuilder() {
           description: recipe.title,
           day_of_week: day,
           tipo_refeicao: mealType,
-          meta_calorias: recipe.calories_per_serving || 0,
-          meta_proteinas: recipe.protein_per_serving || 0,
-          meta_carboidratos: recipe.carbs_per_serving || 0,
-          meta_gorduras: recipe.fat_per_serving || 0,
+          meta_calorias: recipe.calorias_por_porcao || 0,
+          meta_proteinas: recipe.proteinas_por_porcao || 0,
+          meta_carboidratos: recipe.carboidratos_por_porcao || 0,
+          meta_gorduras: recipe.gorduras_por_porcao || 0,
           image_url: recipe.image_url || null,
           item_origin: "builder_drag_recipe" as any,
           tenant_id: tenantIdVal,

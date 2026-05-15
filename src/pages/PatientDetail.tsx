@@ -281,10 +281,10 @@ export default function PatientDetail() {
       nutritionistName: profName,
       startDate: new Date().toLocaleDateString("pt-BR"),
       items: planItems,
-      targetCalories: Math.round(Number(plan.total_target_calories || plan.total_calories || 0)),
-      targetProtein: Math.round(Number(plan.total_target_protein || plan.total_protein || 0)),
-      targetCarbs: Math.round(Number(plan.total_target_carbs || plan.total_carbs || 0)),
-      targetFat: Math.round(Number(plan.total_target_fat || plan.total_fat || 0)),
+      targetCalories: Math.round(Number(plan.total_meta_calorias || plan.total_calories || 0)),
+      targetProtein: Math.round(Number(plan.total_meta_proteinas || plan.total_protein || 0)),
+      targetCarbs: Math.round(Number(plan.total_meta_carboidratos || plan.total_carbs || 0)),
+      targetFat: Math.round(Number(plan.total_meta_gorduras || plan.total_fat || 0)),
       goal: profile?.goal,
       planMode: plan.plan_mode
     };

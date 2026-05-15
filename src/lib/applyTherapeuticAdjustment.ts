@@ -133,10 +133,10 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
     const { error: planUpdateError } = await supabase
       .from("meal_plans")
       .update({
-        total_target_calories: afterCalories,
-        total_target_protein: afterProtein,
-        total_target_carbs: afterCarbs,
-        total_target_fat: afterFat,
+        total_meta_calorias: afterCalories,
+        total_meta_proteinas: afterProtein,
+        total_meta_carboidratos: afterCarbs,
+        total_meta_gorduras: afterFat,
         therapeutic_effectiveness_status: interventionType,
         therapeutic_efficacy_score: metadata?.efficacy_score ?? null,
         updated_at: new Date().toISOString(),

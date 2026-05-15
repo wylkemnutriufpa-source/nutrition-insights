@@ -60,7 +60,7 @@ async function searchDirectly(words: string[]): Promise<GroupedSearchResults> {
   const results: GroupedSearchResults = { recipes: [], meals: [], plans: [], strategies: [], calories: [] };
 
   const [recipesRes, mealsRes] = await Promise.all([
-    supabase.from("recipes").select("id, title, category, tags, calories_per_serving, protein_per_serving").limit(30),
+    supabase.from("recipes").select("id, title, category, tags, calorias_por_porcao, proteinas_por_porcao").limit(30),
     supabase.from("meal_library" as any).select("id, title, tipo_refeicao, goal_tag, clinical_tags, base_calories, protein").eq("is_active", true).limit(50),
   ]);
 
@@ -78,7 +78,7 @@ async function searchDirectly(words: string[]): Promise<GroupedSearchResults> {
         clinical_tags: JSON.stringify(r.tags || []),
         goal_tags: r.category || '',
         strategy_tags: '',
-        extra_data: { calories: r.calories_per_serving, protein: r.protein_per_serving },
+        extra_data: { calories: r.calorias_por_porcao, protein: r.proteinas_por_porcao },
       }));
   }
 

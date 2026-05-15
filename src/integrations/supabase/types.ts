@@ -7925,10 +7925,10 @@ export type Database = {
           generated_by: string | null
           generation_metadata: Json | null
           generation_source: string | null
-          global_calories_target: number | null
-          global_carbs_target: number | null
-          global_fat_target: number | null
-          global_protein_target: number | null
+          global_meta_calorias: number | null
+          global_meta_carboidratos: number | null
+          global_meta_gorduras: number | null
+          global_meta_proteinas: number | null
           id: string | null
           is_active: boolean | null
           is_global_model: boolean | null
@@ -7969,10 +7969,10 @@ export type Database = {
           total_carbs: number | null
           total_fat: number | null
           total_protein: number | null
-          total_target_calories: number | null
-          total_target_carbs: number | null
-          total_target_fat: number | null
-          total_target_protein: number | null
+          total_meta_calorias: number | null
+          total_meta_carboidratos: number | null
+          total_meta_gorduras: number | null
+          total_meta_proteinas: number | null
           totals_status: string | null
           transition_origin_id: string | null
           updated_at: string | null
@@ -7992,10 +7992,10 @@ export type Database = {
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
-          global_calories_target?: number | null
-          global_carbs_target?: number | null
-          global_fat_target?: number | null
-          global_protein_target?: number | null
+          global_meta_calorias?: number | null
+          global_meta_carboidratos?: number | null
+          global_meta_gorduras?: number | null
+          global_meta_proteinas?: number | null
           id?: string | null
           is_active?: boolean | null
           is_global_model?: boolean | null
@@ -8036,10 +8036,10 @@ export type Database = {
           total_carbs?: number | null
           total_fat?: number | null
           total_protein?: number | null
-          total_target_calories?: number | null
-          total_target_carbs?: number | null
-          total_target_fat?: number | null
-          total_target_protein?: number | null
+          total_meta_calorias?: number | null
+          total_meta_carboidratos?: number | null
+          total_meta_gorduras?: number | null
+          total_meta_proteinas?: number | null
           totals_status?: string | null
           transition_origin_id?: string | null
           updated_at?: string | null
@@ -8059,10 +8059,10 @@ export type Database = {
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
-          global_calories_target?: number | null
-          global_carbs_target?: number | null
-          global_fat_target?: number | null
-          global_protein_target?: number | null
+          global_meta_calorias?: number | null
+          global_meta_carboidratos?: number | null
+          global_meta_gorduras?: number | null
+          global_meta_proteinas?: number | null
           id?: string | null
           is_active?: boolean | null
           is_global_model?: boolean | null
@@ -8103,10 +8103,10 @@ export type Database = {
           total_carbs?: number | null
           total_fat?: number | null
           total_protein?: number | null
-          total_target_calories?: number | null
-          total_target_carbs?: number | null
-          total_target_fat?: number | null
-          total_target_protein?: number | null
+          total_meta_calorias?: number | null
+          total_meta_carboidratos?: number | null
+          total_meta_gorduras?: number | null
+          total_meta_proteinas?: number | null
           totals_status?: string | null
           transition_origin_id?: string | null
           updated_at?: string | null

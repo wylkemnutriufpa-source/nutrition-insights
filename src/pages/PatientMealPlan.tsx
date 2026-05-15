@@ -57,10 +57,10 @@ interface MealPlan {
   plan_mode?: string;
   editor_version?: string;
   snapshot?: any;
-  total_target_calories?: number;
-  total_target_protein?: number;
-  total_target_carbs?: number;
-  total_target_fat?: number;
+  total_meta_calorias?: number;
+  total_meta_proteinas?: number;
+  total_meta_carboidratos?: number;
+  total_meta_gorduras?: number;
 }
 
 function getWeekDates(dateStr: string) {
@@ -194,10 +194,10 @@ export default function PatientMealPlan() {
       plan_mode: planData.plan_mode,
       editor_version: planData.editor_version,
       snapshot: planData.snapshot,
-      total_target_calories: planData.total_target_calories,
-      total_target_protein: planData.total_target_protein,
-      total_target_carbs: planData.total_target_carbs,
-      total_target_fat: planData.total_target_fat,
+      total_meta_calorias: planData.total_meta_calorias,
+      total_meta_proteinas: planData.total_meta_proteinas,
+      total_meta_carboidratos: planData.total_meta_carboidratos,
+      total_meta_gorduras: planData.total_meta_gorduras,
     } as any);
 
     // Feedback visual premium ao carregar
@@ -498,7 +498,7 @@ export default function PatientMealPlan() {
       const { data: myProfile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
       if (myProfile?.full_name) patientName = myProfile.full_name;
 
-      const { data: planFull } = await supabase.from("meal_plans").select("nutritionist_id, total_target_calories, total_target_protein, total_target_carbs, total_target_fat, description").eq("id", plan.id).maybeSingle();
+      const { data: planFull } = await supabase.from("meal_plans").select("nutritionist_id, total_meta_calorias, total_meta_proteinas, total_meta_carboidratos, total_meta_gorduras, description").eq("id", plan.id).maybeSingle();
       if (planFull?.nutritionist_id) {
         const { data: nutProfile } = await supabase.from("profiles").select("full_name").eq("user_id", planFull.nutritionist_id).maybeSingle();
         if (nutProfile?.full_name) nutritionistName = nutProfile.full_name;
@@ -516,10 +516,10 @@ export default function PatientMealPlan() {
       if (plan.editor_version === 'v3') {
         pdfItems = allItems; // No V3, allItems já estão filtrados/estruturados pelo snapshot
         primaryTotals = {
-          calories: plan.total_target_calories,
-          protein: plan.total_target_protein,
-          carbs: plan.total_target_carbs,
-          fat: plan.total_target_fat,
+          calories: plan.total_meta_calorias,
+          protein: plan.total_meta_proteinas,
+          carbs: plan.total_meta_carboidratos,
+          fat: plan.total_meta_gorduras,
         };
       } else {
         pdfItems = buildPdfItemsForDailyPlan(allItems as any, new Date(date + "T12:00:00").getDay()) as MealPlanItem[];
@@ -560,10 +560,10 @@ export default function PatientMealPlan() {
             substitution_group_id: (i as any).substitution_group_id || null,
           };
         }),
-        targetCalories: Math.round(primaryTotals.calories) || planFull?.total_target_calories || undefined,
-        targetProtein: Math.round(primaryTotals.protein) || planFull?.total_target_protein || undefined,
-        targetCarbs: Math.round(primaryTotals.carbs) || planFull?.total_target_carbs || undefined,
-        targetFat: Math.round(primaryTotals.fat) || planFull?.total_target_fat || undefined,
+        targetCalories: Math.round(primaryTotals.calories) || planFull?.total_meta_calorias || undefined,
+        targetProtein: Math.round(primaryTotals.protein) || planFull?.total_meta_proteinas || undefined,
+        targetCarbs: Math.round(primaryTotals.carbs) || planFull?.total_meta_carboidratos || undefined,
+        targetFat: Math.round(primaryTotals.fat) || planFull?.total_meta_gorduras || undefined,
         goal,
         notes: planFull?.description || undefined,
       };

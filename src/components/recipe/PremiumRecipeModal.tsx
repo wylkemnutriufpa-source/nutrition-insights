@@ -15,10 +15,10 @@ interface Recipe {
   porcoes: number | null;
   difficulty: string | null;
   category: string | null;
-  calories_per_serving: number | null;
-  protein_per_serving: number | null;
-  carbs_per_serving: number | null;
-  fat_per_serving: number | null;
+  calorias_por_porcao: number | null;
+  proteinas_por_porcao: number | null;
+  carboidratos_por_porcao: number | null;
+  gorduras_por_porcao: number | null;
   image_url?: string | null;
   tags?: string[] | null;
 }
@@ -87,10 +87,10 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
   const instructions = toStringArray(recipe.instructions);
 
   const macros = [
-    { label: "Kcal", value: recipe.calories_per_serving != null ? fmtMacro(recipe.calories_per_serving) : null, icon: Flame, color: "text-orange-500" },
-    { label: "Proteína", value: recipe.protein_per_serving != null ? `${fmtMacro(recipe.protein_per_serving)}g` : null, icon: Beef, color: "text-red-500" },
-    { label: "Carboidrato", value: recipe.carbs_per_serving != null ? `${fmtMacro(recipe.carbs_per_serving)}g` : null, icon: Wheat, color: "text-amber-500" },
-    { label: "Gordura", value: recipe.fat_per_serving != null ? `${fmtMacro(recipe.fat_per_serving)}g` : null, icon: Droplets, color: "text-blue-500" },
+    { label: "Kcal", value: recipe.calorias_por_porcao != null ? fmtMacro(recipe.calorias_por_porcao) : null, icon: Flame, color: "text-orange-500" },
+    { label: "Proteína", value: recipe.proteinas_por_porcao != null ? `${fmtMacro(recipe.proteinas_por_porcao)}g` : null, icon: Beef, color: "text-red-500" },
+    { label: "Carboidrato", value: recipe.carboidratos_por_porcao != null ? `${fmtMacro(recipe.carboidratos_por_porcao)}g` : null, icon: Wheat, color: "text-amber-500" },
+    { label: "Gordura", value: recipe.gorduras_por_porcao != null ? `${fmtMacro(recipe.gorduras_por_porcao)}g` : null, icon: Droplets, color: "text-blue-500" },
   ].filter(m => m.value != null);
 
   return (

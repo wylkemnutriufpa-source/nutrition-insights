@@ -85,7 +85,7 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
       const [recipesRes, foodsRes] = await Promise.all([
         supabase
           .from("recipes")
-          .select("id, title, calories_per_serving, protein_per_serving, carbs_per_serving, fat_per_serving, image_url, category, description")
+          .select("id, title, calorias_por_porcao, proteinas_por_porcao, carboidratos_por_porcao, gorduras_por_porcao, image_url, category, description")
           .order("title"),
         supabase
           .from("ifj_food_database")
@@ -104,10 +104,10 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
           id: `recipe-${r.id}`,
           name: r.title,
           description: r.description || r.title,
-          calories: Math.round(r.calories_per_serving || 0),
-          protein: Math.round(r.protein_per_serving || 0),
-          carbs: Math.round(r.carbs_per_serving || 0),
-          fat: Math.round(r.fat_per_serving || 0),
+          calories: Math.round(r.calorias_por_porcao || 0),
+          protein: Math.round(r.proteinas_por_porcao || 0),
+          carbs: Math.round(r.carboidratos_por_porcao || 0),
+          fat: Math.round(r.gorduras_por_porcao || 0),
           source: "recipe" as const,
           imageUrl: r.image_url,
           recipeId: r.id,
