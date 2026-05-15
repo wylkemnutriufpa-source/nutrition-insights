@@ -29,8 +29,9 @@ import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLev
 
 
 export default function EditorV3Page() {
-  const { planId, id } = useParams<{ planId: string; id: string }>();
+  const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
   const effectiveId = planId || id;
+  const effectivePatientId = patientId;
 
   const navigate = useNavigate();
   const store = useEditorState();
@@ -139,12 +140,32 @@ export default function EditorV3Page() {
 
   useEffect(() => {
     async function loadPlan() {
-      if (!effectiveId) return;
+      // 1. Prioritize patient ID if present in URL
+      if (effectivePatientId) {
+        store.setPatientId(effectivePatientId);
+        
+        // Load patient data even without a specific plan
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', effectivePatientId)
+          .maybeSingle();
+        
+        if (profile) {
+          setPatientData(profile);
+        }
+      }
+
+      if (!effectiveId) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const { data: plan, error } = await supabase
           .from('meal_plans')
-          .select('*, patient:patients(*)')
+          .select('*, patient:profiles(*)') // Changed from patients(*) to profiles(*)
           .eq('id', effectiveId)
           .single();
 
@@ -173,7 +194,7 @@ export default function EditorV3Page() {
     }
 
     loadPlan();
-  }, [effectiveId]);
+  }, [effectiveId, effectivePatientId]);
 
 
   if (loading) {
@@ -432,7 +453,7 @@ export default function EditorV3Page() {
                 </div>
                 
                 <p className="text-[8px] text-white/40 uppercase font-medium leading-tight">
-                  Cálculo automático baseado no peso ({patientData.weight}kg), altura ({patientData.height}cm) e objetivo ({patientData.goal}).
+                  Cálculo automático baseado no peso ({patientData.current_weight_kg || patientData.weight || 70}kg), altura ({patientData.current_height_cm || patientData.height || 170}cm) e objetivo ({patientData.goal || 'Manutenção'}).
                 </p>
               </section>
             )}
