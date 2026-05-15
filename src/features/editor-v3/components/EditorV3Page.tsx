@@ -411,11 +411,19 @@ export default function EditorV3Page() {
                 <PremiumGallery 
                   templates={templates} 
                   onSelect={(template) => {
+                    setSelectedTemplate(template);
                     setIsTemplateModalOpen(true);
                   }} 
                 />
               </DialogContent>
             </Dialog>
+
+            <TemplateV3Modal 
+              isOpen={isTemplateModalOpen}
+              onClose={() => setIsTemplateModalOpen(false)}
+              template={selectedTemplate}
+              onSelectProfile={handleSelectProfile}
+            />
 
             <Button 
               variant="outline" 
