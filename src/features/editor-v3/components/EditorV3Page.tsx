@@ -107,7 +107,7 @@ export default function EditorV3Page() {
     
     try {
       const clusterMap = (selectedTemplate.cluster_map as any) || {};
-      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
+      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay]; // Use activeDay instead of [0] if not weekly
       const newMeals: any[] = [];
       const distribution = (selectedTemplate.meal_distribution as any[]) || [];
 
@@ -139,7 +139,12 @@ export default function EditorV3Page() {
       for (const day of days) {
         for (const dist of distribution) {
           const slot = dist.slot;
-          const clusterSlug = clusterMap[slot] || clusterMap[slot.trim()] || Object.entries(clusterMap).find(([k]) => k.toLowerCase() === slot.toLowerCase())?.[1];
+          
+          // Match logic for slot keys (case-insensitive and trimmed)
+          const clusterSlug = clusterMap[slot] || 
+                             clusterMap[slot.trim()] || 
+                             Object.entries(clusterMap).find(([k]) => k.toLowerCase().replace(/_/g, ' ') === slot.toLowerCase().replace(/_/g, ' '))?.[1];
+          
           let items: any[] = [];
 
           if (clusterSlug) {
@@ -178,7 +183,10 @@ export default function EditorV3Page() {
         }
       }
 
-      store.hydrateMeals(newMeals);
+      // Merge with existing meals for OTHER days, but replace for selected days
+      const otherDayMeals = store.meals.filter(m => !days.includes(m.day_of_week || 0));
+      store.hydrateMeals([...otherDayMeals, ...newMeals]);
+      
       toast.success('Template plotado com sucesso!', { id: toastId });
     } catch (err) {
       console.error(err);
