@@ -216,6 +216,8 @@ export default function EditorV3Page() {
                 };
               });
             }
+          } else {
+            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}. Available keys:`, Object.keys(clusterMap));
           }
 
           newMeals.push({
