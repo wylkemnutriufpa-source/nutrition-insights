@@ -51,7 +51,7 @@ interface SavedTemplate {
   created_at: string;
 }
 
-const MEAL_TYPES: MealBlock[] = [
+const MEAL_TYPES: any[] = [
   { type: "Café da Manhã", label: "Café da Manhã", emoji: "☕", items: [] },
   { type: "Lanche da Manhã", label: "Lanche da Manhã", emoji: "🍎", items: [] },
   { type: "Almoço", label: "Almoço", emoji: "🍽️", items: [] },
