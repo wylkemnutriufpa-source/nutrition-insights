@@ -194,14 +194,13 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
           return true;
         });
         
-        if (sectionItems.length === 0 && !section.section_name.toLowerCase().includes("pacientes")) return null;
+        const isPatientsSection = section.section_name.toLowerCase().includes("pacientes");
+        if (sectionItems.length === 0 && !isPatientsSection) return null;
         
         const isOpen = openSection === section.id;
         const SectionIcon = ICON_MAP[section.section_icon] || LayoutDashboard;
         const hasActiveItem = sectionItems.some(item => location.pathname === item.route);
         const colorClass = section.section_color || "text-muted-foreground";
-
-        const isPatientsSection = section.section_name.toLowerCase().includes("pacientes");
 
         const sorted = [...sectionItems].sort((a, b) => {
           if (a.is_pinned && !b.is_pinned) return -1;
