@@ -318,29 +318,32 @@ export default function EditorV3Page() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white selection:bg-emerald-500/30">
+      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white selection:bg-emerald-500/30 font-sans">
         {/* Header Superior */}
-        <header className="px-8 py-4 bg-neutral-900/40 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-2xl backdrop-blur-xl transition-all duration-300">
-          <div className="flex items-center gap-6">
+        <header className="px-8 py-5 bg-neutral-900/60 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-2xl backdrop-blur-2xl transition-all duration-500">
+          <div className="flex items-center gap-8">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate(-1)}
-              className="h-10 w-10 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+              className="h-11 w-11 text-white/40 hover:text-white hover:bg-white/5 rounded-2xl transition-all duration-300"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             
-            <div className="flex items-center gap-4">
-              <div className="hidden lg:block">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney Editor</h1>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">V3</Badge>
+            <div className="flex items-center gap-6">
+              <div className="hidden lg:block group">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-black uppercase italic tracking-tighter leading-none group-hover:text-emerald-400 transition-colors">FitJourney</h1>
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md">V3 PRO</Badge>
                 </div>
-                <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mt-0.5">Gestão de templates clínicos</p>
+                <p className="text-[10px] text-white/20 uppercase font-bold tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500/50 animate-pulse" />
+                  Ambiente de Prescrição Premium
+                </p>
               </div>
 
-              <div className="h-10 w-px bg-white/10 hidden lg:block mx-2" />
+              <div className="h-10 w-px bg-white/10 hidden lg:block mx-1" />
 
               <Select 
                 value={effectivePatientId || ""} 
@@ -435,14 +438,14 @@ export default function EditorV3Page() {
         </header>
 
         {/* Dashboard de Macros */}
-        <div className="px-8 py-8 bg-neutral-900/30 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8 items-center backdrop-blur-md">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Flame className="w-3 h-3 text-orange-500" /> Valor Calórico
+        <div className="px-10 py-10 bg-neutral-900/40 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-12 items-center backdrop-blur-3xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-orange-500 transition-colors duration-500">
+              <Flame className="w-4 h-4 text-orange-500" /> Valor Calórico
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.kcal)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">kcal</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.kcal)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">kcal</span>
             </div>
           </div>
 

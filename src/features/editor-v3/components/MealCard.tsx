@@ -35,20 +35,22 @@ export const MealCard: React.FC<MealCardProps> = ({
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
   return (
-    <div className="bg-neutral-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-md group/meal hover:bg-neutral-900/60 hover:border-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 ease-out">
+    <div className="bg-neutral-900/60 border border-white/5 rounded-[3rem] overflow-hidden backdrop-blur-2xl group/meal hover:bg-neutral-900/80 hover:border-emerald-500/30 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
       {/* Header */}
-      <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-        <div className="flex items-center gap-6">
-          <div className="w-14 h-14 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-110 group-hover/meal:bg-emerald-500/20 transition-all duration-500 shadow-inner">
-            <Utensils className="w-7 h-7" />
+      <div className="p-10 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
+        <div className="flex items-center gap-8">
+          <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-105 group-hover/meal:bg-emerald-500/20 group-hover/meal:border-emerald-500/40 transition-all duration-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+            <Utensils className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-lg font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors">
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors duration-500">
               {meal.name}
             </h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <Clock className="w-3 h-3 text-white/30" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/30">{meal.time || '00:00'}</span>
+            <div className="flex items-center gap-2.5 mt-1.5">
+              <Clock className="w-3.5 h-3.5 text-white/20" />
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/20">{meal.time || '08:00'}</span>
+              <div className="w-1 h-1 rounded-full bg-white/10" />
+              <Badge variant="outline" className="text-[8px] uppercase font-black border-white/10 text-white/30 px-2 py-0">Refeição Principal</Badge>
             </div>
           </div>
         </div>

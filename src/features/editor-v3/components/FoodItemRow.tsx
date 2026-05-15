@@ -16,16 +16,18 @@ interface FoodItemRowProps {
 
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity, onUpdateMacros, onRemove }) => {
   return (
-    <div className="group relative flex flex-col p-6 bg-white/[0.02] border border-white/5 rounded-[2rem] hover:bg-white/[0.04] hover:border-white/10 hover:shadow-xl transition-all duration-500 ease-out">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+    <div className="group relative flex flex-col p-8 bg-neutral-800/20 border border-white/5 rounded-[2.5rem] hover:bg-neutral-800/40 hover:border-emerald-500/30 hover:shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] -mr-16 -mt-16 rounded-full group-hover:bg-emerald-500/10 transition-all duration-700" />
+      
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6 relative z-10">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h4 className="text-base font-black uppercase italic tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+          <div className="flex items-center gap-4 mb-3">
+            <h4 className="text-xl font-black uppercase italic tracking-tighter text-white group-hover:text-emerald-400 transition-colors duration-500">
               {item.name}
             </h4>
-            <Badge variant="outline" className="text-[7px] uppercase font-black bg-emerald-500/10 border-transparent text-emerald-500 px-1 py-0 h-3">Real Food</Badge>
+            <Badge variant="outline" className="text-[8px] uppercase font-black bg-emerald-500/10 border-emerald-500/20 text-emerald-500 px-2 py-0.5 h-4 tracking-widest rounded-md">Alimento Real</Badge>
           </div>
-          
+
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-1">
               <Flame className="w-2.5 h-2.5 text-orange-500" />

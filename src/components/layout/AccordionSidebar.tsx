@@ -35,7 +35,7 @@ function getIcon(name: string) {
   return ICON_MAP[name] || LayoutDashboard;
 }
 
-// Map existing DB categories to new accordion groups
+// Map categories to premium groups
 const CATEGORY_TO_GROUP: Record<string, string> = {
   PRINCIPAL: "CLÍNICO",
   CLÍNICO: "CLÍNICO",
@@ -43,13 +43,13 @@ const CATEGORY_TO_GROUP: Record<string, string> = {
   ANALYTICS: "ACOMPANHAMENTO",
   PERFORMANCE: "ACOMPANHAMENTO",
   MARKETING: "GESTÃO",
-  FERRAMENTAS: "CONTEÚDO",
-  CONTEÚDO: "CONTEÚDO",
+  FERRAMENTAS: "BIBLIOTECA",
+  CONTEÚDO: "BIBLIOTECA",
   ADMIN: "GESTÃO",
   PERSONAL: "CLÍNICO",
 };
 
-const GROUP_ORDER = ["CLÍNICO", "ACOMPANHAMENTO", "ENGAJAMENTO", "CONTEÚDO", "GESTÃO", "CONFIGURAÇÕES"];
+const GROUP_ORDER = ["CLÍNICO", "ACOMPANHAMENTO", "BIBLIOTECA", "GESTÃO", "CONFIGURAÇÕES"];
 
 const GROUP_ICONS: Record<string, any> = {
   CLÍNICO: Heart,
