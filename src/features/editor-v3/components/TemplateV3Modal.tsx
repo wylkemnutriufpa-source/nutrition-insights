@@ -118,9 +118,10 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
               
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-white/30">
-                  <Clock className="w-3 h-3" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Preview V3</span>
+                  <Calculator className="w-3 h-3" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Cálculo Automático</span>
                 </div>
+
               </div>
             </div>
 
