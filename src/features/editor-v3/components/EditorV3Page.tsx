@@ -548,7 +548,7 @@ const EditorV3Page = () => {
           
           const isPlanEmpty = meals.length <= 1 && (meals[0]?.items.length === 0);
           
-          if (isRecent && isPlanEmpty && !planId) {
+          if (isRecent && isPlanEmpty && !resolvedPlanId) {
             setPendingAnamnesisData({
               kcal: Number(anamnesis.computed_kcal_target),
               protein: Number(anamnesis.computed_protein),
