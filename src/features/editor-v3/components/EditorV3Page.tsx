@@ -576,8 +576,9 @@ const EditorV3Page = () => {
         }));
       });
       runV3IntegrationTests(patientId).then(res => {
-        if (res.errors.length > 0) {
-          console.error('[v3-health] issues detected during initialization', res.errors);
+        const evidence = (res as any).evidence || [];
+        if (evidence.length > 0) {
+          console.error('[v3-health] issues detected during initialization', evidence);
         } else {
           console.info('[v3-health] all systems operational');
           // Rodar prova clínica
