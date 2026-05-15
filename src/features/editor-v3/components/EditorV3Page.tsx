@@ -125,12 +125,24 @@ export default function EditorV3Page() {
       if (libError) throw libError;
 
       const libraryMap = new Map();
+      const substitutionGroupMap = new Map();
+      
       (libraryItems || []).forEach(item => {
         const slug = item.cluster_slug;
-        if (!libraryMap.has(slug)) {
-          libraryMap.set(slug, []);
+        if (slug) {
+          if (!libraryMap.has(slug)) {
+            libraryMap.set(slug, []);
+          }
+          libraryMap.get(slug).push(item);
         }
-        libraryMap.get(slug).push(item);
+        
+        const group = item.substitutions_group;
+        if (group) {
+          if (!substitutionGroupMap.has(group)) {
+            substitutionGroupMap.set(group, []);
+          }
+          substitutionGroupMap.get(group).push(item);
+        }
       });
       
       console.log('[EditorV3] Library items found:', libraryItems?.length);
@@ -165,13 +177,30 @@ export default function EditorV3Page() {
                 let quantity = scaleItemToTarget(food, targetItemKcal, 'kcal');
                 const macros = calculateItemMacros(food, quantity);
                 
+                const subGroup = food.substitutions_group;
+                const potentialSubs = subGroup ? (substitutionGroupMap.get(subGroup) || []) : [];
+                const substitutions = potentialSubs
+                  .filter((s: any) => s.id !== food.id)
+                  .map((s: any) => {
+                    const subQty = scaleItemToTarget(s, macros.kcal, 'kcal');
+                    const subMacros = calculateItemMacros(s, subQty);
+                    return {
+                      ...s,
+                      name: s.title || s.name,
+                      quantity: subQty,
+                      clinical_mass_g: subQty,
+                      ...subMacros
+                    };
+                  })
+                  .slice(0, 4);
+
                 return {
                   ...food,
                   instanceId: crypto.randomUUID(),
                   name: food.title || food.name,
                   quantity,
                   clinical_mass_g: quantity,
-                  substitutions: [],
+                  substitutions,
                   imageUrl,
                   ...macros
                 };
