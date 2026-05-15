@@ -9,7 +9,7 @@ import {
   CheckCircle2, AlertCircle, Info, Send, Share2,
   Trash2, Copy, MoreHorizontal, Settings, Library,
   Layout, Search, Loader2, User, Activity, Calculator,
-  ChevronRight
+  ChevronRight, Check, ChevronsUpDown, Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,12 +23,19 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -49,6 +56,9 @@ export default function EditorV3Page() {
   const [templates, setTemplates] = useState<V3DietTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<V3DietTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [activeDay, setActiveDay] = useState<number>(1); // 1 = Segunda-feira (Padrão)
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
@@ -124,7 +134,6 @@ export default function EditorV3Page() {
 
       for (const day of days) {
         for (const dist of distribution) {
-          // Normalizar chaves do clusterMap (banco pode salvar com espaços ou acentos, UI usa slots técnicos)
           const slot = dist.slot;
           const clusterSlug = clusterMap[slot] || clusterMap[slot.trim()] || Object.entries(clusterMap).find(([k]) => k.toLowerCase() === slot.toLowerCase())?.[1];
           let items: any[] = [];
@@ -141,6 +150,7 @@ export default function EditorV3Page() {
               items = [{
                 ...food,
                 instanceId: crypto.randomUUID(),
+                name: food.title || food.name, // SOBERANIA: Título mapeado para Nome
                 quantity,
                 clinical_mass_g: quantity,
                 substitutions: [],
@@ -248,45 +258,22 @@ export default function EditorV3Page() {
 
   // Totals for the whole plan (Sum of PRIMARY items only)
   const planTotals = useMemo(() => {
-    // We only sum macros for the unique items across all meals.
-    // If a plan is weekly (7 days), we usually average or sum based on design.
-    // FitJourney design: total daily calories.
-    const dailyKcalMap: Record<number, number> = {};
-    const dailyProtMap: Record<number, number> = {};
-    const dailyCarbMap: Record<number, number> = {};
-    const dailyFatMap: Record<number, number> = {};
-
-    store.meals.forEach((meal) => {
-      const day = meal.day_of_week || 0;
-      if (!dailyKcalMap[day]) {
-        dailyKcalMap[day] = 0;
-        dailyProtMap[day] = 0;
-        dailyCarbMap[day] = 0;
-        dailyFatMap[day] = 0;
-      }
-
-      meal.items.forEach((item) => {
-        dailyKcalMap[day] += item.kcal || 0;
-        dailyProtMap[day] += item.protein || 0;
-        dailyCarbMap[day] += item.carbs || 0;
-        dailyFatMap[day] += item.fat || 0;
+    const totals = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+    
+    // Sum macros ONLY for the currently active day
+    store.meals
+      .filter(m => (m.day_of_week || 0) === activeDay)
+      .forEach((meal) => {
+        meal.items.forEach((item) => {
+          totals.kcal += item.kcal || 0;
+          totals.protein += item.protein || 0;
+          totals.carbs += item.carbs || 0;
+          totals.fat += item.fat || 0;
+        });
       });
-    });
 
-    const days = Object.keys(dailyKcalMap);
-    if (days.length === 0) return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-
-    // Return the maximum day or the average. 
-    // Usually, we want to show the current active day's total if in daily mode,
-    // or the average if in weekly mode.
-    // For simplicity and clinical safety: return the maximum day found (prevents underestimation).
-    return {
-      kcal: Math.max(...Object.values(dailyKcalMap)),
-      protein: Math.max(...Object.values(dailyProtMap)),
-      carbs: Math.max(...Object.values(dailyCarbMap)),
-      fat: Math.max(...Object.values(dailyFatMap)),
-    };
-  }, [store.meals]);
+    return totals;
+  }, [store.meals, activeDay]);
 
 
   const handleSave = async () => {
@@ -367,29 +354,60 @@ export default function EditorV3Page() {
 
               <div className="h-10 w-px bg-white/10 hidden lg:block mx-1" />
 
-              <Select 
-                value={effectivePatientId || ""} 
-                onValueChange={(val) => navigate(`/editor-v3/${val}`)}
-              >
-                <SelectTrigger className="w-[200px] h-10 bg-white/5 border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl">
-                  <User className="w-4 h-4 mr-2 text-emerald-500" />
-                  <SelectValue placeholder="Selecionar Paciente" />
-                </SelectTrigger>
-                <SelectContent className="bg-neutral-900 border-white/10 text-white">
-                  {availablePatients.map(p => (
-                    <SelectItem key={p.user_id} value={p.user_id} className="text-[10px] font-black uppercase">
-                      {p.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={isPatientSearchOpen} onOpenChange={setIsPatientSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={isPatientSearchOpen}
+                    className="w-[240px] h-11 bg-white/5 border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl justify-between hover:bg-white/10 hover:border-emerald-500/30 transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-emerald-500" />
+                      {effectivePatientId 
+                        ? availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name 
+                        : "Selecionar Paciente..."}
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px] p-0 bg-neutral-900 border-white/10 shadow-2xl">
+                  <Command className="bg-transparent">
+                    <CommandInput placeholder="Buscar paciente..." className="h-9 text-[10px] font-bold uppercase text-white" />
+                    <CommandList>
+                      <CommandEmpty className="py-6 text-center text-[10px] uppercase font-black text-white/20">Nenhum paciente encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {availablePatients.map((p) => (
+                          <CommandItem
+                            key={p.user_id}
+                            value={p.full_name}
+                            onSelect={() => {
+                              navigate(`/editor-v3/${p.user_id}`);
+                              setIsPatientSearchOpen(false);
+                            }}
+                            className="text-[10px] font-black uppercase text-white/60 hover:text-emerald-400 hover:bg-white/5 cursor-pointer"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4 text-emerald-500",
+                                effectivePatientId === p.user_id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {p.full_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
 
           </div>
 
           <div className="flex items-center gap-4">
-            <Dialog>
+            <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
@@ -419,8 +437,9 @@ export default function EditorV3Page() {
                 <PremiumGallery 
                   templates={templates} 
                   onSelect={(template) => {
+                    setIsGalleryOpen(false); // Close gallery when selecting a template
                     setSelectedTemplate(template);
-                    setIsTemplateModalOpen(true);
+                    setTimeout(() => setIsTemplateModalOpen(true), 100);
                   }} 
                 />
               </DialogContent>
@@ -494,37 +513,87 @@ export default function EditorV3Page() {
         </div>
 
         {/* Workspace Principal */}
-        <main className="flex-1 overflow-hidden flex flex-col md:flex-row">
+        <main className="flex-1 overflow-hidden flex flex-col">
+          {/* Seletor de Dias - Essencial para evitar o CAOS */}
+          <div className="px-10 py-4 bg-neutral-900/20 border-b border-white/5 flex items-center justify-between backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-4 h-4 text-emerald-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Cronograma Semanal</span>
+            </div>
+            
+            <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+              {[
+                { id: 1, label: "SEG" },
+                { id: 2, label: "TER" },
+                { id: 3, label: "QUA" },
+                { id: 4, label: "QUI" },
+                { id: 5, label: "SEX" },
+                { id: 6, label: "SÁB" },
+                { id: 0, label: "DOM" },
+              ].map((day) => (
+                <button
+                  key={day.id}
+                  onClick={() => setActiveDay(day.id)}
+                  className={cn(
+                    "h-8 px-4 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all",
+                    activeDay === day.id 
+                      ? "bg-emerald-500 text-black shadow-lg" 
+                      : "text-white/30 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Timeline de Refeições */}
           <ScrollArea className="flex-1 h-full px-8 py-12">
             <div className="max-w-5xl mx-auto space-y-12 pb-32">
               <AnimatePresence mode="popLayout">
-                {store.meals.map((meal, idx) => (
-                  <motion.div
-                    key={meal.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  >
-                    <MealCard 
-                      meal={meal} 
-                      onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
-                      onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
-                      onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
-                      onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
-                      onRemoveMeal={() => store.removeMeal(meal.id)}
-                    />
-                  </motion.div>
-                ))}
+                {store.meals
+                  .filter(m => (m.day_of_week || 0) === activeDay)
+                  .map((meal, idx) => (
+                    <motion.div
+                      key={meal.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: idx * 0.1 }}
+                    >
+                      <MealCard 
+                        meal={meal} 
+                        onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
+                        onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
+                        onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
+                        onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
+                        onRemoveMeal={() => store.removeMeal(meal.id)}
+                      />
+                    </motion.div>
+                  ))}
               </AnimatePresence>
 
               <Button 
-                onClick={handleAddMeal}
+                onClick={() => {
+                  const names = ["Café da Manhã", "Lanche", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
+                  const currentCount = store.meals.filter(m => (m.day_of_week || 0) === activeDay).length;
+                  const name = names[currentCount % names.length];
+                  store.addMeal(name, "08:00");
+                  
+                  // Update the new meal to the active day (since addMeal doesn't take day)
+                  // We need to wait for the store to update
+                  setTimeout(() => {
+                    const meals = useEditorState.getState().meals;
+                    const lastMeal = meals[meals.length - 1];
+                    if (lastMeal) {
+                      useEditorState.getState().updateMealHeader(lastMeal.id, { day_of_week: activeDay });
+                    }
+                  }, 50);
+                }}
                 variant="outline" 
                 className="w-full h-24 bg-white/[0.02] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-[2.5rem] transition-all group/add-meal shadow-inner"
               >
                 <Plus className="w-8 h-8 mr-4 group-hover/add-meal:scale-125 transition-transform duration-500" />
-                <span className="uppercase text-xs font-black tracking-[0.3em]">Adicionar Nova Refeição ao Plano</span>
+                <span className="uppercase text-xs font-black tracking-[0.3em]">Adicionar Nova Refeição ao Dia</span>
               </Button>
             </div>
           </ScrollArea>
