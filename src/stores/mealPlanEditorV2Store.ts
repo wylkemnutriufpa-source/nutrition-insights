@@ -231,10 +231,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     if (!planId || items.length === 0) return;
 
     const prevItems = [...items];
-    // Single-day puro: todos os items pertencem ao dia 0
-    const totalProt = items.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
-    const totalCarb = items.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0);
-    const totalKcal = items.reduce((s, i) => s + (Number(i.meta_calorias) || 0), 0);
+    // Single-day puro: considera APENAS itens principais (is_primary = true)
+    const primaryItems = items.filter(i => i.is_primary !== false);
+    
+    const totalProt = primaryItems.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
+    const totalCarb = primaryItems.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0);
+    const totalKcal = primaryItems.reduce((s, i) => s + (Number(i.meta_calorias) || 0), 0);
 
     // Determinar Fatores de Escala
     const pScale = delta.protein ? (totalProt + delta.protein) / totalProt : 1;

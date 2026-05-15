@@ -22,14 +22,16 @@ export function ListView() {
 
   const totals = useMemo(() => {
     const t = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-    for (const i of dayItems) {
+    // Regra: Considera APENAS itens principais (is_primary = true)
+    const primaryItems = dayItems.filter(i => i.is_primary !== false);
+    for (const i of primaryItems) {
       t.calories += Number(i.meta_calorias) || 0;
       t.protein += Number(i.meta_proteinas) || 0;
       t.carbs += Number(i.meta_carboidratos) || 0;
       t.fat += Number(i.meta_gorduras) || 0;
     }
     return t;
-  }, [items]);
+  }, [dayItems]);
 
   return (
     <div className="space-y-3 max-w-3xl mx-auto">

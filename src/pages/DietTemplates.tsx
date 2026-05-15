@@ -1035,16 +1035,19 @@ export default function DietTemplates() {
                   </Button>
                   {patientId && (
                     <Button
-                      onClick={() => handleApplyTemplate(previewTemplate)}
+                      onClick={async () => {
+                        await handleApplyTemplate(previewTemplate);
+                        setPreviewOpen(false); // Close template UI after success
+                      }}
                       disabled={applying}
-                      className="gradient-primary gap-2 shadow-glow"
+                      className="gradient-primary gap-2 shadow-glow flex-1 h-12 rounded-xl font-bold"
                     >
                       {applying ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Check className="w-4 h-4" />
                       )}
-                      {applying ? "Aplicando..." : "Aplicar Modelo"}
+                      {applying ? "Aplicando..." : "Plotar Template no Plano"}
                     </Button>
                   )}
                 </div>

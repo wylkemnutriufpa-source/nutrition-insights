@@ -96,7 +96,8 @@ export function WeeklyGrid() {
 
   const getDayTotals = useCallback(
     (day: number) => {
-      const dayItems = items.filter((i) => i.day_of_week === day);
+      // Regra: Considera APENAS itens principais (is_primary = true)
+      const dayItems = items.filter((i) => i.day_of_week === day && i.is_primary !== false);
       return {
         calories: dayItems.reduce((s, i) => s + (i.meta_calorias || 0), 0),
         protein: dayItems.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0),

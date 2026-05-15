@@ -334,65 +334,63 @@ export function MealSmartEditorModal({
       <DialogContent 
         className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl"
       >
-        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 pr-12 sm:pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b relative">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-6 pr-12 sm:pr-14 bg-gradient-to-br from-primary/20 via-background to-background border-b relative">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+            <div className="flex items-start gap-6 flex-1 min-w-0">
               {item.image_url ? (
-                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 group/img border border-primary/20 shadow-sm">
-                  <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                <div className="relative w-32 h-32 rounded-2xl overflow-hidden shrink-0 group/img border-2 border-primary/20 shadow-xl">
+                  <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform group-hover/img:scale-110 duration-500" />
                   <button 
                     onClick={() => updateItem(itemId, { image_url: null } as any)}
                     className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
                     title="Remover Imagem"
                   >
-                    <Trash2 className="w-4 h-4 text-white" />
+                    <Trash2 className="w-6 h-6 text-white" />
                   </button>
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0 border border-dashed border-primary/30">
+                <div className="w-32 h-32 rounded-2xl bg-secondary/50 flex flex-col items-center justify-center shrink-0 border-2 border-dashed border-primary/30 group hover:border-primary/60 transition-colors">
                   <MealPhotoUpload 
-                    compact 
                     onUploaded={(url) => updateItem(itemId, { image_url: url } as any)} 
                     onRemoved={() => {}}
                   />
+                  {!item.image_url && <span className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-tighter">Adicionar Foto</span>}
                 </div>
               )}
-              <div className="min-w-0 flex-1">
-                <DialogTitle className="text-lg sm:text-xl font-bold font-display tracking-tight flex items-center gap-2">
-                  Editar {item.title}
+              <div className="min-w-0 flex-1 pt-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">
+                    {item.tipo_refeicao}
+                  </Badge>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">Sovereign Editor V3</span>
+                </div>
+                <DialogTitle className="text-2xl sm:text-3xl font-black font-display tracking-tight leading-none mb-2">
+                  {item.title}
                 </DialogTitle>
-                <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                    Ajuste os alimentos, substituições e observações clínicas
+                <div className="flex items-center gap-4">
+                  <p className="text-xs text-muted-foreground font-medium max-w-md">
+                    Gestão clínica avançada: ajuste alimentos, proporções e equivalentes com precisão cirúrgica.
                   </p>
-                  {item.image_url && (
-                    <MealPhotoUpload 
-                      compact
-                      label="Trocar Foto"
-                      onUploaded={(url) => updateItem(itemId, { image_url: url } as any)} 
-                      onRemoved={() => {}}
-                    />
-                  )}
                 </div>
               </div>
             </div>
             <div 
               data-testid="modal-macro-summary"
-              className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10 sm:mr-0 mr-4"
+              className="flex items-center gap-4 sm:gap-6 bg-white/50 backdrop-blur-xl px-6 py-4 rounded-3xl border-2 border-primary/10 shrink-0 shadow-2xl shadow-primary/5 self-end sm:self-start"
             >
               <div className="flex flex-col items-center">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
-                <span className="text-xs sm:text-sm font-black text-orange-500">{totals.calories}</span>
+                <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest mb-1">Kcal</span>
+                <span className="text-2xl font-black text-orange-500 tabular-nums">{totals.calories}</span>
               </div>
-              <div className="h-6 w-px bg-border/50" />
+              <div className="h-10 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Prot</span>
-                <span className="text-xs sm:text-sm font-black text-red-500">{totals.protein}g</span>
+                <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest mb-1">Prot</span>
+                <span className="text-2xl font-black text-red-500 tabular-nums">{totals.protein}<span className="text-xs ml-0.5 opacity-50">g</span></span>
               </div>
-              <div className="h-6 w-px bg-border/50" />
+              <div className="h-10 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Carb</span>
-                <span className="text-xs sm:text-sm font-black text-amber-500">{totals.carbs}g</span>
+                <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest mb-1">Carb</span>
+                <span className="text-2xl font-black text-amber-500 tabular-nums">{totals.carbs}<span className="text-xs ml-0.5 opacity-50">g</span></span>
               </div>
             </div>
           </div>
@@ -545,60 +543,56 @@ export function MealSmartEditorModal({
                   />
                 </div>
 
-                {currentMeta?.is_fixed && (
-                  <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                        <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
-                      </h3>
-                      <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-primary/10 shadow-sm">
-                        <span className="text-[10px] font-bold text-orange-600">{adjustedMacros.calories} kcal</span>
-                        <Separator orientation="vertical" className="h-3 mx-1" />
-                        <span className="text-[10px] font-bold text-red-600">{adjustedMacros.protein}g P</span>
-                        <Separator orientation="vertical" className="h-3 mx-1" />
-                        <span className="text-[10px] font-bold text-amber-600">{adjustedMacros.carbs}g C</span>
-                      </div>
+                <div className="space-y-4 p-5 rounded-3xl border-2 bg-primary/5 border-primary/10 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção Proporcional
+                    </h3>
+                    <div className="flex items-center gap-3 px-4 py-1.5 bg-white rounded-full border border-primary/20 shadow-sm">
+                      <span className="text-[11px] font-black text-orange-600">{adjustedMacros.calories} <span className="opacity-50 font-bold uppercase text-[9px]">kcal</span></span>
+                      <Separator orientation="vertical" className="h-3 mx-1" />
+                      <span className="text-[11px] font-black text-red-600">{adjustedMacros.protein}g <span className="opacity-50 font-bold uppercase text-[9px]">Prot</span></span>
                     </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Fator de Ajuste</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            step="0.1"
-                            min="0.1"
-                            className="h-10 bg-background border-primary/20 rounded-xl"
-                            value={portionFactor}
-                            onChange={(e) => handlePortionChange(parseFloat(e.target.value) || 1.0)}
-                          />
-                          <span className="text-sm font-bold text-muted-foreground">x</span>
-                        </div>
-                      </div>
-                      <div className="flex-[2] grid grid-cols-2 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-9 text-[10px] rounded-xl"
-                          onClick={() => handlePortionChange(portionFactor - 0.1)}
-                        >
-                          - 10%
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-9 text-[10px] rounded-xl"
-                          onClick={() => handlePortionChange(portionFactor + 0.1)}
-                        >
-                          + 10%
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground italic">
-                      Isso recalculará proporcionalmente todos os macros desta marmita em tempo real.
-                    </p>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-6">
+                    <div className="w-1/3 space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Volume da Refeição</Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          className="h-12 bg-white border-2 border-primary/10 rounded-2xl text-center font-black text-lg focus-visible:ring-primary/20"
+                          value={portionFactor}
+                          onChange={(e) => handlePortionChange(parseFloat(e.target.value) || 1.0)}
+                        />
+                        <span className="text-xl font-black text-muted-foreground opacity-30">×</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 grid grid-cols-2 gap-3 pt-6">
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="h-12 rounded-2xl border-2 font-black text-xs uppercase tracking-widest hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-all active:scale-95"
+                        onClick={() => handlePortionChange(portionFactor - 0.1)}
+                      >
+                        - 10% Menor
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="h-12 rounded-2xl border-2 font-black text-xs uppercase tracking-widest hover:bg-emerald-500/5 hover:text-emerald-600 hover:border-emerald-500/20 transition-all active:scale-95"
+                        onClick={() => handlePortionChange(portionFactor + 0.1)}
+                      >
+                        + 10% Maior
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground/60 font-medium italic bg-white/40 p-2 rounded-xl border border-primary/5 text-center">
+                    Utilize os controles para escalar gramagens e macros simultaneamente sem perder a proporção nutricional.
+                  </p>
+                </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
