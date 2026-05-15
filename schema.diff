@@ -1,25 +1,18 @@
 {
-  "summary": "Summary:\nColumns:\n+ meal_plan_items.human_reasons\n+ meal_plan_items.human_score\n+ meal_plan_items.human_status\n+ meal_plans.clinical_audit_status\n+ meal_plans.is_humanized",
+  "summary": "Summary:",
   "details": {
-    "timestamp": "2026-05-14T20:24:32.649Z",
-    "duration": "0.0s",
-    "lastSnapshotMigration": "20260514022704_d6fb2698-71f4-4836-829a-f74006a53098.sql",
-    "lastActualMigration": "20260514150348_8567b7bc-49b2-407b-92d7-03ad865402c7.sql",
+    "timestamp": "2026-05-15T16:23:48.702Z",
+    "duration": "0.1s",
+    "lastSnapshotMigration": "20260514150348_8567b7bc-49b2-407b-92d7-03ad865402c7.sql",
+    "lastActualMigration": "20260515153116_84df69f2-9aca-4e2c-8d02-5d7ae4453486.sql",
     "missingMigrations": [
-      "20260514143113_c9db8c1e-a60b-4067-8132-1ac8529696cb.sql",
-      "20260514150348_8567b7bc-49b2-407b-92d7-03ad865402c7.sql"
+      "20260514212822_195763cf-c098-40de-99a4-8dde7fe6e65b.sql",
+      "20260514212849_2bd312a2-4b33-4261-9424-342c3132aa3f.sql",
+      "20260514220256_4fd24ca5-9224-418d-b743-ec6be5960675.sql",
+      "20260515132631_7960848f-8892-4a51-b871-df827594585c.sql",
+      "20260515142817_839206fb-c62b-4463-bf86-da740f00731e.sql",
+      "20260515153116_84df69f2-9aca-4e2c-8d02-5d7ae4453486.sql"
     ],
-    "diffResults": [
-      {
-        "table": "meal_plan_items",
-        "type": "MISSING_IN_SNAPSHOT",
-        "columns": "human_reasons, human_score, human_status"
-      },
-      {
-        "table": "meal_plans",
-        "type": "MISSING_IN_SNAPSHOT",
-        "columns": "clinical_audit_status, is_humanized"
-      }
-    ]
+    "diffResults": []
   }
 }
