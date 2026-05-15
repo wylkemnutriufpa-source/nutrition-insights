@@ -32,8 +32,27 @@ export const searchV3LibraryItems = async (
     return [];
   }
 
-  return data || [];
+  const items = data || [];
+  
+  // For each item, if it has a substitution_group, fetch others in that group
+  const itemsWithEquivalents = await Promise.all(items.map(async (item) => {
+    if (item.substitutions_group) {
+      const { data: subs } = await supabase
+        .from("v3_library_items")
+        .select("*")
+        .eq("substitutions_group", item.substitutions_group)
+        .neq("id", item.id)
+        .eq("active", true)
+        .limit(10);
+      
+      return { ...item, ingredients: subs || [] }; // Map to ingredients for useEditorState
+    }
+    return item;
+  }));
+
+  return itemsWithEquivalents;
 };
+
 
 export const getV3Templates = async (): Promise<V3DietTemplate[]> => {
   return await DietTemplateService.listTemplates();
