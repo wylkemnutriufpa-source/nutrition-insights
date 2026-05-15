@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from '../types';
-import { SimpleMealGenerator } from '../services/simpleMealGenerator';
 import { normalizeFood, getBestMealImage, normalizeMeals } from '../utils/normalization';
 import { 
   calculateNutritionalScore, 
@@ -18,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 import { logClinicalEvent } from '../../audit/services/auditLogger';
-import { processSmartTemplate } from '../services/templateIntelligence';
+// Removed templateIntelligence import
 import { validatePersistedState } from '../security/storeGuard';
 import { normalizeSlot } from '@/lib/mealTypeIntegrity';
 
@@ -44,7 +43,7 @@ interface EditorState {
   setGoalMetadata: (metadata: any) => void;
   recalculateScore: () => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'created_at'>) => void;
-  refinePlan: (availableFoods: Food[], level?: 'light' | 'moderate' | 'aggressive') => void;
+  // refinePlan removed
   addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[], sharingToken?: string) => void;
   addMeal: () => void;
@@ -59,12 +58,12 @@ interface EditorState {
   removeFood: (mealId: string, instanceId: string) => Promise<void>;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number, clinical_mass_g?: number) => void;
   updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>, skipWeeklySync?: boolean) => Promise<void>;
-  generatePlan: (goal: string, baseCalories: number, replaceExisting?: boolean) => void;
-  generateMeal: (mealId: string, goal: string, baseCalories?: number) => void;
+  // generatePlan removed
+  // generateMeal removed
   savePlan: () => Promise<void>;
   resetEditor: () => void;
   setMeals: (meals: Meal[]) => void;
-  applySmartTemplate: (template: MealTemplate, baseFoods?: Food[]) => Promise<void>;
+  // applySmartTemplate removed
 }
 
 const DEFAULT_MEALS: Meal[] = [
@@ -189,11 +188,7 @@ export const useEditorState = create<EditorState>()(
         set({ nutritionalScore, validationIssues: allIssues, confidence });
       },
 
-      refinePlan: (availableFoods, level = 'moderate') => {
-        const { meals, goalMetadata, validationIssues } = get();
-        toast.info("Refinamento simplificado aplicado.");
-        set({ planStatus: 'draft' });
-      },
+      // refinePlan removed
 
       addMealWithHeader: (name, time) => {
         set((state) => ({
@@ -371,38 +366,8 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      generatePlan: async (goal, baseCalories, replaceExisting = false) => {
-        const { patientContext, patientId } = get();
-        const context = {
-          ...patientContext,
-          calories_target: baseCalories,
-          id: patientId || 'sandbox',
-          name: patientContext?.name || 'Paciente',
-          goal: goal,
-        };
-        const newMeals = SimpleMealGenerator.generatePlan(context as any, false);
-        const mealsWithImages = await Promise.all(newMeals.map(async (meal) => {
-          const bestImage = await getBestMealImage(meal.name, meal.items);
-          return { ...meal, imageUrl: bestImage.url, imageSource: bestImage.source };
-        }));
-        set({ meals: mealsWithImages, planStatus: 'draft' });
-        get().recalculateScore();
-      },
-
-      generateMeal: async (mealId, goal, baseCalories = 2000) => {
-        const { meals, patientContext, patientId } = get();
-        const meal = meals.find(m => m.id === mealId);
-        if (!meal) return;
-        const context = { ...patientContext, calories_target: baseCalories, goal };
-        const allGenerated = SimpleMealGenerator.generatePlan(context as any, false);
-        const sourceMeal = allGenerated.find(m => m.name === meal.name) || allGenerated[0];
-        const bestImage = await getBestMealImage(meal.name, sourceMeal.items);
-        set((state) => ({
-          meals: state.meals.map(m => m.id === mealId ? { ...m, items: sourceMeal.items, imageUrl: bestImage.url, imageSource: bestImage.source } : m),
-          planStatus: 'draft'
-        }));
-        get().recalculateScore();
-      },
+      // generatePlan removed
+      // generateMeal removed
 
       savePlan: async () => {
         set({ planStatus: 'saving' });
@@ -418,11 +383,7 @@ export const useEditorState = create<EditorState>()(
         get().recalculateScore();
       },
 
-      applySmartTemplate: async (template, baseFoods = []) => {
-        const smartMeals = processSmartTemplate(template, { isWeeklyMode: get().viewMode === 'weekly' }, baseFoods);
-        set({ meals: smartMeals, planStatus: 'draft' });
-        get().recalculateScore();
-      },
+      // applySmartTemplate removed
     }),
     {
       name: 'fitjourney-editor-v3-storage',

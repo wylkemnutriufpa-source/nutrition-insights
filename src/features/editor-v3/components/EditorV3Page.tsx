@@ -11,7 +11,7 @@ import { runV3IntegrationTests } from '../services/v3Tests';
 import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
-  getCompatibleFoods, getBaseFoods, seedBaseData,
+  getBaseFoods, seedBaseData,
   searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
 } from '../utils/dataFetcher';
 import { getBestMealImage } from '../utils/normalization';
@@ -20,10 +20,9 @@ import {
   calculateNutritionalScore, validatePlanClinically 
 } from '../../clinical-engine';
 import { 
-  isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros 
+  calculateItemMacros 
 } from '@/lib/nutricore_v2/helpers';
 
-import { recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V3 Imports (lib/nutricore_v2)
 // Direct NutriCore V3 Imports are now handled via Adapter or direct types
@@ -122,11 +121,10 @@ const EditorV3Page = () => {
   const {
     meals, auditLog, setPatientId, hydrateMeals, sharingToken: storeSharingToken,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
-    removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
+    removeFood, updateFoodQuantity, updateMealItem, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
-    duplicateMeal, reorderMeal, updateMealImage, setMeals, applySmartTemplate,
-
-    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
+    duplicateMeal, reorderMeal, updateMealImage, setMeals,
+    nutritionalScore, validationIssues, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
     initialMeals: initialMealsInStore, viewMode, setViewMode, clinicalMode
   } = useEditorState();
@@ -1798,26 +1796,14 @@ const EditorV3Page = () => {
                   <Settings2 className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Ajustar</span>
                 </Button>
-                <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleGenerateFullPlan}
-                  disabled={isGeneratingGlobal}
-                  className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all gap-2"
-                >
-                  {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline">Gerar Tudo</span>
-                </Button>
-                <div className="w-px h-6 bg-white/10 mx-1 self-center" />
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => {
-                    setActiveTab('template');
+                    setV3LibraryTab('templates');
                     setShowMainAddModal(true);
                   }}
-                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2 border border-amber-500/20 animate-pulse shadow-lg shadow-amber-500/10"
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2 border border-emerald-500/20 shadow-lg shadow-emerald-500/10"
                 >
                   <BookCopy className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Biblioteca de Templates</span>
