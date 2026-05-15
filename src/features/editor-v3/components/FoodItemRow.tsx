@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { Trash2, ChevronRight, Flame, Target } from 'lucide-react';
+import { Trash2, ChevronRight, Flame, Target, Plus, Search } from 'lucide-react';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+} from "@/components/ui/dialog";
+import { FoodSearch } from './FoodSearch';
+import { Food } from '../types/types';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +17,14 @@ interface FoodItemRowProps {
   onUpdateQuantity: (newQty: number) => void;
   onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
+  onAddSubstitution: (food: Food) => void;
 }
 
-export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity, onUpdateMacros, onRemove }) => {
+export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
+  item, onUpdateQuantity, onUpdateMacros, onRemove, onAddSubstitution 
+}) => {
+  const [isSubSearchOpen, setIsSubSearchOpen] = React.useState(false);
+
   return (
     <div className="group relative flex flex-col p-8 bg-neutral-800/20 border border-white/5 rounded-[2.5rem] hover:bg-neutral-800/40 hover:border-emerald-500/30 hover:shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] -mr-16 -mt-16 rounded-full group-hover:bg-emerald-500/10 transition-all duration-700" />
