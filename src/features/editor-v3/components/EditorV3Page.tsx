@@ -136,23 +136,25 @@ export default function EditorV3Page() {
       try {
         const { data: plan, error } = await supabase
           .from('meal_plans')
-          .select('*')
+          .select('*, patient:patients(*)')
           .eq('id', effectiveId)
           .single();
-
 
         if (error) throw error;
 
         const planData = plan as any;
+        if (planData?.patient) {
+          setPatientData(planData.patient);
+        }
+
         if (planData?.items_payload && (planData.items_payload as any).meals) {
           store.hydrateMeals((planData.items_payload as any).meals);
         } else if (planData?.meals) {
-          // Fallback for older schema if needed
           store.hydrateMeals(planData.meals as any);
         }
         
-        if (plan?.patient_id) {
-          store.setPatientId(plan.patient_id);
+        if (planData?.patient_id) {
+          store.setPatientId(planData.patient_id);
         }
       } catch (err) {
         console.error('Erro ao carregar plano:', err);
@@ -163,7 +165,8 @@ export default function EditorV3Page() {
     }
 
     loadPlan();
-  }, [id]);
+  }, [effectiveId]);
+
 
   if (loading) {
     return (
