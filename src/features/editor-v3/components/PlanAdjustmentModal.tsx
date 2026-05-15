@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Minus, Plus, Settings2 } from 'lucide-react';
 import { Meal } from '../types';
-import { adjustPlan, PlanAdjustmentParams } from '../services/planAdjustmentService';
+// Removed adjustPlan import
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
 
 interface PlanAdjustmentModalProps {
@@ -109,15 +109,12 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
     }
   }, [isOpen]); // Only react to isOpen changes to prevent loops with meals/originalTotals
 
-  // Real-time preview: apply to initial snapshot
+  // 🛡️ SOBERANIA MANUAL: Ajuste automático removido.
   useEffect(() => {
-    if (isOpen && initialMeals.length > 0) {
-      const adjustedMeals = adjustPlan(initialMeals, params);
-      onApply(adjustedMeals);
-    }
+    // O ajuste agora deve ser feito manualmente no editor pelo nutricionista.
   }, [params, isOpen, initialMeals]);
 
-  const updateParam = (key: keyof PlanAdjustmentParams, value: any) => {
+  const updateParam = (key: string, value: any) => {
     setParams(prev => ({ ...prev, [key]: value }));
   };
 

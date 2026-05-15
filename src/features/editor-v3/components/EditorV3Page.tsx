@@ -75,8 +75,6 @@ import { TemplateV3Modal } from './TemplateV3Modal';
 import { ControlledDeliveryModal } from './ControlledDeliveryModal';
 import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
-import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
-import { SimpleMealGenerator } from '../services/simpleMealGenerator';
 import { V3DietTemplate } from '../types/types';
 import { V3TemplateEngine } from '../services/v3TemplateEngine';
 import { calculateHumanMealScore } from '@/lib/clinicalHumanEngine';
@@ -1398,17 +1396,8 @@ const EditorV3Page = () => {
   };
 
   const handleMealGenerate = async (mealId: string) => {
-    setGeneratingMealId(mealId);
-    try {
-      // Usar a engine via hook useEditorState
-      generateMeal(mealId, patientContext?.goal || 'manutencao');
-      // O hook já lida com o toast de sucesso
-    } catch (error) {
-      console.error('[V3-UI] Error generating meal:', error);
-      toast.error('Erro ao gerar refeição individual.');
-    } finally {
-      setGeneratingMealId(null);
-    }
+    // 🛡️ SOBERANIA MANUAL: Geração procedural desativada.
+    toast.info('Geração automática desativada. Utilize a biblioteca de templates para preencher o plano.');
   };
 
   const executeSwap = (mealId: string, instanceId: string, target: Food & { suggestedQuantity?: number }, autoAdjust = false) => {
@@ -1423,7 +1412,7 @@ const EditorV3Page = () => {
     if (target.suggestedQuantity) {
       newGrams = target.suggestedQuantity;
     } else if (autoAdjust) {
-      const currentMacros = recalculateMacros(currentItem, currentItem.quantity);
+      const currentMacros = calculateItemMacros(currentItem, currentItem.quantity);
       const targetKcalPerUnit = target.kcal || target.calories || 0; 
       
       if (targetKcalPerUnit > 0) {
@@ -1441,11 +1430,11 @@ const EditorV3Page = () => {
       else newGrams = target.portionValue || 1;
     }
 
-    const safeGrams = applyClinicalSafety(target.name, newGrams);
+    const safeGrams = newGrams; // Removida applyClinicalSafety procedural
     const household = convertGramsToHousehold(target.name, safeGrams);
     
     const safeQuantity = household.quantity;
-    const macros = recalculateMacros(target, safeGrams);
+    const macros = calculateItemMacros(target as any, safeGrams);
 
     updateMealItem(mealId, instanceId, {
       ...target,
