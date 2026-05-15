@@ -197,7 +197,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <p className="text-[9px] font-black uppercase text-white/30">Substituições Soberanas</p>
+                      <p className="text-[9px] font-black uppercase text-white/30">Equivalentes Clínicos</p>
                       <div className="flex flex-wrap gap-2">
                         {['Frango', 'Carne', 'Ovos', 'Peixe'].map(tag => (
                           <Badge key={tag} className="bg-white/5 text-white/60 border-white/10 text-[8px] uppercase font-black">{tag}</Badge>
