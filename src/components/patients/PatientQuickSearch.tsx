@@ -41,50 +41,52 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
 
   const isPro = isNutritionist || isAdmin || isPersonal;
 
-  // Load initial patients or search on demand
+  // Search patients in real-time
   useEffect(() => {
-    if (!open || !isPro || patients.length > 0) return;
+    if (!open || !isPro) return;
 
-    const fetchInitial = async () => {
+    const fetchPatients = async () => {
       setLoading(true);
       try {
-        if (isAdmin) {
-          const { data } = await supabase
-            .from("profiles")
-            .select("user_id, full_name, avatar_url")
-            .order("full_name")
-            .limit(50);
-          
-          if (data) {
-            setPatients(data.map(p => ({
-              user_id: p.user_id,
-              full_name: p.full_name || "Sem nome",
-              avatar_url: p.avatar_url
-            })));
-          }
-        } else {
+        let query = supabase
+          .from("profiles")
+          .select("user_id, full_name, avatar_url, email");
+
+        if (search.trim()) {
+          query = query.ilike("full_name", `%${search}%`);
+        }
+
+        if (!isAdmin) {
+          // If not admin, only search within nutritionist's linked patients
           const { data: links } = await supabase
             .from("nutritionist_patients")
             .select("patient_id")
             .eq("nutritionist_id", user?.id || "")
-            .eq("status", "active")
-            .limit(100);
+            .eq("status", "active");
 
           if (links && links.length > 0) {
-            const ids = links.map(l => l.patient_id);
-            const { data: profiles } = await supabase
-              .from("profiles")
-              .select("user_id, full_name, avatar_url")
-              .in("user_id", ids);
-
-            if (profiles) {
-              setPatients(profiles.map(p => ({
-                user_id: p.user_id,
-                full_name: p.full_name || "Sem nome",
-                avatar_url: p.avatar_url
-              })));
-            }
+            query = query.in("user_id", links.map(l => l.patient_id));
+          } else if (!search.trim()) {
+            // No links and no search = empty
+            setPatients([]);
+            setLoading(false);
+            return;
           }
+        }
+
+        const { data, error } = await query
+          .order("full_name")
+          .limit(20);
+
+        if (error) throw error;
+        
+        if (data) {
+          setPatients(data.map(p => ({
+            user_id: p.user_id,
+            full_name: p.full_name || "Sem nome",
+            avatar_url: p.avatar_url,
+            email: p.email
+          })));
         }
       } catch (err) {
         console.error("Error fetching patients for autocomplete:", err);
@@ -93,20 +95,14 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
       }
     };
 
-    fetchInitial();
-  }, [open, isPro, isAdmin, user?.id, patients.length]);
+    const timer = setTimeout(fetchPatients, search ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [open, search, isPro, isAdmin, user?.id]);
 
   const normalize = (text: string) => 
     text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  const filteredPatients = useMemo(() => {
-    if (!search) return patients.slice(0, 10);
-    const q = normalize(search);
-    return patients.filter(p => 
-      normalize(p.full_name).includes(q) || 
-      (p.email && normalize(p.email).includes(q))
-    ).slice(0, 15);
-  }, [patients, search]);
+  const filteredPatients = patients; // Already filtered by backend or initial load
 
   const handleSelect = useCallback((patient: PatientResult) => {
     setOpen(false);
