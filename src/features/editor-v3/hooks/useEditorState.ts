@@ -26,7 +26,9 @@ interface EditorState {
   addMeal: (name: string, time?: string) => void;
   removeMeal: (mealId: string) => void;
   updateMealHeader: (mealId: string, updates: Partial<Meal>) => void;
+  updateMealItemMacros: (mealId: string, itemInstanceId: string, targetValue: number, macroType: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
 }
+
 
 export const useEditorState = create<EditorState>()(
   persist(
