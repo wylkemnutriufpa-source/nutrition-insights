@@ -1,0 +1,103 @@
+
+import { supabase } from "@/integrations/supabase/client";
+import { V3DietTemplate, Meal, MealItem } from "../types/types";
+import { LibraryV3Resolver } from "./libraryV3Resolver";
+import { distributeMacros, MealSlot } from "@/lib/nutricore_v2/meal-distribution";
+
+/**
+ * V3 Template Engine
+ * ----------------------------------------------------------------
+ * A nova fonte da verdade para o FitJourney V3.
+ * Abandona a geração procedural complexa em favor de uma 
+ * biblioteca premium de templates editáveis.
+ */
+export class V3TemplateEngine {
+  /**
+   * Plota um template completo para um paciente
+   */
+  static async plotTemplate(
+    templateSlug: string, 
+    targetKcal: number,
+    options: { isWeekly?: boolean } = {}
+  ): Promise<Meal[]> {
+    console.info(`[V3-Template-Engine] Plotting template: ${templateSlug} at ${targetKcal}kcal`);
+
+    // 1. Carregar Template Soberano
+    const { data: template, error } = await supabase
+      .from('v3_diet_templates')
+      .select('*')
+      .eq('slug', templateSlug)
+      .single();
+
+    if (error || !template) {
+      throw new Error(`Template ${templateSlug} não encontrado.`);
+    }
+
+    // 2. Definir Alvos de Macros Baseados no Kcal Selecionado
+    // Como simplificação, usamos uma distribuição balanceada (30% P, 40% C, 30% G)
+    const targetMacros = {
+      protein_g: (targetKcal * 0.3) / 4,
+      carb_g: (targetKcal * 0.4) / 4,
+      fat_g: (targetKcal * 0.3) / 9,
+      protein_kcal: targetKcal * 0.3,
+      carb_kcal: targetKcal * 0.4,
+      fat_kcal: targetKcal * 0.3
+    };
+
+    // 3. Mapear Slots do Template
+    const distribution = (template.meal_distribution as any[]) || [];
+    const mealSlots: MealSlot[] = distribution.map(d => ({
+      type: d.slot,
+      time: d.time
+    }));
+
+    // 4. Distribuir Macros pelos Slots (Regra de Negócio NutriCore)
+    const distributed = distributeMacros(targetMacros as any, mealSlots);
+
+    // 5. Resolver cada Refeição via Biblioteca Premium (Sem Invenção)
+    const meals: Meal[] = [];
+    const daysToProcess = options.isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
+
+    for (const day of daysToProcess) {
+      for (const slot of distributed) {
+        const clusterSlug = template.cluster_map?.[slot.type] || 'almoco_tradicional';
+        
+        // O Resolver V3 já foi blindado para evitar expansões absurdas
+        const resolvedMeal = await LibraryV3Resolver.resolveMealStructure(
+          clusterSlug,
+          slot.macros.calories,
+          {
+            goal: template.objective,
+            planId: `v3-plot-${templateSlug}`,
+            day: day.toString(),
+            mealSlot: slot.type,
+            integrityThreshold: 1.2, // Rigoroso: pouca variação de gramas
+            family: template.objective
+          }
+        );
+
+        if (resolvedMeal) {
+          resolvedMeal.time = slot.time;
+          resolvedMeal.day_of_week = day;
+          meals.push(resolvedMeal);
+        }
+      }
+    }
+
+    return meals;
+  }
+
+  /**
+   * Lista categorias disponíveis para o UI
+   */
+  static async getCategories() {
+    const { data, error } = await supabase
+      .from('v3_diet_templates')
+      .select('objective')
+      .eq('active', true);
+    
+    if (error) return [];
+    const objectives = Array.from(new Set(data.map(d => d.objective)));
+    return objectives;
+  }
+}
