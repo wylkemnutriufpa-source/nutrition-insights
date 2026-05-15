@@ -14,22 +14,15 @@
 // ── Physiological Guardrails ──
 // These are hard limits that NO strategy can violate.
 export const PHYSIOLOGICAL_GUARDRAILS = {
-  // Protein per kg body weight
-  proteinPerKg: { min: 1.2, max: 3.0 },
-  // Fat per kg body weight (minimum for hormonal health)
-  fatPerKg: { min: 0.7 },
-  // Max protein per single meal (g) — absorption/utilization ceiling
-  maxProteinPerMeal: 50,
-  // Max kcal per single meal
-  maxKcalPerMeal: 900,
-  // Min kcal per meal (too low = pointless)
-  minKcalPerMeal: 80,
-  // Absolute calorie floors (clinical safety)
-  minKcal: { female: 1200, male: 1500 },
-  // Absolute calorie ceiling
-  maxKcal: 4500,
-  // Max fat percentage of total kcal
-  maxFatPercent: 45,
+  // Relaxed limits to give nutritionist full control
+  proteinPerKg: { min: 0.5, max: 5.0 },
+  fatPerKg: { min: 0.2 },
+  maxProteinPerMeal: 500, // Effectively removed
+  maxKcalPerMeal: 5000,   // Effectively removed
+  minKcalPerMeal: 0,
+  minKcal: { female: 500, male: 500 },
+  maxKcal: 10000,
+  maxFatPercent: 80,
 } as const;
 
 export type SizeVariant = "small" | "medium" | "large";
@@ -554,10 +547,8 @@ function scaleMealPreview(preview: StrategyMealPreview, scaleFactor: number, mea
     carbs: Math.round(preview.carbs * scaleFactor),
     fat: Math.round(preview.fat * scaleFactor),
   };
-  // Enforce per-meal guardrails on preview
-  scaled.protein = Math.min(scaled.protein, G.maxProteinPerMeal);
-  scaled.calories = Math.min(scaled.calories, G.maxKcalPerMeal);
-  scaled.calories = Math.max(scaled.calories, G.minKcalPerMeal);
+  // Removed per-meal guardrails on preview to give nutritionist full sovereignty
+  return scaled;
   return scaled;
 }
 
@@ -635,7 +626,7 @@ function buildStrategy(
       return {
         mealType, label: mealType, description: "—",
         calories: Math.round(activeProfile.calories * (mealSplit[mealType] || 0.15)),
-        protein: Math.min(Math.round(activeProfile.protein * (mealSplit[mealType] || 0.15)), PHYSIOLOGICAL_GUARDRAILS.maxProteinPerMeal),
+        protein: Math.round(activeProfile.protein * (mealSplit[mealType] || 0.15)),
         carbs: Math.round(activeProfile.carbs * (mealSplit[mealType] || 0.15)),
         fat: Math.round(activeProfile.fat * (mealSplit[mealType] || 0.15)),
       };
@@ -681,8 +672,8 @@ export function switchStrategySize(strategy: NutritionalStrategy, size: SizeVari
   const kcalRatio = variant.macroProfile.calories / strategy.macroProfile.calories;
   const previewMeals = strategy.previewMeals.map(meal => ({
     ...meal,
-    calories: Math.min(Math.round(meal.calories * kcalRatio), PHYSIOLOGICAL_GUARDRAILS.maxKcalPerMeal),
-    protein: Math.min(Math.round(meal.protein * kcalRatio), PHYSIOLOGICAL_GUARDRAILS.maxProteinPerMeal),
+    calories: Math.round(meal.calories * kcalRatio),
+    protein: Math.round(meal.protein * kcalRatio),
     carbs: Math.round(meal.carbs * kcalRatio),
     fat: Math.round(meal.fat * kcalRatio),
   }));

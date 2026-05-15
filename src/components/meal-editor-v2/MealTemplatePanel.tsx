@@ -192,13 +192,13 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
   },
 ];
 
-const MEAL_TYPE_CONFIG: Record<MealType, { label: string; icon: React.ReactNode }> = {
-  breakfast: { label: "Café da Manhã", icon: <Coffee className="w-4 h-4" /> },
-  morning_snack: { label: "Lanche Manhã", icon: <Apple className="w-4 h-4" /> },
-  lunch: { label: "Almoço", icon: <Utensils className="w-4 h-4" /> },
-  afternoon_snack: { label: "Lanche Tarde", icon: <Cookie className="w-4 h-4" /> },
-  dinner: { label: "Jantar", icon: <Moon className="w-4 h-4" /> },
-  evening_snack: { label: "Ceia", icon: <Sun className="w-4 h-4" /> },
+const MEAL_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
+  "Café da Manhã": { label: "Café da Manhã", icon: <Coffee className="w-4 h-4" /> },
+  "Lanche da Manhã": { label: "Lanche Manhã", icon: <Apple className="w-4 h-4" /> },
+  "Almoço": { label: "Almoço", icon: <Utensils className="w-4 h-4" /> },
+  "Lanche da Tarde": { label: "Lanche Tarde", icon: <Cookie className="w-4 h-4" /> },
+  "Jantar": { label: "Jantar", icon: <Moon className="w-4 h-4" /> },
+  "Ceia": { label: "Ceia", icon: <Sun className="w-4 h-4" /> },
 };
 
 const ALL_MEAL_TYPES: MealType[] = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
@@ -304,54 +304,43 @@ export default function MealTemplatePanel({ day }: Props) {
     const daysToApply = isWeeklyMode ? [0, 1, 2, 3, 4, 5, 6] : [day];
 
     daysToApply.forEach((targetDay) => {
-      // For weekly mode, we apply variation if targetDay > 0
-      const variedFoods = template.foods.map(f => {
-        if (!isWeeklyMode || targetDay === 0) return f;
-        const newName = getVariedFoodName(f.name, targetDay);
-        return { ...f, name: newName };
-      });
+      // Clear existing items in this cell
+      useMealPlanEditorV2Store.getState().deleteItemsInCell(targetDay, activeMealType);
 
-      const mainDescription = variedFoods.map(f => `${f.name} (${f.portion})`).join(" + ");
-      
-      const subLines: string[] = [];
-      const isWannubia = patientName?.toLowerCase().includes("wannubia");
-
-      variedFoods.forEach(f => {
-        let alts = getSubstitutionsFor(f.name);
+      // Create separate items for each food in the template to make it "born ready"
+      const inserts = template.foods.map(f => {
+        const foodName = (!isWeeklyMode || targetDay === 0) ? f.name : getVariedFoodName(f.name, targetDay);
         
+        let alts = getSubstitutionsFor(foodName);
+        const isWannubia = patientName?.toLowerCase().includes("wannubia");
         if (isWannubia) {
           const forbiddenKeywords = ["ultraprocessado", "fritura", "doce", "açúcar", "refrigerante"];
           alts = alts.filter(alt => !forbiddenKeywords.some(key => alt.toLowerCase().includes(key)));
         }
-
         alts = alts.slice(0, substitutionCount);
         
-        if (alts.length > 0) {
-          subLines.push(`• ${f.name} → ${alts.join(", ")}`);
-        }
+        const description = f.portion + (alts.length > 0 ? `\n\n🔄 Substituições:\n• ${alts.join(", ")}` : "");
+
+        return {
+          meal_plan_id: planId,
+          title: foodName,
+          description,
+          meal_type: activeMealType,
+          day_of_week: targetDay,
+          calories_target: f.calories,
+          protein_target: f.protein,
+          carbs_target: f.carbs,
+          fat_target: f.fat,
+          item_origin: "template_v3",
+          edit_metadata: {
+            substitutions_json: alts,
+            portion_base: f.portion,
+            is_fixed: template.description === "Marmita Fixa Selecionada"
+          } as any
+        };
       });
 
-      const description = mainDescription + (subLines.length > 0 ? `\n\n🔄 Substituições:\n${subLines.join("\n")}` : "");
-
-      addItem({
-        meal_plan_id: planId,
-        title: targetDay === 0 || !isWeeklyMode ? template.title : `${template.title} (Variado)`,
-        description,
-        meal_type: activeMealType,
-        day_of_week: targetDay,
-        calories_target: template.totalCalories,
-        protein_target: template.totalProtein,
-        carbs_target: template.totalCarbs,
-        fat_target: template.totalFat,
-        edit_metadata: {
-          substitutions_json: subLines,
-          is_fixed: template.description === "Marmita Fixa Selecionada",
-          kcal_base: template.totalCalories,
-          protein_base: template.totalProtein,
-          carbs_base: template.totalCarbs,
-          fat_base: template.totalFat,
-        } as any
-      });
+      useMealPlanEditorV2Store.getState().addItems(inserts);
     });
 
     setRecentlyApplied(prev => new Set(prev).add(template.id));
@@ -362,9 +351,9 @@ export default function MealTemplatePanel({ day }: Props) {
     }]);
     
     if (isWeeklyMode) {
-      toast.success(`✅ ${template.title} aplicado aos 7 dias com variações!`);
+      toast.success(`✅ ${template.title} aplicado aos 7 dias com alimentos individuais!`);
     } else {
-      toast.success(`✅ ${template.title} adicionado!`);
+      toast.success(`✅ ${template.title} adicionado com ${template.foods.length} alimentos!`);
     }
 
     setTimeout(() => {
@@ -374,7 +363,7 @@ export default function MealTemplatePanel({ day }: Props) {
         return next;
       });
     }, 2000);
-  }, [planId, activeMealType, day, addItem, patientName, substitutionCount]);
+  }, [planId, activeMealType, day, patientName, substitutionCount]);
 
   const config = MEAL_TYPE_CONFIG[activeMealType];
 

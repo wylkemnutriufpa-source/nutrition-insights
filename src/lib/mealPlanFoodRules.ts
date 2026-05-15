@@ -113,22 +113,22 @@ export const ALLOWED_EXTRAS = [
 
 // ── Distribuição calórica por refeição (synced from _shared/food-rules.ts) ──
 export const MEAL_KCAL_SPLIT: Record<string, number> = {
-  breakfast: 0.20,
-  morning_snack: 0.10,
-  lunch: 0.30,
-  afternoon_snack: 0.10,
-  dinner: 0.22,
-  evening_snack: 0.08,
+  "Café da Manhã": 0.20,
+  "Lanche da Manhã": 0.10,
+  "Almoço": 0.30,
+  "Lanche da Tarde": 0.10,
+  "Jantar": 0.22,
+  "Ceia": 0.08,
 };
 
 // ── Distribuição de proteína por refeição (synced from _shared/food-rules.ts) ──
 export function getProteinDistribution(isGainGoal: boolean) {
   const shares: Record<string, number> = isGainGoal
-    ? { breakfast: 0.16, morning_snack: 0.10, lunch: 0.26, afternoon_snack: 0.10, dinner: 0.24, evening_snack: 0.14 }
-    : { breakfast: 0.15, morning_snack: 0.08, lunch: 0.27, afternoon_snack: 0.08, dinner: 0.27, evening_snack: 0.15 };
+    ? { "Café da Manhã": 0.16, "Lanche da Manhã": 0.10, "Almoço": 0.26, "Lanche da Tarde": 0.10, "Jantar": 0.24, "Ceia": 0.14 }
+    : { "Café da Manhã": 0.15, "Lanche da Manhã": 0.08, "Almoço": 0.27, "Lanche da Tarde": 0.08, "Jantar": 0.27, "Ceia": 0.15 };
   const caps: Record<string, number> = isGainGoal
-    ? { breakfast: 45, morning_snack: 24, lunch: 65, afternoon_snack: 24, dinner: 60, evening_snack: 35 }
-    : { breakfast: 30, morning_snack: 18, lunch: 55, afternoon_snack: 18, dinner: 55, evening_snack: 30 };
+    ? { "Café da Manhã": 45, "Lanche da Manhã": 24, "Almoço": 65, "Lanche da Tarde": 24, "Jantar": 60, "Ceia": 35 }
+    : { "Café da Manhã": 30, "Lanche da Manhã": 18, "Almoço": 55, "Lanche da Tarde": 18, "Jantar": 55, "Ceia": 30 };
   return { shares, caps };
 }
 
@@ -136,12 +136,12 @@ export const MEAL_ORDER = ["Café da Manhã", "Lanche da Manhã", "Almoço", "La
 export const RESIDUAL_PRIORITY = ["Almoço", "Jantar", "Ceia", "Café da Manhã", "Lanche da Manhã", "Lanche da Tarde"];
 
 export const MEAL_LIMITS = {
-  maxFruitsPerMeal: 2,
-  maxFruitsPerDay: 4,
-  maxEggsBreakfast: 2,
-  maxEggsPerMeal: 3,
-  minProteinMainMeal: 100,
-  maxProteinMainMeal: 250,
+  maxFruitsPerMeal: 10,
+  maxFruitsPerDay: 20,
+  maxEggsBreakfast: 10,
+  maxEggsPerMeal: 10,
+  minProteinMainMeal: 0,
+  maxProteinMainMeal: 2000, // Relaxed
 };
 
 // ── Estruturas realistas de refeição por objetivo ──

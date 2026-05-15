@@ -59,21 +59,21 @@ interface DietTemplate {
 }
 
 const MEAL_ICONS: Record<string, React.ReactNode> = {
-  breakfast: <Coffee className="w-3.5 h-3.5" />,
-  morning_snack: <Apple className="w-3.5 h-3.5" />,
-  lunch: <Utensils className="w-3.5 h-3.5" />,
-  afternoon_snack: <Cookie className="w-3.5 h-3.5" />,
-  dinner: <Moon className="w-3.5 h-3.5" />,
-  evening_snack: <Sun className="w-3.5 h-3.5" />,
+  "Café da Manhã": <Coffee className="w-3.5 h-3.5" />,
+  "Lanche da Manhã": <Apple className="w-3.5 h-3.5" />,
+  "Almoço": <Utensils className="w-3.5 h-3.5" />,
+  "Lanche da Tarde": <Cookie className="w-3.5 h-3.5" />,
+  "Jantar": <Moon className="w-3.5 h-3.5" />,
+  "Ceia": <Sun className="w-3.5 h-3.5" />,
 };
 
 const MEAL_LABELS: Record<string, string> = {
-  breakfast: "Café da Manhã",
-  morning_snack: "Lanche da Manhã",
-  lunch: "Almoço",
-  afternoon_snack: "Lanche da Tarde",
-  dinner: "Jantar",
-  evening_snack: "Ceia",
+  "Café da Manhã": "Café da Manhã",
+  "Lanche da Manhã": "Lanche da Manhã",
+  "Almoço": "Almoço",
+  "Lanche da Tarde": "Lanche da Tarde",
+  "Jantar": "Jantar",
+  "Ceia": "Ceia",
 };
 
 const GOAL_LABELS: Record<string, string> = {
@@ -88,7 +88,7 @@ const GOAL_LABELS: Record<string, string> = {
 
 export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealType }: MealLibrarySidebarProps) {
   const { user } = useAuth();
-  const { planId, items, addItem, addItems, deleteItem } = useMealPlanEditorV2Store();
+  const { planId, items, addItem, addItems, deleteItem, deleteItemsInCell } = useMealPlanEditorV2Store();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [dietTemplates, setDietTemplates] = useState<DietTemplate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -347,13 +347,15 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
     // Find meals matching the target meal_type
     const matchingMeals = meals.filter((m: any) => {
       const mt = m.meal_type || m.type;
-      return mt === targetMealType;
+      // Normalize comparison to handle possible PT-BR or English keys in legacy data
+      return mt === targetMealType || 
+             (mt === 'breakfast' && targetMealType === 'Café da Manhã') ||
+             (mt === 'lunch' && targetMealType === 'Almoço') ||
+             (mt === 'dinner' && targetMealType === 'Jantar');
     });
 
     if (matchingMeals.length > 0) {
       const allFoods = matchingMeals.flatMap((meal: any) => {
-        // Adapter v2: templates práticos usam `blocks` em vez de `foods`.
-        // Achata cada bloco usando a primeira `option` como item principal.
         let foods: any[] = Array.isArray(meal.foods)
           ? meal.foods
           : Array.isArray(meal.items)
@@ -372,6 +374,7 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
               protein: primary.protein || 0,
               carbs: primary.carbs || 0,
               fat: primary.fat || 0,
+              image_url: primary.image_url || b.image_url
             }];
           });
         }
@@ -386,16 +389,14 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
           protein_target: food.protein || null,
           carbs_target: food.carbs || null,
           fat_target: food.fat || null,
+          image_url: food.image_url || null,
+          item_origin: "template"
         }));
       });
 
       if (allFoods.length > 0) {
         // Clear existing items in this cell
-        const existingIds = items
-          .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
-          .map((i) => i.id);
-        existingIds.forEach((id) => deleteItem(id));
-
+        deleteItemsInCell(targetDay, targetMealType);
         addItems(allFoods);
         toast.success(`${allFoods.length} itens importados de "${template.name}"`);
         onOpenChange(false);
@@ -403,15 +404,11 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       }
     }
 
-    // Clear existing items in this cell for fallback
-    const existingFallbackIds = items
-      .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
-      .map((i) => i.id);
-    existingFallbackIds.forEach((id) => deleteItem(id));
-
     // Fallback: insert distribution-based entry
+    deleteItemsInCell(targetDay, targetMealType);
+
     const distribution = template.meal_distribution as Record<string, number> | null;
-    const pct = distribution?.[targetMealType] || 0.2;
+    const pct = distribution?.[targetMealType] || distribution?.[targetMealType.toLowerCase()] || 0.2;
     const kcal = Math.round(template.base_calories * pct);
     const macros = template.macro_ratio as { protein?: number; carbs?: number; fat?: number } | null;
     const protPct = (macros?.protein || 30) / 100;
@@ -420,7 +417,7 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
     addItem({
       meal_plan_id: planId,
-      title: `${template.name} — ${MEAL_LABELS[targetMealType] || targetMealType}`,
+      title: `${template.name} — ${targetMealType}`,
       description: `${template.diet_style} • ${kcal} kcal`,
       meal_type: targetMealType,
       day_of_week: targetDay,
@@ -428,11 +425,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       protein_target: Math.round((kcal * protPct) / 4),
       carbs_target: Math.round((kcal * carbPct) / 4),
       fat_target: Math.round((kcal * fatPct) / 9),
+      item_origin: "template_fallback"
     });
 
     toast.success(`"${template.name}" importado no plano`);
     onOpenChange(false);
-  }, [planId, targetDay, targetMealType, addItem, addItems, onOpenChange]);
+  }, [planId, targetDay, targetMealType, addItem, addItems, deleteItemsInCell, onOpenChange]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -489,28 +487,30 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Meal type filter chips */}
             {/* Meal type filter chips */}
-            <div className="px-4 pt-2 pb-1 flex flex-wrap gap-1">
-              <button
-                type="button"
-                onClick={() => setFilterType("all")}
-                className={`text-[10px] h-7 px-2.5 rounded-md font-medium transition-colors ${
-                  filterType === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-                }`}
-              >
-                Todos
-              </button>
+            <div className="px-4 pt-2 pb-1 overflow-x-auto">
+              <div className="flex gap-1 pb-1 w-max">
+                <button
+                  type="button"
+                  onClick={() => setFilterType("all")}
+                  className={`text-[10px] h-7 px-2.5 rounded-md font-medium transition-colors whitespace-nowrap ${
+                    filterType === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  Todos
+                </button>
               {Object.entries(MEAL_LABELS).map(([key, label]) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setFilterType(key)}
-                  className={`text-[10px] h-7 px-2.5 rounded-md font-medium flex items-center gap-1 transition-colors ${
+                  className={`text-[10px] h-7 px-2.5 rounded-md font-medium flex items-center gap-1 transition-colors whitespace-nowrap ${
                     filterType === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
                   }`}
                 >
                   {MEAL_ICONS[key]} {label}
                 </button>
               ))}
+              </div>
             </div>
 
             <div className="px-4 py-2 border-b border-border space-y-3">
