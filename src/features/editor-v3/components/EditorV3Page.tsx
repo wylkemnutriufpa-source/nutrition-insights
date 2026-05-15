@@ -320,12 +320,33 @@ export default function EditorV3Page() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney Editor Profissional</h1>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">Estável</Badge>
+            <div className="flex items-center gap-4">
+              <div className="hidden lg:block">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney Editor</h1>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">V3</Badge>
+                </div>
+                <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mt-0.5">Gestão de templates clínicos</p>
               </div>
-              <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mt-0.5">Gestão de templates clínicos e cálculo automático</p>
+
+              <div className="h-10 w-px bg-white/10 hidden lg:block mx-2" />
+
+              <Select 
+                value={effectivePatientId || ""} 
+                onValueChange={(val) => navigate(`/editor-v3/${val}`)}
+              >
+                <SelectTrigger className="w-[200px] h-10 bg-white/5 border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl">
+                  <User className="w-4 h-4 mr-2 text-emerald-500" />
+                  <SelectValue placeholder="Selecionar Paciente" />
+                </SelectTrigger>
+                <SelectContent className="bg-neutral-900 border-white/10 text-white">
+                  {availablePatients.map(p => (
+                    <SelectItem key={p.user_id} value={p.user_id} className="text-[10px] font-black uppercase">
+                      {p.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
 
