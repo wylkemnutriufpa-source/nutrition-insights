@@ -232,7 +232,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                 onClick={handleSelect}
                 className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-8 uppercase text-[10px] font-black tracking-widest h-11"
               >
-                Gerar Plano V3 <ChevronRight className="w-4 h-4 ml-2" />
+                Plotar Template <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </div>
