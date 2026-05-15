@@ -113,10 +113,14 @@ export default function EditorV3Page() {
 
       const libraryMap = new Map();
       (libraryItems || []).forEach(item => {
-        if (!libraryMap.has(item.cluster_slug)) {
-          libraryMap.set(item.cluster_slug, item);
+        const slug = item.cluster_slug;
+        if (!libraryMap.has(slug)) {
+          libraryMap.set(slug, item);
         }
       });
+      
+      console.log('[EditorV3] Library pre-fetched count:', libraryItems?.length);
+      console.log('[EditorV3] Cluster Map to plot:', clusterMap);
 
       for (const day of days) {
         for (const dist of distribution) {
