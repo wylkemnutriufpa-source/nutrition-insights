@@ -246,17 +246,6 @@ export default function EditorV3Page() {
   }, [effectiveId, effectivePatientId]);
 
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-neutral-950">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-
   // Totals for the whole plan (Sum of PRIMARY items only)
   const planTotals = useMemo(() => {
     // We only sum macros for the unique items across all meals.
