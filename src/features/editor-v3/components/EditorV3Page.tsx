@@ -114,8 +114,9 @@ const EditorV3Page = () => {
   const { patientId, planId: urlPlanId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const planId = urlPlanId || searchParams.get('planId');
-  const isSandbox = !patientId && !planId;
+  const initialPlanId = urlPlanId || searchParams.get('planId');
+  const [resolvedPlanId, setResolvedPlanId] = useState<string | null>(initialPlanId || null);
+  const isSandbox = !patientId && !initialPlanId;
 
   const {
     meals, auditLog, setPatientId, hydrateMeals, sharingToken: storeSharingToken,
@@ -150,7 +151,7 @@ const EditorV3Page = () => {
   const {
     draftId, syncState, initialMeals, initialAuditLog, lastSavedAt, sharingToken: draftSharingToken,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
-  } = useDraftSync(patientId ?? null, initialMealsInStore, initialMealsInStore, planId);
+  } = useDraftSync(patientId ?? null, initialMealsInStore, initialMealsInStore, resolvedPlanId);
 
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
@@ -380,12 +381,32 @@ const EditorV3Page = () => {
         // profiles.id is only the row id and must not be used to load assessments.
         const canonicalPatientId = profile.user_id || profile.id;
 
+        // 🛡️ RECOVERY SOVEREIGNTY: Se não temos um planId na URL, tentamos recuperar o plano ATIVO do paciente.
+        // Isso evita que o Editor abra vazio para pacientes que já possuem plano.
+        let activePlanId = resolvedPlanId;
+        if (!activePlanId && canonicalPatientId) {
+          const { data: activePlan } = await supabase
+            .from('meal_plans')
+            .select('id')
+            .eq('patient_id', canonicalPatientId)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+            
+          if (activePlan) {
+            console.info(`[V3-Init] Recovered active plan ${activePlan.id} for patient ${canonicalPatientId}`);
+            activePlanId = activePlan.id;
+            setResolvedPlanId(activePlan.id);
+          }
+        }
+
         // Verify if we are currently using a different ID in the store (stale state)
         // If the current patientId in store is different from the canonical one from URL, 
         // it means we switched patients but the global store still has the old one.
         // We MUST prioritize the URL ID as the intent of the user.
         
-        console.info(`[V3-Init] Canonical profile found: ${profile.full_name} (${canonicalPatientId})`);
+        console.info(`[V3-Init] Canonical profile found: ${profile.full_name} (${canonicalPatientId}). Active Plan: ${activePlanId}`);
 
         // 2. Load Physical Assessment (Fallback 1)
         const { data: assessment } = await supabase
@@ -527,7 +548,7 @@ const EditorV3Page = () => {
           
           const isPlanEmpty = meals.length <= 1 && (meals[0]?.items.length === 0);
           
-          if (isRecent && isPlanEmpty && !planId) {
+          if (isRecent && isPlanEmpty && !resolvedPlanId) {
             setPendingAnamnesisData({
               kcal: Number(anamnesis.computed_kcal_target),
               protein: Number(anamnesis.computed_protein),
@@ -1512,7 +1533,7 @@ const EditorV3Page = () => {
     );
   }
 
-  if (!patientId && !planId && !isSandbox) {
+  if (!patientId && !resolvedPlanId && !isSandbox) {
     return (
       <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-center text-white">
         <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-6">

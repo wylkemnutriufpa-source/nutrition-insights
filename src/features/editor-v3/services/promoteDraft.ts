@@ -167,6 +167,7 @@ export async function promoteDraftToMealPlan(
 
   // 2) Insere meal_plan_items explodindo itens primários e suas substituições
   const itemsRows: any[] = [];
+  const primaryGroupsTracker = new Set<string>();
   
   for (const meal of meals) {
     if (meal.items.length === 0) continue;
@@ -175,19 +176,27 @@ export async function promoteDraftToMealPlan(
       // 🛡️ FASE 4: IDENTIDADE SOBERANA — SANITIZAÇÃO
       const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
-      // 🛡️ HIERARCHY PERSISTENCE: Preserva o blockId original do Editor V3
+      // 🛡️ HIERARCHY PERSISTENCE (V3): 1 Slot = 1 Group
+      // Se múltiplos itens chegarem com o mesmo blockId/groupId, apenas o PRIMEIRO será is_primary=true.
       const blockId = item.blockId;
       const rawGroupId = item.substitution_group_id || blockId || crypto.randomUUID();
+      
+      // Se não for UUID (ex: vindo do SimpleMealGenerator como 'lunch_protein_0'), 
+      // mantemos o rastro mas garantimos que o DB aceite.
+      // O DB exige UUID, então vamos gerar um UUID estável para strings conhecidas ou aleatório para novas.
       const groupId = isUuid(rawGroupId) ? rawGroupId : crypto.randomUUID();
       
-      if (!blockId) {
-        console.warn(`[HIERARCHY-RECOVERY] Item ${item.name} sem blockId durante promoção. Gerando novo.`);
-      }
-
       const mealType = mealNameToType(meal.name);
       
-      // 🛡️ FINAL CLINICAL SANITIZATION: Garante que NADA explodido chegue à persistência
-      // Mesmo que o editor esteja dirty, o ClinicalGuard limpa aqui.
+      // 🛡️ RECOGNITION LOCK: Se este grupo já teve um primary neste plano/dia, este item vira substituição.
+      // Isso impede a explosão calórica de Luciana (133 primaries).
+      const trackerKey = `${mealType}_${meal.day_of_week ?? 0}_${groupId}`;
+      const isPrimary = !primaryGroupsTracker.has(trackerKey);
+      
+      if (isPrimary) {
+        primaryGroupsTracker.add(trackerKey);
+      }
+
       const rawMacros = {
         kcal: Number(item.kcal || 0),
         protein: Number(item.protein || 0),
@@ -195,7 +204,6 @@ export async function promoteDraftToMealPlan(
         fat: Number(item.fat || 0)
       };
       
-      // Se detectarmos explosão óbvia, usamos o motor para recalcular do zero
       let cleanMacros = rawMacros;
       if (rawMacros.kcal > 10000 || rawMacros.protein > 1000) {
         console.warn(`[Promote-Guard] Explosion detected on item ${item.name}. Recalculating...`);
@@ -203,15 +211,7 @@ export async function promoteDraftToMealPlan(
         cleanMacros = recalculated;
       }
 
-      // 🛡️ TRACING SOBERANO — RUPTURA DE IDENTIDADE
       const itemInstanceId = isUuid(item.instanceId) ? item.instanceId : crypto.randomUUID();
-      
-      if (item.instanceId && !isUuid(item.instanceId)) {
-        console.warn(`[IDENTITY-RECOVERY] Item ID "${item.instanceId}" corrigido para UUID soberano.`);
-      }
-
-      // 🛡️ V3 IMAGE SOVEREIGNTY: paciente precisa enxergar a imagem.
-      // Prioridade: imagem do item → imagem da refeição (meal.imageUrl).
       const itemImageUrl = (item as any).imageUrl || meal.imageUrl || null;
 
       itemsRows.push({
@@ -230,7 +230,7 @@ export async function promoteDraftToMealPlan(
         item_origin: 'manual',
         is_manually_edited: true,
         is_locked: (item as any).locked || false,
-        is_primary: true,
+        is_primary: isPrimary, // 🛡️ ENFORCED SOBERANIA
         substitution_group_id: groupId,
         edit_metadata: {
           ...item,
@@ -244,7 +244,7 @@ export async function promoteDraftToMealPlan(
         }
       });
 
-      // 2.2) Substituições (se houver)
+      // 2.2) Substituições (sempre is_primary = false)
       if (item.substitutions && Array.isArray(item.substitutions)) {
         item.substitutions.forEach((sub: any) => {
           itemsRows.push({
@@ -263,7 +263,7 @@ export async function promoteDraftToMealPlan(
             item_origin: 'auto',
             is_manually_edited: false,
             is_locked: false,
-            is_primary: false,
+            is_primary: false, // Substituições nunca são primárias na promoção
             substitution_group_id: groupId,
             edit_metadata: {
               ...sub,

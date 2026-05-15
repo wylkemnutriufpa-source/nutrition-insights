@@ -584,74 +584,68 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const canonicalType = resolveCanonicalMealType(mType);
     const mealInfo = MEAL_LABELS[String(canonicalType)] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
 
-    // Agrupar por grupo de substituição para manter a lógica de "item principal + suas trocas"
-    const groups: Record<string, MealPlanPDFItem[]> = {};
-    const orphans: MealPlanPDFItem[] = [];
+    const primaries = typeItems.filter(i => i.is_primary);
+    const substitutions = typeItems.filter(i => !i.is_primary);
     
-    typeItems.forEach(item => {
-      const gId = item.substitution_group_id;
-      if (gId) {
-        if (!groups[gId]) groups[gId] = [];
-        groups[gId].push(item);
-      } else {
-        orphans.push(item);
-      }
-    });
+    const totalKcal = primaries.reduce((sum, i) => sum + (i.calories_target || 0), 0);
 
-    const totalKcal = typeItems.filter(i => i.is_primary).reduce((sum, i) => sum + (i.calories_target || 0), 0);
-
-    const renderGroupContent = (groupItems: MealPlanPDFItem[]) => {
-      const primary = groupItems.find(i => i.is_primary) || groupItems[0];
-      const substitutions = groupItems.filter(i => i !== primary);
+    const renderItemLine = (item: MealPlanPDFItem) => {
+      const dQty = item.display_quantity || "";
+      const dUnit = item.display_unit || "";
+      const cMass = item.clinical_mass_g || "";
       
-      const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
-      const showTitle = primary.title && !sameAsLabel;
-
-      // 🛡️ SOBERANIA V3: Resolver porção (Lógica 1:1 com Dashboard)
-      const isV3 = primary.editor_version === "v3" || (primary as any).editor_version === "V3";
-      
-      const dQty = primary.display_quantity || "";
-      const dUnit = primary.display_unit || "";
-      const cMass = primary.clinical_mass_g || "";
-      
-      let portionHtml = "";
-      if (dQty) {
-        portionHtml = `<div style="font-size: 10px; font-weight: 700; color: #6366f1; margin-bottom: 2px;">${dQty} ${dUnit}</div>`;
-      } else if (cMass) {
-        portionHtml = `<div style="font-size: 10px; font-weight: 700; color: #6366f1; margin-bottom: 2px;">${cMass}g</div>`;
-      }
-
+      let portionText = "";
+      if (dQty) portionText = `${dQty} ${dUnit}`;
+      else if (cMass) portionText = `${cMass}g`;
+      else portionText = item.description || "";
 
       return `
-        <div class="meal-group-container">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-            <div style="font-weight: 700; color: #1e293b; font-size: 11px;">
-              ${showTitle ? escapeHtml(primary.title) : ""}
-            </div>
-            <div style="font-size: 10px; font-weight: 600; color: #D4A84B;">${primary.calories_target || 0} kcal</div>
+        <div class="food-line" style="margin-bottom: 6px;">
+          <span class="food-bullet" style="background: ${mealInfo.color}"></span>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; color: #1e293b;">${escapeHtml(item.title)}</span>
+            <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
           </div>
-          
-          <div class="food-list" style="margin-left: 4px; border-left: 2px solid #f1f5f9; padding-left: 10px;">
-            ${portionHtml}
-            ${primary.description ? formatDescription(primary.description) : ""}
-          </div>
+          <span style="margin-left: auto; font-size: 9px; font-weight: 600; color: #94a3b8;">${item.calories_target || 0} kcal</span>
+        </div>
+      `;
+    };
 
-          ${substitutions.length > 0 ? `
-            <div class="substitution-box" style="margin-left: 10px; background: #fafafa; border: 1px dashed #e2e8f0;">
-              <div class="sub-header" style="color: #64748b;">Opções de Troca</div>
-              ${substitutions.map(sub => {
-                const subPortion = formatSubstitutionDetail(sub, primary);
-                return `
-                <div class="sub-item" style="border-bottom: 1px solid #f1f5f9;">
-                  <div>
-                    <span style="font-weight: 500;">${escapeHtml(sub.title)}</span>
-                    ${subPortion ? `<span style="font-size: 9px; color: #94a3b8;"> — ${escapeHtml(subPortion)}</span>` : ""}
-                  </div>
-                  <span style="color: #cbd5e1; font-size: 9px;">${sub.calories_target || 0} kcal</span>
+    const renderSubstitutions = () => {
+      if (substitutions.length === 0) return "";
+      
+      // Agrupar substituições por grupo para saber "o que substitui o que"
+      const subGroups: Record<string, MealPlanPDFItem[]> = {};
+      substitutions.forEach(s => {
+        const gId = s.substitution_group_id || 'orphan';
+        if (!subGroups[gId]) subGroups[gId] = [];
+        subGroups[gId].push(s);
+      });
+
+      return `
+        <div class="substitution-box" style="margin-top: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px;">
+          <div style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 0.5px;">Opções de Troca</div>
+          ${Object.entries(subGroups).map(([gId, items]) => {
+            const targetPrimary = primaries.find(p => p.substitution_group_id === gId);
+            const targetName = targetPrimary ? targetPrimary.title : "Itens acima";
+            
+            return `
+              <div style="margin-bottom: 8px; last-child: margin-bottom: 0;">
+                <div style="font-size: 9px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">Substituindo ${escapeHtml(targetName)}:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  ${items.map(sub => {
+                    const subPortion = formatSubstitutionDetail(sub, sub); // Use sub's own detail
+                    return `
+                      <div style="background: #fff; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 10px;">
+                        <span style="font-weight: 600; color: #334155;">${escapeHtml(sub.title)}</span>
+                        ${subPortion ? `<span style="color: #94a3b8; font-size: 9px;"> (${escapeHtml(subPortion)})</span>` : ""}
+                      </div>
+                    `;
+                  }).join("")}
                 </div>
-              `}).join("")}
-            </div>
-          ` : ""}
+              </div>
+            `;
+          }).join("")}
         </div>
       `;
     };
@@ -665,8 +659,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           <div class="meal-kcal-badge">${Math.round(totalKcal)} kcal</div>
         </div>
         <div class="meal-body">
-          ${Object.values(groups).map(g => renderGroupContent(g)).join("")}
-          ${orphans.map(i => renderGroupContent([i])).join("")}
+          <div class="primary-items-list">
+            ${primaries.map(renderItemLine).join("")}
+          </div>
+          ${renderSubstitutions()}
         </div>
       </div>
     `;
