@@ -1,104 +1,81 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Meal, Food, MealItem, AuditLogEntry, PatientContext } from '../types';
-
-const DEFAULT_MEALS: Meal[] = [
-  { id: '1', name: 'Café da Manhã', items: [], time: '08:00' },
-  { id: '2', name: 'Lanche da Manhã', items: [], time: '10:30' },
-  { id: '3', name: 'Almoço', items: [], time: '13:00' },
-  { id: '4', name: 'Lanche da Tarde', items: [], time: '16:00' },
-  { id: '5', name: 'Jantar', items: [], time: '19:30' },
-  { id: '6', name: 'Ceia', items: [], time: '22:00' },
-];
 
 interface EditorState {
-  meals: Meal[];
-  auditLog: AuditLogEntry[];
+  meals: any[];
   patientId: string | null;
-  planStatus: 'draft' | 'saving' | 'saved';
-  nutritionalScore: any;
-  validationIssues: any[];
-  goalMetadata: any;
   clinicalMode: boolean;
-  lastBlockedReason: string | null;
-  patientContext: PatientContext | null;
-  sharingToken: string | null;
-  confidence: any;
-  initialMeals: Meal[]; 
-  viewMode: 'daily' | 'weekly';
-  setViewMode: (mode: 'daily' | 'weekly') => void;
+  setViewMode: (mode: any) => void;
   setPatientId: (id: string) => void;
-  hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[], sharingToken?: string) => void;
-  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => Promise<void>;
+  hydrateMeals: (meals: any) => void;
+  updateMealItem: (mealId: string, itemId: string, updates: any) => Promise<void>;
   savePlan: () => Promise<void>;
   resetEditor: () => void;
   recalculateScore: () => void;
-  addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
-  addFoodToMeal: (mealId: string, food: Food) => Promise<void>;
-  applyTemplateToMeal: (mealId: string, template: any) => void;
-  removeFood: (mealId: string, instanceId: string) => Promise<void>;
-  updateFoodQuantity: (mealId: string, instanceId: string, quantity: number, clinical_mass_g?: number) => void;
-  addMeal: () => void;
-  removeMeal: (mealId: string) => void;
-  updateMealHeader: (mealId: string, name: string, time: string, description?: string, imageUrl?: string, imageSource?: any) => void;
-  addMealWithHeader: (name: string, time: string) => void;
-  duplicateMeal: (mealId: string) => void;
-  reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
-  updateMealImage: (mealId: string, imageUrl: string, imageSource: any) => void;
-  setMeals: (meals: Meal[]) => void;
-  setGoalMetadata: (metadata: any) => void;
-  setPatientContext: (context: PatientContext) => void;
-  addAuditEntry: (entry: any) => void;
+  addMarmitaToMeal: any;
+  addFoodToMeal: any;
+  applyTemplateToMeal: any;
+  removeFood: any;
+  updateFoodQuantity: any;
+  addMeal: any;
+  removeMeal: any;
+  updateMealHeader: any;
+  addMealWithHeader: any;
+  duplicateMeal: any;
+  reorderMeal: any;
+  updateMealImage: any;
+  setMeals: any;
+  setGoalMetadata: any;
+  setPatientContext: any;
+  addAuditEntry: any;
+  nutritionalScore: any;
+  validationIssues: any[];
+  goalMetadata: any;
+  patientContext: any;
+  confidence: any;
+  sharingToken: string | null;
+  initialMeals: any[];
+  viewMode: string;
 }
 
 export const useEditorState = create<EditorState>()(
   persist(
-    (set, get) => ({
-      meals: DEFAULT_MEALS,
-      auditLog: [],
+    (set) => ({
+      meals: [],
       patientId: null,
-      planStatus: 'draft',
+      clinicalMode: true,
       nutritionalScore: null,
       validationIssues: [],
       goalMetadata: {},
       patientContext: null,
-      confidence: null, 
+      confidence: null,
       sharingToken: null,
-      initialMeals: DEFAULT_MEALS,
+      initialMeals: [],
       viewMode: 'daily',
-      clinicalMode: true,
-      lastBlockedReason: null,
       setViewMode: (mode) => set({ viewMode: mode }),
       setPatientId: (id) => set({ patientId: id }),
-      hydrateMeals: (meals) => set({ meals, planStatus: 'saved' }),
-      updateMealItem: async (mealId, instanceId, updates) => {
-        set((state) => ({
-          meals: state.meals.map(m => m.id === mealId ? {
-            ...m,
-            items: m.items.map(i => i.instanceId === instanceId ? { ...i, ...updates } : i)
-          } : m)
-        }));
-      },
-      savePlan: async () => { set({ planStatus: 'saved' }); },
-      resetEditor: () => set({ meals: DEFAULT_MEALS, planStatus: 'draft' }),
+      hydrateMeals: (meals) => set({ meals }),
+      updateMealItem: async () => {},
+      savePlan: async () => {},
+      resetEditor: () => set({ meals: [] }),
       recalculateScore: () => {},
-      addMarmitaToMeal: async (mealId, m) => {},
-      addFoodToMeal: async (mealId, f) => {},
-      applyTemplateToMeal: (mealId, t) => {},
-      removeFood: async (mealId, instanceId) => {},
-      updateFoodQuantity: (mealId, instanceId, q, c) => {},
+      addMarmitaToMeal: async () => {},
+      addFoodToMeal: async () => {},
+      applyTemplateToMeal: () => {},
+      removeFood: async () => {},
+      updateFoodQuantity: () => {},
       addMeal: () => {},
-      removeMeal: (id) => {},
-      updateMealHeader: (id, n, t, d, i, s) => {},
-      addMealWithHeader: (n, t) => {},
-      duplicateMeal: (id) => {},
-      reorderMeal: (id, d) => {},
-      updateMealImage: (id, i, s) => {},
-      setMeals: (m) => set({ meals: m }),
-      setGoalMetadata: (m) => set({ goalMetadata: m }),
-      setPatientContext: (c) => set({ patientContext: c }),
-      addAuditEntry: (e) => {},
+      removeMeal: () => {},
+      updateMealHeader: () => {},
+      addMealWithHeader: () => {},
+      duplicateMeal: () => {},
+      reorderMeal: () => {},
+      updateMealImage: () => {},
+      setMeals: (m: any) => set({ meals: m }),
+      setGoalMetadata: () => {},
+      setPatientContext: () => {},
+      addAuditEntry: () => {},
     }),
-    { name: 'fitjourney-editor-v3-storage', version: 3, storage: createJSONStorage(() => localStorage) }
+    { name: 'fitjourney-editor-v3-minimal', version: 1, storage: createJSONStorage(() => localStorage) }
   )
 );
