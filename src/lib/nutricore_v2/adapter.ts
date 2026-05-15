@@ -122,11 +122,14 @@ export class NutriCoreV3Adapter {
       const CARB_ROTATION = ["Arroz", "Batata Doce", "Macarrão", "Mandioca"];
 
       for (let dayIdx = 0; dayIdx < loops; dayIdx++) {
-        const currentDayOfWeek = dayIdx + 1; 
+        // 🛡️ DAY_OF_WEEK SOBERANO: Domingo=0, Segunda=1, ..., Sábado=6
+        // Se loops=7, mapeamos dayIdx 0..6 para Segunda..Domingo ou conforme a ordem de loops
+        // Para manter consistência com o motor V3, vamos usar dayIdx diretamente se for 0-6.
+        const currentDayOfWeek = dayIdx % 7; 
 
         const daySeed = 42 + dayIdx;
         const dayMeals = await Promise.all(distributed.map(async (slot, slotIdx) => {
-          const mealSeed = daySeed + (slotIdx * 7.7); // 🛡️ VARIETY GUARD: Offset por refeição para evitar Lunch == Dinner
+          const mealSeed = daySeed + (slotIdx * 7.7); // 🛡️ VARIETY GUARD: Offset por refeição
           
           const nameMap: Record<string, string> = {
             'cafe_da_manha': 'Café da Manhã',
@@ -162,7 +165,9 @@ export class NutriCoreV3Adapter {
 
           const v3Items = plannedMeal.items.map(item => {
             const foodObj = finalDb.find(f => f.id === item.foodId);
-            const primaryGroupId = crypto.randomUUID(); // 🛡️ Hierarchy Ownership
+            
+            // 🛡️ SLOT SOVEREIGNTY: 1 Slot = 1 Group
+            const primaryGroupId = crypto.randomUUID(); 
             
             let substitutions: any[] = [];
             if (foodObj) {
@@ -231,7 +236,9 @@ export class NutriCoreV3Adapter {
             time: slot.time,
             items: v3Items,
             imageUrl: bestImage.url,
-            imageSource: bestImage.source
+            imageSource: bestImage.source,
+            day_of_week: isWeekly ? currentDayOfWeek : 0, // 🛡️ CORREÇÃO CRÍTICA
+            selectionMode: isWeekly ? 'week' : 'day'
           } as V3Meal;
         }));
         allGeneratedMeals.push(...dayMeals);
