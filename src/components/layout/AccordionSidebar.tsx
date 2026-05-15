@@ -303,10 +303,6 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                     onLinkClick={onLinkClick}
                     collapsed={collapsed}
                     renderItem={(item) => {
-                      if (!item.id && isPatientsSection) {
-                         // This would handle a special "View All" case in grid if needed, 
-                         // but let's keep it simple and just ensure the section is visible.
-                      }
                       const Icon = getIcon(item.icon || "LayoutDashboard");
                       const active = location.pathname === item.route;
                       const isPremium = item.premium_only;
@@ -369,6 +365,127 @@ function SidebarSkeleton() {
   );
 }
 
+function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
+  const location = useLocation();
+  const { t } = useTranslation();
+  const { isFeatureEnabled, minMode, mode, isBasic } = useExperienceMode();
+  
+  const isMobile = useIsMobile();
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const { isPatient, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const hasRole = isPatient || isNutritionist || isPersonal || isAdmin;
+
+  if (loading || !hasRole) return null;
+
+  const allItems = categories.flatMap((c) => c.items).filter(item => {
+    const featureKey = item.feature || item.route.replace(/^\//, '');
+    
+    // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
+    const isDietRoute = item.route === "/patient-meal-plan";
+    if (isBasic && isPatient && isDietRoute) return true;
+
+    if (!isFeatureEnabled(featureKey)) return false;
+    if (item.premium_only && !minMode("pro")) return false;
+    return true;
+  });
+
+  const grouped = useMemo(() => {
+    const groups: Record<string, SmartMenuItem[]> = {};
+    allItems.forEach((item) => {
+      const g = CATEGORY_TO_GROUP[item.category] || "OUTROS";
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(item);
+    });
+    return groups;
+  }, [allItems]);
+
+  const sortedGroups = useMemo(() => {
+    return GROUP_ORDER.filter(g => grouped[g] && grouped[g].length > 0);
+  }, [grouped]);
+
+  return (
+    <div className="space-y-1">
+      {sortedGroups.map((group) => {
+        const items = grouped[group];
+        const isOpen = openGroup === group;
+        const GroupIcon = GROUP_ICONS[group] || LayoutDashboard;
+        const colorClass = GROUP_COLORS[group] || "text-muted-foreground";
+        const hasActive = items.some(i => location.pathname === i.route);
+
+        return (
+          <div key={group} className="relative mb-0.5">
+            <button
+              onClick={() => setOpenGroup(isOpen ? null : group)}
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-all text-left group
+                ${isOpen ? "bg-primary/10 shadow-sm" : hasActive ? "bg-primary/5" : "hover:bg-muted/50"}
+              `}
+            >
+              {!collapsed && (
+                <>
+                  <GroupIcon className={`w-3.5 h-3.5 ${colorClass} flex-shrink-0`} />
+                  <span className={`text-[10px] font-bold uppercase tracking-wider flex-1 ${colorClass}`}>
+                    {group}
+                  </span>
+                  <ChevronRight className={`w-3 h-3 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                </>
+              )}
+              {collapsed && (
+                <GroupIcon className={`w-4 h-4 ${colorClass} mx-auto`} />
+              )}
+            </button>
+
+            <AnimatePresence>
+              {isOpen && (
+                <SideFlyout
+                  title={group}
+                  icon={GroupIcon}
+                  colorClass={colorClass}
+                  items={items}
+                  onClose={() => setOpenGroup(null)}
+                  onLinkClick={onLinkClick}
+                  collapsed={collapsed}
+                  renderItem={(item) => {
+                    const Icon = getIcon(item.icon);
+                    const active = location.pathname === item.route;
+                    const isPremium = item.premium_only;
+                    return (
+                      <Link
+                        key={item.id}
+                        to={item.route}
+                        onClick={() => { 
+                          trackClick(item.id); 
+                          setOpenGroup(null); 
+                          onLinkClick?.(); 
+                        }}
+                        className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
+                          ${active
+                            ? isPremium
+                              ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
+                              : "bg-primary/10 text-primary ring-1 ring-primary/20"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                          }`}
+                      >
+                        <Icon className={`w-5 h-5 transition-transform group-hover/item:scale-110 ${
+                          isPremium ? "text-amber-500" : active ? "text-primary" : ""
+                        }`} />
+                        <span className={`text-[10px] font-medium leading-tight line-clamp-2 ${
+                          isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
+                        }`}>
+                          {String(t(item.label_key, item.label))}
+                        </span>
+                      </Link>
+                    );
+                  }}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AccordionSidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick, loading: menuLoading }: Props) {
   const { sections, loading: wsLoading } = useWorkspace();
   const { isProfessionalContext } = useWorkspaceContext();
@@ -390,7 +507,7 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
           />
         </div>
       )}
-
+      
       <div className="flex-1 overflow-y-auto scrollbar-none">
         {hasWorkspaceConfig ? (
           <WorkspaceSidebar collapsed={collapsed} onLinkClick={onLinkClick} />
@@ -405,241 +522,6 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
           />
         )}
       </div>
-    </div>
-  );
-}
-
-function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
-  const location = useLocation();
-  const { t } = useTranslation();
-  const { isFeatureEnabled, minMode, mode, isBasic } = useExperienceMode();
-  
-  console.log(`[DEBUG] LegacySidebar render | mode: ${mode}`);
-  console.log(`[DEBUG] Itens ANTES do filtro:`, categories.flatMap(c => c.items).map(i => ({ label: i.label, feature: i.feature, premium: i.premium_only })));
-
-  const isMobile = useIsMobile();
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const { isPatient, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
-  const hasRole = isPatient || isNutritionist || isPersonal || isAdmin;
-
-  if (loading || !hasRole) return null;
-
-  const allItems = categories.flatMap((c) => c.items).filter(item => {
-    const featureKey = item.feature || item.route.replace(/^\//, '');
-    
-    // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
-    const isDietRoute = item.route === "/patient-meal-plan";
-    if (isBasic && isPatient && isDietRoute) return true;
-
-    // 1. Check feature permission using isFeatureEnabled (which checks both dynamic config and hardcoded map)
-    if (!isFeatureEnabled(featureKey)) return false;
-
-    // 2. Legacy fallback for premium_only without specific feature key
-    if (item.premium_only && !item.feature && !minMode("pro")) return false;
-
-    return true;
-  });
-
-  console.log(`[DEBUG] Itens DEPOIS do filtro:`, allItems.map(i => i.label));
-
-  const fixedItems = allItems.filter((item) => FIXED_ROUTES.includes(item.route));
-
-  const groupedMap = new Map<string, SmartMenuItem[]>();
-  GROUP_ORDER.forEach((g) => groupedMap.set(g, []));
-
-  allItems
-    .filter((item) => !FIXED_ROUTES.includes(item.route))
-    .forEach((item) => {
-      const group = CATEGORY_TO_GROUP[item.category] || "CONTEÚDO";
-      const existing = groupedMap.get(group) || [];
-      existing.push(item);
-      groupedMap.set(group, existing);
-    });
-
-  const groups = GROUP_ORDER
-    .map((name) => ({ name, items: groupedMap.get(name) || [] }))
-    .filter((g) => g.items.length > 0);
-
-  return (
-    <div className="space-y-1">
-      {minMode("pro") && fixedItems.map((item) => {
-        const Icon = getIcon(item.icon);
-        const active = location.pathname === item.route;
-        return (
-          <Link
-            key={item.id}
-            to={item.route}
-            onClick={() => { 
-              console.log("[NAV] Sidebar clicking fixed item", { to: item.route, id: item.id });
-              trackClick(item.id); 
-              onLinkClick?.(); 
-            }}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all border mb-2
-              ${active
-                ? mode === 'advanced' ? "bg-gradient-to-r from-amber-500/15 to-amber-600/10 border-amber-500/30 shadow-sm" :
-                  mode === 'pro' ? "bg-blue-500/10 border-blue-500/30 shadow-sm" :
-                  "bg-green-700/10 border-green-700/30 shadow-sm"
-                : mode === 'advanced' ? "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10" :
-                  mode === 'pro' ? "border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10" :
-                  "border-green-700/20 bg-green-700/5 hover:bg-green-700/10"
-              }`}
-          >
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-              active 
-                ? mode === 'advanced' ? "bg-amber-500/20" : mode === 'pro' ? "bg-blue-500/20" : "bg-green-700/20" 
-                : mode === 'advanced' ? "bg-amber-500/10" : mode === 'pro' ? "bg-blue-500/10" : "bg-green-700/10"
-            }`}>
-              <Icon className={`w-4 h-4 ${
-                mode === 'advanced' ? "text-amber-500" : mode === 'pro' ? "text-blue-500" : "text-green-700"
-              }`} />
-            </div>
-            {!collapsed && (
-              <span className={`text-xs font-bold ${
-                mode === 'advanced' ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent" :
-                mode === 'pro' ? "text-blue-600" : "text-green-800"
-              }`}>
-                {String(t(item.label_key, item.label))}
-              </span>
-            )}
-            {active && !collapsed && <Crown className={`w-3.5 h-3.5 ml-auto ${
-              mode === 'advanced' ? "text-amber-500" : mode === 'pro' ? "text-blue-500" : "text-green-700"
-            }`} />}
-          </Link>
-        );
-      })}
-
-      {groups.map((group) => {
-        const isOpen = openGroup === group.name;
-        const GroupIcon = GROUP_ICONS[group.name] || Settings;
-        const hasActiveItem = group.items.some((item) => location.pathname === item.route);
-        const colorClass = GROUP_COLORS[group.name] || "text-muted-foreground";
-
-        return (
-          <div key={group.name} className="relative mb-0.5">
-            <button
-              onClick={() => setOpenGroup(isOpen ? null : group.name)}
-              className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-all text-left group
-                ${isOpen 
-                  ? mode === 'advanced' ? "bg-amber-500/10 shadow-sm" : 
-                    mode === 'pro' ? "bg-blue-500/10 shadow-sm" : 
-                    "bg-green-700/10 shadow-sm" 
-                  : hasActiveItem 
-                    ? mode === 'advanced' ? "bg-amber-500/5" :
-                      mode === 'pro' ? "bg-blue-500/5" :
-                      "bg-green-700/5"
-                    : "hover:bg-muted/50"}
-              `}
-            >
-              {!collapsed && (
-                <>
-                  <GroupIcon className={`w-3.5 h-3.5 ${colorClass} flex-shrink-0`} />
-                  <span className={`text-[10px] font-bold uppercase tracking-wider flex-1 ${colorClass}`}>
-                    {group.name}
-                  </span>
-                  {hasActiveItem && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  )}
-                  <ChevronRight className={`w-3 h-3 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
-                </>
-              )}
-              {collapsed && (
-                <GroupIcon className={`w-4 h-4 ${colorClass} mx-auto`} />
-              )}
-            </button>
-
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                isMobile ? (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-2 ml-2 space-y-1 rounded-xl border border-border/50 bg-muted/20 p-2">
-                      {group.items.map((menuItem) => {
-                        const Icon = getIcon(menuItem.icon);
-                        const active = location.pathname === menuItem.route;
-                        const isPremium = menuItem.premium_only;
-
-                        return (
-                          <Link
-                            key={menuItem.id}
-                            to={menuItem.route}
-                            onClick={() => {
-                              console.log("[NAV] Sidebar clicking legacy group item", { to: menuItem.route, id: menuItem.id });
-                              trackClick(menuItem.id);
-                              setOpenGroup(null);
-                              onLinkClick?.();
-                            }}
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
-                              active
-                                ? isPremium
-                                  ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
-                                  : "bg-primary/10 text-primary ring-1 ring-primary/20"
-                                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                            }`}
-                          >
-                            <Icon className={`h-4 w-4 flex-shrink-0 ${isPremium ? "text-amber-500" : active ? "text-primary" : ""}`} />
-                            <span className={`min-w-0 flex-1 truncate text-xs font-medium ${isPremium ? "text-amber-500" : ""}`}>
-                              {String(t(menuItem.label_key, menuItem.label))}
-                            </span>
-                            {isPremium && <Crown className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <SideFlyout
-                    title={group.name}
-                    icon={GroupIcon}
-                    colorClass={colorClass}
-                    items={group.items}
-                    onClose={() => setOpenGroup(null)}
-                    onLinkClick={onLinkClick}
-                    collapsed={collapsed}
-                    renderItem={(menuItem) => {
-                      const Icon = getIcon(menuItem.icon);
-                      const active = location.pathname === menuItem.route;
-                      const isPremium = menuItem.premium_only;
-
-                      return (
-                        <Link
-                          key={menuItem.id}
-                          to={menuItem.route}
-                          onClick={() => { 
-                            console.log("[NAV] Sidebar clicking legacy flyout item", { to: menuItem.route, id: menuItem.id });
-                            trackClick(menuItem.id); 
-                            setOpenGroup(null); 
-                            onLinkClick?.(); 
-                          }}
-                          className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
-                            ${active
-                              ? isPremium
-                                ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
-                                : "bg-primary/10 text-primary ring-1 ring-primary/20"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                            }`}
-                        >
-                          <Icon className={`w-5 h-5 transition-transform group-hover/item:scale-110 ${
-                            isPremium ? "text-amber-500" : active ? "text-primary" : ""
-                          }`} />
-                          <span className={`text-[10px] font-medium leading-tight line-clamp-2 ${
-                            isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
-                          }`}>
-                            {String(t(menuItem.label_key, menuItem.label))}
-                          </span>
-                        </Link>
-                      );
-                    }}
-                  />
-                )
-              )}
-            </AnimatePresence>
-          </div>
-        );
-      })}
     </div>
   );
 }
