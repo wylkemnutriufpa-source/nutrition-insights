@@ -4,9 +4,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
-import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
-import { formatDisplayPortion, resolveDisplayGrams } from '@/lib/nutricore_v2/portion-display';
-import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
+// Removed nutricore and snapshot imports
 
 type ClinicalMealType =
   | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
@@ -170,11 +168,7 @@ export async function promoteDraftToMealPlan(
       };
       
       let cleanMacros = rawMacros;
-      if (rawMacros.kcal > 10000 || rawMacros.protein > 1000) {
-        console.warn(`[Promote-Guard] Explosion detected on item ${item.name}. Recalculating...`);
-        const recalculated = calculateItemMacros(item, item.quantity || 1);
-        cleanMacros = recalculated;
-      }
+      // Removed auto-recalculation logic
 
       const itemInstanceId = isUuid(item.instanceId) ? item.instanceId : crypto.randomUUID();
       const itemImageUrl = (item as any).imageUrl || meal.imageUrl || null;
@@ -271,15 +265,7 @@ export async function promoteDraftToMealPlan(
     })
     .eq('id', draft.id);
 
-  // 🛡️ Onda 1: Snapshot imutável (Shadow Mode)
-  // Garante soberania visual para o Patient App
-  try {
-    await generateAndPersistMealPlanSnapshot(plan.id);
-  } catch (snapshotErr: any) {
-    console.error("[Promote-Snapshot] Falha crítica ao gerar snapshot:", snapshotErr);
-    // V3 MANDATORY SNAPSHOT: Bloqueamos se o snapshot falhar para evitar inconsistência operacional
-    throw new Error(`Falha na Soberania V3: O snapshot visual não pôde ser gerado (${snapshotErr.message}).`);
-  }
+  // Snapshot persistence removed - following minimalist approach
 
   // Log removido com a desativação dos motores procedurais.
 

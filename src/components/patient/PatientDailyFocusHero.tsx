@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
-import { resolvePatientDailyFocus, completeDailyFocus, type DailyFocus } from "@/lib/dailyFocusEngine";
-import { resolveFocusAction, getFocusQuickActions } from "@/lib/focusActionResolver";
+// Daily focus engines removed
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { safeNum } from "@/lib/formatMacros";

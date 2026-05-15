@@ -9,7 +9,7 @@ import {
   ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
   SlidersHorizontal, ArrowRightLeft, User, ShieldCheck,
 } from "lucide-react";
-import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+// Removed clinicalHumanEngine import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
