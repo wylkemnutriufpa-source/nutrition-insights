@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Clock, Plus, Trash2, Utensils } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Meal, Food } from '../types/types';
+import { Meal, Food, MealItem } from '../types/types';
 import { FoodItemRow } from './FoodItemRow';
 import { FoodSearch } from './FoodSearch';
 import { 
@@ -26,6 +26,7 @@ export const MealCard: React.FC<MealCardProps> = ({
 }) => {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activeItemForSub, setActiveItemForSub] = useState<MealItem | null>(null);
 
   const mealTotals = meal.items.reduce((acc, item) => {
     acc.kcal += item.kcal || 0;
@@ -141,7 +142,10 @@ export const MealCard: React.FC<MealCardProps> = ({
                   onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
                   onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
                   onRemove={() => onRemoveFood(item.instanceId)}
-                  onAddSubstitution={(food) => onAddSubstitution(item.instanceId, food)}
+                  onRequestSubstitution={() => {
+                    setActiveItemForSub(item);
+                    setIsSearchOpen(true);
+                  }}
                 />
               ))
             ) : (
@@ -170,25 +174,15 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
 
           <div className="flex items-center gap-4">
-            <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] h-14 px-8 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95">
-                  <Plus className="w-5 h-5 mr-3" /> Adicionar Alimento
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-xl rounded-[3rem] p-12">
-                <DialogHeader className="mb-8">
-                  <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Biblioteca Soberana</DialogTitle>
-                </DialogHeader>
-                <FoodSearch 
-                  mealSlot={meal.name}
-                  onSelect={(food) => {
-                    onAddFood(food);
-                    setIsSearchOpen(false);
-                  }} 
-                />
-              </DialogContent>
-            </Dialog>
+            <Button 
+              onClick={() => {
+                setActiveItemForSub(null);
+                setIsSearchOpen(true);
+              }}
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] h-14 px-8 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
+            >
+              <Plus className="w-5 h-5 mr-3" /> Adicionar Alimento
+            </Button>
 
             <Button
               variant="outline"
@@ -199,6 +193,33 @@ export const MealCard: React.FC<MealCardProps> = ({
             </Button>
           </div>
         </div>
+
+        {/* Common Search Dialog - Moved out of the row to avoid nesting */}
+        <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+          <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-xl rounded-[3rem] p-12">
+            <DialogHeader className="mb-8">
+              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">
+                {activeItemForSub ? "Buscar Equivalentes" : "Biblioteca Soberana"}
+              </DialogTitle>
+              {activeItemForSub && (
+                <p className="text-[10px] uppercase font-black tracking-widest text-white/20 mt-2">
+                  Encontre substitutos para: {activeItemForSub.name}
+                </p>
+              )}
+            </DialogHeader>
+            <FoodSearch 
+              mealSlot={activeItemForSub ? (activeItemForSub.category || meal.name) : meal.name}
+              onSelect={(food) => {
+                if (activeItemForSub) {
+                  onAddSubstitution(activeItemForSub.instanceId, food);
+                } else {
+                  onAddFood(food);
+                }
+                setIsSearchOpen(false);
+              }} 
+            />
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
