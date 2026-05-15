@@ -144,6 +144,12 @@ export default function EditorV3Page() {
               variant="outline" 
               className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
             >
+              <Library className="w-4 h-4 mr-2" /> Templates
+            </Button>
+            <Button 
+              variant="outline" 
+              className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
+            >
               <Share2 className="w-4 h-4 mr-2" /> Compartilhar
             </Button>
             <Button 
