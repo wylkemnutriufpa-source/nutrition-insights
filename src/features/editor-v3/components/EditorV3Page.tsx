@@ -113,15 +113,20 @@ export default function EditorV3Page() {
 
       const libraryMap = new Map();
       (libraryItems || []).forEach(item => {
-        if (!libraryMap.has(item.cluster_slug)) {
-          libraryMap.set(item.cluster_slug, item);
+        const slug = item.cluster_slug;
+        if (!libraryMap.has(slug)) {
+          libraryMap.set(slug, item);
         }
       });
+      
+      console.log('[EditorV3] Library pre-fetched count:', libraryItems?.length);
+      console.log('[EditorV3] Cluster Map to plot:', clusterMap);
 
       for (const day of days) {
         for (const dist of distribution) {
+          // Normalizar chaves do clusterMap (banco pode salvar com espaços ou acentos, UI usa slots técnicos)
           const slot = dist.slot;
-          const clusterSlug = clusterMap[slot];
+          const clusterSlug = clusterMap[slot] || clusterMap[slot.trim()] || Object.entries(clusterMap).find(([k]) => k.toLowerCase() === slot.toLowerCase())?.[1];
           let items: any[] = [];
 
           if (clusterSlug) {
@@ -138,11 +143,15 @@ export default function EditorV3Page() {
                 instanceId: crypto.randomUUID(),
                 quantity,
                 clinical_mass_g: quantity,
-                substitutions: [], // Subs are fetched on demand in the modal/editor if needed, or kept empty for speed
+                substitutions: [],
                 imageUrl,
                 ...macros
               }];
+            } else {
+              console.warn(`[EditorV3] No food found for cluster slug: ${clusterSlug} in slot: ${slot}`);
             }
+          } else {
+            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}`);
           }
 
           newMeals.push({
