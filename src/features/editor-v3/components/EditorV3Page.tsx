@@ -208,11 +208,23 @@ export default function EditorV3Page() {
 
       setLoading(true);
       try {
-        const { data: plan, error } = await supabase
-          .from('meal_plans')
-          .select('*, patient:profiles(*)') // Changed from patients(*) to profiles(*)
+        const { data: plan, error } = await (supabase
+          .from('meal_plans') as any)
+          .select('*, patient:profiles(*)')
           .eq('id', effectiveId)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid throw on not found
+
+        if (error) {
+          console.error('Database error:', error);
+          setLoading(false);
+          return;
+        }
+
+        if (!plan) {
+          console.warn('Plan not found:', effectiveId);
+          setLoading(false);
+          return;
+        }
 
         if (error) throw error;
 
