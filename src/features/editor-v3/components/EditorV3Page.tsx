@@ -133,7 +133,6 @@ export default function EditorV3Page() {
 
       for (const day of days) {
         for (const dist of distribution) {
-          // Normalizar chaves do clusterMap (banco pode salvar com espaços ou acentos, UI usa slots técnicos)
           const slot = dist.slot;
           const clusterSlug = clusterMap[slot] || clusterMap[slot.trim()] || Object.entries(clusterMap).find(([k]) => k.toLowerCase() === slot.toLowerCase())?.[1];
           let items: any[] = [];
@@ -150,6 +149,7 @@ export default function EditorV3Page() {
               items = [{
                 ...food,
                 instanceId: crypto.randomUUID(),
+                name: food.title || food.name, // SOBERANIA: Título mapeado para Nome
                 quantity,
                 clinical_mass_g: quantity,
                 substitutions: [],
