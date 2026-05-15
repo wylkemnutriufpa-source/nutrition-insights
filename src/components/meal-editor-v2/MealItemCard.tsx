@@ -262,48 +262,27 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               </span>
             )}
             <div className="absolute top-1 right-1 z-10 flex gap-0.5 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setMacroEditOpen(true); }}
-                className="p-0.5 rounded hover:bg-accent/50"
-                title="Editar macros"
-              >
-                <SlidersHorizontal className="w-2.5 h-2.5 text-muted-foreground" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setInlineEdit(true); setEditValue(item.title); }}
-                className="p-0.5 rounded hover:bg-accent/50"
-                title="Editar"
-              >
-                <PencilLine className="w-2.5 h-2.5 text-muted-foreground" />
-              </button>
+              {/* Only essential actions on card, others moved inside Sovereign Modal */}
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); copyItem(item.id); toast.success(`"${item.title}" copiado`); }}
-                className="p-0.5 rounded hover:bg-accent/50 text-primary"
+                className="p-1.5 rounded-lg bg-white/80 hover:bg-white text-primary shadow-sm border border-primary/10"
                 title="Copiar Alimento"
               >
-                <CopyPlus className="w-2.5 h-2.5" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); duplicateItem(item.id); }}
-                className="p-0.5 rounded hover:bg-accent/50"
-                title="Duplicar"
-              >
-                <RefreshCcw className="w-2.5 h-2.5 text-muted-foreground" />
+                <CopyPlus className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
                 onClick={(e) => { 
                   e.stopPropagation(); 
-                  deleteItem(item.id); 
+                  if (confirm("Remover este item?")) {
+                    deleteItem(item.id);
+                  }
                 }}
-                className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                className="p-1.5 rounded-lg bg-white/80 hover:bg-destructive/10 text-destructive shadow-sm border border-destructive/10"
                 title="Remover Alimento"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </>
