@@ -94,38 +94,52 @@ export default function EditorV3Page() {
       const clusterMap = (selectedTemplate.cluster_map as any) || {};
       const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
       const newMeals: any[] = [];
+      const distribution = (selectedTemplate.meal_distribution as any[]) || [];
+
+      if (distribution.length === 0) {
+        throw new Error('Template sem distribuição de refeições configurada.');
+      }
 
       for (const day of days) {
-        for (const dist of (selectedTemplate.meal_distribution as any[])) {
+        for (const dist of distribution) {
           const slot = dist.slot;
           const clusterSlug = clusterMap[slot];
           let items: any[] = [];
 
           if (clusterSlug) {
-            const { data: libraryItems } = await (supabase
-              .from('v3_library_items') as any)
-              .select('*')
+            console.log(`[EditorV3] Plotting slot: ${slot} with cluster: ${clusterSlug}`);
+            
+            const { data: libraryItems, error: libError } = await supabase
+              .from('v3_library_items')
+              .select('*, images:v3_library_images(*)')
               .eq('cluster_slug', clusterSlug)
               .eq('active', true)
               .limit(1);
             
+            if (libError) {
+              console.error(`[EditorV3] Error fetching library item for cluster ${clusterSlug}:`, libError);
+            }
+
             if (libraryItems && libraryItems.length > 0) {
               const food = libraryItems[0];
-              const { data: subs } = await (supabase
-                .from('v3_library_items') as any)
-                .select('*')
+              
+              // Map images if available
+              const imageUrl = food.images?.[0]?.image_url || food.composition?.imageUrl || null;
+              
+              const { data: subs } = await supabase
+                .from('v3_library_items')
+                .select('*, images:v3_library_images(*)')
                 .eq('substitutions_group', food.substitutions_group)
                 .neq('id', food.id)
                 .eq('active', true)
                 .limit(5);
 
               // Calculate quantity based on total target calories and number of meals
-              const targetMealKcal = kcal / selectedTemplate.meal_distribution.length;
+              const targetMealKcal = kcal / distribution.length;
               let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
               
               // Safety limit to avoid "exploding calories"
-              // Limit quantity to a reasonable human amount (e.g. 1500g max per item)
-              quantity = Math.min(quantity, 1500);
+              quantity = Math.min(Math.max(quantity, 10), 2000); // Between 10g and 2kg
               
               const macros = calculateItemMacros(food, quantity);
               
@@ -134,21 +148,28 @@ export default function EditorV3Page() {
                 instanceId: crypto.randomUUID(),
                 quantity,
                 clinical_mass_g: quantity,
-                substitutions: subs || [],
+                substitutions: (subs || []).map(s => ({
+                  ...s,
+                  imageUrl: s.images?.[0]?.image_url || s.composition?.imageUrl || null
+                })),
+                imageUrl,
                 ...macros
               }];
+            } else {
+              console.warn(`[EditorV3] No active items found for cluster: ${clusterSlug}`);
             }
           }
 
           newMeals.push({
             id: crypto.randomUUID(),
             name: translateSlot(slot),
-            time: dist.time,
+            time: dist.time || "08:00",
             day_of_week: day,
             items
           });
         }
       }
+
 
       store.hydrateMeals(newMeals);
       toast.success('Template plotado com sucesso!', { id: toastId });
