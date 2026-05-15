@@ -543,60 +543,56 @@ export function MealSmartEditorModal({
                   />
                 </div>
 
-                {currentMeta?.is_fixed && (
-                  <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                        <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
-                      </h3>
-                      <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-primary/10 shadow-sm">
-                        <span className="text-[10px] font-bold text-orange-600">{adjustedMacros.calories} kcal</span>
-                        <Separator orientation="vertical" className="h-3 mx-1" />
-                        <span className="text-[10px] font-bold text-red-600">{adjustedMacros.protein}g P</span>
-                        <Separator orientation="vertical" className="h-3 mx-1" />
-                        <span className="text-[10px] font-bold text-amber-600">{adjustedMacros.carbs}g C</span>
-                      </div>
+                <div className="space-y-4 p-5 rounded-3xl border-2 bg-primary/5 border-primary/10 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção Proporcional
+                    </h3>
+                    <div className="flex items-center gap-3 px-4 py-1.5 bg-white rounded-full border border-primary/20 shadow-sm">
+                      <span className="text-[11px] font-black text-orange-600">{adjustedMacros.calories} <span className="opacity-50 font-bold uppercase text-[9px]">kcal</span></span>
+                      <Separator orientation="vertical" className="h-3 mx-1" />
+                      <span className="text-[11px] font-black text-red-600">{adjustedMacros.protein}g <span className="opacity-50 font-bold uppercase text-[9px]">Prot</span></span>
                     </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Fator de Ajuste</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            step="0.1"
-                            min="0.1"
-                            className="h-10 bg-background border-primary/20 rounded-xl"
-                            value={portionFactor}
-                            onChange={(e) => handlePortionChange(parseFloat(e.target.value) || 1.0)}
-                          />
-                          <span className="text-sm font-bold text-muted-foreground">x</span>
-                        </div>
-                      </div>
-                      <div className="flex-[2] grid grid-cols-2 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-9 text-[10px] rounded-xl"
-                          onClick={() => handlePortionChange(portionFactor - 0.1)}
-                        >
-                          - 10%
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-9 text-[10px] rounded-xl"
-                          onClick={() => handlePortionChange(portionFactor + 0.1)}
-                        >
-                          + 10%
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground italic">
-                      Isso recalculará proporcionalmente todos os macros desta marmita em tempo real.
-                    </p>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-6">
+                    <div className="w-1/3 space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Volume da Refeição</Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          className="h-12 bg-white border-2 border-primary/10 rounded-2xl text-center font-black text-lg focus-visible:ring-primary/20"
+                          value={portionFactor}
+                          onChange={(e) => handlePortionChange(parseFloat(e.target.value) || 1.0)}
+                        />
+                        <span className="text-xl font-black text-muted-foreground opacity-30">×</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 grid grid-cols-2 gap-3 pt-6">
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="h-12 rounded-2xl border-2 font-black text-xs uppercase tracking-widest hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-all active:scale-95"
+                        onClick={() => handlePortionChange(portionFactor - 0.1)}
+                      >
+                        - 10% Menor
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="h-12 rounded-2xl border-2 font-black text-xs uppercase tracking-widest hover:bg-emerald-500/5 hover:text-emerald-600 hover:border-emerald-500/20 transition-all active:scale-95"
+                        onClick={() => handlePortionChange(portionFactor + 0.1)}
+                      >
+                        + 10% Maior
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground/60 font-medium italic bg-white/40 p-2 rounded-xl border border-primary/5 text-center">
+                    Utilize os controles para escalar gramagens e macros simultaneamente sem perder a proporção nutricional.
+                  </p>
+                </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
