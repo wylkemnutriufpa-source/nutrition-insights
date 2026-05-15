@@ -35,11 +35,12 @@ export default function EditorV3Page() {
 
         if (error) throw error;
 
-        if (plan?.items_payload && (plan.items_payload as any).meals) {
-          store.hydrateMeals((plan.items_payload as any).meals);
-        } else if (plan?.meals) {
+        const planData = plan as any;
+        if (planData?.items_payload && (planData.items_payload as any).meals) {
+          store.hydrateMeals((planData.items_payload as any).meals);
+        } else if (planData?.meals) {
           // Fallback for older schema if needed
-          store.hydrateMeals(plan.meals as any);
+          store.hydrateMeals(planData.meals as any);
         }
         
         if (plan?.patient_id) {
