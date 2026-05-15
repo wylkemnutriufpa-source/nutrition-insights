@@ -134,8 +134,37 @@ export const useEditorState = create<EditorState>()(
         set({
           meals: meals.map(m => m.id === mealId ? { ...m, ...updates } : m)
         });
+      },
+
+      updateMealItemMacros: (mealId, itemInstanceId, targetValue, macroType) => {
+        const { meals } = get();
+        const updatedMeals = meals.map(meal => {
+          if (meal.id !== mealId) return meal;
+
+          const updatedItems = meal.items.map(item => {
+            if (item.instanceId !== itemInstanceId) return item;
+
+            const newQuantity = scaleItemToTarget(item, targetValue, macroType);
+            const oldQty = item.clinical_mass_g || item.quantity || 100;
+            const updatedSubs = adjustSubstitutionsProportionally(item.substitutions || [], oldQty, newQuantity);
+            const newMacros = calculateItemMacros(item, newQuantity);
+
+            return {
+              ...item,
+              quantity: newQuantity,
+              clinical_mass_g: newQuantity,
+              substitutions: updatedSubs,
+              ...newMacros
+            };
+          });
+
+          return { ...meal, items: updatedItems };
+        });
+
+        set({ meals: updatedMeals });
       }
     }),
+
     { 
       name: 'fitjourney-editor-v3-sovereign', 
       version: 2, 
