@@ -1533,7 +1533,7 @@ const EditorV3Page = () => {
     );
   }
 
-  if (!patientId && !planId && !isSandbox) {
+  if (!patientId && !resolvedPlanId && !isSandbox) {
     return (
       <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-center text-white">
         <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-6">
