@@ -1218,11 +1218,16 @@ export default function Patients() {
             )}
 
             <div className="flex flex-wrap gap-2 items-center">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+              <div className="flex-1 min-w-[200px]">
+                <PatientQuickSearch 
+                  className="w-full"
+                  onSelect={(p) => {
+                    setSearch(p.full_name);
+                    setDebouncedSearch(p.full_name);
+                  }}
+                />
               </div>
-              
+
               <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
                 <SelectTrigger className="w-[140px] h-10">
                   <SelectValue placeholder="Ordenar por" />
