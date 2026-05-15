@@ -363,7 +363,7 @@ const MealItemCard = memo(function MealItemCard({
               </div>
             )}
             {showMacros && (
-              <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-4 mt-3 py-3 border-t border-white/5 text-[11px] font-black uppercase tracking-wider text-white/30">
                 {(() => {
                   const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
                   if (cal === null || cal === undefined) return null;
@@ -523,15 +523,17 @@ const AdherenceCard = memo(function AdherenceCard({
   }
 
   return (
-    <motion.div className="glass rounded-2xl p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-primary" />
-          <span className="font-display font-semibold">Progresso do Dia</span>
+    <motion.div className="bg-neutral-900/60 border border-white/5 rounded-3xl p-6 backdrop-blur-md shadow-2xl" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+            <Flame className="w-6 h-6" />
+          </div>
+          <span className="font-black uppercase italic tracking-tighter text-white text-lg">Progresso do Dia</span>
         </div>
-        <span className="text-lg font-bold text-primary">{Math.round(dailyAdherence)}%</span>
+        <span className="text-2xl font-black italic text-primary">{Math.round(dailyAdherence)}%</span>
       </div>
-      <Progress value={dailyAdherence} className="h-3" />
+      <Progress value={dailyAdherence} className="h-3 bg-white/5 border border-white/5" indicatorClassName="bg-gradient-to-r from-primary to-emerald-400 shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
       <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
         <div className="flex gap-3">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> {followedCount}</span>
