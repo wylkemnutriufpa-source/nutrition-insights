@@ -56,6 +56,8 @@ export default function EditorV3Page() {
   const [templates, setTemplates] = useState<V3DietTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<V3DietTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
