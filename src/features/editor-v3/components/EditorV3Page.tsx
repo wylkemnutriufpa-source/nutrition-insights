@@ -690,80 +690,10 @@ const EditorV3Page = () => {
   }, [swapSearch]);
 
   useEffect(() => {
-    const loadSmartSuggestions = async () => {
-      if (selectedItem) {
-        setIsLoadingSmartSubs(true);
-        const name = selectedItem.item.name;
-
-        // V3 Logic: Use Direct NutriCore V3 Substitutions if possible
-        const currentFood = BASE_FOODS.find(f => f.id === selectedItem.item.id) || 
-                          BASE_FOODS.find(f => f.name.toLowerCase() === name.toLowerCase());
-                          
-        if (currentFood) {
-          console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
-          
-          // 🛡️ Contrato único: substituição recebe gramas reais, corrigindo qualquer quantidade visual corrompida
-          const itemTotalGrams = resolveDisplayGrams(selectedItem.item);
-
-          const meal = meals.find(m => m.id === selectedItem.mealId);
-          const v3PlanSubs = getSubstitutions(
-            currentFood, 
-            BASE_FOODS, 
-            itemTotalGrams,
-            patientContext?.restrictions || [],
-            meal?.name
-          );
-
-          const v3Subs = v3PlanSubs.map(s => {
-            const ratio = s.grams / 100;
-            // 🛡️ Usar calculateItemMacros em vez de cálculo manual para garantir sanitização
-            const computedMacros = calculateItemMacros({
-              ...s.food,
-              clinical_mass_g: s.grams
-            }, s.grams);
-
-            return {
-              ...s.food,
-              kcal: computedMacros.kcal,
-              calories: computedMacros.kcal,
-              protein: computedMacros.protein,
-              carbs: computedMacros.carbs,
-              fat: computedMacros.fat,
-              portionValue: s.grams,
-              portionLabel: s.unit_label,
-              measurementType: 'gram' as const,
-              suggestedQuantity: s.grams 
-            };
-          });
-          
-          setSmartSubstitutions(v3Subs as any);
-          setIsLoadingSmartSubs(false);
-          return;
-        }
-
-        let category: 'protein' | 'carb' | 'fruit' | 'any' = 'any';
-        if (isProtein(name)) category = 'protein';
-        else if (isCarb(name)) category = 'carb';
-        else if (isFruit(name)) category = 'fruit';
-
-        const dbSuggestions = await getCompatibleFoods(
-          category, 
-          name, 
-          patientContext?.restrictions || []
-        );
-        const suggestions = getDeterministicSuggestions(
-          name, 
-          dbSuggestions, 
-          selectedItem.item.measurementType,
-          selectedItem.item.portionLabel
-        );
-
-        setSmartSubstitutions(suggestions.slice(0, 12));
-        setIsLoadingSmartSubs(false);
-      }
-    };
-    loadSmartSuggestions();
-  }, [selectedItem, selectedItem?.item.quantity, selectedItem?.item.instanceId, patientContext]);
+    // 🛡️ SOBERANIA MANUAL: Substituições automáticas desativadas.
+    setIsLoadingSmartSubs(false);
+    setSmartSubstitutions([]);
+  }, [selectedItem]);
 
   useEffect(() => {
     const loadAllData = async () => {
