@@ -133,17 +133,21 @@ export default function EditorV3Page() {
         }
       });
       
-      console.log('[EditorV3] Library pre-fetched count:', libraryItems?.length);
+      console.log('[EditorV3] Library items found:', libraryItems?.length);
       console.log('[EditorV3] Cluster Map to plot:', clusterMap);
 
       for (const day of days) {
         for (const dist of distribution) {
           const slot = dist.slot;
           
-          // Match logic for slot keys (case-insensitive and trimmed)
+          // Match logic for slot keys: try exact, then trimmed, then case-insensitive with underscore/space normalization
           const clusterSlug = clusterMap[slot] || 
                              clusterMap[slot.trim()] || 
-                             Object.entries(clusterMap).find(([k]) => k.toLowerCase().replace(/_/g, ' ') === slot.toLowerCase().replace(/_/g, ' '))?.[1];
+                             Object.entries(clusterMap).find(([k]) => {
+                               const normK = k.toLowerCase().replace(/_/g, ' ').trim();
+                               const normSlot = slot.toLowerCase().replace(/_/g, ' ').trim();
+                               return normK === normSlot;
+                             })?.[1];
           
           let items: any[] = [];
 
@@ -151,6 +155,7 @@ export default function EditorV3Page() {
             const food = libraryMap.get(clusterSlug);
 
             if (food) {
+              console.log(`[EditorV3] Plotting food: ${food.title} for slot: ${slot}`);
               const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
               const targetMealKcal = kcal / distribution.length;
               let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
@@ -167,10 +172,10 @@ export default function EditorV3Page() {
                 ...macros
               }];
             } else {
-              console.warn(`[EditorV3] No food found for cluster slug: ${clusterSlug} in slot: ${slot}`);
+              console.warn(`[EditorV3] No food found in libraryMap for cluster slug: ${clusterSlug} (from slot: ${slot})`);
             }
           } else {
-            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}`);
+            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}. Available keys:`, Object.keys(clusterMap));
           }
 
           newMeals.push({
