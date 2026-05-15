@@ -281,12 +281,7 @@ export async function promoteDraftToMealPlan(
     throw new Error(`Falha na Soberania V3: O snapshot visual não pôde ser gerado (${snapshotErr.message}).`);
   }
 
-  // Log de acesso soberano
-  logSovereignEvent("INFO", "DRAFT_PROMOVIDO_SUCESSO", {
-    meal_plan_id: plan.id,
-    draft_id: draft.id,
-    correlation_id: correlationId
-  });
+  // Log removido com a desativação dos motores procedurais.
 
   await supabase.from('access_logs').insert({
     user_id: draft.nutritionist_id,
