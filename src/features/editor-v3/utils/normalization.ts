@@ -121,20 +121,10 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
       itemsByMealType[type].push(item);
     });
 
-    const mealTypeLabels: Record<string, string> = {
-      breakfast: 'Café da Manhã',
-      morning_snack: 'Lanche da Manhã',
-      lunch: 'Almoço',
-      afternoon_snack: 'Lanche da Tarde',
-      dinner: 'Jantar',
-      evening_snack: 'Ceia',
-      pre_workout: 'Pré-Treino',
-      post_workout: 'Pós-Treino'
-    };
-
     mealsArray = Object.entries(itemsByMealType).map(([type, items]) => ({
       id: crypto.randomUUID(),
-      name: mealTypeLabels[type] || type,
+      name: translateSlot(type),
+
       time: type === 'breakfast' ? '08:00' : (type === 'lunch' ? '12:00' : (type === 'dinner' ? '20:00' : '00:00')),
       items: items
     }));
