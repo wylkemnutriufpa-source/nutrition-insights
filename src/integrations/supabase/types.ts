@@ -7082,7 +7082,7 @@ export type Database = {
           is_primary: boolean | null
           item_origin: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
+          meal_type: string
           protein_target: number | null
           substitution_group_id: string | null
           target_percentage: number | null
@@ -7109,7 +7109,7 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
+          meal_type: string
           protein_target?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
@@ -7136,7 +7136,7 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string
           meal_plan_id?: string
-          meal_type?: Database["public"]["Enums"]["meal_type"]
+          meal_type?: string
           protein_target?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
@@ -8384,7 +8384,7 @@ export type Database = {
           id: string
           image_url: string | null
           logged_at: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
+          meal_type: string
           protein: number | null
           tenant_id: string | null
           title: string
@@ -8404,7 +8404,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           logged_at?: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
+          meal_type: string
           protein?: number | null
           tenant_id?: string | null
           title: string
@@ -8424,7 +8424,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           logged_at?: string
-          meal_type?: Database["public"]["Enums"]["meal_type"]
+          meal_type?: string
           protein?: number | null
           tenant_id?: string | null
           title?: string
