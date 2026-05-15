@@ -519,6 +519,14 @@ export default function EditorV3Page() {
 
             <Button 
               variant="outline" 
+              onClick={handleClearAll}
+              className="bg-white/5 border-white/10 hover:bg-red-500/10 hover:text-red-400 text-white/40 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
+            >
+              <Trash2 className="w-5 h-5 mr-3" /> Limpar
+            </Button>
+
+            <Button 
+              variant="outline" 
               className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-8 rounded-2xl hidden md:flex transition-all"
             >
               <Share2 className="w-5 h-5 mr-3" /> Compartilhar
