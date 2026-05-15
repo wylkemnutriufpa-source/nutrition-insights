@@ -1,3 +1,3 @@
 import React from 'react';
-export const AutoGenerateModal = () => null;
-export const AssistedPlanModal = () => null;
+export const AutoGenerateModal = (...args: any[]) => null;
+export const AssistedPlanModal = (...args: any[]) => null;

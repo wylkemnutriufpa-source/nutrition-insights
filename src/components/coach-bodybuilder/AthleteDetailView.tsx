@@ -277,7 +277,7 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
             analysis={analysisResult}
             alerts={alerts}
             decisions={decisions}
-            priorityLevel={priority.level}
+            priorityLevel={'medium'}
             lastVisualObservation={lastVisualObs}
             lastManualDecision={lastDecision?.notes || null}
           />

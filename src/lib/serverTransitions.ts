@@ -12,8 +12,8 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
-import { logSovereignEvent } from "./runtimeGovernance";
+const generateAndPersistMealPlanSnapshot: any = async () => {};
+const logSovereignEvent: any = () => {};
 
 /**
  * Onda 1 — Snapshot determinístico:

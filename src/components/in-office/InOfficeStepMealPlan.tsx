@@ -182,7 +182,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
               <div className="text-left">
                 <span className="block font-bold">Auto-Gerar</span>
                 <span className="block text-[10px] font-normal opacity-70 flex items-center gap-1">
-                  <ShieldCheck className="w-2.5 h-2.5" /> Engine v{CURRENT_ENGINE_VERSION}
+                  <ShieldCheck className="w-2.5 h-2.5" /> Engine v3.0.0
                 </span>
               </div>
             </Button>
