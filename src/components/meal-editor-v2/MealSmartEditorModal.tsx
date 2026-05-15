@@ -334,65 +334,63 @@ export function MealSmartEditorModal({
       <DialogContent 
         className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl"
       >
-        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 pr-12 sm:pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b relative">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-6 pr-12 sm:pr-14 bg-gradient-to-br from-primary/20 via-background to-background border-b relative">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+            <div className="flex items-start gap-6 flex-1 min-w-0">
               {item.image_url ? (
-                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 group/img border border-primary/20 shadow-sm">
-                  <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                <div className="relative w-32 h-32 rounded-2xl overflow-hidden shrink-0 group/img border-2 border-primary/20 shadow-xl">
+                  <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform group-hover/img:scale-110 duration-500" />
                   <button 
                     onClick={() => updateItem(itemId, { image_url: null } as any)}
                     className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
                     title="Remover Imagem"
                   >
-                    <Trash2 className="w-4 h-4 text-white" />
+                    <Trash2 className="w-6 h-6 text-white" />
                   </button>
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0 border border-dashed border-primary/30">
+                <div className="w-32 h-32 rounded-2xl bg-secondary/50 flex flex-col items-center justify-center shrink-0 border-2 border-dashed border-primary/30 group hover:border-primary/60 transition-colors">
                   <MealPhotoUpload 
-                    compact 
                     onUploaded={(url) => updateItem(itemId, { image_url: url } as any)} 
                     onRemoved={() => {}}
                   />
+                  {!item.image_url && <span className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-tighter">Adicionar Foto</span>}
                 </div>
               )}
-              <div className="min-w-0 flex-1">
-                <DialogTitle className="text-lg sm:text-xl font-bold font-display tracking-tight flex items-center gap-2">
-                  Editar {item.title}
+              <div className="min-w-0 flex-1 pt-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">
+                    {item.tipo_refeicao}
+                  </Badge>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">Sovereign Editor V3</span>
+                </div>
+                <DialogTitle className="text-2xl sm:text-3xl font-black font-display tracking-tight leading-none mb-2">
+                  {item.title}
                 </DialogTitle>
-                <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                    Ajuste os alimentos, substituições e observações clínicas
+                <div className="flex items-center gap-4">
+                  <p className="text-xs text-muted-foreground font-medium max-w-md">
+                    Gestão clínica avançada: ajuste alimentos, proporções e equivalentes com precisão cirúrgica.
                   </p>
-                  {item.image_url && (
-                    <MealPhotoUpload 
-                      compact
-                      label="Trocar Foto"
-                      onUploaded={(url) => updateItem(itemId, { image_url: url } as any)} 
-                      onRemoved={() => {}}
-                    />
-                  )}
                 </div>
               </div>
             </div>
             <div 
               data-testid="modal-macro-summary"
-              className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10 sm:mr-0 mr-4"
+              className="flex items-center gap-4 sm:gap-6 bg-white/50 backdrop-blur-xl px-6 py-4 rounded-3xl border-2 border-primary/10 shrink-0 shadow-2xl shadow-primary/5 self-end sm:self-start"
             >
               <div className="flex flex-col items-center">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
-                <span className="text-xs sm:text-sm font-black text-orange-500">{totals.calories}</span>
+                <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest mb-1">Kcal</span>
+                <span className="text-2xl font-black text-orange-500 tabular-nums">{totals.calories}</span>
               </div>
-              <div className="h-6 w-px bg-border/50" />
+              <div className="h-10 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Prot</span>
-                <span className="text-xs sm:text-sm font-black text-red-500">{totals.protein}g</span>
+                <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest mb-1">Prot</span>
+                <span className="text-2xl font-black text-red-500 tabular-nums">{totals.protein}<span className="text-xs ml-0.5 opacity-50">g</span></span>
               </div>
-              <div className="h-6 w-px bg-border/50" />
+              <div className="h-10 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Carb</span>
-                <span className="text-xs sm:text-sm font-black text-amber-500">{totals.carbs}g</span>
+                <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest mb-1">Carb</span>
+                <span className="text-2xl font-black text-amber-500 tabular-nums">{totals.carbs}<span className="text-xs ml-0.5 opacity-50">g</span></span>
               </div>
             </div>
           </div>
