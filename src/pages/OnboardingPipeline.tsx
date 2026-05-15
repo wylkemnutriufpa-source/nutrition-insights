@@ -23,8 +23,8 @@ import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
   ChefHat, Heart, Zap, ThumbsUp, Shield, RefreshCw
 } from "lucide-react";
-import { generatePlanWithEngine } from "@/features/clinical-engine";
-import type { Meal, Food } from "@/features/clinical-engine/types/clinical-types";
+// Procedural engine imports removed
+const generatePlanWithEngine: any = null;
 import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
 
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
@@ -423,15 +423,16 @@ export default function OnboardingPipeline() {
       
       // NutriCore V2 Engine — Chamada LOCAL (TypeScript Puro)
       // Substitui a chamada à Edge Function antiga para evitar timeouts e erros de infra
+      // NutriCore V2 Engine — Chamada LOCAL (TypeScript Puro)
       const data = await localGenerateMealPlan({
         patientId: user.id,
         nutritionistId: pipeline.nutritionist_id,
-        weight: pipeline.weight,
-        height: pipeline.height,
+        weight: Number(pipeline.weight),
+        height: Number(pipeline.height),
         mealCount: pipeline.meal_count,
         cookingPreference: pipeline.cooking_preference,
         isPipeline: true,
-        planCount: 1, // Paciente gera 1 opção base
+        planCount: 1, 
       });
 
       if (!data?.success) throw new Error("O motor local não retornou sucesso.");

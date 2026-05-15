@@ -1,5 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
-import { autoFixMealPlan, type AutoFixResult } from "@/lib/autoFixEngine";
+// Removed obsolete autoFixEngine import
+export type AutoFixResult = {
+  success: boolean;
+  newPlanId: string | null;
+  inPlace: boolean;
+  changes: any[];
+  warnings: string[];
+  summary?: any;
+};
 import { isSimpleMode } from "@/lib/simpleModeFlag";
 
 export interface ClinicalValidationResult {
@@ -137,8 +145,9 @@ export async function runValidateAndFixMealPlan({
     throw new Error("Contexto da clínica não carregado para corrigir o plano.");
   }
 
-  const fixedResult = await autoFixMealPlan(planId, patientId, userId, tenantId);
-  console.info("[ValidateAndFix] AutoFix result", { planId, success: fixedResult.success, newPlanId: fixedResult.newPlanId, inPlace: fixedResult.inPlace, changesCount: fixedResult.changes.length, warnings: fixedResult.warnings });
+  // autoFixMealPlan disabled as part of procedural engine removal
+  const fixedResult = { success: false, newPlanId: null, inPlace: false, changes: [], warnings: ["A correção automática foi desativada."] } as any;
+  console.info("[ValidateAndFix] AutoFix bypassed", { planId });
 
   if (!fixedResult.success || !fixedResult.newPlanId) {
     throw new Error(fixedResult.warnings[0] || "A correção automática não conseguiu persistir mudanças.");
