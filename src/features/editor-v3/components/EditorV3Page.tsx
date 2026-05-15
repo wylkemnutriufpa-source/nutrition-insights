@@ -143,11 +143,15 @@ export default function EditorV3Page() {
                 instanceId: crypto.randomUUID(),
                 quantity,
                 clinical_mass_g: quantity,
-                substitutions: [], // Subs are fetched on demand in the modal/editor if needed, or kept empty for speed
+                substitutions: [],
                 imageUrl,
                 ...macros
               }];
+            } else {
+              console.warn(`[EditorV3] No food found for cluster slug: ${clusterSlug} in slot: ${slot}`);
             }
+          } else {
+            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}`);
           }
 
           newMeals.push({
