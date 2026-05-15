@@ -32,7 +32,14 @@ export const searchV3LibraryItems = async (
     return [];
   }
 
-  const items = data || [];
+  const items = (data || []).map(item => ({
+    ...item,
+    name: item.title || item.name, // Ensure 'name' is present (mapping 'title' from DB)
+    kcal: item.kcal_base || item.kcal_100g || item.kcal || 0,
+    protein: item.protein_base || item.protein_100g || item.protein || 0,
+    carbs: item.carbs_base || item.carb_100g || item.carbs || 0,
+    fat: item.fats_base || item.fat_100g || item.fat || 0
+  }));
   
   // For each item, if it has a substitution_group, fetch others in that group
   const itemsWithEquivalents = await Promise.all(items.map(async (item) => {
@@ -45,7 +52,12 @@ export const searchV3LibraryItems = async (
         .eq("active", true)
         .limit(10);
       
-      return { ...item, ingredients: subs || [] }; // Map to ingredients for useEditorState
+      const mappedSubs = (subs || []).map(s => ({
+        ...s,
+        name: s.title || s.name
+      }));
+      
+      return { ...item, ingredients: mappedSubs }; 
     }
     return item;
   }));
