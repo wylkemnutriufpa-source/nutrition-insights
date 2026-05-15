@@ -387,27 +387,59 @@ export default function EditorV3Page() {
 
           {/* Barra Lateral de Status (Hidden on Mobile) */}
           <aside className="hidden lg:flex w-80 bg-neutral-900 border-l border-white/10 p-6 flex-col gap-8">
-            <section>
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 flex items-center gap-2">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Validação Soberana
-              </h4>
-              <div className="space-y-3">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            {/* Automatic Calculation Section */}
+            {nutritionalTargets && (
+              <section className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-500/20 rounded-lg">
+                    <Calculator className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Alvo do Paciente</h4>
+                </div>
+                
+                <div className="space-y-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-emerald-400 mb-1">Coerência Real-time</p>
-                    <p className="text-[9px] text-white/40 font-medium leading-tight">Cálculos e equivalentes ajustados automaticamente.</p>
+                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Kcal Recomendado</p>
+                    <p className="text-xl font-black italic">{nutritionalTargets.calories} <span className="text-[10px] uppercase text-white/20">kcal</span></p>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 border-t border-emerald-500/10 pt-3">
+                    <div>
+                      <p className="text-[8px] font-black uppercase text-white/30">Prot</p>
+                      <p className="text-xs font-bold">{nutritionalTargets.protein}g</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black uppercase text-white/30">Carb</p>
+                      <p className="text-xs font-bold">{nutritionalTargets.carbs}g</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black uppercase text-white/30">Gord</p>
+                      <p className="text-xs font-bold">{nutritionalTargets.fat}g</p>
+                    </div>
                   </div>
                 </div>
-                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl flex gap-3 opacity-50">
-                  <Info className="w-4 h-4 text-white/20 shrink-0" />
+                
+                <p className="text-[8px] text-white/40 uppercase font-medium leading-tight">
+                  Cálculo automático baseado no peso ({patientData.weight}kg), altura ({patientData.height}cm) e objetivo ({patientData.goal}).
+                </p>
+              </section>
+            )}
+
+            <section>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Auditoria Nutricional
+              </h4>
+              <div className="space-y-3">
+                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl flex gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-black uppercase text-white/40 mb-1">Avisos Clínicos</p>
-                    <p className="text-[9px] text-white/30 font-medium leading-tight">Nenhum conflito detectado no plano atual.</p>
+                    <p className="text-[10px] font-black uppercase text-white/60 mb-1">Editor Manual Ativo</p>
+                    <p className="text-[9px] text-white/40 font-medium leading-tight">Controle total do nutricionista habilitado.</p>
                   </div>
                 </div>
               </div>
             </section>
+
 
             <section className="mt-auto">
               <div className="p-6 bg-white/5 border border-white/10 rounded-3xl">
