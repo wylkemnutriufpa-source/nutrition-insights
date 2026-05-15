@@ -19,7 +19,7 @@ import { ValidationCorrectionPanel, type ValidationResult } from "@/components/m
 import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
 import ValidationModeDialog, { type ValidationMode } from "@/components/hybrid-builder/ValidationModeDialog";
 import PublishWarningDialog from "@/components/hybrid-builder/PublishWarningDialog";
-import type { AutoFixResult } from "@/lib/autoFixEngine";
+// Removed obsolete autoFixEngine import
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
 import { logAudit } from "@/lib/auditLog";
 import { validateMealPlan } from "@/lib/mealPlanValidationFlow";

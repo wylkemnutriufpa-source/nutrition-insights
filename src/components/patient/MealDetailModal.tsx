@@ -9,7 +9,7 @@ import {
   ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
   SlidersHorizontal, ArrowRightLeft, User, ShieldCheck,
 } from "lucide-react";
-import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+// Removed obsolete clinicalHumanEngine import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -1133,31 +1133,25 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             </div>
           )}
 
-          {/* Clinical Human Rules Guard - SOBERANIA: Paciente nunca vê auditoria clínica */}
-          {canSeeInternalAudit && (() => {
+          {/* Auditório Clínico Humano desativado — focando em templates editáveis */}
+          {false && canSeeInternalAudit && (() => {
             const mockItems = parseDescriptionLines(meal.description || "").foodLines.map(line => ({
               name: line.startsWith("•") ? line.slice(1).trim().split("—")[0].trim() : line.split("—")[0].trim(),
               quantity: parseInt(line.match(/—\s*(\d+)/)?.[1] || "100")
             }));
             
-            const humanScore = calculateHumanMealScore({ items: mockItems as any }, meal.meal_type || 'breakfast');
-            
+            // Logic disabled as requested
             return (
-              <div className={`p-4 rounded-xl border ${
-                humanScore.status === 'human' ? 'bg-emerald-500/5 border-emerald-500/20' : 
-                humanScore.status === 'robotic' ? 'bg-amber-500/5 border-amber-500/20' : 
-                'bg-red-500/5 border-red-500/20'
-              }`}>
+              <div className={`p-4 rounded-xl border bg-emerald-500/5 border-emerald-500/20`}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className={`w-4 h-4 ${
-                      humanScore.status === 'human' ? 'text-emerald-500' : 
-                      humanScore.status === 'robotic' ? 'text-amber-500' : 
-                      'text-red-500'
-                    }`} />
+                    <ShieldCheck className={`w-4 h-4 text-emerald-500`} />
                     <span className="text-sm font-bold">Auditório Clínico Humano</span>
                   </div>
-                  <Badge variant="outline" className={
+                </div>
+              </div>
+            );
+          })()}
                     humanScore.status === 'human' ? 'bg-emerald-500/10 text-emerald-500' : 
                     humanScore.status === 'robotic' ? 'bg-amber-500/10 text-amber-600' : 
                     'bg-red-500/10 text-red-500'
