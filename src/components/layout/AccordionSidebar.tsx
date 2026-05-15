@@ -194,7 +194,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
           return true;
         });
         
-        if (sectionItems.length === 0) return null;
+        if (sectionItems.length === 0 && !section.section_name.toLowerCase().includes("pacientes")) return null;
         
         const isOpen = openSection === section.id;
         const SectionIcon = ICON_MAP[section.section_icon] || LayoutDashboard;
@@ -250,6 +250,16 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                     className="overflow-hidden"
                   >
                     <div className="mt-2 ml-2 space-y-1 rounded-xl border border-border/50 bg-muted/20 p-2">
+                      {isPatientsSection && (
+                        <Link
+                          to="/patients"
+                          onClick={() => { setOpenSection(null); onLinkClick?.(); }}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all text-primary hover:bg-primary/5"
+                        >
+                          <Users className="h-4 w-4" />
+                          <span className="text-xs font-bold">Ver Todos Pacientes</span>
+                        </Link>
+                      )}
                       {sorted.map((item) => {
                         const Icon = getIcon(item.icon || "LayoutDashboard");
                         const active = location.pathname === item.route;
@@ -293,6 +303,10 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                     onLinkClick={onLinkClick}
                     collapsed={collapsed}
                     renderItem={(item) => {
+                      if (!item.id && isPatientsSection) {
+                         // This would handle a special "View All" case in grid if needed, 
+                         // but let's keep it simple and just ensure the section is visible.
+                      }
                       const Icon = getIcon(item.icon || "LayoutDashboard");
                       const active = location.pathname === item.route;
                       const isPremium = item.premium_only;

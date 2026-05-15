@@ -150,14 +150,14 @@ function rebuildDescription(foodLines: string[], substitutionLines: string[]): s
 
 /** Client-side substitution groups with portions for regeneration */
 const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPortion: string }> = {
-  protein_main: { foods: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha", "alcatra", "patinho"], defaultPortion: "150g" },
-  carb_main: { foods: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame", "purê"], defaultPortion: "120g" },
-  carb_breakfast: { foods: ["pão integral", "tapioca", "cuscuz", "pão francês", "pão de forma"], defaultPortion: "50g" },
-  protein_breakfast: { foods: ["ovo mexido", "ovo cozido", "queijo coalho", "queijo muçarela", "frango desfiado"], defaultPortion: "60g" },
-  fruit: { foods: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina", "melancia", "abacaxi", "manga"], defaultPortion: "100g" },
-  dairy: { foods: ["iogurte natural", "leite", "queijo coalho"], defaultPortion: "150ml" },
-  legume: { foods: ["feijão", "feijão carioca", "feijão preto", "lentilha"], defaultPortion: "80g" },
-  vegetable: { foods: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"], defaultPortion: "50g" },
+  protein_main: { foods: ["Frango", "Carne moída", "Bife", "Tilápia", "Porco", "Sardinha", "Alcatra", "Patinho"], defaultPortion: "150g" },
+  carb_main: { foods: ["Arroz", "Macarrão", "Batata", "Macaxeira", "Batata doce", "Inhame", "Purê"], defaultPortion: "120g" },
+  carb_breakfast: { foods: ["Pão integral", "Tapioca", "Cuscuz", "Pão francês", "Pão de forma"], defaultPortion: "50g" },
+  protein_breakfast: { foods: ["Ovo mexido", "Ovo cozido", "Queijo coalho", "Queijo muçarela", "Frango desfiado"], defaultPortion: "60g" },
+  fruit: { foods: ["Banana", "Maçã", "Mamão", "Laranja", "Goiaba", "Morango", "Tangerina", "Melancia", "Abacaxi", "Manga"], defaultPortion: "100g" },
+  dairy: { foods: ["Iogurte natural", "Leite", "Queijo coalho"], defaultPortion: "150ml" },
+  legume: { foods: ["Feijão", "Feijão carioca", "Feijão preto", "Lentilha"], defaultPortion: "80g" },
+  vegetable: { foods: ["Alface", "Tomate", "Brócolis", "Cenoura", "Couve", "Repolho", "Chuchu", "Abobrinha"], defaultPortion: "50g" },
 };
 
 function normalizeForMatch(t: string): string {
