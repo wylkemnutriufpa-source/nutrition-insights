@@ -120,7 +120,7 @@ export default function EditorV3Page() {
       const { data: libraryItems, error: libError } = await supabase
         .from('v3_library_items')
         .select('*, images:v3_library_images(*)')
-        .in('cluster_slug', allClusterSlugs); // Removed .eq('active', true) to be safe during population check
+        .or(`cluster_slug.in.(${allClusterSlugs.join(',')}),substitutions_group.in.(${allClusterSlugs.join(',')})`); 
 
       if (libError) throw libError;
 
