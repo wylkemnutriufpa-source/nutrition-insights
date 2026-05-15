@@ -127,6 +127,7 @@ export default function EditorV3Page() {
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
   const handleSave = async () => {
+    if (!effectiveId) return;
     setSaving(true);
     const toastId = toast.loading('Salvando alterações...');
     
@@ -143,7 +144,8 @@ export default function EditorV3Page() {
           total_target_fat: Math.round(planTotals.fat),
           updated_at: new Date().toISOString()
         } as any)
-        .eq('id', id);
+        .eq('id', effectiveId);
+
 
       if (error) throw error;
       toast.success('Plano salvo com sucesso!', { id: toastId });
