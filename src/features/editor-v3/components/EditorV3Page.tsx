@@ -87,6 +87,8 @@ export default function EditorV3Page() {
   const handleSelectProfile = async (kcal: number, isWeekly: boolean) => {
     if (!selectedTemplate) return;
     
+    // Close modal BEFORE processing to prevent double clicks and visual lag
+    setIsTemplateModalOpen(false);
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
@@ -99,6 +101,23 @@ export default function EditorV3Page() {
         throw new Error('Template sem distribuição de refeições configurada.');
       }
 
+      // Pre-fetch all needed library items to avoid N+1 queries in the loop
+      const allClusterSlugs = Object.values(clusterMap) as string[];
+      const { data: libraryItems, error: libError } = await supabase
+        .from('v3_library_items')
+        .select('*, images:v3_library_images(*)')
+        .in('cluster_slug', allClusterSlugs)
+        .eq('active', true);
+
+      if (libError) throw libError;
+
+      const libraryMap = new Map();
+      (libraryItems || []).forEach(item => {
+        if (!libraryMap.has(item.cluster_slug)) {
+          libraryMap.set(item.cluster_slug, item);
+        }
+      });
+
       for (const day of days) {
         for (const dist of distribution) {
           const slot = dist.slot;
@@ -106,37 +125,12 @@ export default function EditorV3Page() {
           let items: any[] = [];
 
           if (clusterSlug) {
-            console.log(`[EditorV3] Plotting slot: ${slot} with cluster: ${clusterSlug}`);
-            
-            const { data: libraryItems, error: libError } = await supabase
-              .from('v3_library_items')
-              .select('*, images:v3_library_images(*)')
-              .eq('cluster_slug', clusterSlug)
-              .eq('active', true)
-              .limit(1);
-            
-            if (libError) {
-              console.error(`[EditorV3] Error fetching library item for cluster ${clusterSlug}:`, libError);
-            }
+            const food = libraryMap.get(clusterSlug);
 
-            if (libraryItems && libraryItems.length > 0) {
-              const food = libraryItems[0];
-              
-              // Map images if available
+            if (food) {
               const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
-
-              const { data: subs } = await supabase
-                .from('v3_library_items')
-                .select('*, images:v3_library_images(*)')
-                .eq('substitutions_group', food.substitutions_group)
-                .neq('id', food.id)
-                .eq('active', true)
-                .limit(5);
-
-              // Calculate quantity based on total target calories and number of meals
               const targetMealKcal = kcal / distribution.length;
               let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
-              
               const macros = calculateItemMacros(food, quantity);
               
               items = [{
@@ -144,16 +138,10 @@ export default function EditorV3Page() {
                 instanceId: crypto.randomUUID(),
                 quantity,
                 clinical_mass_g: quantity,
-                substitutions: (subs || []).map(s => ({
-                  ...s,
-                  imageUrl: s.images?.[0]?.image_asset || (s.composition as any)?.imageUrl || null
-                })),
+                substitutions: [], // Subs are fetched on demand in the modal/editor if needed, or kept empty for speed
                 imageUrl,
                 ...macros
               }];
-
-            } else {
-              console.warn(`[EditorV3] No active items found for cluster: ${clusterSlug}`);
             }
           }
 
@@ -166,7 +154,6 @@ export default function EditorV3Page() {
           });
         }
       }
-
 
       store.hydrateMeals(newMeals);
       toast.success('Template plotado com sucesso!', { id: toastId });
