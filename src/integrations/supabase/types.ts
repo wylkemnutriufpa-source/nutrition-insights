@@ -7202,7 +7202,7 @@ export type Database = {
           is_primary: boolean | null
           item_origin: string | null
           meal_plan_id: string | null
-          meal_type: Database["public"]["Enums"]["meal_type"] | null
+          meal_type: Database["public"]["Enums"]["tipo_refeicao"] | null
           protein_target: number | null
           substitution_group_id: string | null
           target_percentage: number | null
@@ -7229,7 +7229,7 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string | null
           meal_plan_id?: string | null
-          meal_type?: Database["public"]["Enums"]["meal_type"] | null
+          meal_type?: Database["public"]["Enums"]["tipo_refeicao"] | null
           protein_target?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
@@ -7256,7 +7256,7 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string | null
           meal_plan_id?: string | null
-          meal_type?: Database["public"]["Enums"]["meal_type"] | null
+          meal_type?: Database["public"]["Enums"]["tipo_refeicao"] | null
           protein_target?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
@@ -7445,7 +7445,7 @@ export type Database = {
           fat_target: number | null
           id: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
+          meal_type: Database["public"]["Enums"]["tipo_refeicao"]
           protein_target: number | null
           updated_at: string | null
         }
@@ -7456,7 +7456,7 @@ export type Database = {
           fat_target?: number | null
           id?: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
+          meal_type: Database["public"]["Enums"]["tipo_refeicao"]
           protein_target?: number | null
           updated_at?: string | null
         }
@@ -7467,7 +7467,7 @@ export type Database = {
           fat_target?: number | null
           id?: string
           meal_plan_id?: string
-          meal_type?: Database["public"]["Enums"]["meal_type"]
+          meal_type?: Database["public"]["Enums"]["tipo_refeicao"]
           protein_target?: number | null
           updated_at?: string | null
         }
@@ -17603,7 +17603,7 @@ export type Database = {
           image_url: string | null
           nutritionist_id: string
           protein_target: number | null
-          tipo_refeicao: Database["public"]["Enums"]["meal_type"]
+          tipo_refeicao: Database["public"]["Enums"]["tipo_refeicao"]
           title: string
           visual_library_item_id: string | null
         }
@@ -17617,7 +17617,7 @@ export type Database = {
           image_url?: string | null
           nutritionist_id: string
           protein_target?: number | null
-          tipo_refeicao?: Database["public"]["Enums"]["meal_type"]
+          tipo_refeicao?: Database["public"]["Enums"]["tipo_refeicao"]
           title: string
           visual_library_item_id?: string | null
         }
@@ -17631,7 +17631,7 @@ export type Database = {
           image_url?: string | null
           nutritionist_id?: string
           protein_target?: number | null
-          tipo_refeicao?: Database["public"]["Enums"]["meal_type"]
+          tipo_refeicao?: Database["public"]["Enums"]["tipo_refeicao"]
           title?: string
           visual_library_item_id?: string | null
         }
@@ -22707,19 +22707,6 @@ export type Database = {
         | "archived"
         | "expired"
         | "replaced"
-      meal_type:
-        | "breakfast"
-        | "morning_snack"
-        | "lunch"
-        | "afternoon_snack"
-        | "dinner"
-        | "evening_snack"
-        | "Café da Manhã"
-        | "Lanche da Manhã"
-        | "Almoço"
-        | "Lanche da Tarde"
-        | "Jantar"
-        | "Ceia"
       metabolic_phase_type:
         | "initial_response"
         | "active_loss"
@@ -22778,6 +22765,19 @@ export type Database = {
         | "personal"
         | "staff"
         | "patient"
+      tipo_refeicao:
+        | "breakfast"
+        | "morning_snack"
+        | "lunch"
+        | "afternoon_snack"
+        | "dinner"
+        | "evening_snack"
+        | "Café da Manhã"
+        | "Lanche da Manhã"
+        | "Almoço"
+        | "Lanche da Tarde"
+        | "Jantar"
+        | "Ceia"
       usage_intensity: "low" | "medium" | "high"
     }
     CompositeTypes: {
@@ -22960,20 +22960,6 @@ export const Constants = {
         "expired",
         "replaced",
       ],
-      meal_type: [
-        "breakfast",
-        "morning_snack",
-        "lunch",
-        "afternoon_snack",
-        "dinner",
-        "evening_snack",
-        "Café da Manhã",
-        "Lanche da Manhã",
-        "Almoço",
-        "Lanche da Tarde",
-        "Jantar",
-        "Ceia",
-      ],
       metabolic_phase_type: [
         "initial_response",
         "active_loss",
@@ -23032,6 +23018,20 @@ export const Constants = {
         "personal",
         "staff",
         "patient",
+      ],
+      tipo_refeicao: [
+        "breakfast",
+        "morning_snack",
+        "lunch",
+        "afternoon_snack",
+        "dinner",
+        "evening_snack",
+        "Café da Manhã",
+        "Lanche da Manhã",
+        "Almoço",
+        "Lanche da Tarde",
+        "Jantar",
+        "Ceia",
       ],
       usage_intensity: ["low", "medium", "high"],
     },
