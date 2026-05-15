@@ -347,6 +347,14 @@ export default function EditorV3Page() {
           </aside>
         </main>
       </div>
+
+      <TemplateV3Modal 
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        template={selectedTemplate}
+        onSelectProfile={handleSelectProfile}
+      />
     </DashboardLayout>
   );
 }
+
