@@ -2,6 +2,16 @@
 import json
 import uuid
 
+# Allowed values mapping
+GOAL_MAP = {
+    "hipertrofia": "hypertrophy",
+    "emagrecimento": "weight_loss",
+    "saude": "maintenance",
+    "clinico": "metabolic",
+    "performance": "hypertrophy",
+    "estilo_de_vida": "maintenance",
+}
+
 categories = [
     ("Hipertrofia Masculina", "hipertrofia", "💪", "Foco em superávit calórico e alta proteína para desenvolvimento muscular masculino.", "hipertrofia", "power"),
     ("Hipertrofia Feminina", "hipertrofia", "🏋️‍♀️", "Ganho de massa magra com foco em tônus muscular e saúde hormonal feminina.", "hipertrofia", "wellness"),
@@ -155,7 +165,7 @@ VALUES (
   '{style}',
   1800,
   '{{"protein": 30, "carbs": 40, "fat": 30}}',
-  '{json.dumps(meals, ensure_ascii=False)}',
+  '{json.dumps(meals, ensure_ascii=False).replace("'", "''")}',
   ARRAY['premium', '{style}', 'official'],
   true,
   'official_v2',
