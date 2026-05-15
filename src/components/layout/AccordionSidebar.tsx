@@ -201,6 +201,8 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
         const hasActiveItem = sectionItems.some(item => location.pathname === item.route);
         const colorClass = section.section_color || "text-muted-foreground";
 
+        const isPatientsSection = section.section_name.toLowerCase().includes("pacientes");
+
         const sorted = [...sectionItems].sort((a, b) => {
           if (a.is_pinned && !b.is_pinned) return -1;
           if (!a.is_pinned && b.is_pinned) return 1;
@@ -209,6 +211,12 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
 
         return (
           <div key={section.id} className="relative mb-0.5">
+            {isPatientsSection && !collapsed && (
+              <div className="px-3 mb-2 flex items-center justify-between">
+                 <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Atalho Rápido</h4>
+                 <Link to="/patients" className="text-[9px] text-primary hover:underline font-bold">Ver Todos</Link>
+              </div>
+            )}
             <button
               onClick={() => setOpenSection(isOpen ? null : section.id)}
               className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-all text-left group
