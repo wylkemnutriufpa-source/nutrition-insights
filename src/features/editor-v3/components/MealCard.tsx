@@ -80,8 +80,10 @@ export const MealCard: React.FC<MealCardProps> = ({
               key={item.instanceId} 
               item={item} 
               onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
+              onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
               onRemove={() => onRemoveFood(item.instanceId)}
             />
+
           ))
         ) : (
           <div className="py-10 text-center border-2 border-dashed border-white/5 rounded-2xl">
