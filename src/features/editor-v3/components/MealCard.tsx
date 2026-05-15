@@ -37,7 +37,7 @@ export const MealCard: React.FC<MealCardProps> = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="bg-neutral-900/60 border border-white/5 rounded-[3rem] overflow-hidden backdrop-blur-2xl group/meal hover:bg-neutral-900/80 hover:border-emerald-500/30 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer">
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[3rem] overflow-hidden backdrop-blur-2xl group/meal hover:bg-neutral-900/80 hover:border-emerald-500/30 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer ring-offset-neutral-950 focus:ring-2 focus:ring-emerald-500/50">
           {/* Header */}
           <div className="p-10 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
             <div className="flex items-center gap-8">
