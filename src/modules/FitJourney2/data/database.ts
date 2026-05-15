@@ -23,13 +23,13 @@ export const MARMITAS: FoodItem[] = [
 ];
 
 export const BREAKFAST_ITEMS: FoodItem[] = [
-  { id: 'p1', name: 'Pão Integral', calories: 120, protein: 5, carbs: 22, fat: 2, servingSize: 50, category: 'carb' },
-  { id: 'o1', name: 'Ovos Mexidos', calories: 150, protein: 12, carbs: 1, fat: 11, servingSize: 100, category: 'protein' },
-  { id: 'b1', name: 'Banana', calories: 90, protein: 1, carbs: 23, fat: 0, servingSize: 90, category: 'fruit' },
-  { id: 't1', name: 'Tapioca', calories: 240, protein: 0, carbs: 60, fat: 0, servingSize: 70, category: 'carb' },
-  { id: 'q1', name: 'Queijo Minas', calories: 150, protein: 10, carbs: 1, fat: 12, servingSize: 60, category: 'protein' },
-  { id: 'm_fruta', name: 'Mamão', calories: 60, protein: 1, carbs: 15, fat: 0, servingSize: 150, category: 'fruit' },
-  { id: 'i1', name: 'Iogurte Natural', calories: 110, protein: 8, carbs: 10, fat: 4, servingSize: 170, category: 'dairy' }
+  { id: 'p1', name: 'Pão Integral', calories: 120, protein: 5, carbs: 22, fat: 2, servingSize: 50, category: 'carboidrato' },
+  { id: 'o1', name: 'Ovos Mexidos', calories: 150, protein: 12, carbs: 1, fat: 11, servingSize: 100, category: 'proteína' },
+  { id: 'b1', name: 'Banana', calories: 90, protein: 1, carbs: 23, fat: 0, servingSize: 90, category: 'fruta' },
+  { id: 't1', name: 'Tapioca', calories: 240, protein: 0, carbs: 60, fat: 0, servingSize: 70, category: 'carboidrato' },
+  { id: 'q1', name: 'Queijo Minas', calories: 150, protein: 10, carbs: 1, fat: 12, servingSize: 60, category: 'proteína' },
+  { id: 'm_fruta', name: 'Mamão', calories: 60, protein: 1, carbs: 15, fat: 0, servingSize: 150, category: 'fruta' },
+  { id: 'i1', name: 'Iogurte Natural', calories: 110, protein: 8, carbs: 10, fat: 4, servingSize: 170, category: 'laticínio' }
 ];
 
 export const SNACK_OPTIONS = [
@@ -45,12 +45,12 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
     id: 't-hyper-1',
     name: 'Hipertrofia Clássica',
     description: 'Focado em 2.2g/kg de proteína com carboidratos complexos.',
-    category: 'hypertrophy',
+    category: 'hipertrofia',
     meals: [
       { name: 'Café da Manhã', type: 'Café da Manhã', items: [{ foodId: 'p1', quantity: 100 }, { foodId: 'o1', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Lanche Manhã', type: 'snack1', items: [{ foodId: 'i1', quantity: 170 }, { foodId: 'b1', quantity: 100 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Lanche Manhã', type: 'Lanche da Manhã', items: [{ foodId: 'i1', quantity: 170 }, { foodId: 'b1', quantity: 100 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Almoço (Marmita)', type: 'Almoço', items: [{ foodId: 'm2', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Lanche Tarde', type: 'snack2', items: [{ foodId: 'p1', quantity: 50 }, { foodId: 'q1', quantity: 60 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Lanche Tarde', type: 'Lanche da Tarde', items: [{ foodId: 'p1', quantity: 50 }, { foodId: 'q1', quantity: 60 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Jantar (Marmita)', type: 'Jantar', items: [{ foodId: 'm1', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
     ]
   },
@@ -58,11 +58,11 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
     id: 't-loss-1',
     name: 'Definição Máxima',
     description: 'Baixo carboidrato com alto volume de vegetais e proteínas magras.',
-    category: 'weight-loss',
+    category: 'emagrecimento',
     meals: [
       { name: 'Café da Manhã', type: 'Café da Manhã', items: [{ foodId: 'o1', quantity: 200 }, { foodId: 'm_fruta', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Almoço (Marmita)', type: 'Almoço', items: [{ foodId: 'm12', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Lanche Tarde', type: 'snack2', items: [{ foodId: 'i1', quantity: 170 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Lanche Tarde', type: 'Lanche da Tarde', items: [{ foodId: 'i1', quantity: 170 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Jantar (Marmita)', type: 'Jantar', items: [{ foodId: 'm14', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
     ]
   }

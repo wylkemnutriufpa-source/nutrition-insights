@@ -8,7 +8,7 @@ export interface FoodItem {
   carbs: number;
   fat: number;
   servingSize: number; // em gramas ou unidades
-  category: 'protein' | 'carb' | 'fat' | 'fruit' | 'dairy' | 'marmita';
+  category: 'proteína' | 'carboidrato' | 'gordura' | 'fruta' | 'laticínio' | 'marmita';
 }
 
 export interface Meal {
@@ -40,7 +40,7 @@ export interface PlanTemplate {
   id: string;
   name: string;
   description: string;
-  category: 'hypertrophy' | 'weight-loss' | 'performance';
+  category: 'hipertrofia' | 'emagrecimento' | 'performance' | 'saúde';
   meals: Omit<Meal, 'id'>[];
 }
 
