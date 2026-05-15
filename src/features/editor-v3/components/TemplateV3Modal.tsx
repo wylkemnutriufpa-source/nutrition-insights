@@ -190,8 +190,9 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                       <Zap className="w-4 h-4 text-emerald-400" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase italic">Variedade Determinística</h4>
-                      <p className="text-[10px] text-white/40 uppercase font-medium">Algoritmo de rotação ativa</p>
+                      <h4 className="text-xs font-black uppercase italic">Substituições Proporcionais</h4>
+                      <p className="text-[10px] text-white/40 uppercase font-medium">Ajuste automático de gramagem</p>
+
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
