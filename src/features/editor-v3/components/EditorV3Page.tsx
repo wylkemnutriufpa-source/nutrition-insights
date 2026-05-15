@@ -114,8 +114,9 @@ const EditorV3Page = () => {
   const { patientId, planId: urlPlanId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const planId = urlPlanId || searchParams.get('planId');
-  const isSandbox = !patientId && !planId;
+  const initialPlanId = urlPlanId || searchParams.get('planId');
+  const [resolvedPlanId, setResolvedPlanId] = useState<string | null>(initialPlanId || null);
+  const isSandbox = !patientId && !initialPlanId;
 
   const {
     meals, auditLog, setPatientId, hydrateMeals, sharingToken: storeSharingToken,
