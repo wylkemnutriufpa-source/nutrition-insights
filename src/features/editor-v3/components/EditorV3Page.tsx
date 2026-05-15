@@ -83,7 +83,11 @@ export default function EditorV3Page() {
       try {
         const [fetchedTemplates, patientsResult] = await Promise.all([
           getV3Templates(),
-          (supabase.from('profiles') as any).select('user_id, full_name, current_weight_kg, current_height_cm, activity_level, goal').limit(100)
+          supabase
+            .from('profiles')
+            .select('user_id, full_name, current_weight_kg, current_height_cm, activity_level, goal')
+            .order('full_name', { ascending: true })
+            .limit(1000)
         ]);
         setTemplates(fetchedTemplates);
         if (patientsResult.data) setAvailablePatients(patientsResult.data);
