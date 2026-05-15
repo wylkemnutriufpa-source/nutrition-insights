@@ -9,7 +9,7 @@ import {
   CheckCircle2, AlertCircle, Info, Send, Share2,
   Trash2, Copy, MoreHorizontal, Settings, Library,
   Layout, Search, Loader2, User, Activity, Calculator,
-  ChevronRight
+  ChevronRight, Check, ChevronsUpDown
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,12 +23,19 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
 import { AnimatePresence, motion } from 'framer-motion';
