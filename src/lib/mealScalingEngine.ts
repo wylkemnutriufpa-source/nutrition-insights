@@ -62,14 +62,14 @@ export interface ScaledFoodItem {
   original_portion: number;
 }
 
-// Clinical safety limits from Constitution
+// Relaxed limits to allow professional control
 const CLINICAL_LIMITS = {
-  MAX_PROTEIN_PER_KG: 2.5,
-  MIN_FAT_GRAMS: 20,
-  MIN_PORTION_GRAMS: 10,
-  MAX_SCALE_FACTOR: 2.5,
-  MIN_SCALE_FACTOR: 0.3,
-  MAX_SINGLE_PORTION_GRAMS: 500,
+  MAX_PROTEIN_PER_KG: 4.0,
+  MIN_FAT_GRAMS: 10,
+  MIN_PORTION_GRAMS: 1,
+  MAX_SCALE_FACTOR: 10,
+  MIN_SCALE_FACTOR: 0.1,
+  MAX_SINGLE_PORTION_GRAMS: 5000,
 };
 
 export function scaleMealToTarget(

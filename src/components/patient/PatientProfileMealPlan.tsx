@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChefHat, RefreshCw, Eye, FileDown, Calendar, AlertTriangle, CheckCircle2 } from "lucide-react";
-// Removed clinicalHumanEngine import
+// clinicalHumanEngine removed
 import {
   MacroSummary, MealGroup, MealSlotCard,
   MEAL_TYPES, DAYS,

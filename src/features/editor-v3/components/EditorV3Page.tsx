@@ -35,7 +35,8 @@ import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLev
 
 
 
-import { translateSlot } from '../utils/translations';
+// No translation mapper needed anymore as keys are PT-BR by default
+const translateSlot = (s: string) => s;
 
 
 export default function EditorV3Page() {
@@ -138,8 +139,8 @@ export default function EditorV3Page() {
               const targetMealKcal = kcal / distribution.length;
               let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
               
-              // Safety limit to avoid "exploding calories"
-              quantity = Math.min(Math.max(quantity, 10), 2000); // Between 10g and 2kg
+              // Calculation scale (no hard clamps)
+              let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
               
               const macros = calculateItemMacros(food, quantity);
               
