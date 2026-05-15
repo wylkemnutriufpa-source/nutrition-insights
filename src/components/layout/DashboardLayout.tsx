@@ -171,7 +171,7 @@ function DynamicSidebar({ collapsed, dark, toggleDark, initials, profileName, si
   const effectiveProRole = isProRole && isProfessionalContext;
 
   return (
-    <div className={`flex h-full min-h-0 flex-col transition-colors duration-500 ${mode === 'advanced' ? 'bg-card/40' : mode === 'pro' ? 'bg-blue-500/5' : 'bg-green-700/5'}`}>
+    <div className={`flex h-full min-h-0 flex-col transition-all duration-500 ease-in-out ${mode === 'advanced' ? 'bg-card/40' : mode === 'pro' ? 'bg-blue-500/5' : 'bg-green-700/5'}`}>
       <WorkspaceContextSwitcher collapsed={collapsed} />
       <div className="p-4 flex items-center justify-between flex-shrink-0">
         <FitJourneyLogo collapsed={collapsed} size="sm" />

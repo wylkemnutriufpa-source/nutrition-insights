@@ -241,9 +241,9 @@ export default function EditorV3Page() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white">
+      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white selection:bg-emerald-500/30">
         {/* Header Superior */}
-        <header className="px-8 py-4 bg-neutral-900 border-b border-white/10 flex items-center justify-between sticky top-0 z-10 shadow-xl backdrop-blur-md bg-neutral-900/80">
+        <header className="px-8 py-4 bg-neutral-900/40 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-2xl backdrop-blur-xl transition-all duration-300">
           <div className="flex items-center gap-6">
             <Button 
               variant="ghost" 

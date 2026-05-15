@@ -16,11 +16,11 @@ interface FoodItemRowProps {
 
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity, onUpdateMacros, onRemove }) => {
   return (
-    <div className="group relative flex flex-col p-5 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300">
+    <div className="group relative flex flex-col p-6 bg-white/[0.02] border border-white/5 rounded-[2rem] hover:bg-white/[0.04] hover:border-white/10 hover:shadow-xl transition-all duration-500 ease-out">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-sm font-black uppercase italic tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+          <div className="flex items-center gap-3 mb-2">
+            <h4 className="text-base font-black uppercase italic tracking-tight text-white group-hover:text-emerald-400 transition-colors">
               {item.name}
             </h4>
             <Badge variant="outline" className="text-[7px] uppercase font-black bg-emerald-500/10 border-transparent text-emerald-500 px-1 py-0 h-3">Real Food</Badge>

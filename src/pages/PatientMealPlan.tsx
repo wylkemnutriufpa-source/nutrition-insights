@@ -200,8 +200,12 @@ export default function PatientMealPlan() {
       total_target_fat: planData.total_target_fat,
     } as any);
 
-    let resolvedItems: MealPlanItem[] = [];
-    let resolvedAllItems: MealPlanItem[] = [];
+    // Feedback visual premium ao carregar
+    toast.dismiss();
+    toast.success("Plano carregado com sucesso", {
+      icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" />,
+      className: "bg-neutral-900 border-white/10 text-white font-bold uppercase tracking-widest text-[10px]"
+    });
 
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (planData.editor_version === 'v3' || planData.editor_version === 'V3') {
