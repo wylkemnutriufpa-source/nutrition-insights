@@ -96,11 +96,12 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
               <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Validado Clínicamente</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Estrutura Estável</span>
                 </div>
                 <p className="text-[9px] text-white/50 uppercase leading-tight">
-                  Este template utiliza o Resolver Soberano V3 para garantir integridade em qualquer perfil calórico.
+                  Este template segue padrões fisiológicos e pode ser ajustado manualmente conforme sua necessidade clínica.
                 </p>
+
               </div>
             </div>
           </div>
