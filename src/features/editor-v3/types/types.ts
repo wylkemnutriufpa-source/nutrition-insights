@@ -92,10 +92,10 @@ export interface PatientContext {
   activityLevel?: string;
   restrictions: string[];
   preferences: string[];
-  calories_target: number;
-  protein_target: number;
-  carbs_target: number;
-  fat_target: number;
+  meta_calorias: number;
+  meta_proteinas: number;
+  meta_carboidratos: number;
+  meta_gorduras: number;
   consent_given?: boolean;
   consent_date?: string;
   protocol_type?: string;

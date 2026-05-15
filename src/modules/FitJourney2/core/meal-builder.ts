@@ -56,7 +56,7 @@ export class MealBuilder {
     });
   }
 
-  static createSnack(type: 'snack1' | 'snack2', targetCalories: number): Meal {
+  static createSnack(type: 'Lanche da Manhã' | 'Lanche da Tarde' | 'Ceia', targetCalories: number): Meal {
     const option = SNACK_OPTIONS[0]; 
     return this.createFromTemplateMeal({
       name: option.name,
