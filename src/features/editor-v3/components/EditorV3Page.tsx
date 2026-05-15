@@ -39,6 +39,24 @@ export default function EditorV3Page() {
   const [templates, setTemplates] = useState<V3DietTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<V3DietTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [patientData, setPatientData] = useState<any>(null);
+
+  // Nutritional Targets (Automatic Calculation Only)
+  const nutritionalTargets = useMemo(() => {
+    if (!patientData) return null;
+    
+    const weight = patientData.weight || 70;
+    const height = patientData.height || 170;
+    const age = patientData.age || 30;
+    const gender = (patientData.gender === 'feminino' ? 'female' : 'male') as Gender;
+    const activityLevel = (patientData.activity_level || 'moderate') as ActivityLevel;
+    const goal = (patientData.goal || 'maintenance') as Goal;
+
+    const bmr = calculateBMR(weight, height, age, gender);
+    const tdee = calculateTDEE(bmr, activityLevel);
+    return calculateTargetMacros(weight, tdee, goal);
+  }, [patientData]);
+
 
   useEffect(() => {
     async function loadInitialData() {
