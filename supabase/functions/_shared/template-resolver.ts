@@ -37,12 +37,12 @@ export interface FoodStructureItem {
 
 /** Map engine tipo_refeicao keys → DB tipo_refeicao values in nutritionist_meal_templates */
 const MEAL_TYPE_DB_MAP: Record<string, string[]> = {
-  breakfast: ["breakfast", "cafe_da_manha"],
-  morning_snack: ["morning_snack", "lanche_manha", "lanche"],
-  lunch: ["lunch", "almoco"],
-  afternoon_snack: ["afternoon_snack", "lanche_tarde", "lanche"],
-  dinner: ["dinner", "jantar"],
-  evening_snack: ["evening_snack", "ceia"],
+  'Café da Manhã': ["Café da Manhã"],
+  'Lanche da Manhã': ["Lanche da Manhã"],
+  'Almoço': ["Almoço"],
+  'Lanche da Tarde': ["Lanche da Tarde"],
+  'Jantar': ["Jantar"],
+  'Ceia': ["Ceia"],
 };
 
 /** Map engine goals → template goal_tags */
