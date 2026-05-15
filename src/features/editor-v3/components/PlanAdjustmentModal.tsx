@@ -109,13 +109,10 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
     }
   }, [isOpen]); // Only react to isOpen changes to prevent loops with meals/originalTotals
 
-  // 🛡️ SOBERANIA MANUAL: Ajuste automático removido.
-  // O ajuste agora deve ser feito manualmente no editor pelo nutricionista.
-  // Mantemos o modal apenas para visualização de metas e referência.
+  // 🛡️ SOBERANIA MANUAL: O ajuste agora deve ser feito manualmente no editor.
+  // O modal serve apenas para referência de metas clínicas.
   useEffect(() => {
-    if (isOpen && initialMeals.length > 0) {
-      // Logic for auto-scaling removed to prevent "diet invention"
-    }
+    // Logic for auto-scaling removed to respect nutritionist sovereignty
   }, [params, isOpen, initialMeals]);
 
   const updateParam = (key: string, value: any) => {
