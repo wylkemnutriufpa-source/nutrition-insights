@@ -385,13 +385,12 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
       {isProRole && (
         <div className="px-3 mb-4">
           <PatientQuickSearch 
-            collapsed={collapsed} 
             showIconOnly={collapsed}
             className="w-full"
           />
         </div>
       )}
-      
+
       <div className="flex-1 overflow-y-auto scrollbar-none">
         {hasWorkspaceConfig ? (
           <WorkspaceSidebar collapsed={collapsed} onLinkClick={onLinkClick} />
