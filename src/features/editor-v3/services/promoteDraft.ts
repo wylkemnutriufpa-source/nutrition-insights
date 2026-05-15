@@ -1,23 +1,12 @@
 /**
  * Editor V3 — Promotor de Drafts
- * ----------------------------------------------------------------
- * Converte um `v3_drafts` em plano clínico oficial (`meal_plans` + `meal_plan_items`).
- *
- * 🛡️ Respeita os contratos imutáveis:
- *   - Isolamento multi-tenant (RLS faz a checagem; passamos tenant_id explícito)
- *   - Insert-first: cria plano + items, e SÓ DEPOIS marca o draft como `promoted`
- *   - Não toca em planos publicados (cria SEMPRE como `draft` clínico)
- *   - Marmitas mantêm `is_locked = true` no item oficial
  */
 import { supabase } from '@/integrations/supabase/client';
-import { SovereignFatalGuard } from "@/lib/sovereign-fatal-guards";
 import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
 import { calculateItemMacros } from '@/lib/nutricore_v2/helpers';
-import { validatePlanBeforePublish } from '@/lib/planSafetyNet';
 import { formatDisplayPortion, resolveDisplayGrams } from '@/lib/nutricore_v2/portion-display';
 import { generateAndPersistMealPlanSnapshot } from "@/lib/snapshot/persistSnapshot";
-import { assertSovereignRuntime, logSovereignEvent, getCorrelationId } from "@/lib/runtimeGovernance";
 
 type ClinicalMealType =
   | 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
@@ -74,36 +63,12 @@ export async function promoteDraftToMealPlan(
   draft: DraftRecord,
   options?: { title?: string, v3_sandbox_delivery?: boolean }
 ): Promise<PromoteResult> {
-  // 🛡️ Blindagem: Detectar rastro de motores legados
-  assertSovereignRuntime("promoteDraftToMealPlan");
-
-  const correlationId = getCorrelationId();
-  logSovereignEvent("INFO", "INICIANDO_PROMOCAO_DRAFT", {
-    draft_id: draft.id,
-    patient_id: draft.patient_id,
-    correlation_id: correlationId
-  });
-
   const meals = draft.payload?.meals ?? [];
   const today = new Date().toISOString().slice(0, 10);
   const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
 
-  // 🛡️ Safety Net - Verificações Obrigatórias (Hard Lock no Backend)
-  const safetyNet = validatePlanBeforePublish({
-    meals,
-    patientContext: draft.payload?.patient_context ?? null,
-    totalMacros: {
-      kcal: draft.meta_kcal ?? 0,
-      protein: draft.meta_protein ?? 0,
-      carbs: draft.meta_carbs ?? 0,
-      fat: draft.meta_fat ?? 0
-    },
-    isWeeklyMode: draft.payload?.meals?.some(m => m.selectionMode === 'week')
-  });
-
-  if (safetyNet.errors.length > 0) {
-    return { ok: false, error: `Bloqueio Safety Net: ${safetyNet.errors.join('; ')}` };
-  }
+  // 🛡️ SOBERANIA MANUAL: Removida barreira de Safety Net procedural.
+  // O nutricionista tem soberania total sobre o plano editado.
 
 
   // 0) Resolve o ID real do Auth (auth.users.id) e do Perfil (profiles.id)

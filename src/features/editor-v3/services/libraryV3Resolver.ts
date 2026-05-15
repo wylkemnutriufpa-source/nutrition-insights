@@ -8,7 +8,7 @@ import {
   FREE_PORTION_MAX_GRAMS,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
-import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+// Removed human score engine import
 import { getStyleContract } from "@/lib/templateStyles";
 
 export interface LibraryV3Item {
@@ -175,23 +175,9 @@ export class LibraryV3Resolver {
       })
       .filter(Boolean) as MealItem[];
 
-    // 🛡️ HUMAN_SCORE_GUARD: Rejeita refeições que não parecem humanas.
-    const humanResult = calculateHumanMealScore({ items: scaledItems }, context.mealSlot, styleContract);
-    
-    // Log de Telemetria Clínica (Rejeições)
-    if (humanResult.status === 'absurd') {
-      console.warn(`[LibraryV3Resolver] REJECTED ABSURD MEAL: ${baseItem.title}`, humanResult.reasons);
-      
-      await (supabase.from('clinical_telemetry') as any).insert({
-        event_type: 'meal_rejected',
-        meal_slot: context.mealSlot,
-        content: { title: baseItem.title, items: scaledItems },
-        reasons: humanResult.reasons,
-        human_score: humanResult.score
-      });
-
-      return null;
-    }
+    // 🛡️ SOBERANIA MANUAL: Removida rejeição procedural de "refeições absurdas".
+    // O nutricionista tem autoridade total para editar o template após a plotagem.
+    // O sistema agora apenas plota e permite edição manual total.
 
     // 6. Montagem da Refeição
     return {

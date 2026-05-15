@@ -7,11 +7,9 @@ import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
 import { loadOrCreateDraft, saveDraft } from '../services/draftService';
 import { validatePlanBeforePublish } from '@/lib/planSafetyNet';
-import { runV3IntegrationTests } from '../services/v3Tests';
-import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
-  getCompatibleFoods, getBaseFoods, seedBaseData,
+  getBaseFoods, seedBaseData,
   searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
 } from '../utils/dataFetcher';
 import { getBestMealImage } from '../utils/normalization';
@@ -20,10 +18,9 @@ import {
   calculateNutritionalScore, validatePlanClinically 
 } from '../../clinical-engine';
 import { 
-  isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros 
+  calculateItemMacros 
 } from '@/lib/nutricore_v2/helpers';
 
-import { recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 
 // Direct NutriCore V3 Imports (lib/nutricore_v2)
 // Direct NutriCore V3 Imports are now handled via Adapter or direct types
@@ -76,11 +73,8 @@ import { TemplateV3Modal } from './TemplateV3Modal';
 import { ControlledDeliveryModal } from './ControlledDeliveryModal';
 import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
-import { V3SandboxGenerator } from '../services/v3SandboxGenerator';
-import { SimpleMealGenerator } from '../services/simpleMealGenerator';
 import { V3DietTemplate } from '../types/types';
-import { V3TemplateEngine } from '../services/v3TemplateEngine';
-import { calculateHumanMealScore } from '@/lib/clinicalHumanEngine';
+import { V3TemplatePlotter } from '../services/v3TemplateEngine';
 
 
 
@@ -122,11 +116,10 @@ const EditorV3Page = () => {
   const {
     meals, auditLog, setPatientId, hydrateMeals, sharingToken: storeSharingToken,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
-    removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
+    removeFood, updateFoodQuantity, updateMealItem, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
-    duplicateMeal, reorderMeal, updateMealImage, setMeals, applySmartTemplate,
-
-    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
+    duplicateMeal, reorderMeal, updateMealImage, setMeals,
+    nutritionalScore, validationIssues, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry,
     initialMeals: initialMealsInStore, viewMode, setViewMode, clinicalMode
   } = useEditorState();
@@ -568,31 +561,7 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     if (patientId) {
-      console.debug('[v3-init] checking system health for patient:', patientId);
-      // 🔥 Forçar a prova clínica no localStorage para debug imediato
-      runClinicalProofTests(patientId).then(reports => {
-        localStorage.setItem('v3_proof_report', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          reports
-        }));
-      });
-      runV3IntegrationTests(patientId).then(res => {
-        const evidence = (res as any).evidence || [];
-        if (evidence.length > 0) {
-          console.error('[v3-health] issues detected during initialization', evidence);
-        } else {
-          console.info('[v3-health] all systems operational');
-          // Rodar prova clínica
-          runClinicalProofTests(patientId).then(reports => {
-            console.group('--- RELATÓRIO DE PROVA CLÍNICA ---');
-            reports.forEach(r => {
-              if (r.startsWith('✅')) console.info(r);
-              else console.warn(r);
-            });
-            console.groupEnd();
-          });
-        }
-      });
+      console.info('[v3-init] initializing session for patient:', patientId);
     }
   }, [patientId]);
 
@@ -680,7 +649,7 @@ const EditorV3Page = () => {
       const modeText = isWeekly ? 'Semanal' : 'Diário';
       toast.loading(`Aplicando Template ${selectedV3Template.title} ${modeText} (${kcal} kcal)...`, { id: 'v3-gen' });
       
-      const v3Meals = await V3TemplateEngine.plotTemplate(
+      const v3Meals = await V3TemplatePlotter.plotTemplate(
         selectedV3Template.slug,
         kcal,
         { isWeekly }
@@ -720,80 +689,10 @@ const EditorV3Page = () => {
   }, [swapSearch]);
 
   useEffect(() => {
-    const loadSmartSuggestions = async () => {
-      if (selectedItem) {
-        setIsLoadingSmartSubs(true);
-        const name = selectedItem.item.name;
-
-        // V3 Logic: Use Direct NutriCore V3 Substitutions if possible
-        const currentFood = BASE_FOODS.find(f => f.id === selectedItem.item.id) || 
-                          BASE_FOODS.find(f => f.name.toLowerCase() === name.toLowerCase());
-                          
-        if (currentFood) {
-          console.log('[V3-Subs] Using NutriCore V3 Substitution Engine for:', name);
-          
-          // 🛡️ Contrato único: substituição recebe gramas reais, corrigindo qualquer quantidade visual corrompida
-          const itemTotalGrams = resolveDisplayGrams(selectedItem.item);
-
-          const meal = meals.find(m => m.id === selectedItem.mealId);
-          const v3PlanSubs = getSubstitutions(
-            currentFood, 
-            BASE_FOODS, 
-            itemTotalGrams,
-            patientContext?.restrictions || [],
-            meal?.name
-          );
-
-          const v3Subs = v3PlanSubs.map(s => {
-            const ratio = s.grams / 100;
-            // 🛡️ Usar calculateItemMacros em vez de cálculo manual para garantir sanitização
-            const computedMacros = calculateItemMacros({
-              ...s.food,
-              clinical_mass_g: s.grams
-            }, s.grams);
-
-            return {
-              ...s.food,
-              kcal: computedMacros.kcal,
-              calories: computedMacros.kcal,
-              protein: computedMacros.protein,
-              carbs: computedMacros.carbs,
-              fat: computedMacros.fat,
-              portionValue: s.grams,
-              portionLabel: s.unit_label,
-              measurementType: 'gram' as const,
-              suggestedQuantity: s.grams 
-            };
-          });
-          
-          setSmartSubstitutions(v3Subs as any);
-          setIsLoadingSmartSubs(false);
-          return;
-        }
-
-        let category: 'protein' | 'carb' | 'fruit' | 'any' = 'any';
-        if (isProtein(name)) category = 'protein';
-        else if (isCarb(name)) category = 'carb';
-        else if (isFruit(name)) category = 'fruit';
-
-        const dbSuggestions = await getCompatibleFoods(
-          category, 
-          name, 
-          patientContext?.restrictions || []
-        );
-        const suggestions = getDeterministicSuggestions(
-          name, 
-          dbSuggestions, 
-          selectedItem.item.measurementType,
-          selectedItem.item.portionLabel
-        );
-
-        setSmartSubstitutions(suggestions.slice(0, 12));
-        setIsLoadingSmartSubs(false);
-      }
-    };
-    loadSmartSuggestions();
-  }, [selectedItem, selectedItem?.item.quantity, selectedItem?.item.instanceId, patientContext]);
+    // 🛡️ SOBERANIA MANUAL: Substituições automáticas desativadas.
+    setIsLoadingSmartSubs(false);
+    setSmartSubstitutions([]);
+  }, [selectedItem]);
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -1400,17 +1299,8 @@ const EditorV3Page = () => {
   };
 
   const handleMealGenerate = async (mealId: string) => {
-    setGeneratingMealId(mealId);
-    try {
-      // Usar a engine via hook useEditorState
-      generateMeal(mealId, patientContext?.goal || 'manutencao');
-      // O hook já lida com o toast de sucesso
-    } catch (error) {
-      console.error('[V3-UI] Error generating meal:', error);
-      toast.error('Erro ao gerar refeição individual.');
-    } finally {
-      setGeneratingMealId(null);
-    }
+    // 🛡️ SOBERANIA MANUAL: Geração procedural desativada.
+    toast.info('Geração automática desativada. Utilize a biblioteca de templates para preencher o plano.');
   };
 
   const executeSwap = (mealId: string, instanceId: string, target: Food & { suggestedQuantity?: number }, autoAdjust = false) => {
@@ -1425,14 +1315,14 @@ const EditorV3Page = () => {
     if (target.suggestedQuantity) {
       newGrams = target.suggestedQuantity;
     } else if (autoAdjust) {
-      const currentMacros = recalculateMacros(currentItem, currentItem.quantity);
+      const currentMacros = calculateItemMacros(currentItem, currentItem.quantity);
       const targetKcalPerUnit = target.kcal || target.calories || 0; 
       
       if (targetKcalPerUnit > 0) {
         if (target.measurementType === 'gram' || target.measurementType === 'ml') {
-          newGrams = Math.round((currentMacros.calories / targetKcalPerUnit) * 100);
+          newGrams = Math.round((currentMacros.kcal / targetKcalPerUnit) * 100);
         } else {
-          newGrams = Math.round(currentMacros.calories / targetKcalPerUnit);
+          newGrams = Math.round(currentMacros.kcal / targetKcalPerUnit);
         }
       } else {
         newGrams = currentItem.quantity; // Fallback
@@ -1443,20 +1333,16 @@ const EditorV3Page = () => {
       else newGrams = target.portionValue || 1;
     }
 
-    const safeGrams = applyClinicalSafety(target.name, newGrams);
-    const household = convertGramsToHousehold(target.name, safeGrams);
-    
-    const safeQuantity = household.quantity;
-    const macros = recalculateMacros(target, safeGrams);
+    const macros = calculateItemMacros(target as any, newGrams);
 
     updateMealItem(mealId, instanceId, {
       ...target,
-      ...household,
       ...macros,
-      kcal: macros.calories,
-      calories: macros.calories,
+      kcal: macros.kcal,
+      calories: macros.kcal,
       instanceId,
-      quantity: safeQuantity
+      quantity: newGrams,
+      portionLabel: target.measurementType === 'gram' ? `${newGrams}g` : target.portionLabel
     });
     
     setReplacementPending(null);
@@ -1796,28 +1682,16 @@ const EditorV3Page = () => {
                   className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-blue-400 hover:text-white hover:bg-blue-500/20 rounded-xl transition-all gap-2"
                 >
                   <Settings2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ajustar</span>
+                  <span className="hidden sm:inline">Metas</span>
                 </Button>
-                <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleGenerateFullPlan}
-                  disabled={isGeneratingGlobal}
-                  className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-white hover:bg-emerald-500/20 rounded-xl transition-all gap-2"
-                >
-                  {isGeneratingGlobal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline">Gerar Tudo</span>
-                </Button>
-                <div className="w-px h-6 bg-white/10 mx-1 self-center" />
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => {
-                    setActiveTab('template');
+                    setV3LibraryTab('templates');
                     setShowMainAddModal(true);
                   }}
-                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black rounded-xl transition-all gap-2 border border-amber-500/20 animate-pulse shadow-lg shadow-amber-500/10"
+                  className="h-10 px-4 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all gap-2 border border-emerald-500/20 shadow-lg shadow-emerald-500/10"
                 >
                   <BookCopy className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Biblioteca de Templates</span>
@@ -2087,9 +1961,7 @@ const EditorV3Page = () => {
             <div className="space-y-12">
               {viewMode === 'weekly' ? (
                 ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((day, dayIdx) => {
-                  const dayMeals = meals.length >= 42 
-                    ? meals.slice(dayIdx * (meals.length / 7), (dayIdx + 1) * (meals.length / 7))
-                    : meals;
+                  const dayMeals = meals.filter(m => m.day_of_week === dayIdx);
 
                   return (
                     <div key={day} className="space-y-8 pb-12 border-b border-white/5 last:border-0">
@@ -2102,8 +1974,7 @@ const EditorV3Page = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {dayMeals.map((meal, mIdx) => {
-                          const humanScore = calculateHumanMealScore(meal, meal.name);
-                          const isAbsurd = humanScore.status === 'absurd';
+                  const isAbsurd = false;
 
                           const isEmpty = meal.items.length === 0;
                           return (
@@ -2115,11 +1986,7 @@ const EditorV3Page = () => {
                                 <div className="absolute top-4 left-4 z-10">
                                   <Badge variant="secondary" className="bg-white/10 text-white/70 border-0">Slot vazio — adicione itens</Badge>
                                 </div>
-                              ) : isAbsurd ? (
-                                <div className="absolute top-4 left-4 z-10">
-                                  <Badge variant="secondary" className="bg-amber-500/15 text-amber-300 border border-amber-500/30">⚠ Ajuste sugerido</Badge>
-                                </div>
-                              ) : null}
+                                ) : null}
                               
                               <div className="relative w-full h-32 overflow-hidden">
                                 {meal.imageUrl && (
@@ -2149,8 +2016,7 @@ const EditorV3Page = () => {
                 })
               ) : (
                 meals.map((meal, index) => {
-                  const humanScore = calculateHumanMealScore(meal, meal.name);
-                  const isAbsurd = humanScore.status === 'absurd';
+                          const isAbsurd = false;
 
                   const isEmpty = meal.items.length === 0;
                   return (
@@ -2162,16 +2028,6 @@ const EditorV3Page = () => {
                       {isEmpty ? (
                         <div className="absolute top-8 right-8 z-20">
                           <Badge variant="secondary" className="bg-white/10 text-white/70 border-0 h-8 px-4 text-xs font-bold uppercase">Slot vazio — adicione itens</Badge>
-                        </div>
-                      ) : isAbsurd ? (
-                        <div className="absolute top-8 right-8 z-20 flex flex-col items-end gap-2">
-                          <Badge variant="secondary" className="h-8 px-4 text-xs font-black uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">⚠ Ajuste sugerido</Badge>
-                          <div className="bg-amber-950/60 border border-amber-500/20 p-3 rounded-2xl max-w-xs shadow-xl backdrop-blur-md text-right">
-                            <p className="text-[10px] font-black uppercase text-amber-300/80 mb-2 tracking-widest">Sugestões:</p>
-                            {humanScore.reasons.map((r, i) => (
-                              <p key={i} className="text-[10px] text-white/70 leading-relaxed">{r}</p>
-                            ))}
-                          </div>
                         </div>
                       ) : null}
                     <div className="flex flex-col md:flex-row gap-10">

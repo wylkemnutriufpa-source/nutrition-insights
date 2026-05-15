@@ -5,13 +5,11 @@ import { LibraryV3Resolver } from "./libraryV3Resolver";
 import { distributeMacros, MealSlot } from "@/lib/nutricore_v2/meal-distribution";
 
 /**
- * V3 Template Engine
+ * V3 Template Plotter
  * ----------------------------------------------------------------
- * A nova fonte da verdade para o FitJourney V3.
- * Abandona a geração procedural complexa em favor de uma 
- * biblioteca premium de templates editáveis.
+ * Responsável por plotar os modelos da Biblioteca Premium para o paciente.
  */
-export class V3TemplateEngine {
+export class V3TemplatePlotter {
   /**
    * Plota um template completo para um paciente
    */

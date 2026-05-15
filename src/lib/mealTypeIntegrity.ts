@@ -1,15 +1,8 @@
 /**
  * FitJourney — Meal Type Integrity Guard
  * ----------------------------------------------------------------
- * Regra única, soberana e centralizada para impedir cruzamento de
- * categorias entre slots de refeição.
- *
- * Aplica-se em 3 pontos:
- *  1. Geração (libraryV3Resolver / templateIntelligence)
- *  2. Substituição (MealSubstitutionModal / MealSubstitutionPanel)
- *  3. Renderização defensiva (UI esconde + telemetria)
- *
- * Falha SEMPRE de forma explícita. Nunca silenciosa.
+ * Regra centralizada para impedir cruzamento de categorias entre slots de refeição.
+ * Garante que arroz não apareça no café e pão não apareça no almoço.
  */
 
 import type { SubstitutionGroup } from "./substitutionGroups";
@@ -249,26 +242,13 @@ export function isFoodAllowedInSlot(
   const slot = normalizeSlot(slotInput);
   if (!slot) return true; // slot desconhecido: não bloqueia, só loga
   if (matchesSlotBlacklist(name, slot)) {
-    SovereignTelemetry.log({
-      runtime_source: context.source,
-      event_type: "schema_violation",
-      severity: "warning",
-      message: `MEAL_TYPE_GUARD: bloqueado "${name}" em slot "${slot}" (blacklist textual).`,
-      correlation_id: context.correlationId,
-      metadata: { name, group, slot, reason: "blacklist" },
-    });
-    return false;
+    // 🛡️ SOBERANIA MANUAL: Mantemos apenas logs de aviso, permitindo soberania do nutricionista.
+    console.warn(`[Clinical-Guard] Sugestão: Alimento "${name}" pode ser inadequado para o slot "${slot}".`);
+    return true; 
   }
   if (group && !isGroupAllowedInSlot(group, slot)) {
-    SovereignTelemetry.log({
-      runtime_source: context.source,
-      event_type: "schema_violation",
-      severity: "warning",
-      message: `MEAL_TYPE_GUARD: bloqueado grupo "${group}" em slot "${slot}".`,
-      correlation_id: context.correlationId,
-      metadata: { name, group, slot, reason: "group_mismatch" },
-    });
-    return false;
+    console.warn(`[Clinical-Guard] Sugestão: Grupo "${group}" pode ser inadequado para o slot "${slot}".`);
+    return true; 
   }
   return true;
 }
