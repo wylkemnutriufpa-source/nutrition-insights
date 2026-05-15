@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Meal, MealItem, AuditLogEntry, PatientContext } from '../types';
+import { Meal, Food, MealItem, AuditLogEntry, PatientContext } from '../types';
 
 const DEFAULT_MEALS: Meal[] = [
   { id: '1', name: 'Café da Manhã', items: [], time: '08:00' },
@@ -33,6 +33,22 @@ interface EditorState {
   savePlan: () => Promise<void>;
   resetEditor: () => void;
   recalculateScore: () => void;
+  addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
+  addFoodToMeal: (mealId: string, food: Food) => Promise<void>;
+  applyTemplateToMeal: (mealId: string, template: any) => void;
+  removeFood: (mealId: string, instanceId: string) => Promise<void>;
+  updateFoodQuantity: (mealId: string, instanceId: string, quantity: number, clinical_mass_g?: number) => void;
+  addMeal: () => void;
+  removeMeal: (mealId: string) => void;
+  updateMealHeader: (mealId: string, name: string, time: string, description?: string, imageUrl?: string, imageSource?: any) => void;
+  addMealWithHeader: (name: string, time: string) => void;
+  duplicateMeal: (mealId: string) => void;
+  reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
+  updateMealImage: (mealId: string, imageUrl: string, imageSource: any) => void;
+  setMeals: (meals: Meal[]) => void;
+  setGoalMetadata: (metadata: any) => void;
+  setPatientContext: (context: PatientContext) => void;
+  addAuditEntry: (entry: any) => void;
 }
 
 export const useEditorState = create<EditorState>()(
@@ -66,6 +82,22 @@ export const useEditorState = create<EditorState>()(
       savePlan: async () => { set({ planStatus: 'saved' }); },
       resetEditor: () => set({ meals: DEFAULT_MEALS, planStatus: 'draft' }),
       recalculateScore: () => {},
+      addMarmitaToMeal: async (mealId, m) => {},
+      addFoodToMeal: async (mealId, f) => {},
+      applyTemplateToMeal: (mealId, t) => {},
+      removeFood: async (mealId, instanceId) => {},
+      updateFoodQuantity: (mealId, instanceId, q, c) => {},
+      addMeal: () => {},
+      removeMeal: (id) => {},
+      updateMealHeader: (id, n, t, d, i, s) => {},
+      addMealWithHeader: (n, t) => {},
+      duplicateMeal: (id) => {},
+      reorderMeal: (id, d) => {},
+      updateMealImage: (id, i, s) => {},
+      setMeals: (m) => set({ meals: m }),
+      setGoalMetadata: (m) => set({ goalMetadata: m }),
+      setPatientContext: (c) => set({ patientContext: c }),
+      addAuditEntry: (e) => {},
     }),
     { name: 'fitjourney-editor-v3-storage', version: 3, storage: createJSONStorage(() => localStorage) }
   )

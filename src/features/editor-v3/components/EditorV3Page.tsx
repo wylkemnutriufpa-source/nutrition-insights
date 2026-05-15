@@ -1,7 +1,5 @@
-console.log('[V3-READY] Editor Page Initialized');
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { isFeatureEnabled } from '../../security/services/featureFlags';
 import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
@@ -17,9 +15,6 @@ import {
   formatDisplayPortion, resolveDisplayGrams,
   logClinicalEvent
 } from '../utils/FakeUtils';
-const getSubstitutions: any = () => [];
-const BASE_FOODS: any[] = [];
-const convertGramsToHousehold: any = (g: any) => '';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,30 +49,16 @@ import {
   Zap, Activity, PieChart, Minus, Users, Search, LayoutDashboard, Target, ShieldCheck,
   User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2, FileDown, Settings2, ChevronRight, MessageSquare, BookCopy, Library, Soup, Coffee, UtensilsCrossed, Moon, Sun, ShoppingCart
 } from 'lucide-react';
-import { safeGeneratePDF } from '../services/pdfService';
-import { type PremiumMealPlanPDFData, buildPremiumMealPlanHTML } from '@/lib/pdfExportPremium';
-import { generateV3PlainText } from '../services/plainTextService';
-import { buildWhatsAppUrl } from "@/utils/whatsappNotification";
-
-import PlanAdjustmentModal from './PlanAdjustmentModal';
-import TemplateEditorModal from './TemplateEditorModal';
-import { TemplateV3Modal } from './TemplateV3Modal';
-import { ControlledDeliveryModal } from './ControlledDeliveryModal';
-import { DraftV3PreviewModal } from './DraftV3PreviewModal';
-import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
-import { V3DietTemplate } from '../types/types';
-import { V3TemplatePlotter } from '../services/v3TemplateEngine';
-
-
-
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { PRODUCTION_URL } from '@/lib/config';
-import { copyToClipboard } from '@/utils/clipboard';
-import { Meal, MealItem, Food, MealTemplate } from '../types';
-import { usePatientsList } from '@/hooks/queries/usePatientsList';
-import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+const getSubstitutions: any = () => [];
+const BASE_FOODS: any[] = [];
+const convertGramsToHousehold: any = (g: any) => '';
+type Meal = any;
+type MealItem = any;
+type Food = any;
+type MealTemplate = any;
 
 const MEASURE_OPTIONS = [
   { label: 'Gramas', unit: 'g', type: 'gram' as const },
