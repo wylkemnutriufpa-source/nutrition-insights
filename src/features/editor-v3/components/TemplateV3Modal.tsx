@@ -10,8 +10,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   CheckCircle2, Clock, Zap, Target, Flame, 
   ChevronRight, ArrowRight, Layers, Image as ImageIcon,
-  Calendar, Info
+  Calendar, Info, Calculator
 } from 'lucide-react';
+
 import { V3DietTemplate, KcalProfile } from '../types/types';
 import { cn } from '@/lib/utils';
 
