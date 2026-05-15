@@ -198,10 +198,10 @@ export default function Meals() {
                 title={meal.title}
                 mealType={meal.tipo_refeicao}
                 loggedAt={meal.logged_at}
-                calories={meal.calories}
-                protein={meal.protein}
-                carbs={meal.carbs}
-                fat={meal.fat}
+                calories={meal.meta_calorias}
+                protein={meal.meta_proteinas}
+                carbs={meal.meta_carboidratos}
+                fat={meal.meta_gorduras}
                 aiScore={meal.ai_score}
                 aiFeedback={meal.ai_feedback}
                 imageUrl={meal.image_url}
