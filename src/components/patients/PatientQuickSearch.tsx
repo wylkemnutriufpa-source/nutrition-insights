@@ -50,7 +50,7 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
       try {
         let query = supabase
           .from("profiles")
-          .select("user_id, full_name, avatar_url, email");
+          .select("user_id, full_name, avatar_url");
 
         if (search.trim()) {
           query = query.ilike("full_name", `%${search}%`);
@@ -84,8 +84,7 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
           setPatients(data.map(p => ({
             user_id: p.user_id,
             full_name: p.full_name || "Sem nome",
-            avatar_url: p.avatar_url,
-            email: p.email
+            avatar_url: p.avatar_url
           })));
         }
       } catch (err) {
