@@ -533,7 +533,7 @@ const AdherenceCard = memo(function AdherenceCard({
         </div>
         <span className="text-2xl font-black italic text-primary">{Math.round(dailyAdherence)}%</span>
       </div>
-      <Progress value={dailyAdherence} className="h-3 bg-white/5 border border-white/5" />
+      <Progress value={dailyAdherence} className="h-3 bg-white/5 border border-white/5" indicatorClassName="bg-gradient-to-r from-primary to-emerald-400" />
       <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
         <div className="flex gap-3">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> {followedCount}</span>
