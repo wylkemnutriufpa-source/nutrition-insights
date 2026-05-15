@@ -195,7 +195,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                           </div>
                           <div>
                             <p className="text-xs font-black uppercase italic tracking-tight text-white/90">
-                              {meal.slot.replace(/_/g, ' ')}
+                              {translateSlot(meal.slot)}
                             </p>
                             <p className="text-[9px] uppercase font-black tracking-widest text-white/30">
                               {template.cluster_map?.[meal.slot] || 'Cluster Dinâmico'}
