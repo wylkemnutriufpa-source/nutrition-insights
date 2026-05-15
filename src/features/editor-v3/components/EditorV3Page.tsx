@@ -132,7 +132,12 @@ export default function EditorV3Page() {
 
               // Calculate quantity based on total target calories and number of meals
               const targetMealKcal = kcal / selectedTemplate.meal_distribution.length;
-              const quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
+              let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
+              
+              // Safety limit to avoid "exploding calories"
+              // Limit quantity to a reasonable human amount (e.g. 1500g max per item)
+              quantity = Math.min(quantity, 1500);
+              
               const macros = calculateItemMacros(food, quantity);
               
               items = [{
@@ -148,7 +153,7 @@ export default function EditorV3Page() {
 
           newMeals.push({
             id: crypto.randomUUID(),
-            name: slot.replace(/_/g, ' '),
+            name: translateSlot(slot),
             time: dist.time,
             day_of_week: day,
             items
