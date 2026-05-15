@@ -376,29 +376,60 @@ export default function EditorV3Page() {
 
               <div className="h-10 w-px bg-white/10 hidden lg:block mx-1" />
 
-              <Select 
-                value={effectivePatientId || ""} 
-                onValueChange={(val) => navigate(`/editor-v3/${val}`)}
-              >
-                <SelectTrigger className="w-[200px] h-10 bg-white/5 border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl">
-                  <User className="w-4 h-4 mr-2 text-emerald-500" />
-                  <SelectValue placeholder="Selecionar Paciente" />
-                </SelectTrigger>
-                <SelectContent className="bg-neutral-900 border-white/10 text-white">
-                  {availablePatients.map(p => (
-                    <SelectItem key={p.user_id} value={p.user_id} className="text-[10px] font-black uppercase">
-                      {p.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={isPatientSearchOpen} onOpenChange={setIsPatientSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={isPatientSearchOpen}
+                    className="w-[240px] h-11 bg-white/5 border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl justify-between hover:bg-white/10 hover:border-emerald-500/30 transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-emerald-500" />
+                      {effectivePatientId 
+                        ? availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name 
+                        : "Selecionar Paciente..."}
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px] p-0 bg-neutral-900 border-white/10 shadow-2xl">
+                  <Command className="bg-transparent">
+                    <CommandInput placeholder="Buscar paciente..." className="h-9 text-[10px] font-bold uppercase text-white" />
+                    <CommandList>
+                      <CommandEmpty className="py-6 text-center text-[10px] uppercase font-black text-white/20">Nenhum paciente encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {availablePatients.map((p) => (
+                          <CommandItem
+                            key={p.user_id}
+                            value={p.full_name}
+                            onSelect={() => {
+                              navigate(`/editor-v3/${p.user_id}`);
+                              setIsPatientSearchOpen(false);
+                            }}
+                            className="text-[10px] font-black uppercase text-white/60 hover:text-emerald-400 hover:bg-white/5 cursor-pointer"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4 text-emerald-500",
+                                effectivePatientId === p.user_id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {p.full_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
 
           </div>
 
           <div className="flex items-center gap-4">
-            <Dialog>
+            <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
@@ -428,8 +459,9 @@ export default function EditorV3Page() {
                 <PremiumGallery 
                   templates={templates} 
                   onSelect={(template) => {
+                    setIsGalleryOpen(false); // Close gallery when selecting a template
                     setSelectedTemplate(template);
-                    setIsTemplateModalOpen(true);
+                    setTimeout(() => setIsTemplateModalOpen(true), 100);
                   }} 
                 />
               </DialogContent>
