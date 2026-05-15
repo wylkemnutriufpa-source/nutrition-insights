@@ -136,12 +136,12 @@ export const MEAL_ORDER = ["Café da Manhã", "Lanche da Manhã", "Almoço", "La
 export const RESIDUAL_PRIORITY = ["Almoço", "Jantar", "Ceia", "Café da Manhã", "Lanche da Manhã", "Lanche da Tarde"];
 
 export const MEAL_LIMITS = {
-  maxFruitsPerMeal: 2,
-  maxFruitsPerDay: 4,
-  maxEggsBreakfast: 2,
-  maxEggsPerMeal: 3,
-  minProteinMainMeal: 100,
-  maxProteinMainMeal: 250,
+  maxFruitsPerMeal: 10,
+  maxFruitsPerDay: 20,
+  maxEggsBreakfast: 10,
+  maxEggsPerMeal: 10,
+  minProteinMainMeal: 0,
+  maxProteinMainMeal: 2000, // Relaxed
 };
 
 // ── Estruturas realistas de refeição por objetivo ──

@@ -410,18 +410,19 @@ export function getSeverityColor(severity: string): string {
 
 export function getMealTypeLabel(mealType: string): string {
   const labels: Record<string, string> = {
+    "Café da Manhã": "☀️ Café da manhã",
+    "Lanche da Manhã": "🍎 Lanche da manhã",
+    "Almoço": "🍽️ Almoço",
+    "Lanche da Tarde": "🍌 Lanche da tarde",
+    "Jantar": "🌙 Jantar",
+    "Ceia": "🥛 Ceia",
+    // Legacy support (still allowed but source should be PT-BR)
     breakfast: "☀️ Café da manhã",
-    cafe_da_manha: "☀️ Café da manhã",
     morning_snack: "🍎 Lanche da manhã",
-    lanche_manha: "🍎 Lanche da manhã",
     lunch: "🍽️ Almoço",
-    almoco: "🍽️ Almoço",
     afternoon_snack: "🍌 Lanche da tarde",
-    lanche_tarde: "🍌 Lanche da tarde",
     dinner: "🌙 Jantar",
-    jantar: "🌙 Jantar",
     evening_snack: "🥛 Ceia",
-    ceia: "🥛 Ceia",
   };
   return labels[mealType] || mealType;
 }
