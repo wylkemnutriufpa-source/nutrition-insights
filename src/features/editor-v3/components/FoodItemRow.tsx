@@ -10,10 +10,12 @@ import { cn } from '@/lib/utils';
 interface FoodItemRowProps {
   item: MealItem;
   onUpdateQuantity: (newQty: number) => void;
+  onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
 }
 
-export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity, onRemove }) => {
+export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity, onUpdateMacros, onRemove }) => {
+
   return (
     <div className="group relative flex flex-col p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-white/10 transition-all">
       <div className="flex items-center justify-between gap-4 mb-3">
