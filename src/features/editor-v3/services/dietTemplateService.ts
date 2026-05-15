@@ -16,43 +16,70 @@ const KCAL_PROFILES: KcalProfile[] = [
 const MOCK_TEMPLATES: V3DietTemplate[] = [
   {
     id: 't1',
-    slug: 'hipertrofia_tradicional',
-    title: 'Hipertrofia Tradicional',
-    description: 'Foco em ganho de massa com alimentos brasileiros clássicos.',
+    slug: 'hipertrofia',
+    title: 'Hipertrofia',
+    description: 'Foco em ganho de massa muscular com estrutura fisiológica e alimentos reais.',
     template_type: 'visual_v3',
     objective: 'hipertrofia',
     family: 'hipertrofia',
-    style_contract: getStyleContract('hipertrofia') || undefined,
     meal_distribution: [
-      { slot: 'cafe_da_manha', time: '08:00' },
-      { slot: 'almoço', time: '12:30' },
+      { slot: 'cafe_da_manha', time: '07:00' },
+      { slot: 'lanche_da_manha', time: '10:00' },
+      { slot: 'almoço', time: '13:00' },
       { slot: 'lanche_da_tarde', time: '16:00' },
-      { slot: 'jantar', time: '19:30' }
+      { slot: 'jantar', time: '20:00' },
+      { slot: 'ceia', time: '22:30' }
     ],
     cluster_map: {
       'cafe_da_manha': 'cafe_tradicional',
+      'lanche_da_manha': 'lanche_pratico',
       'almoço': 'almoco_tradicional',
       'lanche_da_tarde': 'lanche_proteico',
+      'jantar': 'jantar_leve',
+      'ceia': 'lanche_leve'
+    },
+    kcal_profiles: KCAL_PROFILES,
+    visual_style: 'clean',
+    substitutions_enabled: true,
+    editable: true,
+    active: true
+  },
+  {
+    id: 't2',
+    slug: 'emagrecimento',
+    title: 'Emagrecimento',
+    description: 'Déficit calórico controlado com alta saciedade e alimentos nutritivos.',
+    template_type: 'visual_v3',
+    objective: 'emagrecimento',
+    family: 'emagrecimento',
+    meal_distribution: [
+      { slot: 'cafe_da_manha', time: '08:00' },
+      { slot: 'almoço', time: '13:00' },
+      { slot: 'lanche_da_tarde', time: '17:00' },
+      { slot: 'jantar', time: '20:00' }
+    ],
+    cluster_map: {
+      'cafe_da_manha': 'cafe_saudavel',
+      'almoço': 'almoco_tradicional',
+      'lanche_da_tarde': 'lanche_fruta',
       'jantar': 'jantar_leve'
     },
     kcal_profiles: KCAL_PROFILES,
     visual_style: 'clean',
     substitutions_enabled: true,
     editable: true,
-    active: true,
-    meal_integrity_threshold: 1.6
+    active: true
   },
   {
-    id: 't2',
-    slug: 'emagrecimento_lowcarb',
-    title: 'Emagrecimento Low Carb',
-    description: 'Estratégia de redução de carboidratos para queima de gordura.',
+    id: 't3',
+    slug: 'low_carb',
+    title: 'Low Carb',
+    description: 'Redução de carboidratos com foco em proteínas e gorduras boas.',
     template_type: 'visual_v3',
-    objective: 'emagrecimento',
-    family: 'emagrecimento',
-    style_contract: getStyleContract('emagrecimento') || undefined,
+    objective: 'saude',
+    family: 'low_carb',
     meal_distribution: [
-      { slot: 'cafe_da_manha', time: '08:30' },
+      { slot: 'cafe_da_manha', time: '08:00' },
       { slot: 'almoço', time: '13:00' },
       { slot: 'lanche_da_tarde', time: '17:00' },
       { slot: 'jantar', time: '20:00' }
@@ -63,14 +90,90 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
       'lanche_da_tarde': 'lanche_lowcarb',
       'jantar': 'jantar_lowcarb'
     },
-    kcal_profiles: KCAL_PROFILES.slice(0, 4), // 1200-1800
-    visual_style: 'premium',
+    kcal_profiles: KCAL_PROFILES,
+    visual_style: 'clean',
     substitutions_enabled: true,
     editable: true,
-    active: true,
-    meal_integrity_threshold: 1.4
+    active: true
+  },
+  {
+    id: 't4',
+    slug: 'cetogenica',
+    title: 'Cetogênica',
+    description: 'Dieta de altíssima gordura e baixo carboidrato para cetose.',
+    template_type: 'visual_v3',
+    objective: 'saude',
+    family: 'cetogenica',
+    meal_distribution: [
+      { slot: 'cafe_da_manha', time: '08:00' },
+      { slot: 'almoço', time: '13:00' },
+      { slot: 'jantar', time: '20:00' }
+    ],
+    cluster_map: {
+      'cafe_da_manha': 'cafe_keto',
+      'almoço': 'almoco_keto',
+      'jantar': 'jantar_keto'
+    },
+    kcal_profiles: KCAL_PROFILES,
+    visual_style: 'clean',
+    substitutions_enabled: true,
+    editable: true,
+    active: true
+  },
+  {
+    id: 't5',
+    slug: 'mediterranea',
+    title: 'Mediterrânea',
+    description: 'Foco em gorduras saudáveis, vegetais e peixes.',
+    template_type: 'visual_v3',
+    objective: 'saude',
+    family: 'mediterranea',
+    meal_distribution: [
+      { slot: 'cafe_da_manha', time: '08:00' },
+      { slot: 'almoço', time: '13:00' },
+      { slot: 'lanche_da_tarde', time: '17:00' },
+      { slot: 'jantar', time: '20:00' }
+    ],
+    cluster_map: {
+      'cafe_da_manha': 'cafe_mediterraneo',
+      'almoço': 'almoco_mediterraneo',
+      'lanche_da_tarde': 'lanche_mediterraneo',
+      'jantar': 'jantar_mediterraneo'
+    },
+    kcal_profiles: KCAL_PROFILES,
+    visual_style: 'clean',
+    substitutions_enabled: true,
+    editable: true,
+    active: true
+  },
+  {
+    id: 't6',
+    slug: 'anti_inflamatoria',
+    title: 'Anti-inflamatória',
+    description: 'Estrutura alimentar focada em reduzir inflamação sistêmica.',
+    template_type: 'visual_v3',
+    objective: 'saude',
+    family: 'anti_inflamatoria',
+    meal_distribution: [
+      { slot: 'cafe_da_manha', time: '08:00' },
+      { slot: 'almoço', time: '13:00' },
+      { slot: 'lanche_da_tarde', time: '17:00' },
+      { slot: 'jantar', time: '20:00' }
+    ],
+    cluster_map: {
+      'cafe_da_manha': 'cafe_saudavel',
+      'almoço': 'almoco_saudavel',
+      'lanche_da_tarde': 'lanche_saudavel',
+      'jantar': 'jantar_leve'
+    },
+    kcal_profiles: KCAL_PROFILES,
+    visual_style: 'clean',
+    substitutions_enabled: true,
+    editable: true,
+    active: true
   }
 ];
+
 
 export class DietTemplateService {
   /**
