@@ -25,12 +25,12 @@ describe('Wannubia Specific Validation Test', () => {
   const mockItem = {
     id: 'item-1',
     title: 'Almoço',
-    calories_target: 0,
-    protein_target: 0,
-    carbs_target: 0,
-    fat_target: 0,
+    meta_calorias: 0,
+    meta_proteinas: 0,
+    meta_carboidratos: 0,
+    meta_gorduras: 0,
     description: '',
-    meal_type: 'Almoço',
+    tipo_refeicao: 'Almoço',
     metadata: { is_fixed: true }
   };
 
@@ -99,8 +99,8 @@ describe('Wannubia Specific Validation Test', () => {
      
      const itemWithMixedProteins = {
        ...mockItem,
-       calories_target: 500,
-       protein_target: 30,
+       meta_calorias: 500,
+       meta_proteinas: 30,
        edit_metadata: {
          substitutions_json: ["Frango e Ovo"] // Combinação proibida
        }

@@ -26,11 +26,11 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     id: 'item-1',
     title: 'Marmita de Frango',
     description: 'Frango com batata doce',
-    meal_type: 'Almoço',
-    calories_target: 400,
-    protein_target: 30,
-    carbs_target: 40,
-    fat_target: 10,
+    tipo_refeicao: 'Almoço',
+    meta_calorias: 400,
+    meta_proteinas: 30,
+    meta_carboidratos: 40,
+    meta_gorduras: 10,
     edit_metadata: {
       is_fixed: true,
       kcal_base: 400,
@@ -112,7 +112,7 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     // Configura item com proteína zerada mas kcal > 0
     const mockAddItem = vi.fn();
     (useMealPlanEditorV2Store as any).mockReturnValue({
-      items: [{ ...mockItem, protein_target: 0 }],
+      items: [{ ...mockItem, meta_proteinas: 0 }],
       updateItem: mockUpdateItem,
       addItem: mockAddItem,
       substitutionCount: 3,
@@ -143,8 +143,8 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     
     const itemWithTemplate = {
       ...mockItem,
-      calories_target: 400,
-      protein_target: 30,
+      meta_calorias: 400,
+      meta_proteinas: 30,
       edit_metadata: {
         ...mockItem.edit_metadata,
         substitutions_json: [

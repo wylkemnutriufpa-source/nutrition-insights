@@ -20,7 +20,7 @@ interface CompletionRow {
 
 interface MealPlanItemRow {
   id: string;
-  meal_type: string;
+  tipo_refeicao: string;
   meal_plan_id: string;
 }
 
@@ -74,7 +74,7 @@ export default function MealAdherenceWidget({ patientId }: MealAdherenceWidgetPr
     const [itemsRes, comp7dRes, compPrev7dRes] = await Promise.all([
       supabase
         .from("meal_plan_items")
-        .select("id, meal_type, meal_plan_id")
+        .select("id, tipo_refeicao, meal_plan_id")
         .eq("meal_plan_id", planData.id),
       supabase
         .from("meal_item_completions")
@@ -113,14 +113,14 @@ export default function MealAdherenceWidget({ patientId }: MealAdherenceWidgetPr
     setAdherencePrev7d(Math.min(100, Math.round(pctPrev)));
 
     // Per meal type
-    const itemTypeMap = new Map(items.map(i => [i.id, i.meal_type]));
+    const itemTypeMap = new Map(items.map(i => [i.id, i.tipo_refeicao]));
     const mealTypeStats: Record<string, { followed: number; total: number }> = {};
 
     for (const item of items) {
-      if (!mealTypeStats[item.meal_type]) {
-        mealTypeStats[item.meal_type] = { followed: 0, total: 0 };
+      if (!mealTypeStats[item.tipo_refeicao]) {
+        mealTypeStats[item.tipo_refeicao] = { followed: 0, total: 0 };
       }
-      mealTypeStats[item.meal_type].total++;
+      mealTypeStats[item.tipo_refeicao].total++;
     }
 
     for (const comp of comp7d) {

@@ -46,10 +46,10 @@ export interface PlanGenerationSnapshot {
   planType: "normal" | "marmita" | string;
   generatedItems: Array<{
     title?: string | null;
-    meal_type?: string | null;
+    tipo_refeicao?: string | null;
     plan_type?: string | null;
-    calories_target?: number | null;
-    protein_target?: number | null;
+    meta_calorias?: number | null;
+    meta_proteinas?: number | null;
   }>;
   totalKcal?: number | null;
   totalProtein?: number | null;
@@ -73,7 +73,7 @@ export function planGenerationContract(s: PlanGenerationSnapshot): ContractResul
       );
     }
     if (!item.title || String(item.title).trim() === "") {
-      v.push(`Item sem título detectado (meal_type=${item.meal_type ?? "?"})`);
+      v.push(`Item sem título detectado (tipo_refeicao=${item.tipo_refeicao ?? "?"})`);
     }
   }
 

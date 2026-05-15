@@ -38,9 +38,9 @@ interface Props {
 // ── Meal type to filter mapping ──────────────────────────────
 const MEAL_TYPE_KEYWORDS: Record<string, string[]> = {
   breakfast: ["café", "Café da Manhã", "cafe_da_manha", "morning", "manhã"],
-  morning_snack: ["lanche", "snack", "lanche_manha"],
+  morning_snack: ["lanche", "Lanche", "lanche_manha"],
   lunch: ["almoço", "almoco", "Almoço"],
-  afternoon_snack: ["lanche", "snack", "lanche_tarde"],
+  afternoon_snack: ["lanche", "Lanche", "lanche_tarde"],
   dinner: ["jantar", "Jantar"],
   evening_snack: ["ceia", "evening", "noite"],
 };
@@ -85,7 +85,7 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
       const [recipesRes, foodsRes] = await Promise.all([
         supabase
           .from("recipes")
-          .select("id, title, calories_per_serving, protein_per_serving, carbs_per_serving, fat_per_serving, image_url, category, description")
+          .select("id, title, calorias_por_porcao, proteinas_por_porcao, carboidratos_por_porcao, gorduras_por_porcao, image_url, category, description")
           .order("title"),
         supabase
           .from("ifj_food_database")
@@ -104,10 +104,10 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
           id: `recipe-${r.id}`,
           name: r.title,
           description: r.description || r.title,
-          calories: Math.round(r.calories_per_serving || 0),
-          protein: Math.round(r.protein_per_serving || 0),
-          carbs: Math.round(r.carbs_per_serving || 0),
-          fat: Math.round(r.fat_per_serving || 0),
+          calories: Math.round(r.calorias_por_porcao || 0),
+          protein: Math.round(r.proteinas_por_porcao || 0),
+          carbs: Math.round(r.carboidratos_por_porcao || 0),
+          fat: Math.round(r.gorduras_por_porcao || 0),
           source: "recipe" as const,
           imageUrl: r.image_url,
           recipeId: r.id,
@@ -267,11 +267,11 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
         ? `[Substituição] ${option.description}`
         : option.description,
       day_of_week: targetDay,
-      meal_type: targetMealType,
-      calories_target: option.calories,
-      protein_target: option.protein,
-      carbs_target: option.carbs,
-      fat_target: option.fat,
+      tipo_refeicao: targetMealType,
+      meta_calorias: option.calories,
+      meta_proteinas: option.protein,
+      meta_carboidratos: option.carbs,
+      meta_gorduras: option.fat,
       item_origin: option.source === "recipe" ? "recipe_library" : "food_database",
     });
   };

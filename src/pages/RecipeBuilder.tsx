@@ -32,7 +32,7 @@ export default function RecipeBuilder() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [servings, setServings] = useState(1);
+  const [porcoes, setServings] = useState(1);
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export default function RecipeBuilder() {
 
   // ── Macro calculation ──
   const totalMacros = useMemo(() => calculateRecipeMacros(ingredients), [ingredients]);
-  const servingMacros = useMemo(() => perServingMacros(totalMacros, servings), [totalMacros, servings]);
+  const servingMacros = useMemo(() => perServingMacros(totalMacros, porcoes), [totalMacros, porcoes]);
 
   // ── Add ingredient from search ──
   const handleAddFood = (food: any) => {
@@ -128,7 +128,7 @@ export default function RecipeBuilder() {
         total_protein: Math.round(totalMacros.protein * 10) / 10,
         total_carbs: Math.round(totalMacros.carbs * 10) / 10,
         total_fat: Math.round(totalMacros.fat * 10) / 10,
-        servings,
+        porcoes,
       };
 
       const { error } = await supabase.from("user_recipes" as any).insert(payload);
@@ -175,7 +175,7 @@ export default function RecipeBuilder() {
     title: string;
     description: string;
     instructions: string;
-    servings: number;
+    porcoes: number;
     ingredients: RecipeIngredient[];
     imageUrl: string | null;
     imagePath: string | null;
@@ -183,7 +183,7 @@ export default function RecipeBuilder() {
     setTitle(r.title);
     setDescription(r.description);
     setInstructions(r.instructions);
-    setServings(r.servings);
+    setServings(r.porcoes);
     setIngredients(r.ingredients);
     setImageUrl(r.imageUrl);
     setImagePath(r.imagePath);
@@ -219,7 +219,7 @@ export default function RecipeBuilder() {
               <MacroGauge label="Gordura" value={servingMacros.fat} unit="g" color="blue-500" icon={<Droplets className="w-4 h-4 text-blue-500" />} />
             </div>
             <p className="text-[10px] text-center text-muted-foreground mt-2">
-              {servings > 1 ? `por porção (${servings} porções · total: ${Math.round(totalMacros.calories)} kcal)` : "total da receita"}
+              {porcoes > 1 ? `por porção (${porcoes} porções · total: ${Math.round(totalMacros.calories)} kcal)` : "total da receita"}
             </p>
           </CardContent>
         </Card>
@@ -241,7 +241,7 @@ export default function RecipeBuilder() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Porções</Label>
-                <Input type="number" min={1} value={servings} onChange={(e) => setServings(Math.max(1, Number(e.target.value)))} />
+                <Input type="number" min={1} value={porcoes} onChange={(e) => setServings(Math.max(1, Number(e.target.value)))} />
               </div>
               <div>
                 <Label>Foto</Label>
@@ -346,7 +346,7 @@ export default function RecipeBuilder() {
           open={matcherOpen}
           onOpenChange={setMatcherOpen}
           ingredients={ingredients}
-          servings={servings}
+          porcoes={porcoes}
           recipeName={title || "Receita"}
         />
 

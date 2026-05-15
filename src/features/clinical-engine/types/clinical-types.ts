@@ -13,7 +13,7 @@ export interface Food {
 export interface Meal {
   id?: string;
   name?: string;
-  meal_type?: string;
+  tipo_refeicao?: string;
   items?: Food[];
   [key: string]: any;
 }

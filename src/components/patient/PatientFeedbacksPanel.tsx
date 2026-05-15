@@ -35,7 +35,7 @@ interface CheckIn {
 
 interface MealFeedback {
   id: string;
-  meal_type: string;
+  tipo_refeicao: string;
   rating: string | number | null;
   comment: string | null;
   created_at: string;
@@ -307,7 +307,7 @@ export default function PatientFeedbacksPanel({ patientId }: Props) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{mealTypeLabels[mf.meal_type] || mf.meal_type}</span>
+                    <span className="text-sm font-medium">{mealTypeLabels[mf.tipo_refeicao] || mf.tipo_refeicao}</span>
                     {mf.rating && (
                       <span className="flex items-center gap-0.5 text-xs text-warning">
                         <Star className="w-3 h-3 fill-warning" /> {mf.rating}/5

@@ -7,12 +7,12 @@ const baseItems = [
   {
     title: "Frango 100g",
     description: "grelhado",
-    meal_type: mealType,
+    tipo_refeicao: mealType,
     day_of_week: 1,
-    calories_target: 220,
-    protein_target: 30,
-    carbs_target: 12,
-    fat_target: 7,
+    meta_calorias: 220,
+    meta_proteinas: 30,
+    meta_carboidratos: 12,
+    meta_gorduras: 7,
   },
 ];
 
@@ -20,7 +20,7 @@ describe("mealPlanPersistenceGuards", () => {
   it("detecta diff real entre antes e depois", () => {
     expect(
       haveMealPlanCollectionsChanged(baseItems, [
-        { ...baseItems[0], title: "Frango 130g", calories_target: 260, protein_target: 38 },
+        { ...baseItems[0], title: "Frango 130g", meta_calorias: 260, meta_proteinas: 38 },
       ])
     ).toBe(true);
   });

@@ -146,10 +146,10 @@ export default function MealSlotItemCard({
             </button>
           )}
           <span>•</span>
-          <Flame className="w-2.5 h-2.5" /> {Math.round(item.calories_target || 0)}
-          <Beef className="w-2.5 h-2.5" /> {Math.round(item.protein_target || 0)}
-          <Wheat className="w-2.5 h-2.5" /> {Math.round(item.carbs_target || 0)}
-          <Droplets className="w-2.5 h-2.5" /> {Math.round(item.fat_target || 0)}
+          <Flame className="w-2.5 h-2.5" /> {Math.round(item.meta_calorias || 0)}
+          <Beef className="w-2.5 h-2.5" /> {Math.round(item.meta_proteinas || 0)}
+          <Wheat className="w-2.5 h-2.5" /> {Math.round(item.meta_carboidratos || 0)}
+          <Droplets className="w-2.5 h-2.5" /> {Math.round(item.meta_gorduras || 0)}
         </div>
       </div>
 

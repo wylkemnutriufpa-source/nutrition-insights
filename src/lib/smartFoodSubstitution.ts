@@ -104,10 +104,10 @@ interface DBFood {
 export interface SmartSwapResult {
   newName: string;
   newDescription: string;
-  calories_target: number;
-  protein_target: number;
-  carbs_target: number;
-  fat_target: number;
+  meta_calorias: number;
+  meta_proteinas: number;
+  meta_carboidratos: number;
+  meta_gorduras: number;
 }
 
 interface SwapInput {
@@ -174,36 +174,36 @@ export async function smartSubstituteFood(input: SwapInput): Promise<SmartSwapRe
   return {
     newName,
     newDescription,
-    calories_target: calories,
-    protein_target: protein,
-    carbs_target: carbs,
-    fat_target: fat,
+    meta_calorias: calories,
+    meta_proteinas: protein,
+    meta_carboidratos: carbs,
+    meta_gorduras: fat,
   };
 }
 
 /**
- * Standardize portions across all 7 days for the same (title, meal_type) pair.
+ * Standardize portions across all 7 days for the same (title, tipo_refeicao) pair.
  * Returns a Map of itemId → patch. Uses median grams to stop the 150/120/130 jitter.
  */
 export function normalizePortionsAcrossDays<
   T extends {
     id: string;
     title: string | null;
-    meal_type: string | null;
+    tipo_refeicao: string | null;
     description: string | null;
-    calories_target: number | null;
-    protein_target: number | null;
-    carbs_target: number | null;
-    fat_target: number | null;
+    meta_calorias: number | null;
+    meta_proteinas: number | null;
+    meta_carboidratos: number | null;
+    meta_gorduras: number | null;
   },
 >(items: T[]): Map<string, Partial<T>> {
   const patches = new Map<string, Partial<T>>();
   if (items.length === 0) return patches;
 
-  // Group by (normalized title + meal_type)
+  // Group by (normalized title + tipo_refeicao)
   const groups = new Map<string, T[]>();
   for (const it of items) {
-    const key = `${norm(it.title || "")}__${it.meal_type || ""}`;
+    const key = `${norm(it.title || "")}__${it.tipo_refeicao || ""}`;
     if (!key.startsWith("__")) {
       const arr = groups.get(key) || [];
       arr.push(it);
@@ -236,10 +236,10 @@ export function normalizePortionsAcrossDays<
       );
       patches.set(it.id, {
         description: newDesc,
-        calories_target: Math.round((it.calories_target || 0) * ratio),
-        protein_target: Math.round(((it.protein_target || 0) * ratio) * 10) / 10,
-        carbs_target: Math.round(((it.carbs_target || 0) * ratio) * 10) / 10,
-        fat_target: Math.round(((it.fat_target || 0) * ratio) * 10) / 10,
+        meta_calorias: Math.round((it.meta_calorias || 0) * ratio),
+        meta_proteinas: Math.round(((it.meta_proteinas || 0) * ratio) * 10) / 10,
+        meta_carboidratos: Math.round(((it.meta_carboidratos || 0) * ratio) * 10) / 10,
+        meta_gorduras: Math.round(((it.meta_gorduras || 0) * ratio) * 10) / 10,
       } as Partial<T>);
     }
   }

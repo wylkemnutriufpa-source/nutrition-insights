@@ -3,11 +3,11 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 export type MealPlanItem = {
   id: string;
   title: string;
-  calories_target?: number | null;
-  protein_target?: number | null;
-  carbs_target?: number | null;
-  fat_target?: number | null;
-  meal_type?: string | null;
+  meta_calorias?: number | null;
+  meta_proteinas?: number | null;
+  meta_carboidratos?: number | null;
+  meta_gorduras?: number | null;
+  tipo_refeicao?: string | null;
   description?: string | null;
   metadata?: any;
   edit_metadata?: any;

@@ -14,18 +14,18 @@ Deno.test({
       patient_id: "b3aa9e2a-58b0-432c-a312-00bb8994d384",
       nutritionist_id: "9994b710-6006-4fca-9761-dc6afef160a4",
       plan_status: "draft",
-      total_target_calories: 2000,
-      total_target_protein: 150,
-      total_target_carbs: 200,
-      total_target_fat: 70,
+      total_meta_calorias: 2000,
+      total_meta_proteinas: 150,
+      total_meta_carboidratos: 200,
+      total_meta_gorduras: 70,
     };
 
     const mockItems = [
       {
-        meal_type: "breakfast",
+        tipo_refeicao: "breakfast",
         title: "Omelete",
-        protein_target: 30,
-        calories_target: 400,
+        meta_proteinas: 30,
+        meta_calorias: 400,
       }
     ];
 

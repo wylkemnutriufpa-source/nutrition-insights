@@ -13,7 +13,7 @@ interface LoadedRecipe {
   title: string;
   description: string | null;
   instructions: string | null;
-  servings: number;
+  porcoes: number;
   total_calories: number;
   total_protein: number;
   ingredients_json: any[];
@@ -28,7 +28,7 @@ interface Props {
     title: string;
     description: string;
     instructions: string;
-    servings: number;
+    porcoes: number;
     ingredients: RecipeIngredient[];
     imageUrl: string | null;
     imagePath: string | null;
@@ -48,7 +48,7 @@ export default function RecipeSearchDialog({ open, onOpenChange, onLoad }: Props
       // Load recipes saved by this user (and any nutritionist-approved if present)
       const { data } = await supabase
         .from("user_recipes" as any)
-        .select("id, title, description, instructions, servings, total_calories, total_protein, ingredients_json, image_url, image_path")
+        .select("id, title, description, instructions, porcoes, total_calories, total_protein, ingredients_json, image_url, image_path")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -79,7 +79,7 @@ export default function RecipeSearchDialog({ open, onOpenChange, onLoad }: Props
       title: r.title,
       description: r.description || "",
       instructions: r.instructions || "",
-      servings: r.servings || 1,
+      porcoes: r.porcoes || 1,
       ingredients: ings,
       imageUrl: r.image_url,
       imagePath: r.image_path,
@@ -154,7 +154,7 @@ export default function RecipeSearchDialog({ open, onOpenChange, onLoad }: Props
                   <Beef className="w-3 h-3" /> {Math.round(r.total_protein || 0)}g
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">
-                  {r.servings} {r.servings === 1 ? "porção" : "porções"}
+                  {r.porcoes} {r.porcoes === 1 ? "porção" : "porções"}
                 </Badge>
               </div>
             </button>

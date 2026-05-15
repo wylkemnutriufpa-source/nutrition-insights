@@ -6,7 +6,7 @@ describe("Sovereign Template Governance: Passive Layer Validation", () => {
   const mockTemplate = {
     id: "tpl-123",
     name: "Omelete de Frango",
-    meal_type: "Café da Manhã",
+    tipo_refeicao: "Café da Manhã",
     kcal_base: 400,
     protein_base: 30,
     carbs_base: 10,

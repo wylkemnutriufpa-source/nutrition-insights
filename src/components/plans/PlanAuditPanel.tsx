@@ -20,17 +20,17 @@ interface MacroResult {
 }
 interface ValidationError { rule: string; message: string; weight: number; }
 interface RestrictionViolation { restriction: string; keyword_found: string; }
-interface BlockedFoodFound { food: string; found_in: string; day: number; meal_type: string; replacement: string | null; }
-interface SimplicityIssue { category: string; severity: string; meal_type: string; day: number; message: string; suggested_fix: string; penalty: number; }
+interface BlockedFoodFound { food: string; found_in: string; day: number; tipo_refeicao: string; replacement: string | null; }
+interface SimplicityIssue { category: string; severity: string; tipo_refeicao: string; day: number; message: string; suggested_fix: string; penalty: number; }
 interface AdherenceFactor { factor: string; impact: number; detail: string; }
-interface Suggestion { before: string; after: string; meal_type: string; day: number; }
+interface Suggestion { before: string; after: string; tipo_refeicao: string; day: number; }
 
 interface PrioritizedIssue {
   severity: string;
   priority_order: number;
   correction_bucket: string;
   category: string;
-  meal_type: string;
+  tipo_refeicao: string;
   day: number;
   message: string;
   suggested_fix: string;
@@ -152,9 +152,9 @@ function IssueRow({ issue }: { issue: PrioritizedIssue }) {
       <span className="mt-0.5 shrink-0">{SEVERITY_EMOJI[issue.severity] || "⚪"}</span>
       <div className="flex-1 min-w-0">
         <span className="font-medium">{issue.message}</span>
-        {issue.meal_type && (
+        {issue.tipo_refeicao && (
           <span className="text-muted-foreground ml-2 text-[10px]">
-            {MEAL_TYPE_LABELS[issue.meal_type] || issue.meal_type}{issue.day != null ? ` · Dia ${issue.day + 1}` : ""}
+            {MEAL_TYPE_LABELS[issue.tipo_refeicao] || issue.tipo_refeicao}{issue.day != null ? ` · Dia ${issue.day + 1}` : ""}
           </span>
         )}
         <p className="text-[10px] text-primary mt-0.5">💡 {issue.suggested_fix}</p>
@@ -410,7 +410,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
                     <ArrowRight className="w-3 h-3 text-emerald-400 shrink-0" />
                     <span className="text-emerald-400 font-medium">{s.after}</span>
                     <span className="text-muted-foreground ml-auto text-[10px]">
-                      {MEAL_TYPE_LABELS[s.meal_type] || s.meal_type}
+                      {MEAL_TYPE_LABELS[s.tipo_refeicao] || s.tipo_refeicao}
                     </span>
                   </div>
                 ))}

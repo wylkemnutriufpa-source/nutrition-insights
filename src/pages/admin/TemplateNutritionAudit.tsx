@@ -73,7 +73,7 @@ type FoodItem = {
 type TemplateRow = {
   id: string;
   name: string;
-  meal_type: string | null;
+  tipo_refeicao: string | null;
   is_global: boolean | null;
   kcal_base: number | null;
   protein_base: number | null;
@@ -501,7 +501,7 @@ export default function TemplateNutritionAudit() {
     setLoading(true);
     const table = templateSource === "nutritionist" ? "nutritionist_meal_templates" : "diet_templates";
     const columns = templateSource === "nutritionist" 
-      ? "id, name, meal_type, is_global, kcal_base, protein_base, carbs_base, fat_base, foods_structure, updated_at"
+      ? "id, name, tipo_refeicao, is_global, kcal_base, protein_base, carbs_base, fat_base, foods_structure, updated_at"
       : "id, name, category, base_calories, meals, updated_at";
 
     const { data, error } = await supabase
@@ -939,7 +939,7 @@ export default function TemplateNutritionAudit() {
                             <TableCell>
                               <div className="font-medium">{t.name}</div>
                               <div className="text-xs text-muted-foreground">
-                                {t.meal_type || "—"}
+                                {t.tipo_refeicao || "—"}
                                 {t.is_global ? " · global" : ""}
                               </div>
                             </TableCell>

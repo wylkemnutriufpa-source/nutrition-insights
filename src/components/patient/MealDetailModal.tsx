@@ -45,20 +45,20 @@ interface EquivalentSubstitutionOption {
   id?: string;
   title: string;
   description?: string | null;
-  calories_target?: number | null;
-  protein_target?: number | null;
-  carbs_target?: number | null;
-  fat_target?: number | null;
+  meta_calorias?: number | null;
+  meta_proteinas?: number | null;
+  meta_carboidratos?: number | null;
+  meta_gorduras?: number | null;
 }
 
 export interface MealDetailData {
   title: string;
   description?: string | null;
-  meal_type?: string;
-  calories_target?: number | null;
-  protein_target?: number | null;
-  carbs_target?: number | null;
-  fat_target?: number | null;
+  tipo_refeicao?: string;
+  meta_calorias?: number | null;
+  meta_proteinas?: number | null;
+  meta_carboidratos?: number | null;
+  meta_gorduras?: number | null;
   metadata?: Record<string, any> | null;
   image_url?: string | null;
   /** If provided, enables editing capabilities (remove food lines) */
@@ -312,10 +312,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
     onUpdateItem(meal.itemId, {
       description: snap.description,
-      protein_target: snap.protein_target,
-      carbs_target: snap.carbs_target,
-      fat_target: snap.fat_target,
-      calories_target: snap.calories_target,
+      meta_proteinas: snap.meta_proteinas,
+      meta_carboidratos: snap.meta_carboidratos,
+      meta_gorduras: snap.meta_gorduras,
+      meta_calorias: snap.meta_calorias,
       title: snap.title
     });
     
@@ -439,13 +439,13 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (p < 0 || c < 0 || f < 0) return { isInvalid: true, reason: "Macros não podem ser negativos" };
     
     // 2. Proteína não pode ultrapassar +50% da meta da refeição (Segurança Renal/Hormonal)
-    const pTarget = meal.protein_target || 0;
+    const pTarget = meal.meta_proteinas || 0;
     if (pTarget > 0 && p > pTarget * 1.5) {
       return { isInvalid: true, reason: `Excesso de proteína (+${Math.round((p/pTarget - 1)*100)}%). Limite de segurança: 50%.` };
     }
     
     // 3. Calorias dentro de ±20% da meta (Segurança Energética)
-    const kTarget = meal.calories_target || 0;
+    const kTarget = meal.meta_calorias || 0;
     if (kTarget > 0) {
       const diff = Math.abs(kcal - kTarget) / kTarget;
       if (diff > 0.2) {
@@ -526,10 +526,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (meal) {
       setTitleValue(meal.title);
       setMacroValues({
-        calories: String(meal.calories_target ?? ""),
-        protein: String(meal.protein_target ?? ""),
-        carbs: String(meal.carbs_target ?? ""),
-        fat: String(meal.fat_target ?? ""),
+        calories: String(meal.meta_calorias ?? ""),
+        protein: String(meal.meta_proteinas ?? ""),
+        carbs: String(meal.meta_carboidratos ?? ""),
+        fat: String(meal.meta_gorduras ?? ""),
       });
     }
   }, [meal]);
@@ -545,13 +545,13 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const goalTag: string | undefined = meta.goal_tag;
   const clinicalTags: string[] = parseJsonField<string>(meta.clinical_tags || meta.clinical_tag);
   const source: string | undefined = meta.source;
-  const mealTypeInfo = MEAL_TYPE_LABELS[meal.meal_type || ""] || null;
+  const mealTypeInfo = MEAL_TYPE_LABELS[meal.tipo_refeicao || ""] || null;
   const imageUrl = meal.image_url || meta.image_url;
 
-  const calories = Number(meal.calories_target ?? meta.calories_target ?? meta.calories ?? 0);
-  const protein = Number(meal.protein_target ?? meta.protein_target ?? meta.protein ?? 0);
-  const carbs = Number(meal.carbs_target ?? meta.carbs_target ?? meta.carbs ?? 0);
-  const fat = Number(meal.fat_target ?? meta.fat_target ?? meta.fat ?? 0);
+  const calories = Number(meal.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0);
+  const protein = Number(meal.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0);
+  const carbs = Number(meal.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs ?? 0);
+  const fat = Number(meal.meta_gorduras ?? meta.meta_gorduras ?? meta.fat ?? 0);
 
   const hasMacros = calories > 0 || protein > 0 || carbs > 0 || fat > 0;
 
@@ -677,7 +677,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const handleRegenerateSubstitutions = () => {
     if (!canEdit || !meal.itemId) return;
     const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
-    const newSubs = generateSubstitutionsFromFoodLines(remainingFoodLines, meal.meal_type || "");
+    const newSubs = generateSubstitutionsFromFoodLines(remainingFoodLines, meal.tipo_refeicao || "");
     const newDescription = rebuildDescription(remainingFoodLines, newSubs);
     if (onUpdateItem) {
       onUpdateItem(meal.itemId, { description: newDescription });
@@ -706,10 +706,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const handleSaveMacros = () => {
     if (!canEdit || !meal.itemId || !onUpdateItem) return;
     const patch = {
-      calories_target: macroValues.calories ? Number(macroValues.calories) : null,
-      protein_target: macroValues.protein ? Number(macroValues.protein) : null,
-      carbs_target: macroValues.carbs ? Number(macroValues.carbs) : null,
-      fat_target: macroValues.fat ? Number(macroValues.fat) : null,
+      meta_calorias: macroValues.calories ? Number(macroValues.calories) : null,
+      meta_proteinas: macroValues.protein ? Number(macroValues.protein) : null,
+      meta_carboidratos: macroValues.carbs ? Number(macroValues.carbs) : null,
+      meta_gorduras: macroValues.fat ? Number(macroValues.fat) : null,
     };
     saveToHistory();
     onUpdateItem(meal.itemId, patch);
@@ -857,10 +857,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             
                             <div className="grid grid-cols-4 gap-2">
                               {[
-                                { l: 'Kcal', v: v.snapshot_data.calories_target },
-                                { l: 'Prot', v: v.snapshot_data.protein_target },
-                                { l: 'Carb', v: v.snapshot_data.carbs_target },
-                                { l: 'Fat', v: v.snapshot_data.fat_target },
+                                { l: 'Kcal', v: v.snapshot_data.meta_calorias },
+                                { l: 'Prot', v: v.snapshot_data.meta_proteinas },
+                                { l: 'Carb', v: v.snapshot_data.meta_carboidratos },
+                                { l: 'Fat', v: v.snapshot_data.meta_gorduras },
                               ].map(m => (
                                 <div key={m.l} className="text-center bg-white/50 rounded-lg py-1 border border-border/30">
                                   <p className="text-[8px] uppercase text-muted-foreground font-bold">{m.l}</p>
@@ -1319,10 +1319,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
                               <div className="grid grid-cols-4 gap-2">
                                 {[
-                                  { l: 'Kcal', v: v.snapshot_data.calories_target },
-                                  { l: 'Prot', v: v.snapshot_data.protein_target },
-                                  { l: 'Carb', v: v.snapshot_data.carbs_target },
-                                  { l: 'Fat', v: v.snapshot_data.fat_target },
+                                  { l: 'Kcal', v: v.snapshot_data.meta_calorias },
+                                  { l: 'Prot', v: v.snapshot_data.meta_proteinas },
+                                  { l: 'Carb', v: v.snapshot_data.meta_carboidratos },
+                                  { l: 'Fat', v: v.snapshot_data.meta_gorduras },
                                 ].map(m => {
                                   const currentVal = m.l === 'Kcal' ? calories : 
                                                    m.l === 'Prot' ? protein : 
@@ -1666,15 +1666,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                         <div className="flex items-center gap-3 pt-2 border-t border-white/5">
                           <div className="flex flex-col">
                             <span className="text-[9px] uppercase font-black text-muted-foreground">Kcal</span>
-                            <span className="text-xs font-bold">{Math.round(option.calories_target ?? 0)}</span>
+                            <span className="text-xs font-bold">{Math.round(option.meta_calorias ?? 0)}</span>
                           </div>
                           <div className="flex flex-col">
                             <span className="text-[9px] uppercase font-black text-muted-foreground">Prot</span>
-                            <span className="text-xs font-bold text-red-500/70">{fmtMacro(option.protein_target ?? 0)}g</span>
+                            <span className="text-xs font-bold text-red-500/70">{fmtMacro(option.meta_proteinas ?? 0)}g</span>
                           </div>
                           <div className="flex flex-col">
                             <span className="text-[9px] uppercase font-black text-muted-foreground">Carb</span>
-                            <span className="text-xs font-bold text-amber-500/70">{fmtMacro(option.carbs_target ?? 0)}g</span>
+                            <span className="text-xs font-bold text-amber-500/70">{fmtMacro(option.meta_carboidratos ?? 0)}g</span>
                           </div>
                         </div>
                       </div>

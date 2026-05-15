@@ -23,12 +23,12 @@ const mockItem = {
   id: "test-id",
   title: "Galinhada FIT",
   description: "Arroz com frango e legumes",
-  meal_type: "Jantar" as any,
+  tipo_refeicao: "Jantar" as any,
   day_of_week: 0,
-  calories_target: 500,
-  protein_target: 30,
-  carbs_target: 40,
-  fat_target: 10,
+  meta_calorias: 500,
+  meta_proteinas: 30,
+  meta_carboidratos: 40,
+  meta_gorduras: 10,
   is_primary: true,
   edit_metadata: { is_fixed: true }
 };

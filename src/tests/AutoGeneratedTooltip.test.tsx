@@ -11,10 +11,10 @@ describe('Auto-Generated Substitution Tooltip', () => {
   const mockItem = {
     id: 'item-1',
     title: 'Frango Grelhado',
-    calories_target: 200,
-    protein_target: 30,
-    carbs_target: 0,
-    fat_target: 8,
+    meta_calorias: 200,
+    meta_proteinas: 30,
+    meta_carboidratos: 0,
+    meta_gorduras: 8,
     item_origin: 'auto_generated_sub',
     is_primary: false,
   } as any;

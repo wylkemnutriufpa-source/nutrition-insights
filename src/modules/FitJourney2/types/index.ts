@@ -7,14 +7,14 @@ export interface FoodItem {
   protein: number;
   carbs: number;
   fat: number;
-  servingSize: number; // em gramas ou unidades
-  category: 'protein' | 'carb' | 'fat' | 'fruit' | 'dairy' | 'marmita';
+  tamanho_porcao: number; // em gramas ou unidades
+  category: 'proteína' | 'carboidrato' | 'gordura' | 'fruta' | 'laticínio' | 'marmita';
 }
 
 export interface Meal {
   id: string;
   name: string;
-  type: 'Café da Manhã' | 'snack1' | 'Almoço' | 'snack2' | 'Jantar';
+  type: 'Café da Manhã' | 'Lanche da Manhã' | 'Almoço' | 'Lanche da Tarde' | 'Jantar' | 'Ceia';
   items: { foodId: string; quantity: number }[];
   totalMacros: {
     calories: number;
@@ -40,7 +40,7 @@ export interface PlanTemplate {
   id: string;
   name: string;
   description: string;
-  category: 'hypertrophy' | 'weight-loss' | 'performance';
+  category: 'hipertrofia' | 'emagrecimento' | 'performance' | 'saúde';
   meals: Omit<Meal, 'id'>[];
 }
 

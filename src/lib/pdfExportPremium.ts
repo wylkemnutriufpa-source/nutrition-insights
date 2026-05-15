@@ -11,10 +11,10 @@ interface MealPlanPDFItem {
   mealType: string;
   title: string;
   description?: string;
-  calories_target?: number;
-  protein_target?: number;
-  carbs_target?: number;
-  fat_target?: number;
+  meta_calorias?: number;
+  meta_proteinas?: number;
+  meta_carboidratos?: number;
+  meta_gorduras?: number;
   day_of_week?: number;
   scheduled_time?: string;
   visual_image_url?: string;
@@ -596,7 +596,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const primaries = typeItems.filter(i => i.is_primary);
     const substitutions = typeItems.filter(i => !i.is_primary);
     
-    const totalKcal = primaries.reduce((sum, i) => sum + (i.calories_target || 0), 0);
+    const totalKcal = primaries.reduce((sum, i) => sum + (i.meta_calorias || 0), 0);
 
     const renderItemLine = (item: MealPlanPDFItem) => {
       const dQty = item.display_quantity || "";
@@ -615,7 +615,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <span style="font-weight: 700; color: #1e293b;">${escapeHtml(item.title)}</span>
             <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
           </div>
-          <span style="margin-left: auto; font-size: 9px; font-weight: 600; color: #94a3b8;">${item.calories_target || 0} kcal</span>
+          <span style="margin-left: auto; font-size: 9px; font-weight: 600; color: #94a3b8;">${item.meta_calorias || 0} kcal</span>
         </div>
       `;
     };

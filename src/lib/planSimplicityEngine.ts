@@ -50,12 +50,12 @@ export interface MealItemForAudit {
   id: string;
   title: string;
   description: string | null;
-  meal_type: string;
+  tipo_refeicao: string;
   day_of_week: number | null;
-  calories_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
+  meta_calorias: number | null;
+  meta_proteinas: number | null;
+  meta_carboidratos: number | null;
+  meta_gorduras: number | null;
 }
 
 export interface SimplifiedReplacement {
@@ -153,7 +153,7 @@ export function calculatePlanSimplicityScore(items: MealItemForAudit[]): Simplic
   // Group items by meal
   const mealGroups = new Map<string, MealItemForAudit[]>();
   for (const item of items) {
-    const key = `${item.day_of_week ?? 0}_${item.meal_type}`;
+    const key = `${item.day_of_week ?? 0}_${item.tipo_refeicao}`;
     if (!mealGroups.has(key)) mealGroups.set(key, []);
     mealGroups.get(key)!.push(item);
   }
@@ -280,7 +280,7 @@ export function calculatePlanSimplicityScore(items: MealItemForAudit[]): Simplic
       }
 
       // Check excess protein at breakfast for weight loss
-      const totalProtein = mealItems.reduce((sum, i) => sum + (i.protein_target || 0), 0);
+      const totalProtein = mealItems.reduce((sum, i) => sum + (i.meta_proteinas || 0), 0);
       if (totalProtein > 30) {
         score -= 8;
         mealHasIssue = true;
@@ -297,7 +297,7 @@ export function calculatePlanSimplicityScore(items: MealItemForAudit[]): Simplic
     }
 
     // 5. Check snack complexity
-    if (mealType.includes("snack") || mealType.includes("lanche")) {
+    if (mealType.includes("Lanche") || mealType.includes("lanche")) {
       if (mealItems.length > 2) {
         score -= 6;
         mealHasIssue = true;

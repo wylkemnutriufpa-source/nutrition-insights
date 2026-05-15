@@ -10,7 +10,7 @@ import { RecipeIngredient, RecipeMacros, matchRecipeToMealSlot, perServingMacros
 
 interface MealSlot {
   id: string;
-  meal_type: string;
+  tipo_refeicao: string;
   day_of_week: number;
   calories: number;
   protein: number;
@@ -21,7 +21,7 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   ingredients: RecipeIngredient[];
-  servings: number;
+  porcoes: number;
   recipeName: string;
 }
 
@@ -34,7 +34,7 @@ const MEAL_LABELS: Record<string, string> = {
   supper: "Ceia",
 };
 
-export default function MealSlotMatcher({ open, onOpenChange, ingredients, servings, recipeName }: Props) {
+export default function MealSlotMatcher({ open, onOpenChange, ingredients, porcoes, recipeName }: Props) {
   const { user } = useAuth();
   const [slots, setSlots] = useState<MealSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
@@ -63,15 +63,15 @@ export default function MealSlotMatcher({ open, onOpenChange, ingredients, servi
 
       const { data: items } = await supabase
         .from("meal_plan_items")
-        .select("id, meal_type, day_of_week, calories_target, protein_target, description")
+        .select("id, tipo_refeicao, day_of_week, meta_calorias, meta_proteinas, description")
         .eq("meal_plan_id", plans[0].id);
 
       if (items) {
-        // Deduplicate by meal_type (pick first day)
+        // Deduplicate by tipo_refeicao (pick first day)
         const seen = new Map<string, MealSlot>();
         for (const item of items as any[]) {
-          if (!seen.has(item.meal_type)) {
-            seen.set(item.meal_type, item);
+          if (!seen.has(item.tipo_refeicao)) {
+            seen.set(item.tipo_refeicao, item);
           }
         }
         setSlots(Array.from(seen.values()));
@@ -87,13 +87,13 @@ export default function MealSlotMatcher({ open, onOpenChange, ingredients, servi
     const { scaleFactor, adjustedIngredients, adjustedMacros } = matchRecipeToMealSlot(
       ingredients,
       slot.calories,
-      servings
+      porcoes
     );
     const match = macrosMatchTarget(adjustedMacros, slot.calories, slot.protein);
     setResult({ scaleFactor, adjustedIngredients, adjustedMacros, match });
-  }, [selectedSlot, ingredients, servings, slots]);
+  }, [selectedSlot, ingredients, porcoes, slots]);
 
-  const currentMacros = perServingMacros(calculateRecipeMacros(ingredients), servings);
+  const currentMacros = perServingMacros(calculateRecipeMacros(ingredients), porcoes);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -112,7 +112,7 @@ export default function MealSlotMatcher({ open, onOpenChange, ingredients, servi
               <SelectContent>
                 {slots.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {MEAL_LABELS[s.meal_type] || s.meal_type} — {Math.round(s.calories)} kcal
+                    {MEAL_LABELS[s.tipo_refeicao] || s.tipo_refeicao} — {Math.round(s.calories)} kcal
                   </SelectItem>
                 ))}
               </SelectContent>

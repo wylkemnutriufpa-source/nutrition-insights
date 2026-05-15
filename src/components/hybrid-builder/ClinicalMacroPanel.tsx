@@ -22,10 +22,10 @@ export default function ClinicalMacroPanel({ targetKcal, targetProtein, targetCa
 
   const daysWithItems = dayMap.size || 1;
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-  const totalCarbs = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-  const totalFat = items.reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
+  const totalKcal = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const totalProt = items.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
+  const totalCarbs = items.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0);
+  const totalFat = items.reduce((s, i) => s + (Number(i.meta_gorduras) || 0), 0);
 
   const avgKcal = totalKcal / daysWithItems;
   const avgProt = totalProt / daysWithItems;

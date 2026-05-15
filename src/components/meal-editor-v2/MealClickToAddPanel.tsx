@@ -1,7 +1,7 @@
 /**
  * MealClickToAddPanel — Phase 2: Click-to-add meal builder
  * 
- * Filtered by meal_type, shows items from visual library.
+ * Filtered by tipo_refeicao, shows items from visual library.
  * One click = add to plan. Auto macro sum displayed live.
  */
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -30,7 +30,7 @@ interface VisualItem {
   tags: string[] | null;
 }
 
-/** Maps meal_type to visual library categories */
+/** Maps tipo_refeicao to visual library categories */
 const MEAL_TYPE_TO_CATEGORIES: Record<string, string[]> = {
   "Café da Manhã": ["cafe_da_manha"],
   "Lanche da Manhã": ["lanche", "frutas"],
@@ -101,19 +101,19 @@ export default function MealClickToAddPanel({ day }: Props) {
   // Day totals
   const dayItems = items.filter(i => i.day_of_week === day);
   const dayTotals = useMemo(() => ({
-    calories: dayItems.reduce((s, i) => s + (i.calories_target || 0), 0),
-    protein: dayItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
-    carbs: dayItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0),
-    fat: dayItems.reduce((s, i) => s + (Number(i.fat_target) || 0), 0),
+    calories: dayItems.reduce((s, i) => s + (i.meta_calorias || 0), 0),
+    protein: dayItems.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0),
+    carbs: dayItems.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0),
+    fat: dayItems.reduce((s, i) => s + (Number(i.meta_gorduras) || 0), 0),
   }), [dayItems]);
 
   // Meal-specific totals
-  const mealItems = dayItems.filter(i => i.meal_type === activeMealType);
+  const mealItems = dayItems.filter(i => i.tipo_refeicao === activeMealType);
   const mealTotals = useMemo(() => ({
-    calories: mealItems.reduce((s, i) => s + (i.calories_target || 0), 0),
-    protein: mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
-    carbs: mealItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0),
-    fat: mealItems.reduce((s, i) => s + (Number(i.fat_target) || 0), 0),
+    calories: mealItems.reduce((s, i) => s + (i.meta_calorias || 0), 0),
+    protein: mealItems.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0),
+    carbs: mealItems.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0),
+    fat: mealItems.reduce((s, i) => s + (Number(i.meta_gorduras) || 0), 0),
     count: mealItems.length,
   }), [mealItems]);
 
@@ -124,12 +124,12 @@ export default function MealClickToAddPanel({ day }: Props) {
       meal_plan_id: planId,
       title: item.display_name,
       description: item.default_portion || null,
-      meal_type: activeMealType,
+      tipo_refeicao: activeMealType,
       day_of_week: day,
-      calories_target: item.default_calories ?? null,
-      protein_target: item.default_protein ?? null,
-      carbs_target: item.default_carbs ?? null,
-      fat_target: item.default_fat ?? null,
+      meta_calorias: item.default_calories ?? null,
+      meta_proteinas: item.default_protein ?? null,
+      meta_carboidratos: item.default_carbs ?? null,
+      meta_gorduras: item.default_fat ?? null,
       visual_library_item_id: item.id || null,
       image_url: item.image_url || null,
     });
@@ -153,7 +153,7 @@ export default function MealClickToAddPanel({ day }: Props) {
       <div className="flex items-center gap-1 overflow-x-auto pb-2 mb-2 border-b border-border">
         {ALL_MEAL_TYPES.map((mt) => {
           const cfg = MEAL_TYPE_CONFIG[mt];
-          const count = dayItems.filter(i => i.meal_type === mt).length;
+          const count = dayItems.filter(i => i.tipo_refeicao === mt).length;
           const isActive = activeMealType === mt;
           return (
             <button

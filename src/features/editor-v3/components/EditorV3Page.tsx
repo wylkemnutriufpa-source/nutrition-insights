@@ -289,10 +289,10 @@ export default function EditorV3Page() {
         .from('meal_plans')
         .update({
           items_payload: { meals: store.meals },
-          total_target_calories: Math.round(planTotals.kcal),
-          total_target_protein: Math.round(planTotals.protein),
-          total_target_carbs: Math.round(planTotals.carbs),
-          total_target_fat: Math.round(planTotals.fat),
+          total_meta_calorias: Math.round(planTotals.kcal),
+          total_meta_proteinas: Math.round(planTotals.protein),
+          total_meta_carboidratos: Math.round(planTotals.carbs),
+          total_meta_gorduras: Math.round(planTotals.fat),
           updated_at: new Date().toISOString()
         } as any)
         .eq('id', effectiveId);

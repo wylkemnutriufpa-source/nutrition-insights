@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { safeNum, fmtMacro } from "@/lib/formatMacros";
 
 interface MealSlot {
-  meal_type: string;
+  tipo_refeicao: string;
   time_label: string;
   items_summary: string;
   total_kcal: number;
@@ -69,7 +69,7 @@ export default function NextMealWidget() {
 
       const itemsQuery = supabase
         .from("meal_plan_items")
-        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target, day_of_week, is_primary")
+        .select("tipo_refeicao, title, description, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras, day_of_week, is_primary")
         .eq("meal_plan_id", plan.id);
       
       // Se não for single_day, filtra por dia
@@ -81,10 +81,10 @@ export default function NextMealWidget() {
 
       if (!items || items.length === 0) { setLoading(false); return; }
 
-      // Group by meal_type
+      // Group by tipo_refeicao
       const grouped: Record<string, typeof items> = {};
       items.forEach((item) => {
-        const key = item.meal_type || "other";
+        const key = item.tipo_refeicao || "other";
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(item);
       });
@@ -117,10 +117,10 @@ export default function NextMealWidget() {
         if (item.substitution_group_id) return false;
         return true;
       });
-      const totalKcal = primaryMealItems.reduce((s, i) => s + safeNum(i?.calories_target), 0);
-      const totalProtein = primaryMealItems.reduce((s, i) => s + safeNum(i?.protein_target), 0);
-      const totalCarbs = primaryMealItems.reduce((s, i) => s + safeNum(i?.carbs_target), 0);
-      const totalFat = primaryMealItems.reduce((s, i) => s + safeNum(i?.fat_target), 0);
+      const totalKcal = primaryMealItems.reduce((s, i) => s + safeNum(i?.meta_calorias), 0);
+      const totalProtein = primaryMealItems.reduce((s, i) => s + safeNum(i?.meta_proteinas), 0);
+      const totalCarbs = primaryMealItems.reduce((s, i) => s + safeNum(i?.meta_carboidratos), 0);
+      const totalFat = primaryMealItems.reduce((s, i) => s + safeNum(i?.meta_gorduras), 0);
       const summary = primaryMealItems.slice(0, 3).map((i) => i?.title || "Alimento").join(", ");
 
       const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
@@ -129,7 +129,7 @@ export default function NextMealWidget() {
       const isNow = Math.abs((mh * 60 + mm) - nowMinutes) <= 30;
 
       setNextMeal({
-        meal_type: selectedMeal,
+        tipo_refeicao: selectedMeal,
         time_label: mealHTime,
         items_summary: summary + (mealItems.length > 3 ? ` +${mealItems.length - 3}` : ""),
         total_kcal: Math.round(totalKcal),
@@ -173,7 +173,7 @@ export default function NextMealWidget() {
               )}
             </div>
             <h4 className="font-display font-bold text-sm">
-              {(nextMeal?.meal_type && MEAL_LABELS[nextMeal.meal_type]) || nextMeal?.meal_type || "Refeição"}
+              {(nextMeal?.tipo_refeicao && MEAL_LABELS[nextMeal.tipo_refeicao]) || nextMeal?.tipo_refeicao || "Refeição"}
             </h4>
             <p className="text-xs text-muted-foreground truncate mt-0.5">
               {nextMeal.items_summary}

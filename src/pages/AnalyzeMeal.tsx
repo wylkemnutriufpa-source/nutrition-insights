@@ -14,7 +14,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { useAIUsage } from "@/hooks/useAIUsage";
 import AIUsageBadge from "@/components/common/AIUsageBadge";
 
-type MealType = Database["public"]["Enums"]["meal_type"];
+type MealType = Database["public"]["Enums"]["tipo_refeicao"];
 
 const mealTypes: { value: any; label: string }[] = [
   { value: "Café da Manhã", label: "☕ Café da manhã" },
@@ -125,7 +125,7 @@ export default function AnalyzeMeal() {
       user_id: user.id,
       title: result.title,
       description,
-      meal_type: mealType,
+      tipo_refeicao: mealType,
       calories: result.calories,
       protein: result.protein,
       carbs: result.carbs,

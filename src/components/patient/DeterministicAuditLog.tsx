@@ -90,7 +90,7 @@ export function DeterministicAuditLog({ patientId }: { patientId: string }) {
                       <div className="space-y-1">
                         <p className="font-semibold text-foreground flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                          {log.metadata.meal_type}: {log.metadata.title}
+                          {log.metadata.tipo_refeicao}: {log.metadata.title}
                         </p>
                         <div className="flex gap-2 text-[10px] text-muted-foreground">
                           <span>Score: {log.metadata.score}/100</span>

@@ -18,12 +18,12 @@ export interface MealItemInput {
   meal_plan_id: string;
   title: string;
   description?: string | null;
-  meal_type: string;
+  tipo_refeicao: string;
   day_of_week: number;
-  calories_target?: number | null;
-  protein_target?: number | null;
-  carbs_target?: number | null;
-  fat_target?: number | null;
+  meta_calorias?: number | null;
+  meta_proteinas?: number | null;
+  meta_carboidratos?: number | null;
+  meta_gorduras?: number | null;
   tenant_id?: string | null;
   visual_library_item_id?: string | null;
   item_origin?: string;
@@ -72,7 +72,7 @@ export function buildMealItems(inputs: MealItemInput[]): BuildResult {
     }
 
     // Ensure title is human-readable
-    const title = input.title || MEAL_TYPE_LABELS[input.meal_type] || "Refeição";
+    const title = input.title || MEAL_TYPE_LABELS[input.tipo_refeicao] || "Refeição";
 
     // Warn if item has no useful description for visual resolution
     if (!description || description.trim().length < 3) {
@@ -85,12 +85,12 @@ export function buildMealItems(inputs: MealItemInput[]): BuildResult {
       meal_plan_id: input.meal_plan_id,
       title,
       description,
-      meal_type: input.meal_type as TablesInsert<"meal_plan_items">["meal_type"],
+      tipo_refeicao: input.tipo_refeicao as TablesInsert<"meal_plan_items">["tipo_refeicao"],
       day_of_week: input.day_of_week,
-      calories_target: input.calories_target ?? null,
-      protein_target: input.protein_target ?? null,
-      carbs_target: input.carbs_target ?? null,
-      fat_target: input.fat_target ?? null,
+      meta_calorias: input.meta_calorias ?? null,
+      meta_proteinas: input.meta_proteinas ?? null,
+      meta_carboidratos: input.meta_carboidratos ?? null,
+      meta_gorduras: input.meta_gorduras ?? null,
       tenant_id: input.tenant_id ?? null,
       visual_library_item_id: input.visual_library_item_id ?? null,
       item_origin: (input.item_origin || "template") as any,

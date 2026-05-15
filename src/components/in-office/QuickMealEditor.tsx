@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
 const CURRENT_ENGINE_VERSION = "3.0.0-manual";
 
-type MealType = Database["public"]["Enums"]["meal_type"];
+type MealType = Database["public"]["Enums"]["tipo_refeicao"];
 
 interface MealItem {
   id?: string;
@@ -27,7 +27,7 @@ interface MealItem {
   protein: number;
   carbs: number;
   fat: number;
-  meal_type: MealType;
+  tipo_refeicao: MealType;
   is_primary?: boolean;
   substitution_group_id?: string | null;
 }
@@ -102,15 +102,15 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       const newBlocks = MEAL_TYPES.map(m => ({
         ...m,
         items: (items || [])
-          .filter((i) => i.meal_type === m.type)
+          .filter((i) => i.tipo_refeicao === m.type)
           .map((i) => ({
             id: i.id,
             name: i.title || "Item",
-            calories: i.calories_target || 0,
-            protein: i.protein_target || 0,
-            carbs: i.carbs_target || 0,
-            fat: i.fat_target || 0,
-            meal_type: m.type,
+            calories: i.meta_calorias || 0,
+            protein: i.meta_proteinas || 0,
+            carbs: i.meta_carboidratos || 0,
+            fat: i.meta_gorduras || 0,
+            tipo_refeicao: m.type,
             is_primary: i.is_primary ?? true,
             substitution_group_id: i.substitution_group_id,
           })),
@@ -203,13 +203,13 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         .upsert({
           id: itemId,
           meal_plan_id: mealPlanId,
-          meal_type: blockType,
+          tipo_refeicao: blockType,
           title: food.name,
           description: `${food.serving_size || 100}${food.serving_unit || "g"}`,
-          calories_target: food.calories || 0,
-          protein_target: food.protein || 0,
-          carbs_target: food.carbs || 0,
-          fat_target: food.fat || 0,
+          meta_calorias: food.calories || 0,
+          meta_proteinas: food.protein || 0,
+          meta_carboidratos: food.carbs || 0,
+          meta_gorduras: food.fat || 0,
           day_of_week: 0,
           item_origin: "in_office_manual",
           tenant_id: tenantId,
@@ -263,7 +263,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         return;
       }
 
-      const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, meal_type: b.type })));
+      const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, tipo_refeicao: b.type })));
       const { error } = await supabase.from("quick_meal_templates" as any).insert({
         nutritionist_id: user.id,
         tenant_id: np.tenant_id,
@@ -298,12 +298,12 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       return {
         id: crypto.randomUUID(),
         meal_plan_id: mealPlanId,
-        meal_type: item.meal_type,
+        tipo_refeicao: item.tipo_refeicao,
         title: item.name,
-        calories_target: cal > 0 ? cal : null,
-        protein_target: prot > 0 ? prot : null,
-        carbs_target: carb > 0 ? carb : null,
-        fat_target: fat > 0 ? fat : null,
+        meta_calorias: cal > 0 ? cal : null,
+        meta_proteinas: prot > 0 ? prot : null,
+        meta_carboidratos: carb > 0 ? carb : null,
+        meta_gorduras: fat > 0 ? fat : null,
         day_of_week: 0,
         item_origin: "in_office_template" as const,
         tenant_id: tenantId,

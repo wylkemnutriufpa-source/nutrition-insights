@@ -23,18 +23,18 @@ function buildPatientFixture(name: string): PremiumMealPlanPDFData {
   // Cada paciente tem 6 refeições com substituições marcadas como "100g" genérico —
   // o PDF DEVE substituir por "Porção equivalente: <descrição real do principal>".
   const items = [
-    { mealType: "Café da Manhã", title: "Tapioca com ovo", description: "1 unidade média (80g)", calories_target: 320, is_primary: true, substitution_group_id: `${name}-cafe` },
-    { mealType: "Café da Manhã", title: "Pão integral com queijo", description: "100g", calories_target: 320, is_primary: false, substitution_group_id: `${name}-cafe` },
-    { mealType: "Lanche da Manhã", title: "Mamão", description: "1 fatia média (150g)", calories_target: 90, is_primary: true, substitution_group_id: `${name}-lm` },
-    { mealType: "Lanche da Manhã", title: "Banana", description: "100g", calories_target: 90, is_primary: false, substitution_group_id: `${name}-lm` },
-    { mealType: "Almoço", title: "Frango grelhado + arroz", description: "120g frango + 4 col. arroz", calories_target: 520, is_primary: true, substitution_group_id: `${name}-almoco` },
-    { mealType: "Almoço", title: "Tilápia + batata-doce", description: "100g", calories_target: 520, is_primary: false, substitution_group_id: `${name}-almoco` },
-    { mealType: "Lanche da Tarde", title: "Iogurte com aveia", description: "170g iogurte + 2 col. aveia", calories_target: 180, is_primary: true, substitution_group_id: `${name}-lt` },
-    { mealType: "Lanche da Tarde", title: "Mix de castanhas", description: "100g", calories_target: 180, is_primary: false, substitution_group_id: `${name}-lt` },
-    { mealType: "Jantar", title: "Sopa de legumes com frango", description: "1 prato fundo (350g)", calories_target: 380, is_primary: true, substitution_group_id: `${name}-jantar` },
-    { mealType: "Jantar", title: "Omelete com salada", description: "100g", calories_target: 380, is_primary: false, substitution_group_id: `${name}-jantar` },
-    { mealType: "Ceia", title: "Chá com biscoito integral", description: "200ml chá + 3 unidades", calories_target: 110, is_primary: true, substitution_group_id: `${name}-ceia` },
-    { mealType: "Ceia", title: "Iogurte natural", description: "100g", calories_target: 110, is_primary: false, substitution_group_id: `${name}-ceia` },
+    { mealType: "Café da Manhã", title: "Tapioca com ovo", description: "1 unidade média (80g)", meta_calorias: 320, is_primary: true, substitution_group_id: `${name}-cafe` },
+    { mealType: "Café da Manhã", title: "Pão integral com queijo", description: "100g", meta_calorias: 320, is_primary: false, substitution_group_id: `${name}-cafe` },
+    { mealType: "Lanche da Manhã", title: "Mamão", description: "1 fatia média (150g)", meta_calorias: 90, is_primary: true, substitution_group_id: `${name}-lm` },
+    { mealType: "Lanche da Manhã", title: "Banana", description: "100g", meta_calorias: 90, is_primary: false, substitution_group_id: `${name}-lm` },
+    { mealType: "Almoço", title: "Frango grelhado + arroz", description: "120g frango + 4 col. arroz", meta_calorias: 520, is_primary: true, substitution_group_id: `${name}-almoco` },
+    { mealType: "Almoço", title: "Tilápia + batata-doce", description: "100g", meta_calorias: 520, is_primary: false, substitution_group_id: `${name}-almoco` },
+    { mealType: "Lanche da Tarde", title: "Iogurte com aveia", description: "170g iogurte + 2 col. aveia", meta_calorias: 180, is_primary: true, substitution_group_id: `${name}-lt` },
+    { mealType: "Lanche da Tarde", title: "Mix de castanhas", description: "100g", meta_calorias: 180, is_primary: false, substitution_group_id: `${name}-lt` },
+    { mealType: "Jantar", title: "Sopa de legumes com frango", description: "1 prato fundo (350g)", meta_calorias: 380, is_primary: true, substitution_group_id: `${name}-jantar` },
+    { mealType: "Jantar", title: "Omelete com salada", description: "100g", meta_calorias: 380, is_primary: false, substitution_group_id: `${name}-jantar` },
+    { mealType: "Ceia", title: "Chá com biscoito integral", description: "200ml chá + 3 unidades", meta_calorias: 110, is_primary: true, substitution_group_id: `${name}-ceia` },
+    { mealType: "Ceia", title: "Iogurte natural", description: "100g", meta_calorias: 110, is_primary: false, substitution_group_id: `${name}-ceia` },
   ];
   return {
     planTitle: `Plano ${name}`,
@@ -89,8 +89,8 @@ describe("PDF Export Premium — Auditoria de Gramas (anti-100g fixo)", () => {
       nutritionistName: "Dra. Teste",
       startDate: "2026-05-11",
       items: [
-        { mealType: "Café da Manhã", title: "Pão integral", description: "2 fatias (50g)", calories_target: 200, is_primary: true, substitution_group_id: "g1" },
-        { mealType: "Café da Manhã", title: "Tapioca", description: "1 unidade pequena (40g)", calories_target: 200, is_primary: false, substitution_group_id: "g1" },
+        { mealType: "Café da Manhã", title: "Pão integral", description: "2 fatias (50g)", meta_calorias: 200, is_primary: true, substitution_group_id: "g1" },
+        { mealType: "Café da Manhã", title: "Tapioca", description: "1 unidade pequena (40g)", meta_calorias: 200, is_primary: false, substitution_group_id: "g1" },
       ],
     };
     const html = buildPremiumMealPlanHTML(data);
@@ -105,9 +105,9 @@ describe("PDF Export Premium — Auditoria de Gramas (anti-100g fixo)", () => {
       nutritionistName: "Wylkem",
       startDate: "2026-05-11",
       items: [
-        { mealType: "Lanche da Manhã", title: "Mamão Papaia", description: "Mamão Papaia — 70g", calories_target: 32, is_primary: true, substitution_group_id: "fruta-1" },
-        { mealType: "Lanche da Manhã", title: "Maçã", description: "Maçã — 0g", calories_target: 52, is_primary: false, substitution_group_id: "fruta-1" },
-        { mealType: "Lanche da Manhã", title: "Banana Prata", description: "Banana Prata — 1 unidade(s) M (0g)", calories_target: 98, is_primary: false, substitution_group_id: "fruta-1" },
+        { mealType: "Lanche da Manhã", title: "Mamão Papaia", description: "Mamão Papaia — 70g", meta_calorias: 32, is_primary: true, substitution_group_id: "fruta-1" },
+        { mealType: "Lanche da Manhã", title: "Maçã", description: "Maçã — 0g", meta_calorias: 52, is_primary: false, substitution_group_id: "fruta-1" },
+        { mealType: "Lanche da Manhã", title: "Banana Prata", description: "Banana Prata — 1 unidade(s) M (0g)", meta_calorias: 98, is_primary: false, substitution_group_id: "fruta-1" },
       ],
     });
 

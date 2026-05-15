@@ -14,11 +14,11 @@ describe('MealSmartEditorModal DOM & Accessibility', () => {
     id: 'item-1',
     title: 'Test Meal',
     description: 'Initial description',
-    meal_type: 'Almoço',
-    calories_target: 500,
-    protein_target: 30,
-    carbs_target: 50,
-    fat_target: 15,
+    tipo_refeicao: 'Almoço',
+    meta_calorias: 500,
+    meta_proteinas: 30,
+    meta_carboidratos: 50,
+    meta_gorduras: 15,
     edit_metadata: {
       substitutions_json: ['Sub 1', 'Sub 2', 'Sub 3', 'Sub 4']
     }

@@ -201,7 +201,7 @@ export default function DailyMealPlanInline() {
   const groupedItems = useMemo(() =>
     MEAL_TYPES.map(mt => ({
       ...mt,
-      items: items.filter(i => i.meal_type === mt.key),
+      items: items.filter(i => i.tipo_refeicao === mt.key),
     })).filter(g => g.items.length > 0),
   [items]);
 
@@ -337,7 +337,7 @@ export default function DailyMealPlanInline() {
           mealPlanItemId={substitutingItem.id}
           mealPlanId={plan?.id || ""}
           patientId={user?.id || ""}
-          mealSlot={(substitutingItem as any)?.meal_type}
+          mealSlot={(substitutingItem as any)?.tipo_refeicao}
           options={substitutingItem.metadata?.substitution_options}
           onSubstitute={(food, original) => {
             // Re-fetch data to show the substitution

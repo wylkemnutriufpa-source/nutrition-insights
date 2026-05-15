@@ -2501,10 +2501,10 @@ export type Database = {
           created_at: string | null
           day_of_week: number | null
           id: string
-          meal_type: string | null
           metadata: Json | null
           patient_id: string | null
           source_rule: string | null
+          tipo_refeicao: string | null
           type: string
         }
         Insert: {
@@ -2513,10 +2513,10 @@ export type Database = {
           created_at?: string | null
           day_of_week?: number | null
           id?: string
-          meal_type?: string | null
           metadata?: Json | null
           patient_id?: string | null
           source_rule?: string | null
+          tipo_refeicao?: string | null
           type: string
         }
         Update: {
@@ -2525,10 +2525,10 @@ export type Database = {
           created_at?: string | null
           day_of_week?: number | null
           id?: string
-          meal_type?: string | null
           metadata?: Json | null
           patient_id?: string | null
           source_rule?: string | null
+          tipo_refeicao?: string | null
           type?: string
         }
         Relationships: []
@@ -5707,8 +5707,8 @@ export type Database = {
           goal_adjustments_json: Json | null
           id: string
           is_active: boolean | null
-          meal_type: string
           preferred_categories_json: Json | null
+          tipo_refeicao: string
         }
         Insert: {
           allowed_categories_json?: Json | null
@@ -5717,8 +5717,8 @@ export type Database = {
           goal_adjustments_json?: Json | null
           id?: string
           is_active?: boolean | null
-          meal_type: string
           preferred_categories_json?: Json | null
+          tipo_refeicao: string
         }
         Update: {
           allowed_categories_json?: Json | null
@@ -5727,8 +5727,8 @@ export type Database = {
           goal_adjustments_json?: Json | null
           id?: string
           is_active?: boolean | null
-          meal_type?: string
           preferred_categories_json?: Json | null
+          tipo_refeicao?: string
         }
         Relationships: []
       }
@@ -6754,9 +6754,9 @@ export type Database = {
           id: string
           meal_plan_id: string | null
           meal_plan_item_id: string | null
-          meal_type: string
           patient_id: string
           rating: string
+          tipo_refeicao: string
         }
         Insert: {
           comment?: string | null
@@ -6764,9 +6764,9 @@ export type Database = {
           id?: string
           meal_plan_id?: string | null
           meal_plan_item_id?: string | null
-          meal_type: string
           patient_id: string
           rating: string
+          tipo_refeicao: string
         }
         Update: {
           comment?: string | null
@@ -6774,9 +6774,9 @@ export type Database = {
           id?: string
           meal_plan_id?: string | null
           meal_plan_item_id?: string | null
-          meal_type?: string
           patient_id?: string
           rating?: string
+          tipo_refeicao?: string
         }
         Relationships: [
           {
@@ -6891,10 +6891,10 @@ export type Database = {
           goal_tag: string
           id: string
           is_active: boolean
-          meal_type: string
           plan_type: string | null
           protein: number
           substitutions: Json | null
+          tipo_refeicao: string
           title: string
         }
         Insert: {
@@ -6907,10 +6907,10 @@ export type Database = {
           goal_tag: string
           id?: string
           is_active?: boolean
-          meal_type: string
           plan_type?: string | null
           protein?: number
           substitutions?: Json | null
+          tipo_refeicao: string
           title: string
         }
         Update: {
@@ -6923,10 +6923,10 @@ export type Database = {
           goal_tag?: string
           id?: string
           is_active?: boolean
-          meal_type?: string
           plan_type?: string | null
           protein?: number
           substitutions?: Json | null
+          tipo_refeicao?: string
           title?: string
         }
         Relationships: []
@@ -7065,13 +7065,10 @@ export type Database = {
       }
       meal_plan_items: {
         Row: {
-          calories_target: number | null
-          carbs_target: number | null
           created_at: string
           day_of_week: number
           description: string | null
           edit_metadata: Json | null
-          fat_target: number | null
           human_reasons: string[] | null
           human_score: number | null
           human_status: string | null
@@ -7082,23 +7079,23 @@ export type Database = {
           is_primary: boolean | null
           item_origin: string
           meal_plan_id: string
-          meal_type: string
-          protein_target: number | null
+          meta_calorias: number | null
+          meta_carboidratos: number | null
+          meta_gorduras: number | null
+          meta_proteinas: number | null
           substitution_group_id: string | null
           target_percentage: number | null
           tenant_id: string | null
+          tipo_refeicao: string
           title: string
           visual_library_item_id: string | null
           was_auto_corrected: boolean
         }
         Insert: {
-          calories_target?: number | null
-          carbs_target?: number | null
           created_at?: string
           day_of_week: number
           description?: string | null
           edit_metadata?: Json | null
-          fat_target?: number | null
           human_reasons?: string[] | null
           human_score?: number | null
           human_status?: string | null
@@ -7109,23 +7106,23 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string
           meal_plan_id: string
-          meal_type: string
-          protein_target?: number | null
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
           tenant_id?: string | null
+          tipo_refeicao: string
           title: string
           visual_library_item_id?: string | null
           was_auto_corrected?: boolean
         }
         Update: {
-          calories_target?: number | null
-          carbs_target?: number | null
           created_at?: string
           day_of_week?: number
           description?: string | null
           edit_metadata?: Json | null
-          fat_target?: number | null
           human_reasons?: string[] | null
           human_score?: number | null
           human_status?: string | null
@@ -7136,11 +7133,14 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string
           meal_plan_id?: string
-          meal_type?: string
-          protein_target?: number | null
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
           tenant_id?: string | null
+          tipo_refeicao?: string
           title?: string
           visual_library_item_id?: string | null
           was_auto_corrected?: boolean
@@ -7202,7 +7202,7 @@ export type Database = {
           is_primary: boolean | null
           item_origin: string | null
           meal_plan_id: string | null
-          meal_type: Database["public"]["Enums"]["meal_type"] | null
+          meal_type: Database["public"]["Enums"]["tipo_refeicao"] | null
           protein_target: number | null
           substitution_group_id: string | null
           target_percentage: number | null
@@ -7229,7 +7229,7 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string | null
           meal_plan_id?: string | null
-          meal_type?: Database["public"]["Enums"]["meal_type"] | null
+          meal_type?: Database["public"]["Enums"]["tipo_refeicao"] | null
           protein_target?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
@@ -7256,7 +7256,7 @@ export type Database = {
           is_primary?: boolean | null
           item_origin?: string | null
           meal_plan_id?: string | null
-          meal_type?: Database["public"]["Enums"]["meal_type"] | null
+          meal_type?: Database["public"]["Enums"]["tipo_refeicao"] | null
           protein_target?: number | null
           substitution_group_id?: string | null
           target_percentage?: number | null
@@ -7445,8 +7445,8 @@ export type Database = {
           fat_target: number | null
           id: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target: number | null
+          tipo_refeicao: Database["public"]["Enums"]["tipo_refeicao"]
           updated_at: string | null
         }
         Insert: {
@@ -7456,8 +7456,8 @@ export type Database = {
           fat_target?: number | null
           id?: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
+          tipo_refeicao: Database["public"]["Enums"]["tipo_refeicao"]
           updated_at?: string | null
         }
         Update: {
@@ -7467,8 +7467,8 @@ export type Database = {
           fat_target?: number | null
           id?: string
           meal_plan_id?: string
-          meal_type?: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
+          tipo_refeicao?: Database["public"]["Enums"]["tipo_refeicao"]
           updated_at?: string | null
         }
         Relationships: [
@@ -7685,10 +7685,10 @@ export type Database = {
           generated_by: string | null
           generation_metadata: Json | null
           generation_source: string | null
-          global_calories_target: number | null
-          global_carbs_target: number | null
-          global_fat_target: number | null
-          global_protein_target: number | null
+          global_meta_calorias: number | null
+          global_meta_carboidratos: number | null
+          global_meta_gorduras: number | null
+          global_meta_proteinas: number | null
           id: string
           is_active: boolean
           is_global_model: boolean | null
@@ -7728,11 +7728,11 @@ export type Database = {
           total_calories: number | null
           total_carbs: number | null
           total_fat: number | null
+          total_meta_calorias: number | null
+          total_meta_carboidratos: number | null
+          total_meta_gorduras: number | null
+          total_meta_proteinas: number | null
           total_protein: number | null
-          total_target_calories: number | null
-          total_target_carbs: number | null
-          total_target_fat: number | null
-          total_target_protein: number | null
           totals_status: string
           transition_origin_id: string | null
           updated_at: string
@@ -7752,10 +7752,10 @@ export type Database = {
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
-          global_calories_target?: number | null
-          global_carbs_target?: number | null
-          global_fat_target?: number | null
-          global_protein_target?: number | null
+          global_meta_calorias?: number | null
+          global_meta_carboidratos?: number | null
+          global_meta_gorduras?: number | null
+          global_meta_proteinas?: number | null
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
@@ -7795,11 +7795,11 @@ export type Database = {
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
+          total_meta_calorias?: number | null
+          total_meta_carboidratos?: number | null
+          total_meta_gorduras?: number | null
+          total_meta_proteinas?: number | null
           total_protein?: number | null
-          total_target_calories?: number | null
-          total_target_carbs?: number | null
-          total_target_fat?: number | null
-          total_target_protein?: number | null
           totals_status?: string
           transition_origin_id?: string | null
           updated_at?: string
@@ -7819,10 +7819,10 @@ export type Database = {
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
-          global_calories_target?: number | null
-          global_carbs_target?: number | null
-          global_fat_target?: number | null
-          global_protein_target?: number | null
+          global_meta_calorias?: number | null
+          global_meta_carboidratos?: number | null
+          global_meta_gorduras?: number | null
+          global_meta_proteinas?: number | null
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
@@ -7862,11 +7862,11 @@ export type Database = {
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
+          total_meta_calorias?: number | null
+          total_meta_carboidratos?: number | null
+          total_meta_gorduras?: number | null
+          total_meta_proteinas?: number | null
           total_protein?: number | null
-          total_target_calories?: number | null
-          total_target_carbs?: number | null
-          total_target_fat?: number | null
-          total_target_protein?: number | null
           totals_status?: string
           transition_origin_id?: string | null
           updated_at?: string
@@ -8128,11 +8128,11 @@ export type Database = {
           is_active: boolean
           is_fixed: boolean
           is_scalable: boolean
-          meal_type: string
           name: string
           nutritionist_id: string
           protein_type: string
           tenant_id: string | null
+          tipo_refeicao: string
           updated_at: string
           visual_library_item_id: string
         }
@@ -8149,11 +8149,11 @@ export type Database = {
           is_active?: boolean
           is_fixed?: boolean
           is_scalable?: boolean
-          meal_type?: string
           name: string
           nutritionist_id: string
           protein_type?: string
           tenant_id?: string | null
+          tipo_refeicao?: string
           updated_at?: string
           visual_library_item_id?: string
         }
@@ -8170,11 +8170,11 @@ export type Database = {
           is_active?: boolean
           is_fixed?: boolean
           is_scalable?: boolean
-          meal_type?: string
           name?: string
           nutritionist_id?: string
           protein_type?: string
           tenant_id?: string | null
+          tipo_refeicao?: string
           updated_at?: string
           visual_library_item_id?: string
         }
@@ -8375,18 +8375,18 @@ export type Database = {
           ai_analyzed: boolean
           ai_feedback: string | null
           ai_score: number | null
-          calories: number | null
-          carbs: number | null
           created_at: string
           description: string | null
-          fat: number | null
           fiber: number | null
           id: string
           image_url: string | null
           logged_at: string
-          meal_type: string
-          protein: number | null
+          meta_calorias: number | null
+          meta_carboidratos: number | null
+          meta_gorduras: number | null
+          meta_proteinas: number | null
           tenant_id: string | null
+          tipo_refeicao: string
           title: string
           user_id: string
           xp_earned: number
@@ -8395,18 +8395,18 @@ export type Database = {
           ai_analyzed?: boolean
           ai_feedback?: string | null
           ai_score?: number | null
-          calories?: number | null
-          carbs?: number | null
           created_at?: string
           description?: string | null
-          fat?: number | null
           fiber?: number | null
           id?: string
           image_url?: string | null
           logged_at?: string
-          meal_type: string
-          protein?: number | null
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           tenant_id?: string | null
+          tipo_refeicao: string
           title: string
           user_id: string
           xp_earned?: number
@@ -8415,18 +8415,18 @@ export type Database = {
           ai_analyzed?: boolean
           ai_feedback?: string | null
           ai_score?: number | null
-          calories?: number | null
-          carbs?: number | null
           created_at?: string
           description?: string | null
-          fat?: number | null
           fiber?: number | null
           id?: string
           image_url?: string | null
           logged_at?: string
-          meal_type?: string
-          protein?: number | null
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           tenant_id?: string | null
+          tipo_refeicao?: string
           title?: string
           user_id?: string
           xp_earned?: number
@@ -8674,42 +8674,42 @@ export type Database = {
       }
       nc_meal_plan_items: {
         Row: {
-          calories: number | null
-          carbs: number | null
-          fat: number | null
           food_name: string
           id: string
-          meal_type: string
+          meta_calorias: number | null
+          meta_carboidratos: number | null
+          meta_gorduras: number | null
+          meta_proteinas: number | null
           plan_id: string
-          protein: number | null
           quantity: number
           sort_order: number | null
+          tipo_refeicao: string
           unit: string
         }
         Insert: {
-          calories?: number | null
-          carbs?: number | null
-          fat?: number | null
           food_name: string
           id?: string
-          meal_type: string
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           plan_id: string
-          protein?: number | null
           quantity: number
           sort_order?: number | null
+          tipo_refeicao: string
           unit: string
         }
         Update: {
-          calories?: number | null
-          carbs?: number | null
-          fat?: number | null
           food_name?: string
           id?: string
-          meal_type?: string
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           plan_id?: string
-          protein?: number | null
           quantity?: number
           sort_order?: number | null
+          tipo_refeicao?: string
           unit?: string
         }
         Relationships: [
@@ -9184,13 +9184,13 @@ export type Database = {
           id: string
           is_global: boolean | null
           kcal_base: number | null
-          meal_type: string
           name: string
           nutritionist_id: string
           protein_base: number | null
           satiety_score: number | null
           slots: Json | null
           slots_version: number
+          tipo_refeicao: string
           updated_at: string | null
           usage_count: number | null
         }
@@ -9205,13 +9205,13 @@ export type Database = {
           id?: string
           is_global?: boolean | null
           kcal_base?: number | null
-          meal_type?: string
           name: string
           nutritionist_id: string
           protein_base?: number | null
           satiety_score?: number | null
           slots?: Json | null
           slots_version?: number
+          tipo_refeicao?: string
           updated_at?: string | null
           usage_count?: number | null
         }
@@ -9226,13 +9226,13 @@ export type Database = {
           id?: string
           is_global?: boolean | null
           kcal_base?: number | null
-          meal_type?: string
           name?: string
           nutritionist_id?: string
           protein_base?: number | null
           satiety_score?: number | null
           slots?: Json | null
           slots_version?: number
+          tipo_refeicao?: string
           updated_at?: string | null
           usage_count?: number | null
         }
@@ -13991,13 +13991,10 @@ export type Database = {
           bmi: number | null
           bmr: number | null
           body_fat_percentage: number | null
-          calories_target: number | null
-          carbs_target: number | null
           chest: number | null
           chest_fold: number | null
           created_at: string
           fat_mass: number | null
-          fat_target: number | null
           goal_body_fat: number | null
           goal_weight: number | null
           height: number | null
@@ -14008,13 +14005,16 @@ export type Database = {
           left_calf: number | null
           left_forearm: number | null
           left_thigh: number | null
+          meta_calorias: number | null
+          meta_carboidratos: number | null
+          meta_gorduras: number | null
+          meta_proteinas: number | null
           method: string | null
           midaxillary_fold: number | null
           neat: number | null
           neck: number | null
           notes: string | null
           patient_id: string
-          protein_target: number | null
           right_arm: number | null
           right_calf: number | null
           right_forearm: number | null
@@ -14038,13 +14038,10 @@ export type Database = {
           bmi?: number | null
           bmr?: number | null
           body_fat_percentage?: number | null
-          calories_target?: number | null
-          carbs_target?: number | null
           chest?: number | null
           chest_fold?: number | null
           created_at?: string
           fat_mass?: number | null
-          fat_target?: number | null
           goal_body_fat?: number | null
           goal_weight?: number | null
           height?: number | null
@@ -14055,13 +14052,16 @@ export type Database = {
           left_calf?: number | null
           left_forearm?: number | null
           left_thigh?: number | null
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           method?: string | null
           midaxillary_fold?: number | null
           neat?: number | null
           neck?: number | null
           notes?: string | null
           patient_id: string
-          protein_target?: number | null
           right_arm?: number | null
           right_calf?: number | null
           right_forearm?: number | null
@@ -14085,13 +14085,10 @@ export type Database = {
           bmi?: number | null
           bmr?: number | null
           body_fat_percentage?: number | null
-          calories_target?: number | null
-          carbs_target?: number | null
           chest?: number | null
           chest_fold?: number | null
           created_at?: string
           fat_mass?: number | null
-          fat_target?: number | null
           goal_body_fat?: number | null
           goal_weight?: number | null
           height?: number | null
@@ -14102,13 +14099,16 @@ export type Database = {
           left_calf?: number | null
           left_forearm?: number | null
           left_thigh?: number | null
+          meta_calorias?: number | null
+          meta_carboidratos?: number | null
+          meta_gorduras?: number | null
+          meta_proteinas?: number | null
           method?: string | null
           midaxillary_fold?: number | null
           neat?: number | null
           neck?: number | null
           notes?: string | null
           patient_id?: string
-          protein_target?: number | null
           right_arm?: number | null
           right_calf?: number | null
           right_forearm?: number | null
@@ -16855,11 +16855,11 @@ export type Database = {
           id: string
           is_active: boolean
           items: Json
-          meal_type: string | null
           nutritionist_id: string
           template_name: string
           template_type: string
           tenant_id: string
+          tipo_refeicao: string | null
           total_calories: number
           total_carbs: number
           total_fat: number
@@ -16871,11 +16871,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           items?: Json
-          meal_type?: string | null
           nutritionist_id: string
           template_name?: string
           template_type?: string
           tenant_id: string
+          tipo_refeicao?: string | null
           total_calories?: number
           total_carbs?: number
           total_fat?: number
@@ -16887,11 +16887,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           items?: Json
-          meal_type?: string | null
           nutritionist_id?: string
           template_name?: string
           template_type?: string
           tenant_id?: string
+          tipo_refeicao?: string | null
           total_calories?: number
           total_carbs?: number
           total_fat?: number
@@ -17223,14 +17223,14 @@ export type Database = {
       }
       recipes: {
         Row: {
-          calories_per_serving: number | null
-          carbs_per_serving: number | null
+          calorias_por_porcao: number | null
+          carboidratos_por_porcao: number | null
           category: string | null
           cook_time_minutes: number | null
           created_at: string
           description: string | null
           difficulty: string | null
-          fat_per_serving: number | null
+          gorduras_por_porcao: number | null
           id: string
           image_url: string | null
           ingredients: Json
@@ -17238,23 +17238,23 @@ export type Database = {
           is_ai_generated: boolean | null
           is_shared: boolean | null
           nutritionist_id: string
+          porcoes: number | null
           prep_time_minutes: number | null
-          protein_per_serving: number | null
-          servings: number | null
+          proteinas_por_porcao: number | null
           tags: string[] | null
           tenant_id: string | null
           title: string
           updated_at: string
         }
         Insert: {
-          calories_per_serving?: number | null
-          carbs_per_serving?: number | null
+          calorias_por_porcao?: number | null
+          carboidratos_por_porcao?: number | null
           category?: string | null
           cook_time_minutes?: number | null
           created_at?: string
           description?: string | null
           difficulty?: string | null
-          fat_per_serving?: number | null
+          gorduras_por_porcao?: number | null
           id?: string
           image_url?: string | null
           ingredients?: Json
@@ -17262,23 +17262,23 @@ export type Database = {
           is_ai_generated?: boolean | null
           is_shared?: boolean | null
           nutritionist_id: string
+          porcoes?: number | null
           prep_time_minutes?: number | null
-          protein_per_serving?: number | null
-          servings?: number | null
+          proteinas_por_porcao?: number | null
           tags?: string[] | null
           tenant_id?: string | null
           title: string
           updated_at?: string
         }
         Update: {
-          calories_per_serving?: number | null
-          carbs_per_serving?: number | null
+          calorias_por_porcao?: number | null
+          carboidratos_por_porcao?: number | null
           category?: string | null
           cook_time_minutes?: number | null
           created_at?: string
           description?: string | null
           difficulty?: string | null
-          fat_per_serving?: number | null
+          gorduras_por_porcao?: number | null
           id?: string
           image_url?: string | null
           ingredients?: Json
@@ -17286,9 +17286,9 @@ export type Database = {
           is_ai_generated?: boolean | null
           is_shared?: boolean | null
           nutritionist_id?: string
+          porcoes?: number | null
           prep_time_minutes?: number | null
-          protein_per_serving?: number | null
-          servings?: number | null
+          proteinas_por_porcao?: number | null
           tags?: string[] | null
           tenant_id?: string | null
           title?: string
@@ -17565,9 +17565,9 @@ export type Database = {
           id: string
           image_url: string | null
           items: Json
-          meal_type: string | null
           name: string
           tenant_id: string | null
+          tipo_refeicao: string | null
           user_id: string
         }
         Insert: {
@@ -17575,9 +17575,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           items?: Json
-          meal_type?: string | null
           name: string
           tenant_id?: string | null
+          tipo_refeicao?: string | null
           user_id: string
         }
         Update: {
@@ -17585,9 +17585,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           items?: Json
-          meal_type?: string | null
           name?: string
           tenant_id?: string | null
+          tipo_refeicao?: string | null
           user_id?: string
         }
         Relationships: []
@@ -17601,9 +17601,9 @@ export type Database = {
           fat_target: number | null
           id: string
           image_url: string | null
-          meal_type: Database["public"]["Enums"]["meal_type"]
           nutritionist_id: string
           protein_target: number | null
+          tipo_refeicao: Database["public"]["Enums"]["tipo_refeicao"]
           title: string
           visual_library_item_id: string | null
         }
@@ -17615,9 +17615,9 @@ export type Database = {
           fat_target?: number | null
           id?: string
           image_url?: string | null
-          meal_type?: Database["public"]["Enums"]["meal_type"]
           nutritionist_id: string
           protein_target?: number | null
+          tipo_refeicao?: Database["public"]["Enums"]["tipo_refeicao"]
           title: string
           visual_library_item_id?: string | null
         }
@@ -17629,9 +17629,9 @@ export type Database = {
           fat_target?: number | null
           id?: string
           image_url?: string | null
-          meal_type?: Database["public"]["Enums"]["meal_type"]
           nutritionist_id?: string
           protein_target?: number | null
+          tipo_refeicao?: Database["public"]["Enums"]["tipo_refeicao"]
           title?: string
           visual_library_item_id?: string | null
         }
@@ -20040,8 +20040,8 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
-          meal_type: string[] | null
           objective: string | null
+          tipo_refeicao: string[] | null
         }
         Insert: {
           cluster_name: string
@@ -20049,8 +20049,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          meal_type?: string[] | null
           objective?: string | null
+          tipo_refeicao?: string[] | null
         }
         Update: {
           cluster_name?: string
@@ -20058,8 +20058,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          meal_type?: string[] | null
           objective?: string | null
+          tipo_refeicao?: string[] | null
         }
         Relationships: []
       }
@@ -20243,12 +20243,12 @@ export type Database = {
           fats_base: number | null
           id: string
           kcal_base: number | null
-          meal_type: string[] | null
           objective_tags: string[] | null
           portion_mode: string | null
           protein_base: number | null
           slug: string
           substitutions_group: string | null
+          tipo_refeicao: string[] | null
           title: string
           updated_at: string | null
         }
@@ -20262,12 +20262,12 @@ export type Database = {
           fats_base?: number | null
           id?: string
           kcal_base?: number | null
-          meal_type?: string[] | null
           objective_tags?: string[] | null
           portion_mode?: string | null
           protein_base?: number | null
           slug: string
           substitutions_group?: string | null
+          tipo_refeicao?: string[] | null
           title: string
           updated_at?: string | null
         }
@@ -20281,12 +20281,12 @@ export type Database = {
           fats_base?: number | null
           id?: string
           kcal_base?: number | null
-          meal_type?: string[] | null
           objective_tags?: string[] | null
           portion_mode?: string | null
           protein_base?: number | null
           slug?: string
           substitutions_group?: string | null
+          tipo_refeicao?: string[] | null
           title?: string
           updated_at?: string | null
         }
@@ -20298,30 +20298,30 @@ export type Database = {
           created_at: string | null
           equivalence_type: string | null
           id: string
-          meal_type: string | null
           score: number | null
           source_slug: string
           target_slug: string
+          tipo_refeicao: string | null
         }
         Insert: {
           active?: boolean | null
           created_at?: string | null
           equivalence_type?: string | null
           id?: string
-          meal_type?: string | null
           score?: number | null
           source_slug: string
           target_slug: string
+          tipo_refeicao?: string | null
         }
         Update: {
           active?: boolean | null
           created_at?: string | null
           equivalence_type?: string | null
           id?: string
-          meal_type?: string | null
           score?: number | null
           source_slug?: string
           target_slug?: string
+          tipo_refeicao?: string | null
         }
         Relationships: [
           {
@@ -22707,19 +22707,6 @@ export type Database = {
         | "archived"
         | "expired"
         | "replaced"
-      meal_type:
-        | "breakfast"
-        | "morning_snack"
-        | "lunch"
-        | "afternoon_snack"
-        | "dinner"
-        | "evening_snack"
-        | "Café da Manhã"
-        | "Lanche da Manhã"
-        | "Almoço"
-        | "Lanche da Tarde"
-        | "Jantar"
-        | "Ceia"
       metabolic_phase_type:
         | "initial_response"
         | "active_loss"
@@ -22778,6 +22765,19 @@ export type Database = {
         | "personal"
         | "staff"
         | "patient"
+      tipo_refeicao:
+        | "breakfast"
+        | "morning_snack"
+        | "lunch"
+        | "afternoon_snack"
+        | "dinner"
+        | "evening_snack"
+        | "Café da Manhã"
+        | "Lanche da Manhã"
+        | "Almoço"
+        | "Lanche da Tarde"
+        | "Jantar"
+        | "Ceia"
       usage_intensity: "low" | "medium" | "high"
     }
     CompositeTypes: {
@@ -22960,20 +22960,6 @@ export const Constants = {
         "expired",
         "replaced",
       ],
-      meal_type: [
-        "breakfast",
-        "morning_snack",
-        "lunch",
-        "afternoon_snack",
-        "dinner",
-        "evening_snack",
-        "Café da Manhã",
-        "Lanche da Manhã",
-        "Almoço",
-        "Lanche da Tarde",
-        "Jantar",
-        "Ceia",
-      ],
       metabolic_phase_type: [
         "initial_response",
         "active_loss",
@@ -23032,6 +23018,20 @@ export const Constants = {
         "personal",
         "staff",
         "patient",
+      ],
+      tipo_refeicao: [
+        "breakfast",
+        "morning_snack",
+        "lunch",
+        "afternoon_snack",
+        "dinner",
+        "evening_snack",
+        "Café da Manhã",
+        "Lanche da Manhã",
+        "Almoço",
+        "Lanche da Tarde",
+        "Jantar",
+        "Ceia",
       ],
       usage_intensity: ["low", "medium", "high"],
     },

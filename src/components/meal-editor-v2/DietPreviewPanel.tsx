@@ -31,13 +31,13 @@ export default function DietPreviewPanel() {
   const dayItems = items.filter((i) => i.day_of_week === previewDay);
   const mealTypes = ["Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
 
-  const totalKcal = dayItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = dayItems.reduce((s, i) => s + (i.protein_target || 0), 0);
-  const totalCarbs = dayItems.reduce((s, i) => s + (i.carbs_target || 0), 0);
-  const totalFat = dayItems.reduce((s, i) => s + (i.fat_target || 0), 0);
+  const totalKcal = dayItems.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const totalProt = dayItems.reduce((s, i) => s + (i.meta_proteinas || 0), 0);
+  const totalCarbs = dayItems.reduce((s, i) => s + (i.meta_carboidratos || 0), 0);
+  const totalFat = dayItems.reduce((s, i) => s + (i.meta_gorduras || 0), 0);
 
   // Weekly totals
-  const weekKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
+  const weekKcal = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
   const daysWithItems = new Set(items.map((i) => i.day_of_week)).size;
   const avgKcal = daysWithItems > 0 ? Math.round(weekKcal / daysWithItems) : 0;
   
@@ -112,7 +112,7 @@ export default function DietPreviewPanel() {
       {/* Meals preview — patient view */}
       <div className="space-y-2">
         {mealTypes.map((mt) => {
-          const mealItems = dayItems.filter((i) => i.meal_type === mt);
+          const mealItems = dayItems.filter((i) => i.tipo_refeicao === mt);
           const meal = MEAL_LABELS[mt];
           if (!meal) return null;
 
@@ -122,7 +122,7 @@ export default function DietPreviewPanel() {
                 {meal.icon}
                 <span className="text-xs font-bold">{meal.label}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">
-                  {mealItems.reduce((s, i) => s + (i.calories_target || 0), 0)} kcal
+                  {mealItems.reduce((s, i) => s + (i.meta_calorias || 0), 0)} kcal
                 </span>
               </div>
               {mealItems.length === 0 ? (
@@ -147,7 +147,7 @@ export default function DietPreviewPanel() {
                         )}
                       </div>
                       <span className="text-[10px] text-muted-foreground shrink-0">
-                        {Math.round(item.calories_target || 0)} kcal
+                        {Math.round(item.meta_calorias || 0)} kcal
                       </span>
                     </div>
                   ))}

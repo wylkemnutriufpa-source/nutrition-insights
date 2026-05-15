@@ -28,13 +28,13 @@ interface Recipe {
   instructions: any;
   prep_time_minutes: number | null;
   cook_time_minutes: number | null;
-  servings: number | null;
+  porcoes: number | null;
   difficulty: string | null;
   category: string | null;
-  calories_per_serving: number | null;
-  protein_per_serving: number | null;
-  carbs_per_serving: number | null;
-  fat_per_serving: number | null;
+  calorias_por_porcao: number | null;
+  proteinas_por_porcao: number | null;
+  carboidratos_por_porcao: number | null;
+  gorduras_por_porcao: number | null;
   tags: string[] | null;
   is_ai_generated: boolean | null;
   is_shared: boolean | null;
@@ -75,9 +75,9 @@ const categoryMap: Record<string, string> = { main: "Prato Principal", snack: "L
 
 const emptyForm = {
   title: "", description: "", ingredients_text: "", instructions_text: "",
-  prep_time_minutes: "15", cook_time_minutes: "30", servings: "2",
+  prep_time_minutes: "15", cook_time_minutes: "30", porcoes: "2",
   difficulty: "medium", category: "main",
-  calories_per_serving: "", protein_per_serving: "", carbs_per_serving: "", fat_per_serving: "",
+  calorias_por_porcao: "", proteinas_por_porcao: "", carboidratos_por_porcao: "", gorduras_por_porcao: "",
 };
 
 // ──── NUTRITIONIST VIEW ────
@@ -115,11 +115,11 @@ function NutritionistRecipes() {
       ingredients_text: toStringArray(r.ingredients).join("\n"),
       instructions_text: toStringArray(r.instructions).join("\n"),
       prep_time_minutes: String(r.prep_time_minutes ?? 15), cook_time_minutes: String(r.cook_time_minutes ?? 30),
-      servings: String(r.servings ?? 2), difficulty: r.difficulty ?? "medium", category: r.category ?? "main",
-      calories_per_serving: String(r.calories_per_serving ?? ""),
-      protein_per_serving: String(r.protein_per_serving ?? ""),
-      carbs_per_serving: String(r.carbs_per_serving ?? ""),
-      fat_per_serving: String(r.fat_per_serving ?? ""),
+      porcoes: String(r.porcoes ?? 2), difficulty: r.difficulty ?? "medium", category: r.category ?? "main",
+      calorias_por_porcao: String(r.calorias_por_porcao ?? ""),
+      proteinas_por_porcao: String(r.proteinas_por_porcao ?? ""),
+      carboidratos_por_porcao: String(r.carboidratos_por_porcao ?? ""),
+      gorduras_por_porcao: String(r.gorduras_por_porcao ?? ""),
     });
     setDialogOpen(true);
   };
@@ -133,12 +133,12 @@ function NutritionistRecipes() {
       instructions: form.instructions_text.split("\n").filter(Boolean),
       prep_time_minutes: Number(form.prep_time_minutes) || 15,
       cook_time_minutes: Number(form.cook_time_minutes) || 30,
-      servings: Number(form.servings) || 2,
+      porcoes: Number(form.porcoes) || 2,
       difficulty: form.difficulty, category: form.category,
-      calories_per_serving: form.calories_per_serving ? Number(form.calories_per_serving) : null,
-      protein_per_serving: form.protein_per_serving ? Number(form.protein_per_serving) : null,
-      carbs_per_serving: form.carbs_per_serving ? Number(form.carbs_per_serving) : null,
-      fat_per_serving: form.fat_per_serving ? Number(form.fat_per_serving) : null,
+      calorias_por_porcao: form.calorias_por_porcao ? Number(form.calorias_por_porcao) : null,
+      proteinas_por_porcao: form.proteinas_por_porcao ? Number(form.proteinas_por_porcao) : null,
+      carboidratos_por_porcao: form.carboidratos_por_porcao ? Number(form.carboidratos_por_porcao) : null,
+      gorduras_por_porcao: form.gorduras_por_porcao ? Number(form.gorduras_por_porcao) : null,
     };
 
     if (editing) {
@@ -235,8 +235,8 @@ function NutritionistRecipes() {
                   <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{r.description}</p>
                   <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{(r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0)}min</span>
-                    <span className="flex items-center gap-1"><Users className="w-3 h-3" />{r.servings ?? 1} porções</span>
-                    {r.calories_per_serving && <span>{r.calories_per_serving} kcal</span>}
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" />{r.porcoes ?? 1} porções</span>
+                    {r.calorias_por_porcao && <span>{r.calorias_por_porcao} kcal</span>}
                   </div>
                 </CardContent>
               </Card>
@@ -271,15 +271,15 @@ function NutritionistRecipes() {
             <div className="grid grid-cols-3 gap-3">
               <div><Label>Preparo (min)</Label><Input type="number" value={form.prep_time_minutes} onChange={e => setForm({ ...form, prep_time_minutes: e.target.value })} /></div>
               <div><Label>Cozimento (min)</Label><Input type="number" value={form.cook_time_minutes} onChange={e => setForm({ ...form, cook_time_minutes: e.target.value })} /></div>
-              <div><Label>Porções</Label><Input type="number" value={form.servings} onChange={e => setForm({ ...form, servings: e.target.value })} /></div>
+              <div><Label>Porções</Label><Input type="number" value={form.porcoes} onChange={e => setForm({ ...form, porcoes: e.target.value })} /></div>
             </div>
             <div><Label>Ingredientes (um por linha)</Label><Textarea value={form.ingredients_text} onChange={e => setForm({ ...form, ingredients_text: e.target.value })} rows={4} placeholder={"200g peito de frango\n1 xícara de quinoa\n..."} /></div>
             <div><Label>Modo de Preparo (um passo por linha)</Label><Textarea value={form.instructions_text} onChange={e => setForm({ ...form, instructions_text: e.target.value })} rows={4} placeholder={"Tempere o frango\nGrelhe em fogo médio\n..."} /></div>
             <div className="grid grid-cols-4 gap-2">
-              <div><Label>Kcal/porção</Label><Input type="number" value={form.calories_per_serving} onChange={e => setForm({ ...form, calories_per_serving: e.target.value })} /></div>
-              <div><Label>Prot (g)</Label><Input type="number" value={form.protein_per_serving} onChange={e => setForm({ ...form, protein_per_serving: e.target.value })} /></div>
-              <div><Label>Carb (g)</Label><Input type="number" value={form.carbs_per_serving} onChange={e => setForm({ ...form, carbs_per_serving: e.target.value })} /></div>
-              <div><Label>Gord (g)</Label><Input type="number" value={form.fat_per_serving} onChange={e => setForm({ ...form, fat_per_serving: e.target.value })} /></div>
+              <div><Label>Kcal/porção</Label><Input type="number" value={form.calorias_por_porcao} onChange={e => setForm({ ...form, calorias_por_porcao: e.target.value })} /></div>
+              <div><Label>Prot (g)</Label><Input type="number" value={form.proteinas_por_porcao} onChange={e => setForm({ ...form, proteinas_por_porcao: e.target.value })} /></div>
+              <div><Label>Carb (g)</Label><Input type="number" value={form.carboidratos_por_porcao} onChange={e => setForm({ ...form, carboidratos_por_porcao: e.target.value })} /></div>
+              <div><Label>Gord (g)</Label><Input type="number" value={form.gorduras_por_porcao} onChange={e => setForm({ ...form, gorduras_por_porcao: e.target.value })} /></div>
             </div>
             <Button onClick={handleSave} className="w-full gradient-primary" disabled={!form.title.trim()}>{editing ? "Atualizar" : "Criar Receita"}</Button>
           </div>
@@ -405,7 +405,7 @@ function PatientRecipes() {
                 <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{r.description}</p>
                 <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
                   <span><Clock className="w-3 h-3 inline mr-1" />{(r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0)}min</span>
-                  {r.calories_per_serving && <span>{r.calories_per_serving} kcal</span>}
+                  {r.calorias_por_porcao && <span>{r.calorias_por_porcao} kcal</span>}
                 </div>
               </CardContent>
             </Card>

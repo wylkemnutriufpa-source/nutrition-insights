@@ -62,7 +62,7 @@ export const TemplateSelector = ({ onPlanGenerated }: { onPlanGenerated: (plan: 
                 {template.meals.length} Refeições
               </span>
               <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${
-                template.category === 'hypertrophy' ? 'bg-orange-500/10 text-orange-400' : 'bg-green-500/10 text-green-400'
+                template.category === 'hipertrofia' ? 'bg-orange-500/10 text-orange-400' : 'bg-green-500/10 text-green-400'
               }`}>
                 {template.category}
               </span>

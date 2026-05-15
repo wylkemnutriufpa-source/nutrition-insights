@@ -38,10 +38,10 @@ export function MealSlotModal({
   const totals = items.reduce((acc, item) => {
     const meta = item.metadata || {};
     return {
-      calories: acc.calories + (item.calories_target ?? meta.calories_target ?? meta.calories ?? 0),
-      protein: acc.protein + (item.protein_target ?? meta.protein_target ?? meta.protein ?? 0),
-      carbs: acc.carbs + (item.carbs_target ?? meta.carbs_target ?? meta.carbs ?? 0),
-      fat: acc.fat + (item.fat_target ?? meta.fat_target ?? meta.fat ?? 0),
+      calories: acc.calories + (item.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0),
+      protein: acc.protein + (item.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0),
+      carbs: acc.carbs + (item.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs ?? 0),
+      fat: acc.fat + (item.meta_gorduras ?? meta.meta_gorduras ?? meta.fat ?? 0),
     };
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 

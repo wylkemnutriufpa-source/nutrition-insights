@@ -23,7 +23,7 @@ export interface FoodStructureItem {
 export interface MealTemplate {
   id: string;
   name: string;
-  meal_type: string;
+  tipo_refeicao: string;
   kcal_base: number;
   protein_base: number;
   carbs_base: number;
@@ -36,9 +36,9 @@ export interface MealTemplate {
 
 export interface ScalingTarget {
   target_kcal: number;
-  protein_target?: number;
-  carbs_target?: number;
-  fat_target?: number;
+  meta_proteinas?: number;
+  meta_carboidratos?: number;
+  meta_gorduras?: number;
   patient_weight_kg?: number;
 }
 
@@ -197,7 +197,7 @@ export function rankTemplatesForPatient(
       }
 
       // Meal type match (+20)
-      if (targetMealType && t.meal_type === targetMealType) {
+      if (targetMealType && t.tipo_refeicao === targetMealType) {
         score += 20;
       }
 

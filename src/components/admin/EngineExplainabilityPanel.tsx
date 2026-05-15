@@ -14,10 +14,10 @@ import { cn } from "@/lib/utils";
 
 interface ExplainabilityPanelProps {
   metadata: {
-    calories_target?: number;
-    protein_target?: number;
-    carbs_target?: number;
-    fat_target?: number;
+    meta_calorias?: number;
+    meta_proteinas?: number;
+    meta_carboidratos?: number;
+    meta_gorduras?: number;
     protocol?: string;
     restrictions_applied?: string[];
     strategy_version?: string;
@@ -55,9 +55,9 @@ export function EngineExplainabilityPanel({ metadata }: ExplainabilityPanelProps
           <div className="space-y-2 p-3 rounded-lg bg-muted/30 border border-border/10">
             <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase">
               <Flame className="h-3 w-3 text-orange-500" />
-              Calorias Alvo
+              Meta de Calorias
             </div>
-            <div className="text-lg font-mono font-bold">{metadata.calories_target || 0} <span className="text-[10px] text-muted-foreground">kcal</span></div>
+            <div className="text-lg font-mono font-bold">{metadata.meta_calorias || 0} <span className="text-[10px] text-muted-foreground">kcal</span></div>
           </div>
 
           <div className="space-y-2 p-3 rounded-lg bg-muted/30 border border-border/10">
@@ -77,9 +77,9 @@ export function EngineExplainabilityPanel({ metadata }: ExplainabilityPanelProps
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Prot', value: metadata.protein_target, color: 'bg-red-500' },
-              { label: 'Carb', value: metadata.carbs_target, color: 'bg-blue-500' },
-              { label: 'Gord', value: metadata.fat_target, color: 'bg-yellow-500' }
+              { label: 'Prot', value: metadata.meta_proteinas, color: 'bg-red-500' },
+              { label: 'Carb', value: metadata.meta_carboidratos, color: 'bg-blue-500' },
+              { label: 'Gord', value: metadata.meta_gorduras, color: 'bg-yellow-500' }
             ].map(macro => (
               <div key={macro.label} className="p-2 rounded bg-background border border-border/5 text-center">
                 <div className="text-[10px] text-muted-foreground uppercase mb-1">{macro.label}</div>

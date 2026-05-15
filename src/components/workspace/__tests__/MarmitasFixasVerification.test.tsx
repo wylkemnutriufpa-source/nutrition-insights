@@ -15,7 +15,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 
 // ─── Estado mutável compartilhado entre o teste e o mock supabase ───────
-type RecipeRow = { meal_type: string; is_fixed: boolean };
+type RecipeRow = { tipo_refeicao: string; is_fixed: boolean };
 type State = {
   recipes: RecipeRow[];
   templates: Array<{
@@ -47,8 +47,8 @@ const STATE: State = {
 
 function buildFixedRecipes(fixedLunch: number, fixedDinner: number): RecipeRow[] {
   return [
-    ...Array.from({ length: fixedLunch }, () => ({ meal_type: "Almoço", is_fixed: true })),
-    ...Array.from({ length: fixedDinner }, () => ({ meal_type: "Jantar", is_fixed: true })),
+    ...Array.from({ length: fixedLunch }, () => ({ tipo_refeicao: "Almoço", is_fixed: true })),
+    ...Array.from({ length: fixedDinner }, () => ({ tipo_refeicao: "Jantar", is_fixed: true })),
   ];
 }
 

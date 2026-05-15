@@ -32,7 +32,7 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
         .gte("date", new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0]),
       supabase
         .from("meal_plans")
-        .select("title, plan_status, total_target_calories, total_target_protein, total_target_carbs, total_target_fat")
+        .select("title, plan_status, total_meta_calorias, total_meta_proteinas, total_meta_carboidratos, total_meta_gorduras")
         .eq("patient_id", patientId)
         .eq("plan_status", "published")
         .order("created_at", { ascending: false })
@@ -136,10 +136,10 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
   ${plan ? `
     <h2>Plano Alimentar Atual</h2>
     <div class="grid">
-      <div class="metric"><div class="value">${plan.total_target_calories || "—"}</div><div class="label">Kcal/dia</div></div>
-      <div class="metric"><div class="value">${plan.total_target_protein ? `${plan.total_target_protein}g` : "—"}</div><div class="label">Proteínas</div></div>
-      <div class="metric"><div class="value">${plan.total_target_carbs ? `${plan.total_target_carbs}g` : "—"}</div><div class="label">Carboidratos</div></div>
-      <div class="metric"><div class="value">${plan.total_target_fat ? `${plan.total_target_fat}g` : "—"}</div><div class="label">Gorduras</div></div>
+      <div class="metric"><div class="value">${plan.total_meta_calorias || "—"}</div><div class="label">Kcal/dia</div></div>
+      <div class="metric"><div class="value">${plan.total_meta_proteinas ? `${plan.total_meta_proteinas}g` : "—"}</div><div class="label">Proteínas</div></div>
+      <div class="metric"><div class="value">${plan.total_meta_carboidratos ? `${plan.total_meta_carboidratos}g` : "—"}</div><div class="label">Carboidratos</div></div>
+      <div class="metric"><div class="value">${plan.total_meta_gorduras ? `${plan.total_meta_gorduras}g` : "—"}</div><div class="label">Gorduras</div></div>
     </div>
   ` : ""}
 

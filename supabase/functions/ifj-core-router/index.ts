@@ -1183,7 +1183,7 @@ async function runNutritionEngine(supabaseAdmin: any, intent: IFJIntent, userId:
     const [{ data: profile }, { data: anam }, { data: plan }] = await Promise.all([
       supabaseAdmin.from("profiles").select("full_name, goal").eq("user_id", userId).maybeSingle(),
       supabaseAdmin.from("patient_anamnesis").select("answers").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-      supabaseAdmin.from("meal_plans").select("title, total_target_calories").eq("patient_id", userId).eq("is_active", true).limit(1).maybeSingle(),
+      supabaseAdmin.from("meal_plans").select("title, total_meta_calorias").eq("patient_id", userId).eq("is_active", true).limit(1).maybeSingle(),
     ]);
 
     if (!profile?.goal && !anam && !plan)
@@ -1210,7 +1210,7 @@ CONTEXTO:
 - Nome: ${profile?.full_name || "Paciente"}
 - Objetivo: ${profile?.goal || "Não informado"}
 - Alergias: ${allergies.length ? allergies.join(", ") : "Nenhuma"}
-- Plano: ${plan ? plan.title + " (" + (plan.total_target_calories || "?") + "kcal)" : "Sem plano ativo"}`;
+- Plano: ${plan ? plan.title + " (" + (plan.total_meta_calorias || "?") + "kcal)" : "Sem plano ativo"}`;
 
     try {
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -1375,7 +1375,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *plano alimentar da Maria*", [], intent, "clinical", ctx);
-      const { data: plan } = await supabase.from("meal_plans").select("id, title, plan_status, is_active, start_date, end_date, total_target_calories").eq("patient_id", pid).eq("is_active", true).limit(1).maybeSingle();
+      const { data: plan } = await supabase.from("meal_plans").select("id, title, plan_status, is_active, start_date, end_date, total_meta_calorias").eq("patient_id", pid).eq("is_active", true).limit(1).maybeSingle();
       const p = patients.find(x => x.id === pid);
       if (!plan) {
         // Check for inactive/old plans
@@ -1394,7 +1394,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
           actions, intent, "clinical", ctx);
       }
       const daysLeft = plan.end_date ? Math.ceil((new Date(plan.end_date).getTime() - Date.now()) / 86400000) : null;
-      const md = `## ${plan.title}\n\n- Status: ${plan.plan_status}\n- Início: ${plan.start_date || "—"}\n- Fim: ${plan.end_date || "—"}\n- Calorias: ${plan.total_target_calories || "—"} kcal` + (daysLeft != null ? `\n- **Vence em ${daysLeft}d**` : "");
+      const md = `## ${plan.title}\n\n- Status: ${plan.plan_status}\n- Início: ${plan.start_date || "—"}\n- Fim: ${plan.end_date || "—"}\n- Calorias: ${plan.total_meta_calorias || "—"} kcal` + (daysLeft != null ? `\n- **Vence em ${daysLeft}d**` : "");
       return fmt(`Plano: ${p?.full_name}`, "🍽️", "detail", plan.title, md, [{ label: "Editar", route: `/meal-plans/${plan.id}`, type: "navigate" }], intent, "clinical", ctx);
     }
     case "meal_plan_expiring": {

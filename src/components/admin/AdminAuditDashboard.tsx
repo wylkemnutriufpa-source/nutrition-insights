@@ -202,10 +202,10 @@ export const AdminAuditDashboard = () => {
             <div className="space-y-6">
               <EngineExplainabilityPanel 
                 metadata={{
-                  calories_target: 2150,
-                  protein_target: 165,
-                  carbs_target: 220,
-                  fat_target: 72,
+                  meta_calorias: 2150,
+                  meta_proteinas: 165,
+                  meta_carboidratos: 220,
+                  meta_gorduras: 72,
                   protocol: "FitJourney",
                   restrictions_applied: ["Lactose", "Glúten"],
                   clinical_rationale: "Paciente apresenta sensibilidade gástrica reportada. Engine selecionou estratégia de alta densidade nutricional com exclusão de alérgenos comuns para otimizar recuperação muscular."

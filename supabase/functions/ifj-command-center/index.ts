@@ -15,7 +15,7 @@ const corsHeaders = {
  * - patients (id, nutritionist_id, full_name, email, phone, status, journey_status, goal, current_weight, target_weight)
  * - clinical_daily_snapshots (patient_id, snapshot_date, adherence_score, dropout_risk_score, risk_level, weight_trend, checklist_completion_rate)
  * - clinical_alerts (nutritionist_id, patient_id, title, severity, alert_type, is_active)
- * - meal_plans (nutritionist_id, patient_id, title, plan_status, end_date, total_target_calories, is_active)
+ * - meal_plans (nutritionist_id, patient_id, title, plan_status, end_date, total_meta_calorias, is_active)
  * - patient_appointments (nutritionist_id, patient_id, appointment_date, appointment_time, appointment_type, status)
  * - patient_checkins (patient_id, weight, mood, created_at)
  * - patient_anamnesis (user_id, health_conditions, allergies, food_preferences, activity_level, sleep_hours, medications, dietary_restrictions)
@@ -361,7 +361,7 @@ serve(async (req) => {
         const { data: alertsData } = await supabase.from("clinical_alerts")
           .select("title, severity, alert_type").eq("patient_id", found.id).eq("is_active", true);
         const { data: plans } = await supabase.from("meal_plans")
-          .select("title, plan_status, end_date, total_target_calories, is_active")
+          .select("title, plan_status, end_date, total_meta_calorias, is_active")
           .eq("patient_id", found.id).order("created_at", { ascending: false }).limit(3);
         const { data: appointments } = await supabase.from("patient_appointments")
           .select("appointment_date, appointment_time, status").eq("patient_id", found.id).gte("appointment_date", today).limit(3);
@@ -386,7 +386,7 @@ serve(async (req) => {
         }
 
         if (activePlan) {
-          body += `\n\n### Plano Ativo\n- **${activePlan.title}** (${activePlan.total_target_calories || "?"} kcal) — expira ${activePlan.end_date || "indefinido"}`;
+          body += `\n\n### Plano Ativo\n- **${activePlan.title}** (${activePlan.total_meta_calorias || "?"} kcal) — expira ${activePlan.end_date || "indefinido"}`;
         }
 
         if ((alertsData || []).length > 0) {
@@ -482,7 +482,7 @@ serve(async (req) => {
       const nextWeekStr = nextWeek.toISOString().split("T")[0];
 
       const { data: plans } = await supabase.from("meal_plans")
-        .select("patient_id, title, end_date, total_target_calories, plan_status")
+        .select("patient_id, title, end_date, total_meta_calorias, plan_status")
         .eq("nutritionist_id", user.id).in("plan_status", ["active", "published"])
         .lte("end_date", nextWeekStr).gte("end_date", today);
 
@@ -492,7 +492,7 @@ serve(async (req) => {
         responseText = formatResponse(`Planos Expirando (${plans.length})`, "⏰",
           plans.map((p: any) => {
             const pat = (patients || []).find((x: any) => x.id === p.patient_id);
-            return `- **${pat?.full_name || "?"}** — ${p.title} (${p.total_target_calories || "?"} kcal) → expira ${p.end_date}`;
+            return `- **${pat?.full_name || "?"}** — ${p.title} (${p.total_meta_calorias || "?"} kcal) → expira ${p.end_date}`;
           }).join("\n")
         );
       }

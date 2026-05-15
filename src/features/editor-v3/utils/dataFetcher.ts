@@ -280,7 +280,7 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
     return {
       id: t.id,
       name: t.name,
-      description: t.goal_tags ? t.goal_tags.join(", ") : (t.meal_type || ""),
+      description: t.goal_tags ? t.goal_tags.join(", ") : (t.tipo_refeicao || ""),
       items: foods.map((f: any) => ({
         id: crypto.randomUUID(),
         name: f.name,

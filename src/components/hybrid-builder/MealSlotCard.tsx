@@ -58,8 +58,8 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const primaryItems = sortedAllItems.filter((i) => (i as any).is_primary !== false);
   const substitutionItems = sortedAllItems.filter((i) => (i as any).is_primary === false);
 
-  const totalKcal = primaryItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = primaryItems.reduce((s, i) => s + (i.protein_target || 0), 0);
+  const totalKcal = primaryItems.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const totalProt = primaryItems.reduce((s, i) => s + (i.meta_proteinas || 0), 0);
   const hasItems = items.length > 0;
 
   const handleDelete = (itemId: string) => {
@@ -94,10 +94,10 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
       store.updateItem(item.id, {
         title: result.newName,
         description: result.newDescription,
-        calories_target: result.calories_target,
-        protein_target: result.protein_target,
-        carbs_target: result.carbs_target,
-        fat_target: result.fat_target,
+        meta_calorias: result.meta_calorias,
+        meta_proteinas: result.meta_proteinas,
+        meta_carboidratos: result.meta_carboidratos,
+        meta_gorduras: result.meta_gorduras,
       });
       toast.success(`✅ ${item.title} → ${result.newName} (${grams}g)`, { id: tId });
     } catch (e) {
@@ -120,10 +120,10 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     const oldGrams = parseQuantity(item);
     const ratio = newGrams / oldGrams;
     return {
-      calories_target: Math.round((item.calories_target || 0) * ratio),
-      protein_target: Math.round(((item.protein_target || 0) * ratio) * 10) / 10,
-      carbs_target: Math.round(((item.carbs_target || 0) * ratio) * 10) / 10,
-      fat_target: Math.round(((item.fat_target || 0) * ratio) * 10) / 10,
+      meta_calorias: Math.round((item.meta_calorias || 0) * ratio),
+      meta_proteinas: Math.round(((item.meta_proteinas || 0) * ratio) * 10) / 10,
+      meta_carboidratos: Math.round(((item.meta_carboidratos || 0) * ratio) * 10) / 10,
+      meta_gorduras: Math.round(((item.meta_gorduras || 0) * ratio) * 10) / 10,
       description: item.description?.replace(/\d+\s*g/i, `${newGrams}g`) || `${newGrams}g`,
     };
   };
@@ -148,10 +148,10 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     // Update current item
     store.updateItem(item.id, applyGramsUpdate(item, newGrams));
     
-    // Find matching items on other days (same title + meal_type)
+    // Find matching items on other days (same title + tipo_refeicao)
     const allItems = store.items;
     const matchingItems = allItems.filter(
-      (i) => i.id !== item.id && i.title === item.title && i.meal_type === item.meal_type
+      (i) => i.id !== item.id && i.title === item.title && i.tipo_refeicao === item.tipo_refeicao
     );
     matchingItems.forEach((match) => {
       store.updateItem(match.id, applyGramsUpdate(match, newGrams));
@@ -182,11 +182,11 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           title: ci.food_name,
           description: `${ci.food_name} ${ci.grams}g`,
           day_of_week: day,
-          meal_type: mealType,
-          calories_target: ci.calories,
-          protein_target: ci.protein,
-          carbs_target: ci.carbs,
-          fat_target: ci.fat,
+          tipo_refeicao: mealType,
+          meta_calorias: ci.calories,
+          meta_proteinas: ci.protein,
+          meta_carboidratos: ci.carbs,
+          meta_gorduras: ci.fat,
           item_origin: "composer_auto",
         });
       }
@@ -229,11 +229,11 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
         title: item.title,
         description: item.description,
         day_of_week: day,
-        meal_type: mealType,
-        calories_target: item.calories_target,
-        protein_target: item.protein_target,
-        carbs_target: item.carbs_target,
-        fat_target: item.fat_target,
+        tipo_refeicao: mealType,
+        meta_calorias: item.meta_calorias,
+        meta_proteinas: item.meta_proteinas,
+        meta_carboidratos: item.meta_carboidratos,
+        meta_gorduras: item.meta_gorduras,
         item_origin: (item as any).item_origin || "manual",
         is_primary: (item as any).is_primary ?? true,
         substitution_group_id: (item as any).substitution_group_id,
@@ -264,11 +264,11 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           title: item.title,
           description: item.description,
           day_of_week: targetDay,
-          meal_type: mealType,
-          calories_target: item.calories_target,
-          protein_target: item.protein_target,
-          carbs_target: item.carbs_target,
-          fat_target: item.fat_target,
+          tipo_refeicao: mealType,
+          meta_calorias: item.meta_calorias,
+          meta_proteinas: item.meta_proteinas,
+          meta_carboidratos: item.meta_carboidratos,
+          meta_gorduras: item.meta_gorduras,
           item_origin: (item as any).item_origin || "manual",
           is_primary: (item as any).is_primary ?? true,
           substitution_group_id: (item as any).substitution_group_id,

@@ -5,10 +5,10 @@ export interface PatientPlan {
   patient_id: string;
   patient_name: string;
   goal: string;
-  calories_target: number;
-  protein_target: number;
-  carbs_target: number;
-  fat_target: number;
+  meta_calorias: number;
+  meta_proteinas: number;
+  meta_carboidratos: number;
+  meta_gorduras: number;
   meals: Meal[];
   created_at: string;
   sharing_token?: string;

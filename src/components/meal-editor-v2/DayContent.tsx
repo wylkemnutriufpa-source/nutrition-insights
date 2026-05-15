@@ -78,10 +78,10 @@ export function DayContent({ day }: Props) {
   const dayItems = items.filter(i => i.day_of_week === day);
 
   const totals = {
-    calories: dayItems.reduce((s, i) => s + (i.calories_target || 0), 0),
-    protein: dayItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
-    carbs: dayItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0),
-    fat: dayItems.reduce((s, i) => s + (Number(i.fat_target) || 0), 0),
+    calories: dayItems.reduce((s, i) => s + (i.meta_calorias || 0), 0),
+    protein: dayItems.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0),
+    carbs: dayItems.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0),
+    fat: dayItems.reduce((s, i) => s + (Number(i.meta_gorduras) || 0), 0),
   };
 
   const handleQuickAdd = (mealType: MealType) => {
@@ -91,12 +91,12 @@ export function DayContent({ day }: Props) {
       meal_plan_id: planId,
       title: quickAddText.trim(),
       description: match?.portion ?? null,
-      meal_type: mealType,
+      tipo_refeicao: mealType,
       day_of_week: day,
-      calories_target: match?.calories ?? null,
-      protein_target: match?.protein ?? null,
-      carbs_target: match?.carbs ?? null,
-      fat_target: match?.fat ?? null,
+      meta_calorias: match?.calories ?? null,
+      meta_proteinas: match?.protein ?? null,
+      meta_carboidratos: match?.carbs ?? null,
+      meta_gorduras: match?.fat ?? null,
     });
     setQuickAddText("");
     setQuickAddKey(null);
@@ -124,7 +124,7 @@ export function DayContent({ day }: Props) {
 
       {/* Meal Sections */}
       {MEAL_TYPES.map((meal) => {
-        const mealItems = dayItems.filter(i => i.meal_type === meal.key);
+        const mealItems = dayItems.filter(i => i.tipo_refeicao === meal.key);
         const cellKey = `${day}-${meal.key}`;
 
         return (

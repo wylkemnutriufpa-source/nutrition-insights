@@ -23,10 +23,10 @@ interface FoodRow {
 interface RecipeRow {
   id: string;
   title: string;
-  calories_per_serving: number | null;
-  protein_per_serving: number | null;
-  carbs_per_serving: number | null;
-  fat_per_serving: number | null;
+  calorias_por_porcao: number | null;
+  proteinas_por_porcao: number | null;
+  carboidratos_por_porcao: number | null;
+  gorduras_por_porcao: number | null;
   image_url: string | null;
   category: string | null;
 }
@@ -36,7 +36,7 @@ const MEAL_FILTERS = [
   { key: "Café da Manhã", label: "Café" },
   { key: "Almoço", label: "Almoço" },
   { key: "Jantar", label: "Jantar" },
-  { key: "snack", label: "Lanche" },
+  { key: "Lanche", label: "Lanche" },
 ];
 
 export default function BuilderLibraryPanel() {
@@ -58,7 +58,7 @@ export default function BuilderLibraryPanel() {
           .order("food_name"),
         supabase
           .from("recipes")
-          .select("id, title, calories_per_serving, protein_per_serving, carbs_per_serving, fat_per_serving, image_url, category")
+          .select("id, title, calorias_por_porcao, proteinas_por_porcao, carboidratos_por_porcao, gorduras_por_porcao, image_url, category")
           .order("title"),
       ]);
 
@@ -253,10 +253,10 @@ function DraggableRecipeItem({ recipe }: { recipe: RecipeRow }) {
           <ChefHat className="w-3 h-3 text-primary shrink-0" />
         </div>
         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5">
-          <Flame className="w-2.5 h-2.5" /> {Math.round(recipe.calories_per_serving || 0)}
-          <Beef className="w-2.5 h-2.5" /> {Math.round(recipe.protein_per_serving || 0)}
-          <Wheat className="w-2.5 h-2.5" /> {Math.round(recipe.carbs_per_serving || 0)}
-          <Droplets className="w-2.5 h-2.5" /> {Math.round(recipe.fat_per_serving || 0)}
+          <Flame className="w-2.5 h-2.5" /> {Math.round(recipe.calorias_por_porcao || 0)}
+          <Beef className="w-2.5 h-2.5" /> {Math.round(recipe.proteinas_por_porcao || 0)}
+          <Wheat className="w-2.5 h-2.5" /> {Math.round(recipe.carboidratos_por_porcao || 0)}
+          <Droplets className="w-2.5 h-2.5" /> {Math.round(recipe.gorduras_por_porcao || 0)}
         </div>
       </div>
     </div>

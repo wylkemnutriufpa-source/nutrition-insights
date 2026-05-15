@@ -20,19 +20,19 @@ const formatDisplayPortion: any = (i: any) => '';
 
 import type { Database } from "@/integrations/supabase/types";
 
-type MealType = Database["public"]["Enums"]["meal_type"];
+type MealType = Database["public"]["Enums"]["tipo_refeicao"];
 type AdherenceStatus = "followed" | "partial" | "not_followed";
 
 interface MealPlanItem {
   id: string;
   title: string;
   description: string | null;
-  meal_type: MealType;
+  tipo_refeicao: MealType;
   day_of_week: number | null;
-  calories_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
+  meta_calorias: number | null;
+  meta_proteinas: number | null;
+  meta_carboidratos: number | null;
+  meta_gorduras: number | null;
   metadata?: Record<string, any> | null;
   image_url?: string | null;
   visual_library_item_id?: string | null;
@@ -58,11 +58,11 @@ interface MealDetailData {
   itemId?: string;
   title: string;
   description: string | null;
-  meal_type: MealType;
-  calories_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
+  tipo_refeicao: MealType;
+  meta_calorias: number | null;
+  meta_proteinas: number | null;
+  meta_carboidratos: number | null;
+  meta_gorduras: number | null;
   metadata?: Record<string, any> | null;
   image_url?: string | null;
 }
@@ -94,10 +94,10 @@ const IMPACT_TAGS: Record<string, { icon: React.ReactNode; label: string; color:
 function getImpactTags(meal: MealPlanItem) {
   const tags: string[] = [];
   const meta = meal.metadata || {};
-  const p = Number(meal.protein_target ?? meta.protein_target ?? meta.protein) || 0;
-  const c = Number(meal.carbs_target ?? meta.carbs_target ?? meta.carbs) || 0;
-  const f = Number(meal.fat_target ?? meta.fat_target ?? meta.fat) || 0;
-  const cal = Number(meal.calories_target ?? meta.calories_target ?? meta.calories) || 0;
+  const p = Number(meal.meta_proteinas ?? meta.meta_proteinas ?? meta.protein) || 0;
+  const c = Number(meal.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs) || 0;
+  const f = Number(meal.meta_gorduras ?? meta.meta_gorduras ?? meta.fat) || 0;
+  const cal = Number(meal.meta_calorias ?? meta.meta_calorias ?? meta.calories) || 0;
   if (p > 20) tags.push("recovery");
   if (p > 15 && f > 8) tags.push("satiety");
   if (c > 30 && cal > 200) tags.push("energy");
@@ -152,10 +152,10 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
     });
     
     return {
-      calories: primaryOnly.reduce((s, i) => s + safeNum(i.calories_target ?? i.metadata?.calories_target ?? i.metadata?.calories), 0),
-      protein: primaryOnly.reduce((s, i) => s + safeNum(i.protein_target ?? i.metadata?.protein_target ?? i.metadata?.protein), 0),
-      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.carbs_target ?? i.metadata?.carbs_target ?? i.metadata?.carbs), 0),
-      fat: primaryOnly.reduce((s, i) => s + safeNum(i.fat_target ?? i.metadata?.fat_target ?? i.metadata?.fat), 0),
+      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
+      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
+      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
+      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
     };
   }, [items]);
 
@@ -371,7 +371,7 @@ const MealItemCard = memo(function MealItemCard({
             {showMacros && (
               <div className="flex flex-wrap items-center gap-4 mt-3 py-3 border-t border-white/5 text-[11px] font-black uppercase tracking-wider text-white/30">
                 {(() => {
-                  const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
+                  const cal = item.meta_calorias ?? item.metadata?.meta_calorias ?? item.metadata?.calories;
                   if (cal === null || cal === undefined) return null;
                   return (
                     <div className="flex items-center gap-1">
@@ -399,9 +399,9 @@ const MealItemCard = memo(function MealItemCard({
                     </div>
                   );
                 })()}
-                <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target ?? item.metadata?.protein_target ?? item.metadata?.protein, "...")}g</span>
-                <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target ?? item.metadata?.carbs_target ?? item.metadata?.carbs, "...")}g</span>
-                <span className="flex items-center gap-1"><Droplets className="w-3 h-3 text-yellow-400" /> {fmtMacro(item.fat_target ?? item.metadata?.fat_target ?? item.metadata?.fat, "...")}g</span>
+                <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.meta_proteinas ?? item.metadata?.meta_proteinas ?? item.metadata?.protein, "...")}g</span>
+                <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.meta_carboidratos ?? item.metadata?.meta_carboidratos ?? item.metadata?.carbs, "...")}g</span>
+                <span className="flex items-center gap-1"><Droplets className="w-3 h-3 text-yellow-400" /> {fmtMacro(item.meta_gorduras ?? item.metadata?.meta_gorduras ?? item.metadata?.fat, "...")}g</span>
                 
                 {item.metadata?.prep_time && (
                   <Badge variant="secondary" className="px-1 py-0 h-4 text-[8px] flex items-center gap-0.5 bg-primary/5 text-primary border-primary/10">
@@ -410,7 +410,7 @@ const MealItemCard = memo(function MealItemCard({
                 )}
 
                 {/* SOBERANIA: Paciente nunca vê alertas de inconsistência técnica */}
-                {!isBasic && isMacroInconsistent(item.calories_target || 0, item.protein_target || 0, item.carbs_target || 0, item.fat_target || 0) && (
+                {!isBasic && isMacroInconsistent(item.meta_calorias || 0, item.meta_proteinas || 0, item.meta_carboidratos || 0, item.meta_gorduras || 0) && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -479,7 +479,7 @@ const MealItemCard = memo(function MealItemCard({
                 </button>
               )}
             </div>
-            <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
+            <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.tipo_refeicao} />
           </div>
           {completedAt && status && (
             <span className={`text-[10px] font-medium ${
@@ -609,10 +609,10 @@ const MealSlotCard = memo(function MealSlotCard({
     return items.reduce((acc, item) => {
       const meta = item.metadata || {};
       return {
-        calories: acc.calories + (item.calories_target ?? meta.calories_target ?? meta.calories ?? 0),
-        protein: acc.protein + (item.protein_target ?? meta.protein_target ?? meta.protein ?? 0),
-        carbs: acc.carbs + (item.carbs_target ?? meta.carbs_target ?? meta.carbs ?? 0),
-        fat: acc.fat + (item.fat_target ?? meta.fat_target ?? meta.fat ?? 0),
+        calories: acc.calories + (item.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0),
+        protein: acc.protein + (item.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0),
+        carbs: acc.carbs + (item.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs ?? 0),
+        fat: acc.fat + (item.meta_gorduras ?? meta.meta_gorduras ?? meta.fat ?? 0),
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   }, [items]);

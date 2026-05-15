@@ -28,7 +28,7 @@ interface MealLibrarySidebarProps {
 interface TemplateRow {
   id: string;
   name: string;
-  meal_type: string;
+  tipo_refeicao: string;
   kcal_base: number | null;
   protein_base: number | null;
   carbs_base: number | null;
@@ -126,14 +126,14 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
         
         // Transform recipes into TemplateRow format
         const recipeTemplates: TemplateRow[] = (recipesRes.data || []).map(r => {
-          const mType = r.meal_type?.toLowerCase();
+          const mType = r.tipo_refeicao?.toLowerCase();
           let mealType = "Almoço";
           if (mType?.includes("jantar")) mealType = "Jantar";
           
           return {
             id: r.id,
             name: r.name,
-            meal_type: mealType,
+            tipo_refeicao: mealType,
             kcal_base: r.fixed_calories || 0,
             protein_base: r.fixed_protein || 0,
             carbs_base: r.fixed_carbs || 0,
@@ -195,9 +195,9 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
     
     // Auto-filter by meal type if enabled
     if (showOnlyCompatible) {
-      list = list.filter((t) => t.meal_type === targetMealType);
+      list = list.filter((t) => t.tipo_refeicao === targetMealType);
     } else if (filterType !== "all") {
-      list = list.filter((t) => t.meal_type === filterType);
+      list = list.filter((t) => t.tipo_refeicao === filterType);
     }
 
     // Filter by objective tags
@@ -250,7 +250,7 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       if (foods.length > 0) {
         // Clear existing items in this cell
         const existingIds = items
-          .filter((i) => i.day_of_week === day && i.meal_type === targetMealType)
+          .filter((i) => i.day_of_week === day && i.tipo_refeicao === targetMealType)
           .map((i) => i.id);
         existingIds.forEach((id) => deleteItem(id));
 
@@ -268,12 +268,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
             meal_plan_id: planId,
             title: foodName,
             description: (food.portion || food.description || "") + subText,
-            meal_type: targetMealType,
+            tipo_refeicao: targetMealType,
             day_of_week: day,
-            calories_target: food.kcal || food.calories || null,
-            protein_target: food.protein || null,
-            carbs_target: food.carbs || null,
-            fat_target: food.fat || null,
+            meta_calorias: food.kcal || food.calories || null,
+            meta_proteinas: food.protein || null,
+            meta_carboidratos: food.carbs || null,
+            meta_gorduras: food.fat || null,
             edit_metadata: {
               is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
               original_recipe_id: template.is_recipe ? template.id : null,
@@ -290,7 +290,7 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       } else {
         // Clear existing items in this cell
         const existingIds = items
-          .filter((i) => i.day_of_week === day && i.meal_type === targetMealType)
+          .filter((i) => i.day_of_week === day && i.tipo_refeicao === targetMealType)
           .map((i) => i.id);
         existingIds.forEach((id) => deleteItem(id));
 
@@ -303,12 +303,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
           meal_plan_id: planId,
           title: templateName,
           description: null,
-          meal_type: targetMealType,
+          tipo_refeicao: targetMealType,
           day_of_week: day,
-          calories_target: template.kcal_base,
-          protein_target: template.protein_base,
-          carbs_target: template.carbs_base,
-          fat_target: template.fat_base,
+          meta_calorias: template.kcal_base,
+          meta_proteinas: template.protein_base,
+          meta_carboidratos: template.carbs_base,
+          meta_gorduras: template.fat_base,
           edit_metadata: {
             is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
             original_recipe_id: template.is_recipe ? template.id : null,
@@ -344,9 +344,9 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
     if (!planId) return;
 
     const meals = Array.isArray(template.meals) ? template.meals : [];
-    // Find meals matching the target meal_type
+    // Find meals matching the target tipo_refeicao
     const matchingMeals = meals.filter((m: any) => {
-      const mt = m.meal_type || m.type;
+      const mt = m.tipo_refeicao || m.type;
       // Normalize comparison to handle possible PT-BR or English keys in legacy data
       return mt === targetMealType || 
              (mt === 'breakfast' && targetMealType === 'Café da Manhã') ||
@@ -383,12 +383,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
           meal_plan_id: planId,
           title: food.name || food.title || meal.name || template.name,
           description: food.portion || food.serving || food.description || null,
-          meal_type: targetMealType,
+          tipo_refeicao: targetMealType,
           day_of_week: targetDay,
-          calories_target: food.kcal || food.calories || null,
-          protein_target: food.protein || null,
-          carbs_target: food.carbs || null,
-          fat_target: food.fat || null,
+          meta_calorias: food.kcal || food.calories || null,
+          meta_proteinas: food.protein || null,
+          meta_carboidratos: food.carbs || null,
+          meta_gorduras: food.fat || null,
           image_url: food.image_url || null,
           item_origin: "template"
         }));
@@ -419,12 +419,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       meal_plan_id: planId,
       title: `${template.name} — ${targetMealType}`,
       description: `${template.diet_style} • ${kcal} kcal`,
-      meal_type: targetMealType,
+      tipo_refeicao: targetMealType,
       day_of_week: targetDay,
-      calories_target: kcal,
-      protein_target: Math.round((kcal * protPct) / 4),
-      carbs_target: Math.round((kcal * carbPct) / 4),
-      fat_target: Math.round((kcal * fatPct) / 9),
+      meta_calorias: kcal,
+      meta_proteinas: Math.round((kcal * protPct) / 4),
+      meta_carboidratos: Math.round((kcal * carbPct) / 4),
+      meta_gorduras: Math.round((kcal * fatPct) / 9),
       item_origin: "template_fallback"
     });
 
@@ -652,7 +652,7 @@ function TemplateCard({ template, onInsert }: { template: TemplateRow; onInsert:
         </div>
         <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-0.5">
-            {MEAL_ICONS[template.meal_type]} {MEAL_LABELS[template.meal_type] || template.meal_type}
+            {MEAL_ICONS[template.tipo_refeicao]} {MEAL_LABELS[template.tipo_refeicao] || template.tipo_refeicao}
           </span>
           {template.kcal_base != null && (
             <span className="flex items-center gap-0.5">

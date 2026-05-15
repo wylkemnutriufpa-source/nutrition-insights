@@ -14,11 +14,11 @@ describe('MealSmartEditorModal Transactional Logic Proof', () => {
     id: 'item-175',
     title: 'Protein Meal',
     description: 'Frango Grelhado 175g',
-    meal_type: 'Almoço',
-    calories_target: 350,
-    protein_target: 40,
-    carbs_target: 10,
-    fat_target: 15,
+    tipo_refeicao: 'Almoço',
+    meta_calorias: 350,
+    meta_proteinas: 40,
+    meta_carboidratos: 10,
+    meta_gorduras: 15,
     edit_metadata: {
       portion_factor: 1.0,
       substitutions_json: ['Patinho Moído 175g', 'Tilápia 175g']

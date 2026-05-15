@@ -38,12 +38,12 @@ interface PlanItem {
   id: string;
   description: string;
   title: string;
-  meal_type: string;
+  tipo_refeicao: string;
   day_of_week: number;
-  calories_target: number;
-  protein_target: number;
-  carbs_target: number;
-  fat_target: number;
+  meta_calorias: number;
+  meta_proteinas: number;
+  meta_carboidratos: number;
+  meta_gorduras: number;
 }
 
 interface BatchReport {
@@ -331,7 +331,7 @@ function ComparisonView({ reform, onOpenDraft }: { reform: Reformulation; onOpen
                     <div key={item.id} className="text-xs p-2 rounded-lg bg-muted/30 border border-border/20">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline" className="text-[9px]">Dia {item.day_of_week + 1}</Badge>
-                        <span className="font-medium">{item.title || item.meal_type}</span>
+                        <span className="font-medium">{item.title || item.tipo_refeicao}</span>
                       </div>
                       {item.originalDescription && (
                         <p className="text-destructive/60 line-through text-[10px] mb-1">{item.originalDescription.slice(0, 120)}...</p>
@@ -393,7 +393,7 @@ export default function PlanBatchAudit() {
       const planIds = (plans || []).map(p => p.id);
       const { data: allItems } = await supabase
         .from("meal_plan_items")
-        .select("id, meal_plan_id, description, title, meal_type, day_of_week, calories_target, protein_target, carbs_target, fat_target")
+        .select("id, meal_plan_id, description, title, tipo_refeicao, day_of_week, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras")
         .in("meal_plan_id", planIds.slice(0, 100));
 
       const patientIds = [...new Set((plans || []).map(p => p.patient_id))];
@@ -502,7 +502,7 @@ export default function PlanBatchAudit() {
         }
         const { newDesc, subs } = reformulateDescription(item.description || "");
         subs.forEach(s => {
-          allSubs.push({ original: s.original, replacement: s.replacement, meal: item.title || item.meal_type, day: item.day_of_week });
+          allSubs.push({ original: s.original, replacement: s.replacement, meal: item.title || item.tipo_refeicao, day: item.day_of_week });
           allRemoved.add(s.original);
         });
         newItems.push({ ...item, description: newDesc, wasModified: true, originalDescription: item.description });
@@ -545,10 +545,10 @@ export default function PlanBatchAudit() {
           title: `${originalPlan.title} (Reformulado v3)`,
           plan_status: "draft_auto_generated",
           start_date: new Date().toISOString().split("T")[0],
-          total_target_calories: originalPlan.total_target_calories,
-          total_target_protein: originalPlan.total_target_protein,
-          total_target_carbs: originalPlan.total_target_carbs,
-          total_target_fat: originalPlan.total_target_fat,
+          total_meta_calorias: originalPlan.total_meta_calorias,
+          total_meta_proteinas: originalPlan.total_meta_proteinas,
+          total_meta_carboidratos: originalPlan.total_meta_carboidratos,
+          total_meta_gorduras: originalPlan.total_meta_gorduras,
           template_id: originalPlan.template_id,
           tenant_id: currentProfile?.tenant_id ?? originalPlan.tenant_id,
         }])
@@ -557,14 +557,14 @@ export default function PlanBatchAudit() {
 
       const itemsToInsert = reform.newItems.map(item => ({
         meal_plan_id: newPlan.id,
-        meal_type: item.meal_type as any,
+        tipo_refeicao: item.tipo_refeicao as any,
         title: item.title,
         description: item.description,
         day_of_week: item.day_of_week,
-        calories_target: item.calories_target,
-        protein_target: item.protein_target,
-        carbs_target: item.carbs_target,
-        fat_target: item.fat_target,
+        meta_calorias: item.meta_calorias,
+        meta_proteinas: item.meta_proteinas,
+        meta_carboidratos: item.meta_carboidratos,
+        meta_gorduras: item.meta_gorduras,
       }));
       const { error: itemsErr } = await supabase.from("meal_plan_items").insert(itemsToInsert);
       if (itemsErr) throw itemsErr;

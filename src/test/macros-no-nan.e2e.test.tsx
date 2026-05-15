@@ -300,8 +300,8 @@ describe("<ConsultationCompare /> — comparativo com avaliações sujas", () =>
         right_arm: 32,
         bmr: 0,
         tdee: 2200,
-        calories_target: 1800,
-        protein_target: 150,
+        meta_calorias: 1800,
+        meta_proteinas: 150,
       },
       {
         id: "a-2",
@@ -316,8 +316,8 @@ describe("<ConsultationCompare /> — comparativo com avaliações sujas", () =>
         right_arm: 31,
         bmr: 1500,
         tdee: 2100,
-        calories_target: 1700,
-        protein_target: 140,
+        meta_calorias: 1700,
+        meta_proteinas: 140,
       },
     ];
 

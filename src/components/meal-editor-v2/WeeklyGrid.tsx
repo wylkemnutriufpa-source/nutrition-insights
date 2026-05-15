@@ -90,7 +90,7 @@ export function WeeklyGrid() {
 
   const getItems = useCallback(
     (day: number, mealType: MealType) =>
-      items.filter((i) => i.day_of_week === day && i.meal_type === mealType),
+      items.filter((i) => i.day_of_week === day && i.tipo_refeicao === mealType),
     [items]
   );
 
@@ -98,10 +98,10 @@ export function WeeklyGrid() {
     (day: number) => {
       const dayItems = items.filter((i) => i.day_of_week === day);
       return {
-        calories: dayItems.reduce((s, i) => s + (i.calories_target || 0), 0),
-        protein: dayItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
-        carbs: dayItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0),
-        fat: dayItems.reduce((s, i) => s + (Number(i.fat_target) || 0), 0),
+        calories: dayItems.reduce((s, i) => s + (i.meta_calorias || 0), 0),
+        protein: dayItems.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0),
+        carbs: dayItems.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0),
+        fat: dayItems.reduce((s, i) => s + (Number(i.meta_gorduras) || 0), 0),
       };
     },
     [items]
@@ -161,12 +161,12 @@ export function WeeklyGrid() {
       meal_plan_id: planId,
       title: quickAddText.trim(),
       description: match?.portion ?? null,
-      meal_type: mealType,
+      tipo_refeicao: mealType,
       day_of_week: day,
-      calories_target: match?.calories ?? null,
-      protein_target: match?.protein ?? null,
-      carbs_target: match?.carbs ?? null,
-      fat_target: match?.fat ?? null,
+      meta_calorias: match?.calories ?? null,
+      meta_proteinas: match?.protein ?? null,
+      meta_carboidratos: match?.carbs ?? null,
+      meta_gorduras: match?.fat ?? null,
     });
     setQuickAddText("");
     setQuickAddKey(null);

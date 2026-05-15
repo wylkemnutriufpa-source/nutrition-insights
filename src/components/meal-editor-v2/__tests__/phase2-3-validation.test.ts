@@ -59,21 +59,21 @@ describe("Phase 2 — Click-to-Add", () => {
       meal_plan_id: PLAN_ID,
       title: "Arroz branco",
       description: "4 colheres (120g)",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 155,
-      protein_target: 3,
-      carbs_target: 34,
-      fat_target: 0,
+      meta_calorias: 155,
+      meta_proteinas: 3,
+      meta_carboidratos: 34,
+      meta_gorduras: 0,
     });
 
     const items = useMealPlanEditorV2Store.getState().items;
     expect(items).toHaveLength(1);
     expect(items[0].meal_plan_id).toBe(PLAN_ID);
     expect(items[0].day_of_week).toBe(DAY);
-    expect(items[0].meal_type).toBe(MEAL_TYPE);
+    expect(items[0].tipo_refeicao).toBe(MEAL_TYPE);
     expect(items[0].title).toBe("Arroz branco");
-    expect(items[0].calories_target).toBe(155);
+    expect(items[0].meta_calorias).toBe(155);
   });
 
   it("2. multiple items accumulate correctly", () => {
@@ -82,30 +82,30 @@ describe("Phase 2 — Click-to-Add", () => {
       meal_plan_id: PLAN_ID,
       title: "Frango grelhado",
       description: "150g",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 248,
-      protein_target: 46,
-      carbs_target: 0,
-      fat_target: 5,
+      meta_calorias: 248,
+      meta_proteinas: 46,
+      meta_carboidratos: 0,
+      meta_gorduras: 5,
     });
     store.addItem({
       meal_plan_id: PLAN_ID,
       title: "Arroz branco",
       description: "120g",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 155,
-      protein_target: 3,
-      carbs_target: 34,
-      fat_target: 0,
+      meta_calorias: 155,
+      meta_proteinas: 3,
+      meta_carboidratos: 34,
+      meta_gorduras: 0,
     });
 
     const items = useMealPlanEditorV2Store.getState().items;
     expect(items).toHaveLength(2);
 
-    const totalCal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-    const totalProt = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+    const totalCal = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+    const totalProt = items.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
     expect(totalCal).toBe(403);
     expect(totalProt).toBe(49);
   });
@@ -116,12 +116,12 @@ describe("Phase 2 — Click-to-Add", () => {
       meal_plan_id: PLAN_ID,
       title: "Salada",
       description: "1 porção",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 15,
-      protein_target: 1,
-      carbs_target: 3,
-      fat_target: 0,
+      meta_calorias: 15,
+      meta_proteinas: 1,
+      meta_carboidratos: 3,
+      meta_gorduras: 0,
     });
 
     const ops = useMealPlanEditorV2Store.getState().pendingOps;
@@ -156,19 +156,19 @@ describe("Phase 3 — Templates", () => {
       meal_plan_id: PLAN_ID,
       title: template.title,
       description,
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: template.totalCalories,
-      protein_target: template.totalProtein,
-      carbs_target: template.totalCarbs,
-      fat_target: template.totalFat,
+      meta_calorias: template.totalCalories,
+      meta_proteinas: template.totalProtein,
+      meta_carboidratos: template.totalCarbs,
+      meta_gorduras: template.totalFat,
     });
 
     const items = useMealPlanEditorV2Store.getState().items;
     expect(items).toHaveLength(1);
     expect(items[0].title).toBe("Frango + Arroz + Salada");
-    expect(items[0].calories_target).toBe(478);
-    expect(items[0].protein_target).toBe(54);
+    expect(items[0].meta_calorias).toBe(478);
+    expect(items[0].meta_proteinas).toBe(54);
     expect(items[0].description).toContain("Peito de frango grelhado");
     expect(items[0].description).toContain("Salada verde");
   });
@@ -182,12 +182,12 @@ describe("Phase 3 — Substitutions", () => {
       meal_plan_id: PLAN_ID,
       title: "Arroz branco",
       description: "4 colheres (120g)",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 155,
-      protein_target: 3,
-      carbs_target: 34,
-      fat_target: 0,
+      meta_calorias: 155,
+      meta_proteinas: 3,
+      meta_carboidratos: 34,
+      meta_gorduras: 0,
     });
   });
 
@@ -199,16 +199,16 @@ describe("Phase 3 — Substitutions", () => {
     useMealPlanEditorV2Store.getState().updateItem(itemId, {
       title: "Macarrão",
       description: "100g cozido",
-      calories_target: 160,
-      protein_target: 5,
-      carbs_target: 31,
-      fat_target: 1,
+      meta_calorias: 160,
+      meta_proteinas: 5,
+      meta_carboidratos: 31,
+      meta_gorduras: 1,
     });
 
     const updated = useMealPlanEditorV2Store.getState().items;
     expect(updated[0].title).toBe("Macarrão");
-    expect(updated[0].calories_target).toBe(160);
-    expect(updated[0].protein_target).toBe(5);
+    expect(updated[0].meta_calorias).toBe(160);
+    expect(updated[0].meta_proteinas).toBe(5);
   });
 
   it("6. substitution preserves day total calculation", () => {
@@ -218,17 +218,17 @@ describe("Phase 3 — Substitutions", () => {
       meal_plan_id: PLAN_ID,
       title: "Frango grelhado",
       description: "150g",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 248,
-      protein_target: 46,
-      carbs_target: 0,
-      fat_target: 5,
+      meta_calorias: 248,
+      meta_proteinas: 46,
+      meta_carboidratos: 0,
+      meta_gorduras: 5,
     });
 
     // Before substitution
     let items = useMealPlanEditorV2Store.getState().items.filter(i => i.day_of_week === DAY);
-    const totalBefore = items.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const totalBefore = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
     expect(totalBefore).toBe(155 + 248); // arroz + frango
 
     // Substitute arroz → purê (120 kcal)
@@ -236,14 +236,14 @@ describe("Phase 3 — Substitutions", () => {
     useMealPlanEditorV2Store.getState().updateItem(arrozId, {
       title: "Purê de batata",
       description: "3 colheres (120g)",
-      calories_target: 120,
-      protein_target: 2,
-      carbs_target: 20,
-      fat_target: 4,
+      meta_calorias: 120,
+      meta_proteinas: 2,
+      meta_carboidratos: 20,
+      meta_gorduras: 4,
     });
 
     items = useMealPlanEditorV2Store.getState().items.filter(i => i.day_of_week === DAY);
-    const totalAfter = items.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const totalAfter = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
     expect(totalAfter).toBe(120 + 248); // purê + frango
     expect(totalAfter).toBeLessThan(totalBefore);
   });
@@ -264,9 +264,9 @@ describe("Professional Authority (formerly Immutability Guard)", () => {
           id: "item-001",
           meal_plan_id: PLAN_ID,
           title: "Arroz",
-          meal_type: MEAL_TYPE,
+          tipo_refeicao: MEAL_TYPE,
           day_of_week: DAY,
-          calories_target: 155,
+          meta_calorias: 155,
         } as any],
         hydrated: true,
         hydrating: false,
@@ -296,12 +296,12 @@ describe("Description & Macro Coherence", () => {
       meal_plan_id: PLAN_ID,
       title: "Pão com Ovo",
       description: "Pão francês (1 unidade (50g)) + Ovo mexido (2 unidades)",
-      meal_type: "Café da Manhã",
+      tipo_refeicao: "Café da Manhã",
       day_of_week: DAY,
-      calories_target: 330,
-      protein_target: 17,
-      carbs_target: 29,
-      fat_target: 16,
+      meta_calorias: 330,
+      meta_proteinas: 17,
+      meta_carboidratos: 29,
+      meta_gorduras: 16,
     });
 
     // Apply template
@@ -309,45 +309,45 @@ describe("Description & Macro Coherence", () => {
       meal_plan_id: PLAN_ID,
       title: "Frango + Arroz + Salada",
       description: "Peito de frango grelhado (150g) + Arroz branco (4 colheres (120g)) + Salada verde (1 porção)",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 418,
-      protein_target: 50,
-      carbs_target: 37,
-      fat_target: 5,
+      meta_calorias: 418,
+      meta_proteinas: 50,
+      meta_carboidratos: 37,
+      meta_gorduras: 5,
     });
 
     const items = useMealPlanEditorV2Store.getState().items;
     expect(items).toHaveLength(2);
 
     // Substitute frango → peixe in the lunch item
-    const lunchItem = items.find(i => i.meal_type === MEAL_TYPE)!;
+    const lunchItem = items.find(i => i.tipo_refeicao === MEAL_TYPE)!;
     store.updateItem(lunchItem.id, {
       title: "Peixe + Arroz + Salada",
       description: "Filé de peixe grelhado (150g) + Arroz branco (4 colheres (120g)) + Salada verde (1 porção)",
-      calories_target: 350,
-      protein_target: 40,
-      carbs_target: 37,
-      fat_target: 3,
+      meta_calorias: 350,
+      meta_proteinas: 40,
+      meta_carboidratos: 37,
+      meta_gorduras: 3,
     });
 
     const finalItems = useMealPlanEditorV2Store.getState().items;
-    const lunch = finalItems.find(i => i.meal_type === MEAL_TYPE)!;
-    const breakfast = finalItems.find(i => i.meal_type === "Café da Manhã")!;
+    const lunch = finalItems.find(i => i.tipo_refeicao === MEAL_TYPE)!;
+    const breakfast = finalItems.find(i => i.tipo_refeicao === "Café da Manhã")!;
 
     // Verify coherence
     expect(lunch.title).toBe("Peixe + Arroz + Salada");
     expect(lunch.description).toContain("Filé de peixe");
-    expect(lunch.calories_target).toBe(350);
+    expect(lunch.meta_calorias).toBe(350);
 
     // Breakfast unchanged
     expect(breakfast.title).toBe("Pão com Ovo");
-    expect(breakfast.calories_target).toBe(330);
+    expect(breakfast.meta_calorias).toBe(330);
 
     // Day total
     const dayTotal = finalItems
       .filter(i => i.day_of_week === DAY)
-      .reduce((s, i) => s + (i.calories_target || 0), 0);
+      .reduce((s, i) => s + (i.meta_calorias || 0), 0);
     expect(dayTotal).toBe(350 + 330); // peixe+arroz + pão com ovo
   });
 });
@@ -363,17 +363,17 @@ describe("Full Integration Scenario", () => {
       meal_plan_id: PLAN_ID,
       title: "Banana",
       description: "1 unidade (100g)",
-      meal_type: "Lanche da Manhã",
+      tipo_refeicao: "Lanche da Manhã",
       day_of_week: DAY,
-      calories_target: 89,
-      protein_target: 1,
-      carbs_target: 23,
-      fat_target: 0,
+      meta_calorias: 89,
+      meta_proteinas: 1,
+      meta_carboidratos: 23,
+      meta_gorduras: 0,
     });
 
     let items = useMealPlanEditorV2Store.getState().items;
     expect(items).toHaveLength(1);
-    const totalStep1 = items.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const totalStep1 = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
     expect(totalStep1).toBe(89);
 
     // Step 2: Apply 1 template (lunch)
@@ -381,32 +381,32 @@ describe("Full Integration Scenario", () => {
       meal_plan_id: PLAN_ID,
       title: "Frango + Arroz + Salada",
       description: "Peito de frango grelhado (150g) + Arroz branco (4 colheres) + Feijão (1 concha) + Salada verde",
-      meal_type: MEAL_TYPE,
+      tipo_refeicao: MEAL_TYPE,
       day_of_week: DAY,
-      calories_target: 478,
-      protein_target: 54,
-      carbs_target: 47,
-      fat_target: 5,
+      meta_calorias: 478,
+      meta_proteinas: 54,
+      meta_carboidratos: 47,
+      meta_gorduras: 5,
     });
 
     items = useMealPlanEditorV2Store.getState().items;
     expect(items).toHaveLength(2);
-    const totalStep2 = items.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const totalStep2 = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
     expect(totalStep2).toBe(89 + 478); // 567
 
     // Step 3: Substitute arroz → macarrão in the template
-    const lunchItem = items.find(i => i.meal_type === MEAL_TYPE)!;
+    const lunchItem = items.find(i => i.tipo_refeicao === MEAL_TYPE)!;
     store.updateItem(lunchItem.id, {
       title: "Frango + Macarrão + Salada",
       description: "Peito de frango grelhado (150g) + Macarrão (100g cozido) + Feijão (1 concha) + Salada verde",
-      calories_target: 483, // 248+160+60+15
-      protein_target: 55,
-      carbs_target: 44,
-      fat_target: 6,
+      meta_calorias: 483, // 248+160+60+15
+      meta_proteinas: 55,
+      meta_carboidratos: 44,
+      meta_gorduras: 6,
     });
 
     items = useMealPlanEditorV2Store.getState().items;
-    const totalStep3 = items.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const totalStep3 = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
 
     // Final assertions
     expect(items).toHaveLength(2);
@@ -414,12 +414,12 @@ describe("Full Integration Scenario", () => {
 
     // Verify each item integrity
     const banana = items.find(i => i.title === "Banana")!;
-    expect(banana.calories_target).toBe(89);
-    expect(banana.meal_type).toBe("Lanche da Manhã");
+    expect(banana.meta_calorias).toBe(89);
+    expect(banana.tipo_refeicao).toBe("Lanche da Manhã");
 
-    const lunch = items.find(i => i.meal_type === MEAL_TYPE)!;
+    const lunch = items.find(i => i.tipo_refeicao === MEAL_TYPE)!;
     expect(lunch.title).toBe("Frango + Macarrão + Salada");
-    expect(lunch.calories_target).toBe(483);
+    expect(lunch.meta_calorias).toBe(483);
     expect(lunch.description).toContain("Macarrão");
 
     // All operations queued for persistence

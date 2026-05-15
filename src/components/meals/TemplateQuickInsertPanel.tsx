@@ -29,7 +29,7 @@ interface TemplateQuickInsertPanelProps {
 interface TemplateRow {
   id: string;
   name: string;
-  meal_type: string;
+  tipo_refeicao: string;
   kcal_base: number;
   protein_base: number;
   carbs_base: number;
@@ -87,10 +87,10 @@ export default function TemplateQuickInsertPanel({
       });
     }
 
-    // Prefer matching meal_type
+    // Prefer matching tipo_refeicao
     return list.sort((a, b) => {
-      if (a.meal_type === mealType && b.meal_type !== mealType) return -1;
-      if (b.meal_type === mealType && a.meal_type !== mealType) return 1;
+      if (a.tipo_refeicao === mealType && b.tipo_refeicao !== mealType) return -1;
+      if (b.tipo_refeicao === mealType && a.tipo_refeicao !== mealType) return 1;
       return (b.usage_count || 0) - (a.usage_count || 0);
     });
   }, [templates, tab, search, goalFilter, mealType, user]);
@@ -129,12 +129,12 @@ export default function TemplateQuickInsertPanel({
         meal_plan_id: planId,
         title: template.name,
         description: foodDesc,
-        meal_type: mealType,
+        tipo_refeicao: mealType,
         day_of_week: dayOfWeek,
-        calories_target: totalCal,
-        protein_target: totalP,
-        carbs_target: totalC,
-        fat_target: totalF,
+        meta_calorias: totalCal,
+        meta_proteinas: totalP,
+        meta_carboidratos: totalC,
+        meta_gorduras: totalF,
         item_origin: "template",
         foods: scaled.foods.map(f => f.name),
       };
@@ -148,12 +148,12 @@ export default function TemplateQuickInsertPanel({
         meal_plan_id: planId,
         title: template.name,
         description: foodDesc,
-        meal_type: mealType,
+        tipo_refeicao: mealType,
         day_of_week: dayOfWeek,
-        calories_target: totalCal,
-        protein_target: totalP,
-        carbs_target: totalC,
-        fat_target: totalF,
+        meta_calorias: totalCal,
+        meta_proteinas: totalP,
+        meta_carboidratos: totalC,
+        meta_gorduras: totalF,
         item_origin: "template",
         foods: foods.map(f => f.name),
       };
@@ -162,12 +162,12 @@ export default function TemplateQuickInsertPanel({
         meal_plan_id: planId,
         title: template.name,
         description: `⚠️ Template sem alimentos definidos — preencha manualmente`,
-        meal_type: mealType,
+        tipo_refeicao: mealType,
         day_of_week: dayOfWeek,
-        calories_target: template.kcal_base,
-        protein_target: template.protein_base,
-        carbs_target: template.carbs_base,
-        fat_target: template.fat_base,
+        meta_calorias: template.kcal_base,
+        meta_proteinas: template.protein_base,
+        meta_carboidratos: template.carbs_base,
+        meta_gorduras: template.fat_base,
         item_origin: "template",
       };
     }

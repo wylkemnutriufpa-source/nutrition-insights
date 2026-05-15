@@ -36,7 +36,7 @@ Deno.test({
         chain.insert = () => chain;
         chain.update = () => chain;
         chain.then = (onRes: any) => Promise.resolve({ 
-          data: [{ id: "item-1", title: "Marmita Desconhecida", meal_type: "lunch" }], 
+          data: [{ id: "item-1", title: "Marmita Desconhecida", tipo_refeicao: "lunch" }], 
           error: null 
         }).then(onRes);
       } else if (table === "diet_templates") {

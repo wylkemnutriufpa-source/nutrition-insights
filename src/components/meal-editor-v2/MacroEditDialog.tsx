@@ -16,10 +16,10 @@ interface MacroEditDialogProps {
 
 export function MacroEditDialog({ open, onOpenChange, item }: MacroEditDialogProps) {
   const { items, updateItem } = useMealPlanEditorV2Store();
-  const [calories, setCalories] = useState(String(item.calories_target ?? ""));
-  const [protein, setProtein] = useState(String(Number(item.protein_target) || ""));
-  const [carbs, setCarbs] = useState(String(Number(item.carbs_target) || ""));
-  const [fat, setFat] = useState(String(Number(item.fat_target) || ""));
+  const [calories, setCalories] = useState(String(item.meta_calorias ?? ""));
+  const [protein, setProtein] = useState(String(Number(item.meta_proteinas) || ""));
+  const [carbs, setCarbs] = useState(String(Number(item.meta_carboidratos) || ""));
+  const [fat, setFat] = useState(String(Number(item.meta_gorduras) || ""));
   const [applyAll, setApplyAll] = useState(false);
 
   const mealTypeLabels: Record<string, string> = {
@@ -33,25 +33,25 @@ export function MacroEditDialog({ open, onOpenChange, item }: MacroEditDialogPro
 
   const handleSave = () => {
     const patch: Partial<MealPlanItem> = {
-      calories_target: calories ? Number(calories) : null,
-      protein_target: protein ? Number(protein) : null,
-      carbs_target: carbs ? Number(carbs) : null,
-      fat_target: fat ? Number(fat) : null,
+      meta_calorias: calories ? Number(calories) : null,
+      meta_proteinas: protein ? Number(protein) : null,
+      meta_carboidratos: carbs ? Number(carbs) : null,
+      meta_gorduras: fat ? Number(fat) : null,
     };
 
     updateItem(item.id, patch);
 
     if (applyAll) {
-      // Find same meal_type + same title items on other days
+      // Find same tipo_refeicao + same title items on other days
       const siblings = items.filter(
         (i) =>
           i.id !== item.id &&
-          i.meal_type === item.meal_type &&
+          i.tipo_refeicao === item.tipo_refeicao &&
           i.title.toLowerCase().trim() === item.title.toLowerCase().trim()
       );
       siblings.forEach((s) => updateItem(s.id, patch));
       toast.success(
-        `Macros atualizados em ${siblings.length + 1} itens "${item.title}" no ${mealTypeLabels[item.meal_type] || item.meal_type}`
+        `Macros atualizados em ${siblings.length + 1} itens "${item.title}" no ${mealTypeLabels[item.tipo_refeicao] || item.tipo_refeicao}`
       );
     } else {
       toast.success("Macros atualizados");
@@ -64,7 +64,7 @@ export function MacroEditDialog({ open, onOpenChange, item }: MacroEditDialogPro
   const siblingCount = items.filter(
     (i) =>
       i.id !== item.id &&
-      i.meal_type === item.meal_type &&
+      i.tipo_refeicao === item.tipo_refeicao &&
       i.title.toLowerCase().trim() === item.title.toLowerCase().trim()
   ).length;
 

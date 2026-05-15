@@ -12,8 +12,8 @@ const corsHeaders = {
  * 
  * VALIDATED TABLES:
  * - profiles (user_id, full_name, goal, current_weight, target_weight)
- * - meal_plans (patient_id, title, plan_status, total_target_calories, is_active)
- * - meal_plan_items (meal_plan_id, title, meal_type, calories_target, protein_target, carbs_target, fat_target)
+ * - meal_plans (patient_id, title, plan_status, total_meta_calorias, is_active)
+ * - meal_plan_items (meal_plan_id, title, tipo_refeicao, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras)
  * - checklist_tasks (patient_id, date, title, completed, category)
  * - fit_intelligence_hydration (patient_id, date, consumed_cups, target_cups)
  * - patient_appointments (patient_id, appointment_date, appointment_time, appointment_type, status)
@@ -169,7 +169,7 @@ serve(async (req) => {
 
     else if (intent === "diet_today") {
       const { data: plans } = await supabase.from("meal_plans")
-        .select("id, title, total_target_calories, plan_status, is_active")
+        .select("id, title, total_meta_calorias, plan_status, is_active")
         .eq("patient_id", user.id).or("plan_status.eq.published,plan_status.eq.active,is_active.eq.true")
         .limit(1);
 
@@ -178,12 +178,12 @@ serve(async (req) => {
         responseText = formatResponse("Plano Alimentar", "🍽️", "Você ainda não tem um plano alimentar ativo. Converse com seu nutricionista!");
       } else {
         const { data: items } = await supabase.from("meal_plan_items")
-          .select("title, meal_type, calories_target, protein_target, carbs_target, fat_target, day_of_week")
-          .eq("meal_plan_id", plan.id).order("meal_type");
+          .select("title, tipo_refeicao, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras, day_of_week")
+          .eq("meal_plan_id", plan.id).order("tipo_refeicao");
 
-        responseText = formatResponse(`${plan.title} (${plan.total_target_calories || "?"} kcal)`, "🍽️",
+        responseText = formatResponse(`${plan.title} (${plan.total_meta_calorias || "?"} kcal)`, "🍽️",
           ((items as any[]) || []).map((m: any) =>
-            `### ${m.title} (${m.meal_type})\n- ${m.calories_target || "?"}kcal | P: ${m.protein_target || "?"}g | C: ${m.carbs_target || "?"}g | G: ${m.fat_target || "?"}g`
+            `### ${m.title} (${m.tipo_refeicao})\n- ${m.meta_calorias || "?"}kcal | P: ${m.meta_proteinas || "?"}g | C: ${m.meta_carboidratos || "?"}g | G: ${m.meta_gorduras || "?"}g`
           ).join("\n\n") || "Sem refeições cadastradas"
         );
       }

@@ -61,7 +61,7 @@ interface MockState {
   user: { id: string } | null;
   settings: typeof DEFAULT_SETTINGS;
   settingsLoading: boolean;
-  recipes: Array<{ meal_type: string; is_fixed: boolean }>;
+  recipes: Array<{ tipo_refeicao: string; is_fixed: boolean }>;
 }
 
 const STATE_KEY = "__GMS_MOCK_STATE__";
@@ -82,10 +82,10 @@ function getState(): MockState {
 export function buildRecipes(counts: RecipeCounts = {}) {
   const { lunch = 0, dinner = 0, fixedLunch = 0, fixedDinner = 0 } = counts;
   return [
-    ...Array.from({ length: lunch }, () => ({ meal_type: "Almoço", is_fixed: false })),
-    ...Array.from({ length: dinner }, () => ({ meal_type: "Jantar", is_fixed: false })),
-    ...Array.from({ length: fixedLunch }, () => ({ meal_type: "Almoço", is_fixed: true })),
-    ...Array.from({ length: fixedDinner }, () => ({ meal_type: "Jantar", is_fixed: true })),
+    ...Array.from({ length: lunch }, () => ({ tipo_refeicao: "Almoço", is_fixed: false })),
+    ...Array.from({ length: dinner }, () => ({ tipo_refeicao: "Jantar", is_fixed: false })),
+    ...Array.from({ length: fixedLunch }, () => ({ tipo_refeicao: "Almoço", is_fixed: true })),
+    ...Array.from({ length: fixedDinner }, () => ({ tipo_refeicao: "Jantar", is_fixed: true })),
   ];
 }
 
