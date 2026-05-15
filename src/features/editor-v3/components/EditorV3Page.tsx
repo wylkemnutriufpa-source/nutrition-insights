@@ -1342,7 +1342,8 @@ const EditorV3Page = () => {
       kcal: macros.kcal,
       calories: macros.kcal,
       instanceId,
-      quantity: newGrams
+      quantity: newGrams,
+      portionLabel: target.measurementType === 'gram' ? `${newGrams}g` : target.portionLabel
     });
     
     setReplacementPending(null);
