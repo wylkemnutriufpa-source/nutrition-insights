@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -17,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TemplateV3Modal } from './TemplateV3Modal';
+import { PremiumGallery } from './PremiumGallery';
 import { getV3Templates } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
 import { 
@@ -31,10 +31,7 @@ import {
 } from "@/components/ui/select";
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
-
-
-
-
+import { AnimatePresence, motion } from 'framer-motion';
 
 // No translation mapper needed anymore as keys are PT-BR by default
 const translateSlot = (s: string) => s;
@@ -395,68 +392,29 @@ export default function EditorV3Page() {
                   </div>
                 </DialogHeader>
                 
-                <ScrollArea className="h-[65vh] pr-8 -mr-8 relative z-10">
-                  <div className="space-y-12">
-                    {Object.entries(
-                      templates.reduce((acc, t) => {
-                        const cat = t.objective || 'Geral';
-                        if (!acc[cat]) acc[cat] = [];
-                        acc[cat].push(t);
-                        return acc;
-                      }, {} as Record<string, V3DietTemplate[]>)
-                    ).map(([category, items]) => (
-                      <div key={category} className="space-y-6">
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-emerald-500/40 border-b border-white/5 pb-4 flex items-center gap-3">
-                          <Layout className="w-4 h-4" />
-                          {category}
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                          {items.map(template => (
-                            <button
-                              key={template.id}
-                              onClick={() => {
-                                setSelectedTemplate(template);
-                                setIsTemplateModalOpen(true);
-                              }}
-                              className="flex flex-col p-8 rounded-[2.5rem] bg-neutral-900/40 border border-white/5 hover:border-emerald-500/40 hover:bg-neutral-900 transition-all duration-700 text-left group relative overflow-hidden shadow-xl"
-                            >
-                              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] -mr-16 -mt-16 rounded-full group-hover:bg-emerald-500/10 transition-all duration-700" />
-                              
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-emerald-400 transition-colors duration-500 leading-none">
-                                {template.title}
-                              </h4>
-                              <p className="text-[11px] text-white/20 mt-6 line-clamp-3 uppercase font-bold leading-relaxed tracking-wide group-hover:text-white/40 transition-colors">
-                                {template.description}
-                              </p>
-                              <div className="mt-10 flex items-center justify-between border-t border-white/5 pt-6">
-                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-white/10 text-white/20 px-2 py-0.5 rounded-md">PRO V3</Badge>
-                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-black transition-all duration-500">
-                                  <ChevronRight className="w-4 h-4" />
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
+                <PremiumGallery 
+                  templates={templates} 
+                  onSelect={(template) => {
+                    setSelectedTemplate(template);
+                    setIsTemplateModalOpen(true);
+                  }}
+                />
               </DialogContent>
             </Dialog>
 
             <Button 
               variant="outline" 
-              className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
+              className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-8 rounded-2xl hidden md:flex transition-all"
             >
-              <Share2 className="w-4 h-4 mr-2" /> Compartilhar
+              <Share2 className="w-5 h-5 mr-3" /> Compartilhar
             </Button>
 
             <Button 
               onClick={handleSave}
               disabled={saving}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-10 px-8 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-[0.2em] h-12 px-10 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 text-[11px]"
             >
-              <Save className="w-4 h-4 mr-2" /> Salvar Plano
+              <Save className="w-5 h-5 mr-3" /> Salvar Plano
             </Button>
           </div>
         </header>
@@ -507,99 +465,40 @@ export default function EditorV3Page() {
         {/* Workspace Principal */}
         <main className="flex-1 overflow-hidden flex flex-col md:flex-row">
           {/* Timeline de Refeições */}
-          <ScrollArea className="flex-1 h-full px-8 py-8">
-            <div className="max-w-4xl mx-auto space-y-8 pb-20">
-              {store.meals.map((meal) => (
-                <MealCard 
-                  key={meal.id} 
-                  meal={meal} 
-                  onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
-                  onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
-                  onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
-                  onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
-                  onRemoveMeal={() => store.removeMeal(meal.id)}
-                />
+          <ScrollArea className="flex-1 h-full px-8 py-12">
+            <div className="max-w-5xl mx-auto space-y-12 pb-32">
+              <AnimatePresence mode="popLayout">
+                {store.meals.map((meal, idx) => (
+                  <motion.div
+                    key={meal.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  >
+                    <MealCard 
+                      meal={meal} 
+                      onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
+                      onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
+                      onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
+                      onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
+                      onRemoveMeal={() => store.removeMeal(meal.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
 
-              ))}
-
-              {/* Botão Adicionar Refeição */}
               <Button 
                 onClick={handleAddMeal}
-                className="w-full h-32 bg-white/[0.02] border-2 border-dashed border-white/5 hover:bg-emerald-500/[0.02] hover:border-emerald-500/30 text-white/10 hover:text-emerald-500 rounded-[2.5rem] transition-all duration-500 group"
+                variant="outline" 
+                className="w-full h-24 bg-white/[0.02] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-[2.5rem] transition-all group/add-meal shadow-inner"
               >
-                <div className="flex flex-col items-center gap-1">
-                  <Plus className="w-6 h-6 group-hover:scale-125 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Nova Refeição</span>
-                </div>
+                <Plus className="w-8 h-8 mr-4 group-hover/add-meal:scale-125 transition-transform duration-500" />
+                <span className="uppercase text-xs font-black tracking-[0.3em]">Adicionar Nova Refeição ao Plano</span>
               </Button>
             </div>
           </ScrollArea>
 
-          {/* Barra Lateral de Status (Hidden on Mobile) */}
-          <aside className="hidden lg:flex w-80 bg-neutral-900 border-l border-white/10 p-6 flex-col gap-8">
-            {/* Automatic Calculation Section */}
-            {nutritionalTargets && (
-              <section className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/20 rounded-lg">
-                    <Calculator className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Alvo do Paciente</h4>
-                </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Kcal Recomendado</p>
-                    <p className="text-xl font-black italic">{nutritionalTargets.calories} <span className="text-[10px] uppercase text-white/20">kcal</span></p>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 border-t border-emerald-500/10 pt-3">
-                    <div>
-                      <p className="text-[8px] font-black uppercase text-white/30">Prot</p>
-                      <p className="text-xs font-bold">{nutritionalTargets.protein}g</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-black uppercase text-white/30">Carb</p>
-                      <p className="text-xs font-bold">{nutritionalTargets.carbs}g</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-black uppercase text-white/30">Gord</p>
-                      <p className="text-xs font-bold">{nutritionalTargets.fat}g</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="text-[8px] text-white/40 uppercase font-medium leading-tight">
-                  Cálculo automático baseado no peso ({patientData.current_weight_kg || patientData.weight || 70}kg), altura ({patientData.current_height_cm || patientData.height || 170}cm) e objetivo ({patientData.goal || 'Manutenção'}).
-                </p>
-              </section>
-            )}
-
-            <section>
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 flex items-center gap-2">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Auditoria Nutricional
-              </h4>
-              <div className="space-y-3">
-                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl flex gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-white/60 mb-1">Editor Manual Ativo</p>
-                    <p className="text-[9px] text-white/40 font-medium leading-tight">Controle total do nutricionista habilitado.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-
-            <section className="mt-auto">
-              <div className="p-6 bg-white/5 border border-white/10 rounded-3xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">FitJourney Editor</p>
-                <p className="text-sm font-bold text-white mb-4 italic">"Plataforma Profissional de Templates e Cálculos"</p>
-                <Badge className="bg-white/10 text-white/60 border-transparent text-[8px] uppercase font-black">v4.0.0-stable</Badge>
-
-              </div>
-            </section>
-          </aside>
+          {/* Lateral Info / Sidebar de Metas (Opcional) */}
         </main>
       </div>
 
@@ -612,4 +511,3 @@ export default function EditorV3Page() {
     </DashboardLayout>
   );
 }
-
