@@ -47,11 +47,11 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
     description: 'Focado em 2.2g/kg de proteína com carboidratos complexos.',
     category: 'hypertrophy',
     meals: [
-      { name: 'Café da Manhã', type: 'breakfast', items: [{ foodId: 'p1', quantity: 100 }, { foodId: 'o1', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Café da Manhã', type: 'Café da Manhã', items: [{ foodId: 'p1', quantity: 100 }, { foodId: 'o1', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Lanche Manhã', type: 'snack1', items: [{ foodId: 'i1', quantity: 170 }, { foodId: 'b1', quantity: 100 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Almoço (Marmita)', type: 'lunch', items: [{ foodId: 'm2', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Almoço (Marmita)', type: 'Almoço', items: [{ foodId: 'm2', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Lanche Tarde', type: 'snack2', items: [{ foodId: 'p1', quantity: 50 }, { foodId: 'q1', quantity: 60 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Jantar (Marmita)', type: 'dinner', items: [{ foodId: 'm1', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
+      { name: 'Jantar (Marmita)', type: 'Jantar', items: [{ foodId: 'm1', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
     ]
   },
   {
@@ -60,10 +60,10 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
     description: 'Baixo carboidrato com alto volume de vegetais e proteínas magras.',
     category: 'weight-loss',
     meals: [
-      { name: 'Café da Manhã', type: 'breakfast', items: [{ foodId: 'o1', quantity: 200 }, { foodId: 'm_fruta', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Almoço (Marmita)', type: 'lunch', items: [{ foodId: 'm12', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Café da Manhã', type: 'Café da Manhã', items: [{ foodId: 'o1', quantity: 200 }, { foodId: 'm_fruta', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Almoço (Marmita)', type: 'Almoço', items: [{ foodId: 'm12', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Lanche Tarde', type: 'snack2', items: [{ foodId: 'i1', quantity: 170 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Jantar (Marmita)', type: 'dinner', items: [{ foodId: 'm14', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
+      { name: 'Jantar (Marmita)', type: 'Jantar', items: [{ foodId: 'm14', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
     ]
   }
 ];

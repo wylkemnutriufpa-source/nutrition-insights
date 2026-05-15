@@ -14,7 +14,7 @@ describe('MealSmartEditorModal DOM & Accessibility', () => {
     id: 'item-1',
     title: 'Test Meal',
     description: 'Initial description',
-    meal_type: 'lunch',
+    meal_type: 'Almoço',
     calories_target: 500,
     protein_target: 30,
     carbs_target: 50,

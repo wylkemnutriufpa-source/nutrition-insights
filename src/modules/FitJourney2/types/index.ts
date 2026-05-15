@@ -14,7 +14,7 @@ export interface FoodItem {
 export interface Meal {
   id: string;
   name: string;
-  type: 'breakfast' | 'snack1' | 'lunch' | 'snack2' | 'dinner';
+  type: 'Café da Manhã' | 'snack1' | 'Almoço' | 'snack2' | 'Jantar';
   items: { foodId: string; quantity: number }[];
   totalMacros: {
     calories: number;

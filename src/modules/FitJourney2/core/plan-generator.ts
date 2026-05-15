@@ -25,9 +25,9 @@ export class PlanGenerator {
     const meals: Meal[] = [
       MealBuilder.createBreakfast(targetCals * 0.25),
       MealBuilder.createSnack('snack1', targetCals * 0.10),
-      MealBuilder.createMarmitaMeal('lunch', targetCals * 0.30),
+      MealBuilder.createMarmitaMeal('Almoço', targetCals * 0.30),
       MealBuilder.createSnack('snack2', targetCals * 0.10),
-      MealBuilder.createMarmitaMeal('dinner', targetCals * 0.25),
+      MealBuilder.createMarmitaMeal('Jantar', targetCals * 0.25),
     ];
 
     const totalMacros = this.calculateTotal(meals);

@@ -52,7 +52,7 @@ describe('Extended E2E Tests', () => {
           item_origin: 'auto_generated_sub', 
           is_primary: false,
           day_of_week: 1,
-          meal_type: 'breakfast',
+          meal_type: 'Café da Manhã',
           calories_target: 100
         }
       ],
@@ -74,7 +74,7 @@ describe('Extended E2E Tests', () => {
               item_origin: 'auto_generated_sub', 
               is_primary: false,
               day_of_week: 1,
-              meal_type: 'breakfast',
+              meal_type: 'Café da Manhã',
               calories_target: 100
             }
           ] as any}
@@ -100,8 +100,8 @@ describe('Extended E2E Tests', () => {
   });
 
   it('should maintain deterministic order after editing calories_target of primary item', () => {
-    const itemPri = { id: 'pri', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'lunch' } as any;
-    const itemSub = { id: 'sub', is_primary: false, calories_target: 600, day_of_week: 1, meal_type: 'lunch' } as any;
+    const itemPri = { id: 'pri', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'Almoço' } as any;
+    const itemSub = { id: 'sub', is_primary: false, calories_target: 600, day_of_week: 1, meal_type: 'Almoço' } as any;
 
     let items = [itemSub, itemPri];
     
@@ -122,8 +122,8 @@ describe('Extended E2E Tests', () => {
     // Even if sub has more calories than initial pri but less than updated pri, 
     // or vice versa, Primary is always first.
     // Let's test tie-breaking on ID if calories were same
-    const itemPri2 = { id: 'pri-a', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'lunch' } as any;
-    const itemPri3 = { id: 'pri-b', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'lunch' } as any;
+    const itemPri2 = { id: 'pri-a', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'Almoço' } as any;
+    const itemPri3 = { id: 'pri-b', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'Almoço' } as any;
     
     sorted = sortMealPlanItems([itemPri3, itemPri2]);
     expect(sorted[0].id).toBe('pri-a');

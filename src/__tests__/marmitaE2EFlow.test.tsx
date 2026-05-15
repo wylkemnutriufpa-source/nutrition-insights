@@ -55,7 +55,7 @@ describe('Validação E2E: Visualização Paciente', () => {
             const dayOfWeek = (new Date().getDay() + 6) % 7;
             return Promise.resolve({ 
               data: [
-                { meal_type: 'lunch', title: 'Marmita E2E', calories_target: 2000, protein_target: 150, carbs_target: 200, fat_target: 60, day_of_week: dayOfWeek }
+                { meal_type: 'Almoço', title: 'Marmita E2E', calories_target: 2000, protein_target: 150, carbs_target: 200, fat_target: 60, day_of_week: dayOfWeek }
               ], 
               error: null 
             });

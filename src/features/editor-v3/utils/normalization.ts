@@ -127,7 +127,7 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
       id: crypto.randomUUID(),
       name: translateSlot(type),
 
-      time: type === 'breakfast' ? '08:00' : (type === 'lunch' ? '12:00' : (type === 'dinner' ? '20:00' : '00:00')),
+      time: type === 'Café da Manhã' ? '08:00' : (type === 'Almoço' ? '12:00' : (type === 'Jantar' ? '20:00' : '00:00')),
       items: items
     }));
   }

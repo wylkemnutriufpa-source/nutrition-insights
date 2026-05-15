@@ -30,7 +30,7 @@ describe('Wannubia Specific Validation Test', () => {
     carbs_target: 0,
     fat_target: 0,
     description: '',
-    meal_type: 'lunch',
+    meal_type: 'Almoço',
     metadata: { is_fixed: true }
   };
 

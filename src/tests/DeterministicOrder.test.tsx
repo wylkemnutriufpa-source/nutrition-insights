@@ -30,7 +30,7 @@ describe('Deterministic Order E2E', () => {
     calories_target: 300,
     is_primary: true,
     day_of_week: 0,
-    meal_type: 'breakfast'
+    meal_type: 'Café da Manhã'
   } as any;
 
   const itemSub1 = {
@@ -39,7 +39,7 @@ describe('Deterministic Order E2E', () => {
     calories_target: 200,
     is_primary: false,
     day_of_week: 0,
-    meal_type: 'breakfast'
+    meal_type: 'Café da Manhã'
   } as any;
 
   const itemSub2 = {
@@ -48,7 +48,7 @@ describe('Deterministic Order E2E', () => {
     calories_target: 400,
     is_primary: false,
     day_of_week: 0,
-    meal_type: 'breakfast'
+    meal_type: 'Café da Manhã'
   } as any;
 
   beforeEach(() => {

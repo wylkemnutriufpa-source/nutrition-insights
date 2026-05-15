@@ -14,7 +14,7 @@ describe('MealSmartEditorModal Transactional Logic Proof', () => {
     id: 'item-175',
     title: 'Protein Meal',
     description: 'Frango Grelhado 175g',
-    meal_type: 'lunch',
+    meal_type: 'Almoço',
     calories_target: 350,
     protein_target: 40,
     carbs_target: 10,
