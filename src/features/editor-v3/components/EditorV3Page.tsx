@@ -124,8 +124,8 @@ export default function EditorV3Page() {
               const food = libraryItems[0];
               
               // Map images if available
-              const imageUrl = food.images?.[0]?.image_url || food.composition?.imageUrl || null;
-              
+              const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
+
               const { data: subs } = await supabase
                 .from('v3_library_items')
                 .select('*, images:v3_library_images(*)')
