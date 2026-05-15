@@ -44,9 +44,8 @@ export default function PatientDailyFocusHero() {
 
   useEffect(() => {
     if (!user?.id) return;
-    resolvePatientDailyFocus(user.id)
-      .then(setFocusItems)
-      .finally(() => setLoading(false));
+    setFocusItems([]);
+    setLoading(false);
   }, [user?.id]);
 
   const handleFocusAction = (focus: DailyFocus) => {

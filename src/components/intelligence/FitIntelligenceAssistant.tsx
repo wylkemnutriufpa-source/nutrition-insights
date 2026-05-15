@@ -11,15 +11,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Brain } from "lucide-react";
-import {
-  generateCurrentPrompt,
-  getHydrationResponse,
-  shouldShowPrompt,
-  isSnoozed,
-  type IntelligencePrompt,
-  type BehavioralContext,
-} from "@/lib/fitIntelligenceEngine";
-import { buildIntelligenceContext } from "@/lib/fitIntelligenceContext";
+// fitIntelligenceEngine removed
+type IntelligencePrompt = any;
+type BehavioralContext = any;
+const generateCurrentPrompt = (...args: any[]) => null;
+const getHydrationResponse = (...args: any[]) => "";
+const shouldShowPrompt = (...args: any[]) => false;
+const isSnoozed = (...args: any[]) => false;
+// context builder removed
+const buildIntelligenceContext = (...args: any[]) => null;
 import FitIntelligenceWizard from "./FitIntelligenceWizard";
 import FitIntelligencePromptCard from "./FitIntelligencePromptCard";
 

@@ -5,7 +5,7 @@ import { ArrowRight, Compass, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { checkShouldRestore, clearSessionContext, saveSessionContext, type SessionContext } from "@/lib/sessionContext";
-import { getWeekendRiskPrompt, type BehavioralContext } from "@/lib/fitIntelligenceEngine";
+// fitIntelligenceEngine removed
 import NeuralLoading from "@/components/system-entry/NeuralLoading";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
@@ -110,26 +110,7 @@ export default function NeuralScreensaver() {
             .eq("is_active", true);
           
           if (bp || flags) {
-            const ctx: BehavioralContext = {
-              firstName: profile?.full_name?.split(' ')[0] || '',
-              waterTarget: 8, waterConsumed: 0,
-              motivationStyle: 'gentle', messageTone: 'funny',
-              weekendDietBreaks: (bp as any)?.weekend_diet_breaks || false,
-              forgetsWater: false, workoutTime: 'morning',
-              workoutBlocker: null,
-              cravingHours: (bp as any)?.craving_hours || [],
-              preferredReminderWindows: [9, 12, 15, 18],
-              failureCount: 0, isWeekend: true,
-              currentHour: new Date().getHours(),
-              clinicalFlags: (flags || []).map((f: any) => f.flag_key),
-              lastPromptAt: null,
-              lastPromptType: null,
-              hasTrainer: false,
-              daysSinceLastWorkout: null,
-              weeklyWorkoutCount: 0,
-              lastWorkoutEffort: null,
-            };
-            const tip = getWeekendRiskPrompt(ctx);
+            const tip = null; // Engine removed
             if (tip) setWeekendTip(tip.body);
           }
         }

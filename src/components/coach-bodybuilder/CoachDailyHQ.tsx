@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PHASE_LABELS, type CheckinData, generateAlerts, analyzeAthleteData } from "@/lib/coachAnalysisEngine";
-import { calculatePriority, PRIORITY_CONFIG, type AthletePriority } from "@/lib/coachPriorityEngine";
+// coachPriorityEngine removed
+type AthletePriority = any;
+const PRIORITY_CONFIG: any = {};
 import {
   Sunrise, AlertTriangle, Crown, Clock, Zap, ChevronRight,
   CheckCircle2, Activity, Shield
@@ -45,16 +47,7 @@ export default function CoachDailyHQ({ athletes, allCheckins, onSelectAthlete }:
         (now - new Date(c.checkin_date).getTime()) / 86400000 < 7
       );
 
-      const priority = calculatePriority({
-        id: a.id,
-        current_phase: a.current_phase,
-        prep_score: a.prep_score || 0,
-        status: a.status,
-        alertCount: alerts.length,
-        hasCriticalAlert: alerts.some(al => al.severity === "critical"),
-        daysSinceCheckin: daysSince,
-        hasRecentPhotos,
-      });
+      const priority = { level: 'medium', score: 50 }; // Engine removed
 
       return { ...priority, athlete: a };
     }).sort((a, b) => b.score - a.score);

@@ -19,22 +19,10 @@ import {
 import { toast } from "sonner";
 import { fmtMacro, safeNum } from "@/lib/formatMacros";
 import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
-import { slotsToInserts } from "@/lib/mealPlanAutoGenerator";
+// mealPlanAutoGenerator removed
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
-import {
-  loadPatientContext,
-  generateAssistedPlan,
-  checkKcalCoherence,
-  type AssistedPlanParams,
-  type PatientContext,
-  type AssistedGenerationResult,
-  type GeneratedPlanOption,
-  type GeneratedSlotWithSubs,
-  type ComplexityTier,
-  type PlanFocus,
-  type ProteinLevel,
-} from "@/lib/assistedPlanGenerator";
+// assistedPlanGenerator removed
 
 interface Props {
   open: boolean;

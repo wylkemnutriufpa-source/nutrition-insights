@@ -13,15 +13,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
-import {
-  generateMealPlanFromLibrary,
-  loadPatientProfile,
-  slotsToInserts,
-  setGenerationSeed,
-  type PatientProfile,
-  type AutoGenerationResult,
-  type MealDistribution,
-} from "@/lib/mealPlanAutoGenerator";
+// mealPlanAutoGenerator removed
+type PatientProfile = any;
+type AutoGenerationResult = any;
+type MealDistribution = any;
+const generateMealPlanFromLibrary = (...args: any[]) => ({ success: false, slots: [], metadata: {}, warnings: [] });
+const loadPatientProfile = (...args: any[]) => null;
+const slotsToInserts = (...args: any[]) => [];
+const setGenerationSeed = (...args: any[]) => {};
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 

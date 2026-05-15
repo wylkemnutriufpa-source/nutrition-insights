@@ -10,7 +10,8 @@ import {
   Brain, X, Droplets, Dumbbell, AlertTriangle, Sparkles,
   Check, Heart, Stethoscope, BellOff,
 } from "lucide-react";
-import type { IntelligencePrompt } from "@/lib/fitIntelligenceEngine";
+// fitIntelligenceEngine removed
+type IntelligencePrompt = any;
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
-import { getLearnedPatterns } from "@/lib/clinicalLearningEngine";
+// clinicalLearningEngine removed
 import { Brain, TrendingUp, Utensils, Dumbbell, Sparkles, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { safeNum } from "@/lib/formatMacros";
@@ -29,7 +29,7 @@ export default function ClinicalInsightsCard() {
 
   useEffect(() => {
     if (!user?.id) return;
-    getLearnedPatterns(user.id).then(setPatterns);
+    setPatterns([]);
   }, [user?.id]);
 
   if (patterns.length === 0) return null;
