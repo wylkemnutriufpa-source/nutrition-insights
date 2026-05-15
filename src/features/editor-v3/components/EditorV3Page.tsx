@@ -18,6 +18,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { TemplateV3Modal } from './TemplateV3Modal';
 import { getV3Templates } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+} from "@/components/ui/dialog";
+
 
 
 export default function EditorV3Page() {
