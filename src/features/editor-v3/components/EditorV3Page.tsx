@@ -20,6 +20,52 @@ export default function EditorV3Page() {
   const navigate = useNavigate();
   const store = useEditorState();
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadPlan() {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const { data: plan, error } = await supabase
+          .from('meal_plans')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+
+        if (plan?.items_payload && (plan.items_payload as any).meals) {
+          store.hydrateMeals((plan.items_payload as any).meals);
+        } else if (plan?.meals) {
+          // Fallback for older schema if needed
+          store.hydrateMeals(plan.meals as any);
+        }
+        
+        if (plan?.patient_id) {
+          store.setPatientId(plan.patient_id);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar plano:', err);
+        toast.error('Erro ao carregar dados do plano');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPlan();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-neutral-950">
+          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
 
   // Totals for the whole plan
   const planTotals = store.meals.reduce((acc, meal) => {
