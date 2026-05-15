@@ -1135,12 +1135,6 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
           {/* Auditório Clínico Humano desativado — focando em templates editáveis */}
           {false && canSeeInternalAudit && (() => {
-            const mockItems = parseDescriptionLines(meal.description || "").foodLines.map(line => ({
-              name: line.startsWith("•") ? line.slice(1).trim().split("—")[0].trim() : line.split("—")[0].trim(),
-              quantity: parseInt(line.match(/—\s*(\d+)/)?.[1] || "100")
-            }));
-            
-            // Logic disabled as requested
             return (
               <div className={`p-4 rounded-xl border bg-emerald-500/5 border-emerald-500/20`}>
                 <div className="flex items-center justify-between mb-2">
@@ -1149,33 +1143,6 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     <span className="text-sm font-bold">Auditório Clínico Humano</span>
                   </div>
                 </div>
-              </div>
-            );
-          })()}
-                    humanScore.status === 'human' ? 'bg-emerald-500/10 text-emerald-500' : 
-                    humanScore.status === 'robotic' ? 'bg-amber-500/10 text-amber-600' : 
-                    'bg-red-500/10 text-red-500'
-                  }>
-                    SCORE: {humanScore.score}/100
-                  </Badge>
-                </div>
-                
-                {humanScore.reasons.length > 0 && (
-                  <ul className="space-y-1 mt-2">
-                    {humanScore.reasons.map((reason, idx) => (
-                      <li key={idx} className="text-[10px] flex items-center gap-2 text-muted-foreground">
-                        <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-                        {reason}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                
-                {humanScore.status !== 'human' && (
-                  <p className="text-[9px] mt-3 font-medium text-muted-foreground italic">
-                    * Esta refeição apresenta características robóticas. Recomenda-se ajuste manual para melhorar a adesão.
-                  </p>
-                )}
               </div>
             );
           })()}
