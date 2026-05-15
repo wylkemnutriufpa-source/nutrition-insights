@@ -18,10 +18,11 @@ interface MealCardProps {
   onRemoveFood: (itemInstanceId: string) => void;
   onAddFood: (food: Food) => void;
   onRemoveMeal: () => void;
+  onAddSubstitution: (itemInstanceId: string, food: Food) => void;
 }
 
 export const MealCard: React.FC<MealCardProps> = ({ 
-  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal 
+  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution 
 }) => {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -140,6 +141,7 @@ export const MealCard: React.FC<MealCardProps> = ({
                   onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
                   onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
                   onRemove={() => onRemoveFood(item.instanceId)}
+                  onAddSubstitution={(food) => onAddSubstitution(item.instanceId, food)}
                 />
               ))
             ) : (
