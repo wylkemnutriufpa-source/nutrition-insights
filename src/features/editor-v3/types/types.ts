@@ -38,6 +38,7 @@ export interface Food {
   library_item_slug?: string;      // V3: Referência ao slug da biblioteca soberana
   composition_metadata?: any;      // V3: Estrutura da refeição (ingredientes, pesos base)
   nutritionistId?: string;
+  substitutions?: any[];
 }
 
 export interface MealItem extends Food {

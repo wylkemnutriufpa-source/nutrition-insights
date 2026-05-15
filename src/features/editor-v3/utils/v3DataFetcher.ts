@@ -18,7 +18,27 @@ export const searchV3LibraryItems = async (
   }
 
   if (mealSlot) {
-    queryBuilder = queryBuilder.contains("tipo_refeicao", [mealSlot]);
+    // Be flexible with slot names (e.g., "Café da Manhã" vs "cafe")
+    const normSlot = mealSlot.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Fallback: If it's a known slot, use it, otherwise don't restrict too much
+    const commonSlots = ["cafe", "almoco", "jantar", "lanche", "ceia"];
+    const foundSlot = commonSlots.find(s => normSlot.includes(s));
+    
+    if (foundSlot) {
+      // Find items that have this slot in their tipo_refeicao array (using partial match logic if possible)
+      // Since Supabase .contains() is exact, we try to match the common categories
+      const categoryMap: Record<string, string[]> = {
+        "cafe": ["Café da Manhã"],
+        "almoco": ["Almoço", "Jantar"],
+        "jantar": ["Jantar", "Almoço"],
+        "lanche": ["Lanche da Manhã", "Lanche da Tarde", "Pós-Treino", "Pré-Treino"],
+        "ceia": ["Ceia", "Lanche da Tarde"]
+      };
+      
+      const slotsToSearch = categoryMap[foundSlot] || [mealSlot];
+      queryBuilder = queryBuilder.overlaps("tipo_refeicao", slotsToSearch);
+    }
   }
 
   if (query && query.length >= 2) {
@@ -57,7 +77,7 @@ export const searchV3LibraryItems = async (
         name: s.title || s.name || "Substituto"
       }));
       
-      return { ...item, ingredients: mappedSubs }; 
+      return { ...item, substitutions: mappedSubs }; 
     }
     return item;
   }));

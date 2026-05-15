@@ -115,12 +115,24 @@ export default function EditorV3Page() {
         throw new Error('Template sem distribuição de refeições configurada.');
       }
 
-      // Pre-fetch all needed library items to avoid N+1 queries in the loop
+      // Pre-fetch all cluster slugs and their potential substitution groups
       const allClusterSlugs = Object.values(clusterMap) as string[];
+      
+      // We first need to know which substitution groups these clusters belong to
+      const { data: primaryItems } = await supabase
+        .from('v3_library_items')
+        .select('cluster_slug, substitutions_group')
+        .in('cluster_slug', allClusterSlugs);
+
+      const subGroups = Array.from(new Set((primaryItems || [])
+        .map(i => i.substitutions_group)
+        .filter(Boolean))) as string[];
+
+      // Now fetch all items that are either in the clusters OR in the substitution groups
       const { data: libraryItems, error: libError } = await supabase
         .from('v3_library_items')
         .select('*, images:v3_library_images(*)')
-        .or(`cluster_slug.in.(${allClusterSlugs.join(',')}),substitutions_group.in.(${allClusterSlugs.join(',')})`); 
+        .or(`cluster_slug.in.(${allClusterSlugs.join(',')}),substitutions_group.in.(${subGroups.length > 0 ? subGroups.join(',') : 'none'})`);
 
       if (libError) throw libError;
 
@@ -130,29 +142,23 @@ export default function EditorV3Page() {
       (libraryItems || []).forEach(item => {
         const slug = item.cluster_slug;
         if (slug) {
-          if (!libraryMap.has(slug)) {
-            libraryMap.set(slug, []);
-          }
+          if (!libraryMap.has(slug)) libraryMap.set(slug, []);
           libraryMap.get(slug).push(item);
         }
         
         const group = item.substitutions_group;
         if (group) {
-          if (!substitutionGroupMap.has(group)) {
-            substitutionGroupMap.set(group, []);
-          }
+          if (!substitutionGroupMap.has(group)) substitutionGroupMap.set(group, []);
           substitutionGroupMap.get(group).push(item);
         }
       });
       
       console.log('[EditorV3] Library items found:', libraryItems?.length);
-      console.log('[EditorV3] Cluster Map to plot:', clusterMap);
 
       for (const day of days) {
         for (const dist of distribution) {
           const slot = dist.slot;
           
-          // Match logic for slot keys: try exact, then trimmed, then case-insensitive with underscore/space normalization
           const clusterSlug = clusterMap[slot] || 
                              clusterMap[slot.trim()] || 
                              Object.entries(clusterMap).find(([k]) => {
@@ -167,14 +173,17 @@ export default function EditorV3Page() {
             const foods = libraryMap.get(clusterSlug);
 
             if (foods && foods.length > 0) {
-              // Plot all items in the cluster
               items = foods.map((food: any) => {
-                console.log(`[EditorV3] Plotting food: ${food.title} for slot: ${slot}`);
                 const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
                 
-                // If the cluster has multiple items, divide kcal among them
+                // Calculate target kcal for this specific item in the meal
+                // If there are multiple foods in one cluster, we split the kcal
                 const targetItemKcal = (kcal / distribution.length) / foods.length;
+                
+                // Ensure we have a valid quantity
                 let quantity = scaleItemToTarget(food, targetItemKcal, 'kcal');
+                if (!quantity || isNaN(quantity)) quantity = 100;
+
                 const macros = calculateItemMacros(food, quantity);
                 
                 const subGroup = food.substitutions_group;
@@ -192,7 +201,7 @@ export default function EditorV3Page() {
                       ...subMacros
                     };
                   })
-                  .slice(0, 4);
+                  .slice(0, 6); // Increase to 6 substitutes by default
 
                 return {
                   ...food,
@@ -202,11 +211,10 @@ export default function EditorV3Page() {
                   clinical_mass_g: quantity,
                   substitutions,
                   imageUrl,
+                  category: food.category || slot,
                   ...macros
                 };
               });
-            } else {
-              console.warn(`[EditorV3] No food found in libraryMap for cluster slug: ${clusterSlug} (from slot: ${slot})`);
             }
           } else {
             console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}. Available keys:`, Object.keys(clusterMap));
@@ -222,7 +230,6 @@ export default function EditorV3Page() {
         }
       }
 
-      // Merge with existing meals for OTHER days, but replace for selected days
       const otherDayMeals = store.meals.filter(m => !days.includes(m.day_of_week || 0));
       store.hydrateMeals([...otherDayMeals, ...newMeals]);
       
@@ -365,6 +372,13 @@ export default function EditorV3Page() {
     store.addMeal(name);
   };
 
+  const handleClearAll = () => {
+    if (confirm("Deseja realmente apagar todas as refeições deste plano?")) {
+      store.setMeals([]);
+      toast.success("Plano limpo com sucesso");
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -502,6 +516,14 @@ export default function EditorV3Page() {
               template={selectedTemplate}
               onSelectProfile={handleSelectProfile}
             />
+
+            <Button 
+              variant="outline" 
+              onClick={handleClearAll}
+              className="bg-white/5 border-white/10 hover:bg-red-500/10 hover:text-red-400 text-white/40 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
+            >
+              <Trash2 className="w-5 h-5 mr-3" /> Limpar
+            </Button>
 
             <Button 
               variant="outline" 
