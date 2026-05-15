@@ -134,6 +134,9 @@ export const useEditorState = create<EditorState>()(
       setPatientId: (id) => {
         const currentId = get().patientId;
         if (currentId === id) return;
+        
+        // 🛡️ RESET SOBERANO: Limpa o rascunho em memória e localStorage ao trocar de paciente
+        // Isso impede que o plano da Catharina "vaze" para a Luciana.
         set({ 
           patientId: id,
           meals: DEFAULT_MEALS,
@@ -146,6 +149,11 @@ export const useEditorState = create<EditorState>()(
           confidence: null,
           patientContext: null
         });
+        
+        // Limpar rascunho persistido localmente para o paciente anterior
+        if (currentId) {
+          localStorage.removeItem(`fitjourney-v3-fallback-${currentId}`);
+        }
       },
 
       addAuditEntry: (entry) => {
