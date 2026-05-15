@@ -245,74 +245,11 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
             </p>
           </div>
 
-          {/* Retirar Carboidrato */}
-          <div className="space-y-4 pt-4 border-t border-white/5">
-            <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest block">Retirar Carboidrato</Label>
-            <RadioGroup 
-              value={params.removeCarbsIntensity} 
-              onValueChange={(val: any) => updateParam('removeCarbsIntensity', val)}
-              className="flex gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="total" id="rc-total" className="border-white/20 text-emerald-500" />
-                <Label htmlFor="rc-total" className="text-xs">Total</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="parcial" id="rc-parcial" className="border-white/20 text-emerald-500" />
-                <Label htmlFor="rc-parcial" className="text-xs">Parcial</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="none" id="rc-none" className="border-white/20 text-emerald-500" />
-                <Label htmlFor="rc-none" className="text-xs">Não retirar</Label>
-              </div>
-            </RadioGroup>
-
-            <div className="flex flex-wrap gap-4 mt-2">
-              {['Almoço', 'Jantar'].map(mealName => (
-                <div key={mealName} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`check-${mealName}`}
-                    checked={params.removeCarbsMeals.includes(mealName)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        updateParam('removeCarbsMeals', [...params.removeCarbsMeals, mealName]);
-                      } else {
-                        updateParam('removeCarbsMeals', params.removeCarbsMeals.filter(m => m !== mealName));
-                      }
-                    }}
-                    className="border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-black"
-                  />
-                  <Label htmlFor={`check-${mealName}`} className="text-xs">{mealName}</Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Retirar Feijão */}
-          <div className="space-y-4 pt-4 border-t border-white/5">
-            <Label className="text-[10px] font-black text-white/60 uppercase tracking-widest block">Retirar Feijão</Label>
-            <RadioGroup 
-              value={params.removeBeansOption} 
-              onValueChange={(val: any) => updateParam('removeBeansOption', val)}
-              className="grid grid-cols-2 gap-3"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="total" id="rb-total" className="border-white/20 text-emerald-500" />
-                <Label htmlFor="rb-total" className="text-xs">Total</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="almoco" id="rb-almoco" className="border-white/20 text-emerald-500" />
-                <Label htmlFor="rb-almoco" className="text-xs">Só Almoço</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="jantar" id="rb-jantar" className="border-white/20 text-emerald-500" />
-                <Label htmlFor="rb-jantar" className="text-xs">Só Jantar</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="none" id="rb-none" className="border-white/20 text-emerald-500" />
-                <Label htmlFor="rb-none" className="text-xs">Não retirar</Label>
-              </div>
-            </RadioGroup>
+          <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest leading-relaxed">
+              O ajuste automático foi desativado para garantir sua soberania clínica.
+              Utilize os valores acima como referência para editar gramagens e alimentos no editor principal.
+            </p>
           </div>
         </div>
 
