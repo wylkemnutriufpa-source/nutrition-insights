@@ -34,10 +34,6 @@ function buildItemDescription(item: MealItem): string {
   return item.portionLabel || `${item.quantity || 1}${item.portionUnit || 'g'}`;
 }
 
-function buildItemDescription(item: MealItem): string {
-  return item.portionLabel || `${item.quantity || 1}${item.portionUnit || 'g'}`;
-}
-
 function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {

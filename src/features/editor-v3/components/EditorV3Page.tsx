@@ -93,7 +93,7 @@ const MEASURE_OPTIONS = [
 ];
 
 const formatPortion = (item: MealItem) => {
-  return formatDisplayPortion(item);
+  return item.portionLabel || `${item.quantity || 1}${item.portionUnit || 'g'}`;
 };
 
 const EditorV3Page = () => {
