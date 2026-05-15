@@ -7,6 +7,7 @@ import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import PatientQuickSearch from "@/components/patients/PatientQuickSearch";
 import {
   ChevronDown, Trophy, LayoutDashboard, Users, UtensilsCrossed,
   ClipboardCheck, Dumbbell, Brain, FileText, Target, Activity,
