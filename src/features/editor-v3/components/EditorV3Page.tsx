@@ -179,9 +179,11 @@ export default function EditorV3Page() {
   }
 
 
-  // Totals for the whole plan
+  // Totals for the whole plan (Sum of PRIMARY items only)
   const planTotals = store.meals.reduce((acc, meal) => {
-    meal.items.forEach(item => {
+    meal.items.forEach((item, index) => {
+      // Rule: only the "primary" items (usually the ones in the main items array) count.
+      // Substitutions list within each item is already excluded because we are iterating meal.items.
       acc.kcal += item.kcal || 0;
       acc.protein += item.protein || 0;
       acc.carbs += item.carbs || 0;
@@ -189,6 +191,7 @@ export default function EditorV3Page() {
     });
     return acc;
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
 
   const handleSave = async () => {
     if (!effectiveId) return;
