@@ -9,13 +9,13 @@ import { FoodSearch } from './FoodSearch';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MealCardProps {
   meal: Meal;
   onUpdateQuantity: (itemInstanceId: string, newQty: number) => void;
   onUpdateMacros: (itemInstanceId: string, val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemoveFood: (itemInstanceId: string) => void;
-
   onAddFood: (food: Food) => void;
   onRemoveMeal: () => void;
 }
@@ -35,106 +35,169 @@ export const MealCard: React.FC<MealCardProps> = ({
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
   return (
-    <div className="bg-neutral-900/60 border border-white/5 rounded-[3rem] overflow-hidden backdrop-blur-2xl group/meal hover:bg-neutral-900/80 hover:border-emerald-500/30 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-      {/* Header */}
-      <div className="p-10 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
-        <div className="flex items-center gap-8">
-          <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-105 group-hover/meal:bg-emerald-500/20 group-hover/meal:border-emerald-500/40 transition-all duration-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
-            <Utensils className="w-8 h-8" />
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[3rem] overflow-hidden backdrop-blur-2xl group/meal hover:bg-neutral-900/80 hover:border-emerald-500/30 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer">
+          {/* Header */}
+          <div className="p-10 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
+            <div className="flex items-center gap-8">
+              <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-105 group-hover/meal:bg-emerald-500/20 group-hover/meal:border-emerald-500/40 transition-all duration-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+                <Utensils className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors duration-500">
+                  {meal.name}
+                </h3>
+                <div className="flex items-center gap-2.5 mt-1.5">
+                  <Clock className="w-3.5 h-3.5 text-white/20" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/20">{meal.time || '08:00'}</span>
+                  <div className="w-1 h-1 rounded-full bg-white/10" />
+                  <Badge variant="outline" className="text-[8px] uppercase font-black border-white/10 text-white/30 px-2 py-0">Refeição Principal</Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                <p className="text-xl font-black italic text-white leading-none">
+                  {Math.round(mealTotals.kcal)}
+                  <span className="text-[10px] uppercase ml-1 opacity-30">kcal</span>
+                </p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/20 mt-1">Total Refeição</p>
+              </div>
+              
+              <div className="h-10 w-10 flex items-center justify-center text-white/40 opacity-0 group-hover/meal:opacity-100 transition-all">
+                <Plus className="w-5 h-5" />
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors duration-500">
-              {meal.name}
-            </h3>
-            <div className="flex items-center gap-2.5 mt-1.5">
-              <Clock className="w-3.5 h-3.5 text-white/20" />
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/20">{meal.time || '08:00'}</span>
-              <div className="w-1 h-1 rounded-full bg-white/10" />
-              <Badge variant="outline" className="text-[8px] uppercase font-black border-white/10 text-white/30 px-2 py-0">Refeição Principal</Badge>
+
+          {/* Quick View Items */}
+          <div className="p-8 space-y-2">
+            {meal.items.slice(0, 3).map((item) => (
+              <div key={item.instanceId} className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
+                <span>{item.name}</span>
+                <span>{Math.round(item.kcal)} kcal</span>
+              </div>
+            ))}
+            {meal.items.length > 3 && (
+              <p className="text-[9px] font-black text-emerald-500/50 mt-2 uppercase tracking-[0.2em]">+{meal.items.length - 3} itens adicionais</p>
+            )}
+            {meal.items.length === 0 && (
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/10 py-4 text-center">Refeição Vazia</p>
+            )}
+          </div>
+
+          {/* Footer Macros */}
+          <div className="px-10 py-6 bg-white/[0.01] border-t border-white/5 grid grid-cols-3 gap-8">
+            <div className="text-center">
+              <p className="text-sm font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
+              <p className="text-[8px] uppercase font-black tracking-widest text-white/10">Proteína</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-black text-blue-400">{Math.round(mealTotals.carbs)}g</p>
+              <p className="text-[8px] uppercase font-black tracking-widest text-white/10">Carbo</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-black text-amber-400">{Math.round(mealTotals.fat)}g</p>
+              <p className="text-[8px] uppercase font-black tracking-widest text-white/10">Gordura</p>
             </div>
           </div>
         </div>
-
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-xl font-black italic text-white leading-none">
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white rounded-[3rem] p-0 overflow-hidden shadow-2xl">
+        {/* Header Modal */}
+        <div className="p-10 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+              <Utensils className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white">Gerenciar Refeição</h3>
+              <div className="flex items-center gap-3 mt-1.5">
+                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">{meal.name}</span>
+                <div className="w-1 h-1 rounded-full bg-white/10" />
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/20">Editor de Itens e Substituições</p>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-black italic text-white leading-none">
               {Math.round(mealTotals.kcal)}
-              <span className="text-[10px] uppercase ml-1 opacity-30">kcal</span>
+              <span className="text-xs uppercase ml-1 opacity-30 font-bold">kcal</span>
             </p>
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/20 mt-1">Total Refeição</p>
           </div>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onRemoveMeal}
-            className="h-10 w-10 text-white/10 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all opacity-0 group-hover/meal:opacity-100"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
         </div>
-      </div>
 
-      {/* Items */}
-      <div className="p-8 space-y-4">
-        {meal.items.length > 0 ? (
-          meal.items.map((item) => (
-            <FoodItemRow 
-              key={item.instanceId} 
-              item={item} 
-              onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
-              onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
-              onRemove={() => onRemoveFood(item.instanceId)}
-            />
-
-          ))
-        ) : (
-          <div className="py-10 text-center border-2 border-dashed border-white/5 rounded-2xl">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Refeição Vazia</p>
+        {/* Content Modal */}
+        <ScrollArea className="max-h-[50vh] p-10">
+          <div className="space-y-4">
+            {meal.items.length > 0 ? (
+              meal.items.map((item) => (
+                <FoodItemRow 
+                  key={item.instanceId} 
+                  item={item} 
+                  onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
+                  onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
+                  onRemove={() => onRemoveFood(item.instanceId)}
+                />
+              ))
+            ) : (
+              <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/[0.01]">
+                <p className="text-[11px] font-black uppercase tracking-widest text-white/20">Nenhum alimento cadastrado nesta refeição</p>
+              </div>
+            )}
           </div>
-        )}
+        </ScrollArea>
 
-        {/* Add Food Trigger */}
-        <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full h-16 bg-white/[0.01] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-2xl transition-all mt-4 group/add"
+        {/* Footer Modal */}
+        <div className="p-10 border-t border-white/5 bg-neutral-900/50 flex items-center justify-between">
+          <div className="flex gap-6">
+            <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
+              <p className="text-lg font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
+              <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Proteína</p>
+            </div>
+            <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
+              <p className="text-lg font-black text-blue-400">{Math.round(mealTotals.carbs)}g</p>
+              <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Carbo</p>
+            </div>
+            <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
+              <p className="text-lg font-black text-amber-400">{Math.round(mealTotals.fat)}g</p>
+              <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Gordura</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] h-14 px-8 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95">
+                  <Plus className="w-5 h-5 mr-3" /> Adicionar Alimento
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-xl rounded-[3rem] p-12">
+                <DialogHeader className="mb-8">
+                  <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Biblioteca Soberana</DialogTitle>
+                </DialogHeader>
+                <FoodSearch 
+                  mealSlot={meal.name}
+                  onSelect={(food) => {
+                    onAddFood(food);
+                    setIsSearchOpen(false);
+                  }} 
+                />
+              </DialogContent>
+            </Dialog>
+
+            <Button
+              variant="outline"
+              onClick={onRemoveMeal}
+              className="h-14 w-14 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all"
             >
-              <Plus className="w-5 h-5 mr-2 group-hover/add:scale-125 transition-transform" />
-              <span className="uppercase text-[10px] font-black tracking-widest">Adicionar Alimento Real</span>
+              <Trash2 className="w-5 h-5" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-lg rounded-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca Soberana</DialogTitle>
-            </DialogHeader>
-            <FoodSearch 
-              mealSlot={meal.name}
-              onSelect={(food) => {
-                onAddFood(food);
-                setIsSearchOpen(false);
-              }} 
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Footer Macros */}
-      <div className="px-6 py-4 bg-white/[0.01] border-t border-white/5 grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <p className="text-xs font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
-          <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Prot</p>
+          </div>
         </div>
-        <div className="text-center">
-          <p className="text-xs font-black text-blue-400">{Math.round(mealTotals.carbs)}g</p>
-          <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Carb</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xs font-black text-amber-400">{Math.round(mealTotals.fat)}g</p>
-          <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Gord</p>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

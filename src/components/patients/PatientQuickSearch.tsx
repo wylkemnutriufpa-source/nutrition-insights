@@ -119,18 +119,20 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
     <div className={cn("relative", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn(
-              "w-full justify-start text-muted-foreground font-bold uppercase tracking-widest transition-all border-white/5 hover:border-emerald-500/50 bg-white/5 rounded-2xl shadow-inner",
-              showIconOnly ? "w-11 h-11 px-0 justify-center" : "h-11 px-4"
-            )}
-          >
-            <Search className={cn("h-4 w-4 shrink-0 text-emerald-500", showIconOnly ? "" : "mr-3")} />
-            {!showIconOnly && <span className="truncate text-[10px]">Buscar paciente...</span>}
-          </Button>
+          <div className="w-full">
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className={cn(
+                "w-full justify-start text-muted-foreground font-bold uppercase tracking-widest transition-all border-white/5 hover:border-emerald-500/50 bg-white/5 rounded-2xl shadow-inner",
+                showIconOnly ? "w-11 h-11 px-0 justify-center" : "h-11 px-4"
+              )}
+            >
+              <Search className={cn("h-4 w-4 shrink-0 text-emerald-500", showIconOnly ? "" : "mr-3")} />
+              {!showIconOnly && <span className="truncate text-[10px]">Buscar paciente...</span>}
+            </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-[280px] p-0 border-white/10 bg-neutral-950 backdrop-blur-2xl shadow-2xl rounded-2xl overflow-hidden z-[100]" align="start" sideOffset={8}>
           <Command shouldFilter={false}>
