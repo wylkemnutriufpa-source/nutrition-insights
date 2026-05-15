@@ -22714,6 +22714,12 @@ export type Database = {
         | "afternoon_snack"
         | "dinner"
         | "evening_snack"
+        | "Café da Manhã"
+        | "Lanche da Manhã"
+        | "Almoço"
+        | "Lanche da Tarde"
+        | "Jantar"
+        | "Ceia"
       metabolic_phase_type:
         | "initial_response"
         | "active_loss"
@@ -22961,6 +22967,12 @@ export const Constants = {
         "afternoon_snack",
         "dinner",
         "evening_snack",
+        "Café da Manhã",
+        "Lanche da Manhã",
+        "Almoço",
+        "Lanche da Tarde",
+        "Jantar",
+        "Ceia",
       ],
       metabolic_phase_type: [
         "initial_response",
