@@ -204,10 +204,11 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
 }
 
 export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
-  // Garantir que o scroll do body não fique travado ao fechar e que cliques fora funcionem via radix-ui padrão
+  // Garantir que o scroll do body não fique travado ao fechar
   useEffect(() => {
     if (!open) {
       document.body.style.pointerEvents = "auto";
+      document.body.style.overflow = "auto";
     }
   }, [open]);
 
