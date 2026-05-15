@@ -29,6 +29,10 @@ export const calculateNutritionalScore = (
 
   const totals = meals.reduce((acc, meal) => {
     meal.items.forEach(item => {
+      // 🛡️ SOBERANIA CALÓRICA V3: Apenas o item primário (ativo) entra na soma.
+      // Substituições (alternativas) são ignoradas no cálculo total para evitar "explosão calórica".
+      if (item.is_primary === false) return;
+      
       const macros = calculateItemMacros(item, item.quantity);
       acc.kcal += macros.kcal;
       acc.protein += macros.protein;
@@ -67,7 +71,10 @@ export const calculateNutritionalScore = (
 
   // 3. Equilíbrio entre refeições (20%)
   // Avalia se as calorias estão bem distribuídas ou se há refeições vazias
-  const mealCals = meals.map(m => m.items.reduce((sum, i) => sum + calculateItemMacros(i, i.quantity).kcal, 0));
+  const mealCals = meals.map(m => m.items.reduce((sum, i) => {
+    if (i.is_primary === false) return sum;
+    return sum + calculateItemMacros(i, i.quantity).kcal;
+  }, 0));
   const emptyMeals = mealCals.filter(c => c === 0).length;
   const distScore = Math.max(0, 100 - (emptyMeals * 20));
 
@@ -110,6 +117,9 @@ export const validatePlanClinically = (
   const issues: ValidationIssue[] = [];
   const totals = meals.reduce((acc, meal) => {
     meal.items.forEach(item => {
+      // 🛡️ SOBERANIA CALÓRICA V3: Ignora itens secundários
+      if (item.is_primary === false) return;
+      
       const macros = calculateItemMacros(item, item.quantity);
       acc.kcal += macros.kcal;
       acc.protein += macros.protein;
