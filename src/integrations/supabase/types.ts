@@ -22708,12 +22708,12 @@ export type Database = {
         | "expired"
         | "replaced"
       meal_type:
-        | "breakfast"
-        | "morning_snack"
-        | "lunch"
-        | "afternoon_snack"
-        | "dinner"
-        | "evening_snack"
+        | "Café da Manhã"
+        | "Lanche da Manhã"
+        | "Almoço"
+        | "Lanche da Tarde"
+        | "Jantar"
+        | "Ceia"
       metabolic_phase_type:
         | "initial_response"
         | "active_loss"
@@ -22955,12 +22955,12 @@ export const Constants = {
         "replaced",
       ],
       meal_type: [
-        "breakfast",
-        "morning_snack",
-        "lunch",
-        "afternoon_snack",
-        "dinner",
-        "evening_snack",
+        "Café da Manhã",
+        "Lanche da Manhã",
+        "Almoço",
+        "Lanche da Tarde",
+        "Jantar",
+        "Ceia",
       ],
       metabolic_phase_type: [
         "initial_response",
