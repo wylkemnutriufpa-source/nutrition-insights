@@ -2501,10 +2501,10 @@ export type Database = {
           created_at: string | null
           day_of_week: number | null
           id: string
-          meal_type: string | null
           metadata: Json | null
           patient_id: string | null
           source_rule: string | null
+          tipo_refeicao: string | null
           type: string
         }
         Insert: {
@@ -2513,10 +2513,10 @@ export type Database = {
           created_at?: string | null
           day_of_week?: number | null
           id?: string
-          meal_type?: string | null
           metadata?: Json | null
           patient_id?: string | null
           source_rule?: string | null
+          tipo_refeicao?: string | null
           type: string
         }
         Update: {
@@ -2525,10 +2525,10 @@ export type Database = {
           created_at?: string | null
           day_of_week?: number | null
           id?: string
-          meal_type?: string | null
           metadata?: Json | null
           patient_id?: string | null
           source_rule?: string | null
+          tipo_refeicao?: string | null
           type?: string
         }
         Relationships: []
@@ -6754,9 +6754,9 @@ export type Database = {
           id: string
           meal_plan_id: string | null
           meal_plan_item_id: string | null
-          meal_type: string
           patient_id: string
           rating: string
+          tipo_refeicao: string
         }
         Insert: {
           comment?: string | null
@@ -6764,9 +6764,9 @@ export type Database = {
           id?: string
           meal_plan_id?: string | null
           meal_plan_item_id?: string | null
-          meal_type: string
           patient_id: string
           rating: string
+          tipo_refeicao: string
         }
         Update: {
           comment?: string | null
@@ -6774,9 +6774,9 @@ export type Database = {
           id?: string
           meal_plan_id?: string | null
           meal_plan_item_id?: string | null
-          meal_type?: string
           patient_id?: string
           rating?: string
+          tipo_refeicao?: string
         }
         Relationships: [
           {
@@ -6891,10 +6891,10 @@ export type Database = {
           goal_tag: string
           id: string
           is_active: boolean
-          meal_type: string
           plan_type: string | null
           protein: number
           substitutions: Json | null
+          tipo_refeicao: string
           title: string
         }
         Insert: {
@@ -6907,10 +6907,10 @@ export type Database = {
           goal_tag: string
           id?: string
           is_active?: boolean
-          meal_type: string
           plan_type?: string | null
           protein?: number
           substitutions?: Json | null
+          tipo_refeicao: string
           title: string
         }
         Update: {
@@ -6923,10 +6923,10 @@ export type Database = {
           goal_tag?: string
           id?: string
           is_active?: boolean
-          meal_type?: string
           plan_type?: string | null
           protein?: number
           substitutions?: Json | null
+          tipo_refeicao?: string
           title?: string
         }
         Relationships: []
@@ -7445,8 +7445,8 @@ export type Database = {
           fat_target: number | null
           id: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["tipo_refeicao"]
           protein_target: number | null
+          tipo_refeicao: Database["public"]["Enums"]["tipo_refeicao"]
           updated_at: string | null
         }
         Insert: {
@@ -7456,8 +7456,8 @@ export type Database = {
           fat_target?: number | null
           id?: string
           meal_plan_id: string
-          meal_type: Database["public"]["Enums"]["tipo_refeicao"]
           protein_target?: number | null
+          tipo_refeicao: Database["public"]["Enums"]["tipo_refeicao"]
           updated_at?: string | null
         }
         Update: {
@@ -7467,8 +7467,8 @@ export type Database = {
           fat_target?: number | null
           id?: string
           meal_plan_id?: string
-          meal_type?: Database["public"]["Enums"]["tipo_refeicao"]
           protein_target?: number | null
+          tipo_refeicao?: Database["public"]["Enums"]["tipo_refeicao"]
           updated_at?: string | null
         }
         Relationships: [
@@ -8128,11 +8128,11 @@ export type Database = {
           is_active: boolean
           is_fixed: boolean
           is_scalable: boolean
-          meal_type: string
           name: string
           nutritionist_id: string
           protein_type: string
           tenant_id: string | null
+          tipo_refeicao: string
           updated_at: string
           visual_library_item_id: string
         }
@@ -8149,11 +8149,11 @@ export type Database = {
           is_active?: boolean
           is_fixed?: boolean
           is_scalable?: boolean
-          meal_type?: string
           name: string
           nutritionist_id: string
           protein_type?: string
           tenant_id?: string | null
+          tipo_refeicao?: string
           updated_at?: string
           visual_library_item_id?: string
         }
@@ -8170,11 +8170,11 @@ export type Database = {
           is_active?: boolean
           is_fixed?: boolean
           is_scalable?: boolean
-          meal_type?: string
           name?: string
           nutritionist_id?: string
           protein_type?: string
           tenant_id?: string | null
+          tipo_refeicao?: string
           updated_at?: string
           visual_library_item_id?: string
         }
@@ -9184,13 +9184,13 @@ export type Database = {
           id: string
           is_global: boolean | null
           kcal_base: number | null
-          meal_type: string
           name: string
           nutritionist_id: string
           protein_base: number | null
           satiety_score: number | null
           slots: Json | null
           slots_version: number
+          tipo_refeicao: string
           updated_at: string | null
           usage_count: number | null
         }
@@ -9205,13 +9205,13 @@ export type Database = {
           id?: string
           is_global?: boolean | null
           kcal_base?: number | null
-          meal_type?: string
           name: string
           nutritionist_id: string
           protein_base?: number | null
           satiety_score?: number | null
           slots?: Json | null
           slots_version?: number
+          tipo_refeicao?: string
           updated_at?: string | null
           usage_count?: number | null
         }
@@ -9226,13 +9226,13 @@ export type Database = {
           id?: string
           is_global?: boolean | null
           kcal_base?: number | null
-          meal_type?: string
           name?: string
           nutritionist_id?: string
           protein_base?: number | null
           satiety_score?: number | null
           slots?: Json | null
           slots_version?: number
+          tipo_refeicao?: string
           updated_at?: string | null
           usage_count?: number | null
         }
@@ -16855,11 +16855,11 @@ export type Database = {
           id: string
           is_active: boolean
           items: Json
-          meal_type: string | null
           nutritionist_id: string
           template_name: string
           template_type: string
           tenant_id: string
+          tipo_refeicao: string | null
           total_calories: number
           total_carbs: number
           total_fat: number
@@ -16871,11 +16871,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           items?: Json
-          meal_type?: string | null
           nutritionist_id: string
           template_name?: string
           template_type?: string
           tenant_id: string
+          tipo_refeicao?: string | null
           total_calories?: number
           total_carbs?: number
           total_fat?: number
@@ -16887,11 +16887,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           items?: Json
-          meal_type?: string | null
           nutritionist_id?: string
           template_name?: string
           template_type?: string
           tenant_id?: string
+          tipo_refeicao?: string | null
           total_calories?: number
           total_carbs?: number
           total_fat?: number
@@ -17565,9 +17565,9 @@ export type Database = {
           id: string
           image_url: string | null
           items: Json
-          meal_type: string | null
           name: string
           tenant_id: string | null
+          tipo_refeicao: string | null
           user_id: string
         }
         Insert: {
@@ -17575,9 +17575,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           items?: Json
-          meal_type?: string | null
           name: string
           tenant_id?: string | null
+          tipo_refeicao?: string | null
           user_id: string
         }
         Update: {
@@ -17585,9 +17585,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           items?: Json
-          meal_type?: string | null
           name?: string
           tenant_id?: string | null
+          tipo_refeicao?: string | null
           user_id?: string
         }
         Relationships: []
@@ -20040,8 +20040,8 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
-          meal_type: string[] | null
           objective: string | null
+          tipo_refeicao: string[] | null
         }
         Insert: {
           cluster_name: string
@@ -20049,8 +20049,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          meal_type?: string[] | null
           objective?: string | null
+          tipo_refeicao?: string[] | null
         }
         Update: {
           cluster_name?: string
@@ -20058,8 +20058,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          meal_type?: string[] | null
           objective?: string | null
+          tipo_refeicao?: string[] | null
         }
         Relationships: []
       }
@@ -20243,12 +20243,12 @@ export type Database = {
           fats_base: number | null
           id: string
           kcal_base: number | null
-          meal_type: string[] | null
           objective_tags: string[] | null
           portion_mode: string | null
           protein_base: number | null
           slug: string
           substitutions_group: string | null
+          tipo_refeicao: string[] | null
           title: string
           updated_at: string | null
         }
@@ -20262,12 +20262,12 @@ export type Database = {
           fats_base?: number | null
           id?: string
           kcal_base?: number | null
-          meal_type?: string[] | null
           objective_tags?: string[] | null
           portion_mode?: string | null
           protein_base?: number | null
           slug: string
           substitutions_group?: string | null
+          tipo_refeicao?: string[] | null
           title: string
           updated_at?: string | null
         }
@@ -20281,12 +20281,12 @@ export type Database = {
           fats_base?: number | null
           id?: string
           kcal_base?: number | null
-          meal_type?: string[] | null
           objective_tags?: string[] | null
           portion_mode?: string | null
           protein_base?: number | null
           slug?: string
           substitutions_group?: string | null
+          tipo_refeicao?: string[] | null
           title?: string
           updated_at?: string | null
         }
@@ -20298,30 +20298,30 @@ export type Database = {
           created_at: string | null
           equivalence_type: string | null
           id: string
-          meal_type: string | null
           score: number | null
           source_slug: string
           target_slug: string
+          tipo_refeicao: string | null
         }
         Insert: {
           active?: boolean | null
           created_at?: string | null
           equivalence_type?: string | null
           id?: string
-          meal_type?: string | null
           score?: number | null
           source_slug: string
           target_slug: string
+          tipo_refeicao?: string | null
         }
         Update: {
           active?: boolean | null
           created_at?: string | null
           equivalence_type?: string | null
           id?: string
-          meal_type?: string | null
           score?: number | null
           source_slug?: string
           target_slug?: string
+          tipo_refeicao?: string | null
         }
         Relationships: [
           {
