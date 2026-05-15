@@ -77,7 +77,7 @@ export const searchV3LibraryItems = async (
         name: s.title || s.name || "Substituto"
       }));
       
-      return { ...item, ingredients: mappedSubs }; 
+      return { ...item, substitutions: mappedSubs }; 
     }
     return item;
   }));
