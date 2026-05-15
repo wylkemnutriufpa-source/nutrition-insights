@@ -129,6 +129,17 @@ export function useDraftSync(
         return;
       }
 
+      // 🛡️ INTEGRITY GUARD: Impedir salvamento de planos com 0kcal se o snapshot anterior era saudável
+      const totalKcal = mealsToSave.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
+      if (totalKcal === 0 && snapshot && snapshot.length > 0) {
+        const snapshotKcal = snapshot.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
+        if (snapshotKcal > 0) {
+          console.error('[Sync-Guard] Tentativa de sobrescrever rascunho saudável por um rascunho ZERADO. Abortando save.');
+          setSyncState('error');
+          return;
+        }
+      }
+
       setSyncState('saving');
       const updatedRecord = await saveDraft(draftId, mealsToSave, auditLogToSave || []);
       
@@ -141,7 +152,7 @@ export function useDraftSync(
       } else {
         setSyncState('offline');
       }
-    }, 2000); // Aumentado para 2 segundos para evitar flood
+    }, 1500);
   };
 
   const resetDraft = async () => {

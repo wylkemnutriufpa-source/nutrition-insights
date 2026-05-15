@@ -1158,7 +1158,7 @@ const EditorV3Page = () => {
       return;
     }
 
-    // 🛡️ REGRAS IMATUTÁVEIS: Usar peso REAL da Lynn Ohana (Source of Truth)
+    // 🛡️ REGRAS IMATUTÁVEIS: Usar peso REAL (Source of Truth)
     const weight = patientContext.weight;
     if (!weight || weight <= 0) {
       toast.error('O peso do paciente é obrigatório para gerar o plano real.');
@@ -1169,25 +1169,31 @@ const EditorV3Page = () => {
     setShowCalorieModal(false);
     
     try {
-      console.log(`[Elite-V3] Gerando plano via Adaptador NutriCore V3 para ${weight}kg`);
+      console.log(`[Elite-V3] Gerando plano para ${weight}kg via V3 Sandbox`);
       
-      const { NutriCoreV3Adapter } = await import("@/lib/nutricore_v2/adapter");
-      
-      // O Adaptador já lida com o mapeamento de objetivos/atividade e regras de medidas caseiras
-      const v3Meals = await NutriCoreV3Adapter.generateElitePlan(patientContext, [], viewMode === 'weekly');
+      // 🛡️ MOTOR V3: Usar V3SandboxGenerator em vez de NutriCoreV3Adapter (que pode ter lógicas antigas)
+      // O SandboxGenerator usa o motor soberano e resolve via LibraryV3Resolver
+      const v3Meals = await V3SandboxGenerator.generateDraft({
+        patientContext,
+        isWeekly: viewMode === 'weekly'
+      });
 
       if (!v3Meals || v3Meals.length === 0) {
-        throw new Error('O motor NutriCore retornou um plano vazio. Verifique as restrições do paciente.');
+        throw new Error('O motor V3 retornou um plano vazio. Verifique as restrições do paciente.');
       }
 
       console.log(`[Elite-V3] Plano gerado com ${v3Meals.length} refeições. Hidratando...`);
+      
+      // 🛡️ RESET PRIOR: Garante que não estamos apenas "somando" ao que já existe
       await hydrateMeals(v3Meals as any);
       
       // Calcular calorias totais para o toast
       const totalKcal = v3Meals.reduce((acc, m) => acc + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
-      toast.success(`Elite V3: Plano gerado com ${Math.round(totalKcal)} kcal para ${weight}kg!`);
+      const dailyKcal = viewMode === 'weekly' ? totalKcal / 7 : totalKcal;
+      
+      toast.success(`Plano gerado: ${Math.round(dailyKcal)} kcal/dia para ${weight}kg!`);
     } catch (error: any) {
-      console.error('[Elite-V3 Error] Falha crítica na geração:', error);
+      console.error('[V3 Generation Error] Falha crítica:', error);
       toast.error(`Erro ao gerar plano: ${error.message || 'Falha no Motor V3'}`);
     } finally {
       setIsGeneratingGlobal(false);
