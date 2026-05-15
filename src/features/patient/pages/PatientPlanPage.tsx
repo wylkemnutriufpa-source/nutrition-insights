@@ -87,17 +87,18 @@ export const PatientPlanPage = () => {
       const { safeGeneratePDF } = await import("@/features/editor-v3/services/pdfService");
       
       const pdfData = {
-        planTitle: plan.name || "Plano Alimentar",
+        planTitle: (plan as any).name || "Plano Alimentar",
         patientName: plan.patient_name || "Paciente",
-        nutritionistName: plan.coach_name || "Nutricionista",
+        nutritionistName: (plan as any).coach_name || "Nutricionista",
         startDate: new Date().toLocaleDateString('pt-BR'),
         targetCalories: plan.calories_target,
         targetProtein: plan.protein_target,
         targetCarbs: plan.carbs_target,
         targetFat: plan.fat_target,
         goal: plan.goal,
-        notes: plan.notes,
-        planMode: plan.plan_mode || 'single_day',
+        notes: (plan as any).notes,
+        planMode: (plan as any).plan_mode || 'single_day',
+
         items: plan.meals.flatMap(meal => 
           meal.items.map((item: any) => ({
             mealType: meal.name,
