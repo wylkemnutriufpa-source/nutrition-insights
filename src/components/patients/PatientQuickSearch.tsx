@@ -94,7 +94,7 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
       }
     };
 
-    const timer = setTimeout(fetchPatients, search ? 300 : 0);
+    const timer = setTimeout(fetchPatients, search ? 150 : 0); // Reduzido para 150ms para sensação de tempo real
     return () => clearTimeout(timer);
   }, [open, search, isPro, isAdmin, user?.id]);
 
