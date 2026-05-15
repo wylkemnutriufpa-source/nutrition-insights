@@ -137,9 +137,9 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
         <DialogHeader className="mb-6">
           <div className="flex items-center gap-2 text-emerald-500 mb-1">
             <Settings2 className="w-5 h-5" />
-            <DialogTitle className="text-lg font-black uppercase tracking-tight">⚙️ Ajustar Plano</DialogTitle>
+            <DialogTitle className="text-lg font-black uppercase tracking-tight">Metas Nutricionais</DialogTitle>
           </div>
-          <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Ajuste o plano em tempo real com base nas metas clínicas.</p>
+          <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Utilize os alvos abaixo como referência para sua prescrição manual.</p>
         </DialogHeader>
 
         <div className="space-y-8">
