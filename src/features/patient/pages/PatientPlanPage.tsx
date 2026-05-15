@@ -82,9 +82,47 @@ export const PatientPlanPage = () => {
     if (!plan) return;
     await patientService.logAccess(plan.id, 'export');
     toast.info('Gerando PDF profissional...');
-    // PDF generation logic would go here
-    setTimeout(() => toast.success('PDF gerado com sucesso!'), 1500);
+    
+    try {
+      const { safeGeneratePDF } = await import("@/features/editor-v3/services/pdfService");
+      
+      const pdfData = {
+        planTitle: plan.name || "Plano Alimentar",
+        patientName: plan.patient_name || "Paciente",
+        nutritionistName: plan.coach_name || "Nutricionista",
+        startDate: new Date().toLocaleDateString('pt-BR'),
+        targetCalories: plan.calories_target,
+        targetProtein: plan.protein_target,
+        targetCarbs: plan.carbs_target,
+        targetFat: plan.fat_target,
+        goal: plan.goal,
+        notes: plan.notes,
+        planMode: plan.plan_mode || 'single_day',
+        items: plan.meals.flatMap(meal => 
+          meal.items.map((item: any) => ({
+            mealType: meal.name,
+            title: item.name,
+            calories_target: item.kcal,
+            protein_target: item.protein,
+            carbs_target: item.carbs,
+            fat_target: item.fat,
+            is_primary: true,
+            display_quantity: item.display_quantity || item.quantity,
+            display_unit: item.display_unit || item.portionUnitLabel,
+            clinical_mass_g: item.clinical_mass_g,
+            visual_image_url: item.imageUrl
+          }))
+        )
+      };
+      
+      await safeGeneratePDF(pdfData);
+      toast.success('PDF gerado com sucesso!');
+    } catch (err) {
+      console.error("[PatientApp] PDF Export Error:", err);
+      toast.error("Erro ao gerar PDF.");
+    }
   };
+
   
   const handleOpenSubstitution = (item: any, mealId: string) => {
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
