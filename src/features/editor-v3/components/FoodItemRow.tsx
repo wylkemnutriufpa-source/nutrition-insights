@@ -1,20 +1,29 @@
 
 import React from 'react';
-import { Trash2, ChevronRight, Flame, Target } from 'lucide-react';
+import { Trash2, ChevronRight, Flame, Target, Plus, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MealItem } from '../types/types';
+import { MealItem, Food } from '../types/types';
 import { cn } from '@/lib/utils';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+} from "@/components/ui/dialog";
+import { FoodSearch } from './FoodSearch';
 
 interface FoodItemRowProps {
   item: MealItem;
   onUpdateQuantity: (newQty: number) => void;
   onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
+  onAddSubstitution: (food: Food) => void;
 }
 
-export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity, onUpdateMacros, onRemove }) => {
+export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
+  item, onUpdateQuantity, onUpdateMacros, onRemove, onAddSubstitution 
+}) => {
+  const [isSubSearchOpen, setIsSubSearchOpen] = React.useState(false);
+
   return (
     <div className="group relative flex flex-col p-8 bg-neutral-800/20 border border-white/5 rounded-[2.5rem] hover:bg-neutral-800/40 hover:border-emerald-500/30 hover:shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] -mr-16 -mt-16 rounded-full group-hover:bg-emerald-500/10 transition-all duration-700" />
@@ -82,16 +91,36 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity
       </div>
 
       {/* Substituições Dinâmicas Soberanas */}
-      {item.substitutions && item.substitutions.length > 0 && (
-        <div className="mt-4 pt-6 border-t border-white/5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ChevronRight className="w-3 h-3 text-emerald-500" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Equivalentes Dinâmicos</span>
-            </div>
-            <Badge variant="outline" className="text-[7px] uppercase font-black border-white/10 text-white/20">Ajuste Proporcional Ativo</Badge>
+      <div className="mt-4 pt-6 border-t border-white/5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <ChevronRight className="w-3 h-3 text-emerald-500" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Lista de Substituição</span>
           </div>
           
+          <Dialog open={isSubSearchOpen} onOpenChange={setIsSubSearchOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" className="h-7 px-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest rounded-lg">
+                <Search className="w-2.5 h-2.5 mr-1.5" /> Adicionar Substituto
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-xl rounded-[3rem] p-12">
+              <DialogHeader className="mb-8">
+                <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Buscar Equivalentes</DialogTitle>
+                <p className="text-[10px] uppercase font-black tracking-widest text-white/20 mt-2">Encontre substitutos para: {item.name}</p>
+              </DialogHeader>
+              <FoodSearch 
+                mealSlot={item.category}
+                onSelect={(food) => {
+                  onAddSubstitution(food);
+                  setIsSubSearchOpen(false);
+                }} 
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        {item.substitutions && item.substitutions.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {item.substitutions.map((sub, idx) => (
               <div 
@@ -100,14 +129,18 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity
               >
                 <span className="text-[10px] font-bold text-white/60 truncate group-hover/sub:text-emerald-400 transition-colors">{sub.name}</span>
                 <span className="text-[11px] font-black text-white mt-1">
-                  {(sub as any).clinical_mass_g || sub.portionValue || 100}
+                  {Math.round((sub as any).clinical_mass_g || sub.portionValue || 100)}
                   <span className="text-[8px] uppercase ml-1 opacity-30">g</span>
                 </span>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="py-6 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-2xl">
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/10 italic">Nenhum equivalente cadastrado</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

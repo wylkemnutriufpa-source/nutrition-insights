@@ -27,6 +27,7 @@ interface EditorState {
   removeMeal: (mealId: string) => void;
   updateMealHeader: (mealId: string, updates: Partial<Meal>) => void;
   updateMealItemMacros: (mealId: string, itemInstanceId: string, targetValue: number, macroType: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
+  addSubstitutionToItem: (mealId: string, itemInstanceId: string, food: Food) => void;
 }
 
 
@@ -161,6 +162,37 @@ export const useEditorState = create<EditorState>()(
           return { ...meal, items: updatedItems };
         });
 
+        set({ meals: updatedMeals });
+      },
+
+      addSubstitutionToItem: (mealId, itemInstanceId, food) => {
+        const { meals } = get();
+        const updatedMeals = meals.map(meal => {
+          if (meal.id !== mealId) return meal;
+
+          const updatedItems = meal.items.map(item => {
+            if (item.instanceId !== itemInstanceId) return item;
+
+            const targetKcal = item.kcal || 100;
+            const substituteQuantity = scaleItemToTarget(food, targetKcal, 'kcal');
+            const subMacros = calculateItemMacros(food, substituteQuantity);
+
+            const newSub = {
+              ...food,
+              name: food.name,
+              quantity: substituteQuantity,
+              clinical_mass_g: substituteQuantity,
+              ...subMacros
+            };
+
+            return {
+              ...item,
+              substitutions: [...(item.substitutions || []), newSub]
+            };
+          });
+
+          return { ...meal, items: updatedItems };
+        });
         set({ meals: updatedMeals });
       }
     }),
