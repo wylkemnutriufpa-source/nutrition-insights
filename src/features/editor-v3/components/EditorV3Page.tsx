@@ -1683,7 +1683,7 @@ const EditorV3Page = () => {
                   className="h-10 px-3 text-[10px] font-black uppercase tracking-wider text-blue-400 hover:text-white hover:bg-blue-500/20 rounded-xl transition-all gap-2"
                 >
                   <Settings2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ajustar</span>
+                  <span className="hidden sm:inline">Metas</span>
                 </Button>
                 <Button 
                   variant="ghost" 
