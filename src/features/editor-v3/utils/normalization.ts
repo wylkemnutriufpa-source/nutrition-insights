@@ -2,6 +2,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal, MealItem } from '../types';
 import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
 import { SovereignFatalGuard } from './FakeUtils';
+import { translateSlot } from './translations';
+
 
 /**
  * Normaliza um alimento para garantir que ele siga o padrão Estável.
