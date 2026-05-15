@@ -49,8 +49,9 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
           <div className="w-full md:w-80 bg-neutral-900/50 p-6 border-r border-white/10 flex flex-col">
             <div className="flex-1">
               <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4 uppercase text-[10px] font-black tracking-widest">
-                Template Soberano
+                Template Profissional
               </Badge>
+
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">
                 {template.title}
               </h2>
