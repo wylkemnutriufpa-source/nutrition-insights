@@ -207,7 +207,8 @@ export default function PatientMealPlan() {
       className: "bg-neutral-900 border-white/10 text-white font-bold uppercase tracking-widest text-[10px]"
     });
 
-    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
+    let resolvedItems: MealPlanItem[] = [];
+    let resolvedAllItems: MealPlanItem[] = [];
     if (planData.editor_version === 'v3' || planData.editor_version === 'V3') {
       const snapshot = planData.snapshot as any;
       if (!snapshot || (!snapshot.days && !snapshot.meals)) {
