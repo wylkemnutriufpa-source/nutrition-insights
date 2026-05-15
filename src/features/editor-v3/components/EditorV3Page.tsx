@@ -366,35 +366,50 @@ export default function EditorV3Page() {
 
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
+                  className="bg-white/5 border-white/10 hover:bg-emerald-500/10 hover:border-emerald-500/30 text-white/60 hover:text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-8 rounded-2xl hidden md:flex transition-all duration-300 shadow-lg"
                 >
-                  <Library className="w-4 h-4 mr-2" /> Templates
+                  <Library className="w-5 h-5 mr-3" /> Biblioteca Premium
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-6 rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca de Templates Premium</DialogTitle>
+              <DialogContent className="max-w-6xl bg-neutral-950 border-white/10 text-white p-12 rounded-[3.5rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)] overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] -mr-64 -mt-64 rounded-full pointer-events-none" />
+                
+                <DialogHeader className="mb-12 relative z-10">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+                      <Library className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-4xl font-black uppercase italic tracking-tighter leading-none text-white">Biblioteca Soberana</DialogTitle>
+                      <p className="text-[11px] text-white/20 uppercase font-black tracking-[0.3em] mt-3 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Padrões Clínicos de Alta Performance
+                      </p>
+                    </div>
+                  </div>
                 </DialogHeader>
-                <ScrollArea className="h-[65vh] mt-4 pr-4">
-                  <div className="space-y-8">
+                
+                <ScrollArea className="h-[65vh] pr-8 -mr-8 relative z-10">
+                  <div className="space-y-12">
                     {Object.entries(
                       templates.reduce((acc, t) => {
-                        const cat = t.objective || 'Outros';
+                        const cat = t.objective || 'Geral';
                         if (!acc[cat]) acc[cat] = [];
                         acc[cat].push(t);
                         return acc;
                       }, {} as Record<string, V3DietTemplate[]>)
                     ).map(([category, items]) => (
-                      <div key={category} className="space-y-4">
-                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500 border-b border-emerald-500/10 pb-2">
+                      <div key={category} className="space-y-6">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-emerald-500/40 border-b border-white/5 pb-4 flex items-center gap-3">
+                          <Layout className="w-4 h-4" />
                           {category}
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                           {items.map(template => (
                             <button
                               key={template.id}
@@ -402,14 +417,22 @@ export default function EditorV3Page() {
                                 setSelectedTemplate(template);
                                 setIsTemplateModalOpen(true);
                               }}
-                              className="flex flex-col p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all text-left group"
+                              className="flex flex-col p-8 rounded-[2.5rem] bg-neutral-900/40 border border-white/5 hover:border-emerald-500/40 hover:bg-neutral-900 transition-all duration-700 text-left group relative overflow-hidden shadow-xl"
                             >
-                              <h4 className="text-lg font-black uppercase italic group-hover:text-emerald-400 transition-colors">
+                              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] -mr-16 -mt-16 rounded-full group-hover:bg-emerald-500/10 transition-all duration-700" />
+                              
+                              <h4 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-emerald-400 transition-colors duration-500 leading-none">
                                 {template.title}
                               </h4>
-                              <p className="text-xs text-white/40 mt-2 line-clamp-2 uppercase font-medium">
+                              <p className="text-[11px] text-white/20 mt-6 line-clamp-3 uppercase font-bold leading-relaxed tracking-wide group-hover:text-white/40 transition-colors">
                                 {template.description}
                               </p>
+                              <div className="mt-10 flex items-center justify-between border-t border-white/5 pt-6">
+                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-white/10 text-white/20 px-2 py-0.5 rounded-md">PRO V3</Badge>
+                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-black transition-all duration-500">
+                                  <ChevronRight className="w-4 h-4" />
+                                </div>
+                              </div>
                             </button>
                           ))}
                         </div>
@@ -449,33 +472,33 @@ export default function EditorV3Page() {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Target className="w-3 h-3 text-emerald-500" /> Proteínas
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-emerald-500 transition-colors duration-500">
+              <Target className="w-4 h-4 text-emerald-500" /> Proteínas
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.protein)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">g</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.protein)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Target className="w-3 h-3 text-blue-500" /> Carboidratos
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-blue-500 transition-colors duration-500">
+              <Target className="w-4 h-4 text-blue-500" /> Carboidratos
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.carbs)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">g</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.carbs)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Target className="w-3 h-3 text-amber-500" /> Lipídeos
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-amber-500 transition-colors duration-500">
+              <Target className="w-4 h-4 text-amber-500" /> Lipídeos
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.fat)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">g</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.fat)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
             </div>
           </div>
         </div>

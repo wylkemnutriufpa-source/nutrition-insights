@@ -53,20 +53,18 @@ const GROUP_ORDER = ["CLÍNICO", "ACOMPANHAMENTO", "BIBLIOTECA", "GESTÃO", "CON
 
 const GROUP_ICONS: Record<string, any> = {
   CLÍNICO: Heart,
-  ACOMPANHAMENTO: TrendingUp,
-  ENGAJAMENTO: Trophy,
-  CONTEÚDO: BookOpen,
+  ACOMPANHAMENTO: Activity,
+  BIBLIOTECA: Library,
   GESTÃO: BarChart3,
   CONFIGURAÇÕES: Settings,
 };
 
 const GROUP_COLORS: Record<string, string> = {
-  CLÍNICO: "text-sky-400",
-  ACOMPANHAMENTO: "text-emerald-400",
-  ENGAJAMENTO: "text-amber-400",
-  CONTEÚDO: "text-violet-400",
+  CLÍNICO: "text-emerald-400",
+  ACOMPANHAMENTO: "text-blue-400",
+  BIBLIOTECA: "text-amber-400",
   GESTÃO: "text-rose-400",
-  CONFIGURAÇÕES: "text-muted-foreground",
+  CONFIGURAÇÕES: "text-white/20",
 };
 
 // Fixed items that appear above groups

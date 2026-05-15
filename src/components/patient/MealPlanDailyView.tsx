@@ -167,29 +167,29 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Metas Nutricionais do Dia</span>
       </div>
-      <div className="grid grid-cols-4 gap-2.5">
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Kcal</p>
-          <p className="font-display font-black text-lg text-white" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Flame className="w-5 h-5 mx-auto text-orange-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Kcal</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
         </div>
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Beef className="w-4 h-4 mx-auto text-red-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Prot</p>
-          <p className="font-display font-black text-lg text-white" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Beef className="w-5 h-5 mx-auto text-red-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Prot</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
         </div>
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Carbs</p>
-          <p className="font-display font-black text-lg text-white" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Wheat className="w-5 h-5 mx-auto text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Carbs</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
         </div>
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Gord</p>
-          <p className="font-display font-black text-lg text-white" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Droplets className="w-5 h-5 mx-auto text-yellow-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Gord</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
         </div>
       </div>
-      
+
       {isIncomplete && (
         <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg animate-pulse" data-testid="macros-sync-alert">
           <Clock className="w-3.5 h-3.5 text-amber-500" />
@@ -240,7 +240,7 @@ const MealItemCard = memo(function MealItemCard({
         opacity: 1, y: 0,
         boxShadow: isJustDone ? "0 0 20px rgba(16,185,129,0.3)" : "none",
       }}
-      className={`relative rounded-[2.5rem] border overflow-hidden bg-neutral-900/40 backdrop-blur-md group ${statusColor}`}
+      className={`relative rounded-[3rem] border overflow-hidden bg-neutral-900/60 backdrop-blur-2xl group transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${statusColor}`}
     >
       {resolvedImage && (
         <div
