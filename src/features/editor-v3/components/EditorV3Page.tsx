@@ -9,7 +9,7 @@ import {
   CheckCircle2, AlertCircle, Info, Send, Share2,
   Trash2, Copy, MoreHorizontal, Settings, Library,
   Layout, Search, Loader2, User, Activity, Calculator,
-  ChevronRight, Check, ChevronsUpDown
+  ChevronRight, Check, ChevronsUpDown, Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
