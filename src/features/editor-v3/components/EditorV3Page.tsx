@@ -562,31 +562,7 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     if (patientId) {
-      console.debug('[v3-init] checking system health for patient:', patientId);
-      // 🔥 Forçar a prova clínica no localStorage para debug imediato
-      runClinicalProofTests(patientId).then(reports => {
-        localStorage.setItem('v3_proof_report', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          reports
-        }));
-      });
-      runV3IntegrationTests(patientId).then(res => {
-        const evidence = (res as any).evidence || [];
-        if (evidence.length > 0) {
-          console.error('[v3-health] issues detected during initialization', evidence);
-        } else {
-          console.info('[v3-health] all systems operational');
-          // Rodar prova clínica
-          runClinicalProofTests(patientId).then(reports => {
-            console.group('--- RELATÓRIO DE PROVA CLÍNICA ---');
-            reports.forEach(r => {
-              if (r.startsWith('✅')) console.info(r);
-              else console.warn(r);
-            });
-            console.groupEnd();
-          });
-        }
-      });
+      console.info('[v3-init] initializing session for patient:', patientId);
     }
   }, [patientId]);
 
@@ -1432,12 +1408,11 @@ const EditorV3Page = () => {
 
     updateMealItem(mealId, instanceId, {
       ...target,
-      ...household,
       ...macros,
-      kcal: macros.calories,
-      calories: macros.calories,
+      kcal: macros.kcal,
+      calories: macros.kcal,
       instanceId,
-      quantity: safeQuantity
+      quantity: newGrams
     });
     
     setReplacementPending(null);

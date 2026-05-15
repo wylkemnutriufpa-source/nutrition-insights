@@ -77,7 +77,7 @@ const PlanAdjustmentModal: React.FC<PlanAdjustmentModalProps> = ({
     };
   }, [meals, dayCount]);
 
-  const [params, setParams] = useState<PlanAdjustmentParams>({
+  const [params, setParams] = useState<any>({
     proteinTarget: 0,
     carbTarget: 0,
     fatTarget: 0,
