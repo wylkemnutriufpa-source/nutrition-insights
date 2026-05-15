@@ -179,7 +179,7 @@ export const useEditorState = create<EditorState>()(
 
             const newSub = {
               ...food,
-              name: food.title || food.name,
+              name: food.name,
               quantity: substituteQuantity,
               clinical_mass_g: substituteQuantity,
               ...subMacros
