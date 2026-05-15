@@ -12,6 +12,11 @@ import { toast } from "sonner";
 import {
   Utensils,
   Flame,
+  ChevronRight,
+  Clock,
+  Info,
+  CheckCircle2,
+  ChevronDown
 } from "lucide-react";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
@@ -21,7 +26,6 @@ import {
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import { MealSlotModal } from "@/components/patient/MealSlotModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
-
 
 import type { MealDetailData } from "@/components/patient/MealPlanDailyView";
 import { buildDailyDisplayItems } from "@/lib/mealPlanDisplay";

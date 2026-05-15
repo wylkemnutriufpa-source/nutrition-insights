@@ -16,7 +16,7 @@ import {
   TrendingUp, Heart, MessageSquare, MessageCircle, Award, Crown, Compass,
   Megaphone, UserCheck, Scale, Lightbulb, Bot, Camera, Pill,
   GraduationCap, LogOut, ChevronRight, Search, AlertTriangle,
-  Flame, ShoppingCart, Pin, X,
+  Flame, ShoppingCart, Pin, X, Library
 } from "lucide-react";
 import { SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@/hooks/useSmartMenu";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
