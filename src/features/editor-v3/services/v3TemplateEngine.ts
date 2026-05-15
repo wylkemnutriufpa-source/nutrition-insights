@@ -34,14 +34,27 @@ export class V3TemplateEngine {
     }
 
     // 2. Definir Alvos de Macros Baseados no Kcal Selecionado
-    // Como simplificação, usamos uma distribuição balanceada (30% P, 40% C, 30% G)
+    // Tenta encontrar perfil específico no template, caso contrário usa distribuição balanceada
+    const profiles = (template.kcal_profiles as any[]) || [];
+    const activeProfile = profiles.find((p: any) => (typeof p === 'number' ? p : p.kcal) === targetKcal);
+    
+    let proteinRatio = 0.3;
+    let carbRatio = 0.4;
+    let fatRatio = 0.3;
+
+    if (activeProfile && typeof activeProfile === 'object' && activeProfile.distribution_rules) {
+      proteinRatio = activeProfile.distribution_rules.protein_ratio || 0.3;
+      carbRatio = activeProfile.distribution_rules.carb_ratio || 0.4;
+      fatRatio = activeProfile.distribution_rules.fat_ratio || 0.3;
+    }
+
     const targetMacros = {
-      protein_g: (targetKcal * 0.3) / 4,
-      carb_g: (targetKcal * 0.4) / 4,
-      fat_g: (targetKcal * 0.3) / 9,
-      protein_kcal: targetKcal * 0.3,
-      carb_kcal: targetKcal * 0.4,
-      fat_kcal: targetKcal * 0.3
+      protein_g: (targetKcal * proteinRatio) / 4,
+      carb_g: (targetKcal * carbRatio) / 4,
+      fat_g: (targetKcal * fatRatio) / 9,
+      protein_kcal: targetKcal * proteinRatio,
+      carb_kcal: targetKcal * carbRatio,
+      fat_kcal: targetKcal * fatRatio
     };
 
     // 3. Mapear Slots do Template
