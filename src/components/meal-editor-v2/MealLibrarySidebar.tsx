@@ -88,7 +88,7 @@ const GOAL_LABELS: Record<string, string> = {
 
 export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealType }: MealLibrarySidebarProps) {
   const { user } = useAuth();
-  const { planId, items, addItem, addItems, deleteItem } = useMealPlanEditorV2Store();
+  const { planId, items, addItem, addItems, deleteItem, deleteItemsInCell } = useMealPlanEditorV2Store();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [dietTemplates, setDietTemplates] = useState<DietTemplate[]>([]);
   const [loading, setLoading] = useState(false);
