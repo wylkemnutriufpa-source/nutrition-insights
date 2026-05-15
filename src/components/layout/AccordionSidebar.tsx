@@ -380,11 +380,34 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 
   const hasWorkspaceConfig = isProRole && isProfessionalContext && sections.length > 0;
 
-  if (hasWorkspaceConfig) {
-    return <WorkspaceSidebar collapsed={collapsed} onLinkClick={onLinkClick} />;
-  }
-
-  return <LegacySidebar categories={categories} flatItems={flatItems} collapsed={collapsed} isProRole={isProRole} onLinkClick={onLinkClick} trackClick={trackClick} />;
+  return (
+    <div className="flex flex-col h-full">
+      {isProRole && (
+        <div className="px-3 mb-4">
+          <PatientQuickSearch 
+            collapsed={collapsed} 
+            showIconOnly={collapsed}
+            className="w-full"
+          />
+        </div>
+      )}
+      
+      <div className="flex-1 overflow-y-auto scrollbar-none">
+        {hasWorkspaceConfig ? (
+          <WorkspaceSidebar collapsed={collapsed} onLinkClick={onLinkClick} />
+        ) : (
+          <LegacySidebar 
+            categories={categories} 
+            flatItems={flatItems} 
+            collapsed={collapsed} 
+            isProRole={isProRole} 
+            onLinkClick={onLinkClick} 
+            trackClick={trackClick} 
+          />
+        )}
+      </div>
+    </div>
+  );
 }
 
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
