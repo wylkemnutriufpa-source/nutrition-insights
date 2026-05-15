@@ -5,13 +5,13 @@ import { V3DietTemplate, KcalProfile } from "../types/types";
 import { getStyleContract } from "@/lib/templateStyles";
 
 const KCAL_PROFILES: KcalProfile[] = [
-  { kcal: 1200, meal_intensity: 'low', satiety_level: 4, protein_density: 'standard' },
-  { kcal: 1400, meal_intensity: 'low', satiety_level: 5, protein_density: 'standard' },
-  { kcal: 1600, meal_intensity: 'medium', satiety_level: 6, protein_density: 'high' },
-  { kcal: 1800, meal_intensity: 'medium', satiety_level: 7, protein_density: 'high' },
-  { kcal: 2200, meal_intensity: 'high', satiety_level: 8, protein_density: 'ultra' },
-  { kcal: 2800, meal_intensity: 'high', satiety_level: 9, protein_density: 'ultra' }
+  { kcal: 1200, meal_intensity: 'low' },
+  { kcal: 1400, meal_intensity: 'low' },
+  { kcal: 1600, meal_intensity: 'medium' },
+  { kcal: 1800, meal_intensity: 'medium' },
+  { kcal: 2200, meal_intensity: 'high' }
 ];
+
 
 const MOCK_TEMPLATES: V3DietTemplate[] = [
   {
