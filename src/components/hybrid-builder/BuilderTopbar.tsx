@@ -41,10 +41,10 @@ export default function BuilderTopbar({
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
-  const totalCarbs = items.reduce((s, i) => s + (i.carbs_target || 0), 0);
-  const totalFat = items.reduce((s, i) => s + (i.fat_target || 0), 0);
+  const totalKcal = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const totalProt = items.reduce((s, i) => s + (i.meta_proteinas || 0), 0);
+  const totalCarbs = items.reduce((s, i) => s + (i.meta_carboidratos || 0), 0);
+  const totalFat = items.reduce((s, i) => s + (i.meta_gorduras || 0), 0);
 
   const status = plan?.plan_status;
   const isPublished = status === "published_to_patient";

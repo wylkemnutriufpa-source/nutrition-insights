@@ -102,14 +102,14 @@ function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemIns
     meal_plan_id: insert.meal_plan_id,
     title: insert.title,
     description: insert.description ?? null,
-    meal_type: insert.meal_type,
+    tipo_refeicao: insert.tipo_refeicao,
     day_of_week: insert.day_of_week ?? 0, // Permite múltiplos dias
     is_primary: (insert as any).is_primary ?? true,
     substitution_group_id: (insert as any).substitution_group_id ?? null,
-    calories_target: insert.calories_target ?? null,
-    protein_target: insert.protein_target ?? null,
-    carbs_target: insert.carbs_target ?? null,
-    fat_target: insert.fat_target ?? null,
+    meta_calorias: insert.meta_calorias ?? null,
+    meta_proteinas: insert.meta_proteinas ?? null,
+    meta_carboidratos: insert.meta_carboidratos ?? null,
+    meta_gorduras: insert.meta_gorduras ?? null,
     tenant_id: (insert as any).tenant_id ?? null,
     visual_library_item_id: (insert as any).visual_library_item_id ?? null,
     image_url: (insert as any).image_url ?? null,
@@ -136,12 +136,12 @@ function getMetadataFromItem(item: Partial<MealPlanItem> & { metadata?: unknown 
 const MEAL_PLAN_ITEM_PATCH_KEYS = new Set([
   "title",
   "description",
-  "meal_type",
+  "tipo_refeicao",
   "day_of_week",
-  "calories_target",
-  "protein_target",
-  "carbs_target",
-  "fat_target",
+  "meta_calorias",
+  "meta_proteinas",
+  "meta_carboidratos",
+  "meta_gorduras",
   "tenant_id",
   "visual_library_item_id",
   "image_url",
@@ -232,9 +232,9 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
     const prevItems = [...items];
     // Single-day puro: todos os items pertencem ao dia 0
-    const totalProt = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-    const totalCarb = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-    const totalKcal = items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    const totalProt = items.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
+    const totalCarb = items.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0);
+    const totalKcal = items.reduce((s, i) => s + (Number(i.meta_calorias) || 0), 0);
 
     // Determinar Fatores de Escala
     const pScale = delta.protein ? (totalProt + delta.protein) / totalProt : 1;
@@ -243,24 +243,24 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
     const updatedItems = items.map(item => {
 
-      const nextProt = item.protein_target ? Number(item.protein_target) * pScale : 0;
-      const nextCarb = item.carbs_target ? Number(item.carbs_target) * cScale : 0;
-      const nextKcal = item.calories_target ? Number(item.calories_target) * kScale : 0;
+      const nextProt = item.meta_proteinas ? Number(item.meta_proteinas) * pScale : 0;
+      const nextCarb = item.meta_carboidratos ? Number(item.meta_carboidratos) * cScale : 0;
+      const nextKcal = item.meta_calorias ? Number(item.meta_calorias) * kScale : 0;
       
       let nextDescription = item.description;
       if (nextDescription) {
         nextDescription = nextDescription.replace(/(\d+)\s*g/g, (match, grams) => {
           const g = parseFloat(grams);
-          const scale = (item.carbs_target && Number(item.carbs_target) > Number(item.protein_target)) ? cScale : (pScale || kScale);
+          const scale = (item.meta_carboidratos && Number(item.meta_carboidratos) > Number(item.meta_proteinas)) ? cScale : (pScale || kScale);
           return `${Math.round(g * scale)}g`;
         });
       }
 
       return {
         ...item,
-        protein_target: Math.round(nextProt * 10) / 10,
-        carbs_target: Math.round(nextCarb * 10) / 10,
-        calories_target: Math.round(nextKcal),
+        meta_proteinas: Math.round(nextProt * 10) / 10,
+        meta_carboidratos: Math.round(nextCarb * 10) / 10,
+        meta_calorias: Math.round(nextKcal),
         description: nextDescription,
         is_manually_edited: true,
       };
@@ -470,12 +470,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
               meal_plan_id: item!.meal_plan_id,
               title: item!.title,
               description: item!.description,
-              meal_type: item!.meal_type,
+              tipo_refeicao: item!.tipo_refeicao,
               day_of_week: item!.day_of_week,
-              calories_target: item!.calories_target,
-              protein_target: item!.protein_target,
-              carbs_target: item!.carbs_target,
-              fat_target: item!.fat_target,
+              meta_calorias: item!.meta_calorias,
+              meta_proteinas: item!.meta_proteinas,
+              meta_carboidratos: item!.meta_carboidratos,
+              meta_gorduras: item!.meta_gorduras,
               tenant_id: item!.tenant_id,
               visual_library_item_id: item!.visual_library_item_id,
               image_url: item!.image_url,
@@ -496,7 +496,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         if (error) throw error;
 
         const rows = (data || []) as MealPlanItem[];
-        // Map real IDs back using title/meal_type/etc. as a best-effort if order is not guaranteed
+        // Map real IDs back using title/tipo_refeicao/etc. as a best-effort if order is not guaranteed
         // But better: since we insert ONE by ONE or in small batches, let's just use the index if lengths match
         set((s) => ({
           items: sortMealPlanItems(s.items.map((item) => {
@@ -505,7 +505,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
               // Try to find the exact match in returned rows by comparing identifying fields
               const match = rows.find(r => 
                 r.title === item.title && 
-                r.meal_type === item.meal_type && 
+                r.tipo_refeicao === item.tipo_refeicao && 
                 r.day_of_week === item.day_of_week
               );
               return match || item;
@@ -622,11 +622,11 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   // ── Delete all items in a cell (day + mealType) ────────────
   deleteItemsInCell: (day, mealType) => {
 
-    const toDelete = get().items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
+    const toDelete = get().items.filter((i) => i.day_of_week === day && i.tipo_refeicao === mealType);
     if (toDelete.length === 0) return;
     const prev = get().items;
     const deleteIds = toDelete.map((i) => i.id);
-    set((s) => ({ items: sortMealPlanItems(s.items.filter((i) => !(i.day_of_week === day && i.meal_type === mealType))) }));
+    set((s) => ({ items: sortMealPlanItems(s.items.filter((i) => !(i.day_of_week === day && i.tipo_refeicao === mealType))) }));
 
     get()._enqueue({
       key: `deleteCell:${day}-${mealType}`,
@@ -690,7 +690,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   moveItem: (itemId, targetDay, targetMealType) => {
     get().updateItem(itemId, {
       day_of_week: 0,
-      meal_type: targetMealType,
+      tipo_refeicao: targetMealType,
     } as Partial<MealPlanItem>);
   },
 
@@ -703,12 +703,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       meal_plan_id: item.meal_plan_id,
       title: item.title,
       description: item.description,
-      meal_type: item.meal_type,
+      tipo_refeicao: item.tipo_refeicao,
       day_of_week: item.day_of_week ?? 1,
-      calories_target: item.calories_target,
-      protein_target: item.protein_target,
-      carbs_target: item.carbs_target,
-      fat_target: item.fat_target,
+      meta_calorias: item.meta_calorias,
+      meta_proteinas: item.meta_proteinas,
+      meta_carboidratos: item.meta_carboidratos,
+      meta_gorduras: item.meta_gorduras,
       tenant_id: item.tenant_id,
       visual_library_item_id: item.visual_library_item_id,
       image_url: item.image_url,
@@ -727,7 +727,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   },
 
   copyCell: (day, mealType) => {
-    const toCopy = get().items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
+    const toCopy = get().items.filter((i) => i.day_of_week === day && i.tipo_refeicao === mealType);
     if (toCopy.length === 0) return;
     set({ clipboardItems: toCopy });
   },
@@ -740,12 +740,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       meal_plan_id: planId,
       title: item.title,
       description: item.description,
-      meal_type: mealType,
+      tipo_refeicao: mealType,
       day_of_week: day,
-      calories_target: item.calories_target,
-      protein_target: item.protein_target,
-      carbs_target: item.carbs_target,
-      fat_target: item.fat_target,
+      meta_calorias: item.meta_calorias,
+      meta_proteinas: item.meta_proteinas,
+      meta_carboidratos: item.meta_carboidratos,
+      meta_gorduras: item.meta_gorduras,
       visual_library_item_id: (item as any).visual_library_item_id,
       image_url: (item as any).image_url,
       item_origin: (item as any).item_origin || "manual",
@@ -758,16 +758,16 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   swapCells: (srcDay, srcMeal, dstDay, dstMeal) => {
 
     const prev = get().items;
-    const srcItems = prev.filter((i) => i.day_of_week === srcDay && i.meal_type === srcMeal);
-    const dstItems = prev.filter((i) => i.day_of_week === dstDay && i.meal_type === dstMeal);
+    const srcItems = prev.filter((i) => i.day_of_week === srcDay && i.tipo_refeicao === srcMeal);
+    const dstItems = prev.filter((i) => i.day_of_week === dstDay && i.tipo_refeicao === dstMeal);
     if (srcItems.length === 0 && dstItems.length === 0) return;
 
     const updated = prev.map((item) => {
-      if (item.day_of_week === srcDay && item.meal_type === srcMeal) {
-        return { ...item, day_of_week: dstDay, meal_type: dstMeal } as MealPlanItem;
+      if (item.day_of_week === srcDay && item.tipo_refeicao === srcMeal) {
+        return { ...item, day_of_week: dstDay, tipo_refeicao: dstMeal } as MealPlanItem;
       }
-      if (item.day_of_week === dstDay && item.meal_type === dstMeal) {
-        return { ...item, day_of_week: srcDay, meal_type: srcMeal } as MealPlanItem;
+      if (item.day_of_week === dstDay && item.tipo_refeicao === dstMeal) {
+        return { ...item, day_of_week: srcDay, tipo_refeicao: srcMeal } as MealPlanItem;
       }
       return item;
     });
@@ -785,12 +785,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         const updates = allAffected
           .filter((item) => !item.id.startsWith("temp-"))
           .map((item) => {
-          const isSrc = item.day_of_week === srcDay && item.meal_type === srcMeal;
+          const isSrc = item.day_of_week === srcDay && item.tipo_refeicao === srcMeal;
           return supabase
             .from("meal_plan_items")
             .update({
               day_of_week: 0,
-              meal_type: isSrc ? dstMeal : srcMeal,
+              tipo_refeicao: isSrc ? dstMeal : srcMeal,
             })
             .eq("id", item.id);
           });

@@ -25,10 +25,10 @@ describe('Substitution Grams Edit E2E', () => {
   const mockPrimary = {
     id: 'primary-1',
     title: 'Arroz',
-    calories_target: 100,
-    protein_target: 2,
-    carbs_target: 20,
-    fat_target: 0,
+    meta_calorias: 100,
+    meta_proteinas: 2,
+    meta_carboidratos: 20,
+    meta_gorduras: 0,
     is_primary: true,
     substitution_group_id: 'group-1',
     description: '100g'
@@ -37,10 +37,10 @@ describe('Substitution Grams Edit E2E', () => {
   const mockSub = {
     id: 'sub-1',
     title: 'Batata',
-    calories_target: 80,
-    protein_target: 2,
-    carbs_target: 18,
-    fat_target: 0,
+    meta_calorias: 80,
+    meta_proteinas: 2,
+    meta_carboidratos: 18,
+    meta_gorduras: 0,
     is_primary: false,
     substitution_group_id: 'group-1',
     description: '100g'
@@ -88,8 +88,8 @@ describe('Substitution Grams Edit E2E', () => {
     // Verifica se o updateItem foi chamado com os valores dobrados (100g -> 200g)
     // E verifica se outros campos foram omitidos ou se o substitution_group_id está implícito no patch se fosse passado (mas o store preserva o que já tem)
     expect(mockUpdateItem).toHaveBeenCalledWith('sub-1', expect.objectContaining({
-      calories_target: 160, // 80 * 2
-      protein_target: 4,    // 2 * 2
+      meta_calorias: 160, // 80 * 2
+      meta_proteinas: 4,    // 2 * 2
       description: '200g'
     }));
 

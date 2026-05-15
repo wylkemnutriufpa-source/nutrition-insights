@@ -233,8 +233,8 @@ export default function MealTemplatePanel({ day }: Props) {
         const transformed: MealTemplate[] = (data || []).map((recipe) => {
           const foods_json = Array.isArray(recipe.foods_json) ? recipe.foods_json : [];
           
-          // Map database meal_type to store MealType
-          const mType = recipe.meal_type?.toLowerCase();
+          // Map database tipo_refeicao to store MealType
+          const mType = recipe.tipo_refeicao?.toLowerCase();
           const mealTypes: MealType[] = [];
           if (mType?.includes("almoco") || mType?.includes("almoço")) mealTypes.push("Almoço");
           if (mType?.includes("jantar")) mealTypes.push("Jantar");
@@ -325,12 +325,12 @@ export default function MealTemplatePanel({ day }: Props) {
           meal_plan_id: planId,
           title: foodName,
           description,
-          meal_type: activeMealType,
+          tipo_refeicao: activeMealType,
           day_of_week: targetDay,
-          calories_target: f.calories,
-          protein_target: f.protein,
-          carbs_target: f.carbs,
-          fat_target: f.fat,
+          meta_calorias: f.calories,
+          meta_proteinas: f.protein,
+          meta_carboidratos: f.carbs,
+          meta_gorduras: f.fat,
           item_origin: "template_v3",
           edit_metadata: {
             substitutions_json: alts,

@@ -57,11 +57,11 @@ export default function HybridPlanBuilder() {
           title: recipe.title,
           description: recipe.title,
           day_of_week: day,
-          meal_type: mealType,
-          calories_target: recipe.calories_per_serving || 0,
-          protein_target: recipe.protein_per_serving || 0,
-          carbs_target: recipe.carbs_per_serving || 0,
-          fat_target: recipe.fat_per_serving || 0,
+          tipo_refeicao: mealType,
+          meta_calorias: recipe.calories_per_serving || 0,
+          meta_proteinas: recipe.protein_per_serving || 0,
+          meta_carboidratos: recipe.carbs_per_serving || 0,
+          meta_gorduras: recipe.fat_per_serving || 0,
           image_url: recipe.image_url || null,
           item_origin: "builder_drag_recipe" as any,
           tenant_id: tenantIdVal,
@@ -97,11 +97,11 @@ export default function HybridPlanBuilder() {
           title: `${ri.food_name}`,
           description: `${ri.food_name} ${grams}g (${recipe.title})`,
           day_of_week: day,
-          meal_type: mealType,
-          calories_target: kcal,
-          protein_target: prot,
-          carbs_target: carbs,
-          fat_target: fat,
+          tipo_refeicao: mealType,
+          meta_calorias: kcal,
+          meta_proteinas: prot,
+          meta_carboidratos: carbs,
+          meta_gorduras: fat,
           item_origin: "builder_recipe_item" as any,
           tenant_id: tenantIdVal,
         };
@@ -248,7 +248,7 @@ export default function HybridPlanBuilder() {
 
     if (dragData.type === "existing-item") store.moveItem(dragData.itemId, day, mealType);
     else if (dragData.type === "food") {
-      store.addItem({ meal_plan_id: plan.id, title: dragData.food.food_name, description: `${dragData.food.food_name} ${dragData.food.computed.qty}g`, day_of_week: day, meal_type: mealType, calories_target: dragData.food.computed.kcal, protein_target: dragData.food.computed.prot, carbs_target: dragData.food.computed.carbs, fat_target: dragData.food.computed.fat });
+      store.addItem({ meal_plan_id: plan.id, title: dragData.food.food_name, description: `${dragData.food.food_name} ${dragData.food.computed.qty}g`, day_of_week: day, tipo_refeicao: mealType, meta_calorias: dragData.food.computed.kcal, meta_proteinas: dragData.food.computed.prot, meta_carboidratos: dragData.food.computed.carbs, meta_gorduras: dragData.food.computed.fat });
     } else if (dragData.type === "recipe") expandRecipeToItems(dragData.recipe, plan.id, day, mealType, tenantId || null, true);
   };
 

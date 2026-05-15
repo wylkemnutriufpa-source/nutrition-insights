@@ -80,7 +80,7 @@ describe('Fluxo E2E Paciente: Onboarding -> Macros', () => {
             const dayOfWeek = (new Date().getDay() + 6) % 7;
             return Promise.resolve(resolve({ 
               data: [
-                { id: 'item-1', meal_type: 'Almoço', title: 'Frango com Arroz', calories_target: 600, protein_target: 40, carbs_target: 60, fat_target: 15, day_of_week: dayOfWeek }
+                { id: 'item-1', tipo_refeicao: 'Almoço', title: 'Frango com Arroz', meta_calorias: 600, meta_proteinas: 40, meta_carboidratos: 60, meta_gorduras: 15, day_of_week: dayOfWeek }
               ], 
               error: null 
             }));

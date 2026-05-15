@@ -38,7 +38,7 @@ describe('Single Day Template Features', () => {
       store.addItem({
         meal_plan_id: 'test-plan',
         title: 'Teste Item',
-        meal_type: 'Café da Manhã',
+        tipo_refeicao: 'Café da Manhã',
         day_of_week: 5, // Try to set to Friday
       } as any);
     });
@@ -51,8 +51,8 @@ describe('Single Day Template Features', () => {
     const breakfastItem = {
       id: 'item-1',
       title: 'Café da Manhã',
-      meal_type: 'Café da Manhã',
-      calories_target: 500,
+      tipo_refeicao: 'Café da Manhã',
+      meta_calorias: 500,
       edit_metadata: {
         substitutions_json: ['Arroz e feijão com carne'] // Clearly a lunch option
       }
@@ -67,11 +67,11 @@ describe('Single Day Template Features', () => {
     const item = {
       id: 'item-1',
       title: 'Lanche',
-      meal_type: 'Lanche da Manhã',
-      calories_target: 100, // Very low target
-      protein_target: 10,
-      carbs_target: 10,
-      fat_target: 2,
+      tipo_refeicao: 'Lanche da Manhã',
+      meta_calorias: 100, // Very low target
+      meta_proteinas: 10,
+      meta_carboidratos: 10,
+      meta_gorduras: 2,
       edit_metadata: {
         substitutions_json: ['Hambúrguer completo'] // High calorie match in database (simulated)
       }

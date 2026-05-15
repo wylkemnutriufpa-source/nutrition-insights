@@ -197,7 +197,7 @@ export default function MealPlanEditorV2() {
       const nutritionistName = profProfile?.full_name || "Seu Nutricionista";
 
       // Calculate current daily averages to use if goal is missing or suspicious
-      const weekKcal = store.items.reduce((s, i) => s + (i.calories_target || 0), 0);
+      const weekKcal = store.items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
       const daysWithItems = new Set(store.items.map((i) => i.day_of_week)).size;
       const avgKcal = daysWithItems > 0 ? Math.round(weekKcal / daysWithItems) : 0;
 
@@ -209,13 +209,13 @@ export default function MealPlanEditorV2() {
         startDate: new Date(plan.start_date || new Date()).toLocaleDateString("pt-BR"),
         planMode: plan.plan_mode || "weekly",
         items: store.items.map(i => ({
-          mealType: i.meal_type || "Almoço",
+          mealType: i.tipo_refeicao || "Almoço",
           title: i.title || "Refeição",
           description: i.description || undefined,
-          calories_target: i.calories_target || undefined,
-          protein_target: i.protein_target || undefined,
-          carbs_target: i.carbs_target || undefined,
-          fat_target: i.fat_target || undefined,
+          meta_calorias: i.meta_calorias || undefined,
+          meta_proteinas: i.meta_proteinas || undefined,
+          meta_carboidratos: i.meta_carboidratos || undefined,
+          meta_gorduras: i.meta_gorduras || undefined,
           day_of_week: i.day_of_week ?? undefined,
           is_primary: i.is_primary !== false,
           substitution_group_id: (i as any).substitution_group_id || null,
@@ -468,7 +468,7 @@ export default function MealPlanEditorV2() {
       return;
     }
 
-    const totalKcal = store.items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    const totalKcal = store.items.reduce((s, i) => s + (Number(i.meta_calorias) || 0), 0);
     
     // Guardrail Check: calories between days (+/- 5%) and protein (+/- 3%)
     const itemsByDay: Record<number, any[]> = {};
@@ -480,8 +480,8 @@ export default function MealPlanEditorV2() {
 
     const dayTotals = Object.entries(itemsByDay).map(([day, items]) => ({
       day: Number(day),
-      kcal: items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0),
-      protein: items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
+      kcal: items.reduce((s, i) => s + (Number(i.meta_calorias) || 0), 0),
+      protein: items.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0),
     })).filter(d => d.kcal > 0);
 
     if (dayTotals.length > 1) {
@@ -617,7 +617,7 @@ export default function MealPlanEditorV2() {
 
     setSavingAndPublishing(true);
 
-    const totalKcal = store.items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    const totalKcal = store.items.reduce((s, i) => s + (Number(i.meta_calorias) || 0), 0);
     if (totalKcal <= 0 && store.items.length > 0) {
       toast.error("O plano não pode ter totais zerados.", {
         description: "Adicione refeições com valores calóricos antes de salvar."
@@ -1413,10 +1413,10 @@ export default function MealPlanEditorV2() {
         items={store.items.map(i => ({
           title: i.title,
           description: i.description,
-          calories_target: i.calories_target,
-          protein_target: i.protein_target,
-          carbs_target: i.carbs_target,
-          fat_target: i.fat_target,
+          meta_calorias: i.meta_calorias,
+          meta_proteinas: i.meta_proteinas,
+          meta_carboidratos: i.meta_carboidratos,
+          meta_gorduras: i.meta_gorduras,
         }))}
         mealType={(plan as any)?.plan_type || "custom"}
         defaultName={plan?.title || ""}

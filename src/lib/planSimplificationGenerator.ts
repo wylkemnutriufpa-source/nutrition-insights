@@ -95,12 +95,12 @@ export function generateSimplificationPreview(
     id: i.id,
     title: i.title,
     description: i.description,
-    meal_type: i.meal_type,
+    tipo_refeicao: i.tipo_refeicao,
     day_of_week: i.day_of_week,
-    calories_target: i.calories_target,
-    protein_target: i.protein_target,
-    carbs_target: i.carbs_target,
-    fat_target: i.fat_target,
+    meta_calorias: i.meta_calorias,
+    meta_proteinas: i.meta_proteinas,
+    meta_carboidratos: i.meta_carboidratos,
+    meta_gorduras: i.meta_gorduras,
   }));
 
   const originalScore = calculatePlanSimplicityScore(auditItems);
@@ -126,12 +126,12 @@ export function generateSimplificationPreview(
     id: i.id,
     title: i.title,
     description: i.description,
-    meal_type: i.meal_type,
+    tipo_refeicao: i.tipo_refeicao,
     day_of_week: i.day_of_week,
-    calories_target: i.calories_target,
-    protein_target: i.protein_target,
-    carbs_target: i.carbs_target,
-    fat_target: i.fat_target,
+    meta_calorias: i.meta_calorias,
+    meta_proteinas: i.meta_proteinas,
+    meta_carboidratos: i.meta_carboidratos,
+    meta_gorduras: i.meta_gorduras,
   }));
 
   const projectedScore = calculatePlanSimplicityScore(simplifiedAuditItems);
@@ -271,12 +271,12 @@ export async function generateSimplifiedMealPlanVersion(
       meal_plan_id: newPlan.id,
       title: si.title,
       description: si.description,
-      meal_type: si.meal_type,
+      tipo_refeicao: si.tipo_refeicao,
       day_of_week: si.day_of_week,
-      calories_target: si.calories_target,
-      protein_target: si.protein_target,
-      carbs_target: si.carbs_target,
-      fat_target: si.fat_target,
+      meta_calorias: si.meta_calorias,
+      meta_proteinas: si.meta_proteinas,
+      meta_carboidratos: si.meta_carboidratos,
+      meta_gorduras: si.meta_gorduras,
       tenant_id: tenantId,
     };
   });

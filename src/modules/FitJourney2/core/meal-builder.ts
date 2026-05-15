@@ -13,8 +13,8 @@ export class MealBuilder {
     return items.reduce((acc, item) => {
       const food = this.getFood(item.foodId);
       // Se for marmita (category), a quantidade é unitária (vezes o macro total da marmita)
-      // Se for item comum, a quantidade é em gramas (food macros são por servingSize)
-      const factor = food.category === 'marmita' ? item.quantity : item.quantity / food.servingSize;
+      // Se for item comum, a quantidade é em gramas (food macros são por tamanho_porcao)
+      const factor = food.category === 'marmita' ? item.quantity : item.quantity / food.tamanho_porcao;
       
       return {
         calories: acc.calories + (food.calories * factor),

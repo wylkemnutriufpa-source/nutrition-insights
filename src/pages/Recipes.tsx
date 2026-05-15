@@ -28,7 +28,7 @@ interface Recipe {
   instructions: any;
   prep_time_minutes: number | null;
   cook_time_minutes: number | null;
-  servings: number | null;
+  porcoes: number | null;
   difficulty: string | null;
   category: string | null;
   calories_per_serving: number | null;
@@ -75,7 +75,7 @@ const categoryMap: Record<string, string> = { main: "Prato Principal", snack: "L
 
 const emptyForm = {
   title: "", description: "", ingredients_text: "", instructions_text: "",
-  prep_time_minutes: "15", cook_time_minutes: "30", servings: "2",
+  prep_time_minutes: "15", cook_time_minutes: "30", porcoes: "2",
   difficulty: "medium", category: "main",
   calories_per_serving: "", protein_per_serving: "", carbs_per_serving: "", fat_per_serving: "",
 };
@@ -115,7 +115,7 @@ function NutritionistRecipes() {
       ingredients_text: toStringArray(r.ingredients).join("\n"),
       instructions_text: toStringArray(r.instructions).join("\n"),
       prep_time_minutes: String(r.prep_time_minutes ?? 15), cook_time_minutes: String(r.cook_time_minutes ?? 30),
-      servings: String(r.servings ?? 2), difficulty: r.difficulty ?? "medium", category: r.category ?? "main",
+      porcoes: String(r.porcoes ?? 2), difficulty: r.difficulty ?? "medium", category: r.category ?? "main",
       calories_per_serving: String(r.calories_per_serving ?? ""),
       protein_per_serving: String(r.protein_per_serving ?? ""),
       carbs_per_serving: String(r.carbs_per_serving ?? ""),
@@ -133,7 +133,7 @@ function NutritionistRecipes() {
       instructions: form.instructions_text.split("\n").filter(Boolean),
       prep_time_minutes: Number(form.prep_time_minutes) || 15,
       cook_time_minutes: Number(form.cook_time_minutes) || 30,
-      servings: Number(form.servings) || 2,
+      porcoes: Number(form.porcoes) || 2,
       difficulty: form.difficulty, category: form.category,
       calories_per_serving: form.calories_per_serving ? Number(form.calories_per_serving) : null,
       protein_per_serving: form.protein_per_serving ? Number(form.protein_per_serving) : null,
@@ -235,7 +235,7 @@ function NutritionistRecipes() {
                   <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{r.description}</p>
                   <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{(r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0)}min</span>
-                    <span className="flex items-center gap-1"><Users className="w-3 h-3" />{r.servings ?? 1} porções</span>
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" />{r.porcoes ?? 1} porções</span>
                     {r.calories_per_serving && <span>{r.calories_per_serving} kcal</span>}
                   </div>
                 </CardContent>
@@ -271,7 +271,7 @@ function NutritionistRecipes() {
             <div className="grid grid-cols-3 gap-3">
               <div><Label>Preparo (min)</Label><Input type="number" value={form.prep_time_minutes} onChange={e => setForm({ ...form, prep_time_minutes: e.target.value })} /></div>
               <div><Label>Cozimento (min)</Label><Input type="number" value={form.cook_time_minutes} onChange={e => setForm({ ...form, cook_time_minutes: e.target.value })} /></div>
-              <div><Label>Porções</Label><Input type="number" value={form.servings} onChange={e => setForm({ ...form, servings: e.target.value })} /></div>
+              <div><Label>Porções</Label><Input type="number" value={form.porcoes} onChange={e => setForm({ ...form, porcoes: e.target.value })} /></div>
             </div>
             <div><Label>Ingredientes (um por linha)</Label><Textarea value={form.ingredients_text} onChange={e => setForm({ ...form, ingredients_text: e.target.value })} rows={4} placeholder={"200g peito de frango\n1 xícara de quinoa\n..."} /></div>
             <div><Label>Modo de Preparo (um passo por linha)</Label><Textarea value={form.instructions_text} onChange={e => setForm({ ...form, instructions_text: e.target.value })} rows={4} placeholder={"Tempere o frango\nGrelhe em fogo médio\n..."} /></div>

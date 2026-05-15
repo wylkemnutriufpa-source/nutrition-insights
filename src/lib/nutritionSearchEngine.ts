@@ -61,7 +61,7 @@ async function searchDirectly(words: string[]): Promise<GroupedSearchResults> {
 
   const [recipesRes, mealsRes] = await Promise.all([
     supabase.from("recipes").select("id, title, category, tags, calories_per_serving, protein_per_serving").limit(30),
-    supabase.from("meal_library" as any).select("id, title, meal_type, goal_tag, clinical_tags, base_calories, protein").eq("is_active", true).limit(50),
+    supabase.from("meal_library" as any).select("id, title, tipo_refeicao, goal_tag, clinical_tags, base_calories, protein").eq("is_active", true).limit(50),
   ]);
 
   if (recipesRes.data) {
@@ -85,14 +85,14 @@ async function searchDirectly(words: string[]): Promise<GroupedSearchResults> {
   if (mealsRes.data) {
     results.meals = (mealsRes.data as any[])
       .filter(r => {
-        const h = normalize(`${r.title} ${r.meal_type || ''} ${r.goal_tag || ''} ${JSON.stringify(r.clinical_tags || [])}`);
+        const h = normalize(`${r.title} ${r.tipo_refeicao || ''} ${r.goal_tag || ''} ${JSON.stringify(r.clinical_tags || [])}`);
         return words.every(w => h.includes(w));
       })
       .map(r => ({
         id: r.id,
         entity_type: "meal_library" as const,
         title: r.title,
-        keywords: r.meal_type || '',
+        keywords: r.tipo_refeicao || '',
         clinical_tags: JSON.stringify(r.clinical_tags || []),
         goal_tags: r.goal_tag || '',
         strategy_tags: '',

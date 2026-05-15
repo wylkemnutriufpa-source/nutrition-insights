@@ -14,10 +14,10 @@ interface MealVisualModalProps {
   planOverrides?: {
     title?: string;
     description?: string | null;
-    calories_target?: number | null;
-    protein_target?: number | null;
-    carbs_target?: number | null;
-    fat_target?: number | null;
+    meta_calorias?: number | null;
+    meta_proteinas?: number | null;
+    meta_carboidratos?: number | null;
+    meta_gorduras?: number | null;
     image_url?: string | null;
   };
 }
@@ -29,10 +29,10 @@ export default function MealVisualModal({ open, onOpenChange, item, planOverride
 
   const title = planOverrides?.title || item.display_name;
   const description = planOverrides?.description || item.short_description;
-  const calories = planOverrides?.calories_target ?? item.default_calories;
-  const protein = planOverrides?.protein_target ?? item.default_protein;
-  const carbs = planOverrides?.carbs_target ?? item.default_carbs;
-  const fat = planOverrides?.fat_target ?? item.default_fat;
+  const calories = planOverrides?.meta_calorias ?? item.default_calories;
+  const protein = planOverrides?.meta_proteinas ?? item.default_protein;
+  const carbs = planOverrides?.meta_carboidratos ?? item.default_carbs;
+  const fat = planOverrides?.meta_gorduras ?? item.default_fat;
   const primaryImage = planOverrides?.image_url || item.image_url || item.image_path;
   const allImages = [primaryImage, ...(item.gallery_images || [])].filter(Boolean) as string[];
   const currentImage = allImages[galleryIndex] || primaryImage;

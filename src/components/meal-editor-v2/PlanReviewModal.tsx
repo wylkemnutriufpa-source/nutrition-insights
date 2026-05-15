@@ -23,11 +23,11 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
   const [localAprovals, setLocalAprovals] = useState<Record<string, Record<number, boolean>>>({});
 
   const totalCalories = useMemo(() => {
-    return items.reduce((sum, item) => sum + (Number(item.calories_target) || 0), 0);
+    return items.reduce((sum, item) => sum + (Number(item.meta_calorias) || 0), 0);
   }, [items]);
 
   const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || ""));
+    return [...items].sort((a, b) => (a.tipo_refeicao || "").localeCompare(b.tipo_refeicao || ""));
   }, [items]);
 
   const currentItem = sortedItems[activeMealIndex];
@@ -95,17 +95,17 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
               <div className="flex justify-between items-start">
                 <div>
                   <Badge variant="outline" className="mb-2 bg-primary/5 text-primary border-primary/20">
-                    {currentItem.meal_type}
+                    {currentItem.tipo_refeicao}
                   </Badge>
                   <h3 className="font-display font-bold text-2xl tracking-tight">{currentItem.title}</h3>
                   <p className="text-muted-foreground mt-1">{currentItem.description}</p>
                 </div>
                 <div className="text-right glass p-3 rounded-xl border-primary/10">
-                  <p className="font-mono text-xl font-bold text-primary">{currentItem.calories_target} kcal</p>
+                  <p className="font-mono text-xl font-bold text-primary">{currentItem.meta_calorias} kcal</p>
                   <div className="flex gap-2 text-[10px] text-muted-foreground font-medium mt-1 uppercase tracking-wider">
-                    <span>P: {currentItem.protein_target}g</span>
-                    <span>C: {currentItem.carbs_target}g</span>
-                    <span>G: {currentItem.fat_target}g</span>
+                    <span>P: {currentItem.meta_proteinas}g</span>
+                    <span>C: {currentItem.meta_carboidratos}g</span>
+                    <span>G: {currentItem.meta_gorduras}g</span>
                   </div>
                 </div>
               </div>

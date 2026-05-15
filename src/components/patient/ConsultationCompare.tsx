@@ -22,8 +22,8 @@ const FIELDS: { key: string; label: string; unit: string; lowerBetter?: boolean 
   { key: "right_arm", label: "Braço D", unit: "cm" },
   { key: "bmr", label: "TMB", unit: "kcal" },
   { key: "tdee", label: "GET", unit: "kcal" },
-  { key: "calories_target", label: "Meta Cal", unit: "kcal" },
-  { key: "protein_target", label: "Meta Ptn", unit: "g" },
+  { key: "meta_calorias", label: "Meta Cal", unit: "kcal" },
+  { key: "meta_proteinas", label: "Meta Ptn", unit: "g" },
 ];
 
 function DeltaIcon({ delta, lowerBetter }: { delta: number; lowerBetter?: boolean }) {

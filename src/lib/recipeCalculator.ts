@@ -76,8 +76,8 @@ export function calculateRecipeMacros(ingredients: RecipeIngredient[]): RecipeMa
 /**
  * Calculate per-serving macros
  */
-export function perServingMacros(total: RecipeMacros, servings: number): RecipeMacros {
-  const s = Math.max(1, servings);
+export function perServingMacros(total: RecipeMacros, porcoes: number): RecipeMacros {
+  const s = Math.max(1, porcoes);
   return {
     calories: total.calories / s,
     protein: total.protein / s,
@@ -93,10 +93,10 @@ export function perServingMacros(total: RecipeMacros, servings: number): RecipeM
 export function matchRecipeToMealSlot(
   ingredients: RecipeIngredient[],
   targetCalories: number,
-  servings: number
+  porcoes: number
 ): { scaleFactor: number; adjustedIngredients: RecipeIngredient[]; adjustedMacros: RecipeMacros } {
   const currentTotal = calculateRecipeMacros(ingredients);
-  const currentPerServing = perServingMacros(currentTotal, servings);
+  const currentPerServing = perServingMacros(currentTotal, porcoes);
 
   if (currentPerServing.calories <= 0) {
     return { scaleFactor: 1, adjustedIngredients: ingredients, adjustedMacros: currentPerServing };
@@ -110,7 +110,7 @@ export function matchRecipeToMealSlot(
   }));
 
   const adjustedTotal = calculateRecipeMacros(adjustedIngredients);
-  const adjustedMacros = perServingMacros(adjustedTotal, servings);
+  const adjustedMacros = perServingMacros(adjustedTotal, porcoes);
 
   return { scaleFactor, adjustedIngredients, adjustedMacros };
 }

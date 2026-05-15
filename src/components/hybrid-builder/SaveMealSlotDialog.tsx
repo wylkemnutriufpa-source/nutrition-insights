@@ -18,7 +18,7 @@ import { Save, Loader2, Trash2, FolderOpen } from "lucide-react";
 interface MealTemplate {
   id: string;
   name: string;
-  meal_type: string | null;
+  tipo_refeicao: string | null;
   items: any[];
   created_at: string;
 }
@@ -68,10 +68,10 @@ export default function SaveMealSlotDialog({ open, onOpenChange, mode, day, meal
       const templateItems = items.map((item) => ({
         title: item.title,
         description: item.description,
-        calories_target: item.calories_target,
-        protein_target: item.protein_target,
-        carbs_target: item.carbs_target,
-        fat_target: item.fat_target,
+        meta_calorias: item.meta_calorias,
+        meta_proteinas: item.meta_proteinas,
+        meta_carboidratos: item.meta_carboidratos,
+        meta_gorduras: item.meta_gorduras,
         image_url: item.image_url,
         item_origin: (item as any).item_origin,
       }));
@@ -80,7 +80,7 @@ export default function SaveMealSlotDialog({ open, onOpenChange, mode, day, meal
         user_id: user.id,
         tenant_id: tenantId || null,
         name: name.trim(),
-        meal_type: mealType,
+        tipo_refeicao: mealType,
         items: templateItems,
       });
 
@@ -109,11 +109,11 @@ export default function SaveMealSlotDialog({ open, onOpenChange, mode, day, meal
         title: item.title,
         description: item.description,
         day_of_week: day,
-        meal_type: mealType,
-        calories_target: item.calories_target || 0,
-        protein_target: item.protein_target || 0,
-        carbs_target: item.carbs_target || 0,
-        fat_target: item.fat_target || 0,
+        tipo_refeicao: mealType,
+        meta_calorias: item.meta_calorias || 0,
+        meta_proteinas: item.meta_proteinas || 0,
+        meta_carboidratos: item.meta_carboidratos || 0,
+        meta_gorduras: item.meta_gorduras || 0,
         image_url: item.image_url || null,
         item_origin: "template",
       });
@@ -179,7 +179,7 @@ export default function SaveMealSlotDialog({ open, onOpenChange, mode, day, meal
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{t.name}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {t.items?.length || 0} itens • {t.meal_type || "geral"}
+                      {t.items?.length || 0} itens • {t.tipo_refeicao || "geral"}
                     </p>
                   </div>
                   <button

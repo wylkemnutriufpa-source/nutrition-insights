@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
-type MealType = Database["public"]["Enums"]["meal_type"];
+type MealType = Database["public"]["Enums"]["tipo_refeicao"];
 
 interface CalorieTemplate {
   label: string;
@@ -86,12 +86,12 @@ export default function CalorieTemplates({ mealPlanId, onApplied }: CalorieTempl
           meal_plan_id: mealPlanId,
           title: meal.label,
           description: `• ${meal.label}\n• Meta: ${mealKcal}kcal | ${mealProtein}g prot | ${mealCarbs}g carb | ${mealFat}g gord\n\n⚠️ Refeição modelo — preencha os alimentos reais`,
-          meal_type: meal.type,
+          tipo_refeicao: meal.type,
           day_of_week: day,
-          calories_target: mealKcal,
-          protein_target: mealProtein,
-          carbs_target: mealCarbs,
-          fat_target: mealFat,
+          meta_calorias: mealKcal,
+          meta_proteinas: mealProtein,
+          meta_carboidratos: mealCarbs,
+          meta_gorduras: mealFat,
           item_origin: "template",
         };
       })

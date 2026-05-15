@@ -17,10 +17,10 @@ export interface MealSubstitutionOption {
   id: string;
   title: string;
   description?: string | null;
-  calories_target?: number | null;
-  protein_target?: number | null;
-  carbs_target?: number | null;
-  fat_target?: number | null;
+  meta_calorias?: number | null;
+  meta_proteinas?: number | null;
+  meta_carboidratos?: number | null;
+  meta_gorduras?: number | null;
 }
 
 type GroupedMeal = {
@@ -107,8 +107,8 @@ export function sortPlanItems<T extends DisplayMealPlanItem>(items: T[]): T[] {
     const aDay = a.day_of_week === 0 ? 7 : (a.day_of_week ?? 99);
     const bDay = b.day_of_week === 0 ? 7 : (b.day_of_week ?? 99);
     if (aDay !== bDay) return aDay - bDay;
-    const aMeal = String(a.meal_type || "");
-    const bMeal = String(b.meal_type || "");
+    const aMeal = String(a.tipo_refeicao || "");
+    const bMeal = String(b.tipo_refeicao || "");
     if (aMeal !== bMeal) return aMeal.localeCompare(bMeal);
     if (isPrimaryMealItem(a) !== isPrimaryMealItem(b)) return isPrimaryMealItem(a) ? -1 : 1;
     return getItemTime(a).localeCompare(getItemTime(b));
@@ -154,9 +154,9 @@ export function dedupeGroups(groups: GroupedMeal[]): GroupedMeal[] {
   
   for (const group of groups) {
     const key = [
-      String(group.primary.meal_type ?? ""),
+      String(group.primary.tipo_refeicao ?? ""),
       String(group.primary.title ?? "").trim().toLowerCase(),
-      String(group.primary.calories_target ?? (group.primary as any).metadata?.calories_target ?? (group.primary as any).metadata?.calories ?? ""),
+      String(group.primary.meta_calorias ?? (group.primary as any).metadata?.meta_calorias ?? (group.primary as any).metadata?.calories ?? ""),
       String(group.substitutions.length)
     ].join("|");
     
@@ -173,10 +173,10 @@ function withSubstitutionMetadata(group: GroupedMeal): DisplayMealPlanItem {
     id: item.id,
     title: item.title,
     description: item.description,
-    calories_target: item.calories_target,
-    protein_target: item.protein_target,
-    carbs_target: item.carbs_target,
-    fat_target: item.fat_target,
+    meta_calorias: item.meta_calorias,
+    meta_proteinas: item.meta_proteinas,
+    meta_carboidratos: item.meta_carboidratos,
+    meta_gorduras: item.meta_gorduras,
   }));
 
   return {
@@ -201,14 +201,14 @@ export function getAvailablePlanDays(items: DisplayMealPlanItem[]): number[] {
 /**
  * Deduplica itens idênticos persistidos múltiplas vezes (legacy: planos single_day
  * com day_of_week=NULL gravam 7x o mesmo item, um por dia da semana).
- * Mantém apenas a primeira ocorrência por chave (meal_type|title|is_primary|substitution_group_id).
+ * Mantém apenas a primeira ocorrência por chave (tipo_refeicao|title|is_primary|substitution_group_id).
  */
 function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem[] {
   const seen = new Set<string>();
   const out: DisplayMealPlanItem[] = [];
   for (const item of items) {
     const key = [
-      String(item.meal_type ?? ""),
+      String(item.tipo_refeicao ?? ""),
       String(item.title ?? "").trim().toLowerCase(),
       isPrimaryMealItem(item) ? "p" : "s",
       String(item.substitution_group_id ?? ""),
@@ -280,10 +280,10 @@ export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
 
   return primaryItems.reduce(
     (acc, item) => ({
-      calories: acc.calories + asNumber(item.calories_target ?? (item as any).metadata?.calories_target ?? (item as any).metadata?.calories),
-      protein: acc.protein + asNumber(item.protein_target ?? (item as any).metadata?.protein_target ?? (item as any).metadata?.protein),
-      carbs: acc.carbs + asNumber(item.carbs_target ?? (item as any).metadata?.carbs_target ?? (item as any).metadata?.carbs),
-      fat: acc.fat + asNumber(item.fat_target ?? (item as any).metadata?.fat_target ?? (item as any).metadata?.fat),
+      calories: acc.calories + asNumber(item.meta_calorias ?? (item as any).metadata?.meta_calorias ?? (item as any).metadata?.calories),
+      protein: acc.protein + asNumber(item.meta_proteinas ?? (item as any).metadata?.meta_proteinas ?? (item as any).metadata?.protein),
+      carbs: acc.carbs + asNumber(item.meta_carboidratos ?? (item as any).metadata?.meta_carboidratos ?? (item as any).metadata?.carbs),
+      fat: acc.fat + asNumber(item.meta_gorduras ?? (item as any).metadata?.meta_gorduras ?? (item as any).metadata?.fat),
     }),
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );

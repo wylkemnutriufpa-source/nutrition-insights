@@ -135,7 +135,7 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
             const dayOfWeek = (new Date().getDay() + 6) % 7;
             return Promise.resolve({ 
               data: [
-                { meal_type: 'Almoço', title: 'Marmita Publicada', calories_target: 2000, protein_target: 150, carbs_target: 200, fat_target: 60, day_of_week: dayOfWeek }
+                { tipo_refeicao: 'Almoço', title: 'Marmita Publicada', meta_calorias: 2000, meta_proteinas: 150, meta_carboidratos: 200, meta_gorduras: 60, day_of_week: dayOfWeek }
               ], 
               error: null 
             });

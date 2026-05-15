@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 import type { Tables, Database } from "@/integrations/supabase/types";
 
 type Meal = Tables<"meals">;
-type MealType = Database["public"]["Enums"]["meal_type"];
+type MealType = Database["public"]["Enums"]["tipo_refeicao"];
 
 export default function Meals() {
   const { user } = useAuth();
@@ -27,7 +27,7 @@ export default function Meals() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    meal_type: "Almoço" as MealType,
+    tipo_refeicao: "Almoço" as MealType,
     calories: "",
     protein: "",
     carbs: "",
@@ -68,7 +68,7 @@ export default function Meals() {
       user_id: user.id,
       title: form.title,
       description: form.description || null,
-      meal_type: form.meal_type,
+      tipo_refeicao: form.tipo_refeicao,
       calories: form.calories ? parseInt(form.calories) : null,
       protein: form.protein ? parseFloat(form.protein) : null,
       carbs: form.carbs ? parseFloat(form.carbs) : null,
@@ -106,7 +106,7 @@ export default function Meals() {
 
       toast.success(t("meals.registered"));
       setOpen(false);
-      setForm({ title: "", description: "", meal_type: "Almoço", calories: "", protein: "", carbs: "", fat: "" });
+      setForm({ title: "", description: "", tipo_refeicao: "Almoço", calories: "", protein: "", carbs: "", fat: "" });
       fetchMeals();
     }
     setSubmitting(false);
@@ -133,7 +133,7 @@ export default function Meals() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Label>{t("common.type")}</Label>
-                  <Select value={form.meal_type} onValueChange={(v) => setForm({ ...form, meal_type: v as MealType })}>
+                  <Select value={form.tipo_refeicao} onValueChange={(v) => setForm({ ...form, tipo_refeicao: v as MealType })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {mealTypes.map((mt) => (
@@ -196,7 +196,7 @@ export default function Meals() {
               <MealCard
                 key={meal.id}
                 title={meal.title}
-                mealType={meal.meal_type}
+                mealType={meal.tipo_refeicao}
                 loggedAt={meal.logged_at}
                 calories={meal.calories}
                 protein={meal.protein}

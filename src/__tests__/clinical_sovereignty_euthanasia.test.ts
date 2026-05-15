@@ -47,7 +47,7 @@ describe("Eutanásia da Inteligência Clínica Paralela — Blindagem Soberana",
     const mockTemplate = {
       id: "t1",
       name: "Template Teste",
-      meal_type: "Almoço",
+      tipo_refeicao: "Almoço",
       kcal_base: 500,
       protein_base: 40,
       carbs_base: 50,

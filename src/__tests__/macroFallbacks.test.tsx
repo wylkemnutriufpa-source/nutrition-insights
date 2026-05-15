@@ -56,7 +56,7 @@ describe('Validação de Fallbacks de Macros', () => {
             // Retorna itens SEM macros (parcial/erro de banco)
             return Promise.resolve({ 
               data: [
-                { meal_type: 'Almoço', title: 'Marmita em Processamento', calories_target: 0, protein_target: 0, carbs_target: 0, fat_target: 0, day_of_week: dayOfWeek }
+                { tipo_refeicao: 'Almoço', title: 'Marmita em Processamento', meta_calorias: 0, meta_proteinas: 0, meta_carboidratos: 0, meta_gorduras: 0, day_of_week: dayOfWeek }
               ], 
               error: null 
             });

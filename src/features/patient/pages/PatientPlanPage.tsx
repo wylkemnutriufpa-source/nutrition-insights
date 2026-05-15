@@ -91,10 +91,10 @@ export const PatientPlanPage = () => {
         patientName: plan.patient_name || "Paciente",
         nutritionistName: (plan as any).coach_name || "Nutricionista",
         startDate: new Date().toLocaleDateString('pt-BR'),
-        targetCalories: plan.calories_target,
-        targetProtein: plan.protein_target,
-        targetCarbs: plan.carbs_target,
-        targetFat: plan.fat_target,
+        targetCalories: plan.meta_calorias,
+        targetProtein: plan.meta_proteinas,
+        targetCarbs: plan.meta_carboidratos,
+        targetFat: plan.meta_gorduras,
         goal: plan.goal,
         notes: (plan as any).notes,
         planMode: (plan as any).plan_mode || 'single_day',
@@ -103,10 +103,10 @@ export const PatientPlanPage = () => {
           meal.items.map((item: any) => ({
             mealType: meal.name,
             title: item.name,
-            calories_target: item.kcal,
-            protein_target: item.protein,
-            carbs_target: item.carbs,
-            fat_target: item.fat,
+            meta_calorias: item.kcal,
+            meta_proteinas: item.protein,
+            meta_carboidratos: item.carbs,
+            meta_gorduras: item.fat,
             is_primary: true,
             display_quantity: item.display_quantity || item.quantity,
             display_unit: item.display_unit || item.portionUnitLabel,
@@ -265,25 +265,25 @@ export const PatientPlanPage = () => {
                 <Flame className="w-4 h-4 text-orange-500" />
                 <span className="text-xs text-gray-400">Energia</span>
               </div>
-              <p className="text-2xl font-bold mt-2">{Math.round(plan.calories_target)} <span className="text-xs text-gray-500 font-normal">kcal</span></p>
+              <p className="text-2xl font-bold mt-2">{Math.round(plan.meta_calorias)} <span className="text-xs text-gray-500 font-normal">kcal</span></p>
             </CardContent>
           </Card>
           <Card className="bg-emerald-950/20 border-emerald-500/20">
             <CardContent className="pt-6">
               <span className="text-xs text-gray-400">Proteína</span>
-              <p className="text-2xl font-bold mt-2">{Math.round(plan.protein_target)}g</p>
+              <p className="text-2xl font-bold mt-2">{Math.round(plan.meta_proteinas)}g</p>
             </CardContent>
           </Card>
           <Card className="bg-emerald-950/20 border-emerald-500/20">
             <CardContent className="pt-6">
               <span className="text-xs text-gray-400">Carbo</span>
-              <p className="text-2xl font-bold mt-2">{Math.round(plan.carbs_target)}g</p>
+              <p className="text-2xl font-bold mt-2">{Math.round(plan.meta_carboidratos)}g</p>
             </CardContent>
           </Card>
           <Card className="bg-emerald-950/20 border-emerald-500/20">
             <CardContent className="pt-6">
               <span className="text-xs text-gray-400">Gordura</span>
-              <p className="text-2xl font-bold mt-2">{Math.round(plan.fat_target)}g</p>
+              <p className="text-2xl font-bold mt-2">{Math.round(plan.meta_gorduras)}g</p>
             </CardContent>
           </Card>
         </section>

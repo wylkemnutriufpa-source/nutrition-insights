@@ -10,7 +10,7 @@ describe("Marmitas Fixas — Unit Logic", () => {
   const mockRecipes = Array.from({ length: 19 }).map((_, i) => ({
     id: `r-${i}`,
     name: `Marmita ${i + 1}`,
-    meal_type: "almoço",
+    tipo_refeicao: "almoço",
     fixed_calories: 400,
     fixed_protein: 30,
     fixed_carbs: 40,
@@ -27,7 +27,7 @@ describe("Marmitas Fixas — Unit Logic", () => {
         id: "tpl-1",
         meals: [
           {
-            meal_type: "Almoço",
+            tipo_refeicao: "Almoço",
             title: "Almoço de Marmita",
             foods: [{ name: "Marmita do dia", calories: 0, protein: 0, carbs: 0, fat: 0 }]
           }

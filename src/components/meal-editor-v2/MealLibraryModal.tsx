@@ -20,7 +20,7 @@ import { fmtMacro, safeNum } from "@/lib/formatMacros";
 interface MealLibraryItem {
   id: string;
   title: string;
-  meal_type: string;
+  tipo_refeicao: string;
   goal_tag: string;
   clinical_tags: string[];
   base_calories: number;
@@ -97,7 +97,7 @@ export function MealLibraryModal({
 
   // Filter logic
   const filtered = useMemo(() => {
-    let list = items.filter((i) => i.meal_type === mealTab);
+    let list = items.filter((i) => i.tipo_refeicao === mealTab);
     if (goalFilter !== "all") list = list.filter((i) => i.goal_tag === goalFilter);
     if (clinicalFilter) list = list.filter((i) =>
       Array.isArray(i.clinical_tags) && i.clinical_tags.includes(clinicalFilter)
@@ -123,7 +123,7 @@ export function MealLibraryModal({
         breakfast: 0.25, morning_snack: 0.10, lunch: 0.30,
         afternoon_snack: 0.10, dinner: 0.20, evening_snack: 0.05,
       };
-      const targetMealKcal = patientTargetKcal * (mealShare[meal.meal_type] || 0.2);
+      const targetMealKcal = patientTargetKcal * (mealShare[meal.tipo_refeicao] || 0.2);
       scaleFactor = targetMealKcal / meal.base_calories;
       scaleFactor = Math.max(0.5, Math.min(2.0, scaleFactor));
     }
@@ -150,12 +150,12 @@ export function MealLibraryModal({
       description: foods.length > 0
         ? foods.map((f) => `• ${f.name} — ${f.portion}`).join("\n")
         : null,
-      meal_type: targetMealType,
+      tipo_refeicao: targetMealType,
       day_of_week: targetDay,
-      calories_target: Math.round(meal.base_calories * scaleFactor),
-      protein_target: Math.round(meal.protein * scaleFactor),
-      carbs_target: Math.round(meal.carbs * scaleFactor),
-      fat_target: Math.round(meal.fat * scaleFactor),
+      meta_calorias: Math.round(meal.base_calories * scaleFactor),
+      meta_proteinas: Math.round(meal.protein * scaleFactor),
+      meta_carboidratos: Math.round(meal.carbs * scaleFactor),
+      meta_gorduras: Math.round(meal.fat * scaleFactor),
       edit_metadata: mealMeta,
     };
 
@@ -261,7 +261,7 @@ export function MealLibraryModal({
                       ? Math.max(0.5, Math.min(2.0, (patientTargetKcal * ({
                           breakfast: 0.25, morning_snack: 0.10, lunch: 0.30,
                           afternoon_snack: 0.10, dinner: 0.20, evening_snack: 0.05,
-                        }[meal.meal_type] || 0.2)) / meal.base_calories))
+                        }[meal.tipo_refeicao] || 0.2)) / meal.base_calories))
                       : null
                   } />
                 ))}

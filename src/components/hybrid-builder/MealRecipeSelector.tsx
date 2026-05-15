@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 interface MealRecipe {
   id: string;
   name: string;
-  meal_type: string;
+  tipo_refeicao: string;
   foods_json: { name: string; grams: number }[];
 }
 
@@ -33,10 +33,10 @@ export default function MealRecipeSelector({ onSelect, onCancel }: Props) {
     const load = async () => {
       const { data } = await supabase
         .from("meal_recipes")
-        .select("id, name, meal_type, foods_json, protein_type, visual_library_item_id")
+        .select("id, name, tipo_refeicao, foods_json, protein_type, visual_library_item_id")
         .eq("nutritionist_id", user.id)
         .eq("is_active", true)
-        .order("meal_type")
+        .order("tipo_refeicao")
         .order("name");
       setRecipes((data as any[]) || []);
       setLoading(false);
@@ -66,9 +66,9 @@ export default function MealRecipeSelector({ onSelect, onCancel }: Props) {
     );
   }
 
-  // Group by meal_type
+  // Group by tipo_refeicao
   const grouped = recipes.reduce<Record<string, MealRecipe[]>>((acc, r) => {
-    const key = r.meal_type || "outro";
+    const key = r.tipo_refeicao || "outro";
     if (!acc[key]) acc[key] = [];
     acc[key].push(r);
     return acc;

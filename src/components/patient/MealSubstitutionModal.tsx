@@ -33,10 +33,10 @@ interface MealSubstitutionModalProps {
     id: string;
     title: string;
     description?: string | null;
-    calories_target?: number | null;
-    protein_target?: number | null;
-    carbs_target?: number | null;
-    fat_target?: number | null;
+    meta_calorias?: number | null;
+    meta_proteinas?: number | null;
+    meta_carboidratos?: number | null;
+    meta_gorduras?: number | null;
   }>;
 }
 
@@ -83,10 +83,10 @@ export default function MealSubstitutionModal({
           food: {
             name: opt.title,
             portion: opt.description || "",
-            calories: Number(opt.calories_target || 0),
-            protein: Number(opt.protein_target || 0),
-            carbs: Number(opt.carbs_target || 0),
-            fat: Number(opt.fat_target || 0),
+            calories: Number(opt.meta_calorias || 0),
+            protein: Number(opt.meta_proteinas || 0),
+            carbs: Number(opt.meta_carboidratos || 0),
+            fat: Number(opt.meta_gorduras || 0),
             category: "substitution"
           },
           labels: []

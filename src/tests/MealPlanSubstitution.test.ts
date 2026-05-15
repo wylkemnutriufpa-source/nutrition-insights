@@ -8,12 +8,12 @@ describe('Meal Plan Substitution System', () => {
   const baseItem: Partial<MealPlanItem> = {
     id: 'meal-1',
     title: 'Almoço',
-    calories_target: 500,
-    protein_target: 30,
-    carbs_target: 50,
-    fat_target: 15,
+    meta_calorias: 500,
+    meta_proteinas: 30,
+    meta_carboidratos: 50,
+    meta_gorduras: 15,
     day_of_week: 0,
-    meal_type: 'Almoço',
+    tipo_refeicao: 'Almoço',
   };
 
   it('should validate substitution limit (0-4)', () => {
@@ -38,10 +38,10 @@ describe('Meal Plan Substitution System', () => {
   it('should validate macro tolerances correctly (including fat)', () => {
     const item: MealPlanItem = {
       ...baseItem,
-      calories_target: 219, // Match Patinho
-      protein_target: 36,  // Match Patinho
-      carbs_target: 0,     // Match Patinho
-      fat_target: 7.5,     // Match Patinho
+      meta_calorias: 219, // Match Patinho
+      meta_proteinas: 36,  // Match Patinho
+      meta_carboidratos: 0,     // Match Patinho
+      meta_gorduras: 7.5,     // Match Patinho
       edit_metadata: {
         substitutions_json: [
           'Patinho grelhado'
@@ -93,7 +93,7 @@ describe('Meal Plan Substitution System', () => {
   it('should validate fat with ±25% tolerance', () => {
     const item: MealPlanItem = {
       ...baseItem,
-      fat_target: 10,
+      meta_gorduras: 10,
       edit_metadata: {
         substitutions_json: ['Azeite de oliva'] // 12g fat vs 10g target -> 20% diff (within 25%)
       }
@@ -106,7 +106,7 @@ describe('Meal Plan Substitution System', () => {
 
     const itemInvalidFat: MealPlanItem = {
       ...baseItem,
-      fat_target: 5,
+      meta_gorduras: 5,
       edit_metadata: {
         substitutions_json: ['Azeite de oliva'] // 12g fat vs 5g target -> 140% diff (outside 25%)
       }
@@ -118,7 +118,7 @@ describe('Meal Plan Substitution System', () => {
   it('should validate carbs with ±20% tolerance', () => {
     const item: MealPlanItem = {
       ...baseItem,
-      carbs_target: 50,
+      meta_carboidratos: 50,
       edit_metadata: {
         substitutions_json: ['Arroz branco'] // 43g carbs vs 50g target -> 14% diff (within 20%)
       }
@@ -129,7 +129,7 @@ describe('Meal Plan Substitution System', () => {
 
     const itemInvalidCarbs: MealPlanItem = {
       ...baseItem,
-      carbs_target: 20,
+      meta_carboidratos: 20,
       edit_metadata: {
         substitutions_json: ['Arroz branco'] // 43g carbs vs 20g target -> 115% diff (outside 20%)
       }
@@ -141,12 +141,12 @@ describe('Meal Plan Substitution System', () => {
   describe('E2E Plan Generation & Validation', () => {
     it('should ensure each meal creates exactly 1 primary item and shared substitution_group_id', () => {
       const items: Partial<MealPlanItem>[] = [
-        { id: '1', title: 'Frango', is_primary: true, substitution_group_id: 'grp-1', meal_type: 'Almoço' },
-        { id: '2', title: 'Peixe', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'Almoço' },
-        { id: '3', title: 'Ovo', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'Almoço' },
+        { id: '1', title: 'Frango', is_primary: true, substitution_group_id: 'grp-1', tipo_refeicao: 'Almoço' },
+        { id: '2', title: 'Peixe', is_primary: false, substitution_group_id: 'grp-1', tipo_refeicao: 'Almoço' },
+        { id: '3', title: 'Ovo', is_primary: false, substitution_group_id: 'grp-1', tipo_refeicao: 'Almoço' },
       ];
 
-      const lunchItems = items.filter(i => i.meal_type === 'Almoço');
+      const lunchItems = items.filter(i => i.tipo_refeicao === 'Almoço');
       const primaries = lunchItems.filter(i => i.is_primary === true);
       const subs = lunchItems.filter(i => i.is_primary === false);
 
@@ -157,14 +157,14 @@ describe('Meal Plan Substitution System', () => {
 
     it('should only use primary items for total macro calculation', () => {
       const items = [
-        { calories_target: 500, is_primary: true },
-        { calories_target: 400, is_primary: false }, // sub
-        { calories_target: 300, is_primary: true },
+        { meta_calorias: 500, is_primary: true },
+        { meta_calorias: 400, is_primary: false }, // sub
+        { meta_calorias: 300, is_primary: true },
       ];
 
       const total = items
         .filter(i => i.is_primary !== false)
-        .reduce((sum, i) => sum + (i.calories_target || 0), 0);
+        .reduce((sum, i) => sum + (i.meta_calorias || 0), 0);
       
       expect(total).toBe(800); // 500 + 300
     });
@@ -174,11 +174,11 @@ describe('Meal Plan Substitution System', () => {
         id: 'sub-1',
         substitution_group_id: 'grp-1',
         is_primary: false,
-        calories_target: 400
+        meta_calorias: 400
       };
 
       // Simulating update
-      const updatedItem = { ...item, calories_target: 450 };
+      const updatedItem = { ...item, meta_calorias: 450 };
       
       expect(updatedItem.substitution_group_id).toBe('grp-1');
       expect(updatedItem.is_primary).toBe(false);

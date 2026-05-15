@@ -80,7 +80,7 @@ export default function PatientAIInsightsWidget() {
         // 2. Get meal adherence patterns
         const { data: adherence } = await (supabase as any)
           .from("meal_plan_adherence")
-          .select("meal_type, adherence_status, logged_at")
+          .select("tipo_refeicao, adherence_status, logged_at")
           .eq("patient_id", user!.id)
           .order("logged_at", { ascending: false })
           .limit(50);
@@ -93,7 +93,7 @@ export default function PatientAIInsightsWidget() {
           const totalByType: Record<string, number> = {};
           
           for (const a of adherence) {
-            const type = a.meal_type ?? "other";
+            const type = a.tipo_refeicao ?? "other";
             totalByType[type] = (totalByType[type] ?? 0) + 1;
             if (a.adherence_status === "skipped") {
               skippedByType[type] = (skippedByType[type] ?? 0) + 1;

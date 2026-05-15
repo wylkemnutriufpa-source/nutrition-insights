@@ -127,16 +127,16 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
         const updates: Record<string, number> = {};
 
         if (macroKey === "calorias" || macroKey === "calories") {
-          updates.calories_target = Math.round((item.calories_target || 0) * factor);
-          updates.protein_target = Math.round(Number(item.protein_target || 0) * factor);
-          updates.carbs_target = Math.round(Number(item.carbs_target || 0) * factor);
-          updates.fat_target = Math.round(Number(item.fat_target || 0) * factor);
+          updates.meta_calorias = Math.round((item.meta_calorias || 0) * factor);
+          updates.meta_proteinas = Math.round(Number(item.meta_proteinas || 0) * factor);
+          updates.meta_carboidratos = Math.round(Number(item.meta_carboidratos || 0) * factor);
+          updates.meta_gorduras = Math.round(Number(item.meta_gorduras || 0) * factor);
         } else if (macroKey === "proteína" || macroKey === "protein") {
-          updates.protein_target = Math.round(Number(item.protein_target || 0) * factor);
+          updates.meta_proteinas = Math.round(Number(item.meta_proteinas || 0) * factor);
         } else if (macroKey === "carboidrato" || macroKey === "carbs") {
-          updates.carbs_target = Math.round(Number(item.carbs_target || 0) * factor);
+          updates.meta_carboidratos = Math.round(Number(item.meta_carboidratos || 0) * factor);
         } else if (macroKey === "gordura" || macroKey === "fat") {
-          updates.fat_target = Math.round(Number(item.fat_target || 0) * factor);
+          updates.meta_gorduras = Math.round(Number(item.meta_gorduras || 0) * factor);
         }
 
         if (Object.keys(updates).length > 0) {

@@ -239,7 +239,7 @@ export default function PatientMealPlan() {
           const isPrimary = item.is_primary !== false && item.is_substitution !== true;
           
           const common = {
-            meal_type: meal.meal_type || meal.id,
+            tipo_refeicao: meal.tipo_refeicao || meal.id,
             day_of_week: hydratedDay,
             editor_version: 'v3',
           };
@@ -253,10 +253,10 @@ export default function PatientMealPlan() {
             id: item.id || item.instanceId,
             title: item.title || item.name,
             description: item.description || item.instructions,
-            calories_target: item.macros?.kcal ?? item.kcal ?? 0,
-            protein_target: item.macros?.protein_g ?? item.protein ?? 0,
-            carbs_target: item.macros?.carbs_g ?? item.carbs ?? 0,
-            fat_target: item.macros?.fat_g ?? item.fat ?? 0,
+            meta_calorias: item.macros?.kcal ?? item.kcal ?? 0,
+            meta_proteinas: item.macros?.protein_g ?? item.protein ?? 0,
+            meta_carboidratos: item.macros?.carbs_g ?? item.carbs ?? 0,
+            meta_gorduras: item.macros?.fat_g ?? item.fat ?? 0,
             image_url: item.image_url || item.imageUrl,
             display_quantity: item.display_quantity || item.quantity,
             display_unit: item.display_unit || item.portionUnitLabel,
@@ -283,10 +283,10 @@ export default function PatientMealPlan() {
                 id: sub.id || sub.instanceId || crypto.randomUUID(),
                 title: sub.title || sub.name,
                 description: sub.description || sub.instructions,
-                calories_target: sub.macros?.kcal ?? sub.kcal ?? 0,
-                protein_target: sub.macros?.protein_g ?? sub.protein ?? 0,
-                carbs_target: sub.macros?.carbs_g ?? sub.carbs ?? 0,
-                fat_target: sub.macros?.fat_g ?? sub.fat ?? 0,
+                meta_calorias: sub.macros?.kcal ?? sub.kcal ?? 0,
+                meta_proteinas: sub.macros?.protein_g ?? sub.protein ?? 0,
+                meta_carboidratos: sub.macros?.carbs_g ?? sub.carbs ?? 0,
+                meta_gorduras: sub.macros?.fat_g ?? sub.fat ?? 0,
                 image_url: sub.image_url || sub.imageUrl,
                 display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity,
                 display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel,
@@ -548,13 +548,13 @@ export default function PatientMealPlan() {
           }
 
           return {
-            mealType: i.meal_type || "Almoço",
+            mealType: i.tipo_refeicao || "Almoço",
             title: i.title || "Refeição",
             description: resolvedDescription || undefined,
-            calories_target: i.calories_target || undefined,
-            protein_target: i.protein_target || undefined,
-            carbs_target: i.carbs_target || undefined,
-            fat_target: i.fat_target || undefined,
+            meta_calorias: i.meta_calorias || undefined,
+            meta_proteinas: i.meta_proteinas || undefined,
+            meta_carboidratos: i.meta_carboidratos || undefined,
+            meta_gorduras: i.meta_gorduras || undefined,
             day_of_week: i.day_of_week ?? undefined,
             is_primary: i.is_primary !== false,
             substitution_group_id: (i as any).substitution_group_id || null,
@@ -594,7 +594,7 @@ export default function PatientMealPlan() {
   const groupedItems = useMemo(() =>
     MEAL_TYPES.map(mt => ({
       ...mt,
-      items: overlayedItems.filter(i => i.meal_type === mt.key),
+      items: overlayedItems.filter(i => i.tipo_refeicao === mt.key),
     })).filter(g => g.items.length > 0),
   [overlayedItems]);
 
@@ -910,7 +910,7 @@ export default function PatientMealPlan() {
                   const dayDate = weekDates[day === 0 ? 0 : day] || date;
                   const groupedDayItems = MEAL_TYPES.map(mt => ({
                     ...mt,
-                    items: (dayItems as MealPlanItem[]).filter(i => i.meal_type === mt.key),
+                    items: (dayItems as MealPlanItem[]).filter(i => i.tipo_refeicao === mt.key),
                   })).filter(g => g.items.length > 0);
 
                   if (groupedDayItems.length === 0) return null;
@@ -984,7 +984,7 @@ export default function PatientMealPlan() {
             mealPlanItemId={substitutionItem?.id || ""}
             mealPlanId={plan?.id || ""}
             patientId={user?.id || ""}
-            mealSlot={(substitutionItem as any)?.meal_type}
+            mealSlot={(substitutionItem as any)?.tipo_refeicao}
             options={(substitutionItem?.metadata as any)?.substitution_options}
             onSubstitute={(food: FoodItem, originalTitle: string) => {
               // Update overlay map — plan data stays untouched

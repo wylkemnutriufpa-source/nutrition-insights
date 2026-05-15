@@ -205,10 +205,10 @@ export default function PatientDetail() {
             mealType: mType,
             title: m.name,
             description: `${item.name} — ${item.display_portion || (item.quantity + (item.unit || 'g'))}`,
-            calories_target: Math.round(Number(item.kcal) || 0),
-            protein_target: Math.round(Number(item.protein) || 0),
-            carbs_target: Math.round(Number(item.carbs) || 0),
-            fat_target: Math.round(Number(item.fat) || 0),
+            meta_calorias: Math.round(Number(item.kcal) || 0),
+            meta_proteinas: Math.round(Number(item.protein) || 0),
+            meta_carboidratos: Math.round(Number(item.carbs) || 0),
+            meta_gorduras: Math.round(Number(item.fat) || 0),
             is_primary: true,
             substitution_group_id: item.id || item.instanceId,
             day_of_week: dayNum
@@ -225,10 +225,10 @@ export default function PatientDetail() {
                 mealType: mType,
                 title: m.name,
                 description: `${item.name} — ${item.display_portion || (item.quantity + (item.unit || 'g'))}`,
-                calories_target: Math.round(Number(item.kcal) || 0),
-                protein_target: Math.round(Number(item.protein) || 0),
-                carbs_target: Math.round(Number(item.carbs) || 0),
-                fat_target: Math.round(Number(item.fat) || 0),
+                meta_calorias: Math.round(Number(item.kcal) || 0),
+                meta_proteinas: Math.round(Number(item.protein) || 0),
+                meta_carboidratos: Math.round(Number(item.carbs) || 0),
+                meta_gorduras: Math.round(Number(item.fat) || 0),
                 is_primary: true,
               substitution_group_id: item.id || item.instanceId,
                 day_of_week: dayNum
@@ -238,10 +238,10 @@ export default function PatientDetail() {
                 mealType: mType,
                 title: sub.name,
                 description: sub.name,
-                calories_target: Math.round(Number(sub.kcal) || 0),
-                protein_target: Math.round(Number(sub.protein) || 0),
-                carbs_target: Math.round(Number(sub.carbs) || 0),
-                fat_target: Math.round(Number(sub.fat) || 0),
+                meta_calorias: Math.round(Number(sub.kcal) || 0),
+                meta_proteinas: Math.round(Number(sub.protein) || 0),
+                meta_carboidratos: Math.round(Number(sub.carbs) || 0),
+                meta_gorduras: Math.round(Number(sub.fat) || 0),
                 is_primary: false,
                 substitution_group_id: item.id || item.instanceId,
                 day_of_week: dayNum
@@ -258,17 +258,17 @@ export default function PatientDetail() {
         .select("*")
         .eq("meal_plan_id", plan.id)
         .order("day_of_week", { ascending: true })
-        .order("meal_type", { ascending: true });
+        .order("tipo_refeicao", { ascending: true });
         
       if (itemsError) throw itemsError;
       planItems = items.map((item: any) => ({
-        mealType: item.meal_type,
+        mealType: item.tipo_refeicao,
         title: item.title,
         description: item.description,
-        calories_target: item.calories_target,
-        protein_target: item.protein_target,
-        carbs_target: item.carbs_target,
-        fat_target: item.fat_target,
+        meta_calorias: item.meta_calorias,
+        meta_proteinas: item.meta_proteinas,
+        meta_carboidratos: item.meta_carboidratos,
+        meta_gorduras: item.meta_gorduras,
         is_primary: item.is_primary,
         substitution_group_id: item.substitution_group_id,
         day_of_week: item.day_of_week

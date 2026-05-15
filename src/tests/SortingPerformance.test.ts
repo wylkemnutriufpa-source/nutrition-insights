@@ -10,10 +10,10 @@ describe('Meal Plan Sorting Performance & Determinism', () => {
         id: `item-${i}`,
         title: `Item ${i}`,
         is_primary: i % 10 === 0, // 10% are primary
-        calories_target: Math.floor(Math.random() * 1000),
-        protein_target: Math.floor(Math.random() * 100),
+        meta_calorias: Math.floor(Math.random() * 1000),
+        meta_proteinas: Math.floor(Math.random() * 100),
         day_of_week: 1,
-        meal_type: 'Café da Manhã'
+        tipo_refeicao: 'Café da Manhã'
       });
     }
     // Shuffle the items
@@ -48,10 +48,10 @@ describe('Meal Plan Sorting Performance & Determinism', () => {
 
   it('should prioritize Primary items first, then by Calories (DESC), then by ID (alphabetical tie-breaker)', () => {
     const items: any[] = [
-      { id: '3', title: 'B', is_primary: false, calories_target: 500 },
-      { id: '1', title: 'C', is_primary: true, calories_target: 300 },
-      { id: '2', title: 'A', is_primary: true, calories_target: 500 },
-      { id: '4', title: 'A', is_primary: false, calories_target: 500 },
+      { id: '3', title: 'B', is_primary: false, meta_calorias: 500 },
+      { id: '1', title: 'C', is_primary: true, meta_calorias: 300 },
+      { id: '2', title: 'A', is_primary: true, meta_calorias: 500 },
+      { id: '4', title: 'A', is_primary: false, meta_calorias: 500 },
     ];
     
     const sorted = sortMealPlanItems(items);

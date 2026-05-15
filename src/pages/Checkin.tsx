@@ -58,10 +58,10 @@ interface PhysicalAssessment {
   left_calf: number | null;
   bmr: number | null;
   tdee: number | null;
-  calories_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
+  meta_calorias: number | null;
+  meta_proteinas: number | null;
+  meta_carboidratos: number | null;
+  meta_gorduras: number | null;
   goal_weight: number | null;
   goal_body_fat: number | null;
   notes: string | null;
@@ -392,18 +392,18 @@ export default function Checkin() {
                     </div>
 
                     {/* Goals */}
-                    {(latestAssessment!.goal_weight || latestAssessment!.calories_target) && (
+                    {(latestAssessment!.goal_weight || latestAssessment!.meta_calorias) && (
                       <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
                         <p className="text-xs font-semibold text-primary mb-2">🎯 Metas & Targets</p>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                           {latestAssessment!.goal_weight && (
                             <div><span className="text-muted-foreground text-xs">Meta Peso:</span><br /><strong>{latestAssessment!.goal_weight} kg</strong></div>
                           )}
-                          {latestAssessment!.calories_target && (
-                            <div><span className="text-muted-foreground text-xs">Calorias:</span><br /><strong>{Math.round(latestAssessment!.calories_target)} kcal</strong></div>
+                          {latestAssessment!.meta_calorias && (
+                            <div><span className="text-muted-foreground text-xs">Calorias:</span><br /><strong>{Math.round(latestAssessment!.meta_calorias)} kcal</strong></div>
                           )}
-                          {latestAssessment!.protein_target && (
-                            <div><span className="text-muted-foreground text-xs">Proteína:</span><br /><strong>{Math.round(latestAssessment!.protein_target)}g</strong></div>
+                          {latestAssessment!.meta_proteinas && (
+                            <div><span className="text-muted-foreground text-xs">Proteína:</span><br /><strong>{Math.round(latestAssessment!.meta_proteinas)}g</strong></div>
                           )}
                           {latestAssessment!.goal_body_fat && (
                             <div><span className="text-muted-foreground text-xs">Meta %GC:</span><br /><strong>{latestAssessment!.goal_body_fat}%</strong></div>

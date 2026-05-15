@@ -63,17 +63,17 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
     }
 
     // 3. Calculate current totals from items
-    const beforeCalories = currentItems.reduce((sum, item) => sum + (item.calories_target || 0), 0);
-    const beforeProtein = currentItems.reduce((sum, item) => sum + (item.protein_target || 0), 0);
-    const beforeCarbs = currentItems.reduce((sum, item) => sum + (item.carbs_target || 0), 0);
-    const beforeFat = currentItems.reduce((sum, item) => sum + (item.fat_target || 0), 0);
+    const beforeCalories = currentItems.reduce((sum, item) => sum + (item.meta_calorias || 0), 0);
+    const beforeProtein = currentItems.reduce((sum, item) => sum + (item.meta_proteinas || 0), 0);
+    const beforeCarbs = currentItems.reduce((sum, item) => sum + (item.meta_carboidratos || 0), 0);
+    const beforeFat = currentItems.reduce((sum, item) => sum + (item.meta_gorduras || 0), 0);
 
     const expectedItems = currentItems.map((item) => ({
       ...item,
-      calories_target: Math.round((item.calories_target || 0) * (1 + (caloricAdjustmentPercent / 100))),
-      protein_target: Math.round(((item.protein_target || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
-      carbs_target: Math.round(((item.carbs_target || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
-      fat_target: Math.round(((item.fat_target || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
+      meta_calorias: Math.round((item.meta_calorias || 0) * (1 + (caloricAdjustmentPercent / 100))),
+      meta_proteinas: Math.round(((item.meta_proteinas || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
+      meta_carboidratos: Math.round(((item.meta_carboidratos || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
+      meta_gorduras: Math.round(((item.meta_gorduras || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
     }));
 
     if (!haveMealPlanCollectionsChanged(currentItems, expectedItems)) {
@@ -89,7 +89,7 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
         items_snapshot: currentItems as unknown as Json,
         changed_by: appliedBy,
         change_reason: `[${interventionType}] ${clinicalReason}`,
-        changed_fields: ["calories_target", "protein_target", "carbs_target", "fat_target"],
+        changed_fields: ["meta_calorias", "meta_proteinas", "meta_carboidratos", "meta_gorduras"],
       })
       .select("id")
       .single();
@@ -102,17 +102,17 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
 
     // 5. Calculate adjustment factor
     const factor = 1 + (caloricAdjustmentPercent / 100);
-    const changedFields = ["calories_target", "protein_target", "carbs_target", "fat_target"];
+    const changedFields = ["meta_calorias", "meta_proteinas", "meta_carboidratos", "meta_gorduras"];
 
     // 6. Batch-update all items in a single RPC-style loop (avoid N+1)
     const updatePromises = currentItems.map((item) =>
       supabase
         .from("meal_plan_items")
         .update({
-          calories_target: Math.round((item.calories_target || 0) * factor),
-          protein_target: Math.round(((item.protein_target || 0) * factor) * 10) / 10,
-          carbs_target: Math.round(((item.carbs_target || 0) * factor) * 10) / 10,
-          fat_target: Math.round(((item.fat_target || 0) * factor) * 10) / 10,
+          meta_calorias: Math.round((item.meta_calorias || 0) * factor),
+          meta_proteinas: Math.round(((item.meta_proteinas || 0) * factor) * 10) / 10,
+          meta_carboidratos: Math.round(((item.meta_carboidratos || 0) * factor) * 10) / 10,
+          meta_gorduras: Math.round(((item.meta_gorduras || 0) * factor) * 10) / 10,
         })
         .eq("id", item.id)
     );
@@ -150,7 +150,7 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
 
     const { data: persistedItems, error: persistedItemsError } = await supabase
       .from("meal_plan_items")
-      .select("title, description, meal_type, day_of_week, calories_target, protein_target, carbs_target, fat_target")
+      .select("title, description, tipo_refeicao, day_of_week, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras")
       .eq("meal_plan_id", planId);
 
     if (persistedItemsError) {

@@ -69,10 +69,10 @@ export function MealSmartEditorModal({
 
   const currentMeta = React.useMemo(() => (item as any)?.edit_metadata || (item as any)?.metadata || {}, [item]);
   
-  const kcalBase = currentMeta.kcal_base ?? item?.calories_target ?? 0;
-  const protBase = currentMeta.protein_base ?? Number(item?.protein_target) ?? 0;
-  const carbBase = currentMeta.carbs_base ?? Number(item?.carbs_target) ?? 0;
-  const fatBase = currentMeta.fat_base ?? Number(item?.fat_target) ?? 0;
+  const kcalBase = currentMeta.kcal_base ?? item?.meta_calorias ?? 0;
+  const protBase = currentMeta.protein_base ?? Number(item?.meta_proteinas) ?? 0;
+  const carbBase = currentMeta.carbs_base ?? Number(item?.meta_carboidratos) ?? 0;
+  const fatBase = currentMeta.fat_base ?? Number(item?.meta_gorduras) ?? 0;
 
   const adjustedMacros = React.useMemo(() => ({
     calories: Math.round(kcalBase * portionFactor),
@@ -185,10 +185,10 @@ export function MealSmartEditorModal({
 
     updateItem(itemId, {
       description: finalDescription,
-      calories_target: adjustedMacros.calories,
-      protein_target: adjustedMacros.protein,
-      carbs_target: adjustedMacros.carbs,
-      fat_target: adjustedMacros.fat,
+      meta_calorias: adjustedMacros.calories,
+      meta_proteinas: adjustedMacros.protein,
+      meta_carboidratos: adjustedMacros.carbs,
+      meta_gorduras: adjustedMacros.fat,
       edit_metadata: {
         ...currentMeta,
         notes,
@@ -245,10 +245,10 @@ export function MealSmartEditorModal({
       // Final persist call (no skipPersist)
       updateItem(itemId, {
         description: finalDescription,
-        calories_target: adjustedMacros.calories,
-        protein_target: adjustedMacros.protein,
-        carbs_target: adjustedMacros.carbs,
-        fat_target: adjustedMacros.fat,
+        meta_calorias: adjustedMacros.calories,
+        meta_proteinas: adjustedMacros.protein,
+        meta_carboidratos: adjustedMacros.carbs,
+        meta_gorduras: adjustedMacros.fat,
         edit_metadata: {
           ...currentMeta,
           notes,
@@ -482,7 +482,7 @@ export function MealSmartEditorModal({
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   {MEAL_TEMPLATES.filter(t => 
-                    t.mealTypes.includes(item.meal_type as any) &&
+                    t.mealTypes.includes(item.tipo_refeicao as any) &&
                     t.title.toLowerCase().includes(search.toLowerCase())
                   ).map((template) => (
                     <button

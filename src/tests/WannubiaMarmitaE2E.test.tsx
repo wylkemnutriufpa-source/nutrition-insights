@@ -11,7 +11,7 @@ import '@testing-library/jest-dom';
 // Mock store to control state precisely
 const mockStore = {
   items: [
-    { id: 'item-1', title: 'Frango', calories_target: 0, protein_target: 0, carbs_target: 0, fat_target: 0, meal_type: 'Almoço' as const, day_of_week: 0, description: 'Desc original', edit_metadata: { is_fixed: true, kcal_base: 500, protein_base: 30, carbs_base: 40, fat_base: 10, portion_factor: 1.0 } }
+    { id: 'item-1', title: 'Frango', meta_calorias: 0, meta_proteinas: 0, meta_carboidratos: 0, meta_gorduras: 0, tipo_refeicao: 'Almoço' as const, day_of_week: 0, description: 'Desc original', edit_metadata: { is_fixed: true, kcal_base: 500, protein_base: 30, carbs_base: 40, fat_base: 10, portion_factor: 1.0 } }
   ],
   plan: { id: 'plan-456', title: 'Plano Teste', plan_status: 'draft', patient_id: 'pat-123', start_date: '2023-01-01' },
   planId: 'plan-456',

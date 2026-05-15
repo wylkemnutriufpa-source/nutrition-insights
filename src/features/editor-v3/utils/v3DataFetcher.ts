@@ -18,7 +18,7 @@ export const searchV3LibraryItems = async (
   }
 
   if (mealSlot) {
-    queryBuilder = queryBuilder.contains("meal_type", [mealSlot]);
+    queryBuilder = queryBuilder.contains("tipo_refeicao", [mealSlot]);
   }
 
   if (query && query.length >= 2) {

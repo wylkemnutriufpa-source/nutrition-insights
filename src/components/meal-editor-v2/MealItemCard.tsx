@@ -181,14 +181,14 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               </p>
             )}
             <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground flex-wrap">
-              {item.calories_target != null && (
+              {item.meta_calorias != null && (
                 <span className="flex items-center gap-0.5">
-                  <Flame className="w-2.5 h-2.5 text-orange-400" />{fmtMacro(item.calories_target)}
+                  <Flame className="w-2.5 h-2.5 text-orange-400" />{fmtMacro(item.meta_calorias)}
                 </span>
               )}
-              {item.protein_target != null && (
+              {item.meta_proteinas != null && (
                 <span className="flex items-center gap-0.5">
-                  <Beef className="w-2.5 h-2.5 text-red-400" />{fmtMacro(item.protein_target)}g
+                  <Beef className="w-2.5 h-2.5 text-red-400" />{fmtMacro(item.meta_proteinas)}g
                 </span>
               )}
               {(() => {
@@ -204,7 +204,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             {(() => {
               const validation = validateMealSubstitutions(item);
               const hasMixingError = validation.detailedErrors.some(e => e.limitError?.includes("mistura") || e.limitError?.includes("parece ser uma opção de"));
-              const hasMacroError = isMacroInconsistent(item.calories_target || 0, Number(item.protein_target) || 0, Number(item.carbs_target) || 0, Number(item.fat_target) || 0);
+              const hasMacroError = isMacroInconsistent(item.meta_calorias || 0, Number(item.meta_proteinas) || 0, Number(item.meta_carboidratos) || 0, Number(item.meta_gorduras) || 0);
               const hasPortionWarning = !!getPortionWarning(item);
               
               if (!hasMixingError && !hasMacroError && !hasPortionWarning && validation.valid) return null;

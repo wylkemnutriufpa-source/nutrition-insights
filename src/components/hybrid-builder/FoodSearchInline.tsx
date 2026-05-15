@@ -111,11 +111,11 @@ export default function FoodSearchInline({ day, mealType, replacingItemId, onClo
       title: food.name,
       description: `${food.name} ${grams}g`,
       day_of_week: day,
-      meal_type: mealType,
-      calories_target: food.calories,
-      protein_target: food.protein,
-      carbs_target: food.carbs,
-      fat_target: food.fat,
+      tipo_refeicao: mealType,
+      meta_calorias: food.calories,
+      meta_proteinas: food.protein,
+      meta_carboidratos: food.carbs,
+      meta_gorduras: food.fat,
       item_origin: food.source === "db" ? "food_database" : "manual",
     });
 

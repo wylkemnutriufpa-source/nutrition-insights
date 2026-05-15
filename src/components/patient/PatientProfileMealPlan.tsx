@@ -80,7 +80,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   const groupedItems = useMemo(() =>
     MEAL_TYPES.map(mt => ({
       ...mt,
-      items: items.filter(i => i.meal_type === mt.key),
+      items: items.filter(i => i.tipo_refeicao === mt.key),
     })).filter(g => g.items.length > 0),
   [items]);
 
@@ -192,7 +192,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
             {weeklyDisplayDays.map(({ day, items: dayItems }) => {
               const groupedDayItems = MEAL_TYPES.map(mt => ({
                 ...mt,
-                items: dayItems.filter(i => i.meal_type === mt.key),
+                items: dayItems.filter(i => i.tipo_refeicao === mt.key),
               })).filter(g => g.items.length > 0);
 
               if (groupedDayItems.length === 0) return null;
@@ -254,7 +254,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           mealPlanItemId={substitutingItem.id}
           mealPlanId={activeMealPlanId || ""}
           patientId={patientId}
-          mealSlot={(substitutingItem as any)?.meal_type}
+          mealSlot={(substitutingItem as any)?.tipo_refeicao}
           options={substitutingItem.metadata?.substitution_options}
           onSubstitute={() => {
             fetchData();

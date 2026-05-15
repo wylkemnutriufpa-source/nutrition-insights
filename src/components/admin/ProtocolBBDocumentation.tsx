@@ -363,7 +363,7 @@ export default function ProtocolBBDocumentation() {
   "bb_phase": 2,
   "bb_phase_name": "Déficit Estratégico",
   "bb_deficit_applied": 400,
-  "bb_protein_target_gkg": 2.0,
+  "bb_meta_proteinas_gkg": 2.0,
   "bmr_formula": "mifflin_st_jeor",
   "bmr_value": 1420,
   "tdee_factor": 1.55,

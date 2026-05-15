@@ -56,7 +56,7 @@ interface TemplateFood {
 }
 
 interface TemplateMeal {
-  meal_type: string;
+  tipo_refeicao: string;
   title: string;
   foods: TemplateFood[];
 }
@@ -70,10 +70,10 @@ interface AnamnesisData {
 }
 
 interface PhysicalAssessmentData {
-  calories_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
+  meta_calorias: number | null;
+  meta_proteinas: number | null;
+  meta_carboidratos: number | null;
+  meta_gorduras: number | null;
   tdee: number | null;
   bmr: number | null;
   assessment_date: string;
@@ -236,7 +236,7 @@ export default function DietTemplates() {
     if (data) {
       const formatted = data.map(r => ({
         name: r.name,
-        meal_type: r.meal_type || "Almoço",
+        tipo_refeicao: r.tipo_refeicao || "Almoço",
         calories: r.fixed_calories || 0,
         protein: r.fixed_protein || 0,
         carbs: r.fixed_carbs || 0,
@@ -265,7 +265,7 @@ export default function DietTemplates() {
     try {
       const { data } = await supabase
         .from("physical_assessments")
-        .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, assessment_date")
+        .select("meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras, tdee, bmr, assessment_date")
         .eq("patient_id", patientId)
         .order("assessment_date", { ascending: false })
         .limit(1)
@@ -370,18 +370,18 @@ export default function DietTemplates() {
 
   // Physical assessment takes priority over anamnesis for calorie targets
   const getEffectiveCalories = () => {
-    if (physicalAssessment?.calories_target) return Math.round(Number(physicalAssessment.calories_target));
+    if (physicalAssessment?.meta_calorias) return Math.round(Number(physicalAssessment.meta_calorias));
     if (anamnesis?.computed_kcal_target) return Math.round(Number(anamnesis.computed_kcal_target));
     return null;
   };
 
   const getEffectiveMacros = () => ({
-    protein: physicalAssessment?.protein_target ? Math.round(Number(physicalAssessment.protein_target)) : (anamnesis?.computed_protein ? Math.round(Number(anamnesis.computed_protein)) : null),
-    carbs: physicalAssessment?.carbs_target ? Math.round(Number(physicalAssessment.carbs_target)) : (anamnesis?.computed_carbs ? Math.round(Number(anamnesis.computed_carbs)) : null),
-    fat: physicalAssessment?.fat_target ? Math.round(Number(physicalAssessment.fat_target)) : (anamnesis?.computed_fat ? Math.round(Number(anamnesis.computed_fat)) : null),
+    protein: physicalAssessment?.meta_proteinas ? Math.round(Number(physicalAssessment.meta_proteinas)) : (anamnesis?.computed_protein ? Math.round(Number(anamnesis.computed_protein)) : null),
+    carbs: physicalAssessment?.meta_carboidratos ? Math.round(Number(physicalAssessment.meta_carboidratos)) : (anamnesis?.computed_carbs ? Math.round(Number(anamnesis.computed_carbs)) : null),
+    fat: physicalAssessment?.meta_gorduras ? Math.round(Number(physicalAssessment.meta_gorduras)) : (anamnesis?.computed_fat ? Math.round(Number(anamnesis.computed_fat)) : null),
   });
 
-  const dataSource = physicalAssessment?.calories_target ? "assessment" : "anamnesis";
+  const dataSource = physicalAssessment?.meta_calorias ? "assessment" : "anamnesis";
 
   // Helpers de coerção e renderização defensiva vivem em @/lib/formatMacros
   // (compartilhados com MealLibraryModal, MealLibrarySidebar, AssistedPlanModal,
@@ -492,7 +492,7 @@ export default function DietTemplates() {
     let globalMarmitaCounter = 0;
 
     for (const meal of meals) {
-      const mealType = meal.meal_type || meal.type;
+      const mealType = meal.tipo_refeicao || meal.type;
       if (!mealType) continue;
 
       const blocks: any[] = Array.isArray(meal.blocks) ? meal.blocks : [];
@@ -520,7 +520,7 @@ export default function DietTemplates() {
               const isLunch = mealType === "Almoço" || mealType === "almoco" || mealType === "almoço";
               const candidates = mealRecipes
                 .filter(r => {
-                  const rt = r.meal_type?.toLowerCase() || "";
+                  const rt = r.tipo_refeicao?.toLowerCase() || "";
                   if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "Almoço";
                   return rt === "jantar" || rt === "Jantar";
                 })
@@ -542,13 +542,13 @@ export default function DietTemplates() {
             items.push({
               meal_plan_id: plan.id,
               day_of_week: day,
-              meal_type: mealType,
+              tipo_refeicao: mealType,
               title: finalName,
               description: finalPortion,
-              calories_target: scaleNum(finalCalories),
-              protein_target: scaleNum(finalProtein),
-              carbs_target: scaleNum(finalCarbs),
-              fat_target: scaleNum(finalFat),
+              meta_calorias: scaleNum(finalCalories),
+              meta_proteinas: scaleNum(finalProtein),
+              meta_carboidratos: scaleNum(finalCarbs),
+              meta_gorduras: scaleNum(finalFat),
               substitution_group_id: groupId,
               is_primary: idx === 0,
             });
@@ -575,7 +575,7 @@ export default function DietTemplates() {
             const isLunch = mealType === "Almoço" || mealType === "almoco" || mealType === "almoço";
             const candidates = mealRecipes
               .filter(r => {
-                const rt = r.meal_type?.toLowerCase() || "";
+                const rt = r.tipo_refeicao?.toLowerCase() || "";
                 if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "Almoço";
                 return rt === "jantar" || rt === "Jantar";
               })
@@ -598,13 +598,13 @@ export default function DietTemplates() {
           items.push({
             meal_plan_id: plan.id,
             day_of_week: day,
-            meal_type: mealType,
+            tipo_refeicao: mealType,
             title: finalName,
             description: finalPortion,
-            calories_target: scaleNum(finalCalories),
-            protein_target: scaleNum(finalProtein),
-            carbs_target: scaleNum(finalCarbs),
-            fat_target: scaleNum(finalFat),
+            meta_calorias: scaleNum(finalCalories),
+            meta_proteinas: scaleNum(finalProtein),
+            meta_carboidratos: scaleNum(finalCarbs),
+            meta_gorduras: scaleNum(finalFat),
             substitution_group_id: groupId,
             is_primary: true,
           });
@@ -614,13 +614,13 @@ export default function DietTemplates() {
             items.push({
               meal_plan_id: plan.id,
               day_of_week: day,
-              meal_type: mealType,
+              tipo_refeicao: mealType,
               title: subName,
               description: "Substituição",
-              calories_target: scaleNum(finalCalories), // Assume same calories as primary for legacy
-              protein_target: scaleNum(finalProtein),
-              carbs_target: scaleNum(finalCarbs),
-              fat_target: scaleNum(finalFat),
+              meta_calorias: scaleNum(finalCalories), // Assume same calories as primary for legacy
+              meta_proteinas: scaleNum(finalProtein),
+              meta_carboidratos: scaleNum(finalCarbs),
+              meta_gorduras: scaleNum(finalFat),
               substitution_group_id: groupId,
               is_primary: false,
             });
@@ -957,7 +957,7 @@ export default function DietTemplates() {
                       <div key={mi} className="glass rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            {MEAL_ICONS[meal.meal_type || (meal as any).type]}
+                            {MEAL_ICONS[meal.tipo_refeicao || (meal as any).type]}
                             <h4 className="font-display font-semibold text-sm">{meal.title}</h4>
                           </div>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">

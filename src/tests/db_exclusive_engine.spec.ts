@@ -242,9 +242,9 @@ describe("Meal selection compliance", () => {
   it("does not generate extra meals beyond enabled list", () => {
     const enabledMeals = ["Café da Manhã", "Almoço"];
     const mealTypes = enabledMeals.length > 0 ? enabledMeals : defaultMeals;
-    const generated = mealTypes.map(m => ({ meal_type: m }));
+    const generated = mealTypes.map(m => ({ tipo_refeicao: m }));
     expect(generated).toHaveLength(2);
-    expect(generated.every(g => enabledMeals.includes(g.meal_type))).toBe(true);
+    expect(generated.every(g => enabledMeals.includes(g.tipo_refeicao))).toBe(true);
   });
 });
 

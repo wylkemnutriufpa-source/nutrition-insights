@@ -21,7 +21,7 @@ interface AuditedPlan {
   issues: string[];
   marmitaItems: {
     title: string;
-    meal_type: string;
+    tipo_refeicao: string;
     subCount: number;
     hasGeneric: boolean;
   }[];
@@ -42,7 +42,7 @@ export default function MarmitaAudit() {
         .select(`
           id, title, patient_id, 
           profiles:patient_id (full_name),
-          items:meal_plan_items (id, title, is_primary, meal_type, edit_metadata)
+          items:meal_plan_items (id, title, is_primary, tipo_refeicao, edit_metadata)
         `)
         .eq("plan_status", "published_to_patient")
         .order("created_at", { ascending: false });
@@ -67,14 +67,14 @@ export default function MarmitaAudit() {
             const subCount = subs.length;
             const itemIssues: string[] = [];
             
-            if (hasGeneric) itemIssues.push(`${item.meal_type}: Contém termo genérico ("marmita do dia")`);
-            if (subCount < 3 || subCount > 4) itemIssues.push(`${item.meal_type}: Deve ter 3-4 substituições (tem ${subCount})`);
+            if (hasGeneric) itemIssues.push(`${item.tipo_refeicao}: Contém termo genérico ("marmita do dia")`);
+            if (subCount < 3 || subCount > 4) itemIssues.push(`${item.tipo_refeicao}: Deve ter 3-4 substituições (tem ${subCount})`);
             
             if (itemIssues.length > 0) {
               issues.push(...itemIssues);
               marmitaItems.push({
                 title: item.title,
-                meal_type: item.meal_type,
+                tipo_refeicao: item.tipo_refeicao,
                 subCount,
                 hasGeneric
               });
@@ -191,7 +191,7 @@ export default function MarmitaAudit() {
                       {plan.marmitaItems.map((item, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-destructive/20 shadow-sm">
                           <h4 className="text-sm font-bold flex items-center gap-2 mb-2">
-                            <Utensils className="w-4 h-4 text-primary" /> {item.title} ({item.meal_type})
+                            <Utensils className="w-4 h-4 text-primary" /> {item.title} ({item.tipo_refeicao})
                           </h4>
                           <ul className="text-xs space-y-1">
                             {item.hasGeneric && (

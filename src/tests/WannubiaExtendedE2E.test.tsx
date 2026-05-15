@@ -52,8 +52,8 @@ describe('Extended E2E Tests', () => {
           item_origin: 'auto_generated_sub', 
           is_primary: false,
           day_of_week: 1,
-          meal_type: 'Café da Manhã',
-          calories_target: 100
+          tipo_refeicao: 'Café da Manhã',
+          meta_calorias: 100
         }
       ],
       updateItem: mockUpdateItem,
@@ -74,8 +74,8 @@ describe('Extended E2E Tests', () => {
               item_origin: 'auto_generated_sub', 
               is_primary: false,
               day_of_week: 1,
-              meal_type: 'Café da Manhã',
-              calories_target: 100
+              tipo_refeicao: 'Café da Manhã',
+              meta_calorias: 100
             }
           ] as any}
         />
@@ -99,9 +99,9 @@ describe('Extended E2E Tests', () => {
     fireEvent.keyDown(badge, { key: 'Enter' });
   });
 
-  it('should maintain deterministic order after editing calories_target of primary item', () => {
-    const itemPri = { id: 'pri', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'Almoço' } as any;
-    const itemSub = { id: 'sub', is_primary: false, calories_target: 600, day_of_week: 1, meal_type: 'Almoço' } as any;
+  it('should maintain deterministic order after editing meta_calorias of primary item', () => {
+    const itemPri = { id: 'pri', is_primary: true, meta_calorias: 500, day_of_week: 1, tipo_refeicao: 'Almoço' } as any;
+    const itemSub = { id: 'sub', is_primary: false, meta_calorias: 600, day_of_week: 1, tipo_refeicao: 'Almoço' } as any;
 
     let items = [itemSub, itemPri];
     
@@ -110,8 +110,8 @@ describe('Extended E2E Tests', () => {
     expect(sorted[0].id).toBe('pri'); // Primary always first
     expect(sorted[1].id).toBe('sub');
 
-    // Edit calories_target of primary
-    const updatedPri = { ...itemPri, calories_target: 700 };
+    // Edit meta_calorias of primary
+    const updatedPri = { ...itemPri, meta_calorias: 700 };
     items = [itemSub, updatedPri];
     
     // Sort again
@@ -122,15 +122,15 @@ describe('Extended E2E Tests', () => {
     // Even if sub has more calories than initial pri but less than updated pri, 
     // or vice versa, Primary is always first.
     // Let's test tie-breaking on ID if calories were same
-    const itemPri2 = { id: 'pri-a', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'Almoço' } as any;
-    const itemPri3 = { id: 'pri-b', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'Almoço' } as any;
+    const itemPri2 = { id: 'pri-a', is_primary: true, meta_calorias: 500, day_of_week: 1, tipo_refeicao: 'Almoço' } as any;
+    const itemPri3 = { id: 'pri-b', is_primary: true, meta_calorias: 500, day_of_week: 1, tipo_refeicao: 'Almoço' } as any;
     
     sorted = sortMealPlanItems([itemPri3, itemPri2]);
     expect(sorted[0].id).toBe('pri-a');
     expect(sorted[1].id).toBe('pri-b');
 
     // Change pri-b calories to 600
-    sorted = sortMealPlanItems([itemPri2, { ...itemPri3, calories_target: 600 }]);
+    sorted = sortMealPlanItems([itemPri2, { ...itemPri3, meta_calorias: 600 }]);
     expect(sorted[0].id).toBe('pri-b'); // 600 > 500
     expect(sorted[1].id).toBe('pri-a');
   });

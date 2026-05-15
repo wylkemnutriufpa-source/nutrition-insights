@@ -70,7 +70,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     (async () => {
       const { data, error } = await supabase
         .from("meal_recipes")
-        .select("id, name, meal_type, is_fixed, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
+        .select("id, name, tipo_refeicao, is_fixed, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
         .eq("nutritionist_id", user.id)
         .eq("is_active", true);
       if (cancelled) return;
@@ -78,10 +78,10 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         setRecipeCounts((s) => ({ ...s, loading: false }));
         return;
       }
-      const lunch = (data || []).filter((r: any) => r.meal_type === "Almoço").length;
-      const dinner = (data || []).filter((r: any) => r.meal_type === "Jantar").length;
-      const fixedLunch = (data || []).filter((r: any) => r.meal_type === "Almoço" && r.is_fixed).length;
-      const fixedDinner = (data || []).filter((r: any) => r.meal_type === "Jantar" && r.is_fixed).length;
+      const lunch = (data || []).filter((r: any) => r.tipo_refeicao === "Almoço").length;
+      const dinner = (data || []).filter((r: any) => r.tipo_refeicao === "Jantar").length;
+      const fixedLunch = (data || []).filter((r: any) => r.tipo_refeicao === "Almoço" && r.is_fixed).length;
+      const fixedDinner = (data || []).filter((r: any) => r.tipo_refeicao === "Jantar" && r.is_fixed).length;
       setRecipeCounts({ lunch, dinner, fixedLunch, fixedDinner, loading: false });
       setAllRecipes(data || []);
     })();
@@ -157,7 +157,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   }, [user, store, patientId, onGenerated]);
 
   // Recipe template selected → generate plan using recipe as base
-  const handleRecipeSelected = useCallback(async (recipe: { id: string; name: string; meal_type: string; foods_json: any }) => {
+  const handleRecipeSelected = useCallback(async (recipe: { id: string; name: string; tipo_refeicao: string; foods_json: any }) => {
     if (!user || !store.planId) return;
     setView("menu");
     setGenerating(true);
@@ -175,7 +175,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           recipeTemplate: {
             recipeId: recipe.id,
             recipeName: recipe.name,
-            mealType: recipe.meal_type,
+            mealType: recipe.tipo_refeicao,
             foods: recipe.foods_json,
           },
         },
@@ -580,7 +580,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         onOpenChange={setConsistencyOpen}
         recipes={allRecipes.map(r => ({
           name: r.name,
-          meal_type: r.meal_type,
+          tipo_refeicao: r.tipo_refeicao,
           calories: Number(r.fixed_calories) || 0,
           protein: Number(r.fixed_protein) || 0,
           carbs: Number(r.fixed_carbs) || 0,

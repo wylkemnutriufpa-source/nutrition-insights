@@ -62,7 +62,7 @@ interface BBGenerationMetadata {
   bb_phase: number;
   bb_phase_name: string;
   bb_deficit_applied: number;
-  bb_protein_target_gkg: number;
+  bb_meta_proteinas_gkg: number;
   bmr_formula: string;
   bmr_value: number;
   tdee_factor: number;
@@ -255,7 +255,7 @@ describe("Protocolo Biquíni Branco — Metadata Schema", () => {
     bb_phase: 2,
     bb_phase_name: "Déficit Estratégico",
     bb_deficit_applied: 400,
-    bb_protein_target_gkg: 2.0,
+    bb_meta_proteinas_gkg: 2.0,
     bmr_formula: "mifflin_st_jeor",
     bmr_value: 1420,
     tdee_factor: 1.55,
@@ -283,7 +283,7 @@ describe("Protocolo Biquíni Branco — Metadata Schema", () => {
     expect(mockMetadata).toHaveProperty("bb_phase");
     expect(mockMetadata).toHaveProperty("bb_phase_name");
     expect(mockMetadata).toHaveProperty("bb_deficit_applied");
-    expect(mockMetadata).toHaveProperty("bb_protein_target_gkg");
+    expect(mockMetadata).toHaveProperty("bb_meta_proteinas_gkg");
     expect(mockMetadata).toHaveProperty("phase_adjustments");
   });
 

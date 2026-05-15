@@ -23,13 +23,13 @@ export default function PlanComparisonView({
   const scoreDiff = projectedScore.total - originalScore.total;
 
   // Group by meal type for display
-  const mealTypes = [...new Set(originalItems.map(i => i.meal_type))];
+  const mealTypes = [...new Set(originalItems.map(i => i.tipo_refeicao))];
 
   // Compute macro totals
-  const origCals = originalItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const simpCals = simplifiedItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const origProt = originalItems.reduce((s, i) => s + (i.protein_target || 0), 0);
-  const simpProt = simplifiedItems.reduce((s, i) => s + (i.protein_target || 0), 0);
+  const origCals = originalItems.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const simpCals = simplifiedItems.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const origProt = originalItems.reduce((s, i) => s + (i.meta_proteinas || 0), 0);
+  const simpProt = simplifiedItems.reduce((s, i) => s + (i.meta_proteinas || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -76,8 +76,8 @@ export default function PlanComparisonView({
       <ScrollArea className="max-h-96">
         <div className="space-y-3">
           {mealTypes.map(mt => {
-            const origMeal = originalItems.filter(i => i.meal_type === mt);
-            const simpMeal = simplifiedItems.filter(i => i.meal_type === mt);
+            const origMeal = originalItems.filter(i => i.tipo_refeicao === mt);
+            const simpMeal = simplifiedItems.filter(i => i.tipo_refeicao === mt);
             const hasChanges = simpMeal.some(i => i._modified);
 
             if (!hasChanges) return null;

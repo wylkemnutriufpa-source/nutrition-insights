@@ -37,7 +37,7 @@ export default function MealSubstitutionPanel({ day }: Props) {
    */
   const substitutions = useMemo(() => {
     if (!selectedItem) return [];
-    const slot = normalizeSlot(selectedItem.meal_type as any);
+    const slot = normalizeSlot(selectedItem.tipo_refeicao as any);
     // Detecta o alimento principal a partir do título
     const detected = findFoodsInTitle(selectedItem.title || "");
     const baseName = detected[0]?.name || selectedItem.title || "";
@@ -57,10 +57,10 @@ export default function MealSubstitutionPanel({ day }: Props) {
     updateItem(selectedItem.id, {
       title: sub.food.name,
       description: sub.food.portion || "",
-      calories_target: sub.food.calories,
-      protein_target: sub.food.protein,
-      carbs_target: sub.food.carbs,
-      fat_target: sub.food.fat,
+      meta_calorias: sub.food.calories,
+      meta_proteinas: sub.food.protein,
+      meta_carboidratos: sub.food.carbs,
+      meta_gorduras: sub.food.fat,
     });
 
     setRecentlySwapped(prev => new Set(prev).add(sub.food.name));
@@ -118,10 +118,10 @@ export default function MealSubstitutionPanel({ day }: Props) {
                       )}
                       <div className="flex items-center gap-2 mt-1 text-[9px]">
                         <span className="flex items-center gap-0.5">
-                          <Flame className="w-2.5 h-2.5 text-orange-400" /> {item.calories_target || 0}
+                          <Flame className="w-2.5 h-2.5 text-orange-400" /> {item.meta_calorias || 0}
                         </span>
                         <span className="flex items-center gap-0.5">
-                          <Beef className="w-2.5 h-2.5 text-red-400" /> {Number(item.protein_target) || 0}g
+                          <Beef className="w-2.5 h-2.5 text-red-400" /> {Number(item.meta_proteinas) || 0}g
                         </span>
                       </div>
                       {!hasGroup && (
@@ -165,7 +165,7 @@ export default function MealSubstitutionPanel({ day }: Props) {
                     .toLowerCase()
                     .includes(sub.food.name.toLowerCase().split(" ")[0]);
                   const wasSwapped = recentlySwapped.has(sub.food.name);
-                  const calDiff = sub.food.calories - (selectedItem.calories_target || 0);
+                  const calDiff = sub.food.calories - (selectedItem.meta_calorias || 0);
                   return (
                     <button
                       key={sub.food.name}

@@ -68,7 +68,7 @@ vi.mock('../integrations/supabase/client', () => ({
 describe('DailyMealPlanInline - Optimistic Updates & Realtime', () => {
   const mockUser = { id: 'patient123' };
   const mockPlan = { id: 'plan1', title: 'Plano Teste', start_date: '2024-01-01' };
-  const mockItem = { id: 'item1', meal_type: 'Café da Manhã', day_of_week: new Date().getDay() };
+  const mockItem = { id: 'item1', tipo_refeicao: 'Café da Manhã', day_of_week: new Date().getDay() };
 
   beforeEach(() => {
     vi.clearAllMocks();

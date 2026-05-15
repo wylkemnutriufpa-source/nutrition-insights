@@ -171,7 +171,7 @@ export default function WorkspaceTemplates({ search }: Props) {
             ) : (
               <div className="space-y-4">
                 {previewMeals.map((meal: any, idx: number) => {
-                  const label = MEAL_LABELS[meal.meal_type] || meal.meal_type || `Refeição ${idx + 1}`;
+                  const label = MEAL_LABELS[meal.tipo_refeicao] || meal.tipo_refeicao || `Refeição ${idx + 1}`;
                   const foods = Array.isArray(meal.foods) ? meal.foods : [];
                   return (
                     <div key={idx} className="p-4 rounded-2xl border border-border bg-card/50 shadow-sm transition-all hover:border-primary/20">

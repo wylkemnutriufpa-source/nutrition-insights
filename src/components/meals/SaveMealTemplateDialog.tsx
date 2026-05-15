@@ -13,10 +13,10 @@ import { Bookmark, Loader2, Sparkles, Tag } from "lucide-react";
 interface MealItemForTemplate {
   title: string;
   description?: string | null;
-  calories_target?: number | null;
-  protein_target?: number | null;
-  carbs_target?: number | null;
-  fat_target?: number | null;
+  meta_calorias?: number | null;
+  meta_proteinas?: number | null;
+  meta_carboidratos?: number | null;
+  meta_gorduras?: number | null;
 }
 
 interface SaveMealTemplateDialogProps {
@@ -42,10 +42,10 @@ export default function SaveMealTemplateDialog({
   const [complexity, setComplexity] = useState("medium");
   const [saving, setSaving] = useState(false);
 
-  const totalKcal = (items || []).reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProtein = (items || []).reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-  const totalCarbs = (items || []).reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-  const totalFat = (items || []).reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
+  const totalKcal = (items || []).reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const totalProtein = (items || []).reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
+  const totalCarbs = (items || []).reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0);
+  const totalFat = (items || []).reduce((s, i) => s + (Number(i.meta_gorduras) || 0), 0);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
@@ -60,17 +60,17 @@ export default function SaveMealTemplateDialog({
     const foodsStructure = items.map(item => ({
       name: item.title,
       portion_grams: parseInt(item.description?.replace(/[^\d]/g, '') || '100') || 100,
-      calories: item.calories_target || 0,
-      protein: Number(item.protein_target) || 0,
-      carbs: Number(item.carbs_target) || 0,
-      fat: Number(item.fat_target) || 0,
+      calories: item.meta_calorias || 0,
+      protein: Number(item.meta_proteinas) || 0,
+      carbs: Number(item.meta_carboidratos) || 0,
+      fat: Number(item.meta_gorduras) || 0,
       substitutions: [],
     }));
 
     const { error } = await supabase.from("nutritionist_meal_templates").insert({
       nutritionist_id: user.id,
       name: name.trim(),
-      meal_type: mealType,
+      tipo_refeicao: mealType,
       goal_tags: selectedTags,
       kcal_base: totalKcal,
       protein_base: totalProtein,
@@ -141,7 +141,7 @@ export default function SaveMealTemplateDialog({
             {(items || []).map((item, i) => (
               <div key={i} className="flex justify-between">
                 <span>{item.title}</span>
-                <span className="text-muted-foreground">{item.calories_target || 0} kcal</span>
+                <span className="text-muted-foreground">{item.meta_calorias || 0} kcal</span>
               </div>
             ))}
           </div>

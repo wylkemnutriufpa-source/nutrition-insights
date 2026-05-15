@@ -7,7 +7,7 @@ export interface FoodItem {
   protein: number;
   carbs: number;
   fat: number;
-  servingSize: number; // em gramas ou unidades
+  tamanho_porcao: number; // em gramas ou unidades
   category: 'proteína' | 'carboidrato' | 'gordura' | 'fruta' | 'laticínio' | 'marmita';
 }
 

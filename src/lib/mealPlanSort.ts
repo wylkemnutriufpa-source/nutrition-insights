@@ -34,8 +34,8 @@ export function sortMealPlanItems(items: MealPlanItem[]): MealPlanItem[] {
     if (aDay !== bDay) return aDay - bDay;
 
     // 1. Meal type
-    const aType = MEAL_TYPE_ORDER[a.meal_type || ""] ?? 99;
-    const bType = MEAL_TYPE_ORDER[b.meal_type || ""] ?? 99;
+    const aType = MEAL_TYPE_ORDER[a.tipo_refeicao || ""] ?? 99;
+    const bType = MEAL_TYPE_ORDER[b.tipo_refeicao || ""] ?? 99;
     if (aType !== bType) return aType - bType;
 
     // 2. Primary items first
@@ -43,9 +43,9 @@ export function sortMealPlanItems(items: MealPlanItem[]): MealPlanItem[] {
     const bPri = (b as any).is_primary ? 1 : 0;
     if (aPri !== bPri) return bPri - aPri;
 
-    // 3. calories_target (descending)
-    const aCal = Number(a.calories_target) || 0;
-    const bCal = Number(b.calories_target) || 0;
+    // 3. meta_calorias (descending)
+    const aCal = Number(a.meta_calorias) || 0;
+    const bCal = Number(b.meta_calorias) || 0;
     if (aCal !== bCal) return bCal - aCal;
 
     // 4. Stable tie-breaker: ID

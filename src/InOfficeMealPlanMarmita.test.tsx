@@ -108,7 +108,7 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
               total_protein: 40,
               total_carbs: 50,
               total_fat: 15,
-              items: [{ name: 'Frango com Batata', calories: 0, protein: 0, carbs: 0, fat: 0, meal_type: 'Almoço' }]
+              items: [{ name: 'Frango com Batata', calories: 0, protein: 0, carbs: 0, fat: 0, tipo_refeicao: 'Almoço' }]
             }],
             error: null
           });
@@ -163,8 +163,8 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
         const data = Array.isArray(call[0]) ? call[0] : [call[0]];
         return data.some((item: any) => 
           item.title === 'Frango com Batata' && 
-          item.calories_target === 500 && 
-          item.protein_target === 40
+          item.meta_calorias === 500 && 
+          item.meta_proteinas === 40
         );
       });
       

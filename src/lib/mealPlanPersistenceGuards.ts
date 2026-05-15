@@ -5,12 +5,12 @@ type MealPlanItem = Tables<"meal_plan_items">;
 type ComparableMealPlanItem = {
   title: string;
   description: string;
-  meal_type: string;
+  tipo_refeicao: string;
   day_of_week: number | null;
-  calories_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
+  meta_calorias: number | null;
+  meta_proteinas: number | null;
+  meta_carboidratos: number | null;
+  meta_gorduras: number | null;
 };
 
 type ComparableInput = Partial<
@@ -18,12 +18,12 @@ type ComparableInput = Partial<
     MealPlanItem,
     | "title"
     | "description"
-    | "meal_type"
+    | "tipo_refeicao"
     | "day_of_week"
-    | "calories_target"
-    | "protein_target"
-    | "carbs_target"
-    | "fat_target"
+    | "meta_calorias"
+    | "meta_proteinas"
+    | "meta_carboidratos"
+    | "meta_gorduras"
   >
 >;
 
@@ -36,26 +36,26 @@ const normalizeNumber = (value: number | null | undefined) =>
 const compareItems = (a: ComparableMealPlanItem, b: ComparableMealPlanItem) =>
   [
     a.day_of_week ?? -1,
-    a.meal_type,
+    a.tipo_refeicao,
     a.title,
     a.description,
-    a.calories_target ?? -1,
-    a.protein_target ?? -1,
-    a.carbs_target ?? -1,
-    a.fat_target ?? -1,
+    a.meta_calorias ?? -1,
+    a.meta_proteinas ?? -1,
+    a.meta_carboidratos ?? -1,
+    a.meta_gorduras ?? -1,
   ]
     .map(String)
     .join("|")
     .localeCompare(
       [
         b.day_of_week ?? -1,
-        b.meal_type,
+        b.tipo_refeicao,
         b.title,
         b.description,
-        b.calories_target ?? -1,
-        b.protein_target ?? -1,
-        b.carbs_target ?? -1,
-        b.fat_target ?? -1,
+        b.meta_calorias ?? -1,
+        b.meta_proteinas ?? -1,
+        b.meta_carboidratos ?? -1,
+        b.meta_gorduras ?? -1,
       ]
         .map(String)
         .join("|")
@@ -66,12 +66,12 @@ export function snapshotMealPlanItems(items: ComparableInput[]): ComparableMealP
     .map((item) => ({
       title: normalizeText(item.title),
       description: normalizeText(item.description),
-      meal_type: String(item.meal_type ?? ""),
+      tipo_refeicao: String(item.tipo_refeicao ?? ""),
       day_of_week: item.day_of_week ?? null,
-      calories_target: normalizeNumber(item.calories_target),
-      protein_target: normalizeNumber(item.protein_target),
-      carbs_target: normalizeNumber(item.carbs_target),
-      fat_target: normalizeNumber(item.fat_target),
+      meta_calorias: normalizeNumber(item.meta_calorias),
+      meta_proteinas: normalizeNumber(item.meta_proteinas),
+      meta_carboidratos: normalizeNumber(item.meta_carboidratos),
+      meta_gorduras: normalizeNumber(item.meta_gorduras),
     }))
     .sort(compareItems);
 }

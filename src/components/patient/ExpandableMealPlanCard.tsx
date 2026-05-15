@@ -184,7 +184,7 @@ export default function ExpandableMealPlanCard() {
 
   const groupedToday = MEAL_TYPES.map(mt => ({
     ...mt,
-    items: (viewMode === "today" ? todayItems : selectedDayItems).filter(i => i.meal_type === mt.key),
+    items: (viewMode === "today" ? todayItems : selectedDayItems).filter(i => i.tipo_refeicao === mt.key),
   })).filter(g => g.items.length > 0);
 
   return (
@@ -321,7 +321,7 @@ export default function ExpandableMealPlanCard() {
                   <div className="space-y-1.5">
                     <span className="text-[11px] font-semibold text-muted-foreground">{DAYS[selectedDay]}</span>
                     {MEAL_TYPES.map(mt => {
-                      const mealItems = selectedDayItems.filter(i => i.meal_type === mt.key);
+                      const mealItems = selectedDayItems.filter(i => i.tipo_refeicao === mt.key);
                       if (mealItems.length === 0) return null;
                       return (
                         <div key={mt.key}>
@@ -335,8 +335,8 @@ export default function ExpandableMealPlanCard() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-medium truncate">{item.title}</span>
-                                  {item.calories_target != null && (
-                                    <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
+                                  {item.meta_calorias != null && (
+                                    <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.meta_calorias)}kcal</span>
                                   )}
                                 </div>
                                 {(item.description || (item as any).edit_metadata?.display_quantity) && (
@@ -388,7 +388,7 @@ export default function ExpandableMealPlanCard() {
                     if (dayItems.length === 0) return null;
                     const grouped = MEAL_TYPES.map(mt => ({
                       ...mt,
-                      items: dayItems.filter(i => i.meal_type === mt.key),
+                      items: dayItems.filter(i => i.tipo_refeicao === mt.key),
                     })).filter(g => g.items.length > 0);
 
                     return (
@@ -409,8 +409,8 @@ export default function ExpandableMealPlanCard() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
                                     <span className="text-xs font-medium truncate">{item.title}</span>
-                                    {item.calories_target != null && (
-                                      <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
+                                    {item.meta_calorias != null && (
+                                      <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.meta_calorias)}kcal</span>
                                     )}
                                   </div>
                                   {(item.description || (item as any).edit_metadata?.display_quantity) && (
@@ -475,7 +475,7 @@ export default function ExpandableMealPlanCard() {
           mealPlanItemId={substitutingItem.id}
           mealPlanId={plan?.id || ""}
           patientId={user?.id || ""}
-          mealSlot={(substitutingItem as any)?.meal_type}
+          mealSlot={(substitutingItem as any)?.tipo_refeicao}
           options={substitutingItem.metadata?.substitution_options}
           onSubstitute={() => {
             fetchData();

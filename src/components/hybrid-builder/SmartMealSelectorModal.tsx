@@ -267,11 +267,11 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
         ? `[Substituição] ${option.description}`
         : option.description,
       day_of_week: targetDay,
-      meal_type: targetMealType,
-      calories_target: option.calories,
-      protein_target: option.protein,
-      carbs_target: option.carbs,
-      fat_target: option.fat,
+      tipo_refeicao: targetMealType,
+      meta_calorias: option.calories,
+      meta_proteinas: option.protein,
+      meta_carboidratos: option.carbs,
+      meta_gorduras: option.fat,
       item_origin: option.source === "recipe" ? "recipe_library" : "food_database",
     });
   };

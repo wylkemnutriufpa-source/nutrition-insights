@@ -47,7 +47,7 @@ interface Assessment {
   abdominal_fold: string; thigh_fold: string; chest_fold: string; midaxillary_fold: string;
   bmr: string; tdee: string; activity_factor: string;
   thermic_effect: string; neat: string;
-  protein_target: string; carbs_target: string; fat_target: string; calories_target: string;
+  meta_proteinas: string; meta_carboidratos: string; meta_gorduras: string; meta_calorias: string;
   goal_weight: string; goal_body_fat: string;
   notes: string; method: string;
   front_photo_url: string; side_photo_url: string; back_photo_url: string;
@@ -67,7 +67,7 @@ const emptyAssessment = (patientId: string, assessorId: string): Assessment => (
   abdominal_fold: "", thigh_fold: "", chest_fold: "", midaxillary_fold: "",
   bmr: "", tdee: "", activity_factor: "1.375",
   thermic_effect: "", neat: "",
-  protein_target: "", carbs_target: "", fat_target: "", calories_target: "",
+  meta_proteinas: "", meta_carboidratos: "", meta_gorduras: "", meta_calorias: "",
   goal_weight: "", goal_body_fat: "",
   notes: "", method: "jackson_pollock_7",
   front_photo_url: "", side_photo_url: "", back_photo_url: "",
@@ -341,10 +341,10 @@ export default function PhysicalAssessment() {
     payload.body_fat_percentage = computed.bodyFat || null;
     payload.lean_mass = computed.leanMass || null;
     payload.fat_mass = computed.fatMass || null;
-    payload.calories_target = computed.calTarget || null;
-    payload.protein_target = computed.protein || null;
-    payload.carbs_target = computed.carbs || null;
-    payload.fat_target = computed.fat || null;
+    payload.meta_calorias = computed.calTarget || null;
+    payload.meta_proteinas = computed.protein || null;
+    payload.meta_carboidratos = computed.carbs || null;
+    payload.meta_gorduras = computed.fat || null;
 
     try {
       if (form.id) {

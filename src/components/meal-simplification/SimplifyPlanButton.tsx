@@ -47,12 +47,12 @@ export default function SimplifyPlanButton({
     id: i.id,
     title: i.title,
     description: i.description,
-    meal_type: i.meal_type,
+    tipo_refeicao: i.tipo_refeicao,
     day_of_week: i.day_of_week,
-    calories_target: i.calories_target,
-    protein_target: i.protein_target,
-    carbs_target: i.carbs_target,
-    fat_target: i.fat_target,
+    meta_calorias: i.meta_calorias,
+    meta_proteinas: i.meta_proteinas,
+    meta_carboidratos: i.meta_carboidratos,
+    meta_gorduras: i.meta_gorduras,
   }));
   const quickScore = calculatePlanSimplicityScore(auditItems);
 

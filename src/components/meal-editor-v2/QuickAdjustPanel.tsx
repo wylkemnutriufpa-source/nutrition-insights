@@ -7,9 +7,9 @@ export function QuickAdjustPanel() {
   const { recalculateMealPlan, items, plan } = useMealPlanEditorV2Store();
   
   const masterItems = items.filter(i => i.day_of_week === 0);
-  const totalProt = masterItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-  const totalCarb = masterItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-  const totalKcal = masterItems.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+  const totalProt = masterItems.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
+  const totalCarb = masterItems.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0);
+  const totalKcal = masterItems.reduce((s, i) => s + (Number(i.meta_calorias) || 0), 0);
 
   const handleAdjust = (type: "protein" | "carbs" | "calories", amount: number) => {
     recalculateMealPlan({ [type]: amount });

@@ -12,7 +12,7 @@ interface Recipe {
   instructions: any;
   prep_time_minutes: number | null;
   cook_time_minutes: number | null;
-  servings: number | null;
+  porcoes: number | null;
   difficulty: string | null;
   category: string | null;
   calories_per_serving: number | null;
@@ -80,7 +80,7 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
   const prepTime = recipe.prep_time_minutes ?? 0;
   const cookTime = recipe.cook_time_minutes ?? 0;
   const totalTime = prepTime + cookTime;
-  const servings = recipe.servings ?? 1;
+  const porcoes = recipe.porcoes ?? 1;
   const difficulty = recipe.difficulty ?? "medium";
   const category = recipe.category ?? "main";
   const ingredients = toSafeArray(recipe.ingredients);
@@ -126,7 +126,7 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
               </span>
             )}
             <span className="flex items-center gap-1.5">
-              <Users className="w-4 h-4" /> {servings} porções
+              <Users className="w-4 h-4" /> {porcoes} porções
             </span>
           </div>
         </div>

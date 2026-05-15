@@ -193,7 +193,7 @@ export function personalizePlanItems(
             changes.push({
               type: "restriction_removed",
               detail: `${food} → ${replacement} (restrição: ${restriction})`,
-              mealType: item.meal_type || undefined,
+              mealType: item.tipo_refeicao || undefined,
               dayOfWeek: item.day_of_week ?? undefined,
             });
           } else {
@@ -203,7 +203,7 @@ export function personalizePlanItems(
             changes.push({
               type: "restriction_removed",
               detail: `${food} removido (restrição: ${restriction})`,
-              mealType: item.meal_type || undefined,
+              mealType: item.tipo_refeicao || undefined,
               dayOfWeek: item.day_of_week ?? undefined,
             });
           }
@@ -229,7 +229,7 @@ export function personalizePlanItems(
         changes.push({
           type: "rejected_removed",
           detail: `${rejected} removido (alimento rejeitado pelo paciente)`,
-          mealType: item.meal_type || undefined,
+          mealType: item.tipo_refeicao || undefined,
           dayOfWeek: item.day_of_week ?? undefined,
         });
         return {
@@ -245,7 +245,7 @@ export function personalizePlanItems(
   // 3. Adjust calories to match patient TMB/TED
   // Skip if caller explicitly requested no calorie scaling (e.g., AutoFix does its own rebalancing)
   if (!options?.skipCalorieScaling) {
-    const currentTotalCal = personalizedItems.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const currentTotalCal = personalizedItems.reduce((s, i) => s + (i.meta_calorias || 0), 0);
     const days = new Set(personalizedItems.map(i => i.day_of_week ?? 0));
     const numDays = Math.max(days.size, 1);
     const currentDailyCal = currentTotalCal / numDays;
@@ -256,10 +256,10 @@ export function personalizePlanItems(
         const factor = context.targetCalories / currentDailyCal;
         personalizedItems = personalizedItems.map(item => ({
           ...item,
-          calories_target: item.calories_target ? Math.round(item.calories_target * factor) : item.calories_target,
-          protein_target: item.protein_target ? Math.round(item.protein_target * factor) : item.protein_target,
-          carbs_target: item.carbs_target ? Math.round(item.carbs_target * factor) : item.carbs_target,
-          fat_target: item.fat_target ? Math.round(item.fat_target * factor) : item.fat_target,
+          meta_calorias: item.meta_calorias ? Math.round(item.meta_calorias * factor) : item.meta_calorias,
+          meta_proteinas: item.meta_proteinas ? Math.round(item.meta_proteinas * factor) : item.meta_proteinas,
+          meta_carboidratos: item.meta_carboidratos ? Math.round(item.meta_carboidratos * factor) : item.meta_carboidratos,
+          meta_gorduras: item.meta_gorduras ? Math.round(item.meta_gorduras * factor) : item.meta_gorduras,
         }));
 
         const newDailyCal = Math.round(context.targetCalories);

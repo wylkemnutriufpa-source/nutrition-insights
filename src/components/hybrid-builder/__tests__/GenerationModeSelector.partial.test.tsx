@@ -23,7 +23,7 @@ interface PartialScenario {
 }
 
 // Note on counts: the component computes weekly `lunch`/`dinner` from ALL
-// recipes of that meal_type (including fixed ones). So a scenario with
+// recipes of that tipo_refeicao (including fixed ones). So a scenario with
 // `lunch: 7, fixedLunch: 1` shows "Almoço 8/7" in the weekly button.
 
 const scenarios: PartialScenario[] = [

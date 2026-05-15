@@ -27,28 +27,28 @@ describe('Deterministic Order E2E', () => {
   const itemPrimary = {
     id: 'id-1',
     title: 'Café da Manhã Principal',
-    calories_target: 300,
+    meta_calorias: 300,
     is_primary: true,
     day_of_week: 0,
-    meal_type: 'Café da Manhã'
+    tipo_refeicao: 'Café da Manhã'
   } as any;
 
   const itemSub1 = {
     id: 'id-2',
     title: 'Sub 1 (Menos Caloria)',
-    calories_target: 200,
+    meta_calorias: 200,
     is_primary: false,
     day_of_week: 0,
-    meal_type: 'Café da Manhã'
+    tipo_refeicao: 'Café da Manhã'
   } as any;
 
   const itemSub2 = {
     id: 'id-3',
     title: 'Sub 2 (Mais Caloria)',
-    calories_target: 400,
+    meta_calorias: 400,
     is_primary: false,
     day_of_week: 0,
-    meal_type: 'Café da Manhã'
+    tipo_refeicao: 'Café da Manhã'
   } as any;
 
   beforeEach(() => {

@@ -115,10 +115,10 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
   }
 
   let mealsArray: any[] = v2Data;
-  if (v2Data.length > 0 && v2Data[0].meal_type) {
+  if (v2Data.length > 0 && v2Data[0].tipo_refeicao) {
     const itemsByMealType: Record<string, any[]> = {};
     v2Data.forEach((item: any) => {
-      const type = item.meal_type || 'outros';
+      const type = item.tipo_refeicao || 'outros';
       if (!itemsByMealType[type]) itemsByMealType[type] = [];
       itemsByMealType[type].push(item);
     });
@@ -137,10 +137,10 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
       const sanitizedItem = { 
         ...item,
         name: item.name || item.title || 'Alimento sem nome',
-        kcal: item.kcal ?? item.calories_target ?? item.calories ?? 0,
-        protein: item.protein ?? item.protein_target ?? 0,
-        carbs: item.carbs ?? item.carbs_target ?? 0,
-        fat: item.fat ?? item.fat_target ?? 0,
+        kcal: item.kcal ?? item.meta_calorias ?? item.calories ?? 0,
+        protein: item.protein ?? item.meta_proteinas ?? 0,
+        carbs: item.carbs ?? item.meta_carboidratos ?? 0,
+        fat: item.fat ?? item.meta_gorduras ?? 0,
       };
       
       const normalized = normalizeFood(sanitizedItem) as any;

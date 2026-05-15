@@ -128,19 +128,19 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
     if (activePlan) {
       const { data: items } = await supabase
         .from("meal_plan_items")
-        .select("calories_target, protein_target, carbs_target, fat_target")
+        .select("meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras")
         .eq("meal_plan_id", activePlan.id)
         .limit(20);
 
       if (items && items.length > 0) {
         let clampValue: number | null = null;
         const hasClamping = items.some(i => {
-          const val = getCalorieClampValue(i.calories_target || 0, patientSex);
+          const val = getCalorieClampValue(i.meta_calorias || 0, patientSex);
           if (val) clampValue = val;
           return val !== null;
         });
         
-        const hasConsistencyCorrection = items.some(i => isMacroInconsistent(i.calories_target || 0, i.protein_target || 0, i.carbs_target || 0, i.fat_target || 0));
+        const hasConsistencyCorrection = items.some(i => isMacroInconsistent(i.meta_calorias || 0, i.meta_proteinas || 0, i.meta_carboidratos || 0, i.meta_gorduras || 0));
 
         if (hasClamping) {
           detected.push({

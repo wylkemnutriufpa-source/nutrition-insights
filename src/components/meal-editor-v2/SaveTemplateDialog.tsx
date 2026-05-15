@@ -28,10 +28,10 @@ export function SaveTemplateDialog({ open, onOpenChange, items, mealType }: Save
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProtein = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-  const totalCarbs = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-  const totalFat = items.reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
+  const totalKcal = items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+  const totalProtein = items.reduce((s, i) => s + (Number(i.meta_proteinas) || 0), 0);
+  const totalCarbs = items.reduce((s, i) => s + (Number(i.meta_carboidratos) || 0), 0);
+  const totalFat = items.reduce((s, i) => s + (Number(i.meta_gorduras) || 0), 0);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -46,16 +46,16 @@ export function SaveTemplateDialog({ open, onOpenChange, items, mealType }: Save
     const foodsStructure = items.map((i) => ({
       name: i.title,
       portion: i.description || "",
-      kcal: i.calories_target || 0,
-      protein: Number(i.protein_target) || 0,
-      carbs: Number(i.carbs_target) || 0,
-      fat: Number(i.fat_target) || 0,
+      kcal: i.meta_calorias || 0,
+      protein: Number(i.meta_proteinas) || 0,
+      carbs: Number(i.meta_carboidratos) || 0,
+      fat: Number(i.meta_gorduras) || 0,
     }));
 
     const { error } = await supabase.from("nutritionist_meal_templates").insert({
       nutritionist_id: user.id,
       name: name.trim(),
-      meal_type: mealType,
+      tipo_refeicao: mealType,
       kcal_base: totalKcal,
       protein_base: totalProtein,
       carbs_base: totalCarbs,

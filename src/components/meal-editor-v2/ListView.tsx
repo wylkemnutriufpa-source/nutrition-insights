@@ -23,10 +23,10 @@ export function ListView() {
   const totals = useMemo(() => {
     const t = { calories: 0, protein: 0, carbs: 0, fat: 0 };
     for (const i of dayItems) {
-      t.calories += Number(i.calories_target) || 0;
-      t.protein += Number(i.protein_target) || 0;
-      t.carbs += Number(i.carbs_target) || 0;
-      t.fat += Number(i.fat_target) || 0;
+      t.calories += Number(i.meta_calorias) || 0;
+      t.protein += Number(i.meta_proteinas) || 0;
+      t.carbs += Number(i.meta_carboidratos) || 0;
+      t.fat += Number(i.meta_gorduras) || 0;
     }
     return t;
   }, [items]);

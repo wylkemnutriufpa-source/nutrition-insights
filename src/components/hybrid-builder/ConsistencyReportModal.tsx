@@ -12,7 +12,7 @@ import { CheckCircle2, AlertCircle, Calculator } from "lucide-react";
 
 interface RecipeSummary {
   name: string;
-  meal_type: string;
+  tipo_refeicao: string;
   calories: number;
   protein: number;
   carbs: number;
@@ -28,10 +28,10 @@ interface Props {
 }
 
 export default function ConsistencyReportModal({ open, onOpenChange, recipes, targetKcal }: Props) {
-  const lunchCount = recipes.filter(r => r.meal_type === "Almoço" || r.meal_type === "almoço").length;
-  const dinnerCount = recipes.filter(r => r.meal_type === "Jantar" || r.meal_type === "jantar").length;
-  const fixedLunchCount = recipes.filter(r => (r.meal_type === "Almoço" || r.meal_type === "almoço") && r.is_fixed).length;
-  const fixedDinnerCount = recipes.filter(r => (r.meal_type === "Jantar" || r.meal_type === "jantar") && r.is_fixed).length;
+  const lunchCount = recipes.filter(r => r.tipo_refeicao === "Almoço" || r.tipo_refeicao === "almoço").length;
+  const dinnerCount = recipes.filter(r => r.tipo_refeicao === "Jantar" || r.tipo_refeicao === "jantar").length;
+  const fixedLunchCount = recipes.filter(r => (r.tipo_refeicao === "Almoço" || r.tipo_refeicao === "almoço") && r.is_fixed).length;
+  const fixedDinnerCount = recipes.filter(r => (r.tipo_refeicao === "Jantar" || r.tipo_refeicao === "jantar") && r.is_fixed).length;
 
   const hasIssues = recipes.some(r => r.calories === 0 || r.protein === 0);
 
@@ -107,7 +107,7 @@ export default function ConsistencyReportModal({ open, onOpenChange, recipes, ta
                       <span className="text-xs font-bold">{recipe.name}</span>
                       {recipe.is_fixed && <Badge variant="secondary" className="h-4 text-[8px] uppercase">FIXA</Badge>}
                     </div>
-                    <span className="text-[10px] text-muted-foreground uppercase">{recipe.meal_type}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase">{recipe.tipo_refeicao}</span>
                   </div>
                   <div className="flex items-center gap-3 text-right">
                     <div className="flex flex-col">

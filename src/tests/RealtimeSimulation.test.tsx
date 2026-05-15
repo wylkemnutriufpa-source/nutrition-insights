@@ -108,7 +108,7 @@ vi.mock('../integrations/supabase/client', () => ({
 describe('DailyMealPlanInline - Realtime & Optimistic Simulation', () => {
   const mockUser = { id: 'patient123' };
   const mockPlan = { id: 'plan1', title: 'Plano Teste', start_date: '2024-01-01', is_active: true, plan_status: 'published_to_patient' };
-  const mockItem = { id: 'item1', meal_type: 'Café da Manhã', day_of_week: new Date().getDay() };
+  const mockItem = { id: 'item1', tipo_refeicao: 'Café da Manhã', day_of_week: new Date().getDay() };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -173,7 +173,7 @@ describe('DailyMealPlanInline - Realtime & Optimistic Simulation', () => {
     await act(async () => {
       realtimeCallbacks['meal_plan_items']({
         eventType: 'INSERT',
-        new: { id: 'item2', meal_type: 'Café da Manhã', meal_plan_id: 'plan1', day_of_week: new Date().getDay() }
+        new: { id: 'item2', tipo_refeicao: 'Café da Manhã', meal_plan_id: 'plan1', day_of_week: new Date().getDay() }
       });
     });
 
