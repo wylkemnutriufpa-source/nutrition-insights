@@ -30,8 +30,11 @@ function buildItemTitle(item: MealItem): string {
   return item.name;
 }
 
+  return item.name;
+}
+
 function buildItemDescription(item: MealItem): string {
-  return formatDisplayPortion(item);
+  return item.portionLabel || `${item.quantity || 1}${item.portionUnit || 'g'}`;
 }
 
 function sumMealMacros(meal: Meal) {
