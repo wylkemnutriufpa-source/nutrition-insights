@@ -27,9 +27,10 @@ interface Props {
   onSelect?: (patient: PatientResult) => void;
   className?: string;
   showIconOnly?: boolean;
+  collapsed?: boolean;
 }
 
-export default function PatientQuickSearch({ onSelect, className, showIconOnly = false }: Props) {
+export default function PatientQuickSearch({ onSelect, className, showIconOnly = false, collapsed = false }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [patients, setPatients] = useState<PatientResult[]>([]);
@@ -128,8 +129,8 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-start text-muted-foreground font-normal transition-all border-border/40 hover:border-primary/50 bg-muted/20",
-              showIconOnly ? "w-9 px-0 justify-center" : "h-9 px-3"
+              "w-full justify-start text-muted-foreground font-normal transition-all border-border/40 hover:border-primary/50 bg-muted/20 rounded-xl",
+              showIconOnly ? "w-9 h-9 px-0 justify-center" : "h-9 px-3"
             )}
           >
             <Search className={cn("h-4 w-4 shrink-0", showIconOnly ? "" : "mr-2")} />
