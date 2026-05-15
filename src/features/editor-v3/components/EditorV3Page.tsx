@@ -70,14 +70,15 @@ export default function EditorV3Page() {
 
   useEffect(() => {
     async function loadPlan() {
-      if (!id) return;
+      if (!effectiveId) return;
       setLoading(true);
       try {
         const { data: plan, error } = await supabase
           .from('meal_plans')
           .select('*')
-          .eq('id', id)
+          .eq('id', effectiveId)
           .single();
+
 
         if (error) throw error;
 
