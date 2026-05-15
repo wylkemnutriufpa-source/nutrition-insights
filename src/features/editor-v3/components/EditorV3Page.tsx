@@ -25,7 +25,9 @@ import {
 
 
 export default function EditorV3Page() {
-  const { id } = useParams<{ id: string }>();
+  const { planId, id } = useParams<{ planId: string; id: string }>();
+  const effectiveId = planId || id;
+
   const navigate = useNavigate();
   const store = useEditorState();
   const [saving, setSaving] = useState(false);
