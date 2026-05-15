@@ -150,54 +150,68 @@ export default function WorkspaceTemplates({ search }: Props) {
       {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Nenhum template encontrado</p>}
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-primary" />
-              {preview?.name}
-            </DialogTitle>
-            {preview?.description && (
-              <p className="text-sm text-muted-foreground pt-1">{preview.description}</p>
-            )}
-          </DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-3xl">
+          <div className="px-6 py-5 border-b border-border bg-muted/30">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+                <BookOpen className="w-6 h-6 text-primary" />
+                {preview?.name}
+              </DialogTitle>
+              {preview?.description && (
+                <p className="text-sm text-muted-foreground pt-1">{preview.description}</p>
+              )}
+            </DialogHeader>
+          </div>
 
-          {previewMeals.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              Este template não possui refeições configuradas.
-            </div>
-          ) : (
-            <div className="space-y-3 pt-2">
-              {previewMeals.map((meal: any, idx: number) => {
-                const label = MEAL_LABELS[meal.meal_type] || meal.meal_type || `Refeição ${idx + 1}`;
-                const foods = Array.isArray(meal.foods) ? meal.foods : [];
-                return (
-                  <div key={idx} className="p-3 rounded-lg border border-border bg-card/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold">{label}</p>
-                      {meal.time && <span className="text-xs text-muted-foreground">{meal.time}</span>}
-                    </div>
-                    {foods.length === 0 ? (
-                      <p className="text-xs text-muted-foreground italic">Sem itens</p>
-                    ) : (
-                      <ul className="space-y-1.5">
-                        {foods.map((f: any, fi: number) => (
-                          <li key={fi} className="text-xs">
-                            <span className="font-medium">{f.name}</span>
-                            {f.portion && <span className="text-muted-foreground"> — {f.portion}</span>}
-                            {Array.isArray(f.substitutions) && f.substitutions.length > 0 && (
-                              <div className="text-[10px] text-muted-foreground/80 pl-3 mt-0.5">
-                                ou: {f.substitutions.join(" • ")}
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+            {previewMeals.length === 0 ? (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                Este template não possui refeições configuradas.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {previewMeals.map((meal: any, idx: number) => {
+                  const label = MEAL_LABELS[meal.meal_type] || meal.meal_type || `Refeição ${idx + 1}`;
+                  const foods = Array.isArray(meal.foods) ? meal.foods : [];
+                  return (
+                    <div key={idx} className="p-4 rounded-2xl border border-border bg-card/50 shadow-sm transition-all hover:border-primary/20">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                          {label}
+                        </p>
+                        {meal.time && (
+                          <Badge variant="outline" className="text-[10px] font-medium border-primary/20 text-primary">
+                            {meal.time}
+                          </Badge>
+                        )}
+                      </div>
+                      {foods.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic pl-3.5">Sem itens</p>
+                      ) : (
+                        <ul className="space-y-2.5 pl-3.5 border-l border-primary/10 ml-0.5">
+                          {foods.map((f: any, fi: number) => (
+                            <li key={fi} className="text-xs leading-relaxed">
+                              <div className="flex items-baseline gap-2">
+                                <span className="font-bold text-foreground">{f.name}</span>
+                                {f.portion && <span className="text-muted-foreground italic">— {f.portion}</span>}
                               </div>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                              {Array.isArray(f.substitutions) && f.substitutions.length > 0 && (
+                                <div className="text-[10px] text-muted-foreground/80 mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                                  <span className="font-medium text-primary/70">Opções:</span>
+                                  {f.substitutions.join(" • ")}
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
