@@ -311,11 +311,12 @@ export default function EditorV3Page() {
   };
 
   const handleAddMeal = () => {
-    const names = ["Café da Manhã", "Lanche", "Almoço", "Café da Tarde", "Jantar", "Ceia"];
+    const names = ["Café da Manhã", "Lanche", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
     const currentCount = store.meals.length;
     const name = names[currentCount % names.length];
     store.addMeal(name);
   };
+
 
   return (
     <DashboardLayout>
