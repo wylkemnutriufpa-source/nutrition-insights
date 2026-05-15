@@ -498,18 +498,18 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
                 >
                   Todos
                 </button>
-                {Object.entries(MEAL_LABELS).map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setFilterType(key)}
-                    className={`text-[10px] h-7 px-2.5 rounded-md font-medium flex items-center gap-1 transition-colors whitespace-nowrap ${
-                      filterType === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-                    }`}
-                  >
-                    {MEAL_ICONS[key]} {label}
-                  </button>
-                ))}
+              {Object.entries(MEAL_LABELS).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFilterType(key)}
+                  className={`text-[10px] h-7 px-2.5 rounded-md font-medium flex items-center gap-1 transition-colors whitespace-nowrap ${
+                    filterType === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {MEAL_ICONS[key]} {label}
+                </button>
+              ))}
               </div>
             </div>
 

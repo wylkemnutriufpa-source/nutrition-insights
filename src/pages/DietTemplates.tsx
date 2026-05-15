@@ -80,12 +80,12 @@ interface PhysicalAssessmentData {
 }
 
 const MEAL_ICONS: Record<string, React.ReactNode> = {
-  breakfast: <Coffee className="w-4 h-4" />,
-  morning_snack: <Apple className="w-4 h-4" />,
-  lunch: <Utensils className="w-4 h-4" />,
-  afternoon_snack: <Cookie className="w-4 h-4" />,
-  dinner: <Moon className="w-4 h-4" />,
-  evening_snack: <Sun className="w-4 h-4" />,
+  "Café da Manhã": <Coffee className="w-4 h-4" />,
+  "Lanche da Manhã": <Apple className="w-4 h-4" />,
+  "Almoço": <Utensils className="w-4 h-4" />,
+  "Lanche da Tarde": <Cookie className="w-4 h-4" />,
+  "Jantar": <Moon className="w-4 h-4" />,
+  "Ceia": <Sun className="w-4 h-4" />,
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
