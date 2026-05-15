@@ -1962,9 +1962,7 @@ const EditorV3Page = () => {
             <div className="space-y-12">
               {viewMode === 'weekly' ? (
                 ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((day, dayIdx) => {
-                  const dayMeals = meals.length >= 42 
-                    ? meals.slice(dayIdx * (meals.length / 7), (dayIdx + 1) * (meals.length / 7))
-                    : meals;
+                  const dayMeals = meals.filter(m => m.day_of_week === dayIdx);
 
                   return (
                     <div key={day} className="space-y-8 pb-12 border-b border-white/5 last:border-0">
@@ -1977,8 +1975,7 @@ const EditorV3Page = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {dayMeals.map((meal, mIdx) => {
-                          const humanScore = calculateHumanMealScore(meal, meal.name);
-                          const isAbsurd = humanScore.status === 'absurd';
+                  const isAbsurd = false;
 
                           const isEmpty = meal.items.length === 0;
                           return (
@@ -2024,8 +2021,7 @@ const EditorV3Page = () => {
                 })
               ) : (
                 meals.map((meal, index) => {
-                  const humanScore = calculateHumanMealScore(meal, meal.name);
-                  const isAbsurd = humanScore.status === 'absurd';
+                          const isAbsurd = false;
 
                   const isEmpty = meal.items.length === 0;
                   return (

@@ -8,7 +8,7 @@ import {
   FREE_PORTION_MAX_GRAMS,
 } from "@/lib/mealTypeIntegrity";
 import { getFoodGroup } from "@/lib/substitutionGroups";
-import { calculateHumanMealScore } from "@/lib/clinicalHumanEngine";
+// Removed human score engine import
 import { getStyleContract } from "@/lib/templateStyles";
 
 export interface LibraryV3Item {
@@ -177,10 +177,7 @@ export class LibraryV3Resolver {
 
     // 🛡️ SOBERANIA MANUAL: Removida rejeição procedural de "refeições absurdas".
     // O nutricionista tem autoridade total para editar o template após a plotagem.
-    // Mantemos apenas um aviso no console para referência técnica.
-    if (humanResult.status === 'absurd') {
-      console.warn(`[LibraryV3Resolver] Sugestão Clínica: Template "${baseItem.title}" possui estrutura incomum.`, humanResult.reasons);
-    }
+    // O sistema agora apenas plota e permite edição manual total.
 
     // 6. Montagem da Refeição
     return {
