@@ -38,9 +38,9 @@ interface Props {
 // ── Meal type to filter mapping ──────────────────────────────
 const MEAL_TYPE_KEYWORDS: Record<string, string[]> = {
   breakfast: ["café", "Café da Manhã", "cafe_da_manha", "morning", "manhã"],
-  morning_snack: ["lanche", "snack", "lanche_manha"],
+  morning_snack: ["lanche", "Lanche", "lanche_manha"],
   lunch: ["almoço", "almoco", "Almoço"],
-  afternoon_snack: ["lanche", "snack", "lanche_tarde"],
+  afternoon_snack: ["lanche", "Lanche", "lanche_tarde"],
   dinner: ["jantar", "Jantar"],
   evening_snack: ["ceia", "evening", "noite"],
 };

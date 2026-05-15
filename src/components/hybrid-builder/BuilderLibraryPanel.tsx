@@ -36,7 +36,7 @@ const MEAL_FILTERS = [
   { key: "Café da Manhã", label: "Café" },
   { key: "Almoço", label: "Almoço" },
   { key: "Jantar", label: "Jantar" },
-  { key: "snack", label: "Lanche" },
+  { key: "Lanche", label: "Lanche" },
 ];
 
 export default function BuilderLibraryPanel() {

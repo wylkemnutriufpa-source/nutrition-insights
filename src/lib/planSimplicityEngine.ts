@@ -297,7 +297,7 @@ export function calculatePlanSimplicityScore(items: MealItemForAudit[]): Simplic
     }
 
     // 5. Check snack complexity
-    if (mealType.includes("snack") || mealType.includes("lanche")) {
+    if (mealType.includes("Lanche") || mealType.includes("lanche")) {
       if (mealItems.length > 2) {
         score -= 6;
         mealHasIssue = true;

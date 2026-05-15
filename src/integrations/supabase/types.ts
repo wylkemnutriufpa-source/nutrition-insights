@@ -22708,12 +22708,12 @@ export type Database = {
         | "expired"
         | "replaced"
       meal_type:
-        | "breakfast"
-        | "morning_snack"
-        | "lunch"
-        | "afternoon_snack"
-        | "dinner"
-        | "evening_snack"
+        | "Café da Manhã"
+        | "Lanche da Manhã"
+        | "Almoço"
+        | "Lanche da Tarde"
+        | "Jantar"
+        | "Ceia"
         | "Café da Manhã"
         | "Lanche da Manhã"
         | "Almoço"
@@ -22961,12 +22961,12 @@ export const Constants = {
         "replaced",
       ],
       meal_type: [
-        "breakfast",
-        "morning_snack",
-        "lunch",
-        "afternoon_snack",
-        "dinner",
-        "evening_snack",
+        "Café da Manhã",
+        "Lanche da Manhã",
+        "Almoço",
+        "Lanche da Tarde",
+        "Jantar",
+        "Ceia",
         "Café da Manhã",
         "Lanche da Manhã",
         "Almoço",
