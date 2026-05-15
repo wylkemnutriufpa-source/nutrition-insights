@@ -1,7 +1,7 @@
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '1363737f-2cd4-4c35-b9c6-a0b274c0dd52',
+  '1f45b88a-780e-4c4a-8d85-029315e0ff46',
   'Hipertrofia Masculina',
   'hipertrofia-masculina-v2',
   'Foco em superávit calórico e alta proteína para desenvolvimento muscular masculino.',
@@ -21,7 +21,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '4b1059ee-929e-4152-bbe9-e896c342bd60',
+  'cc91758d-2628-400e-b5dd-5a305e642714',
   'Hipertrofia Feminina',
   'hipertrofia-feminina-v2',
   'Ganho de massa magra com foco em tônus muscular e saúde hormonal feminina.',
@@ -41,7 +41,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'edb47bf5-3ee7-47e3-aa0a-c2f9230d9cff',
+  'd7b25585-ebe2-4372-b8aa-24950f66ffe1',
   'Emagrecimento Feminino',
   'emagrecimento-feminino-v2',
   'Déficit calórico estratégico com foco em saciedade e controle de compulsão.',
@@ -61,7 +61,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '1c4ebd0e-21f5-4130-9982-341313860337',
+  '324e0718-f6b4-4bea-a493-014b6da0a3d2',
   'Emagrecimento Masculino',
   'emagrecimento-masculino-v2',
   'Redução de gordura corporal com manutenção de massa magra e alta saciedade.',
@@ -81,7 +81,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '51c03d6d-b6f4-4740-9550-f8d039260155',
+  '2df7ff36-4e40-44f1-99ce-9f92b92065aa',
   'Low Carb',
   'low-carb-v2',
   'Redução de carboidratos com foco em gorduras boas e proteínas de alta qualidade.',
@@ -101,7 +101,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '8168f2d0-b2b2-4ea2-9e55-97c96aa953e1',
+  '232ce995-0e7a-49ac-9cb1-9f93c5ab781d',
   'Cetogênica',
   'cetogênica-v2',
   'Indução de cetose para queima acelerada de gordura e clareza mental.',
@@ -121,7 +121,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'fb2ac2c0-0c24-4dbd-88c0-ee46360efaee',
+  '94bd2037-d211-4d9c-af14-ba70e1bdd9a5',
   'Mediterrânea',
   'mediterrânea-v2',
   'Baseada em vegetais, azeite de oliva e proteínas magras para longevidade.',
@@ -141,7 +141,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '04fbec90-b120-4dce-9a17-d9030fa4e10e',
+  '0fcc1d6c-e509-4fbb-8c26-fd1e7cc41e69',
   'Anti-inflamatória',
   'anti-inflamatória-v2',
   'Foco em alimentos que reduzem a inflamação sistêmica e melhoram a imunidade.',
@@ -161,7 +161,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'ee14c5c7-0526-402e-9aba-96d02b0b5794',
+  '0ff4f62e-16df-437a-a1e4-be544ee38275',
   'Diabetes',
   'diabetes-v2',
   'Controle glicêmico rigoroso com carboidratos de baixo índice glicêmico e fibras.',
@@ -181,7 +181,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '437d74d7-81a7-4d69-9025-a2e711b2a6ed',
+  'd0f9c802-89a5-4b2e-8b74-db3bade1f12e',
   'Hipertensão',
   'hipertensão-v2',
   'Redução de sódio e foco em alimentos ricos em potássio e magnésio.',
@@ -201,7 +201,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '13c807ee-64d2-496d-a995-f9094316d8e2',
+  '60c3adde-bd80-4f34-b698-c7d682f1a389',
   'SOP',
   'sop-v2',
   'Estratégia nutricional para controle de resistência insulínica e saúde ovariana.',
@@ -221,7 +221,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '283671c2-0433-4ec4-aeed-6b4319db8ae8',
+  '4abc5ac3-7253-45c4-9b9f-112e3959d873',
   'Menopausa',
   'menopausa-v2',
   'Aporte de cálcio, vitamina D e fitoestrógenos para saúde feminina na maturidade.',
@@ -241,7 +241,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'a5831da4-d36d-4cb2-8cb5-b42df7a09b98',
+  '4ccd5425-3211-489d-a8a5-80860c18dfcf',
   'Pós-parto',
   'pós-parto-v2',
   'Nutrição densa para recuperação materna e suporte à amamentação.',
@@ -261,7 +261,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'e5fcb443-bbd1-41bb-ba80-de01fc9b19fb',
+  'ddf9b65c-ba7f-441f-bef5-1e196c4b87d4',
   'Gestante',
   'gestante-v2',
   'Aporte completo de micronutrientes para o desenvolvimento fetal saudável.',
@@ -281,7 +281,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '0c83a664-cd90-4596-a60c-5235090c75da',
+  '2ac7cb24-a626-4c0c-a159-2c42ffbd1aa6',
   'Vegana',
   'vegana-v2',
   '100% à base de plantas com combinações proteicas completas e biodisponíveis.',
@@ -301,7 +301,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '92a54e84-1da8-481f-97ee-4fbc7a56134d',
+  'ff6126db-b64d-4a20-80ca-513aad774cfb',
   'Vegetariana',
   'vegetariana-v2',
   'Equilíbrio nutricional sem carnes, com foco em ovos, laticínios e leguminosas.',
@@ -321,7 +321,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'b2695db0-0cbd-466a-a37b-66c2051d8413',
+  '914944fe-2885-45e6-a981-fd43713afd3c',
   'Performance esportiva',
   'performance-esportiva-v2',
   'Otimização de estoques de glicogênio e recuperação muscular para atletas.',
@@ -341,7 +341,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '8cd128a8-e23c-4240-86c8-9fde30ed5085',
+  '29b1b76a-e027-4a87-a18d-2a9374876844',
   'Crossfit',
   'crossfit-v2',
   'Nutrição para alta intensidade, combinando força, potência e resistência.',
@@ -361,7 +361,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '2a2c84e4-00c7-497c-9a48-76bc7b13520c',
+  '100daef4-47b7-47cb-8f9a-256b06d1ac42',
   'Corrida',
   'corrida-v2',
   'Foco em carboidratos complexos e hidratação para endurance e performance.',
@@ -381,7 +381,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'f94dd6ee-947e-4878-aa20-b1611caf0883',
+  'fcc9b188-55e0-4e30-9b1d-5922e30e5c79',
   'Lifestyle saudável',
   'lifestyle-saudável-v2',
   'Equilíbrio prático para quem busca longevidade e bem-estar no dia a dia.',
@@ -401,7 +401,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'acb61680-f9fc-4b0a-a09f-6a455be3ca3b',
+  '30cae49c-8c82-4a99-8ef7-ef9bf9d61173',
   'Reeducação alimentar',
   'reeducação-alimentar-v2',
   'Transição para hábitos saudáveis com alimentos reais e sem restrições extremas.',
@@ -421,7 +421,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '0953ce1b-e498-4a6f-838c-f8260b1ae7c3',
+  '278ba39d-481a-4d8b-b382-96ecf4bc2c7c',
   'Definição muscular',
   'definição-muscular-v2',
   'Fase de cutting para evidenciar a musculatura com preservação de massa magra.',
@@ -441,7 +441,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'bc5ed95c-f03b-4141-b20b-12dca0fd35f3',
+  'fe5a2e1a-fd34-4f86-bbd3-e4a74b9d7ded',
   'Alta proteína',
   'alta-proteína-v2',
   'Maximização do aporte proteico para reparação tecidual e saciedade.',
@@ -461,7 +461,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'f84274c4-256b-4852-bc2f-dfcc89c5b858',
+  '99ea5ff5-cbb4-41fa-b9b8-e63a2910deec',
   'Sem lactose',
   'sem-lactose-v2',
   'Plano livre de lácteos, focado em substitutos nutritivos e saúde digestiva.',
@@ -481,7 +481,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'ec548535-0b79-4003-9fbc-1a2343cd2d37',
+  '6389f0aa-09a1-4c27-9b51-d1748d0ef288',
   'Sem glúten',
   'sem-glúten-v2',
   'Alternativas seguras e nutritivas para celíacos ou sensíveis ao glúten.',
@@ -501,7 +501,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '66c09b00-e6a7-45af-8841-7f8d1db3ddd6',
+  'c43e5868-a276-4f7d-994a-3ac5cf924387',
   'Fit econômico',
   'fit-econômico-v2',
   'Saúde e resultados utilizando alimentos básicos e acessíveis da cesta básica.',
@@ -521,7 +521,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'b008497c-9640-4d89-bfb8-f90204d17f59',
+  '18f822c4-517e-4441-b66f-bc5af7167fe1',
   'Rotina corrida',
   'rotina-corrida-v2',
   'Refeições rápidas e práticas para quem tem pouco tempo para cozinhar.',
@@ -541,7 +541,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'cf8d0e1f-dded-47c3-ac01-4bbe6ecd2dc8',
+  '875bceed-2ef5-47cd-bd71-1feca08b2074',
   'Home office',
   'home-office-v2',
   'Controle calórico e praticidade para quem trabalha de casa e cozinha pouco.',
@@ -561,7 +561,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '71bef091-1788-4519-b1b7-eb42a600b3ad',
+  'a031677b-49a5-4fa8-89be-604a781ccf14',
   'Adolescente',
   'adolescente-v2',
   'Suporte ao crescimento e desenvolvimento com foco em densidade nutritiva.',
@@ -581,7 +581,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'aed9eb87-790c-45d6-b0ea-9bed5a85741d',
+  '51787ac7-19a5-4b09-8ec5-08770ccb0aa5',
   'Idoso',
   'idoso-v2',
   'Foco em densidade proteica para evitar sarcopenia e aporte de micronutrientes.',
@@ -601,7 +601,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '23fae41d-eb64-43e7-9525-173c9b5105b7',
+  'bc2fd58a-b368-42aa-ad1a-6b50127b97f7',
   'Nutrição clínica leve',
   'nutrição-clínica-leve-v2',
   'Recuperação de quadros clínicos leves com dieta de fácil digestão.',
@@ -621,7 +621,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '575d1bff-d1be-45a7-9b48-e9b996b8fbb5',
+  '659950d0-4d2e-412d-b929-33699500b6b6',
   'Imunidade',
   'imunidade-v2',
   'Aporte de zinco, vitamina C e antioxidantes para fortalecer as defesas.',
@@ -641,7 +641,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '203684ee-0ac1-4cb7-a0f8-a0c4f1ba3d06',
+  'c9d73125-c79b-4a4f-b45f-f738840f895b',
   'Detox leve',
   'detox-leve-v2',
   'Estímulo natural das vias de desintoxicação com foco em fitoquímicos.',
@@ -661,7 +661,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '696b6646-e7ec-4d71-a8d6-99459af3b9c9',
+  '44d8d910-5520-4dcd-b6c1-ae9da6f08ddc',
   'Massa magra feminina',
   'massa-magra-feminina-v2',
   'Hipertrofia moderada para curvas definidas sem acúmulo de gordura.',
@@ -681,7 +681,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '067a55a3-3334-4a2d-8db8-9e34fc8992e4',
+  'c39d4906-cf30-46a7-be9e-079ee0b6d6b1',
   'Bariátrica',
   'bariátrica-v2',
   'Progressão nutricional e densidade para pacientes pós-cirurgia bariátrica.',
@@ -701,7 +701,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '02befdf4-02fa-4b9e-85a3-9a92a5d847ed',
+  '3e658b78-5a44-4129-b420-c60219c13165',
   'Pré-treino manhã',
   'pré-treino-manhã-v2',
   'Energia rápida e digestão leve para treinos logo ao acordar.',
@@ -721,7 +721,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  '88956d98-eed8-4f1f-ba90-699a45df34ba',
+  '497151e5-ede6-4ce6-bdc2-f5fd294b6045',
   'Pré-treino noite',
   'pré-treino-noite-v2',
   'Aporte energético para treinos noturnos sem prejudicar a qualidade do sono.',
@@ -741,7 +741,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'da3dcd72-f544-4ccf-b680-63e3c20d90e4',
+  '54264872-6fa0-4912-a712-b5c8a6a09d49',
   'Ceia leve / sono',
   'ceia-leve---sono-v2',
   'Alimentos precursores de melatonina e digestão tranquila para o sono.',
@@ -761,7 +761,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'ca6ed66f-65c0-4995-b205-42d3311b586d',
+  '219cb8e7-28fc-4a18-9e79-2cf90f51a8ce',
   'Intestinal leve',
   'intestinal-leve-v2',
   'Fibras e probióticos para regulação do trânsito intestinal e saúde do bioma.',
@@ -781,7 +781,7 @@ VALUES (
 
 INSERT INTO diet_templates (id, name, slug, description, icon, category, goal_category, diet_style, base_calories, macro_ratio, meals, tags, is_active, template_generation, complexity_level, food_access_level)
 VALUES (
-  'e22fcf22-d89d-4e26-abd8-41154983c8dc',
+  '33b2ffe6-74ea-4a47-b35e-5ec4239c66e8',
   'Plano equilibrado tradicional',
   'plano-equilibrado-tradicional-v2',
   'A base da nutrição: Arroz, feijão, proteína e salada em harmonia.',
