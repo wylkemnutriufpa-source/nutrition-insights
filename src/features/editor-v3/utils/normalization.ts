@@ -1,16 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Food, Meal, MealItem } from '../types';
-import { PipelineTrace, ClinicalGuard } from './pipeline-trace';
 import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
 import { SovereignFatalGuard } from './FakeUtils';
 
-const tracer = PipelineTrace.getInstance();
-
 /**
- * Normaliza um alimento para garantir que ele siga o padrão Elite V3.
- * Cura inconsistências de campos ausentes e infere tipos se necessário.
- * FASE: PIPELINE PURIFICATION — Separação de Massa Clínica vs Display
+ * Normaliza um alimento para garantir que ele siga o padrão Estável.
+ * Cura inconsistências de campos ausentes e mantém soberania de massa clínica.
  */
+
 export function normalizeFood(food: any): Food {
   // 🛡️ BLOQUEIO SOBERANO: Impede reconstrução de payload se houver indícios de heurística textual
   if (typeof food === 'string' || (food?.name && !food.id && !food.instanceId)) {
@@ -20,9 +17,8 @@ export function normalizeFood(food: any): Food {
   const f = { ...food };
   const originalId = f.id || f.instanceId;
   
-  tracer.trace(`Normalizing Food: ${f.name || 'Unknown'}`, { id: originalId, initial: { ...f } });
+  // Normalização estritamente técnica (sem rastreamento de pipeline)
 
-  // ... (rest of function)
   // Garantir macros consistentes (kcal vs calories)
   if (f.kcal === undefined && f.calories !== undefined) f.kcal = f.calories;
   if (f.calories === undefined && f.kcal !== undefined) f.calories = f.kcal;
@@ -49,7 +45,7 @@ export function normalizeFood(food: any): Food {
       metadata: { id: originalId, name, quantity: initialQuantity }
     });
     f.clinical_mass_g = initialQuantity;
-    tracer.trace(`Clinical Mass Frozen: ${name}`, { mass: f.clinical_mass_g });
+
   }
 
   // PARTE 1 — MEDIDAS CASEIRAS (PADRONIZAÇÃO)
@@ -82,24 +78,12 @@ export function normalizeFood(food: any): Food {
     }
   }
 
-  // 🛡️ GUARDIÃO FISIOLÓGICO (FIM DO PIPELINE)
-  if (f.quantity) {
-    const clamped = ClinicalGuard.clampQuantity(f.quantity, name, f.measurementType);
-    if (clamped !== f.quantity) {
-      tracer.trace(`Clinical Guard Clamp Applied: ${name}`, { old: f.quantity, new: clamped });
-      f.quantity = clamped;
-      // Se clampamos a quantity, precisamos garantir que o clinical_mass_g também seja saudável
-      if (f.measurementType === 'gram') f.clinical_mass_g = clamped;
-    }
-  }
+  // Sanitização básica de macros para evitar valores nulos
+  f.kcal = Math.max(0, f.kcal);
+  f.protein = Math.max(0, f.protein);
+  f.carbs = Math.max(0, f.carbs);
+  f.fat = Math.max(0, f.fat);
 
-  // 🛡️ MACRO SANITIZATION: Garante que os macros estáticos do objeto fiquem limpos
-  const cleanMacros = ClinicalGuard.sanitizeMacros({
-    kcal: f.kcal || 0,
-    protein: f.protein || 0,
-    carbs: f.carbs || 0,
-    fat: f.fat || 0
-  });
 
   // 🛡️ MACRO PURIFICATION: Se não temos macros por 100g, inferimos agora para o Motor V3
   if (f.kcal_100g === undefined || f.kcal_100g === 0) {
@@ -110,10 +94,8 @@ export function normalizeFood(food: any): Food {
     f.fat_100g = (f.measurementType === 'gram' || f.measurementType === 'ml') ? f.fat : (f.fat / (pValue / 100));
   }
 
-  f.kcal = cleanMacros.kcal;
-  f.protein = cleanMacros.protein;
-  f.carbs = cleanMacros.carbs;
-  f.fat = cleanMacros.fat;
+  // Macros preservados conforme cálculo do alimento
+
 
   return f as Food;
 }
@@ -122,12 +104,8 @@ export function normalizeFood(food: any): Food {
  * Migration Guard: Converte dados do Editor V2 para V3 de forma segura.
  */
 export function normalizeV2ToV3(v2Data: any): Meal[] {
-  // 🛡️ BLOQUEIO SOBERANO: Bloquear hidratação V2->V3 se detectado no runtime crítico
-  SovereignFatalGuard.blockLegacyNormalization('normalizeV2ToV3', 'Tentativa de hidratar V2 -> V3 em Runtime Soberano');
-  
-  // (O código abaixo torna-se inacessível em runtime se o guard acima disparar)
-  console.log('[Migration Guard] Iniciando migração V2 -> V3');
-  tracer.trace('Migration Start', { items_count: v2Data?.length });
+  console.log('[Migration] Concluindo migração técnica para plataforma estável');
+
   
   if (!v2Data || !Array.isArray(v2Data)) {
     console.warn('[Migration Guard] Dados V2 inválidos ou ausentes');
@@ -267,7 +245,7 @@ const FALLBACK_MEAL_IMAGE = `${STORAGE_BASE_URL}/fruta.jpg`;
  * Normaliza uma lista de refeições.
  */
 export function normalizeMeals(meals: Meal[]): Meal[] {
-  tracer.trace('Normalizing Meals Array', { count: meals?.length });
+
   return (meals || []).map(meal => ({
     ...meal,
     items: (meal.items || []).map(item => {

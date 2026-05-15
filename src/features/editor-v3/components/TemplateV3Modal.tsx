@@ -10,8 +10,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   CheckCircle2, Clock, Zap, Target, Flame, 
   ChevronRight, ArrowRight, Layers, Image as ImageIcon,
-  Calendar, Info
+  Calendar, Info, Calculator
 } from 'lucide-react';
+
 import { V3DietTemplate, KcalProfile } from '../types/types';
 import { cn } from '@/lib/utils';
 
@@ -49,8 +50,9 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
           <div className="w-full md:w-80 bg-neutral-900/50 p-6 border-r border-white/10 flex flex-col">
             <div className="flex-1">
               <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4 uppercase text-[10px] font-black tracking-widest">
-                Template Soberano
+                Template Profissional
               </Badge>
+
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">
                 {template.title}
               </h2>
@@ -95,11 +97,12 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
               <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Validado Clínicamente</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Estrutura Estável</span>
                 </div>
                 <p className="text-[9px] text-white/50 uppercase leading-tight">
-                  Este template utiliza o Resolver Soberano V3 para garantir integridade em qualquer perfil calórico.
+                  Este template segue padrões fisiológicos e pode ser ajustado manualmente conforme sua necessidade clínica.
                 </p>
+
               </div>
             </div>
           </div>
@@ -116,9 +119,10 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
               
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-white/30">
-                  <Clock className="w-3 h-3" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Preview V3</span>
+                  <Calculator className="w-3 h-3" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Cálculo Automático</span>
                 </div>
+
               </div>
             </div>
 
@@ -186,13 +190,14 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                       <Zap className="w-4 h-4 text-emerald-400" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase italic">Variedade Determinística</h4>
-                      <p className="text-[10px] text-white/40 uppercase font-medium">Algoritmo de rotação ativa</p>
+                      <h4 className="text-xs font-black uppercase italic">Substituições Proporcionais</h4>
+                      <p className="text-[10px] text-white/40 uppercase font-medium">Ajuste automático de gramagem</p>
+
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <p className="text-[9px] font-black uppercase text-white/30">Substituições Soberanas</p>
+                      <p className="text-[9px] font-black uppercase text-white/30">Equivalentes Clínicos</p>
                       <div className="flex flex-wrap gap-2">
                         {['Frango', 'Carne', 'Ovos', 'Peixe'].map(tag => (
                           <Badge key={tag} className="bg-white/5 text-white/60 border-white/10 text-[8px] uppercase font-black">{tag}</Badge>
@@ -227,7 +232,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                 onClick={handleSelect}
                 className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-8 uppercase text-[10px] font-black tracking-widest h-11"
               >
-                Gerar Plano V3 <ChevronRight className="w-4 h-4 ml-2" />
+                Plotar Template <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </div>
