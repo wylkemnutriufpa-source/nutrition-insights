@@ -21,8 +21,9 @@ interface MealCardProps {
 }
 
 export const MealCard: React.FC<MealCardProps> = ({ 
-  meal, onUpdateQuantity, onRemoveFood, onAddFood, onRemoveMeal 
+  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal 
 }) => {
+
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const mealTotals = meal.items.reduce((acc, item) => {
