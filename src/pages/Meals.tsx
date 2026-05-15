@@ -35,7 +35,7 @@ export default function Meals() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const mealTypes: { value: MealType; label: string }[] = [
+  const mealTypes: { value: any; label: string }[] = [
     { value: "Café da Manhã", label: t("meals.breakfast") },
     { value: "Lanche da Manhã", label: t("meals.morningSnack") },
     { value: "Almoço", label: t("meals.lunch") },
