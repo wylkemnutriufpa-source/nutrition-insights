@@ -299,10 +299,12 @@ export default function EditorV3Page() {
                   key={meal.id} 
                   meal={meal} 
                   onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
+                  onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
                   onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
                   onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
                   onRemoveMeal={() => store.removeMeal(meal.id)}
                 />
+
               ))}
 
               {/* Botão Adicionar Refeição */}
