@@ -7,8 +7,6 @@ import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
 import { loadOrCreateDraft, saveDraft } from '../services/draftService';
 import { validatePlanBeforePublish } from '@/lib/planSafetyNet';
-import { runV3IntegrationTests } from '../services/v3Tests';
-import { runClinicalProofTests } from '@/lib/nutricore_v2/clinical-proof';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getBaseFoods, seedBaseData,
@@ -1417,9 +1415,9 @@ const EditorV3Page = () => {
       
       if (targetKcalPerUnit > 0) {
         if (target.measurementType === 'gram' || target.measurementType === 'ml') {
-          newGrams = Math.round((currentMacros.calories / targetKcalPerUnit) * 100);
+          newGrams = Math.round((currentMacros.kcal / targetKcalPerUnit) * 100);
         } else {
-          newGrams = Math.round(currentMacros.calories / targetKcalPerUnit);
+          newGrams = Math.round(currentMacros.kcal / targetKcalPerUnit);
         }
       } else {
         newGrams = currentItem.quantity; // Fallback
@@ -1430,11 +1428,7 @@ const EditorV3Page = () => {
       else newGrams = target.portionValue || 1;
     }
 
-    const safeGrams = newGrams; // Removida applyClinicalSafety procedural
-    const household = convertGramsToHousehold(target.name, safeGrams);
-    
-    const safeQuantity = household.quantity;
-    const macros = calculateItemMacros(target as any, safeGrams);
+    const macros = calculateItemMacros(target as any, newGrams);
 
     updateMealItem(mealId, instanceId, {
       ...target,
