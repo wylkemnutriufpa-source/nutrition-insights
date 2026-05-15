@@ -26,6 +26,41 @@ export default function EditorV3Page() {
   const store = useEditorState();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [templates, setTemplates] = useState<V3DietTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<V3DietTemplate | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+  useEffect(() => {
+    async function loadInitialData() {
+      const fetchedTemplates = await getV3Templates();
+      setTemplates(fetchedTemplates);
+    }
+    loadInitialData();
+  }, []);
+
+  const handleSelectProfile = async (kcal: number, isWeekly: boolean) => {
+    if (!selectedTemplate) return;
+    
+    const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
+    
+    try {
+      // In a real V3 system, we would fetch the specific meals for this template/kcal combo
+      // For now, let's construct a basic set of meals from the template's distribution
+      const newMeals = selectedTemplate.meal_distribution.map(dist => ({
+        id: crypto.randomUUID(),
+        name: dist.slot.replace(/_/g, ' '),
+        time: dist.time,
+        items: []
+      }));
+
+      store.hydrateMeals(newMeals);
+      toast.success('Template aplicado! Agora você pode ajustar os alimentos.', { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao aplicar template', { id: toastId });
+    }
+  };
+
 
   useEffect(() => {
     async function loadPlan() {
