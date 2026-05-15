@@ -547,10 +547,8 @@ function scaleMealPreview(preview: StrategyMealPreview, scaleFactor: number, mea
     carbs: Math.round(preview.carbs * scaleFactor),
     fat: Math.round(preview.fat * scaleFactor),
   };
-  // Enforce per-meal guardrails on preview
-  scaled.protein = Math.min(scaled.protein, G.maxProteinPerMeal);
-  scaled.calories = Math.min(scaled.calories, G.maxKcalPerMeal);
-  scaled.calories = Math.max(scaled.calories, G.minKcalPerMeal);
+  // Removed per-meal guardrails on preview to give nutritionist full sovereignty
+  return scaled;
   return scaled;
 }
 
@@ -628,7 +626,7 @@ function buildStrategy(
       return {
         mealType, label: mealType, description: "—",
         calories: Math.round(activeProfile.calories * (mealSplit[mealType] || 0.15)),
-        protein: Math.min(Math.round(activeProfile.protein * (mealSplit[mealType] || 0.15)), PHYSIOLOGICAL_GUARDRAILS.maxProteinPerMeal),
+        protein: Math.round(activeProfile.protein * (mealSplit[mealType] || 0.15)),
         carbs: Math.round(activeProfile.carbs * (mealSplit[mealType] || 0.15)),
         fat: Math.round(activeProfile.fat * (mealSplit[mealType] || 0.15)),
       };
