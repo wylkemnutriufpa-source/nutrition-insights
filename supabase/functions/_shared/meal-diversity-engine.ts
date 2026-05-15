@@ -13,7 +13,7 @@ export interface DiversityContext {
 
 export interface RecentMealItem {
   title: string;
-  meal_type: string;
+  tipo_refeicao: string;
   day_of_week: number;
   template_id?: string;
   created_at?: string;
@@ -85,14 +85,14 @@ export async function loadRecentMeals(
 
   const { data: items } = await client
     .from("meal_plan_items")
-    .select("title, meal_type, day_of_week, edit_metadata, created_at")
+    .select("title, tipo_refeicao, day_of_week, edit_metadata, created_at")
     .eq("meal_plan_id", plans[0].id);
 
   if (!items) return [];
 
   return (items as any[]).map(item => ({
     title: item.title || "",
-    meal_type: item.meal_type || "",
+    tipo_refeicao: item.tipo_refeicao || "",
     day_of_week: item.day_of_week ?? 0,
     template_id: item.edit_metadata?._template_id,
     created_at: item.created_at,
@@ -130,7 +130,7 @@ export function ensureMealDiversity(
       recentProteinsByDay.get(meal.day_of_week)!.add(protein);
 
       // Adjacent days (current ±1)
-      if (Math.abs(meal.day_of_week - currentDay) <= 1 && meal.meal_type === currentMealType) {
+      if (Math.abs(meal.day_of_week - currentDay) <= 1 && meal.tipo_refeicao === currentMealType) {
         adjacentDayProteins.add(protein);
       }
     }

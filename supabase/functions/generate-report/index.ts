@@ -306,7 +306,7 @@ ${mealPlan ? `<div class="section">
   <p style="margin-bottom:10px;"><strong>${mealPlan.title}</strong>${mealPlan.description ? ` — ${mealPlan.description}` : ''}</p>
   ${mealPlan.meal_plan_items?.length ? `<table>
     <tr><th>Refeição</th><th>Descrição</th><th>Kcal</th><th>Prot</th></tr>
-    ${mealPlan.meal_plan_items.map((item: any) => `<tr><td>${item.title}</td><td>${item.description || '-'}</td><td>${item.calories_target || '-'}</td><td>${item.protein_target || '-'}g</td></tr>`).join('')}
+    ${mealPlan.meal_plan_items.map((item: any) => `<tr><td>${item.title}</td><td>${item.description || '-'}</td><td>${item.meta_calorias || '-'}</td><td>${item.meta_proteinas || '-'}g</td></tr>`).join('')}
   </table>` : ''}
 </div>` : ''}
 

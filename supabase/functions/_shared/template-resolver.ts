@@ -7,7 +7,7 @@
 export interface ResolvedTemplate {
   id: string;
   name: string;
-  meal_type: string;
+  tipo_refeicao: string;
   kcal_base: number;
   protein_base: number;
   carbs_base: number;
@@ -35,7 +35,7 @@ export interface FoodStructureItem {
   substitutions?: string[];
 }
 
-/** Map engine meal_type keys → DB meal_type values in nutritionist_meal_templates */
+/** Map engine tipo_refeicao keys → DB tipo_refeicao values in nutritionist_meal_templates */
 const MEAL_TYPE_DB_MAP: Record<string, string[]> = {
   breakfast: ["breakfast", "cafe_da_manha"],
   morning_snack: ["morning_snack", "lanche_manha", "lanche"],
@@ -72,7 +72,7 @@ export interface TemplateResolverParams {
 export async function loadMealTemplates(client: any, nutritionistId?: string): Promise<ResolvedTemplate[]> {
   let query = client
     .from("nutritionist_meal_templates")
-    .select("id, name, meal_type, kcal_base, protein_base, carbs_base, fat_base, foods_structure, satiety_score, complexity_level, goal_tags, nutritionist_id, is_global, usage_count");
+    .select("id, name, tipo_refeicao, kcal_base, protein_base, carbs_base, fat_base, foods_structure, satiety_score, complexity_level, goal_tags, nutritionist_id, is_global, usage_count");
 
   // Load global templates + nutritionist-specific templates
   if (nutritionistId) {
@@ -93,7 +93,7 @@ export async function loadMealTemplates(client: any, nutritionistId?: string): P
     .map(t => ({
       id: t.id,
       name: t.name,
-      meal_type: t.meal_type || "refeicao",
+      tipo_refeicao: t.tipo_refeicao || "refeicao",
       kcal_base: Number(t.kcal_base) || 0,
       protein_base: Number(t.protein_base) || 0,
       carbs_base: Number(t.carbs_base) || 0,
@@ -161,10 +161,10 @@ export function resolveMealTemplates(
 ): ResolvedTemplate[] {
   const { goal, mealType, strategy, complexityPreference, excludeTemplateIds, prioritizedTemplateIds } = params;
 
-  // Step 1: Filter by meal_type
+  // Step 1: Filter by tipo_refeicao
   const mealTypeKeys = MEAL_TYPE_DB_MAP[mealType] || [mealType];
   let candidates = templates.filter(t => {
-    const normType = t.meal_type.toLowerCase().replace(/\s+/g, "_");
+    const normType = t.tipo_refeicao.toLowerCase().replace(/\s+/g, "_");
     return mealTypeKeys.some(key => normType === key || normType.includes(key));
   });
 
@@ -333,12 +333,12 @@ export function buildMealItemFromTemplate(
     return {
       title: template.name,
       description: `• ${template.name}`,
-      meal_type: mealType,
+      tipo_refeicao: mealType,
       day_of_week: dayOfWeek,
-      calories_target: null,
-      protein_target: null,
-      carbs_target: null,
-      fat_target: null,
+      meta_calorias: null,
+      meta_proteinas: null,
+      meta_carboidratos: null,
+      meta_gorduras: null,
       _source: "template_resolver",
       _template_id: template.id,
       _scale_factor: scaleFactor,
@@ -383,12 +383,12 @@ export function buildMealItemFromTemplate(
   return {
     title: template.name,
     description,
-    meal_type: mealType,
+    tipo_refeicao: mealType,
     day_of_week: dayOfWeek,
-    calories_target: safeCal,
-    protein_target: safeP,
-    carbs_target: safeC,
-    fat_target: safeF,
+    meta_calorias: safeCal,
+    meta_proteinas: safeP,
+    meta_carboidratos: safeC,
+    meta_gorduras: safeF,
     edit_metadata: {
       substitutions_json: subJson.length > 0 ? subJson : [],
       template_id: template.id,

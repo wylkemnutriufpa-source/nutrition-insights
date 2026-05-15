@@ -101,22 +101,22 @@ function checkMacro(label: string, unit: string, target: number, actual: number,
 interface SimplicityIssue {
     category: "critical" | "adherence" | "suggestion";
     severity: "critical" | "high" | "medium" | "low";
-    meal_type: string;
+    tipo_refeicao: string;
     day: number;
     message: string;
     suggested_fix: string;
     penalty: number;
 }
 
-function analyzePlanSimplicity(items: any[], goal: string): { score: number; status: string; issues: SimplicityIssue[]; blocked_foods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> } {
+function analyzePlanSimplicity(items: any[], goal: string): { score: number; status: string; issues: SimplicityIssue[]; blocked_foods: Array<{ food: string; found_in: string; day: number; tipo_refeicao: string; replacement: string | null }> } {
     let score = 100;
     const issues: SimplicityIssue[] = [];
-    const blockedFoods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> = [];
+    const blockedFoods: Array<{ food: string; found_in: string; day: number; tipo_refeicao: string; replacement: string | null }> = [];
     const isMassGain = ["muscle_gain", "ganho_de_massa", "mass", "bulking", "performance"].includes(normalize(goal));
 
     const groups = new Map<string, any[]>();
     for (const item of items) {
-        const k = `${item.day_of_week ?? 0}_${item.meal_type}`;
+        const k = `${item.day_of_week ?? 0}_${item.tipo_refeicao}`;
         if (!groups.has(k)) groups.set(k, []);
         groups.get(k)!.push(item);
     }
@@ -127,7 +127,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
         const desc = getPrimaryMealText(item);
         const found = findBlockedFoods(desc);
         for (const food of found) {
-            const dedupKey = `blocked_${normalize(food)}_${item.day_of_week ?? 0}_${item.meal_type}`;
+            const dedupKey = `blocked_${normalize(food)}_${item.day_of_week ?? 0}_${item.tipo_refeicao}`;
             if (penalizedKeys.has(dedupKey)) continue;
             penalizedKeys.add(dedupKey);
 
@@ -135,16 +135,16 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
             const replacement = REPLACEMENTS[nf] || REPLACEMENTS[food] || null;
             blockedFoods.push({
                 food,
-                found_in: item.title || item.meal_type,
+                found_in: item.title || item.tipo_refeicao,
                 day: item.day_of_week ?? 0,
-                meal_type: item.meal_type,
+                tipo_refeicao: item.tipo_refeicao,
                 replacement,
             });
             score -= 20;
             issues.push({
                 category: "critical",
                 severity: "critical",
-                meal_type: item.meal_type,
+                tipo_refeicao: item.tipo_refeicao,
                 day: item.day_of_week ?? 0,
                 message: `Alimento bloqueado: "${food}"`,
                 suggested_fix: replacement ? `Trocar por: ${replacement}` : `Remover "${food}"`,
@@ -154,7 +154,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
     }
 
     const uniqueBlocked = blockedFoods.filter((item, idx, arr) =>
-        arr.findIndex(x => x.food === item.food && x.day === item.day && x.meal_type === item.meal_type) === idx
+        arr.findIndex(x => x.food === item.food && x.day === item.day && x.tipo_refeicao === item.tipo_refeicao) === idx
     );
 
     for (const [key, mealItems] of groups.entries()) {
@@ -165,7 +165,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
         if (mealItems.length > 5) {
             score -= 10;
             issues.push({
-                category: "adherence", severity: "high", meal_type: mealType, day,
+                category: "adherence", severity: "high", tipo_refeicao: mealType, day,
                 message: `Refeição com ${mealItems.length} itens (máx 5)`,
                 suggested_fix: "Reduzir para no máximo 5 itens",
                 penalty: 10,
@@ -181,7 +181,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
                 issues.push({
                     category: "critical",
                     severity: "critical",
-                    meal_type: mealType,
+                    tipo_refeicao: mealType,
                     day: item.day_of_week ?? 0,
                     message: `Refeição "${item.title}" excede limite de 4 substituições.`,
                     suggested_fix: "Remover substituições extras para garantir equivalência clínica.",
@@ -248,10 +248,10 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
         let allDescriptions = "";
 
         for (const item of items) {
-            totalCals += item.calories_target || 0;
-            totalP += Number(item.protein_target) || 0;
-            totalC += Number(item.carbs_target) || 0;
-            totalF += Number(item.fat_target) || 0;
+            totalCals += item.meta_calorias || 0;
+            totalP += Number(item.meta_proteinas) || 0;
+            totalC += Number(item.meta_carboidratos) || 0;
+            totalF += Number(item.meta_gorduras) || 0;
             allDescriptions += " " + normalize(item.description || "");
         }
 
@@ -263,10 +263,10 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
         const { data: assessment } = await supabase.from("physical_assessments").select("*").eq("patient_id", patientId).order("assessment_date", { ascending: false }).limit(1).single();
         const { data: anamnesis } = await supabase.from("patient_anamnesis").select("*").eq("user_id", patientId).eq("status", "completed").order("created_at", { ascending: false }).limit(1).single();
 
-        let targetCals = assessment?.calories_target ?? anamnesis?.computed_kcal_target;
-        let targetP = assessment?.protein_target ?? anamnesis?.computed_protein;
-        let targetC = assessment?.carbs_target ?? anamnesis?.computed_carbs;
-        let targetF = assessment?.fat_target ?? anamnesis?.computed_fat;
+        let targetCals = assessment?.meta_calorias ?? anamnesis?.computed_kcal_target;
+        let targetP = assessment?.meta_proteinas ?? anamnesis?.computed_protein;
+        let targetC = assessment?.meta_carboidratos ?? anamnesis?.computed_carbs;
+        let targetF = assessment?.meta_gorduras ?? anamnesis?.computed_fat;
 
         const clinicalErrors: any[] = [];
         const macroResults: any[] = [];
@@ -330,8 +330,8 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
 
 function prioritizeIssuesInternal(simplicityIssues: any[], clinicalErrors: any[]): any[] {
     const issues: any[] = [];
-    clinicalErrors.forEach(e => issues.push({ severity: "high", message: e.message, correction_bucket: "corrigir_agora", category: "clinical", meal_type: "", day: 0, penalty: e.weight }));
-    simplicityIssues.forEach(i => issues.push({ severity: i.severity, message: i.message, correction_bucket: i.category === "critical" ? "bloquear_publicacao" : "corrigir_agora", category: i.category, meal_type: i.meal_type, day: i.day, penalty: i.penalty }));
+    clinicalErrors.forEach(e => issues.push({ severity: "high", message: e.message, correction_bucket: "corrigir_agora", category: "clinical", tipo_refeicao: "", day: 0, penalty: e.weight }));
+    simplicityIssues.forEach(i => issues.push({ severity: i.severity, message: i.message, correction_bucket: i.category === "critical" ? "bloquear_publicacao" : "corrigir_agora", category: i.category, tipo_refeicao: i.tipo_refeicao, day: i.day, penalty: i.penalty }));
     return issues;
 }
 

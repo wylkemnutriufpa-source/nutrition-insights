@@ -149,7 +149,7 @@ const supabase = createClient(
           .from("meals")
           .select("id", { count: "exact", head: true })
           .eq("user_id", patientId)
-          .eq("meal_type", "lunch")
+          .eq("tipo_refeicao", "lunch")
           .gte("logged_at", today);
 
         if ((count || 0) === 0) {

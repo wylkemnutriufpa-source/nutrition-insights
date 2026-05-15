@@ -132,7 +132,7 @@ export async function analyzePatientProgress(
   // 1. Get active meal plan
   const { data: plan, error: planErr } = await supabase
     .from("meal_plans")
-    .select("id, created_at, goal, total_target_calories")
+    .select("id, created_at, goal, total_meta_calorias")
     .eq("patient_id", patientId)
     .in("status", ["published", "published_to_patient", "approved"])
     .order("created_at", { ascending: false })
@@ -251,10 +251,10 @@ export async function generateClinicalSuggestions(
   // Fetch current plan items
   const { data: items, error: itemsErr } = await supabase
     .from("meal_plan_items")
-    .select("id, meal_type, title, calories_target, protein_target, carbs_target, fat_target, day_of_week")
+    .select("id, tipo_refeicao, title, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras, day_of_week")
     .eq("meal_plan_id", progress.currentPlanId)
     .order("day_of_week")
-    .order("meal_type");
+    .order("tipo_refeicao");
 
   if (itemsErr || !items?.length) {
     return { error: "Itens do plano não encontrados." };
@@ -263,12 +263,12 @@ export async function generateClinicalSuggestions(
   // Determine overall strategy based on progress status + goal
   const { strategy, caloricPct, proteinPct, carbsPct, fatPct, reason } = determineStrategy(progress);
 
-  // Generate per-meal suggestions (aggregate by meal_type for day 1 as reference)
+  // Generate per-meal suggestions (aggregate by tipo_refeicao for day 1 as reference)
   const day1Items = items.filter((i: any) => i.day_of_week === 1 || i.day_of_week === "monday" || i.day_of_week === 0);
   const referenceItems = day1Items.length > 0 ? day1Items : items.slice(0, 6);
 
   const mealSuggestions: MealAdjustmentSuggestion[] = referenceItems.map((item: any) => {
-    const slot = normalizeMealSlot(item.meal_type);
+    const slot = normalizeMealSlot(item.tipo_refeicao);
     const actions = determineActionsForMeal(slot, progress, caloricPct);
 
     return {
@@ -277,14 +277,14 @@ export async function generateClinicalSuggestions(
       mealTitle: item.title || slot,
       actions,
       reason: describeMealAction(actions, slot),
-      currentCalories: item.calories_target || 0,
-      suggestedCalories: Math.round((item.calories_target || 0) * (1 + caloricPct / 100)),
-      currentProtein: item.protein_target || 0,
-      suggestedProtein: Math.round(((item.protein_target || 0) * (1 + proteinPct / 100)) * 10) / 10,
-      currentCarbs: item.carbs_target || 0,
-      suggestedCarbs: Math.round(((item.carbs_target || 0) * (1 + carbsPct / 100)) * 10) / 10,
-      currentFat: item.fat_target || 0,
-      suggestedFat: Math.round(((item.fat_target || 0) * (1 + fatPct / 100)) * 10) / 10,
+      currentCalories: item.meta_calorias || 0,
+      suggestedCalories: Math.round((item.meta_calorias || 0) * (1 + caloricPct / 100)),
+      currentProtein: item.meta_proteinas || 0,
+      suggestedProtein: Math.round(((item.meta_proteinas || 0) * (1 + proteinPct / 100)) * 10) / 10,
+      currentCarbs: item.meta_carboidratos || 0,
+      suggestedCarbs: Math.round(((item.meta_carboidratos || 0) * (1 + carbsPct / 100)) * 10) / 10,
+      currentFat: item.meta_gorduras || 0,
+      suggestedFat: Math.round(((item.meta_gorduras || 0) * (1 + fatPct / 100)) * 10) / 10,
     };
   });
 
@@ -343,7 +343,7 @@ export async function applyPlanAdjustments(
         items_snapshot: items,
         changed_by: appliedBy,
         change_reason: "[Clinical Adjustment Engine] Ajuste clínico baseado em progresso",
-        changed_fields: ["calories_target", "protein_target", "carbs_target", "fat_target"],
+        changed_fields: ["meta_calorias", "meta_proteinas", "meta_carboidratos", "meta_gorduras"],
       })
       .select("id")
       .single();
@@ -361,18 +361,18 @@ export async function applyPlanAdjustments(
       const factors = ACTION_FACTORS[adj.action];
       if (!factors) continue;
 
-      const newCalories = Math.round((item.calories_target || 0) * factors.calories);
-      const newProtein = Math.round(((item.protein_target || 0) * factors.protein) * 10) / 10;
-      const newCarbs = Math.round(((item.carbs_target || 0) * factors.carbs) * 10) / 10;
-      const newFat = Math.round(((item.fat_target || 0) * factors.fat) * 10) / 10;
+      const newCalories = Math.round((item.meta_calorias || 0) * factors.calories);
+      const newProtein = Math.round(((item.meta_proteinas || 0) * factors.protein) * 10) / 10;
+      const newCarbs = Math.round(((item.meta_carboidratos || 0) * factors.carbs) * 10) / 10;
+      const newFat = Math.round(((item.meta_gorduras || 0) * factors.fat) * 10) / 10;
 
       const { error: upErr } = await supabase
         .from("meal_plan_items")
         .update({
-          calories_target: newCalories,
-          protein_target: newProtein,
-          carbs_target: newCarbs,
-          fat_target: newFat,
+          meta_calorias: newCalories,
+          meta_proteinas: newProtein,
+          meta_carboidratos: newCarbs,
+          meta_gorduras: newFat,
         })
         .eq("id", item.id);
 
@@ -382,15 +382,15 @@ export async function applyPlanAdjustments(
     // 5. Recalculate plan totals
     const { data: updatedItems } = await supabase
       .from("meal_plan_items")
-      .select("calories_target, protein_target, carbs_target, fat_target")
+      .select("meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras")
       .eq("meal_plan_id", planId);
 
     const totals = (updatedItems || []).reduce(
       (acc: any, i: any) => ({
-        cal: acc.cal + (i.calories_target || 0),
-        pro: acc.pro + (i.protein_target || 0),
-        carb: acc.carb + (i.carbs_target || 0),
-        fat: acc.fat + (i.fat_target || 0),
+        cal: acc.cal + (i.meta_calorias || 0),
+        pro: acc.pro + (i.meta_proteinas || 0),
+        carb: acc.carb + (i.meta_carboidratos || 0),
+        fat: acc.fat + (i.meta_gorduras || 0),
       }),
       { cal: 0, pro: 0, carb: 0, fat: 0 }
     );
@@ -398,10 +398,10 @@ export async function applyPlanAdjustments(
     await supabase
       .from("meal_plans")
       .update({
-        total_target_calories: Math.round(totals.cal),
-        total_target_protein: Math.round(totals.pro * 10) / 10,
-        total_target_carbs: Math.round(totals.carb * 10) / 10,
-        total_target_fat: Math.round(totals.fat * 10) / 10,
+        total_meta_calorias: Math.round(totals.cal),
+        total_meta_proteinas: Math.round(totals.pro * 10) / 10,
+        total_meta_carboidratos: Math.round(totals.carb * 10) / 10,
+        total_meta_gorduras: Math.round(totals.fat * 10) / 10,
         updated_at: new Date().toISOString(),
       })
       .eq("id", planId);
