@@ -120,8 +120,7 @@ export default function EditorV3Page() {
       const { data: libraryItems, error: libError } = await supabase
         .from('v3_library_items')
         .select('*, images:v3_library_images(*)')
-        .in('cluster_slug', allClusterSlugs)
-        .eq('active', true);
+        .in('cluster_slug', allClusterSlugs); // Removed .eq('active', true) to be safe during population check
 
       if (libError) throw libError;
 
@@ -129,8 +128,9 @@ export default function EditorV3Page() {
       (libraryItems || []).forEach(item => {
         const slug = item.cluster_slug;
         if (!libraryMap.has(slug)) {
-          libraryMap.set(slug, item);
+          libraryMap.set(slug, []);
         }
+        libraryMap.get(slug).push(item);
       });
       
       console.log('[EditorV3] Library items found:', libraryItems?.length);
@@ -152,25 +152,30 @@ export default function EditorV3Page() {
           let items: any[] = [];
 
           if (clusterSlug) {
-            const food = libraryMap.get(clusterSlug);
+            const foods = libraryMap.get(clusterSlug);
 
-            if (food) {
-              console.log(`[EditorV3] Plotting food: ${food.title} for slot: ${slot}`);
-              const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
-              const targetMealKcal = kcal / distribution.length;
-              let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
-              const macros = calculateItemMacros(food, quantity);
-              
-              items = [{
-                ...food,
-                instanceId: crypto.randomUUID(),
-                name: food.title || food.name, // SOBERANIA: Título mapeado para Nome
-                quantity,
-                clinical_mass_g: quantity,
-                substitutions: [],
-                imageUrl,
-                ...macros
-              }];
+            if (foods && foods.length > 0) {
+              // Plot all items in the cluster
+              items = foods.map((food: any) => {
+                console.log(`[EditorV3] Plotting food: ${food.title} for slot: ${slot}`);
+                const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
+                
+                // If the cluster has multiple items, divide kcal among them
+                const targetItemKcal = (kcal / distribution.length) / foods.length;
+                let quantity = scaleItemToTarget(food, targetItemKcal, 'kcal');
+                const macros = calculateItemMacros(food, quantity);
+                
+                return {
+                  ...food,
+                  instanceId: crypto.randomUUID(),
+                  name: food.title || food.name,
+                  quantity,
+                  clinical_mass_g: quantity,
+                  substitutions: [],
+                  imageUrl,
+                  ...macros
+                };
+              });
             } else {
               console.warn(`[EditorV3] No food found in libraryMap for cluster slug: ${clusterSlug} (from slot: ${slot})`);
             }
