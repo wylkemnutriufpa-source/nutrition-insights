@@ -343,29 +343,42 @@ export default function EditorV3Page() {
               </DialogTrigger>
               <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-6 rounded-3xl">
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca de Templates</DialogTitle>
+                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca de Templates Premium</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="h-[60vh] mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {templates.map(template => (
-                      <button
-                        key={template.id}
-                        onClick={() => {
-                          setSelectedTemplate(template);
-                          setIsTemplateModalOpen(true);
-                        }}
-                        className="flex flex-col p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all text-left group"
-                      >
-                        <Badge className="w-fit mb-3 bg-emerald-500/10 text-emerald-500 border-transparent text-[8px] uppercase font-black">
-                          {template.family || 'Geral'}
-                        </Badge>
-                        <h4 className="text-lg font-black uppercase italic group-hover:text-emerald-400 transition-colors">
-                          {template.title}
-                        </h4>
-                        <p className="text-xs text-white/40 mt-2 line-clamp-2 uppercase font-medium">
-                          {template.description}
-                        </p>
-                      </button>
+                <ScrollArea className="h-[65vh] mt-4 pr-4">
+                  <div className="space-y-8">
+                    {Object.entries(
+                      templates.reduce((acc, t) => {
+                        const cat = t.objective || 'Outros';
+                        if (!acc[cat]) acc[cat] = [];
+                        acc[cat].push(t);
+                        return acc;
+                      }, {} as Record<string, V3DietTemplate[]>)
+                    ).map(([category, items]) => (
+                      <div key={category} className="space-y-4">
+                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500 border-b border-emerald-500/10 pb-2">
+                          {category}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {items.map(template => (
+                            <button
+                              key={template.id}
+                              onClick={() => {
+                                setSelectedTemplate(template);
+                                setIsTemplateModalOpen(true);
+                              }}
+                              className="flex flex-col p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all text-left group"
+                            >
+                              <h4 className="text-lg font-black uppercase italic group-hover:text-emerald-400 transition-colors">
+                                {template.title}
+                              </h4>
+                              <p className="text-xs text-white/40 mt-2 line-clamp-2 uppercase font-medium">
+                                {template.description}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </ScrollArea>
