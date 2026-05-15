@@ -4,3 +4,6 @@ export function logSovereignEvent(_level: string, _event: string, _meta?: any): 
 export function getCorrelationId(): string {
   return crypto.randomUUID();
 }
+export function validateMealPlanSnapshot(_snapshot: any): { valid: boolean; errors: string[] } {
+  return { valid: true, errors: [] };
+}
