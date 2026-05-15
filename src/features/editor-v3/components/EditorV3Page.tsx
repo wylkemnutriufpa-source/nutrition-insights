@@ -180,18 +180,53 @@ export default function EditorV3Page() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
-            >
-              <Library className="w-4 h-4 mr-2" /> Templates
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
+                >
+                  <Library className="w-4 h-4 mr-2" /> Templates
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-6 rounded-3xl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca de Templates</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="h-[60vh] mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {templates.map(template => (
+                      <button
+                        key={template.id}
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          setIsTemplateModalOpen(true);
+                        }}
+                        className="flex flex-col p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all text-left group"
+                      >
+                        <Badge className="w-fit mb-3 bg-emerald-500/10 text-emerald-500 border-transparent text-[8px] uppercase font-black">
+                          {template.family || 'Geral'}
+                        </Badge>
+                        <h4 className="text-lg font-black uppercase italic group-hover:text-emerald-400 transition-colors">
+                          {template.title}
+                        </h4>
+                        <p className="text-xs text-white/40 mt-2 line-clamp-2 uppercase font-medium">
+                          {template.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+
             <Button 
               variant="outline" 
               className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
             >
               <Share2 className="w-4 h-4 mr-2" /> Compartilhar
             </Button>
+
             <Button 
               onClick={handleSave}
               disabled={saving}
