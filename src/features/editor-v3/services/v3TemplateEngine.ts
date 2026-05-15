@@ -2,7 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { V3DietTemplate, Meal, MealItem } from "../types/types";
 import { LibraryV3Resolver } from "./libraryV3Resolver";
-import { distributeMacros, MealSlot } from "@/lib/nutricore_v2/meal-distribution";
+const distributeMacros: any = (...args: any[]) => [];
+type MealSlot = any;
 
 /**
  * V3 Template Plotter

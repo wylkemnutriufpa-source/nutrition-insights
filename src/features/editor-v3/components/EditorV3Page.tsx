@@ -6,28 +6,7 @@ import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
 import { loadOrCreateDraft, saveDraft } from '../services/draftService';
-import { validatePlanBeforePublish } from '@/lib/planSafetyNet';
-import { 
-  searchFoods, searchMarmitas, searchTemplates, 
-  getBaseFoods, seedBaseData,
-  searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates
-} from '../utils/dataFetcher';
-import { getBestMealImage } from '../utils/normalization';
-import { logClinicalEvent } from '../../audit/services/auditLogger';
-import { 
-  calculateNutritionalScore, validatePlanClinically 
-} from '../../clinical-engine';
-import { 
-  calculateItemMacros 
-} from '@/lib/nutricore_v2/helpers';
-
-
-// Direct NutriCore V3 Imports (lib/nutricore_v2)
-// Direct NutriCore V3 Imports are now handled via Adapter or direct types
-import { getSubstitutions } from "@/lib/nutricore_v2/substitutions";
-import { BASE_FOODS } from "@/lib/nutricore_v2/food-database";
-import { convertGramsToHousehold } from "@/lib/nutricore_v2/unit-converter";
-import { formatDisplayPortion, resolveDisplayGrams } from "@/lib/nutricore_v2/portion-display";
+// engines removed
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

@@ -12,12 +12,15 @@ import {
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
 } from '@/components/ui/dialog';
-import { getSubstitutions } from '@/lib/nutricore_v2/substitutions';
-import { BASE_FOODS, Food } from '@/lib/nutricore_v2/food-database';
+// engines removed
+const getSubstitutions: any = () => [];
+const BASE_FOODS: any[] = [];
+type Food = any;
 import { toast } from 'sonner';
 import { PRODUCTION_URL } from '@/lib/config';
 import { copyToClipboard } from '@/utils/clipboard';
-import { assertSovereignRuntime, logSovereignEvent } from '@/lib/runtimeGovernance';
+const assertSovereignRuntime: any = () => {};
+const logSovereignEvent: any = () => {};
 import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
 
 
