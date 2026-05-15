@@ -324,7 +324,7 @@ export default function EditorV3Page() {
         </header>
 
         {/* Dashboard de Macros */}
-        <div className="px-8 py-6 bg-neutral-900/50 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-6 items-center">
+        <div className="px-8 py-8 bg-neutral-900/30 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8 items-center backdrop-blur-md">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
               <Flame className="w-3 h-3 text-orange-500" /> Valor Calórico
@@ -387,7 +387,7 @@ export default function EditorV3Page() {
               {/* Botão Adicionar Refeição */}
               <Button 
                 onClick={handleAddMeal}
-                className="w-full h-24 bg-white/5 border-2 border-dashed border-white/5 hover:bg-white/10 hover:border-emerald-500/30 text-white/20 hover:text-emerald-500 rounded-3xl transition-all group"
+                className="w-full h-32 bg-white/[0.02] border-2 border-dashed border-white/5 hover:bg-emerald-500/[0.02] hover:border-emerald-500/30 text-white/10 hover:text-emerald-500 rounded-[2.5rem] transition-all duration-500 group"
               >
                 <div className="flex flex-col items-center gap-1">
                   <Plus className="w-6 h-6 group-hover:scale-125 transition-transform" />
