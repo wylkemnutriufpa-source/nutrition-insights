@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, MealItem, Food } from '../types/types';
-import { calculateItemMacros, adjustSubstitutionsProportionally } from '@/lib/nutricore_v2/helpers';
+import { calculateItemMacros, adjustSubstitutionsProportionally, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 
 interface EditorState {
   meals: Meal[];
