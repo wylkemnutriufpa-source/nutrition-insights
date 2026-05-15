@@ -117,7 +117,13 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
 
   return (
     <div className={cn("relative", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(val) => {
+        setOpen(val);
+        if (val) {
+          // Reset search when opening to allow fresh start
+          setSearch("");
+        }
+      }}>
         <PopoverTrigger asChild>
           <div className="w-full">
             <Button
@@ -130,18 +136,22 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
               )}
             >
               <Search className={cn("h-4 w-4 shrink-0 text-emerald-500", showIconOnly ? "" : "mr-3")} />
-              {!showIconOnly && <span className="truncate text-[10px]">Buscar paciente...</span>}
+              {!showIconOnly && <span className="truncate text-[10px]">{search || "Buscar paciente..."}</span>}
             </Button>
           </div>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-0 border-white/10 bg-neutral-950 backdrop-blur-2xl shadow-2xl rounded-2xl overflow-hidden z-[100]" align="start" sideOffset={8}>
-          <Command shouldFilter={false}>
-            <CommandInput 
-              placeholder="Digite o nome..." 
-              value={search}
-              onValueChange={setSearch}
-              className="h-12 border-none focus:ring-0 bg-transparent text-white uppercase text-[10px] font-black tracking-widest px-4"
-            />
+        <PopoverContent className="w-[320px] p-0 border-white/10 bg-neutral-950 backdrop-blur-2xl shadow-2xl rounded-2xl overflow-hidden z-[100]" align="start" sideOffset={8}>
+          <Command shouldFilter={false} className="bg-transparent">
+            <div className="flex items-center border-b border-white/5 px-3">
+              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+              <CommandInput 
+                placeholder="Digite o nome do paciente..." 
+                value={search}
+                onValueChange={setSearch}
+                className="h-12 border-none focus:ring-0 bg-transparent text-white uppercase text-[10px] font-black tracking-widest flex-1"
+                autoFocus
+              />
+            </div>
             <CommandList className="max-h-[350px] scrollbar-thin">
               {loading && patients.length === 0 ? (
                 <div className="flex items-center justify-center py-10">
