@@ -79,8 +79,8 @@ export default function EditorV3Page() {
   const nutritionalTargets = useMemo(() => {
     if (!patientData) return null;
     
-    const weight = Number(patientData.weight) || 70;
-    const height = Number(patientData.height) || 170;
+    const weight = Number(patientData.current_weight_kg) || 70;
+    const height = Number(patientData.current_height_cm) || 170;
     const age = Number(patientData.age) || 30;
     const gender = (patientData.gender === 'feminino' ? 'female' : 'male') as Gender;
     const activityLevel = (patientData.activity_level || 'moderate') as ActivityLevel;
