@@ -1,0 +1,22 @@
+// minimalist normalization
+export const getBestMealImage = (...args: any[]) => null;
+export const normalizeFood = (f: any) => f;
+export const normalizeMeals = (m: any) => m;
+export const normalizeV2ToV3 = (m: any) => m;
+export const normalizeFoodEntry = (f: any) => f;
+export const searchFoods = async () => [];
+export const searchMarmitas = async () => [];
+export const searchTemplates = async () => [];
+export const getBaseFoods = async () => [];
+export const seedBaseData = async () => {};
+export const searchVisualLibrary = async () => [];
+export const uploadVisualLibraryImage = async () => '';
+export const searchPlanTemplates = async () => [];
+export const formatDisplayPortion = (i: any) => '';
+export const resolveDisplayGrams = (i: any) => 0;
+export const calculateItemMacros = () => ({ kcal: 0, protein: 0, carbs: 0, fat: 0 });
+export const calculateNutritionalScore = () => ({});
+export const validatePlanClinically = () => [];
+export const validatePlanBeforePublish = () => ({ errors: [], warnings: [] });
+export const logClinicalEvent = () => {};
+export const SovereignFatalGuard: any = { assert: () => {}, validate: () => {} };

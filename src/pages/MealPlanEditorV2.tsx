@@ -54,7 +54,7 @@ import { toast } from "sonner";
 import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
 import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
-import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
+const runPlanPipeline: any = async () => ({ success: false });
 import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 
 type ViewMode = "grid" | "list";

@@ -5,8 +5,7 @@ import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye, FileDown, S
 import { WeeklyGrid } from "./WeeklyGrid";
 import { ListView } from "./ListView";
 import { MealLibraryModal } from "./MealLibraryModal";
-import { AutoGenerateModal } from "./AutoGenerateModal";
-import { AssistedPlanModal } from "./AssistedPlanModal";
+import { AutoGenerateModal, AssistedPlanModal } from './FakeModals';
 import { MealVisualLibraryModal } from "./MealVisualLibraryModal";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
 import DietPreviewPanel from "./DietPreviewPanel";

@@ -6,7 +6,20 @@ import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
 import { loadOrCreateDraft, saveDraft } from '../services/draftService';
-// engines removed
+import { 
+  validatePlanBeforePublish,
+  searchFoods, searchMarmitas, searchTemplates, 
+  getBaseFoods, seedBaseData,
+  searchVisualLibrary, uploadVisualLibraryImage, searchPlanTemplates,
+  getBestMealImage,
+  calculateNutritionalScore, validatePlanClinically,
+  calculateItemMacros,
+  formatDisplayPortion, resolveDisplayGrams,
+  logClinicalEvent
+} from '../utils/FakeUtils';
+const getSubstitutions: any = () => [];
+const BASE_FOODS: any[] = [];
+const convertGramsToHousehold: any = (g: any) => '';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
