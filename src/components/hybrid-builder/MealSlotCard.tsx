@@ -112,19 +112,28 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   };
 
   const parseQuantity = (item: MealPlanItem): number => {
-    const match = item.description?.match(/(\d+)\s*g/i);
+    const match = item.description?.match(/(\d+)\s*(g|un|fatia|scoop|unidade)/i);
     return match ? parseInt(match[1]) : 100;
   };
 
   const applyGramsUpdate = (item: MealPlanItem, newGrams: number) => {
     const oldGrams = parseQuantity(item);
     const ratio = newGrams / oldGrams;
+    
+    // Se temos os macros base salvos no edit_metadata, usamos eles para maior precisão
+    const meta = (item as any).edit_metadata || {};
+    const baseKcal = meta.kcal_base || item.meta_calorias;
+    const baseProt = meta.protein_base || item.meta_proteinas;
+    const baseCarb = meta.carbs_base || item.meta_carboidratos;
+    const baseFat = meta.fat_base || item.meta_gorduras;
+
     return {
-      meta_calorias: Math.round((item.meta_calorias || 0) * ratio),
-      meta_proteinas: Math.round(((item.meta_proteinas || 0) * ratio) * 10) / 10,
-      meta_carboidratos: Math.round(((item.meta_carboidratos || 0) * ratio) * 10) / 10,
-      meta_gorduras: Math.round(((item.meta_gorduras || 0) * ratio) * 10) / 10,
-      description: item.description?.replace(/\d+\s*g/i, `${newGrams}g`) || `${newGrams}g`,
+      meta_calorias: Math.round((baseKcal || 0) * ratio),
+      meta_proteinas: Math.round(((baseProt || 0) * ratio) * 10) / 10,
+      meta_carboidratos: Math.round(((baseCarb || 0) * ratio) * 10) / 10,
+      meta_gorduras: Math.round(((baseFat || 0) * ratio) * 10) / 10,
+      description: item.description?.replace(/\d+\s*(g|un|fatia|scoop|unidade)/i, `${newGrams}$1`) || `${newGrams}g`,
+      is_manually_edited: true,
     };
   };
 

@@ -23,12 +23,12 @@ export function MacroEditDialog({ open, onOpenChange, item }: MacroEditDialogPro
   const [applyAll, setApplyAll] = useState(false);
 
   const mealTypeLabels: Record<string, string> = {
-    breakfast: "Café da Manhã",
-    morning_snack: "Lanche da Manhã",
-    lunch: "Almoço",
-    afternoon_snack: "Lanche da Tarde",
-    dinner: "Jantar",
-    evening_snack: "Ceia",
+    "Café da Manhã": "Café da Manhã",
+    "Lanche da Manhã": "Lanche da Manhã",
+    "Almoço": "Almoço",
+    "Lanche da Tarde": "Lanche da Tarde",
+    "Jantar": "Jantar",
+    "Ceia": "Ceia",
   };
 
   const handleSave = () => {

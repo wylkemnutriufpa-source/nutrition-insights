@@ -347,11 +347,7 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
     // Find meals matching the target tipo_refeicao
     const matchingMeals = meals.filter((m: any) => {
       const mt = m.tipo_refeicao || m.type;
-      // Normalize comparison to handle possible PT-BR or English keys in legacy data
-      return mt === targetMealType || 
-             (mt === 'breakfast' && targetMealType === 'Café da Manhã') ||
-             (mt === 'lunch' && targetMealType === 'Almoço') ||
-             (mt === 'dinner' && targetMealType === 'Jantar');
+      return mt === targetMealType;
     });
 
     if (matchingMeals.length > 0) {
