@@ -111,6 +111,8 @@ export async function generateAndSaveLocalPlan(
     if (promoteError) throw promoteError;
 
     // Insert items
+    const primaryGroupsTracker = new Set<string>();
+
     for (const meal of v3Meals) {
       // 🛡️ Sanity check por refeição
       const mealKcal = meal.items.reduce((sum, it) => sum + (Number(it.kcal) || 0), 0);
@@ -129,21 +131,40 @@ export async function generateAndSaveLocalPlan(
           'Ceia': 'supper'
         };
 
+        const mealType = mealTypeMap[meal.name] || 'snack';
+        
+        // 🛡️ SLOT SOVEREIGNTY (V3 Sandbox): 
+        // Mesmo no sandbox, forçamos o padrão de 1 primary por groupId.
+        const blockId = (item as any).blockId || crypto.randomUUID();
+        const groupId = (item as any).substitution_group_id || blockId;
+        
+        // No sandbox local, o groupId pode ser string ou UUID (convertemos para UUID se necessário no DB, mas aqui passamos como está)
+        // Se o DB exigir UUID, o insert falharia. Vamos garantir UUID.
+        const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        const finalGroupId = isUuid(groupId) ? groupId : crypto.randomUUID();
+
+        const trackerKey = `${mealType}_0_${finalGroupId}`;
+        const isPrimary = !primaryGroupsTracker.has(trackerKey);
+        if (isPrimary) primaryGroupsTracker.add(trackerKey);
+
         await supabase.from('meal_plan_items').insert({
           meal_plan_id: mealPlan.id,
-          title: item.name,
-          meal_type: mealTypeMap[meal.name] || 'snack',
+          tenant_id: tenantId,
+          meal_type: mealType,
           day_of_week: 0,
+          title: item.name,
+          description: item.portionLabel && /\d/.test(item.portionLabel) 
+            ? item.portionLabel 
+            : `${item.quantity} ${item.portionUnitLabel || item.portionLabel || 'g'}`,
           calories_target: safeKcal,
           protein_target: Math.min(500, Number(item.protein) || 0),
           carbs_target: Math.min(800, Number(item.carbs) || 0),
           fat_target: Math.min(300, Number(item.fat) || 0),
-          description: item.portionLabel && /\d/.test(item.portionLabel) 
-            ? item.portionLabel 
-            : `${item.quantity} ${item.portionUnitLabel || item.portionLabel || 'g'}`,
-          tenant_id: tenantId,
+          is_primary: isPrimary,
+          substitution_group_id: finalGroupId,
           edit_metadata: {
             ...item,
+            blockId,
             display_quantity: item.quantity,
             display_unit: item.portionUnitLabel || item.portionLabel || 'g'
           }
