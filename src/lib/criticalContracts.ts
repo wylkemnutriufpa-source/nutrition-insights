@@ -3,7 +3,10 @@ export type CriticalContractId = string;
 
 export const CRITICAL_CONTRACTS: Record<string, any> = {};
 
-const noopContract = { id: '', validate: async (..._args: any[]) => ({ ok: true, errors: [] }) };
+const noopContract: any = Object.assign(
+  async (..._args: any[]) => ({ ok: true, errors: [] }),
+  { id: '', validate: async (..._args: any[]) => ({ ok: true, errors: [] }) },
+);
 
 export const draftIntegrityContract = noopContract;
 export const clinicalValidityContract = noopContract;

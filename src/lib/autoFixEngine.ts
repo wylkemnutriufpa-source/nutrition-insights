@@ -6,6 +6,8 @@ export interface AutoFixResult {
   after: any;
   warnings: string[];
   summary: any;
+  newPlanId?: string;
+  inPlace?: boolean;
 }
 
 export async function autoFixMealPlan(
