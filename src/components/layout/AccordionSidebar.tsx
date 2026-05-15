@@ -28,7 +28,7 @@ const ICON_MAP: Record<string, any> = {
   Shield, Zap, TrendingUp, Heart, MessageSquare, MessageCircle, Award, Crown,
   Compass, Megaphone, UserCheck, Scale, Lightbulb, Bot, Camera,
   Pill, GraduationCap, Dumbbell, Flame, ShoppingCart, AlertTriangle,
-  Moon, Sun, LogOut, ChevronRight, Search, Pin,
+  Moon, Sun, LogOut, ChevronRight, Search, Pin, Library
 };
 
 function getIcon(name: string) {
@@ -363,7 +363,7 @@ function SidebarSkeleton() {
   );
 }
 
-function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
+function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: any) {
   const location = useLocation();
   const { t } = useTranslation();
   const { isFeatureEnabled, minMode, mode, isBasic } = useExperienceMode();
@@ -375,7 +375,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
 
   if (loading || !hasRole) return null;
 
-  const allItems = categories.flatMap((c) => c.items).filter(item => {
+  const allItems = categories.flatMap((c: any) => c.items).filter((item: any) => {
     const featureKey = item.feature || item.route.replace(/^\//, '');
     
     // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
@@ -389,7 +389,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
 
   const grouped = useMemo(() => {
     const groups: Record<string, SmartMenuItem[]> = {};
-    allItems.forEach((item) => {
+    allItems.forEach((item: any) => {
       const g = CATEGORY_TO_GROUP[item.category] || "OUTROS";
       if (!groups[g]) groups[g] = [];
       groups[g].push(item);
