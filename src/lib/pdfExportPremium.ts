@@ -385,12 +385,12 @@ function buildPremiumCSS(): string {
       }
 
       .macro-card {
-        background: #ffffff;
-        border: 1px solid #f1f5f9;
-        border-radius: 10px;
-        padding: 10px 8px;
+        background: #fdfcf9;
+        border: 1px solid #f1e6d0;
+        border-radius: 15px;
+        padding: 15px 10px;
         text-align: center;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
       }
 
       .macro-label {
@@ -437,18 +437,19 @@ function buildPremiumCSS(): string {
 
       /* Linhas de Refeição */
       .meal-row {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        margin-bottom: 12px;
+        border: 2px solid #f1f5f9;
+        border-radius: 20px;
+        margin-bottom: 20px;
         overflow: hidden;
         background: #ffffff;
-        page-break-inside: auto;
+        page-break-inside: avoid;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
       }
 
       .meal-header-row {
-        background: #f8fafc;
-        padding: 10px 16px;
-        border-bottom: 1px solid #f1f5f9;
+        background: linear-gradient(to right, #f8fafc, #ffffff);
+        padding: 15px 24px;
+        border-bottom: 2px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
         align-items: center;

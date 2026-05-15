@@ -112,21 +112,20 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <div className="flex-1 flex flex-col min-w-0 bg-black/20">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between backdrop-blur-md">
               <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-auto">
-                <TabsList className="bg-white/5 border border-white/10 p-1">
-                  <TabsTrigger value="daily" className="data-[state=active]:bg-white/10 text-[10px] uppercase font-black px-4">Diário</TabsTrigger>
-                  <TabsTrigger value="weekly" className="data-[state=active]:bg-white/10 text-[10px] uppercase font-black px-4">Semanal</TabsTrigger>
+                <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl">
+                  <TabsTrigger value="daily" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] uppercase font-black px-6 py-2 rounded-xl transition-all duration-300 tracking-widest">Diário</TabsTrigger>
+                  <TabsTrigger value="weekly" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] uppercase font-black px-6 py-2 rounded-xl transition-all duration-300 tracking-widest">Semanal</TabsTrigger>
                 </TabsList>
               </Tabs>
               
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-white/30">
-                  <Calculator className="w-3 h-3" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Cálculo Automático</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-white/20">
+                  <Calculator className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Cálculo Soberano Ativo</span>
                 </div>
-
               </div>
             </div>
 
