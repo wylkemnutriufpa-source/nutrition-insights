@@ -492,7 +492,7 @@ export default function DietTemplates() {
     let globalMarmitaCounter = 0;
 
     for (const meal of meals) {
-      const mealType = meal.tipo_refeicao || meal.type;
+      const mealType = meal.tipo_refeicao;
       if (!mealType) continue;
 
       const blocks: any[] = Array.isArray(meal.blocks) ? meal.blocks : [];
@@ -517,12 +517,12 @@ export default function DietTemplates() {
             // Detect placeholder and replace with a recipe
             const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
             if (isPlaceholder && mealRecipes.length > 0) {
-              const isLunch = mealType === "Almoço" || mealType === "almoco" || mealType === "almoço";
+              const isLunch = mealType === "Almoço";
               const candidates = mealRecipes
                 .filter(r => {
-                  const rt = r.tipo_refeicao?.toLowerCase() || "";
-                  if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "Almoço";
-                  return rt === "jantar" || rt === "Jantar";
+                  const rt = r.tipo_refeicao;
+                  if (isLunch) return rt === "Almoço";
+                  return rt === "Jantar";
                 })
                 .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
               
