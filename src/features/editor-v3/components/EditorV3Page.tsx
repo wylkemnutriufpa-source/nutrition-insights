@@ -372,6 +372,13 @@ export default function EditorV3Page() {
     store.addMeal(name);
   };
 
+  const handleClearAll = () => {
+    if (confirm("Deseja realmente apagar todas as refeições deste plano?")) {
+      store.setMeals([]);
+      toast.success("Plano limpo com sucesso");
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
