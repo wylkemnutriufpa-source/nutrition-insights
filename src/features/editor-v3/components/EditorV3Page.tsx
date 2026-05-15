@@ -258,45 +258,22 @@ export default function EditorV3Page() {
 
   // Totals for the whole plan (Sum of PRIMARY items only)
   const planTotals = useMemo(() => {
-    // We only sum macros for the unique items across all meals.
-    // If a plan is weekly (7 days), we usually average or sum based on design.
-    // FitJourney design: total daily calories.
-    const dailyKcalMap: Record<number, number> = {};
-    const dailyProtMap: Record<number, number> = {};
-    const dailyCarbMap: Record<number, number> = {};
-    const dailyFatMap: Record<number, number> = {};
-
-    store.meals.forEach((meal) => {
-      const day = meal.day_of_week || 0;
-      if (!dailyKcalMap[day]) {
-        dailyKcalMap[day] = 0;
-        dailyProtMap[day] = 0;
-        dailyCarbMap[day] = 0;
-        dailyFatMap[day] = 0;
-      }
-
-      meal.items.forEach((item) => {
-        dailyKcalMap[day] += item.kcal || 0;
-        dailyProtMap[day] += item.protein || 0;
-        dailyCarbMap[day] += item.carbs || 0;
-        dailyFatMap[day] += item.fat || 0;
+    const totals = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+    
+    // Sum macros ONLY for the currently active day
+    store.meals
+      .filter(m => (m.day_of_week || 0) === activeDay)
+      .forEach((meal) => {
+        meal.items.forEach((item) => {
+          totals.kcal += item.kcal || 0;
+          totals.protein += item.protein || 0;
+          totals.carbs += item.carbs || 0;
+          totals.fat += item.fat || 0;
+        });
       });
-    });
 
-    const days = Object.keys(dailyKcalMap);
-    if (days.length === 0) return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-
-    // Return the maximum day or the average. 
-    // Usually, we want to show the current active day's total if in daily mode,
-    // or the average if in weekly mode.
-    // For simplicity and clinical safety: return the maximum day found (prevents underestimation).
-    return {
-      kcal: Math.max(...Object.values(dailyKcalMap)),
-      protein: Math.max(...Object.values(dailyProtMap)),
-      carbs: Math.max(...Object.values(dailyCarbMap)),
-      fat: Math.max(...Object.values(dailyFatMap)),
-    };
-  }, [store.meals]);
+    return totals;
+  }, [store.meals, activeDay]);
 
 
   const handleSave = async () => {
