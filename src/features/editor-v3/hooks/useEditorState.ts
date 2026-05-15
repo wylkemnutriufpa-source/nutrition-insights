@@ -54,7 +54,7 @@ export const useEditorState = create<EditorState>()(
             if (item.instanceId !== itemInstanceId) return item;
 
             const oldQty = item.clinical_mass_g || item.quantity || 100;
-            const updatedSubs = adjustSubstitutionsProportionally(item, oldQty, newQuantity);
+            const updatedSubs = adjustSubstitutionsProportionally(item.substitutions || [], oldQty, newQuantity);
             
             // Calculate new macros for the item itself
             const newMacros = calculateItemMacros(item, newQuantity);
