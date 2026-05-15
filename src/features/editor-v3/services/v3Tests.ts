@@ -76,10 +76,22 @@ export async function runV3IntegrationTests(patientId: string) {
         blockId: 'b1',
         substitution_group_id: 'b1',
         substitutions: [
-          { name: 'Tapioca', kcal: 150, protein: 0.5, carbs: 35, fat: 0 }
+          { 
+            id: crypto.randomUUID(),
+            name: 'Tapioca', 
+            kcal: 150, 
+            calories: 150,
+            protein: 0.5, 
+            carbs: 35, 
+            fat: 0,
+            portionValue: 100,
+            portionUnitLabel: 'g',
+            category: 'carbo-cereal',
+            is_active: true
+          } as any
         ]
-      }]
-    }];
+      } as any]
+    } as any];
 
     const promo = await promoteDraftToMealPlan(draft);
     if (!promo.ok) throw new Error(`Promotion failed: ${promo.error}`);
