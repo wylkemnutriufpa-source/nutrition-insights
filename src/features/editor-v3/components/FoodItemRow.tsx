@@ -63,7 +63,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity
               type="number"
               value={item.clinical_mass_g || item.quantity || 0}
               onChange={(e) => onUpdateQuantity(Number(e.target.value))}
-              className="bg-neutral-900 border-white/10 text-right pr-7 h-11 w-28 font-black text-sm rounded-xl focus:ring-emerald-500/50 hover:border-emerald-500/30 transition-all"
+              className="bg-neutral-900/80 border-white/5 text-right pr-7 h-12 w-32 font-black text-base rounded-2xl focus:ring-emerald-500/30 hover:border-emerald-500/20 transition-all backdrop-blur-sm shadow-inner"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
           </div>
@@ -81,7 +81,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity
 
       {/* Substituições Dinâmicas Soberanas */}
       {item.substitutions && item.substitutions.length > 0 && (
-        <div className="mt-2 pt-4 border-t border-white/5">
+        <div className="mt-4 pt-6 border-t border-white/5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <ChevronRight className="w-3 h-3 text-emerald-500" />
@@ -90,11 +90,11 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({ item, onUpdateQuantity
             <Badge variant="outline" className="text-[7px] uppercase font-black border-white/10 text-white/20">Ajuste Proporcional Ativo</Badge>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {item.substitutions.map((sub, idx) => (
               <div 
                 key={idx}
-                className="flex flex-col p-2.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/[0.02] transition-all group/sub"
+                className="flex flex-col p-3.5 rounded-2xl bg-white/[0.01] border border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/[0.02] transition-all group/sub shadow-sm"
               >
                 <span className="text-[10px] font-bold text-white/60 truncate group-hover/sub:text-emerald-400 transition-colors">{sub.name}</span>
                 <span className="text-[11px] font-black text-white mt-1">

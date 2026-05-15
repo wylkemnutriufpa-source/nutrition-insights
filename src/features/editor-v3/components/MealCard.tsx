@@ -74,7 +74,7 @@ export const MealCard: React.FC<MealCardProps> = ({
       </div>
 
       {/* Items */}
-      <div className="p-6 space-y-3">
+      <div className="p-8 space-y-4">
         {meal.items.length > 0 ? (
           meal.items.map((item) => (
             <FoodItemRow 
@@ -97,7 +97,7 @@ export const MealCard: React.FC<MealCardProps> = ({
           <DialogTrigger asChild>
             <Button 
               variant="outline" 
-              className="w-full h-14 bg-white/5 border-dashed border-white/10 hover:bg-white/10 hover:border-emerald-500/50 text-white/40 hover:text-emerald-400 rounded-2xl transition-all mt-4 group/add"
+              className="w-full h-16 bg-white/[0.01] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-2xl transition-all mt-4 group/add"
             >
               <Plus className="w-5 h-5 mr-2 group-hover/add:scale-125 transition-transform" />
               <span className="uppercase text-[10px] font-black tracking-widest">Adicionar Alimento Real</span>
