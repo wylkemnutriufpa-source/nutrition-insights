@@ -21,12 +21,44 @@ import { V3DietTemplate } from '../types/types';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
 
 
 
 
+
+const SLOT_TRANSLATIONS: Record<string, string> = {
+  'breakfast': 'Café da Manhã',
+  'morning_snack': 'Lanche da Manhã',
+  'lunch': 'Almoço',
+  'afternoon_snack': 'Lanche da Tarde',
+  'snack': 'Lanche',
+  'dinner': 'Jantar',
+  'evening_snack': 'Ceia',
+  'supper': 'Ceia',
+  'pre_workout': 'Pré-Treino',
+  'post_workout': 'Pós-Treino',
+  'cafe_da_manha': 'Café da Manhã',
+  'lanche_da_manha': 'Lanche da Manhã',
+  'almoco': 'Almoço',
+  'almoço': 'Almoço',
+  'lanche_da_tarde': 'Lanche da Tarde',
+  'jantar': 'Jantar',
+  'ceia': 'Ceia'
+};
+
+const translateSlot = (slot: string) => {
+  const normalized = slot.toLowerCase().replace(/ /g, '_');
+  return SLOT_TRANSLATIONS[normalized] || slot.replace(/_/g, ' ');
+};
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -41,14 +73,15 @@ export default function EditorV3Page() {
   const [selectedTemplate, setSelectedTemplate] = useState<V3DietTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [patientData, setPatientData] = useState<any>(null);
+  const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
   // Nutritional Targets (Automatic Calculation Only)
   const nutritionalTargets = useMemo(() => {
     if (!patientData) return null;
     
-    const weight = patientData.weight || 70;
-    const height = patientData.height || 170;
-    const age = patientData.age || 30;
+    const weight = Number(patientData.current_weight_kg) || 70;
+    const height = Number(patientData.current_height_cm) || 170;
+    const age = Number(patientData.age) || 30;
     const gender = (patientData.gender === 'feminino' ? 'female' : 'male') as Gender;
     const activityLevel = (patientData.activity_level || 'moderate') as ActivityLevel;
     const goal = (patientData.goal || 'maintenance') as Goal;
@@ -58,11 +91,18 @@ export default function EditorV3Page() {
     return calculateTargetMacros(weight, tdee, goal);
   }, [patientData]);
 
-
   useEffect(() => {
     async function loadInitialData() {
-      const fetchedTemplates = await getV3Templates();
-      setTemplates(fetchedTemplates);
+      try {
+        const [fetchedTemplates, patientsResult] = await Promise.all([
+          getV3Templates(),
+          (supabase.from('profiles') as any).select('user_id, full_name, current_weight_kg, current_height_cm, activity_level, goal').limit(100)
+        ]);
+        setTemplates(fetchedTemplates);
+        if (patientsResult.data) setAvailablePatients(patientsResult.data);
+      } catch (err) {
+        console.error('Error loading initial data:', err);
+      }
     }
     loadInitialData();
   }, []);
@@ -73,19 +113,19 @@ export default function EditorV3Page() {
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
-      const clusterMap = selectedTemplate.cluster_map || {};
+      const clusterMap = (selectedTemplate.cluster_map as any) || {};
       const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
       const newMeals: any[] = [];
 
       for (const day of days) {
-        for (const dist of selectedTemplate.meal_distribution) {
+        for (const dist of (selectedTemplate.meal_distribution as any[])) {
           const slot = dist.slot;
           const clusterSlug = clusterMap[slot];
           let items: any[] = [];
 
           if (clusterSlug) {
-            const { data: libraryItems } = await supabase
-              .from('v3_library_items')
+            const { data: libraryItems } = await (supabase
+              .from('v3_library_items') as any)
               .select('*')
               .eq('cluster_slug', clusterSlug)
               .eq('active', true)
@@ -93,8 +133,8 @@ export default function EditorV3Page() {
             
             if (libraryItems && libraryItems.length > 0) {
               const food = libraryItems[0];
-              const { data: subs } = await supabase
-                .from('v3_library_items')
+              const { data: subs } = await (supabase
+                .from('v3_library_items') as any)
                 .select('*')
                 .eq('substitutions_group', food.substitutions_group)
                 .neq('id', food.id)
@@ -103,7 +143,12 @@ export default function EditorV3Page() {
 
               // Calculate quantity based on total target calories and number of meals
               const targetMealKcal = kcal / selectedTemplate.meal_distribution.length;
-              const quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
+              let quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
+              
+              // Safety limit to avoid "exploding calories"
+              // Limit quantity to a reasonable human amount (e.g. 1500g max per item)
+              quantity = Math.min(quantity, 1500);
+              
               const macros = calculateItemMacros(food, quantity);
               
               items = [{
@@ -119,7 +164,7 @@ export default function EditorV3Page() {
 
           newMeals.push({
             id: crypto.randomUUID(),
-            name: slot.replace(/_/g, ' '),
+            name: translateSlot(slot),
             time: dist.time,
             day_of_week: day,
             items
@@ -163,11 +208,23 @@ export default function EditorV3Page() {
 
       setLoading(true);
       try {
-        const { data: plan, error } = await supabase
-          .from('meal_plans')
-          .select('*, patient:profiles(*)') // Changed from patients(*) to profiles(*)
+        const { data: plan, error } = await (supabase
+          .from('meal_plans') as any)
+          .select('*, patient:profiles(*)')
           .eq('id', effectiveId)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid throw on not found
+
+        if (error) {
+          console.error('Database error:', error);
+          setLoading(false);
+          return;
+        }
+
+        if (!plan) {
+          console.warn('Plan not found:', effectiveId);
+          setLoading(false);
+          return;
+        }
 
         if (error) throw error;
 
@@ -275,12 +332,33 @@ export default function EditorV3Page() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney Editor Profissional</h1>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">Estável</Badge>
+            <div className="flex items-center gap-4">
+              <div className="hidden lg:block">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney Editor</h1>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">V3</Badge>
+                </div>
+                <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mt-0.5">Gestão de templates clínicos</p>
               </div>
-              <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mt-0.5">Gestão de templates clínicos e cálculo automático</p>
+
+              <div className="h-10 w-px bg-white/10 hidden lg:block mx-2" />
+
+              <Select 
+                value={effectivePatientId || ""} 
+                onValueChange={(val) => navigate(`/editor-v3/${val}`)}
+              >
+                <SelectTrigger className="w-[200px] h-10 bg-white/5 border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl">
+                  <User className="w-4 h-4 mr-2 text-emerald-500" />
+                  <SelectValue placeholder="Selecionar Paciente" />
+                </SelectTrigger>
+                <SelectContent className="bg-neutral-900 border-white/10 text-white">
+                  {availablePatients.map(p => (
+                    <SelectItem key={p.user_id} value={p.user_id} className="text-[10px] font-black uppercase">
+                      {p.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
 
@@ -298,29 +376,42 @@ export default function EditorV3Page() {
               </DialogTrigger>
               <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-6 rounded-3xl">
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca de Templates</DialogTitle>
+                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca de Templates Premium</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="h-[60vh] mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {templates.map(template => (
-                      <button
-                        key={template.id}
-                        onClick={() => {
-                          setSelectedTemplate(template);
-                          setIsTemplateModalOpen(true);
-                        }}
-                        className="flex flex-col p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all text-left group"
-                      >
-                        <Badge className="w-fit mb-3 bg-emerald-500/10 text-emerald-500 border-transparent text-[8px] uppercase font-black">
-                          {template.family || 'Geral'}
-                        </Badge>
-                        <h4 className="text-lg font-black uppercase italic group-hover:text-emerald-400 transition-colors">
-                          {template.title}
-                        </h4>
-                        <p className="text-xs text-white/40 mt-2 line-clamp-2 uppercase font-medium">
-                          {template.description}
-                        </p>
-                      </button>
+                <ScrollArea className="h-[65vh] mt-4 pr-4">
+                  <div className="space-y-8">
+                    {Object.entries(
+                      templates.reduce((acc, t) => {
+                        const cat = t.objective || 'Outros';
+                        if (!acc[cat]) acc[cat] = [];
+                        acc[cat].push(t);
+                        return acc;
+                      }, {} as Record<string, V3DietTemplate[]>)
+                    ).map(([category, items]) => (
+                      <div key={category} className="space-y-4">
+                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500 border-b border-emerald-500/10 pb-2">
+                          {category}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {items.map(template => (
+                            <button
+                              key={template.id}
+                              onClick={() => {
+                                setSelectedTemplate(template);
+                                setIsTemplateModalOpen(true);
+                              }}
+                              className="flex flex-col p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all text-left group"
+                            >
+                              <h4 className="text-lg font-black uppercase italic group-hover:text-emerald-400 transition-colors">
+                                {template.title}
+                              </h4>
+                              <p className="text-xs text-white/40 mt-2 line-clamp-2 uppercase font-medium">
+                                {template.description}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </ScrollArea>
