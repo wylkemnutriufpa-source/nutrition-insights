@@ -28,6 +28,31 @@ import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLev
 
 
 
+const SLOT_TRANSLATIONS: Record<string, string> = {
+  'breakfast': 'Café da Manhã',
+  'morning_snack': 'Lanche da Manhã',
+  'lunch': 'Almoço',
+  'afternoon_snack': 'Lanche da Tarde',
+  'snack': 'Lanche',
+  'dinner': 'Jantar',
+  'evening_snack': 'Ceia',
+  'supper': 'Ceia',
+  'pre_workout': 'Pré-Treino',
+  'post_workout': 'Pós-Treino',
+  'cafe_da_manha': 'Café da Manhã',
+  'lanche_da_manha': 'Lanche da Manhã',
+  'almoco': 'Almoço',
+  'almoço': 'Almoço',
+  'lanche_da_tarde': 'Lanche da Tarde',
+  'jantar': 'Jantar',
+  'ceia': 'Ceia'
+};
+
+const translateSlot = (slot: string) => {
+  const normalized = slot.toLowerCase().replace(/ /g, '_');
+  return SLOT_TRANSLATIONS[normalized] || slot.replace(/_/g, ' ');
+};
+
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
   const effectiveId = planId || id;
@@ -41,14 +66,15 @@ export default function EditorV3Page() {
   const [selectedTemplate, setSelectedTemplate] = useState<V3DietTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [patientData, setPatientData] = useState<any>(null);
+  const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
   // Nutritional Targets (Automatic Calculation Only)
   const nutritionalTargets = useMemo(() => {
     if (!patientData) return null;
     
-    const weight = patientData.weight || 70;
-    const height = patientData.height || 170;
-    const age = patientData.age || 30;
+    const weight = Number(patientData.weight) || 70;
+    const height = Number(patientData.height) || 170;
+    const age = Number(patientData.age) || 30;
     const gender = (patientData.gender === 'feminino' ? 'female' : 'male') as Gender;
     const activityLevel = (patientData.activity_level || 'moderate') as ActivityLevel;
     const goal = (patientData.goal || 'maintenance') as Goal;
@@ -58,11 +84,14 @@ export default function EditorV3Page() {
     return calculateTargetMacros(weight, tdee, goal);
   }, [patientData]);
 
-
   useEffect(() => {
     async function loadInitialData() {
-      const fetchedTemplates = await getV3Templates();
+      const [fetchedTemplates, { data: patients }] = await Promise.all([
+        getV3Templates(),
+        supabase.from('profiles').select('user_id, full_name, weight, height, age, gender, activity_level, goal').eq('role', 'patient').limit(100)
+      ]);
       setTemplates(fetchedTemplates);
+      if (patients) setAvailablePatients(patients);
     }
     loadInitialData();
   }, []);
