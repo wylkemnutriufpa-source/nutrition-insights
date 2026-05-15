@@ -124,54 +124,52 @@ export default function PatientQuickSearch({ onSelect, className, showIconOnly =
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-start text-muted-foreground font-normal transition-all border-border/40 hover:border-primary/50 bg-muted/20 rounded-xl",
-              showIconOnly ? "w-9 h-9 px-0 justify-center" : "h-9 px-3"
+              "w-full justify-start text-muted-foreground font-bold uppercase tracking-widest transition-all border-white/5 hover:border-emerald-500/50 bg-white/5 rounded-2xl shadow-inner",
+              showIconOnly ? "w-11 h-11 px-0 justify-center" : "h-11 px-4"
             )}
           >
-            <Search className={cn("h-4 w-4 shrink-0", showIconOnly ? "" : "mr-2")} />
-            {!showIconOnly && <span className="truncate">Buscar paciente...</span>}
+            <Search className={cn("h-4 w-4 shrink-0 text-emerald-500", showIconOnly ? "" : "mr-3")} />
+            {!showIconOnly && <span className="truncate text-[10px]">Buscar paciente...</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-0 border-border/40 bg-card/95 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden z-[100]" align="start" sideOffset={8}>
+        <PopoverContent className="w-[280px] p-0 border-white/10 bg-neutral-950 backdrop-blur-2xl shadow-2xl rounded-2xl overflow-hidden z-[100]" align="start" sideOffset={8}>
           <Command shouldFilter={false}>
             <CommandInput 
               placeholder="Digite o nome..." 
               value={search}
               onValueChange={setSearch}
-              className="h-11 border-none focus:ring-0"
+              className="h-12 border-none focus:ring-0 bg-transparent text-white uppercase text-[10px] font-black tracking-widest px-4"
             />
-            <CommandList className="max-h-[300px] scrollbar-thin">
+            <CommandList className="max-h-[350px] scrollbar-thin">
               {loading && patients.length === 0 ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
                 </div>
               ) : (
                 <>
-                  <CommandEmpty className="py-6 text-center text-xs text-muted-foreground">
+                  <CommandEmpty className="py-10 text-center text-[10px] font-black uppercase tracking-widest text-white/20">
                     Nenhum paciente encontrado.
                   </CommandEmpty>
-                  <CommandGroup heading="Pacientes">
+                  <CommandGroup heading={<span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/40 px-2">Resultados</span>}>
                     {filteredPatients.map((patient) => (
                       <CommandItem
                         key={patient.user_id}
                         value={patient.user_id}
                         onSelect={() => handleSelect(patient)}
-                        className="flex items-center gap-3 px-3 py-2 cursor-pointer rounded-lg hover:bg-primary/10 aria-selected:bg-primary/10"
+                        className="flex items-center gap-4 px-4 py-3 cursor-pointer rounded-xl hover:bg-emerald-500/10 aria-selected:bg-emerald-500/5 transition-all group/item"
                       >
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0 group-hover/item:scale-110 transition-transform">
                           {patient.avatar_url ? (
                             <img src={patient.avatar_url} alt={patient.full_name} className="w-full h-full rounded-full object-cover" />
                           ) : (
-                            <User className="w-4 h-4 text-primary" />
+                            <User className="w-5 h-5 text-emerald-500" />
                           )}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-bold truncate">{patient.full_name}</span>
-                          {patient.email && (
-                            <span className="text-[10px] text-muted-foreground truncate">{patient.email}</span>
-                          )}
+                          <span className="text-xs font-black uppercase italic text-white group-hover:text-emerald-400 transition-colors">{patient.full_name}</span>
+                          <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest mt-0.5">Paciente Ativo</span>
                         </div>
-                        <Check className="ml-auto h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                        <Check className="ml-auto h-4 w-4 opacity-0 group-hover/item:opacity-100 transition-all text-emerald-500" />
                       </CommandItem>
                     ))}
                   </CommandGroup>

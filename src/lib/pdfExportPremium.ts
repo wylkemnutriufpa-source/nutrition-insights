@@ -269,7 +269,7 @@ function calculateDisplayTotals(data: PremiumMealPlanPDFData) {
 function buildPremiumCSS(): string {
   return `
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
       @page {
         margin: 0;
@@ -282,8 +282,8 @@ function buildPremiumCSS(): string {
         font-family: 'Inter', -apple-system, sans-serif;
         color: #0f172a;
         background: #ffffff;
-        font-size: 10.5px;
-        line-height: 1.45;
+        font-size: 11px;
+        line-height: 1.5;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
@@ -295,37 +295,37 @@ function buildPremiumCSS(): string {
 
       /* Estilo Premium para o Header */
       .premium-header {
-        background: linear-gradient(135deg, #050505 0%, #111111 100%);
-        padding: 30px 40px;
-        margin-bottom: 25px;
+        background: linear-gradient(145deg, #020617 0%, #0f172a 100%);
+        padding: 45px 50px;
+        margin-bottom: 30px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-radius: 0 0 50px 50px;
+        border-radius: 0 0 60px 60px;
         color: white;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.2);
         position: relative;
         overflow: hidden;
-        border-bottom: 1px solid rgba(212, 168, 75, 0.2);
+        border-bottom: 2px solid rgba(212, 168, 75, 0.3);
       }
 
       .premium-header::after {
         content: '';
         position: absolute;
-        top: 0;
-        right: 0;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(212, 168, 75, 0.1) 0%, transparent 70%);
-        transform: translate(100px, -100px);
+        top: -100px;
+        right: -100px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(212, 168, 75, 0.15) 0%, transparent 70%);
+        border-radius: full;
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 42px;
+        font-size: 48px;
         font-weight: 900;
-        letter-spacing: -0.04em;
-        line-height: 0.9;
+        letter-spacing: -0.05em;
+        line-height: 0.85;
         display: flex;
         flex-direction: column;
       }
@@ -385,12 +385,12 @@ function buildPremiumCSS(): string {
       }
 
       .macro-card {
-        background: #ffffff;
-        border: 1px solid #f1f5f9;
-        border-radius: 10px;
-        padding: 10px 8px;
+        background: #fdfcf9;
+        border: 1px solid #f1e6d0;
+        border-radius: 15px;
+        padding: 15px 10px;
         text-align: center;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
       }
 
       .macro-label {
@@ -437,18 +437,19 @@ function buildPremiumCSS(): string {
 
       /* Linhas de Refeição */
       .meal-row {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        margin-bottom: 12px;
+        border: 2px solid #f1f5f9;
+        border-radius: 20px;
+        margin-bottom: 20px;
         overflow: hidden;
         background: #ffffff;
-        page-break-inside: auto;
+        page-break-inside: avoid;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
       }
 
       .meal-header-row {
-        background: #f8fafc;
-        padding: 10px 16px;
-        border-bottom: 1px solid #f1f5f9;
+        background: linear-gradient(to right, #f8fafc, #ffffff);
+        padding: 15px 24px;
+        border-bottom: 2px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
         align-items: center;

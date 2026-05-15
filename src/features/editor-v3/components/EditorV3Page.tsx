@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -9,13 +8,15 @@ import {
   ArrowLeft, Save, Plus, Target, Flame, 
   CheckCircle2, AlertCircle, Info, Send, Share2,
   Trash2, Copy, MoreHorizontal, Settings, Library,
-  Layout, Search, Loader2, User, Activity, Calculator
+  Layout, Search, Loader2, User, Activity, Calculator,
+  ChevronRight
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TemplateV3Modal } from './TemplateV3Modal';
+import { PremiumGallery } from './PremiumGallery';
 import { getV3Templates } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
 import { 
@@ -30,10 +31,7 @@ import {
 } from "@/components/ui/select";
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
-
-
-
-
+import { AnimatePresence, motion } from 'framer-motion';
 
 // No translation mapper needed anymore as keys are PT-BR by default
 const translateSlot = (s: string) => s;
@@ -318,29 +316,32 @@ export default function EditorV3Page() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white selection:bg-emerald-500/30">
+      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white selection:bg-emerald-500/30 font-sans">
         {/* Header Superior */}
-        <header className="px-8 py-4 bg-neutral-900/40 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-2xl backdrop-blur-xl transition-all duration-300">
-          <div className="flex items-center gap-6">
+        <header className="px-8 py-5 bg-neutral-900/60 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-2xl backdrop-blur-2xl transition-all duration-500">
+          <div className="flex items-center gap-8">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate(-1)}
-              className="h-10 w-10 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+              className="h-11 w-11 text-white/40 hover:text-white hover:bg-white/5 rounded-2xl transition-all duration-300"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             
-            <div className="flex items-center gap-4">
-              <div className="hidden lg:block">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney Editor</h1>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0">V3</Badge>
+            <div className="flex items-center gap-6">
+              <div className="hidden lg:block group">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-black uppercase italic tracking-tighter leading-none group-hover:text-emerald-400 transition-colors">FitJourney</h1>
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md">V3 PRO</Badge>
                 </div>
-                <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mt-0.5">Gestão de templates clínicos</p>
+                <p className="text-[10px] text-white/20 uppercase font-bold tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500/50 animate-pulse" />
+                  Ambiente de Prescrição Premium
+                </p>
               </div>
 
-              <div className="h-10 w-px bg-white/10 hidden lg:block mx-2" />
+              <div className="h-10 w-px bg-white/10 hidden lg:block mx-1" />
 
               <Select 
                 value={effectivePatientId || ""} 
@@ -363,116 +364,100 @@ export default function EditorV3Page() {
 
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
+                  className="bg-white/5 border-white/10 hover:bg-emerald-500/10 hover:border-emerald-500/30 text-white/60 hover:text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-8 rounded-2xl hidden md:flex transition-all duration-300 shadow-lg"
                 >
-                  <Library className="w-4 h-4 mr-2" /> Templates
+                  <Library className="w-5 h-5 mr-3" /> Biblioteca Premium
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-6 rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">Biblioteca de Templates Premium</DialogTitle>
-                </DialogHeader>
-                <ScrollArea className="h-[65vh] mt-4 pr-4">
-                  <div className="space-y-8">
-                    {Object.entries(
-                      templates.reduce((acc, t) => {
-                        const cat = t.objective || 'Outros';
-                        if (!acc[cat]) acc[cat] = [];
-                        acc[cat].push(t);
-                        return acc;
-                      }, {} as Record<string, V3DietTemplate[]>)
-                    ).map(([category, items]) => (
-                      <div key={category} className="space-y-4">
-                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500 border-b border-emerald-500/10 pb-2">
-                          {category}
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {items.map(template => (
-                            <button
-                              key={template.id}
-                              onClick={() => {
-                                setSelectedTemplate(template);
-                                setIsTemplateModalOpen(true);
-                              }}
-                              className="flex flex-col p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all text-left group"
-                            >
-                              <h4 className="text-lg font-black uppercase italic group-hover:text-emerald-400 transition-colors">
-                                {template.title}
-                              </h4>
-                              <p className="text-xs text-white/40 mt-2 line-clamp-2 uppercase font-medium">
-                                {template.description}
-                              </p>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+              <DialogContent className="max-w-6xl bg-neutral-950 border-white/10 text-white p-12 rounded-[3.5rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)] overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] -mr-64 -mt-64 rounded-full pointer-events-none" />
+                
+                <DialogHeader className="mb-12 relative z-10">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+                      <Library className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-4xl font-black uppercase italic tracking-tighter leading-none text-white">Biblioteca Soberana</DialogTitle>
+                      <p className="text-[11px] text-white/20 uppercase font-black tracking-[0.3em] mt-3 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Padrões Clínicos de Alta Performance
+                      </p>
+                    </div>
                   </div>
-                </ScrollArea>
+                </DialogHeader>
+                
+                <PremiumGallery 
+                  templates={templates} 
+                  onSelect={(template) => {
+                    setSelectedTemplate(template);
+                    setIsTemplateModalOpen(true);
+                  }}
+                />
               </DialogContent>
             </Dialog>
 
             <Button 
               variant="outline" 
-              className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex"
+              className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-8 rounded-2xl hidden md:flex transition-all"
             >
-              <Share2 className="w-4 h-4 mr-2" /> Compartilhar
+              <Share2 className="w-5 h-5 mr-3" /> Compartilhar
             </Button>
 
             <Button 
               onClick={handleSave}
               disabled={saving}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-10 px-8 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-[0.2em] h-12 px-10 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 text-[11px]"
             >
-              <Save className="w-4 h-4 mr-2" /> Salvar Plano
+              <Save className="w-5 h-5 mr-3" /> Salvar Plano
             </Button>
           </div>
         </header>
 
         {/* Dashboard de Macros */}
-        <div className="px-8 py-8 bg-neutral-900/30 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8 items-center backdrop-blur-md">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Flame className="w-3 h-3 text-orange-500" /> Valor Calórico
+        <div className="px-10 py-10 bg-neutral-900/40 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-12 items-center backdrop-blur-3xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-orange-500 transition-colors duration-500">
+              <Flame className="w-4 h-4 text-orange-500" /> Valor Calórico
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.kcal)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">kcal</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.kcal)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">kcal</span>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Target className="w-3 h-3 text-emerald-500" /> Proteínas
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-emerald-500 transition-colors duration-500">
+              <Target className="w-4 h-4 text-emerald-500" /> Proteínas
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.protein)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">g</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.protein)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Target className="w-3 h-3 text-blue-500" /> Carboidratos
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-blue-500 transition-colors duration-500">
+              <Target className="w-4 h-4 text-blue-500" /> Carboidratos
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.carbs)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">g</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.carbs)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
-              <Target className="w-3 h-3 text-amber-500" /> Lipídeos
+          <div className="space-y-2 group">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-amber-500 transition-colors duration-500">
+              <Target className="w-4 h-4 text-amber-500" /> Lipídeos
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black italic tracking-tighter text-white">{Math.round(planTotals.fat)}</span>
-              <span className="text-xs font-black uppercase text-white/20 tracking-widest">g</span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.fat)}</span>
+              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
             </div>
           </div>
         </div>
@@ -480,99 +465,40 @@ export default function EditorV3Page() {
         {/* Workspace Principal */}
         <main className="flex-1 overflow-hidden flex flex-col md:flex-row">
           {/* Timeline de Refeições */}
-          <ScrollArea className="flex-1 h-full px-8 py-8">
-            <div className="max-w-4xl mx-auto space-y-8 pb-20">
-              {store.meals.map((meal) => (
-                <MealCard 
-                  key={meal.id} 
-                  meal={meal} 
-                  onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
-                  onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
-                  onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
-                  onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
-                  onRemoveMeal={() => store.removeMeal(meal.id)}
-                />
+          <ScrollArea className="flex-1 h-full px-8 py-12">
+            <div className="max-w-5xl mx-auto space-y-12 pb-32">
+              <AnimatePresence mode="popLayout">
+                {store.meals.map((meal, idx) => (
+                  <motion.div
+                    key={meal.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  >
+                    <MealCard 
+                      meal={meal} 
+                      onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
+                      onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
+                      onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
+                      onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
+                      onRemoveMeal={() => store.removeMeal(meal.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
 
-              ))}
-
-              {/* Botão Adicionar Refeição */}
               <Button 
                 onClick={handleAddMeal}
-                className="w-full h-32 bg-white/[0.02] border-2 border-dashed border-white/5 hover:bg-emerald-500/[0.02] hover:border-emerald-500/30 text-white/10 hover:text-emerald-500 rounded-[2.5rem] transition-all duration-500 group"
+                variant="outline" 
+                className="w-full h-24 bg-white/[0.02] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-[2.5rem] transition-all group/add-meal shadow-inner"
               >
-                <div className="flex flex-col items-center gap-1">
-                  <Plus className="w-6 h-6 group-hover:scale-125 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Nova Refeição</span>
-                </div>
+                <Plus className="w-8 h-8 mr-4 group-hover/add-meal:scale-125 transition-transform duration-500" />
+                <span className="uppercase text-xs font-black tracking-[0.3em]">Adicionar Nova Refeição ao Plano</span>
               </Button>
             </div>
           </ScrollArea>
 
-          {/* Barra Lateral de Status (Hidden on Mobile) */}
-          <aside className="hidden lg:flex w-80 bg-neutral-900 border-l border-white/10 p-6 flex-col gap-8">
-            {/* Automatic Calculation Section */}
-            {nutritionalTargets && (
-              <section className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/20 rounded-lg">
-                    <Calculator className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Alvo do Paciente</h4>
-                </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Kcal Recomendado</p>
-                    <p className="text-xl font-black italic">{nutritionalTargets.calories} <span className="text-[10px] uppercase text-white/20">kcal</span></p>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 border-t border-emerald-500/10 pt-3">
-                    <div>
-                      <p className="text-[8px] font-black uppercase text-white/30">Prot</p>
-                      <p className="text-xs font-bold">{nutritionalTargets.protein}g</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-black uppercase text-white/30">Carb</p>
-                      <p className="text-xs font-bold">{nutritionalTargets.carbs}g</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-black uppercase text-white/30">Gord</p>
-                      <p className="text-xs font-bold">{nutritionalTargets.fat}g</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="text-[8px] text-white/40 uppercase font-medium leading-tight">
-                  Cálculo automático baseado no peso ({patientData.current_weight_kg || patientData.weight || 70}kg), altura ({patientData.current_height_cm || patientData.height || 170}cm) e objetivo ({patientData.goal || 'Manutenção'}).
-                </p>
-              </section>
-            )}
-
-            <section>
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 flex items-center gap-2">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Auditoria Nutricional
-              </h4>
-              <div className="space-y-3">
-                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl flex gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-white/60 mb-1">Editor Manual Ativo</p>
-                    <p className="text-[9px] text-white/40 font-medium leading-tight">Controle total do nutricionista habilitado.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-
-            <section className="mt-auto">
-              <div className="p-6 bg-white/5 border border-white/10 rounded-3xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">FitJourney Editor</p>
-                <p className="text-sm font-bold text-white mb-4 italic">"Plataforma Profissional de Templates e Cálculos"</p>
-                <Badge className="bg-white/10 text-white/60 border-transparent text-[8px] uppercase font-black">v4.0.0-stable</Badge>
-
-              </div>
-            </section>
-          </aside>
+          {/* Lateral Info / Sidebar de Metas (Opcional) */}
         </main>
       </div>
 
@@ -585,4 +511,3 @@ export default function EditorV3Page() {
     </DashboardLayout>
   );
 }
-

@@ -16,7 +16,7 @@ import {
   TrendingUp, Heart, MessageSquare, MessageCircle, Award, Crown, Compass,
   Megaphone, UserCheck, Scale, Lightbulb, Bot, Camera, Pill,
   GraduationCap, LogOut, ChevronRight, Search, AlertTriangle,
-  Flame, ShoppingCart, Pin, X,
+  Flame, ShoppingCart, Pin, X, Library
 } from "lucide-react";
 import { SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@/hooks/useSmartMenu";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
@@ -28,14 +28,14 @@ const ICON_MAP: Record<string, any> = {
   Shield, Zap, TrendingUp, Heart, MessageSquare, MessageCircle, Award, Crown,
   Compass, Megaphone, UserCheck, Scale, Lightbulb, Bot, Camera,
   Pill, GraduationCap, Dumbbell, Flame, ShoppingCart, AlertTriangle,
-  Moon, Sun, LogOut, ChevronRight, Search, Pin,
+  Moon, Sun, LogOut, ChevronRight, Search, Pin, Library
 };
 
 function getIcon(name: string) {
   return ICON_MAP[name] || LayoutDashboard;
 }
 
-// Map existing DB categories to new accordion groups
+// Map categories to premium groups
 const CATEGORY_TO_GROUP: Record<string, string> = {
   PRINCIPAL: "CLÍNICO",
   CLÍNICO: "CLÍNICO",
@@ -43,30 +43,28 @@ const CATEGORY_TO_GROUP: Record<string, string> = {
   ANALYTICS: "ACOMPANHAMENTO",
   PERFORMANCE: "ACOMPANHAMENTO",
   MARKETING: "GESTÃO",
-  FERRAMENTAS: "CONTEÚDO",
-  CONTEÚDO: "CONTEÚDO",
+  FERRAMENTAS: "BIBLIOTECA",
+  CONTEÚDO: "BIBLIOTECA",
   ADMIN: "GESTÃO",
   PERSONAL: "CLÍNICO",
 };
 
-const GROUP_ORDER = ["CLÍNICO", "ACOMPANHAMENTO", "ENGAJAMENTO", "CONTEÚDO", "GESTÃO", "CONFIGURAÇÕES"];
+const GROUP_ORDER = ["CLÍNICO", "ACOMPANHAMENTO", "BIBLIOTECA", "GESTÃO", "CONFIGURAÇÕES"];
 
 const GROUP_ICONS: Record<string, any> = {
   CLÍNICO: Heart,
-  ACOMPANHAMENTO: TrendingUp,
-  ENGAJAMENTO: Trophy,
-  CONTEÚDO: BookOpen,
+  ACOMPANHAMENTO: Activity,
+  BIBLIOTECA: Library,
   GESTÃO: BarChart3,
   CONFIGURAÇÕES: Settings,
 };
 
 const GROUP_COLORS: Record<string, string> = {
-  CLÍNICO: "text-sky-400",
-  ACOMPANHAMENTO: "text-emerald-400",
-  ENGAJAMENTO: "text-amber-400",
-  CONTEÚDO: "text-violet-400",
+  CLÍNICO: "text-emerald-400",
+  ACOMPANHAMENTO: "text-blue-400",
+  BIBLIOTECA: "text-amber-400",
   GESTÃO: "text-rose-400",
-  CONFIGURAÇÕES: "text-muted-foreground",
+  CONFIGURAÇÕES: "text-white/20",
 };
 
 // Fixed items that appear above groups
@@ -365,7 +363,7 @@ function SidebarSkeleton() {
   );
 }
 
-function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
+function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: any) {
   const location = useLocation();
   const { t } = useTranslation();
   const { isFeatureEnabled, minMode, mode, isBasic } = useExperienceMode();
@@ -377,7 +375,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
 
   if (loading || !hasRole) return null;
 
-  const allItems = categories.flatMap((c) => c.items).filter(item => {
+  const allItems = categories.flatMap((c: any) => c.items).filter((item: any) => {
     const featureKey = item.feature || item.route.replace(/^\//, '');
     
     // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
@@ -391,7 +389,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
 
   const grouped = useMemo(() => {
     const groups: Record<string, SmartMenuItem[]> = {};
-    allItems.forEach((item) => {
+    allItems.forEach((item: any) => {
       const g = CATEGORY_TO_GROUP[item.category] || "OUTROS";
       if (!groups[g]) groups[g] = [];
       groups[g].push(item);

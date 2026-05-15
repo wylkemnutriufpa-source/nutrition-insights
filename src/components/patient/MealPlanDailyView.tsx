@@ -137,17 +137,12 @@ function isCurrentMeal(timeRange: string): boolean {
 const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: { items: MealPlanItem[], totalsStatus?: string }) {
   const totals = useMemo(() => {
     // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo
-    // Evita explosão de macros se substituições vazarem para a lista principal
     const primaryOnly = items.filter(i => {
-      // Itens explicitamente marcados como não primários não entram
       if (i.is_primary === false) return false;
-      // Itens em grupos de substituição não entram
       if (i.metadata?.substitution_group_id || (i as any).edit_metadata?.substitution_group_id) return false;
-      // Itens com "substituição" no título ou descrição são suspeitos e removidos se is_primary não for True
       const lowerTitle = (i.title || "").toLowerCase();
       const lowerDesc = (i.description || "").toLowerCase();
       if ((lowerTitle.includes("substitu") || lowerDesc.includes("substitu")) && i.is_primary !== true) return false;
-      
       return true;
     });
     
@@ -162,39 +157,39 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
   const isIncomplete = totalsStatus === 'incomplete' || (totals.calories === 0 && items.length > 0);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-1 px-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Metas Nutricionais do Dia</span>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 px-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.3em]">Metas Nutricionais do Dia</span>
       </div>
-      <div className="grid grid-cols-4 gap-2.5">
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Kcal</p>
-          <p className="font-display font-black text-lg text-white" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Flame className="w-5 h-5 mx-auto text-orange-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Kcal</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
         </div>
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Beef className="w-4 h-4 mx-auto text-red-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Prot</p>
-          <p className="font-display font-black text-lg text-white" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Beef className="w-5 h-5 mx-auto text-red-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Prot</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
         </div>
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Carbs</p>
-          <p className="font-display font-black text-lg text-white" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Wheat className="w-5 h-5 mx-auto text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Carbs</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
         </div>
-        <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4 text-center transition-all hover:bg-neutral-900/60 group shadow-lg">
-          <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] text-muted-foreground font-medium uppercase">Gord</p>
-          <p className="font-display font-black text-lg text-white" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
+          <Droplets className="w-5 h-5 mx-auto text-yellow-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Gord</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
         </div>
       </div>
       
       {isIncomplete && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg animate-pulse" data-testid="macros-sync-alert">
-          <Clock className="w-3.5 h-3.5 text-amber-500" />
-          <p className="text-[10px] text-amber-600 font-medium leading-tight">
-            Valores nutricionais em cálculo... Atualizando em instantes.
+        <div className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-pulse">
+          <Clock className="w-4 h-4 text-amber-500" />
+          <p className="text-[11px] text-amber-600 font-bold uppercase tracking-widest leading-tight">
+            Valores nutricionais em cálculo...
           </p>
         </div>
       )}
@@ -240,26 +235,30 @@ const MealItemCard = memo(function MealItemCard({
         opacity: 1, y: 0,
         boxShadow: isJustDone ? "0 0 20px rgba(16,185,129,0.3)" : "none",
       }}
-      className={`relative rounded-[2.5rem] border overflow-hidden bg-neutral-900/40 backdrop-blur-md group ${statusColor}`}
+      className={`relative rounded-[3rem] border overflow-hidden bg-neutral-900/60 backdrop-blur-2xl group transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${statusColor}`}
     >
       {resolvedImage && (
         <div
-          className="relative w-full aspect-[16/9] overflow-hidden cursor-pointer bg-muted/30"
+          className="relative w-full aspect-[16/10] overflow-hidden cursor-pointer bg-neutral-900 group/image"
           onClick={() => onOpenDetail({ ...item, itemId: item.id, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
-
         >
-          <img src={resolvedImage} alt={item.title} className="w-full h-full object-cover object-center" loading="lazy" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
-          <div className="absolute top-2 right-2">
-            {status === "followed" ? <CheckCircle2 className="w-5 h-5 text-emerald-500 drop-shadow" />
-              : status === "partial" ? <MinusCircle className="w-5 h-5 text-amber-500 drop-shadow" />
-              : status === "not_followed" ? <AlertCircle className="w-5 h-5 text-red-500 drop-shadow" />
+          <img 
+            src={resolvedImage} 
+            alt={item.title} 
+            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/image:scale-110" 
+            loading="lazy" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent" />
+          <div className="absolute top-6 right-6 z-10">
+            {status === "followed" ? <CheckCircle2 className="w-7 h-7 text-emerald-500 drop-shadow-2xl" />
+              : status === "partial" ? <MinusCircle className="w-7 h-7 text-amber-500 drop-shadow-2xl" />
+              : status === "not_followed" ? <AlertCircle className="w-7 h-7 text-red-500 drop-shadow-2xl" />
               : null}
           </div>
           {needsVisualFallback && visualItem && (
-            <div className="absolute bottom-1 left-1">
-              <span className="text-[8px] px-1.5 py-0.5 rounded bg-primary/70 text-primary-foreground backdrop-blur-sm">
-                📸 Inspiração
+            <div className="absolute bottom-4 left-4">
+              <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-emerald-500/80 text-black backdrop-blur-md">
+                📸 Inspiração Real
               </span>
             </div>
           )}

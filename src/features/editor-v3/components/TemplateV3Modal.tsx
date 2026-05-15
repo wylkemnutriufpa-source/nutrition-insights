@@ -46,19 +46,21 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-0 overflow-hidden rounded-2xl">
-        <div className="flex flex-col md:flex-row h-[85vh] max-h-[800px]">
+      <DialogContent className="max-w-5xl bg-neutral-950 border-white/10 text-white p-0 overflow-hidden rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)]">
+        <div className="flex flex-col md:flex-row h-[85vh] max-h-[850px]">
           {/* Lateral Info */}
-          <div className="w-full md:w-80 bg-neutral-900/50 p-6 border-r border-white/10 flex flex-col">
-            <div className="flex-1">
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4 uppercase text-[10px] font-black tracking-widest">
-                Template Profissional
+          <div className="w-full md:w-96 bg-neutral-900/80 p-10 border-r border-white/5 flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] -mr-32 -mt-32 rounded-full" />
+            
+            <div className="flex-1 relative z-10">
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 mb-6 uppercase text-[10px] font-black tracking-[0.2em] px-3 py-1 rounded-lg">
+                Template Premium Soberano
               </Badge>
 
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">
+              <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-4 leading-[0.9] text-white">
                 {template.title}
               </h2>
-              <p className="text-white/40 text-xs uppercase font-medium leading-relaxed mb-6">
+              <p className="text-white/30 text-xs uppercase font-bold leading-relaxed mb-10 tracking-wide">
                 {template.description}
               </p>
 
@@ -110,21 +112,20 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <div className="flex-1 flex flex-col min-w-0 bg-black/20">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between backdrop-blur-md">
               <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-auto">
-                <TabsList className="bg-white/5 border border-white/10 p-1">
-                  <TabsTrigger value="daily" className="data-[state=active]:bg-white/10 text-[10px] uppercase font-black px-4">Diário</TabsTrigger>
-                  <TabsTrigger value="weekly" className="data-[state=active]:bg-white/10 text-[10px] uppercase font-black px-4">Semanal</TabsTrigger>
+                <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl">
+                  <TabsTrigger value="daily" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] uppercase font-black px-6 py-2 rounded-xl transition-all duration-300 tracking-widest">Diário</TabsTrigger>
+                  <TabsTrigger value="weekly" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] uppercase font-black px-6 py-2 rounded-xl transition-all duration-300 tracking-widest">Semanal</TabsTrigger>
                 </TabsList>
               </Tabs>
               
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-white/30">
-                  <Calculator className="w-3 h-3" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Cálculo Automático</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-white/20">
+                  <Calculator className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Cálculo Soberano Ativo</span>
                 </div>
-
               </div>
             </div>
 
