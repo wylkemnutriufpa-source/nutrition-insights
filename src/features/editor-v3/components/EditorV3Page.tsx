@@ -73,59 +73,67 @@ export default function EditorV3Page() {
     
     try {
       const clusterMap = selectedTemplate.cluster_map || {};
-      const newMeals = await Promise.all(selectedTemplate.meal_distribution.map(async (dist) => {
-        const clusterSlug = clusterMap[dist.slot];
-        let items: any[] = [];
+      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
+      const newMeals: any[] = [];
 
-        if (clusterSlug) {
-          const { data: libraryItems } = await supabase
-            .from('v3_library_items')
-            .select('*')
-            .eq('cluster_slug', clusterSlug)
-            .eq('active', true)
-            .limit(1);
-          
-          if (libraryItems && libraryItems.length > 0) {
-            const food = libraryItems[0];
-            // Fetch equivalents for this initial item
-            const { data: subs } = await supabase
+      for (const day of days) {
+        for (const dist of selectedTemplate.meal_distribution) {
+          const slot = dist.slot;
+          const clusterSlug = clusterMap[slot];
+          let items: any[] = [];
+
+          if (clusterSlug) {
+            const { data: libraryItems } = await supabase
               .from('v3_library_items')
               .select('*')
-              .eq('substitutions_group', food.substitutions_group)
-              .neq('id', food.id)
+              .eq('cluster_slug', clusterSlug)
               .eq('active', true)
-              .limit(10);
-
-            const quantity = (food as any).portionValue || (food as any).base_grams || 100;
-            const macros = calculateItemMacros(food, quantity);
-
+              .limit(1);
             
-            items = [{
-              ...food,
-              instanceId: crypto.randomUUID(),
-              quantity,
-              clinical_mass_g: quantity,
-              substitutions: subs || [],
-              ...macros
-            }];
-          }
-        }
+            if (libraryItems && libraryItems.length > 0) {
+              const food = libraryItems[0];
+              const { data: subs } = await supabase
+                .from('v3_library_items')
+                .select('*')
+                .eq('substitutions_group', food.substitutions_group)
+                .neq('id', food.id)
+                .eq('active', true)
+                .limit(5);
 
-        return {
-          id: crypto.randomUUID(),
-          name: dist.slot.replace(/_/g, ' '),
-          time: dist.time,
-          items
-        };
-      }));
+              // Calculate quantity based on total target calories and number of meals
+              const targetMealKcal = kcal / selectedTemplate.meal_distribution.length;
+              const quantity = scaleItemToTarget(food, targetMealKcal, 'kcal');
+              const macros = calculateItemMacros(food, quantity);
+              
+              items = [{
+                ...food,
+                instanceId: crypto.randomUUID(),
+                quantity,
+                clinical_mass_g: quantity,
+                substitutions: subs || [],
+                ...macros
+              }];
+            }
+          }
+
+          newMeals.push({
+            id: crypto.randomUUID(),
+            name: slot.replace(/_/g, ' '),
+            time: dist.time,
+            day_of_week: day,
+            items
+          });
+        }
+      }
 
       store.hydrateMeals(newMeals);
-      toast.success('Template aplicado! Agora você pode ajustar os alimentos.', { id: toastId });
+      toast.success('Template plotado com sucesso!', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao aplicar template', { id: toastId });
+      toast.error('Erro ao plotar template', { id: toastId });
     }
   };
+
 
 
 
