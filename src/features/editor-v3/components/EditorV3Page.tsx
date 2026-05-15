@@ -86,12 +86,16 @@ export default function EditorV3Page() {
 
   useEffect(() => {
     async function loadInitialData() {
-      const [fetchedTemplates, { data: patients }] = await Promise.all([
-        getV3Templates(),
-        supabase.from('profiles').select('user_id, full_name, weight, height, age, gender, activity_level, goal').eq('role', 'patient').limit(100)
-      ]);
-      setTemplates(fetchedTemplates);
-      if (patients) setAvailablePatients(patients);
+      try {
+        const [fetchedTemplates, patientsResult] = await Promise.all([
+          getV3Templates(),
+          (supabase.from('profiles') as any).select('user_id, full_name, weight, height, age, gender, activity_level, goal').eq('role', 'patient').limit(100)
+        ]);
+        setTemplates(fetchedTemplates);
+        if (patientsResult.data) setAvailablePatients(patientsResult.data);
+      } catch (err) {
+        console.error('Error loading initial data:', err);
+      }
     }
     loadInitialData();
   }, []);
@@ -102,19 +106,19 @@ export default function EditorV3Page() {
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
-      const clusterMap = selectedTemplate.cluster_map || {};
+      const clusterMap = (selectedTemplate.cluster_map as any) || {};
       const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [0];
       const newMeals: any[] = [];
 
       for (const day of days) {
-        for (const dist of selectedTemplate.meal_distribution) {
+        for (const dist of (selectedTemplate.meal_distribution as any[])) {
           const slot = dist.slot;
           const clusterSlug = clusterMap[slot];
           let items: any[] = [];
 
           if (clusterSlug) {
-            const { data: libraryItems } = await supabase
-              .from('v3_library_items')
+            const { data: libraryItems } = await (supabase
+              .from('v3_library_items') as any)
               .select('*')
               .eq('cluster_slug', clusterSlug)
               .eq('active', true)
@@ -122,8 +126,8 @@ export default function EditorV3Page() {
             
             if (libraryItems && libraryItems.length > 0) {
               const food = libraryItems[0];
-              const { data: subs } = await supabase
-                .from('v3_library_items')
+              const { data: subs } = await (supabase
+                .from('v3_library_items') as any)
                 .select('*')
                 .eq('substitutions_group', food.substitutions_group)
                 .neq('id', food.id)
