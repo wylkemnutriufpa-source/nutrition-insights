@@ -8,12 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 interface Props { search: string; }
 
 const MEAL_LABELS: Record<string, string> = {
-  breakfast: "Café da Manhã",
-  morning_snack: "Lanche da Manhã",
-  lunch: "Almoço",
-  afternoon_snack: "Lanche da Tarde",
-  dinner: "Jantar",
-  evening_snack: "Ceia",
+  "Café da Manhã": "Café da Manhã",
+  "Lanche da Manhã": "Lanche da Manhã",
+  "Almoço": "Almoço",
+  "Lanche da Tarde": "Lanche da Tarde",
+  "Jantar": "Jantar",
+  "Ceia": "Ceia",
 };
 
 /**

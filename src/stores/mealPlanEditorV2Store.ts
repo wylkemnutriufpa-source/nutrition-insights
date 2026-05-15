@@ -249,10 +249,10 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       
       let nextDescription = item.description;
       if (nextDescription) {
-        nextDescription = nextDescription.replace(/(\d+)\s*g/g, (match, grams) => {
+        nextDescription = nextDescription.replace(/(\d+)\s*(g|un|fatia|scoop|unidade)/g, (match, grams, unit) => {
           const g = parseFloat(grams);
           const scale = (item.meta_carboidratos && Number(item.meta_carboidratos) > Number(item.meta_proteinas)) ? cScale : (pScale || kScale);
-          return `${Math.round(g * scale)}g`;
+          return `${Math.round(g * scale)}${unit}`;
         });
       }
 
