@@ -16,6 +16,31 @@ import {
 import { V3DietTemplate, KcalProfile } from '../types/types';
 import { cn } from '@/lib/utils';
 
+const SLOT_TRANSLATIONS: Record<string, string> = {
+  'breakfast': 'Café da Manhã',
+  'morning_snack': 'Lanche da Manhã',
+  'lunch': 'Almoço',
+  'afternoon_snack': 'Lanche da Tarde',
+  'snack': 'Lanche',
+  'dinner': 'Jantar',
+  'evening_snack': 'Ceia',
+  'supper': 'Ceia',
+  'pre_workout': 'Pré-Treino',
+  'post_workout': 'Pós-Treino',
+  'cafe_da_manha': 'Café da Manhã',
+  'lanche_da_manha': 'Lanche da Manhã',
+  'almoco': 'Almoço',
+  'almoço': 'Almoço',
+  'lanche_da_tarde': 'Lanche da Tarde',
+  'jantar': 'Jantar',
+  'ceia': 'Ceia'
+};
+
+const translateSlot = (slot: string) => {
+  const normalized = slot.toLowerCase().replace(/ /g, '_');
+  return SLOT_TRANSLATIONS[normalized] || slot.replace(/_/g, ' ');
+};
+
 interface TemplateV3ModalProps {
   isOpen: boolean;
   onClose: () => void;
