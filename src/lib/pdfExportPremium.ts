@@ -112,19 +112,23 @@ const MEAL_TYPE_ALIASES: Record<string, CanonicalMealType> = {
   lanche_da_manha: "morning_snack",
   lanche_manha: "morning_snack",
   colacao: "morning_snack",
+  snack_1: "morning_snack",
   lunch: "lunch",
   almoco: "lunch",
   afternoon_snack: "afternoon_snack",
   lanche_da_tarde: "afternoon_snack",
   lanche_tarde: "afternoon_snack",
   snack: "afternoon_snack",
+  snack_2: "afternoon_snack",
   dinner: "dinner",
   jantar: "dinner",
   evening_snack: "evening_snack",
   ceia: "evening_snack",
+  supper: "evening_snack",
   lanche_da_noite: "evening_snack",
   lanche_noite: "evening_snack",
 };
+
 
 function normalizeMealTypeKey(type: unknown): string {
   return String(type || "")
