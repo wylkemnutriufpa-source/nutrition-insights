@@ -383,7 +383,7 @@ const EditorV3Page = () => {
 
         // 🛡️ RECOVERY SOVEREIGNTY: Se não temos um planId na URL, tentamos recuperar o plano ATIVO do paciente.
         // Isso evita que o Editor abra vazio para pacientes que já possuem plano.
-        let activePlanId = planId;
+        let activePlanId = resolvedPlanId;
         if (!activePlanId && canonicalPatientId) {
           const { data: activePlan } = await supabase
             .from('meal_plans')
@@ -397,6 +397,7 @@ const EditorV3Page = () => {
           if (activePlan) {
             console.info(`[V3-Init] Recovered active plan ${activePlan.id} for patient ${canonicalPatientId}`);
             activePlanId = activePlan.id;
+            setResolvedPlanId(activePlan.id);
           }
         }
 
