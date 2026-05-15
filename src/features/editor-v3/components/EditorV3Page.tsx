@@ -74,7 +74,7 @@ import { ControlledDeliveryModal } from './ControlledDeliveryModal';
 import { DraftV3PreviewModal } from './DraftV3PreviewModal';
 import { searchV3LibraryItems, getV3Templates } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
-import { V3TemplateEngine } from '../services/v3TemplateEngine';
+import { V3TemplatePlotter } from '../services/v3TemplateEngine';
 import { calculateHumanMealScore } from '@/lib/clinicalHumanEngine';
 
 
@@ -650,7 +650,7 @@ const EditorV3Page = () => {
       const modeText = isWeekly ? 'Semanal' : 'Diário';
       toast.loading(`Aplicando Template ${selectedV3Template.title} ${modeText} (${kcal} kcal)...`, { id: 'v3-gen' });
       
-      const v3Meals = await V3TemplateEngine.plotTemplate(
+      const v3Meals = await V3TemplatePlotter.plotTemplate(
         selectedV3Template.slug,
         kcal,
         { isWeekly }
