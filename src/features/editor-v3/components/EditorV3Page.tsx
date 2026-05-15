@@ -443,9 +443,10 @@ export default function EditorV3Page() {
 
             <section className="mt-auto">
               <div className="p-6 bg-white/5 border border-white/10 rounded-3xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Editor Protocol</p>
-                <p className="text-sm font-bold text-white mb-4 italic">"Comida Real. Dieta Prática. Estrutura Clara."</p>
-                <Badge className="bg-white/10 text-white/60 border-transparent text-[8px] uppercase font-black">v3.0.0-sovereign</Badge>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">FitJourney Editor</p>
+                <p className="text-sm font-bold text-white mb-4 italic">"Plataforma Profissional de Templates e Cálculos"</p>
+                <Badge className="bg-white/10 text-white/60 border-transparent text-[8px] uppercase font-black">v4.0.0-stable</Badge>
+
               </div>
             </section>
           </aside>
