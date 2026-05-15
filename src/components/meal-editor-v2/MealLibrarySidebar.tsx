@@ -69,9 +69,9 @@ const MEAL_ICONS: Record<string, React.ReactNode> = {
 
 const MEAL_LABELS: Record<string, string> = {
   breakfast: "Café da Manhã",
-  morning_snack: "Lanche Manhã",
+  morning_snack: "Lanche da Manhã",
   lunch: "Almoço",
-  afternoon_snack: "Lanche Tarde",
+  afternoon_snack: "Lanche da Tarde",
   dinner: "Jantar",
   evening_snack: "Ceia",
 };
@@ -456,11 +456,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
           </div>
         </SheetHeader>
 
-        {/* Source tabs: My Templates vs Pre-built */}
-        <div className="flex border-b border-border">
-          <button
-            type="button"
-            onClick={() => setActiveTab("my")}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Source tabs: My Templates vs Pre-built */}
+          <div className="flex border-b border-border shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab("my")}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
               activeTab === "my"
                 ? "text-primary border-b-2 border-primary bg-primary/5"
