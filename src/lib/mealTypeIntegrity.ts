@@ -69,7 +69,12 @@ export function matchesSlotBlacklist(name: string, slot: MealSlot): boolean {
   return patterns.some((re) => re.test(name));
 }
 
-export function isFoodAllowedInSlot(name: string, group: SubstitutionGroup | null | undefined, slotInput: string): boolean {
+export function isFoodAllowedInSlot(
+  name: string,
+  group: SubstitutionGroup | null | undefined,
+  slotInput: string,
+  _context?: any
+): boolean {
   const slot = normalizeSlot(slotInput);
   if (!slot) return true;
   // Apenas avisos, nunca bloqueios rígidos

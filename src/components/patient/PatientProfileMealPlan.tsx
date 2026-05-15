@@ -56,8 +56,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
       return;
     }
 
-    const allResolvedItems = (itemsData || []) as unknown as MealPlanItem[];
-    setAllItems(allResolvedItems);
+    const allResolvedItems = (itemsData || []) as any[];
+    setAllItems(allResolvedItems as any[]);
     
     // Group and filter items for the daily view
     setItems(buildDailyDisplayItems(allResolvedItems as any, dayOfWeek) as MealPlanItem[]);
