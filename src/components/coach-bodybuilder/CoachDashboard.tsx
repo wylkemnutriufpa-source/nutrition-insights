@@ -256,7 +256,7 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(PHASE_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                      <SelectItem key={k} value={k}>{String(v)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -320,7 +320,7 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
           <SelectContent>
             <SelectItem value="all">Todas Fases</SelectItem>
             {Object.entries(PHASE_LABELS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
+              <SelectItem key={k} value={k}>{String(v)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
