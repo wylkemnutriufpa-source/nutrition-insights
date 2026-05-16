@@ -384,7 +384,21 @@ export default function PatientMealPlan() {
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
     // 🛡️ SOBERANIA V3: Mesmo para V3, usamos o pipeline de agrupamento para garantir que
     // apenas itens primários apareçam no dashboard e substituições fiquem no metadata.
-    const dailyItems = buildDailyDisplayItems(resolvedAllItems as any, new Date(date + "T12:00:00").getDay());
+    const currentDow = new Date(date + "T12:00:00").getDay();
+    let dailyItems = buildDailyDisplayItems(resolvedAllItems as any, currentDow);
+    
+    // 🛡️ FALLBACK SOBERANO: Se o dia atual está vazio, mas existem itens em outros dias,
+    // não mostramos tela vazia. Buscamos o primeiro dia disponível para garantir entrega.
+    if (dailyItems.length === 0 && resolvedAllItems.length > 0) {
+      const firstAvailableDay = resolvedAllItems.find(i => i.day_of_week !== null && i.day_of_week !== undefined)?.day_of_week;
+      if (firstAvailableDay !== undefined) {
+        console.log(`[RECOVERY] Current day (${currentDow}) empty. Falling back to day ${firstAvailableDay}.`);
+        dailyItems = buildDailyDisplayItems(resolvedAllItems as any, firstAvailableDay);
+        // Opcional: Atualizar a data selecionada para o dia encontrado? 
+        // Melhor não mudar a data do calendário abruptamente, mas mostrar os itens com um aviso.
+      }
+    }
+
     setItems(dailyItems as MealPlanItem[]);
     setAllItems(resolvedAllItems);
 

@@ -45,32 +45,67 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     if (!patientId || !activeMealPlanId) return;
     setLoading(true);
 
-    const { data: itemsData, error: itemsError } = await supabase
-      .from("meal_plan_items")
-      .select("*")
-      .eq("meal_plan_id", activeMealPlanId);
+    try {
+      // 1. Fetch Plan Header (including snapshot)
+      const { data: planData, error: planError } = await supabase
+        .from("meal_plans")
+        .select("id, snapshot, editor_version")
+        .eq("id", activeMealPlanId)
+        .maybeSingle();
 
-    if (itemsError) {
-      console.error("Error fetching items:", itemsError);
+      if (planError) throw planError;
+
+      let allResolvedItems: any[] = [];
+
+      // 2. Resolve Items: Snapshot First (V3/V2 Sovereignty)
+      if (planData?.snapshot && (Array.isArray((planData.snapshot as any).meals) || Array.isArray((planData.snapshot as any).days))) {
+        const snapshot = planData.snapshot as any;
+        const meals = Array.isArray(snapshot.meals) ? snapshot.meals : (Array.isArray(snapshot.days) ? snapshot.days.flatMap((d: any) => d.meals || []) : []);
+        
+        allResolvedItems = meals.flatMap((m: any) => (m.items || []).map((it: any) => ({
+          ...it,
+          id: it.id || it.instanceId,
+          title: it.title || it.name,
+          description: it.description || it.instructions,
+          meta_calorias: it.macros?.kcal ?? it.kcal ?? 0,
+          meta_proteinas: it.macros?.protein_g ?? it.protein ?? 0,
+          meta_carboidratos: it.macros?.carbs_g ?? it.carbs ?? 0,
+          meta_gorduras: it.macros?.fat_g ?? it.fat ?? 0,
+          tipo_refeicao: m.tipo_refeicao || m.type || m.name,
+          day_of_week: m.day_of_week ?? it.day_of_week
+        })));
+      } else {
+        // Fallback to Relational Table
+        const { data: itemsData, error: itemsError } = await supabase
+          .from("meal_plan_items")
+          .select("*")
+          .eq("meal_plan_id", activeMealPlanId);
+
+        if (itemsError) throw itemsError;
+        allResolvedItems = itemsData || [];
+      }
+
+      setAllItems(allResolvedItems);
+      
+      // Group and filter items for the daily view
+      const daily = buildDailyDisplayItems(allResolvedItems, dayOfWeek);
+      setItems(daily as MealPlanItem[]);
+
+      // 3. Fetch Completions
+      const { data: completionsData } = await supabase
+        .from("meal_item_completions")
+        .select("*")
+        .eq("patient_id", patientId)
+        .eq("meal_plan_id", activeMealPlanId)
+        .eq("date", date);
+
+      setCompletions((completionsData || []) as unknown as MealCompletion[]);
+    } catch (err) {
+      console.error("[FORENSIC] Error fetching profile meal plan:", err);
+      toast.error("Erro ao carregar os dados do plano.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const allResolvedItems = (itemsData || []) as any[];
-    setAllItems(allResolvedItems as any[]);
-    
-    // Group and filter items for the daily view
-    setItems(buildDailyDisplayItems(allResolvedItems as any, dayOfWeek) as MealPlanItem[]);
-
-    const { data: completionsData } = await supabase
-      .from("meal_item_completions")
-      .select("*")
-      .eq("patient_id", patientId)
-      .eq("meal_plan_id", activeMealPlanId)
-      .eq("date", date);
-
-    setCompletions((completionsData || []) as unknown as MealCompletion[]);
-    setLoading(false);
   }, [patientId, activeMealPlanId, date, dayOfWeek]);
 
   useEffect(() => {
