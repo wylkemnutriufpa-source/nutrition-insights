@@ -367,6 +367,7 @@ export default function EditorV3Page() {
                 day_of_week: meal.day_of_week || 0, 
                 scheduled_time: meal.time, 
                 is_primary: true, 
+                substitution_group_id: item.substitution_group_id,
                 clinical_mass_g: item.clinical_mass_g,
                 display_quantity: item.quantity,
                 display_unit: item.portionUnitLabel || 'g'
@@ -382,6 +383,7 @@ export default function EditorV3Page() {
                 day_of_week: meal.day_of_week || 0, 
                 scheduled_time: meal.time, 
                 is_primary: false, 
+                substitution_group_id: (s as any).substitution_group_id || item.substitution_group_id,
                 clinical_mass_g: s.clinical_mass_g,
                 display_quantity: s.quantity,
                 display_unit: s.portionUnitLabel || 'g'
