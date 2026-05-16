@@ -209,27 +209,48 @@ export default function EditorV3Page() {
   }, [store.meals, activeDay]);
 
   const handleSave = async () => {
-    if (!effectiveId) return;
+    if (!effectivePatientId && !effectiveId) {
+      toast.error('Selecione um paciente para salvar o plano.');
+      return;
+    }
+    
     setSaving(true);
-    const toastId = toast.loading('Salvando...');
+    const toastId = toast.loading('Salvando plano...');
     try {
-      const { error } = await supabase
-        .from('meal_plans')
-        .update({
-          snapshot: { meals: store.meals },
-          items_payload: { meals: store.meals },
-          total_meta_calorias: Math.round(planTotals.kcal),
-          total_meta_proteinas: Math.round(planTotals.protein),
-          total_meta_carboidratos: Math.round(planTotals.carbs),
-          total_meta_gorduras: Math.round(planTotals.fat),
-          updated_at: new Date().toISOString()
-        } as any)
-        .eq('id', effectiveId);
-      if (error) throw error;
-      toast.success('Salvo!', { id: toastId });
+      const payload = {
+        patient_id: effectivePatientId,
+        snapshot: { meals: store.meals },
+        items_payload: { meals: store.meals },
+        total_meta_calorias: Math.round(planTotals.kcal),
+        total_meta_proteinas: Math.round(planTotals.protein),
+        total_meta_carboidratos: Math.round(planTotals.carbs),
+        total_meta_gorduras: Math.round(planTotals.fat),
+        updated_at: new Date().toISOString(),
+        status: 'active'
+      };
+
+      if (effectiveId) {
+        const { error } = await supabase
+          .from('meal_plans')
+          .update(payload as any)
+          .eq('id', effectiveId);
+        if (error) throw error;
+      } else {
+        const { data: newPlan, error } = await supabase
+          .from('meal_plans')
+          .insert([payload as any])
+          .select()
+          .single();
+        if (error) throw error;
+        if (newPlan) {
+          navigate(`/editor-v3/${effectivePatientId}/${newPlan.id}`, { replace: true });
+        }
+      }
+      
+      toast.success('Plano salvo com sucesso!', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar', { id: toastId });
+      toast.error('Erro ao salvar plano', { id: toastId });
     } finally {
       setSaving(false);
     }
@@ -316,7 +337,7 @@ export default function EditorV3Page() {
               <Trash2 className="w-4 h-4 mr-2" /> Limpar
             </Button>
 
-            <Button onClick={() => setIsShareDialogOpen(true)} className="bg-neutral-800 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest h-9 px-6 rounded-lg hidden md:flex">
+            <Button onClick={() => setIsShareDialogOpen(true)} className="bg-neutral-800 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest h-9 px-6 rounded-lg flex">
               <Send className="w-4 h-4 mr-2" /> Enviar
             </Button>
 
