@@ -193,22 +193,30 @@ export default function EditorV3Page() {
           
           if (composition && Array.isArray(composition.items) && composition.items.length > 0) {
             // It's a "packaged" meal, we break it down into individual items
+            const totalCompositionWeight = composition.items.reduce((sum: number, i: any) => sum + (parseFloat(i.amount) || 0), 0);
+            
             itemsToPlot = composition.items.map((compItem: any) => {
-              // Try to find if this item exists as a standalone in the library for better metadata
-              // For now, we create a basic item
-              const targetKcal = (kcal / distribution.length) / composition.items.length;
+              const compWeight = parseFloat(compItem.amount) || 100;
+              const weightRatio = totalCompositionWeight > 0 ? compWeight / totalCompositionWeight : (1 / composition.items.length);
+              
+              // Target kcal for this specific ingredient based on its share of the meal
+              const targetKcal = (kcal / distribution.length) * weightRatio;
+              
+              // Find the library item metadata for this ingredient to get real macro ratios
+              // For now we use the weight ratio as a proxy for calories, but we need to ensure
+              // it's clinical. If the composition has specific kcal per item, we'd use that.
               
               return {
-                id: crypto.randomUUID(), // Temp ID for broken down item
+                id: crypto.randomUUID(),
                 instanceId: crypto.randomUUID(),
                 name: compItem.name,
-                quantity: parseFloat(compItem.amount) || 100,
-                clinical_mass_g: parseFloat(compItem.amount) || 100,
+                quantity: compWeight,
+                clinical_mass_g: compWeight,
                 kcal: targetKcal, 
-                protein: targetKcal * 0.1, // Fallback ratio
-                carbs: targetKcal * 0.1,
-                fat: targetKcal * 0.05,
-                substitutions: [], // Will need a separate fetch if we want subs for components
+                protein: (compItem.protein || 0) > 0 ? compItem.protein : (targetKcal * 0.1),
+                carbs: (compItem.carbs || 0) > 0 ? compItem.carbs : (targetKcal * 0.1),
+                fat: (compItem.fat || 0) > 0 ? compItem.fat : (targetKcal * 0.05),
+                substitutions: [],
                 category: slot
               };
             });
