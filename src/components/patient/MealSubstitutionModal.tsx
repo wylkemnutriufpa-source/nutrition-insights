@@ -83,10 +83,10 @@ export default function MealSubstitutionModal({
           food: {
             name: opt.title,
             portion: opt.description || "",
-            calories: Number(opt.meta_calorias || 0),
-            protein: Number(opt.meta_proteinas || 0),
-            carbs: Number(opt.meta_carboidratos || 0),
-            fat: Number(opt.meta_gorduras || 0),
+            calories: Number(opt.meta_calorias ?? (opt as any).kcal ?? (opt as any).calories ?? 0),
+            protein: Number(opt.meta_proteinas ?? (opt as any).protein ?? 0),
+            carbs: Number(opt.meta_carboidratos ?? (opt as any).carbs ?? 0),
+            fat: Number(opt.meta_gorduras ?? (opt as any).fat ?? 0),
             category: "substitution"
           },
           labels: []
