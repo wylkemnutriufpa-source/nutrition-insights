@@ -937,7 +937,16 @@ export default function PatientMealPlan() {
               allMarked={allMarked}
             />
 
-            <MacroSummary items={items} totalsStatus={plan?.totals_status} />
+            <MacroSummary 
+              items={items} 
+              totalsStatus={plan?.totals_status} 
+              targets={{
+                calories: plan?.total_meta_calorias,
+                protein: plan?.total_meta_proteinas,
+                carbs: plan?.total_meta_carboidratos,
+                fat: plan?.total_meta_gorduras,
+              }}
+            />
 
             {viewMode === "daily" ? (
               <div className="space-y-6">
