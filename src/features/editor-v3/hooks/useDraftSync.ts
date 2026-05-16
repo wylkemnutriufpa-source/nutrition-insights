@@ -107,7 +107,7 @@ export function useDraftSync(
       }
       setSyncState('offline');
     }
-  }, [patientId, planId]); // Removido seedMeals para evitar loops de re-hidratação
+  }, [patientId, planId]);
 
   useEffect(() => {
     loadDraft();
@@ -130,12 +130,10 @@ export function useDraftSync(
       const auditLogToSave = pendingAuditLogRef.current;
       if (!mealsToSave) return;
 
-      // Anti-loop: Só salvar se for diferente do snapshot carregado
       if (snapshot && JSON.stringify(mealsToSave) === JSON.stringify(snapshot)) {
         return;
       }
 
-      // 🛡️ INTEGRITY GUARD: Impedir salvamento de planos com 0kcal se o snapshot anterior era saudável
       const totalKcal = mealsToSave.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
       if (totalKcal === 0 && snapshot && snapshot.length > 0) {
         const snapshotKcal = snapshot.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
@@ -150,6 +148,12 @@ export function useDraftSync(
       const updatedRecord = await saveDraft(draftId, mealsToSave, auditLogToSave || []);
       
       if (updatedRecord) {
+        // 🛡️ Monitoramento Soberano
+        SovereignMonitor.log({
+          event_type: 'snapshot_render',
+          component: 'useDraftSync_Save',
+          message: 'Rascunho V3 persistido com sucesso no banco estruturado'
+        });
         setLastSavedAt(updatedRecord.updated_at);
         lastUpdateRef.current = updatedRecord.updated_at;
         setSnapshot(mealsToSave);
