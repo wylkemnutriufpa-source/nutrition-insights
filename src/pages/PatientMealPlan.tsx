@@ -337,6 +337,12 @@ export default function PatientMealPlan() {
         });
       });
 
+      console.log(`[FORENSIC] Hydrated ${flatItems.length} items for ${daysToHydrate.length} days from V3 snapshot.`, { 
+        planId: planData.id, 
+        mode: planData.plan_mode,
+        snapshotVersion: snapshot.version 
+      });
+
       resolvedAllItems = flatItems;
       resolvedItems = flatItems;
     } else {
