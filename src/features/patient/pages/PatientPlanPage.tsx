@@ -130,9 +130,13 @@ export const PatientPlanPage = () => {
   
   const handleOpenSubstitution = (item: any, mealId: string) => {
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-    if (plan?.editor_version === 'v3') {
-      // 🛡️ Blindagem: Patient App em modo passivo snapshot-first
-      assertSovereignRuntime("PatientPlanPage_Substitution");
+    if (plan?.editor_version === 'v3' || (plan as any)?.snapshot?.version === 'v3') {
+      // 🛡️ Monitoramento Soberano
+      SovereignMonitor.log({
+        event_type: 'snapshot_render',
+        component: 'PatientPlanPage_Substitution',
+        message: 'Acesso a substituições via Snapshot Soberano'
+      });
 
       // No V3, usamos APENAS o que o nutricionista definiu como substitutos válidos no snapshot
       const snapshotSubs = item.substitutions || [];
@@ -155,35 +159,9 @@ export const PatientPlanPage = () => {
       return;
     }
 
-    // 🛡️ SOBERANIA V3: Bloquear busca em base local (BASE_FOODS)
-    if (plan?.editor_version === 'v3') {
-      toast.error('Este plano requer substituições soberanas do nutricionista.');
-      SovereignTelemetry.log({
-        runtime_source: 'patient_plan_substitutions',
-        event_type: 'legacy_detected',
-        severity: 'critical',
-        message: `Tentativa de busca em BASE_FOODS bloqueada para plano V3: ${item.name}`,
-        metadata: { classification: 'LEGADO/ZUMBI' }
-      });
-      return;
-    }
-
-    // --- LEGADO V1/V2 (Somente para planos antigos) ---
-    const baseFood = BASE_FOODS.find(f => 
-      f.name.toLowerCase() === item.name.toLowerCase() || 
-      item.name.toLowerCase().includes(f.name.toLowerCase())
-    );
-
-    if (!baseFood) {
-      toast.error('Opções de substituição não disponíveis para este item.');
-      return;
-    }
-
-    const grams = item.quantity || 100;
-    const subs = getSubstitutions(baseFood, BASE_FOODS, grams);
-    setSubstitutions(subs);
-    setSelectedItem({ item, mealId });
-    setShowSubModal(true);
+    // Se cair aqui, é um plano legado tentando usar lógica V3 ou um erro de versão
+    denounce('legacy_fallback_detected', { item: item.name, plan_id: plan?.id });
+    toast.error('Opções de substituição não disponíveis para este formato de plano.');
   };
 
 
