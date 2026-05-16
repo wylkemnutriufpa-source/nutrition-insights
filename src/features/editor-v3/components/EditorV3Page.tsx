@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TemplateV3Modal } from './TemplateV3Modal';
 import { PremiumGallery } from './PremiumGallery';
+import SharePlanDialog from '@/components/meal-plan/SharePlanDialog';
 import { getV3Templates } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
 import { 
@@ -60,6 +61,7 @@ export default function EditorV3Page() {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [activeDay, setActiveDay] = useState<number>(1); // 1 = Segunda-feira (Padrão)
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
@@ -565,8 +567,44 @@ export default function EditorV3Page() {
             >
               <Save className="w-5 h-5 mr-3" /> Salvar Plano
             </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setIsShareDialogOpen(true)}
+              className="bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
+            >
+              <Send className="w-5 h-5 mr-3" /> Enviar
+            </Button>
           </div>
         </header>
+
+        <SharePlanDialog 
+          open={isShareDialogOpen}
+          onOpenChange={setIsShareDialogOpen}
+          data={patientData ? {
+            planTitle: "Plano Alimentar Soberano",
+            patientName: patientData.full_name || "Paciente",
+            nutritionistName: user?.email || "Nutricionista", // Fallback for name
+            startDate: new Date().toLocaleDateString('pt-BR'),
+            items: store.meals.flatMap(meal => meal.items.map(item => ({
+              id: item.instanceId,
+              mealType: meal.name,
+              title: item.name,
+              description: item.description,
+              meta_calorias: item.kcal,
+              meta_proteinas: item.protein,
+              meta_carboidratos: item.carbs,
+              meta_gorduras: item.fat,
+              day_of_week: meal.day_of_week || 0,
+              scheduled_time: meal.time,
+              is_primary: true,
+              clinical_mass_g: item.clinical_mass_g
+            }))),
+            targetCalories: planTotals.kcal,
+            targetProtein: planTotals.protein,
+            targetCarbs: planTotals.carbs,
+            targetFat: planTotals.fat
+          } : null}
+        />
 
         {/* Dashboard de Macros */}
         <div className="px-10 py-10 bg-neutral-900/40 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-12 items-center backdrop-blur-3xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">

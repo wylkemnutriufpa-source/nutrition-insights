@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link2, Mail, MessageCircle, Copy, Check, Loader2 } from "lucide-react";
+import { Link2, Mail, MessageCircle, Copy, Check, Loader2, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPremiumMealPlanHTML, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
@@ -84,6 +84,22 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (!data) return;
+    const html = buildPremiumMealPlanHTML(data);
+    const blob = new Blob([html], { type: "text/html; charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const filename = `Plano-Alimentar-${(data.patientName || "paciente").replace(/\s+/g, "-")}.html`;
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Plano exportado com sucesso!");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -151,6 +167,17 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
                 <Mail className="w-4 h-4 mr-2 text-blue-500" />
               )}
               Enviar por e-mail
+            </Button>
+
+            <div className="h-px bg-border my-2" />
+
+            <Button
+              variant="outline"
+              className="justify-start border-dashed border-emerald-500/30 hover:bg-emerald-500/5 hover:border-emerald-500/50"
+              onClick={handleDownloadPDF}
+            >
+              <FileDown className="w-4 h-4 mr-2 text-emerald-500" />
+              Salvar Plano (PDF/HTML)
             </Button>
           </div>
 
