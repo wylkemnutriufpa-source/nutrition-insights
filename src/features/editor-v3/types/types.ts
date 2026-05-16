@@ -7,7 +7,7 @@ export interface Food {
   id: string;
   name: string;
   kcal: number;
-  calories: number; // Keep for backward compatibility
+  calories?: number; // Keep for backward compatibility
   protein: number;
   protein_g?: number; // Keep for backward compatibility
   carbs: number;
@@ -21,8 +21,8 @@ export interface Food {
   fat_100g?: number;
   portionValue: number;
   portionUnitLabel: string;
-  portionUnit: string; // Keep for backward compatibility
-  portionLabel: string; // Keep for backward compatibility
+  portionUnit?: string; // Keep for backward compatibility
+  portionLabel?: string; // Keep for backward compatibility
   measurementType: 'unit' | 'gram' | 'spoon' | 'ml';
   category?: string;
   isMarmita?: boolean;
