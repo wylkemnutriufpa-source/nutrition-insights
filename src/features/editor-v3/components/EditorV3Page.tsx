@@ -321,7 +321,9 @@ export default function EditorV3Page() {
           setPatientData(planData.patient);
         }
 
-        if (planData?.items_payload && (planData.items_payload as any).meals) {
+        if (planData?.snapshot && (planData.snapshot as any).meals) {
+          store.hydrateMeals((planData.snapshot as any).meals);
+        } else if (planData?.items_payload && (planData.items_payload as any).meals) {
           store.hydrateMeals((planData.items_payload as any).meals);
         } else if (planData?.meals) {
           store.hydrateMeals(planData.meals as any);
@@ -370,9 +372,12 @@ export default function EditorV3Page() {
     try {
       // In a real implementation, we would persist store.meals to the DB
       // For now, let's simulate and update the metadata
+      // Check if items_payload or snapshot should be used
       const { error } = await supabase
         .from('meal_plans')
         .update({
+          snapshot: { meals: store.meals },
+          // We include items_payload just in case other parts of the system expect it
           items_payload: { meals: store.meals },
           total_meta_calorias: Math.round(planTotals.kcal),
           total_meta_proteinas: Math.round(planTotals.protein),
