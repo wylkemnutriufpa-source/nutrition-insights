@@ -83,7 +83,7 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
       } else if (mode === "whatsapp") {
         const phone = contact.replace(/\D/g, "");
         const wa = phone
-          ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+          ? `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`
           : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
         window.open(wa, "_blank");
         toast.success("Abrindo WhatsApp...");

@@ -186,8 +186,8 @@ const MacroSummary = memo(function MacroSummary({
   const displayFat = totals.fat;
 
   const hasData = items.length > 0;
-  // SOBERANIA V3: Se displayKcal > 0, não mostramos 'calculando'. Confiamos no snapshot.
-  const showCalculating = displayKcal === 0 && hasData && totalsStatus !== 'ok';
+  // SOBERANIA V3: Se temos calorias > 0, NUNCA mostramos "calculando", pois os dados são soberanos.
+  const showCalculating = displayKcal === 0 && hasData && totalsStatus !== 'ok' && totalsStatus !== 'calculated';
 
   return (
     <div className="space-y-6">
@@ -249,10 +249,11 @@ const MealItemCard = memo(function MealItemCard({
   const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
   const resolvedImage = useMemo(() => {
-    // SOBERANIA V3: O Patient App nunca usa fallbacks externos (Unsplash).
-    // Ele confia 100% no snapshot que já deve vir com URLs assinadas ou links da biblioteca.
-    return item.image_url || (item as any).imageUrl || null;
-  }, [item.image_url, (item as any).imageUrl]);
+    // SOBERANIA V3: Prioridade total para imagem do snapshot hidratada ou metadados explícitos.
+    const img = item.image_url || (item as any).imageUrl || item.metadata?.image_url || (item as any).edit_metadata?.image_url;
+    if (!img) return null;
+    return img;
+  }, [item.image_url, (item as any).imageUrl, item.metadata?.image_url, (item as any).edit_metadata?.image_url]);
 
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
@@ -475,7 +476,7 @@ const MealItemCard = memo(function MealItemCard({
                   ))}
                 </div>
               )}
-              {!isBasic && (item.metadata?.substitution_count > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
+              {(item.metadata?.substitution_count > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}

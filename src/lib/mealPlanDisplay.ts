@@ -207,14 +207,29 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
   const seen = new Set<string>();
   const out: DisplayMealPlanItem[] = [];
   for (const item of items) {
+    // --- SOBERANIA V3: DEDUPLICAÇÃO AGRESSIVA ---
+    // Remove duplicatas causadas por bugs de persistência ou migrações V2 -> V3.
+    // Consideramos itens idênticos se tiverem o mesmo título, tipo e macros no mesmo dia.
     const key = [
-      String(item.day_of_week ?? ""), 
-      String(item.tipo_refeicao ?? ""),
+      String(item.day_of_week ?? "any"), 
+      String(item.tipo_refeicao ?? "").trim().toLowerCase(),
       String(item.title ?? "").trim().toLowerCase(),
       isPrimaryMealItem(item) ? "p" : "s",
-      String(item.substitution_group_id ?? ""),
+      // Macros são parte da chave para evitar dedupé de itens diferentes com mesmo nome
+      String(Math.round(asNumber(item.meta_calorias ?? (item as any).kcal ?? (item as any).calories))),
+      String(Math.round(asNumber(item.meta_proteinas ?? (item as any).protein)))
     ].join("|");
-    if (seen.has(key)) continue;
+    
+    if (seen.has(key)) {
+      SovereignTelemetry.log({
+        runtime_source: 'dedupeIdenticalItems',
+        event_type: 'legacy_detected',
+        severity: 'info',
+        message: `Item duplicado removido: ${item.title} (${item.tipo_refeicao})`,
+        metadata: { item_id: item.id, key }
+      });
+      continue;
+    }
     seen.add(key);
     out.push(item);
   }
