@@ -283,13 +283,11 @@ export default function EditorV3Page() {
       const payload = {
         patient_id: effectivePatientId,
         snapshot: { meals: store.meals },
-        items_payload: { meals: store.meals },
         total_meta_calorias: Math.round(planTotals.kcal),
         total_meta_proteinas: Math.round(planTotals.protein),
         total_meta_carboidratos: Math.round(planTotals.carbs),
         total_meta_gorduras: Math.round(planTotals.fat),
-        updated_at: new Date().toISOString(),
-        status: 'active'
+        updated_at: new Date().toISOString()
       };
 
       if (effectiveId) {
