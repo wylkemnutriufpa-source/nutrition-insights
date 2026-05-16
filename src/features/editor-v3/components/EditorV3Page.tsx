@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TemplateV3Modal } from './TemplateV3Modal';
 import { PremiumGallery } from './PremiumGallery';
+import SharePlanDialog from '@/components/meal-plan/SharePlanDialog';
 import { getV3Templates } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
 import { 
