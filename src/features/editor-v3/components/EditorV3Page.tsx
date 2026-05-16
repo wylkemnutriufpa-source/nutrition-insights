@@ -377,6 +377,8 @@ export default function EditorV3Page() {
         .from('meal_plans')
         .update({
           snapshot: { meals: store.meals },
+          // We include items_payload just in case other parts of the system expect it
+          items_payload: { meals: store.meals },
           total_meta_calorias: Math.round(planTotals.kcal),
           total_meta_proteinas: Math.round(planTotals.protein),
           total_meta_carboidratos: Math.round(planTotals.carbs),
