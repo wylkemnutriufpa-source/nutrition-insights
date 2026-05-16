@@ -17,28 +17,27 @@ export const searchV3LibraryItems = async (
     queryBuilder = queryBuilder.eq("category", category);
   }
 
-  if (mealSlot) {
-    // Be flexible with slot names (e.g., "Café da Manhã" vs "cafe")
+  // If no specific query but mealSlot provided, suggest items for that slot
+  if (!query && mealSlot) {
     const normSlot = mealSlot.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
-    // Fallback: If it's a known slot, use it, otherwise don't restrict too much
-    const commonSlots = ["cafe", "almoco", "jantar", "lanche", "ceia"];
-    const foundSlot = commonSlots.find(s => normSlot.includes(s));
-    
-    if (foundSlot) {
-      // Find items that have this slot in their tipo_refeicao array (using partial match logic if possible)
-      // Since Supabase .contains() is exact, we try to match the common categories
-      const categoryMap: Record<string, string[]> = {
-        "cafe": ["Café da Manhã"],
-        "almoco": ["Almoço", "Jantar"],
-        "jantar": ["Jantar", "Almoço"],
-        "lanche": ["Lanche da Manhã", "Lanche da Tarde", "Pós-Treino", "Pré-Treino"],
-        "ceia": ["Ceia", "Lanche da Tarde"]
-      };
-      
-      const slotsToSearch = categoryMap[foundSlot] || [mealSlot];
-      queryBuilder = queryBuilder.overlaps("tipo_refeicao", slotsToSearch);
-    }
+    const categoryMap: Record<string, string[]> = {
+      "cafe": ["Café da Manhã"],
+      "almoco": ["Almoço", "Jantar"],
+      "jantar": ["Jantar", "Almoço"],
+      "lanche": ["Lanche da Manhã", "Lanche da Tarde", "Pós-Treino", "Pré-Treino"],
+      "ceia": ["Ceia", "Lanche da Tarde"]
+    };
+
+    let slotsToSearch: string[] = [];
+    if (normSlot.includes("cafe")) slotsToSearch = categoryMap.cafe;
+    else if (normSlot.includes("almoco")) slotsToSearch = categoryMap.almoco;
+    else if (normSlot.includes("jantar")) slotsToSearch = categoryMap.jantar;
+    else if (normSlot.includes("lanche")) slotsToSearch = categoryMap.lanche;
+    else if (normSlot.includes("ceia")) slotsToSearch = categoryMap.ceia;
+    else slotsToSearch = [mealSlot];
+
+    queryBuilder = queryBuilder.overlaps("tipo_refeicao", slotsToSearch);
   }
 
   if (query && query.length >= 2) {
@@ -52,8 +51,7 @@ export const searchV3LibraryItems = async (
     return [];
   }
 
-  const rawItems = data || [];
-  const items = rawItems.map((item: any) => ({
+  const items = (data || []).map((item: any) => ({
     ...item,
     name: item.title || item.name || "Alimento", 
     kcal: item.kcal_base || item.kcal_100g || item.kcal || 0,
@@ -62,6 +60,7 @@ export const searchV3LibraryItems = async (
     fat: item.fats_base || item.fat_100g || item.fat || 0
   }));
   
+  // Parallel fetch for substitutes if items have groups
   const itemsWithEquivalents = await Promise.all(items.map(async (item: any) => {
     if (item.substitutions_group) {
       const { data: subs } = await supabase
@@ -70,16 +69,18 @@ export const searchV3LibraryItems = async (
         .eq("substitutions_group", item.substitutions_group)
         .neq("id", item.id)
         .eq("active", true)
-        .limit(10);
+        .limit(12); // Fetch more substitutes
       
       const mappedSubs = (subs || []).map((s: any) => ({
         ...s,
-        name: s.title || s.name || "Substituto"
+        name: s.title || s.name || "Substituto",
+        // Ensure substitutes are scaled correctly later
+        kcal: s.kcal_base || s.kcal_100g || s.kcal || 0
       }));
       
       return { ...item, substitutions: mappedSubs }; 
     }
-    return item;
+    return { ...item, substitutions: [] };
   }));
 
   return itemsWithEquivalents;

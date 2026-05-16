@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Clock, Plus, Trash2, Utensils } from 'lucide-react';
+import { Clock, Plus, Trash2, Utensils, Search } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Meal, Food, MealItem } from '../types/types';
@@ -196,15 +196,32 @@ export const MealCard: React.FC<MealCardProps> = ({
 
         {/* Common Search Dialog - Moved out of the row to avoid nesting */}
         <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-xl rounded-[3rem] p-12">
+          <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-xl rounded-[3rem] p-12 shadow-2xl">
             <DialogHeader className="mb-8">
-              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">
-                {activeItemForSub ? "Buscar Equivalentes" : "Biblioteca Soberana"}
-              </DialogTitle>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                  <Search className="w-6 h-6" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">
+                    {activeItemForSub ? "Trocar Equivalentes" : "Biblioteca Soberana"}
+                  </DialogTitle>
+                  <p className="text-[10px] uppercase font-black tracking-widest text-white/20 mt-1">
+                    FitJourney Clinical Editor v3
+                  </p>
+                </div>
+              </div>
+              
               {activeItemForSub && (
-                <p className="text-[10px] uppercase font-black tracking-widest text-white/20 mt-2">
-                  Encontre substitutos para: {activeItemForSub.name}
-                </p>
+                <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] uppercase font-black text-emerald-500/60 mb-0.5">Substituindo item:</p>
+                    <p className="text-sm font-black text-white">{activeItemForSub.name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-black text-white/40">{Math.round(activeItemForSub.kcal)} kcal</p>
+                  </div>
+                </div>
               )}
             </DialogHeader>
             <FoodSearch 
