@@ -35,7 +35,7 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
   }, [templates, search, activeCategory]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 w-full overflow-hidden">
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-end flex-shrink-0 relative z-20">
         <div className="flex-1 w-full relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
@@ -65,7 +65,7 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar pb-20">
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-32">
         <AnimatePresence mode="popLayout">
           <motion.div 
             layout
@@ -134,18 +134,20 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
       </div>
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(255, 255, 255, 0.03);
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(16, 185, 129, 0.2);
+          background: rgba(16, 185, 129, 0.6);
           border-radius: 10px;
+          border: 3px solid transparent;
+          background-clip: content-box;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(16, 185, 129, 0.4);
+          background: rgba(16, 185, 129, 0.9);
         }
       `}</style>
     </div>
