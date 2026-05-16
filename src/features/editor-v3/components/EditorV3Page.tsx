@@ -468,24 +468,25 @@ export default function EditorV3Page() {
             <Button 
               variant="outline" 
               onClick={handleClearAll}
-              className="bg-white/5 border-white/10 hover:bg-red-500/10 hover:text-red-400 text-white/40 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
+              className="bg-white/5 border-white/10 hover:bg-red-500/10 hover:text-red-400 text-white/40 text-[10px] font-black uppercase tracking-widest h-10 px-4 rounded-xl hidden xl:flex transition-all"
             >
-              <Trash2 className="w-5 h-5 mr-3" /> Limpar
+              <Trash2 className="w-4 h-4 mr-2" /> Limpar
+            </Button>
+
+            <Button 
+              onClick={() => setIsShareDialogOpen(true)}
+              className="bg-neutral-800 hover:bg-neutral-700 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl hidden md:flex transition-all"
+            >
+              <Send className="w-4 h-4 mr-2" /> Compartilhar
             </Button>
 
             <Button 
               onClick={handleSave}
               disabled={saving}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-[0.2em] h-12 px-10 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 text-[11px]"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-10 px-8 rounded-xl shadow-lg shadow-emerald-500/10 transition-all active:scale-95 text-[10px]"
             >
-              <Save className="w-5 h-5 mr-3" /> Salvar Plano
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setIsShareDialogOpen(true)}
-              className="bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
-            >
-              <Send className="w-5 h-5 mr-3" /> Enviar
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Salvar Plano
             </Button>
           </div>
         </header>
