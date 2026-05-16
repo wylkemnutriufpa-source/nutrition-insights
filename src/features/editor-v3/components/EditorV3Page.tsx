@@ -131,15 +131,17 @@ export default function EditorV3Page() {
                 items: meal.items.map((item: any, itemIdx: number) => {
                   const instanceId = crypto.randomUUID();
                   
-                  // LOGICA DE VARIAÇÃO SOBERANA V4:
+                  // LOGICA DE VARIAÇÃO SOBERANA V5:
+                  // 1. Garantir que existam substitutos (equivalentes)
+                  let subs = item.substitutions || [];
+                  
+                  // 2. Tentar rotacionar para gerar variedade real entre os dias
                   let finalItem = { ...item, instanceId };
                   
-                  // Garantir que substitutions existam
-                  const subs = item.substitutions || [];
-                  
+                  // Se houver substitutos, rotacionamos baseado no dia para que a dieta mude todo dia
                   if (subs.length > 0) {
-                    // O índice de rotação depende do dia e da posição da refeição/item
                     const rotationSeed = (day + mealIdx + itemIdx);
+                    // subIndex 0 = item original, subIndex > 0 = substituto
                     const subIndex = rotationSeed % (subs.length + 1);
                     
                     if (subIndex > 0) {
@@ -161,6 +163,11 @@ export default function EditorV3Page() {
                         imageUrl: sub.imageUrl || (sub as any).image_url || null
                       } as any;
                     }
+                  }
+
+                  // 3. Garantia Visual SOBERANA: Se não tem imagem, tentamos manter a do item original ou placeholder
+                  if (!finalItem.imageUrl) {
+                    finalItem.imageUrl = item.imageUrl || `https://source.unsplash.com/400x300/?${encodeURIComponent(finalItem.name)}`;
                   }
 
                   return finalItem;
