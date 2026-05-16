@@ -109,10 +109,10 @@ export const MealCard: React.FC<MealCardProps> = ({
       </DialogTrigger>
       <DialogContent className="max-w-2xl bg-neutral-950 border-white/10 text-white rounded-[2rem] p-0 overflow-hidden shadow-2xl">
         {/* Header Modal */}
-        <div className="p-10 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-              <Utensils className="w-8 h-8" />
+        <div className="p-6 md:p-8 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.2rem] md:rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+              <Utensils className="w-6 h-6 md:w-8 md:h-8" />
             </div>
             <div>
               <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white">Gerenciar Refeição</h3>
