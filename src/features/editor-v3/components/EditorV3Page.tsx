@@ -567,8 +567,25 @@ export default function EditorV3Page() {
             >
               <Save className="w-5 h-5 mr-3" /> Salvar Plano
             </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setIsShareDialogOpen(true)}
+              className="bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
+            >
+              <Send className="w-5 h-5 mr-3" /> Enviar
+            </Button>
           </div>
         </header>
+
+        <SharePlanDialog 
+          open={isShareDialogOpen}
+          onOpenChange={setIsShareDialogOpen}
+          data={patientData ? {
+            patientName: patientData.full_name,
+            meals: store.meals,
+            totals: planTotals
+          } : null}
+        />
 
         {/* Dashboard de Macros */}
         <div className="px-10 py-10 bg-neutral-900/40 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-12 items-center backdrop-blur-3xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">
