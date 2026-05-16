@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { patientService } from '../services/patientService';
 import { PatientPlan } from '../types';
@@ -6,22 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   CheckCircle2, Share2, Download, Flame, Trophy, Calendar, 
-  RefreshCw, ChevronRight, Scale, Info, Sparkles, Utensils
+  RefreshCw, ChevronRight, Scale, Info, Sparkles, Utensils, Activity, ShieldAlert
 } from 'lucide-react';
 
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
 } from '@/components/ui/dialog';
-// engines removed
-const getSubstitutions: any = () => [];
-const BASE_FOODS: any[] = [];
-type Food = any;
 import { toast } from 'sonner';
 import { PRODUCTION_URL } from '@/lib/config';
 import { copyToClipboard } from '@/utils/clipboard';
-const assertSovereignRuntime: any = () => {};
-const logSovereignEvent: any = () => {};
-import { SovereignTelemetry } from '@/lib/sovereignTelemetry';
+import { SovereignMonitor } from '@/lib/sovereignMonitor';
+import { useSovereignAudit } from '@/hooks/useSovereignAudit';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 export const PatientPlanPage = () => {
@@ -32,7 +31,11 @@ export const PatientPlanPage = () => {
   const [selectedItem, setSelectedItem] = useState<{ item: any, mealId: string } | null>(null);
   const [substitutions, setSubstitutions] = useState<any[]>([]);
   const [showSubModal, setShowSubModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'plan' | 'audit'>('plan');
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
+  // 🛡️ SISTEMA FORENSE AUTO-AUDITÁVEL
+  const { isSovereign, denounce } = useSovereignAudit('PatientPlanPage', plan);
 
   useEffect(() => {
     const fetchPlan = async () => {
