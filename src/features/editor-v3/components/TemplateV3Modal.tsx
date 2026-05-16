@@ -124,7 +124,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-white/20">
                   <Calculator className="w-4 h-4" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Cálculo Soberano Ativo</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Snapshot Clínico Validado</span>
                 </div>
               </div>
             </div>
@@ -193,8 +193,8 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                       <Zap className="w-4 h-4 text-emerald-400" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase italic">Substituições Proporcionais</h4>
-                      <p className="text-[10px] text-white/40 uppercase font-medium">Ajuste automático de gramagem</p>
+                      <h4 className="text-xs font-black uppercase italic">Equivalentes Estáticos</h4>
+                      <p className="text-[10px] text-white/40 uppercase font-medium">Composição Clínica Preservada</p>
 
                     </div>
                   </div>
