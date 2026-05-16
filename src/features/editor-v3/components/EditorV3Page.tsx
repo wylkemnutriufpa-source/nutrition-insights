@@ -115,13 +115,12 @@ export default function EditorV3Page() {
   const handleSelectProfile = async (kcal: number, isWeekly: boolean) => {
     if (!selectedTemplate) return;
     
-    // Close modal BEFORE processing to prevent double clicks and visual lag
     setIsTemplateModalOpen(false);
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
       const clusterMap = (selectedTemplate.cluster_map as any) || {};
-      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay]; // Use activeDay instead of [0] if not weekly
+      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay]; 
       const newMeals: any[] = [];
       const distribution = (selectedTemplate.meal_distribution as any[]) || [];
 
@@ -129,116 +128,132 @@ export default function EditorV3Page() {
         throw new Error('Template sem distribuição de refeições configurada.');
       }
 
-      // Pre-fetch all cluster slugs and their potential substitution groups
+      // 1. Get all clusters for the whole template
       const allClusterSlugs = Object.values(clusterMap) as string[];
       
-      // We first need to know which substitution groups these clusters belong to
+      // 2. Fetch primary items for those clusters
       const { data: primaryItems } = await supabase
         .from('v3_library_items')
-        .select('cluster_slug, substitutions_group')
+        .select('*')
         .in('cluster_slug', allClusterSlugs);
 
-      const subGroups = Array.from(new Set((primaryItems || [])
+      if (!primaryItems || primaryItems.length === 0) {
+        throw new Error('Nenhum alimento encontrado para os clusters deste template.');
+      }
+
+      // 3. Identify substitution groups for these items
+      const subGroups = Array.from(new Set(primaryItems
         .map(i => i.substitutions_group)
         .filter(Boolean))) as string[];
 
-      // Now fetch all items that are either in the clusters OR in the substitution groups
-      const { data: libraryItems, error: libError } = await supabase
+      // 4. Fetch all substitutes in parallel
+      const { data: allSubstitutes } = await supabase
         .from('v3_library_items')
-        .select('*, images:v3_library_images(*)')
-        .or(`cluster_slug.in.(${allClusterSlugs.join(',')}),substitutions_group.in.(${subGroups.length > 0 ? subGroups.join(',') : 'none'})`);
+        .select('*')
+        .in('substitutions_group', subGroups.length > 0 ? subGroups : ['none']);
 
-      if (libError) throw libError;
-
-      const libraryMap = new Map();
-      const substitutionGroupMap = new Map();
-      
-      (libraryItems || []).forEach(item => {
-        const slug = item.cluster_slug;
-        if (slug) {
-          if (!libraryMap.has(slug)) libraryMap.set(slug, []);
-          libraryMap.get(slug).push(item);
-        }
-        
-        const group = item.substitutions_group;
-        if (group) {
-          if (!substitutionGroupMap.has(group)) substitutionGroupMap.set(group, []);
-          substitutionGroupMap.get(group).push(item);
-        }
+      // 5. Organize data for efficient processing
+      const itemsByCluster = new Map<string, any[]>();
+      primaryItems.forEach(item => {
+        if (!itemsByCluster.has(item.cluster_slug)) itemsByCluster.set(item.cluster_slug, []);
+        itemsByCluster.get(item.cluster_slug)?.push(item);
       });
-      
 
+      const substitutesByGroup = new Map<string, any[]>();
+      (allSubstitutes || []).forEach(sub => {
+        if (!substitutesByGroup.has(sub.substitutions_group)) substitutesByGroup.set(sub.substitutions_group, []);
+        substitutesByGroup.get(sub.substitutions_group)?.push(sub);
+      });
+
+      // 6. Generate the plan
       for (const day of days) {
         for (const dist of distribution) {
           const slot = dist.slot;
+          const clusterSlug = clusterMap[slot];
           
-          const clusterSlug = clusterMap[slot] || 
-                             clusterMap[slot.trim()] || 
-                             Object.entries(clusterMap).find(([k]) => {
-                               const normK = k.toLowerCase().replace(/_/g, ' ').trim();
-                               const normSlot = slot.toLowerCase().replace(/_/g, ' ').trim();
-                               return normK === normSlot;
-                             })?.[1];
+          if (!clusterSlug) continue;
+
+          const clusterFoods = itemsByCluster.get(clusterSlug) || [];
+          if (clusterFoods.length === 0) continue;
+
+          // VARIETY LOGIC: Rotate foods based on the day
+          // This ensures Mon, Tue, Wed have different foods if the cluster has multiple options
+          const foodToUseIndex = day % clusterFoods.length;
+          const rawFood = clusterFoods[foodToUseIndex];
+
+          // BREAK DOWN PACKAGED MEALS: If the item has ingredients/composition, we extract them
+          // BUT the user wants INDIVIDUAL items. If a cluster food represents a "plate", 
+          // we should ideally have individual items in the library.
+          // For now, if composition exists, we plot them as separate items.
           
-          let items: any[] = [];
-
-          if (clusterSlug) {
-            const foods = libraryMap.get(clusterSlug);
-
-            if (foods && foods.length > 0) {
-              items = foods.map((food: any) => {
-                const imageUrl = food.images?.[0]?.image_asset || (food.composition as any)?.imageUrl || null;
-                
-                // Calculate target kcal for this specific item in the meal
-                // If there are multiple foods in one cluster, we split the kcal
-                const targetItemKcal = (kcal / distribution.length) / foods.length;
-                
-                // Ensure we have a valid quantity
-                let quantity = scaleItemToTarget(food, targetItemKcal, 'kcal');
-                if (!quantity || isNaN(quantity)) quantity = 100;
-
-                const macros = calculateItemMacros(food, quantity);
-                
-                const subGroup = food.substitutions_group;
-                const potentialSubs = subGroup ? (substitutionGroupMap.get(subGroup) || []) : [];
-                const substitutions = potentialSubs
-                  .filter((s: any) => s.id !== food.id)
-                  .map((s: any) => {
-                    const subQty = scaleItemToTarget(s, macros.kcal, 'kcal');
-                    const subMacros = calculateItemMacros(s, subQty);
-                    return {
-                      ...s,
-                      name: s.title || s.name,
-                      quantity: subQty,
-                      clinical_mass_g: subQty,
-                      ...subMacros
-                    };
-                  })
-                  .slice(0, 6); // Increase to 6 substitutes by default
-
-                return {
-                  ...food,
-                  instanceId: crypto.randomUUID(),
-                  name: food.title || food.name,
-                  quantity,
-                  clinical_mass_g: quantity,
-                  substitutions,
-                  imageUrl,
-                  category: food.category || slot,
-                  ...macros
-                };
-              });
-            }
+          let itemsToPlot: any[] = [];
+          const composition = rawFood.composition as any;
+          
+          if (composition && Array.isArray(composition.items) && composition.items.length > 0) {
+            // It's a "packaged" meal, we break it down into individual items
+            itemsToPlot = composition.items.map((compItem: any) => {
+              // Try to find if this item exists as a standalone in the library for better metadata
+              // For now, we create a basic item
+              const targetKcal = (kcal / distribution.length) / composition.items.length;
+              
+              return {
+                id: crypto.randomUUID(), // Temp ID for broken down item
+                instanceId: crypto.randomUUID(),
+                name: compItem.name,
+                quantity: parseFloat(compItem.amount) || 100,
+                clinical_mass_g: parseFloat(compItem.amount) || 100,
+                kcal: targetKcal, 
+                protein: targetKcal * 0.1, // Fallback ratio
+                carbs: targetKcal * 0.1,
+                fat: targetKcal * 0.05,
+                substitutions: [], // Will need a separate fetch if we want subs for components
+                category: slot
+              };
+            });
           } else {
-            console.warn(`[EditorV3] No cluster slug mapping found for slot: ${slot}. Available keys:`, Object.keys(clusterMap));
+            // Standalone item
+            const targetKcal = (kcal / distribution.length);
+            let quantity = scaleItemToTarget(rawFood, targetKcal, 'kcal');
+            if (!quantity || isNaN(quantity)) quantity = 100;
+
+            const macros = calculateItemMacros(rawFood, quantity);
+            
+            // Get REAL substitutions from the same group
+            const subGroup = rawFood.substitutions_group;
+            const potentialSubs = subGroup ? (substitutesByGroup.get(subGroup) || []) : [];
+            const substitutions = potentialSubs
+              .filter((s: any) => s.id !== rawFood.id)
+              .map((s: any) => {
+                const subQty = scaleItemToTarget(s, macros.kcal, 'kcal');
+                const subMacros = calculateItemMacros(s, subQty);
+                return {
+                  ...s,
+                  name: s.title || s.name,
+                  quantity: subQty,
+                  clinical_mass_g: subQty,
+                  ...subMacros
+                };
+              })
+              .slice(0, 8); // Abundant substitutions
+
+            itemsToPlot.push({
+              ...rawFood,
+              instanceId: crypto.randomUUID(),
+              name: rawFood.title || rawFood.name,
+              quantity,
+              clinical_mass_g: quantity,
+              substitutions,
+              category: rawFood.category || slot,
+              ...macros
+            });
           }
 
           newMeals.push({
             id: crypto.randomUUID(),
-            name: translateSlot(slot),
+            name: slot,
             time: dist.time || "08:00",
             day_of_week: day,
-            items
+            items: itemsToPlot
           });
         }
       }
@@ -246,10 +261,10 @@ export default function EditorV3Page() {
       const otherDayMeals = store.meals.filter(m => !days.includes(m.day_of_week || 0));
       store.hydrateMeals([...otherDayMeals, ...newMeals]);
       
-      toast.success('Template plotado com sucesso!', { id: toastId });
+      toast.success('Plano Soberano gerado com sucesso!', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao plotar template', { id: toastId });
+      toast.error('Erro ao gerar plano modular', { id: toastId });
     }
   };
 
