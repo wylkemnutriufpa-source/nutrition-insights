@@ -229,7 +229,7 @@ export default function IntelligenceActiveUsers() {
                         {/* Customized badge */}
                         {p.ifj_enabled && p.is_customized && (
                           <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-orange-500/30 text-orange-400 bg-orange-500/10">
-                            <Sparkles className="w-2.5 h-2.5 mr-0.5" /> Custom
+                            <Sparkles className="w-2.5 h-2.5 mr-0.5" /> Personalizado
                           </Badge>
                         )}
                       </div>
@@ -240,7 +240,7 @@ export default function IntelligenceActiveUsers() {
                     {p.ifj_enabled && (
                       <Button variant="ghost" size="sm" className="h-7 text-[10px] text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => { setSelectedPatient({ id: p.patient_id, name: p.full_name }); setPermModalOpen(true); }}>
-                        <Settings2 className="w-3 h-3 mr-1" /> Config
+                        <Settings2 className="w-3 h-3 mr-1" /> Configurar
                       </Button>
                     )}
                     <Switch checked={p.ifj_enabled} disabled={togglingId === p.patient_id} onCheckedChange={(v) => toggleIFJ(p.patient_id, v)} />

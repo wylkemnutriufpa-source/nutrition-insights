@@ -65,7 +65,7 @@ const ROLE_CONFIG: Record<IFJRole, {
   suggestions: string[];
 }> = {
   admin: {
-    label: "ADMIN — God Mode",
+    label: "ADMIN — Modo Deus",
     edgeFunction: "ifj-core-router",
     badge: "bg-destructive/10 text-destructive border-destructive/20",
     subtitle: "Centro de Comando — Visão global do sistema",
@@ -81,7 +81,7 @@ const ROLE_CONFIG: Record<IFJRole, {
     label: "Nutricionista",
     edgeFunction: "ifj-core-router",
     badge: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    subtitle: "Mini God Mode — Sua carteira clínica",
+    subtitle: "Mini Modo Deus — Sua carteira clínica",
     suggestions: [
       "Quem precisa de atenção hoje?",
       "Resuma minha carteira",
@@ -94,7 +94,7 @@ const ROLE_CONFIG: Record<IFJRole, {
     label: "Personal Trainer",
     edgeFunction: "ifj-core-router",
     badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    subtitle: "Mini God Mode — Seus alunos e treinos",
+    subtitle: "Mini Modo Deus — Seus alunos e treinos",
     suggestions: [
       "Quais alunos treinaram hoje?",
       "Algum aluno reportou dor?",
