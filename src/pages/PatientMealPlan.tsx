@@ -508,18 +508,18 @@ export default function PatientMealPlan() {
         startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
         planMode: "single_day",
         items: pdfItems.map(i => {
-          const editMeta = (i as any).edit_metadata;
-          const displayQuantity = editMeta?.display_quantity;
-          const displayUnit = editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
-          const clinicalMass = (i as any).clinical_mass_g;
+          // --- SOBERANIA V3: RESPEITO ABSOLUTO AOS DADOS HIDRATADOS ---
+          const displayQuantity = i.display_quantity || (i as any).edit_metadata?.display_quantity;
+          const displayUnit = i.display_unit || (i as any).edit_metadata?.display_unit || (i as any).edit_metadata?.portionLabel || "";
+          const clinicalMass = i.clinical_mass_g || (i as any).grams;
           
           let resolvedDescription = i.description || "";
           
-          // Only override if we have explicit metadata that is likely more accurate/structured
+          // Prioridade para dados de porção estruturados
           if (displayQuantity) {
-            resolvedDescription = `${displayQuantity} ${displayUnit}`;
+            resolvedDescription = `${displayQuantity} ${displayUnit}`.trim();
           } else if (clinicalMass) {
-            resolvedDescription = formatDisplayPortion({ ...i, grams: clinicalMass } as any);
+            resolvedDescription = `${clinicalMass}g`;
           }
 
           return {
@@ -532,7 +532,7 @@ export default function PatientMealPlan() {
             meta_gorduras: i.meta_gorduras || undefined,
             day_of_week: i.day_of_week ?? undefined,
             is_primary: i.is_primary !== false,
-            substitution_group_id: (i as any).substitution_group_id || null,
+            substitution_group_id: (i as any).substitution_group_id || (i as any).blockId || null,
           };
         }),
         targetCalories: Math.round(primaryTotals.calories) || planFull?.total_meta_calorias || undefined,
