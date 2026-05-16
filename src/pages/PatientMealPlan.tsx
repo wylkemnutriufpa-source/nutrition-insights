@@ -267,10 +267,39 @@ export default function PatientMealPlan() {
       const currentDow = new Date(date + "T12:00:00").getDay();
 
       if (hasSnapshot) {
+        // --- ADAPTABILIDADE V3 SOBERANA ---
+        // O Patient App agora é resiliente a variações na estrutura do snapshot.
+        // Tenta processar 'days', 'meals' ou 'items' de forma hierárquica ou flat.
+        
         const days = Array.isArray(snapshot.days) ? snapshot.days : [];
-        days.forEach((day: any) => {
-          const dow = day.day_of_week ?? currentDow;
-          (day.meals || []).forEach((meal: any) => {
+        const mealsAtRoot = Array.isArray(snapshot.meals) ? snapshot.meals : [];
+        const itemsAtRoot = Array.isArray(snapshot.items) ? snapshot.items : [];
+
+        if (days.length > 0) {
+          days.forEach((day: any) => {
+            const dow = day.day_of_week ?? currentDow;
+            (day.meals || []).forEach((meal: any) => {
+              const mealType = meal.tipo_refeicao || meal.type || meal.name;
+              (meal.items || []).forEach((item: any) => {
+                const hydrated = hydrateItem(item, dow, mealType);
+                flatItems.push(hydrated);
+                
+                if (item.substitutions) {
+                  item.substitutions.forEach((sub: any) => {
+                    flatItems.push({
+                      ...hydrateItem(sub, dow, mealType),
+                      is_primary: false,
+                      is_substitution: true,
+                      substitution_group_id: hydrated.id
+                    });
+                  });
+                }
+              });
+            });
+          });
+        } else if (mealsAtRoot.length > 0) {
+          mealsAtRoot.forEach((meal: any) => {
+            const dow = meal.day_of_week ?? currentDow;
             const mealType = meal.tipo_refeicao || meal.type || meal.name;
             (meal.items || []).forEach((item: any) => {
               const hydrated = hydrateItem(item, dow, mealType);
@@ -288,7 +317,14 @@ export default function PatientMealPlan() {
               }
             });
           });
-        });
+        } else if (itemsAtRoot.length > 0) {
+          itemsAtRoot.forEach((item: any) => {
+            const dow = item.day_of_week ?? currentDow;
+            const mealType = item.tipo_refeicao || item.type || item.mealType || "Almoço";
+            const hydrated = hydrateItem(item, dow, mealType);
+            flatItems.push(hydrated);
+          });
+        }
       } else {
         flatItems = (planData.items || []).map((i: any) => hydrateItem(i, i.day_of_week, i.tipo_refeicao));
       }
