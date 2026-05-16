@@ -280,14 +280,27 @@ export default function EditorV3Page() {
     setSaving(true);
     const toastId = toast.loading('Salvando plano...');
     try {
-      const payload = {
+      // Buscar dados do nutricionista para garantir tenant_id
+      const { data: nutritionistProfile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('user_id', user?.id)
+        .single();
+
+      const payload: any = {
         patient_id: effectivePatientId,
+        nutritionist_id: user?.id,
         snapshot: { meals: store.meals },
         total_meta_calorias: Math.round(planTotals.kcal),
         total_meta_proteinas: Math.round(planTotals.protein),
         total_meta_carboidratos: Math.round(planTotals.carbs),
         total_meta_gorduras: Math.round(planTotals.fat),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        title: "Plano Alimentar Soberano V3",
+        start_date: new Date().toISOString().split('T')[0],
+        plan_status: 'active',
+        tenant_id: nutritionistProfile?.tenant_id || '20081963-8db9-4a6c-8181-6a820b86e12f',
+        plan_mode: 'weekly'
       };
 
       if (effectiveId) {
