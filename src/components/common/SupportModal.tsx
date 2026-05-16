@@ -102,7 +102,7 @@ export function SupportModal({ isOpen, onClose, context, errorId }: SupportModal
           <div className="grid grid-cols-1 gap-3">
             <Button 
               className="h-14 rounded-2xl bg-[#25D366] hover:bg-[#1fb858] text-white font-bold gap-3 shadow-lg shadow-emerald-500/20 group"
-              onClick={() => window.open(`https://wa.me/5500000000000?text=${supportMessage}`, "_blank")}
+              onClick={() => window.open(`https://wa.me/5591981234567?text=${supportMessage}`, "_blank")}
             >
               <MessageCircle className="w-5 h-5" />
               WhatsApp Suporte

@@ -194,6 +194,9 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
         if (mealType === "Café da Manhã" && (groupKey === "protein_main" || groupKey === "carb_main")) continue;
         if ((mealType === "Almoço" || mealType === "Jantar") && (groupKey === "protein_breakfast" || groupKey === "carb_breakfast")) continue;
 
+        // SOBERANIA V3: Se o alimento original já tem uma porção explícita na linha, 
+        // usamos essa porção para todos os substitutos para manter a equivalência.
+        // NUNCA usamos fallbacks fixos de "100g" se temos dados reais.
         const portion = linePortion || group.defaultPortion;
         const alternatives = group.foods
           .filter(f => normalizeForMatch(f) !== normalizeForMatch(match))
@@ -211,6 +214,7 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
 
   return newSubs;
 }
+
 
 export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
   // Garantir que o scroll do body não fique travado ao fechar
@@ -272,18 +276,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
   // 🛡️ SOBERANIA V3: Estabilização de Imagem
   const resolvedImage = useMemo(() => {
-    const raw = meal?.image_url || (meal as any).imageUrl;
-    if (!raw) return null;
-    
-    // Se for um snapshot do paciente, a imagem já deve vir resolvida do PatientMealPlan
-    if (isPatient) return raw;
+    // SOBERANIA V3: O Patient App é um RENDERIZADOR PASSIVO.
+    // Ele não deve "resolver" URLs nem buscar fallbacks aleatórios.
+    return meal?.image_url || (meal as any).imageUrl || null;
+  }, [meal?.image_url, (meal as any).imageUrl]);
 
-    if (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured")) {
-      const query = meal?.title || "alimento saudável";
-      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${meal.itemId || meal.title}`;
-    }
-    return raw;
-  }, [meal?.image_url, (meal as any).imageUrl, meal?.title, isPatient]);
 
   const fetchDbHistory = async (offset = 0) => {
     if (!meal?.itemId) return;
@@ -573,13 +570,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const mealTypeInfo = MEAL_TYPE_LABELS[meal.tipo_refeicao || ""] || null;
   const rawImageUrl = meal.image_url || meta.image_url;
   const imageUrl = useMemo(() => {
-    if (!rawImageUrl) return null;
-    if (rawImageUrl.includes("source.unsplash.com") || rawImageUrl.includes("images.unsplash.com/featured")) {
-      const query = meal.title || "alimento saudável";
-      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${meal.itemId || meal.title}`;
-    }
-    return rawImageUrl;
-  }, [rawImageUrl, meal.title]);
+    return rawImageUrl || null;
+  }, [rawImageUrl]);
+
 
   const calories = Number(meal.meta_calorias ?? (meal as any).kcal ?? (meal as any).calories ?? meta.meta_calorias ?? meta.calories ?? 0);
   const protein = Number(meal.meta_proteinas ?? (meal as any).protein ?? meta.meta_proteinas ?? meta.protein ?? 0);

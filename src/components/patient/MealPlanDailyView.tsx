@@ -249,15 +249,11 @@ const MealItemCard = memo(function MealItemCard({
   const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
   const resolvedImage = useMemo(() => {
-    const raw = item.image_url || (item as any).imageUrl || null;
-    
-    // Unsplash Theme Resolution (Soberania V3)
-    if (raw && (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured"))) {
-      const query = item.title || "saudável";
-      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${item.id}`;
-    }
-    return raw;
-  }, [item.image_url, (item as any).imageUrl, item.title, item.id]);
+    // SOBERANIA V3: O Patient App nunca usa fallbacks externos (Unsplash).
+    // Ele confia 100% no snapshot que já deve vir com URLs assinadas ou links da biblioteca.
+    return item.image_url || (item as any).imageUrl || null;
+  }, [item.image_url, (item as any).imageUrl]);
+
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
     : status === "partial" ? "border-amber-500/30 bg-amber-500/5 shadow-inner"

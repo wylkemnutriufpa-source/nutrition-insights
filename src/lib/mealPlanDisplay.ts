@@ -208,11 +208,11 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
   const out: DisplayMealPlanItem[] = [];
   for (const item of items) {
     const key = [
+      String(item.day_of_week ?? ""), 
       String(item.tipo_refeicao ?? ""),
       String(item.title ?? "").trim().toLowerCase(),
       isPrimaryMealItem(item) ? "p" : "s",
       String(item.substitution_group_id ?? ""),
-      String((item as any).scheduled_time ?? ""),
     ].join("|");
     if (seen.has(key)) continue;
     seen.add(key);
@@ -220,6 +220,8 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
   }
   return out;
 }
+
+
 
 export function selectCanonicalDayItems(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
   if (items.length === 0) return [];
