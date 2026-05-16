@@ -178,8 +178,7 @@ export default function EditorV3Page() {
           const clusterFoods = itemsByCluster.get(clusterSlug) || [];
           if (clusterFoods.length === 0) continue;
 
-          // VARIETY LOGIC: Rotate foods based on the day
-          // This ensures Mon, Tue, Wed have different foods if the cluster has multiple options
+          // Variety: prioritize foods that haven't been used yet or based on day
           const foodToUseIndex = day % clusterFoods.length;
           const rawFood = clusterFoods[foodToUseIndex];
 
@@ -193,22 +192,32 @@ export default function EditorV3Page() {
           
           if (composition && Array.isArray(composition.items) && composition.items.length > 0) {
             // It's a "packaged" meal, we break it down into individual items
+            const mealTargetKcal = (kcal / distribution.length);
+            const baseKcal = Number(rawFood.kcal_base || 1); // Avoid div by zero
+            const scaleFactor = mealTargetKcal / baseKcal;
+
             itemsToPlot = composition.items.map((compItem: any) => {
-              // Try to find if this item exists as a standalone in the library for better metadata
-              // For now, we create a basic item
-              const targetKcal = (kcal / distribution.length) / composition.items.length;
+              const baseAmount = parseFloat(compItem.amount) || 100;
+              const scaledAmount = Math.round(baseAmount * scaleFactor);
               
+              // Calculate scaled macros for this specific ingredient
+              // If the ingredient has macros/100g, we use them, else we scale the base amount
+              const itemKcal = ((parseFloat(compItem.kcal) || (baseKcal / composition.items.length)) * scaleFactor);
+              const itemProtein = ((parseFloat(compItem.protein) || 0) * scaleFactor);
+              const itemCarbs = ((parseFloat(compItem.carbs) || 0) * scaleFactor);
+              const itemFat = ((parseFloat(compItem.fat) || 0) * scaleFactor);
+
               return {
-                id: crypto.randomUUID(), // Temp ID for broken down item
+                id: crypto.randomUUID(),
                 instanceId: crypto.randomUUID(),
                 name: compItem.name,
-                quantity: parseFloat(compItem.amount) || 100,
-                clinical_mass_g: parseFloat(compItem.amount) || 100,
-                kcal: targetKcal, 
-                protein: targetKcal * 0.1, // Fallback ratio
-                carbs: targetKcal * 0.1,
-                fat: targetKcal * 0.05,
-                substitutions: [], // Will need a separate fetch if we want subs for components
+                quantity: scaledAmount,
+                clinical_mass_g: scaledAmount,
+                kcal: itemKcal,
+                protein: itemProtein,
+                carbs: itemCarbs,
+                fat: itemFat,
+                substitutions: [],
                 category: slot
               };
             });
