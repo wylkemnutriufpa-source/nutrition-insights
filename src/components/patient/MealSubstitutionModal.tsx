@@ -82,7 +82,12 @@ export default function MealSubstitutionModal({
         substitutions: filteredOptions.map(opt => ({
           food: {
             name: opt.title,
-            portion: opt.description || "",
+            // SOBERANIA V3: Preferimos campos explícitos de gramagem em vez de descrição genérica.
+            portion: (opt as any).display_quantity 
+              ? `${(opt as any).display_quantity} ${(opt as any).display_unit || ""}`.trim()
+              : (opt as any).clinical_mass_g
+                ? `${(opt as any).clinical_mass_g}g`
+                : opt.description || "",
             calories: Number(opt.meta_calorias ?? (opt as any).kcal ?? (opt as any).calories ?? 0),
             protein: Number(opt.meta_proteinas ?? (opt as any).protein ?? 0),
             carbs: Number(opt.meta_carboidratos ?? (opt as any).carbs ?? 0),
@@ -91,6 +96,7 @@ export default function MealSubstitutionModal({
           },
           labels: []
         }))
+
       }];
     }
 
