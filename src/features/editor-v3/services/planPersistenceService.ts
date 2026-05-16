@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import type { Meal, MealItem } from '../types';
+import { Meal, MealItem } from '../types';
 import { saveDraft } from './draftService';
 
 export interface PlanSaveOptions {
@@ -43,6 +44,8 @@ export const planPersistenceService = {
   async publishPlan(options: PlanSaveOptions): Promise<SaveResult> {
     const { patientId, nutritionistId, meals, targets, title, planId, draftId } = options;
 
+    console.log(`[Persistence-V3] Iniciando publicação para paciente ${patientId}. Editor: V3.`);
+
     // 🛡️ REGRAS INVIOLÁVEIS: Macros devem ser saudáveis para publicar
     const hasMacros = targets.kcal > 0 && targets.protein > 0;
     if (!hasMacros) {
@@ -63,7 +66,6 @@ export const planPersistenceService = {
         ...meal,
         items: meal.items.map(item => {
           let imageUrl = item.imageUrl;
-          // Se for uma URL do unsplash que parece ser automática (contendo search terms), removemos.
           if (imageUrl && imageUrl.includes('source.unsplash.com') && imageUrl.includes('?')) {
             imageUrl = null;
           }
@@ -114,7 +116,7 @@ export const planPersistenceService = {
         plan_status: 'published_to_patient',
         is_active: true,
         plan_mode: 'weekly',
-        editor_version: 'v3',
+        editor_version: 'v3', // 🛡️ FORÇAR V3 SEMPRE
         start_date: new Date().toISOString().split('T')[0],
       };
 
@@ -122,12 +124,15 @@ export const planPersistenceService = {
 
       // 4. Persistência Principal
       if (planId) {
+        console.log(`[Persistence-V3] Atualizando plano existente ${planId}.`);
         const { error } = await supabase
           .from('meal_plans')
-          .update(payload as any)
+          .update(payload)
           .eq('id', planId);
         if (error) throw error;
       } else {
+        console.log(`[Persistence-V3] Criando novo plano para o paciente.`);
+        // Desativar planos anteriores
         await supabase
           .from('meal_plans')
           .update({ is_active: false } as any)
@@ -135,14 +140,14 @@ export const planPersistenceService = {
 
         const { data: newPlan, error } = await supabase
           .from('meal_plans')
-          .insert([payload as any])
+          .insert([payload])
           .select()
           .single();
         if (error) throw error;
         finalPlanId = newPlan.id;
       }
 
-      // 5. Persistência Relacional
+      // 5. Persistência Relacional (Somente para compatibilidade de lista, Patient App V3 usa Snapshot)
       if (finalPlanId) {
         await supabase.from('meal_plan_items').delete().eq('meal_plan_id', finalPlanId);
         
@@ -200,18 +205,19 @@ export const planPersistenceService = {
 
       if (draftId) {
         await supabase
-          .from('v3_drafts' as any)
+          .from('v3_drafts')
           .update({
             draft_status: 'promoted',
             promoted_meal_plan_id: finalPlanId,
             promoted_at: new Date().toISOString(),
-          })
+          } as any)
           .eq('id', draftId);
       }
 
+      console.log(`[Persistence-V3] Publicação concluída com sucesso. PlanID: ${finalPlanId}`);
       return { ok: true, planId: finalPlanId };
     } catch (err: any) {
-      console.error('[Persistence] Erro fatal:', err);
+      console.error('[Persistence-V3] Erro fatal:', err);
       return { ok: false, error: err.message };
     }
   }
