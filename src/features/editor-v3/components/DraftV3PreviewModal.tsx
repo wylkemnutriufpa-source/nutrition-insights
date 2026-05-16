@@ -97,7 +97,7 @@ export const DraftV3PreviewModal: React.FC<DraftV3PreviewModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl bg-neutral-950 border-white/10 text-white p-0 overflow-hidden rounded-[2rem] shadow-2xl">
+      <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-0 overflow-hidden rounded-[2rem] shadow-2xl">
         <div className="flex flex-col h-[90vh] max-h-[900px]">
           {/* Header Soberano */}
           <DialogHeader className="p-8 border-b border-white/5 bg-neutral-900/30">

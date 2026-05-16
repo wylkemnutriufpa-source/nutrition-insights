@@ -46,7 +46,7 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl bg-neutral-950 border-white/10 text-white p-0 overflow-hidden rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)]">
+      <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white p-0 overflow-hidden rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)]">
         <div className="flex flex-col md:flex-row h-[85vh] max-h-[850px]">
           {/* Lateral Info */}
           <div className="w-full md:w-96 bg-neutral-900/80 p-10 border-r border-white/5 flex flex-col relative overflow-hidden">
