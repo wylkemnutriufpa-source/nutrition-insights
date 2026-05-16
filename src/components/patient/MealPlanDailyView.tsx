@@ -49,6 +49,7 @@ interface MealPlanItem {
   visual_library_item_id?: string | null;
   is_primary?: boolean;
   is_substitution?: boolean;
+  substitution_group_id?: string | null;
   // --- SOBERANIA V3 ---
   editor_version?: string;
   display_quantity?: string | number;
