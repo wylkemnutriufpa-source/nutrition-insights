@@ -142,9 +142,8 @@ export default function EditorV3Page() {
                         protein: (sub.protein || 0) * (neededQty / 100),
                         carbs: (sub.carbs || 0) * (neededQty / 100),
                         fat: (sub.fat || 0) * (neededQty / 100),
-                        is_primary: true,
                         substitutions: item.substitutions // Mantém a lista de troca disponível
-                      };
+                      } as any;
                     }
                   }
 
