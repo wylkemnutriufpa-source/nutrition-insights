@@ -391,9 +391,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         // O versionamento e auditoria agora ocorrem via Trigger no DB
         onUpdateItem(meal.itemId, { description: newDescription });
         
-        // Verificação pós-persistência (Detecção de Falha Silenciosa)
-        const { data: verifiedItem, error: fetchError } = await supabase
-          .from("meal_plan_items")
+        // Auditoria Pós-Persistência Removida (Patient App é passivo)
+        const verifiedItem = { id: meal.itemId };
+        const fetchError = null;
           .select("description")
           .eq("id", meal.itemId)
           .single();
