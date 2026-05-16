@@ -120,6 +120,16 @@ export const planPersistenceService = {
         start_date: new Date().toISOString().split('T')[0],
       };
 
+      // 🛡️ SNAPSHOT VALIDATOR (Anti-Traição)
+      // Compara se o payload final preserva os macros calculados pelo nutricionista
+      const snapshotKcal = payload.snapshot.targets.kcal;
+      const payloadKcal = payload.total_meta_calorias;
+      
+      if (Math.abs(snapshotKcal - payloadKcal) > 1) {
+         console.error(`[CRITICAL] Divergência de Snapshot detectada: Snapshot(${snapshotKcal}) != Payload(${payloadKcal}). Bloqueando publicação.`);
+         return { ok: false, error: 'SNAPSHOT VALIDATION FAILED: Divergência de integridade detectada.' };
+      }
+
       let finalPlanId = planId;
 
       // 4. Persistência Principal

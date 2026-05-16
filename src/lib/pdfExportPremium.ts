@@ -798,10 +798,15 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 }
 
 export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
-  const html = buildPremiumMealPlanHTML(data);
+  // 🛡️ Monitoramento Soberano no PDF
+  console.log('[Sovereignty] Iniciando Exportação PDF Soberana...');
+  const isV3 = data.items.every(i => i.editor_version === 'v3' || (i as any).clinical_mass_g);
+  
+  if (!isV3) {
+    console.warn('[V3-TRAIÇÃO] PDF sendo gerado com dados que podem conter lógica legada.');
+  }
 
-  // V3 SOBERANO: O PDF é um renderizador passivo puro.
-  // Não há comparação com legado nesta versão soberana.
+  const html = buildPremiumMealPlanHTML(data);
   openPremiumPrintWindow(html, `plano-alimentar-${data.patientName.replace(/\s+/g, '-').toLowerCase()}`);
 }
 

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PatientPlan } from "../types";
+import { SovereignMonitor } from "@/lib/sovereignMonitor";
 
 export const patientService = {
   mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion = 'snapshot'): PatientPlan {
@@ -97,6 +98,11 @@ export const patientService = {
     // Se existe snapshot estruturado, ele é a ÚNICA VERDADE, independente de editor_version
     if (data.snapshot && (Array.isArray(data.snapshot.days) || Array.isArray(data.snapshot.meals))) {
       console.log(`[PatientService] Snapshot estruturado detectado. Renderizando via Soberania V3.`);
+      SovereignMonitor.log({
+        event_type: 'snapshot_render',
+        component: 'PatientService_getPlanById',
+        message: 'Renderização 100% via Snapshot Estruturado'
+      });
       return this.mapSnapshotPlan(data, patientData, data.editor_version || 'v3');
     }
 
@@ -152,6 +158,11 @@ export const patientService = {
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (data.snapshot && (Array.isArray(data.snapshot.days) || Array.isArray(data.snapshot.meals))) {
       console.log(`[PatientService] Snapshot estruturado detectado via Token. Renderizando via Soberania V3.`);
+      SovereignMonitor.log({
+        event_type: 'snapshot_render',
+        component: 'PatientService_getPlanByToken',
+        message: 'Renderização Token 100% via Snapshot Estruturado'
+      });
       return this.mapSnapshotPlan(data, patientData, data.editor_version || 'v3');
     }
 
