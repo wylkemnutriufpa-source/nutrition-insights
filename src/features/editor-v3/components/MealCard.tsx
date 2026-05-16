@@ -168,7 +168,7 @@ export const MealCard: React.FC<MealCardProps> = ({
               <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Carbo</p>
             </div>
             <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
-              <p className="text-lg font-black text-amber-400">{Math.round(mealTotals.fat)}g</p>
+              <p className="text-base md:text-lg font-black text-amber-400">{Math.round(mealTotals.fat)}g</p>
               <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Gordura</p>
             </div>
           </div>
