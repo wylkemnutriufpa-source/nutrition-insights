@@ -223,7 +223,7 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
     if (seen.has(key)) {
       SovereignTelemetry.log({
         runtime_source: 'dedupeIdenticalItems',
-        event_type: 'duplicate_removed',
+        event_type: 'legacy_detected',
         severity: 'info',
         message: `Item duplicado removido: ${item.title} (${item.tipo_refeicao})`,
         metadata: { item_id: item.id, key }

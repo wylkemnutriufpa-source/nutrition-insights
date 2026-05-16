@@ -475,7 +475,7 @@ const MealItemCard = memo(function MealItemCard({
                   ))}
                 </div>
               )}
-              {!isBasic && (item.metadata?.substitution_count > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
+              {(item.metadata?.substitution_count > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}
