@@ -26,18 +26,28 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
-/** Resolve a human-readable portion string from the item data hierarchy. */
+/** 
+ * Resolve a human-readable portion string from the item data hierarchy. 
+ * Patient App should NEVER recalibrate this. It just shows what's in the snapshot.
+ */
 const formatDisplayPortion = (item: any): string => {
   if (!item) return '';
   const meta = item.edit_metadata || item.metadata || {};
-  // Priority 1: explicit display_quantity + display_unit from editor metadata
-  const dQty = item.display_quantity || meta.display_quantity;
-  const dUnit = item.display_unit || meta.display_unit || meta.portionLabel || meta.portionUnit || '';
+  
+  // SOBERANIA V3: Se o item já tem os campos de exibição hidratados no snapshot, use-os.
+  if (item.display_quantity && item.display_unit) return `${item.display_quantity} ${item.display_unit}`;
+  if (item.display_quantity) return `${item.display_quantity}`;
+  
+  // Fallback para metadados (Editor Pro)
+  const dQty = meta.display_quantity;
+  const dUnit = meta.display_unit || meta.portionLabel || meta.portionUnit || '';
   if (dQty) return `${dQty} ${dUnit}`.trim();
-  // Priority 2: clinical_mass_g (gramagem clínica)
+  
+  // Fallback para gramagem clínica
   const mass = item.clinical_mass_g || item.grams || meta.clinical_mass_g;
   if (mass) return `${mass}g`;
-  // Priority 3: description fallback
+  
+  // Último recurso: descrição
   if (item.description) return item.description;
   return '';
 };
@@ -286,14 +296,14 @@ export default function PatientMealPlan() {
             id: item.id || item.instanceId,
             title: item.title || item.name,
             description: item.description || item.instructions,
-            meta_calorias: item.macros?.kcal ?? item.kcal ?? 0,
-            meta_proteinas: item.macros?.protein_g ?? item.protein ?? 0,
-            meta_carboidratos: item.macros?.carbs_g ?? item.carbs ?? 0,
-            meta_gorduras: item.macros?.fat_g ?? item.fat ?? 0,
-            image_url: item.image_url || item.imageUrl,
-            display_quantity: item.display_quantity || item.quantity,
-            display_unit: item.display_unit || item.portionUnitLabel,
-            clinical_mass_g: item.clinical_mass_g,
+            meta_calorias: item.macros?.kcal ?? item.meta_calorias ?? item.kcal ?? 0,
+            meta_proteinas: item.macros?.protein_g ?? item.meta_proteinas ?? item.protein ?? 0,
+            meta_carboidratos: item.macros?.carbs_g ?? item.meta_carboidratos ?? item.carbs ?? 0,
+            meta_gorduras: item.macros?.fat_g ?? item.meta_gorduras ?? item.fat ?? 0,
+            image_url: item.image_url || item.imageUrl || (item as any).metadata?.image_url,
+            display_quantity: item.display_quantity || item.quantity || (item as any).metadata?.display_quantity,
+            display_unit: item.display_unit || item.portionUnitLabel || (item as any).metadata?.display_unit,
+            clinical_mass_g: item.clinical_mass_g || (item as any).metadata?.clinical_mass_g,
             instanceId: item.instanceId,
             blockId: blockId,
             substitution_group_id: blockId,
@@ -316,14 +326,14 @@ export default function PatientMealPlan() {
                 id: sub.id || sub.instanceId || crypto.randomUUID(),
                 title: sub.title || sub.name,
                 description: sub.description || sub.instructions,
-                meta_calorias: sub.macros?.kcal ?? sub.kcal ?? 0,
-                meta_proteinas: sub.macros?.protein_g ?? sub.protein ?? 0,
-                meta_carboidratos: sub.macros?.carbs_g ?? sub.carbs ?? 0,
-                meta_gorduras: sub.macros?.fat_g ?? sub.fat ?? 0,
-                image_url: sub.image_url || sub.imageUrl,
-                display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity,
-                display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel,
-                clinical_mass_g: sub.clinical_mass_g || sub.suggestedQuantity,
+                meta_calorias: sub.macros?.kcal ?? sub.meta_calorias ?? sub.kcal ?? 0,
+                meta_proteinas: sub.macros?.protein_g ?? sub.meta_proteinas ?? sub.protein ?? 0,
+                meta_carboidratos: sub.macros?.carbs_g ?? sub.meta_carboidratos ?? sub.carbs ?? 0,
+                meta_gorduras: sub.macros?.fat_g ?? sub.meta_gorduras ?? sub.fat ?? 0,
+                image_url: sub.image_url || sub.imageUrl || (sub as any).metadata?.image_url,
+                display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity || (sub as any).metadata?.display_quantity,
+                display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel || (sub as any).metadata?.display_unit,
+                clinical_mass_g: sub.clinical_mass_g || sub.suggestedQuantity || (sub as any).metadata?.clinical_mass_g,
                 instanceId: sub.instanceId || crypto.randomUUID(),
                 blockId: sub.block_id || sub.blockId || blockId, // Pertence ao mesmo bloco do primário
                 substitution_group_id: sub.block_id || sub.blockId || blockId,
@@ -382,8 +392,8 @@ export default function PatientMealPlan() {
     }
 
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-    // 🛡️ SOBERANIA V3: Mesmo para V3, usamos o pipeline de agrupamento para garantir que
-    // apenas itens primários apareçam no dashboard e substituições fiquem no metadata.
+    // 🛡️ SOBERANIA V3: O Patient App agora é um RENDERIZADOR BURRO.
+    // O snapshot carregado via RPC já contém gramagens, imagens e substituições hidratadas.
     const currentDow = new Date(date + "T12:00:00").getDay();
     let dailyItems = buildDailyDisplayItems(resolvedAllItems as any, currentDow);
     
@@ -394,8 +404,6 @@ export default function PatientMealPlan() {
       if (firstAvailableDay !== undefined) {
         console.log(`[RECOVERY] Current day (${currentDow}) empty. Falling back to day ${firstAvailableDay}.`);
         dailyItems = buildDailyDisplayItems(resolvedAllItems as any, firstAvailableDay);
-        // Opcional: Atualizar a data selecionada para o dia encontrado? 
-        // Melhor não mudar a data do calendário abruptamente, mas mostrar os itens com um aviso.
       }
     }
 
