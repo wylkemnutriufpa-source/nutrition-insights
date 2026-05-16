@@ -321,7 +321,9 @@ export default function EditorV3Page() {
           setPatientData(planData.patient);
         }
 
-        if (planData?.items_payload && (planData.items_payload as any).meals) {
+        if (planData?.snapshot && (planData.snapshot as any).meals) {
+          store.hydrateMeals((planData.snapshot as any).meals);
+        } else if (planData?.items_payload && (planData.items_payload as any).meals) {
           store.hydrateMeals((planData.items_payload as any).meals);
         } else if (planData?.meals) {
           store.hydrateMeals(planData.meals as any);
