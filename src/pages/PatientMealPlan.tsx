@@ -207,263 +207,129 @@ export default function PatientMealPlan() {
       }
 
       const planData = result as any;
-    
-    // Agora o RPC resolve_patient_meal_plan já retorna os dados necessários (snapshot, editor_version, targets)
-    // eliminando a necessidade de uma segunda query e resolvendo problemas de RLS/UUID.
-    setPlan({
-      id: planData.id,
-      title: planData.title,
-      start_date: planData.start_date,
-      totals_status: planData.totals_status,
-      plan_mode: planData.plan_mode,
-      editor_version: planData.editor_version,
-      snapshot: planData.snapshot,
-      total_meta_calorias: planData.total_meta_calorias,
-      total_meta_proteinas: planData.total_meta_proteinas,
-      total_meta_carboidratos: planData.total_meta_carboidratos,
-      total_meta_gorduras: planData.total_meta_gorduras,
-    } as any);
-
-    // Feedback visual premium ao carregar
-    toast.dismiss();
-    toast.success("Plano carregado com sucesso", {
-      icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" />,
-      className: "bg-neutral-900 border-white/10 text-white font-bold uppercase tracking-widest text-[10px]"
-    });
-
-    let resolvedItems: MealPlanItem[] = [];
-    let resolvedAllItems: MealPlanItem[] = [];
-    const hasSnapshotPlan = !!planData.snapshot && (
-      Array.isArray((planData.snapshot as any).days) || Array.isArray((planData.snapshot as any).meals)
-    );
-
-    if (hasSnapshotPlan) {
       const snapshot = planData.snapshot as any;
-      if (!snapshot || (!snapshot.days && !snapshot.meals)) {
-        console.warn(`[RECOVERY] V3 Plan ${planData.id} missing snapshot. Falling back to items.`);
-        // Se o snapshot falhar, tentamos carregar os itens do legado como fallback de segurança
-        // em vez de bloquear o paciente com uma tela de erro.
-      }
+      const hasSnapshot = !!snapshot && (Array.isArray(snapshot.days) || Array.isArray(snapshot.meals));
 
-      const currentDow = new Date(date + "T12:00:00").getDay();
-      const flatItems: any[] = [];
-
-      // 🛡️ Snapshot V3: hidrata os dias de forma inteligente
-      const snapshotDays = Array.isArray(snapshot.days) ? snapshot.days : null;
-      let daysToHydrate: any[] = [];
+      // --- SNAPSHOT SOBERANO: PRE-RESOLUÇÃO DE IMAGENS ---
+      // Para evitar hydration tardia e imagens piscando, resolvemos tudo agora.
+      const imagePaths: string[] = [];
+      const extractPaths = (node: any) => {
+        if (!node) return;
+        if (node.image_url && !node.image_url.startsWith('http')) imagePaths.push(node.image_url);
+        if (node.meals) node.meals.forEach(extractPaths);
+        if (node.items) node.items.forEach(extractPaths);
+        if (node.days) node.days.forEach(extractPaths);
+        if (node.substitutions) node.substitutions.forEach(extractPaths);
+      };
       
-      if (snapshotDays) {
-        daysToHydrate = (planData.plan_mode === 'single_day'
-            ? [snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0]].filter(Boolean)
-            : snapshotDays);
-      } else if (snapshot.meals && Array.isArray(snapshot.meals)) {
-        // Fallback: Se não tem 'days', mas 'meals' tem day_of_week, agrupamos localmente
-        const hasDayData = snapshot.meals.some((m: any) => m.day_of_week !== undefined);
-        if (hasDayData && planData.plan_mode === 'weekly') {
-          const daysMap = new Map();
-          snapshot.meals.forEach((m: any) => {
-            const d = m.day_of_week ?? currentDow;
-            if (!daysMap.has(d)) daysMap.set(d, []);
-            daysMap.get(d).push(m);
-          });
-          daysToHydrate = Array.from(daysMap.entries()).map(([d, meals]) => ({ day_of_week: d, meals }));
-        } else {
-          daysToHydrate = [{ day_of_week: currentDow, meals: snapshot.meals }];
-        }
+      if (hasSnapshot) extractPaths(snapshot);
+      else if (planData.items) planData.items.forEach(extractPaths);
+
+      const signedUrlsMap = new Map<string, string>();
+      if (imagePaths.length > 0) {
+        const { data: urls } = await supabase.storage
+          .from("meal-images")
+          .createSignedUrls(imagePaths, 3600);
+        
+        urls?.forEach((u, i) => {
+          if (u.signedUrl) signedUrlsMap.set(imagePaths[i], u.signedUrl);
+        });
       }
 
-      // 🛡️ ASSERT: Auditoria de hierarquia durante a hidratação do Snapshot
-      daysToHydrate.forEach((dayNode: any) => {
-        const meals = dayNode?.meals || [];
-        const hydratedDay = dayNode?.day_of_week ?? currentDow;
-        meals.forEach((meal: any) => {
-          (meal.items || []).forEach((item: any) => {
-          assertHierarchyIntegrity(item as unknown as DisplayMealPlanItem, "PatientMealPlan_snapshot");
-          const isPrimary = item.is_primary !== false && item.is_substitution !== true;
-          
-          const common = {
-            tipo_refeicao: meal.tipo_refeicao || meal.type || meal.name || meal.id,
-            day_of_week: hydratedDay,
-            editor_version: planData.editor_version || 'snapshot',
-          };
+      const hydrateItem = (item: any, dayOfWeek: number, mealType: string): MealPlanItem => {
+        const kcal = item.meta_calorias ?? item.kcal ?? item.macros?.kcal ?? 0;
+        const protein = item.meta_proteinas ?? item.protein ?? item.macros?.protein_g ?? 0;
+        const carbs = item.meta_carboidratos ?? item.carbs ?? item.macros?.carbs_g ?? 0;
+        const fat = item.meta_gorduras ?? item.fat ?? item.macros?.fat_g ?? 0;
+        
+        const rawImg = item.image_url || item.imageUrl || (item.metadata?.image_url);
+        const resolvedImg = signedUrlsMap.get(rawImg) || rawImg;
 
-          // 1. Mapeia o item preservando a soberania primário/substituição do snapshot.
-          const blockId = item.block_id || item.blockId || item.substitution_group_id || item.id || item.instanceId;
-          const kcal = item.macros?.kcal ?? item.meta_calorias ?? item.kcal ?? (item as any).calories ?? 0;
-          const protein = item.macros?.protein_g ?? item.meta_proteinas ?? item.protein ?? 0;
-          const carbs = item.macros?.carbs_g ?? item.meta_carboidratos ?? item.carbs ?? 0;
-          const fat = item.macros?.fat_g ?? item.meta_gorduras ?? item.fat ?? 0;
-          
-          flatItems.push({
-            ...item,
-            ...common,
-            id: item.id || item.instanceId,
-            title: item.title || item.name,
-            description: item.description || item.instructions,
-            meta_calorias: kcal,
-            meta_proteinas: protein,
-            meta_carboidratos: carbs,
-            meta_gorduras: fat,
-            kcal: kcal,
-            protein: protein,
-            carbs: carbs,
-            fat: fat,
-            image_url: item.image_url || item.imageUrl || (item as any).metadata?.image_url,
-            display_quantity: item.display_quantity || item.quantity || (item as any).metadata?.display_quantity || item.clinical_mass_g || (item as any).grams,
-            display_unit: item.display_unit || item.portionUnitLabel || (item as any).metadata?.display_unit || (item.clinical_mass_g || (item as any).grams ? "g" : ""),
-            clinical_mass_g: item.clinical_mass_g || (item as any).metadata?.clinical_mass_g || item.quantity || (item as any).grams,
-            instanceId: item.instanceId,
-            blockId: blockId,
-            substitution_group_id: blockId,
-            is_primary: isPrimary,
-            is_substitution: !isPrimary,
-            correlation_id: item.correlation_id,
-            edit_metadata: {
-              ...(item.edit_metadata || {}),
-              display_quantity: item.display_quantity || item.quantity,
-              display_unit: item.display_unit || item.portionUnitLabel,
-            }
-          });
+        return {
+          ...item,
+          id: item.id || item.instanceId,
+          title: item.title || item.name,
+          description: item.description || item.instructions,
+          tipo_refeicao: mealType,
+          day_of_week: dayOfWeek,
+          meta_calorias: kcal,
+          meta_proteinas: protein,
+          meta_carboidratos: carbs,
+          meta_gorduras: fat,
+          image_url: resolvedImg,
+          display_quantity: item.display_quantity || item.quantity || item.metadata?.display_quantity,
+          display_unit: item.display_unit || item.portionUnitLabel || item.metadata?.display_unit,
+          editor_version: planData.editor_version || 'v3'
+        };
+      };
 
-          // 2. Mapeia substituições acopladas apenas quando o parent é primário.
-          if (isPrimary && item.substitutions && Array.isArray(item.substitutions)) {
-            item.substitutions.forEach((sub: any) => {
-              flatItems.push({
-                ...sub,
-                ...common,
-                id: sub.id || sub.instanceId || crypto.randomUUID(),
-                title: sub.title || sub.name,
-                description: sub.description || sub.instructions,
-                meta_calorias: sub.macros?.kcal ?? sub.meta_calorias ?? sub.kcal ?? (sub as any).calories ?? 0,
-                meta_proteinas: sub.macros?.protein_g ?? sub.meta_proteinas ?? sub.protein ?? 0,
-                meta_carboidratos: sub.macros?.carbs_g ?? sub.meta_carboidratos ?? sub.carbs ?? 0,
-                meta_gorduras: sub.macros?.fat_g ?? sub.meta_gorduras ?? sub.fat ?? 0,
-                kcal: sub.macros?.kcal ?? sub.meta_calorias ?? sub.kcal ?? (sub as any).calories ?? 0,
-                protein: sub.macros?.protein_g ?? sub.meta_proteinas ?? sub.protein ?? 0,
-                carbs: sub.macros?.carbs_g ?? sub.meta_carboidratos ?? sub.carbs ?? 0,
-                fat: sub.macros?.fat_g ?? sub.meta_gorduras ?? sub.fat ?? 0,
-                image_url: sub.image_url || sub.imageUrl || (sub as any).metadata?.image_url,
-                display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity || (sub as any).metadata?.display_quantity || sub.clinical_mass_g || (sub as any).grams,
-                display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel || (sub as any).metadata?.display_unit || (sub.clinical_mass_g || (sub as any).grams ? "g" : ""),
-                clinical_mass_g: sub.clinical_mass_g || sub.suggestedQuantity || (sub as any).metadata?.clinical_mass_g || sub.quantity || (sub as any).grams,
-                instanceId: sub.instanceId || crypto.randomUUID(),
-                blockId: sub.block_id || sub.blockId || blockId, // Pertence ao mesmo bloco do primário
-                substitution_group_id: sub.block_id || sub.blockId || blockId,
-                is_primary: false,
-                is_substitution: true,
-                edit_metadata: {
-                  ...(sub.edit_metadata || {}),
-                  display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity,
-                  display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel,
-                }
-              });
+      let flatItems: MealPlanItem[] = [];
+      const currentDow = new Date(date + "T12:00:00").getDay();
+
+      if (hasSnapshot) {
+        const days = Array.isArray(snapshot.days) ? snapshot.days : [];
+        days.forEach((day: any) => {
+          const dow = day.day_of_week ?? currentDow;
+          (day.meals || []).forEach((meal: any) => {
+            const mealType = meal.tipo_refeicao || meal.type || meal.name;
+            (meal.items || []).forEach((item: any) => {
+              const hydrated = hydrateItem(item, dow, mealType);
+              flatItems.push(hydrated);
+              
+              if (item.substitutions) {
+                item.substitutions.forEach((sub: any) => {
+                  flatItems.push({
+                    ...hydrateItem(sub, dow, mealType),
+                    is_primary: false,
+                    is_substitution: true,
+                    substitution_group_id: hydrated.id
+                  });
+                });
+              }
             });
-          }
+          });
         });
-        });
-      });
-
-      console.log(`[FORENSIC] Hydrated ${flatItems.length} items for ${daysToHydrate.length} days from V3 snapshot.`, { 
-        planId: planData.id, 
-        mode: planData.plan_mode,
-        snapshotVersion: snapshot.version || planData.snapshot_schema_version || 'snapshot-auto' 
-      });
-
-      resolvedAllItems = flatItems;
-      resolvedItems = flatItems;
-    } else {
-      // --- LEGADO V1/V2 ---
-      resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
-      resolvedAllItems = resolvedItems;
-
-      if (planData.id && resolvedItems.length === 0) {
-        const { data: fullItemsData, error: fullItemsError } = await supabase
-          .from("meal_plan_items")
-          .select("*")
-          .eq("meal_plan_id", planData.id);
-
-        if (!fullItemsError && fullItemsData) {
-          const fullItems = fullItemsData as unknown as MealPlanItem[];
-          resolvedAllItems = fullItems;
-
-          const currentDow = new Date(date + "T12:00:00").getDay();
-          const sameDayItems = fullItems.filter((item) => item.day_of_week === currentDow);
-          if (sameDayItems.length > 0) {
-            resolvedItems = sameDayItems;
-          } else {
-            const firstAvailableDay = fullItems.find(
-              (item) => item.day_of_week !== null && item.day_of_week !== undefined,
-            )?.day_of_week;
-
-            resolvedItems = firstAvailableDay !== undefined
-              ? fullItems.filter((item) => item.day_of_week === firstAvailableDay)
-              : fullItems;
-          }
-        }
+      } else {
+        flatItems = (planData.items || []).map((i: any) => hydrateItem(i, i.day_of_week, i.tipo_refeicao));
       }
-    }
 
-    // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-    // 🛡️ SOBERANIA V3: O Patient App agora é um RENDERIZADOR BURRO.
-    // O snapshot carregado via RPC já contém gramagens, imagens e substituições hidratadas.
-    const currentDow = new Date(date + "T12:00:00").getDay();
-    let dailyItems = buildDailyDisplayItems(resolvedAllItems as any, currentDow);
-    
-    // 🛡️ FALLBACK SOBERANO: Se o dia atual está vazio, mas existem itens em outros dias,
-    // não mostramos tela vazia. Buscamos o primeiro dia disponível para garantir entrega.
-    if (dailyItems.length === 0 && resolvedAllItems.length > 0) {
-      const firstAvailableDay = resolvedAllItems.find(i => i.day_of_week !== null && i.day_of_week !== undefined)?.day_of_week;
-      if (firstAvailableDay !== undefined) {
-        console.log(`[RECOVERY] Current day (${currentDow}) empty. Falling back to day ${firstAvailableDay}.`);
-        dailyItems = buildDailyDisplayItems(resolvedAllItems as any, firstAvailableDay);
+      setPlan({
+        id: planData.id,
+        title: planData.title,
+        start_date: planData.start_date,
+        totals_status: planData.totals_status || 'ok',
+        plan_mode: planData.plan_mode,
+        editor_version: planData.editor_version,
+        total_meta_calorias: planData.total_meta_calorias || snapshot?.total_meta_calorias,
+        total_meta_proteinas: planData.total_meta_proteinas || snapshot?.total_meta_proteinas,
+        total_meta_carboidratos: planData.total_meta_carboidratos || snapshot?.total_meta_carboidratos,
+        total_meta_gorduras: planData.total_meta_gorduras || snapshot?.total_meta_gorduras,
+      } as any);
+
+      setAllItems(flatItems);
+      
+      const dailyItems = buildDailyDisplayItems(flatItems as any, currentDow);
+      setItems(dailyItems as MealPlanItem[]);
+
+      // Parallel fetch for social/completion data
+      const [subsResponse, completionsResponse, weekResponse] = await Promise.all([
+        supabase.from("patient_meal_substitutions" as any).select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id),
+        supabase.from("meal_item_completions").select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id).eq("date", date),
+        supabase.from("meal_item_completions").select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id).gte("date", weekDates[0]).lte("date", weekDates[6])
+      ]);
+
+      if (subsResponse.data) {
+        const subsMap: Record<string, any> = {};
+        subsResponse.data.forEach((s: any) => { subsMap[s.meal_plan_item_id] = { foodName: s.substituted_food, originalTitle: s.original_food }; });
+        setActiveSubstitutions(subsMap);
       }
-    }
 
-    setItems(dailyItems as MealPlanItem[]);
-    setAllItems(resolvedAllItems);
-
-    const { data: subsData } = await supabase
-      .from("patient_meal_substitutions" as any)
-      .select("meal_plan_item_id, original_food, substituted_food")
-      .eq("patient_id", user.id)
-      .eq("meal_plan_id", planData.id)
-      .order("created_at", { ascending: false });
-
-    if (subsData && subsData.length > 0) {
-      const subsMap: Record<string, { foodName: string; originalTitle: string }> = {};
-      for (const s of subsData as any[]) {
-        if (!subsMap[s.meal_plan_item_id]) {
-          subsMap[s.meal_plan_item_id] = { foodName: s.substituted_food, originalTitle: s.original_food };
-        }
-      }
-      setActiveSubstitutions(subsMap);
-    } else {
-      setActiveSubstitutions({});
-    }
-
-    const { data: completionsData } = await supabase
-      .from("meal_item_completions")
-      .select("*")
-      .eq("patient_id", user.id)
-      .eq("meal_plan_id", planData.id)
-      .eq("date", date);
-
-    setCompletions((completionsData || []) as unknown as MealCompletion[]);
-
-    const weekStart = weekDates[0];
-    const weekEnd = weekDates[6];
-    const { data: weekData } = await supabase
-      .from("meal_item_completions")
-      .select("*")
-      .eq("patient_id", user.id)
-      .eq("meal_plan_id", planData.id)
-      .gte("date", weekStart)
-      .lte("date", weekEnd);
-    setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
+      setCompletions((completionsResponse.data || []) as any);
+      setWeekCompletions((weekResponse.data || []) as any);
 
     } catch (err: any) {
       console.error("[PatientApp] Fetch Error:", err);
-      toast.error(err.message || "Erro ao carregar dados do plano.");
+      toast.error("Erro ao carregar dados do plano.");
     } finally {
       setLoading(false);
     }

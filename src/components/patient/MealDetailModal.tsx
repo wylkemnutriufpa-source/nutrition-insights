@@ -275,13 +275,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const raw = meal?.image_url || (meal as any).imageUrl;
     if (!raw) return null;
     
-    // Unsplash Source está instável/depreciado. Redirecionando para featured images temáticas.
+    // Se for um snapshot do paciente, a imagem já deve vir resolvida do PatientMealPlan
+    if (isPatient) return raw;
+
     if (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured")) {
       const query = meal?.title || "alimento saudável";
       return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${meal.itemId || meal.title}`;
     }
     return raw;
-  }, [meal?.image_url, (meal as any).imageUrl, meal?.title]);
+  }, [meal?.image_url, (meal as any).imageUrl, meal?.title, isPatient]);
 
   const fetchDbHistory = async (offset = 0) => {
     if (!meal?.itemId) return;
