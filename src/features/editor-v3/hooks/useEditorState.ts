@@ -244,8 +244,8 @@ export const useEditorState = create<EditorState>()(
     }),
 
     { 
-      name: 'fitjourney-editor-v3-sovereign-v4', 
-      version: 4, 
+      name: 'fitjourney-editor-v3-sovereign-v5', 
+      version: 5, 
       storage: createJSONStorage(() => localStorage) 
     }
   )
