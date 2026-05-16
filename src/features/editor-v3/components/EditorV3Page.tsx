@@ -178,10 +178,6 @@ export default function EditorV3Page() {
           const clusterFoods = itemsByCluster.get(clusterSlug) || [];
           if (clusterFoods.length === 0) continue;
 
-          // VARIETY LOGIC: Rotate foods based on the day
-          const clusterFoods = itemsByCluster.get(clusterSlug) || [];
-          if (clusterFoods.length === 0) continue;
-
           // Variety: prioritize foods that haven't been used yet or based on day
           const foodToUseIndex = day % clusterFoods.length;
           const rawFood = clusterFoods[foodToUseIndex];
