@@ -88,11 +88,11 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
                 <div className="flex items-center justify-between mb-4 relative z-10">
                   <Badge variant="outline" className={cn(
                     "text-[7px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm shadow-sm",
-                    template.plan_snapshot 
-                      ? "border-amber-500/50 bg-amber-500/10 text-amber-500 shadow-amber-500/10" 
+                    template.sovereign_validated 
+                      ? "border-amber-500 bg-amber-500/10 text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)]" 
                       : "border-emerald-500/20 bg-emerald-500/5 text-emerald-500"
                   )}>
-                    {template.plan_snapshot ? '✨ SOBERANO' : (template.objective?.split(' ')[0] || 'V3')}
+                    {template.sovereign_validated ? '✨ SOBERANO' : (template.objective?.split(' ')[0] || 'V3')}
                   </Badge>
                   <div className="flex items-center gap-1.5 opacity-30 group-hover:opacity-100 transition-opacity">
                     <Star className="w-3 h-3 text-emerald-500" />

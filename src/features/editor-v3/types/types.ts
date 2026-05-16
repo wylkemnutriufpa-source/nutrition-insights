@@ -177,6 +177,7 @@ export interface V3DietTemplate {
   active: boolean;
   meal_integrity_threshold?: number; 
   plan_snapshot?: Record<string, { meals: Meal[] }>; // Kcal-keyed snapshots
+  sovereign_validated?: boolean;
 }
 
 export interface MealTemplate {

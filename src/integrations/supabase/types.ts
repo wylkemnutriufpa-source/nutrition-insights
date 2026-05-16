@@ -20076,6 +20076,7 @@ export type Database = {
           objective: string
           plan_snapshot: Json | null
           slug: string
+          sovereign_validated: boolean | null
           substitutions_enabled: boolean | null
           template_type: string | null
           title: string
@@ -20094,6 +20095,7 @@ export type Database = {
           objective: string
           plan_snapshot?: Json | null
           slug: string
+          sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
           template_type?: string | null
           title: string
@@ -20112,6 +20114,7 @@ export type Database = {
           objective?: string
           plan_snapshot?: Json | null
           slug?: string
+          sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
           template_type?: string | null
           title?: string
