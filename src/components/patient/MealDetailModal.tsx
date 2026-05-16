@@ -577,10 +577,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     return rawImageUrl;
   }, [rawImageUrl, meal.title]);
 
-  const calories = Number(meal.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0);
-  const protein = Number(meal.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0);
-  const carbs = Number(meal.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs ?? 0);
-  const fat = Number(meal.meta_gorduras ?? meta.meta_gorduras ?? meta.fat ?? 0);
+  const calories = Number(meal.meta_calorias ?? (meal as any).kcal ?? (meal as any).calories ?? meta.meta_calorias ?? meta.calories ?? 0);
+  const protein = Number(meal.meta_proteinas ?? (meal as any).protein ?? meta.meta_proteinas ?? meta.protein ?? 0);
+  const carbs = Number(meal.meta_carboidratos ?? (meal as any).carbs ?? meta.meta_carboidratos ?? meta.carbs ?? 0);
+  const fat = Number(meal.meta_gorduras ?? (meal as any).fat ?? meta.meta_gorduras ?? meta.fat ?? 0);
 
   const hasMacros = calories > 0 || protein > 0 || carbs > 0 || fat > 0;
 
