@@ -392,8 +392,8 @@ export default function PatientMealPlan() {
     }
 
     // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-    // 🛡️ SOBERANIA V3: Mesmo para V3, usamos o pipeline de agrupamento para garantir que
-    // apenas itens primários apareçam no dashboard e substituições fiquem no metadata.
+    // 🛡️ SOBERANIA V3: O Patient App agora é um RENDERIZADOR BURRO.
+    // O snapshot carregado via RPC já contém gramagens, imagens e substituições hidratadas.
     const currentDow = new Date(date + "T12:00:00").getDay();
     let dailyItems = buildDailyDisplayItems(resolvedAllItems as any, currentDow);
     
@@ -404,8 +404,6 @@ export default function PatientMealPlan() {
       if (firstAvailableDay !== undefined) {
         console.log(`[RECOVERY] Current day (${currentDow}) empty. Falling back to day ${firstAvailableDay}.`);
         dailyItems = buildDailyDisplayItems(resolvedAllItems as any, firstAvailableDay);
-        // Opcional: Atualizar a data selecionada para o dia encontrado? 
-        // Melhor não mudar a data do calendário abruptamente, mas mostrar os itens com um aviso.
       }
     }
 
