@@ -19,10 +19,10 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
   item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution 
 }) => {
   return (
-    <div className="group relative flex flex-col p-4 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
+    <div className="group relative flex flex-col p-3 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px] -mr-12 -mt-12 rounded-full group-hover:bg-emerald-500/10 transition-all duration-300" />
       
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 relative z-10">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h4 className="text-base font-black uppercase italic tracking-tight text-white group-hover:text-emerald-400 transition-colors">
@@ -84,7 +84,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
       </div>
 
       {/* Substituições Dinâmicas Soberanas */}
-      <div className="mt-4 pt-6 border-t border-white/5">
+      <div className="mt-3 pt-4 border-t border-white/5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <ChevronRight className="w-3 h-3 text-emerald-500" />

@@ -105,15 +105,15 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-xl bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="max-w-lg bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
         {/* Header Modal */}
-        <div className="p-5 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-              <Utensils className="w-5 h-5" />
+        <div className="p-4 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+              <Utensils className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-lg font-black uppercase italic tracking-tighter text-white">Editar Refeição</h3>
+              <h3 className="text-base font-black uppercase italic tracking-tighter text-white">Editar Refeição</h3>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">{meal.name}</span>
               </div>
@@ -128,7 +128,7 @@ export const MealCard: React.FC<MealCardProps> = ({
         </div>
 
         {/* Content Modal */}
-        <ScrollArea className="max-h-[50vh] p-6 md:p-8">
+        <ScrollArea className="max-h-[60vh] p-4 md:p-6">
           <div className="space-y-4">
             {meal.items.length > 0 ? (
               meal.items.map((item) => (
@@ -153,7 +153,7 @@ export const MealCard: React.FC<MealCardProps> = ({
         </ScrollArea>
 
         {/* Footer Modal */}
-        <div className="p-6 md:p-8 border-t border-white/5 bg-neutral-900/50 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="p-4 md:p-6 border-t border-white/5 bg-neutral-900/50 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex gap-4 md:gap-6">
             <div className="text-center px-4 md:px-6 py-2 md:py-3 bg-white/5 rounded-2xl border border-white/5">
               <p className="text-base md:text-lg font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
@@ -175,7 +175,7 @@ export const MealCard: React.FC<MealCardProps> = ({
                 setActiveItemForSub(null);
                 setIsSearchOpen(true);
               }}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[10px] md:text-[11px] h-12 md:h-14 px-6 md:px-8 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[10px] h-11 px-6 rounded-xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
             >
               <Plus className="w-5 h-5 mr-3" /> Adicionar Alimento
             </Button>
@@ -183,7 +183,7 @@ export const MealCard: React.FC<MealCardProps> = ({
             <Button
               variant="outline"
               onClick={onRemoveMeal}
-              className="h-12 w-12 md:h-14 md:w-14 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all"
+              className="h-11 w-11 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
             >
               <Trash2 className="w-5 h-5" />
             </Button>
