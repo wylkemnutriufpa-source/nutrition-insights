@@ -203,16 +203,20 @@ export const useEditorState = create<EditorState>()(
             
             const subMacros = calculateItemMacros(food, substituteQuantity);
 
+            const groupId = item.substitution_group_id || crypto.randomUUID();
             const newSub = {
               ...food,
-              name: food.name,
+              instanceId: crypto.randomUUID(),
               quantity: substituteQuantity,
               clinical_mass_g: substituteQuantity,
+              substitution_group_id: groupId,
+              is_primary: false,
               ...subMacros
             };
 
             return {
               ...item,
+              substitution_group_id: groupId,
               substitutions: [...(item.substitutions || []), newSub]
             };
           });
