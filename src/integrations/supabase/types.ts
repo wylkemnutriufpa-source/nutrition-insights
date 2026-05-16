@@ -9543,6 +9543,96 @@ export type Database = {
           },
         ]
       }
+      operational_audits: {
+        Row: {
+          created_at: string | null
+          editor_ok: boolean | null
+          equivalents_ok: boolean | null
+          error_log: string | null
+          evidence_screenshots: Json | null
+          id: string
+          images_ok: boolean | null
+          patient_app_ok: boolean | null
+          pdf_generated_url: string | null
+          pdf_ok: boolean | null
+          persistence_ok: boolean | null
+          publish_ok: boolean | null
+          publish_payload: Json | null
+          reload_ok: boolean | null
+          rpc_returned: Json | null
+          save_ok: boolean | null
+          save_payload: Json | null
+          snapshot_ok: boolean | null
+          status: string
+          template_id: string
+          template_name: string
+          validation_date: string | null
+          validator_id: string | null
+          validator_name: string | null
+          week_complete: boolean | null
+          whatsapp_link: string | null
+          whatsapp_ok: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          editor_ok?: boolean | null
+          equivalents_ok?: boolean | null
+          error_log?: string | null
+          evidence_screenshots?: Json | null
+          id?: string
+          images_ok?: boolean | null
+          patient_app_ok?: boolean | null
+          pdf_generated_url?: string | null
+          pdf_ok?: boolean | null
+          persistence_ok?: boolean | null
+          publish_ok?: boolean | null
+          publish_payload?: Json | null
+          reload_ok?: boolean | null
+          rpc_returned?: Json | null
+          save_ok?: boolean | null
+          save_payload?: Json | null
+          snapshot_ok?: boolean | null
+          status: string
+          template_id: string
+          template_name: string
+          validation_date?: string | null
+          validator_id?: string | null
+          validator_name?: string | null
+          week_complete?: boolean | null
+          whatsapp_link?: string | null
+          whatsapp_ok?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          editor_ok?: boolean | null
+          equivalents_ok?: boolean | null
+          error_log?: string | null
+          evidence_screenshots?: Json | null
+          id?: string
+          images_ok?: boolean | null
+          patient_app_ok?: boolean | null
+          pdf_generated_url?: string | null
+          pdf_ok?: boolean | null
+          persistence_ok?: boolean | null
+          publish_ok?: boolean | null
+          publish_payload?: Json | null
+          reload_ok?: boolean | null
+          rpc_returned?: Json | null
+          save_ok?: boolean | null
+          save_payload?: Json | null
+          snapshot_ok?: boolean | null
+          status?: string
+          template_id?: string
+          template_name?: string
+          validation_date?: string | null
+          validator_id?: string | null
+          validator_name?: string | null
+          week_complete?: boolean | null
+          whatsapp_link?: string | null
+          whatsapp_ok?: boolean | null
+        }
+        Relationships: []
+      }
       operational_cost_configuration: {
         Row: {
           avg_stripe_fee_percent: number
@@ -18204,7 +18294,11 @@ export type Database = {
           id: string
           message: string
           metadata: Json | null
+          payload: Json | null
+          pdf_url: string | null
+          rpc_response: Json | null
           runtime_source: string
+          screenshot_url: string | null
           severity: string
           snapshot_version: string | null
         }
@@ -18216,7 +18310,11 @@ export type Database = {
           id?: string
           message: string
           metadata?: Json | null
+          payload?: Json | null
+          pdf_url?: string | null
+          rpc_response?: Json | null
           runtime_source: string
+          screenshot_url?: string | null
           severity: string
           snapshot_version?: string | null
         }
@@ -18228,7 +18326,11 @@ export type Database = {
           id?: string
           message?: string
           metadata?: Json | null
+          payload?: Json | null
+          pdf_url?: string | null
+          rpc_response?: Json | null
           runtime_source?: string
+          screenshot_url?: string | null
           severity?: string
           snapshot_version?: string | null
         }
