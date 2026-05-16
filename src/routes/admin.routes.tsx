@@ -43,6 +43,7 @@ const ClinicalPredictions = lazy(() => import("../pages/ClinicalPredictions"));
 const SystemAudit = lazy(() => import("../pages/SystemAudit"));
 const SystemDiagnostics = lazy(() => import("../pages/SystemDiagnostics"));
 const SchemaMonitor = lazy(() => import("../pages/SchemaMonitor"));
+const OperationalAudit = lazy(() => import("../pages/admin/OperationalAudit"));
 
 export const adminRoutes = [
   <Route key="admin-dashboard" path="/admin/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
