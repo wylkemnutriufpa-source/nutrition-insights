@@ -26,7 +26,21 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
-const formatDisplayPortion: any = (i: any) => '';
+/** Resolve a human-readable portion string from the item data hierarchy. */
+const formatDisplayPortion = (item: any): string => {
+  if (!item) return '';
+  const meta = item.edit_metadata || item.metadata || {};
+  // Priority 1: explicit display_quantity + display_unit from editor metadata
+  const dQty = item.display_quantity || meta.display_quantity;
+  const dUnit = item.display_unit || meta.display_unit || meta.portionLabel || meta.portionUnit || '';
+  if (dQty) return `${dQty} ${dUnit}`.trim();
+  // Priority 2: clinical_mass_g (gramagem clínica)
+  const mass = item.clinical_mass_g || item.grams || meta.clinical_mass_g;
+  if (mass) return `${mass}g`;
+  // Priority 3: description fallback
+  if (item.description) return item.description;
+  return '';
+};
 
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {

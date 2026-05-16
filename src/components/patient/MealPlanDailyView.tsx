@@ -16,7 +16,18 @@ import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-const formatDisplayPortion: any = (i: any) => '';
+/** Resolve a human-readable portion string from the item data hierarchy. */
+const formatDisplayPortion = (item: any): string => {
+  if (!item) return '';
+  const meta = item.edit_metadata || item.metadata || {};
+  const dQty = item.display_quantity || meta.display_quantity;
+  const dUnit = item.display_unit || meta.display_unit || meta.portionLabel || meta.portionUnit || '';
+  if (dQty) return `${dQty} ${dUnit}`.trim();
+  const mass = item.clinical_mass_g || item.grams || meta.clinical_mass_g;
+  if (mass) return `${mass}g`;
+  if (item.description) return item.description;
+  return '';
+};
 
 import type { Database } from "@/integrations/supabase/types";
 

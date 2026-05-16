@@ -40,7 +40,7 @@ const App = () => {
     } catch (e) {
       console.warn('[FitJourney] Could not save mode to localStorage');
     }
-    console.log(`[FitJourney] Mode active: ${mode}`);
+    // Mode persisted to localStorage
   }, [mode, isAdmin, loading]);
 
   const Switcher = () => {

@@ -179,7 +179,15 @@ function PatientResumoModal({ patient, onOpenChange, onFullProfile }: { patient:
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-white/40 font-bold uppercase">Status de Pagamento</p>
-                        <p className="text-sm font-black text-emerald-400">VIGENTE</p>
+                        <p className={`text-sm font-black ${
+                          patient.status !== 'active' ? 'text-red-400' :
+                          patient.expires_at && new Date(patient.expires_at) < new Date() ? 'text-amber-400' :
+                          'text-emerald-400'
+                        }`}>{
+                          patient.status !== 'active' ? 'INATIVO' :
+                          patient.expires_at && new Date(patient.expires_at) < new Date() ? 'VENCIDO' :
+                          'VIGENTE'
+                        }</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-white/40 font-bold uppercase">Expira em</p>
@@ -188,23 +196,6 @@ function PatientResumoModal({ patient, onOpenChange, onFullProfile }: { patient:
                     </div>
                   </div>
                 </div>
-
-                {/* Progresso & Métricas */}
-                <div className="space-y-4">
-                  <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-white/10 space-y-4">
-                    <div className="flex items-center gap-2 text-white">
-                      <TrendingUp className="w-4 h-4" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Performance Corporal</span>
-                    </div>
-                    <div className="flex items-end gap-3">
-                      <p className="text-4xl font-black">7.4<span className="text-lg text-emerald-400 ml-1">kg</span></p>
-                      <p className="text-xs text-white/40 font-bold mb-2 uppercase">Eliminados no total</p>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 w-[65%]" />
-                    </div>
-                    <p className="text-[10px] text-white/40 font-black uppercase tracking-tighter">Aderência aos Macros: 88%</p>
-                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center">
@@ -216,7 +207,6 @@ function PatientResumoModal({ patient, onOpenChange, onFullProfile }: { patient:
                       <p className="text-xl font-black text-amber-400">{patient.stats?.current_streak || 0}🔥</p>
                     </div>
                   </div>
-                </div>
               </div>
             )}
 

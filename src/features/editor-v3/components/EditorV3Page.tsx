@@ -6,7 +6,7 @@ import { MealCard } from './MealCard';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, Save, Plus, Target, Flame, 
-  CheckCircle2, AlertCircle, Info, Send, Share2,
+  CheckCircle2, AlertCircle, Info, Send,
   Trash2, Copy, MoreHorizontal, Settings, Library,
   Layout, Search, Loader2, User, Activity, Calculator,
   ChevronRight, Check, ChevronsUpDown, Calendar
@@ -36,6 +36,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useAuth } from '@/lib/auth';
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -50,6 +51,7 @@ export default function EditorV3Page() {
   const effectivePatientId = patientId;
 
   const navigate = useNavigate();
+  const { user } = useAuth();
   const store = useEditorState();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -81,22 +83,34 @@ export default function EditorV3Page() {
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const [fetchedTemplates, patientsResult] = await Promise.all([
-          getV3Templates(),
-          supabase
-            .from('profiles')
-            .select('user_id, full_name, current_weight_kg, current_height_cm, activity_level, goal')
-            .order('full_name', { ascending: true })
-            .limit(1000)
-        ]);
+        // Fetch templates
+        const fetchedTemplates = await getV3Templates();
         setTemplates(fetchedTemplates);
-        if (patientsResult.data) setAvailablePatients(patientsResult.data);
+
+        // Fetch patients filtered by this nutritionist's patients
+        if (user?.id) {
+          const { data: links } = await supabase
+            .from('nutritionist_patients')
+            .select('patient_id')
+            .eq('nutritionist_id', user.id)
+            .eq('status', 'active');
+
+          if (links && links.length > 0) {
+            const patientIds = links.map((l: any) => l.patient_id);
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('user_id, full_name, current_weight_kg, current_height_cm, activity_level, goal')
+              .in('user_id', patientIds)
+              .order('full_name', { ascending: true });
+            if (profiles) setAvailablePatients(profiles);
+          }
+        }
       } catch (err) {
         console.error('Error loading initial data:', err);
       }
     }
     loadInitialData();
-  }, []);
+  }, [user?.id]);
 
   const handleSelectProfile = async (kcal: number, isWeekly: boolean) => {
     if (!selectedTemplate) return;
@@ -153,7 +167,6 @@ export default function EditorV3Page() {
         }
       });
       
-      console.log('[EditorV3] Library items found:', libraryItems?.length);
 
       for (const day of days) {
         for (const dist of distribution) {
@@ -413,7 +426,7 @@ export default function EditorV3Page() {
                 </div>
                 <p className="text-[10px] text-white/20 uppercase font-bold tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
                   <div className="w-1 h-1 rounded-full bg-emerald-500/50 animate-pulse" />
-                  Ambiente de Prescrição Premium
+                  Editor de Planos
                 </p>
               </div>
 
@@ -490,10 +503,10 @@ export default function EditorV3Page() {
                       <Library className="w-8 h-8" />
                     </div>
                     <div>
-                      <DialogTitle className="text-4xl font-black uppercase italic tracking-tighter leading-none text-white">Biblioteca Soberana</DialogTitle>
+                      <DialogTitle className="text-4xl font-black uppercase italic tracking-tighter leading-none text-white">Biblioteca de Templates</DialogTitle>
                       <p className="text-[11px] text-white/20 uppercase font-black tracking-[0.3em] mt-3 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Padrões Clínicos de Alta Performance
+                        Templates verificados
                       </p>
                     </div>
                   </div>
@@ -523,13 +536,6 @@ export default function EditorV3Page() {
               className="bg-white/5 border-white/10 hover:bg-red-500/10 hover:text-red-400 text-white/40 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
             >
               <Trash2 className="w-5 h-5 mr-3" /> Limpar
-            </Button>
-
-            <Button 
-              variant="outline" 
-              className="bg-white/5 border-white/10 hover:bg-white/10 text-white/60 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-8 rounded-2xl hidden md:flex transition-all"
-            >
-              <Share2 className="w-5 h-5 mr-3" /> Compartilhar
             </Button>
 
             <Button 
@@ -676,12 +682,7 @@ export default function EditorV3Page() {
         </main>
       </div>
 
-      <TemplateV3Modal 
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        template={selectedTemplate}
-        onSelectProfile={handleSelectProfile}
-      />
+
     </DashboardLayout>
   );
 }
