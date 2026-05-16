@@ -179,7 +179,7 @@ export const MealCard: React.FC<MealCardProps> = ({
                 setActiveItemForSub(null);
                 setIsSearchOpen(true);
               }}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] h-14 px-8 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[10px] md:text-[11px] h-12 md:h-14 px-6 md:px-8 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
             >
               <Plus className="w-5 h-5 mr-3" /> Adicionar Alimento
             </Button>
