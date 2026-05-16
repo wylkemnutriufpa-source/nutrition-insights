@@ -35,7 +35,7 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
   }, [templates, search, activeCategory]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-end flex-shrink-0 relative z-20">
         <div className="flex-1 w-full relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
