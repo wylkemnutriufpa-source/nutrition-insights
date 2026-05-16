@@ -134,18 +134,22 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
       </div>
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(255, 255, 255, 0.05);
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(16, 185, 129, 0.2);
+          background: rgba(16, 185, 129, 0.5);
           border-radius: 10px;
+          border: 2px solid transparent;
+          background-clip: content-box;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(16, 185, 129, 0.4);
+          background: rgba(16, 185, 129, 0.8);
+          border: 2px solid transparent;
+          background-clip: content-box;
         }
       `}</style>
     </div>
