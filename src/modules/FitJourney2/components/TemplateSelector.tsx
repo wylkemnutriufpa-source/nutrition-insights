@@ -76,9 +76,9 @@ export const TemplateSelector = ({ onPlanGenerated }: { onPlanGenerated: (plan: 
           <Calculator size={18} />
         </div>
         <div>
-          <p className="text-xs font-black uppercase text-blue-400 mb-1">Cálculo de Substituição Ativo</p>
+          <p className="text-xs font-black uppercase text-blue-400 mb-1">Estratégia Soberana Ativa</p>
           <p className="text-[11px] text-slate-400 leading-relaxed italic">
-            O motor V2 está recalculando as gramaturas baseadas no peso do paciente (80kg) para manter 2.0g/kg de proteína.
+            O sistema utiliza gramaturas fixas conforme definido no protocolo padrão para garantir fidelidade clínica absoluta.
           </p>
         </div>
       </div>
