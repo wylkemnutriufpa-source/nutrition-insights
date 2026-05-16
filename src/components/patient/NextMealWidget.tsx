@@ -40,7 +40,7 @@ export default function NextMealWidget() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const [nextMeal, setNextMeal] = useState<(MealSlot & { isNow?: boolean }) | null>(null);
-  const [totalsStatus, setTotalsStatus] = useState<string>("ok");
+  // totalsStatus removido: O paciente não precisa saber de estados internos de cálculo do editor.
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
