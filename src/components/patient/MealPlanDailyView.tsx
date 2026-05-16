@@ -162,23 +162,17 @@ const MacroSummary = memo(function MacroSummary({
   }
 }) {
   const totals = useMemo(() => {
-    // SOBERANIA V3: Se targets já vêm prontos do snapshot, ignoramos qualquer cálculo frontend.
-    if (targets?.calories && Number(targets.calories) > 0) return {
-      calories: targets.calories,
-      protein: targets.protein || 0,
-      carbs: targets.carbs || 0,
-      fat: targets.fat || 0
-    };
-
-    // Fallback legado apenas se targets forem nulos ou zero
-    const primaryOnly = items.filter(i => i.is_primary !== false && !(i as any).is_substitution);
+    // SOBERANIA V3: Snapshot Soberano é a fonte ÚNICA de verdade.
+    // O Patient App não calcula, não infere e não faz fallback.
+    // Se targets vier nulo ou zerado do banco, o valor exibido será zero, 
+    // evidenciando a necessidade de publicação correta pelo nutricionista.
     return {
-      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories), 0),
-      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein), 0),
-      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs), 0),
-      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat), 0),
+      calories: Number(targets?.calories || 0),
+      protein: Number(targets?.protein || 0),
+      carbs: Number(targets?.carbs || 0),
+      fat: Number(targets?.fat || 0)
     };
-  }, [items, targets]);
+  }, [targets]);
 
   const displayKcal = totals.calories;
   const displayProtein = totals.protein;
