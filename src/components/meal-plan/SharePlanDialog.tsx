@@ -168,6 +168,17 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
               )}
               Enviar por e-mail
             </Button>
+
+            <div className="h-px bg-border my-2" />
+
+            <Button
+              variant="outline"
+              className="justify-start border-dashed border-emerald-500/30 hover:bg-emerald-500/5 hover:border-emerald-500/50"
+              onClick={handleDownloadPDF}
+            >
+              <FileDown className="w-4 h-4 mr-2 text-emerald-500" />
+              Salvar Plano (PDF/HTML)
+            </Button>
           </div>
 
           {shareUrl && (
