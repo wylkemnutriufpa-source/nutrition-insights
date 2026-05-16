@@ -142,6 +142,11 @@ export const patientService = {
     const data = rawData as any;
     const patientData = data.nutritionist_patients;
 
+    // --- SNAPSHOT-FIRST: não depende de editor_version ---
+    if (data.snapshot && (Array.isArray(data.snapshot.days) || Array.isArray(data.snapshot.meals))) {
+      return this.mapSnapshotPlan(data, patientData, data.editor_version || 'snapshot');
+    }
+
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (data.editor_version === 'v3') {
       const snapshot = data.snapshot as any;
