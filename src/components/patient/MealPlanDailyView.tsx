@@ -165,7 +165,8 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
     };
   }, [items]);
 
-  const isIncomplete = totalsStatus === 'incomplete' || (totals.calories === 0 && items.length > 0);
+  const hasData = items.length > 0;
+  const showCalculating = totalsStatus === 'incomplete' || (totals.calories === 0 && hasData);
 
   return (
     <div className="space-y-6">
@@ -177,30 +178,30 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Flame className="w-5 h-5 mx-auto text-orange-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Kcal</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(totals.calories, "0")}</p>
         </div>
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Beef className="w-5 h-5 mx-auto text-red-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Prot</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(totals.protein, "0")}g</p>
         </div>
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Wheat className="w-5 h-5 mx-auto text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Carbs</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(totals.carbs, "0")}g</p>
         </div>
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Droplets className="w-5 h-5 mx-auto text-yellow-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Gord</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(totals.fat, "0")}g</p>
         </div>
       </div>
       
-      {isIncomplete && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-pulse">
+      {showCalculating && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
           <Clock className="w-4 h-4 text-amber-500" />
           <p className="text-[11px] text-amber-600 font-bold uppercase tracking-widest leading-tight">
-            Valores nutricionais em cálculo...
+            Valores Nutricionais Pendentes no Template
           </p>
         </div>
       )}

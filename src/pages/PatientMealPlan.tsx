@@ -26,18 +26,28 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
-/** Resolve a human-readable portion string from the item data hierarchy. */
+/** 
+ * Resolve a human-readable portion string from the item data hierarchy. 
+ * Patient App should NEVER recalibrate this. It just shows what's in the snapshot.
+ */
 const formatDisplayPortion = (item: any): string => {
   if (!item) return '';
   const meta = item.edit_metadata || item.metadata || {};
-  // Priority 1: explicit display_quantity + display_unit from editor metadata
-  const dQty = item.display_quantity || meta.display_quantity;
-  const dUnit = item.display_unit || meta.display_unit || meta.portionLabel || meta.portionUnit || '';
+  
+  // SOBERANIA V3: Se o item já tem os campos de exibição hidratados no snapshot, use-os.
+  if (item.display_quantity && item.display_unit) return `${item.display_quantity} ${item.display_unit}`;
+  if (item.display_quantity) return `${item.display_quantity}`;
+  
+  // Fallback para metadados (Editor Pro)
+  const dQty = meta.display_quantity;
+  const dUnit = meta.display_unit || meta.portionLabel || meta.portionUnit || '';
   if (dQty) return `${dQty} ${dUnit}`.trim();
-  // Priority 2: clinical_mass_g (gramagem clínica)
+  
+  // Fallback para gramagem clínica
   const mass = item.clinical_mass_g || item.grams || meta.clinical_mass_g;
   if (mass) return `${mass}g`;
-  // Priority 3: description fallback
+  
+  // Último recurso: descrição
   if (item.description) return item.description;
   return '';
 };

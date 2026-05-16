@@ -9,7 +9,9 @@ import {
   ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
   SlidersHorizontal, ArrowRightLeft, User, ShieldCheck,
 } from "lucide-react";
-// clinicalHumanEngine removed
+// clinicalHumanEngine and any recalc engines removed to preserve Soberania V3 Snapshot
+// O Patient App apenas renderiza o que o Snapshot Soberano entregou.
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -282,9 +284,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const saveToHistory = async (actionType: string = "manual_update", restoredFromId: string | null = null, note: string | null = null) => {
     if (!meal?.itemId) return;
     
-    // Agora o banco versiona automaticamente via trigger tr_validate_meal_item.
-    // Esta função passa a ser um trigger manual para metadados extras se necessário,
-    // mas a integridade principal está no backend.
+    // SOBERANIA V3: O Patient App é um RENDERIZADOR BURRO.
+    // Não recalculamos, não hidratamos, não resolvemos.
+    // Se o dado não está no snapshot, ele não existe para o paciente.
+
     
     // Log de Auditoria explícito para ações de interface
     await supabase.from("clinical_audit_logs").insert({
