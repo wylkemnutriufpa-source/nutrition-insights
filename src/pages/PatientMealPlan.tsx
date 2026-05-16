@@ -223,7 +223,11 @@ export default function PatientMealPlan() {
 
     let resolvedItems: MealPlanItem[] = [];
     let resolvedAllItems: MealPlanItem[] = [];
-    if (planData.editor_version === 'v3' || planData.editor_version === 'V3') {
+    const hasSnapshotPlan = !!planData.snapshot && (
+      Array.isArray((planData.snapshot as any).days) || Array.isArray((planData.snapshot as any).meals)
+    );
+
+    if (hasSnapshotPlan) {
       const snapshot = planData.snapshot as any;
       if (!snapshot || (!snapshot.days && !snapshot.meals)) {
         console.warn(`[RECOVERY] V3 Plan ${planData.id} missing snapshot. Falling back to items.`);
@@ -268,9 +272,9 @@ export default function PatientMealPlan() {
           const isPrimary = item.is_primary !== false && item.is_substitution !== true;
           
           const common = {
-            tipo_refeicao: meal.tipo_refeicao || meal.id,
+            tipo_refeicao: meal.tipo_refeicao || meal.type || meal.name || meal.id,
             day_of_week: hydratedDay,
-            editor_version: 'v3',
+            editor_version: planData.editor_version || 'snapshot',
           };
 
           // 1. Mapeia o item preservando a soberania primário/substituição do snapshot.
@@ -340,7 +344,7 @@ export default function PatientMealPlan() {
       console.log(`[FORENSIC] Hydrated ${flatItems.length} items for ${daysToHydrate.length} days from V3 snapshot.`, { 
         planId: planData.id, 
         mode: planData.plan_mode,
-        snapshotVersion: snapshot.version 
+        snapshotVersion: snapshot.version || planData.snapshot_schema_version || 'snapshot-auto' 
       });
 
       resolvedAllItems = flatItems;
