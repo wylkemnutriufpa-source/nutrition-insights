@@ -125,10 +125,25 @@ const OperationalAudit = () => {
         .from('operational_audits')
         .upsert({
           template_id: templateId,
-          template_name: plan.templateName,
-          ...stepResults,
+          template_name: plan.templateName || templateId,
+          status: stepResults.status,
+          validation_date: stepResults.validation_date,
+          editor_ok: stepResults.editor_ok,
+          save_ok: stepResults.save_ok,
+          reload_ok: stepResults.reload_ok,
+          publish_ok: stepResults.publish_ok,
+          patient_app_ok: stepResults.patient_app_ok,
+          pdf_ok: stepResults.pdf_ok,
+          whatsapp_ok: stepResults.whatsapp_ok,
+          week_complete: stepResults.week_complete,
+          images_ok: stepResults.images_ok,
+          equivalents_ok: stepResults.equivalents_ok,
+          persistence_ok: stepResults.persistence_ok,
+          snapshot_ok: stepResults.snapshot_ok,
+          save_payload: stepResults.save_payload as any,
+          publish_payload: stepResults.publish_payload as any,
           validator_name: 'AI Auditor',
-          evidence_screenshots: [{ step: 'save', timestamp: new Date().toISOString() }]
+          evidence_screenshots: [{ step: 'save', timestamp: new Date().toISOString() }] as any
         }, { onConflict: 'template_id' });
 
       if (saveError) throw saveError;
