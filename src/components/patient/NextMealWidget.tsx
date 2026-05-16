@@ -62,7 +62,7 @@ export default function NextMealWidget() {
       ).maybeSingle();
 
       if (!plan) { setLoading(false); return; }
-      setTotalsStatus(plan.totals_status || "ok");
+      // totalsStatus ignorado no Patient App
 
       // Get current day of week (0=Sunday, 5=Friday)
       const now_dow = new Date().getDay();
