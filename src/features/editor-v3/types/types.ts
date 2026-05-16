@@ -33,12 +33,14 @@ export interface Food {
   ingredients?: any[];
   instructions?: string;
   isVisualLibraryItem?: boolean;
-  isVisualLibraryParent?: boolean; // V3: Define se este item governa a imagem da refeição
-  portionMode?: 'standard' | 'free'; // V3: Define se o item tem gramagem ou é livre
-  library_item_slug?: string;      // V3: Referência ao slug da biblioteca soberana
-  composition_metadata?: any;      // V3: Estrutura da refeição (ingredientes, pesos base)
+  isVisualLibraryParent?: boolean; 
+  portionMode?: 'standard' | 'free'; 
+  library_item_slug?: string;      
+  composition_metadata?: any;      
   nutritionistId?: string;
   substitutions?: any[];
+  quantity?: number; // V3: Born-ready quantity
+  clinical_mass_g?: number; // V3: Born-ready mass
 }
 
 export interface MealItem extends Food {
