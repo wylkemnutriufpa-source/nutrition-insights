@@ -23,6 +23,8 @@ interface UseDraftSyncReturn {
   reloadFromServer: () => Promise<void>;
   /** Reverte para o último estado salvo com sucesso */
   revertToLastSaved: () => void;
+  /** Bloqueia o autosave temporariamente para evitar race conditions durante save manual */
+  setLocked: (locked: boolean) => void;
 }
 
 export function useDraftSync(
@@ -37,6 +39,7 @@ export function useDraftSync(
   const [initialAuditLog, setInitialAuditLog] = useState<AuditLogEntry[]>([]);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [sharingToken, setSharingToken] = useState<string | null>(null);
+  const [isLocked, setLocked] = useState(false);
 
   const [snapshot, setSnapshot] = useState<Meal[] | null>(null);
   const [snapshotAuditLog, setSnapshotAuditLog] = useState<AuditLogEntry[]>([]);
@@ -110,6 +113,8 @@ export function useDraftSync(
   }, [loadDraft]);
 
   const scheduleSave = (meals: Meal[], auditLog: AuditLogEntry[]) => {
+    if (isLocked) return;
+    
     pendingMealsRef.current = meals;
     pendingAuditLogRef.current = auditLog;
 
@@ -119,7 +124,7 @@ export function useDraftSync(
 
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(async () => {
-      if (!draftId) return;
+      if (!draftId || isLocked) return;
       const mealsToSave = pendingMealsRef.current;
       const auditLogToSave = pendingAuditLogRef.current;
       if (!mealsToSave) return;
@@ -186,6 +191,7 @@ export function useDraftSync(
     scheduleSave, 
     resetDraft,
     reloadFromServer: () => loadDraft(true),
-    revertToLastSaved
+    revertToLastSaved,
+    setLocked
   };
 }
