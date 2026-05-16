@@ -121,150 +121,54 @@ export default function EditorV3Page() {
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
-      const clusterMap = (selectedTemplate.cluster_map as any) || {};
-      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay]; 
-      const newMeals: any[] = [];
-      const distribution = (selectedTemplate.meal_distribution as any[]) || [];
-
-      if (distribution.length === 0) {
-        throw new Error('Template sem distribuição de refeições configurada.');
-      }
-
-      // 1. Get all clusters for the whole template
-      const allClusterSlugs = Object.values(clusterMap) as string[];
-      
-      // 2. Fetch primary items for those clusters
-      const { data: primaryItems } = await supabase
-        .from('v3_library_items')
-        .select('*')
-        .in('cluster_slug', allClusterSlugs);
-
-      if (!primaryItems || primaryItems.length === 0) {
-        throw new Error('Nenhum alimento encontrado para os clusters deste template.');
-      }
-
-      // 3. Identify substitution groups for these items
-      const subGroups = Array.from(new Set(primaryItems
-        .map(i => i.substitutions_group)
-        .filter(Boolean))) as string[];
-
-      // 4. Fetch all substitutes in parallel
-      const { data: allSubstitutes } = await supabase
-        .from('v3_library_items')
-        .select('*')
-        .in('substitutions_group', subGroups.length > 0 ? subGroups : ['none']);
-
-      // 5. Organize data for efficient processing
-      const itemsByCluster = new Map<string, any[]>();
-      primaryItems.forEach(item => {
-        if (!itemsByCluster.has(item.cluster_slug)) itemsByCluster.set(item.cluster_slug, []);
-        itemsByCluster.get(item.cluster_slug)?.push(item);
-      });
-
-      const substitutesByGroup = new Map<string, any[]>();
-      (allSubstitutes || []).forEach(sub => {
-        if (!substitutesByGroup.has(sub.substitutions_group)) substitutesByGroup.set(sub.substitutions_group, []);
-        substitutesByGroup.get(sub.substitutions_group)?.push(sub);
-      });
-
-      // 6. Generate the plan
-      for (const day of days) {
-        for (const dist of distribution) {
-          const slot = dist.slot;
-          const clusterSlug = clusterMap[slot];
-          
-          if (!clusterSlug) continue;
-
-          const clusterFoods = itemsByCluster.get(clusterSlug) || [];
-          if (clusterFoods.length === 0) continue;
-
-          // Variety: prioritize foods that haven't been used yet or based on day
-          const foodToUseIndex = day % clusterFoods.length;
-          const rawFood = clusterFoods[foodToUseIndex];
-
-          // BREAK DOWN PACKAGED MEALS: If the item has ingredients/composition, we extract them
-          // BUT the user wants INDIVIDUAL items. If a cluster food represents a "plate", 
-          // we should ideally have individual items in the library.
-          // For now, if composition exists, we plot them as separate items.
-          
-          let itemsToPlot: any[] = [];
-          const composition = rawFood.composition as any;
-          
-          if (composition && Array.isArray(composition.items) && composition.items.length > 0) {
-            // It's a "packaged" meal, we break it down into individual items
-            const mealTargetKcal = (kcal / distribution.length);
-            const baseKcal = Number(rawFood.kcal_base || 1); // Avoid div by zero
-            const scaleFactor = mealTargetKcal / baseKcal;
-
-            itemsToPlot = composition.items.map((compItem: any) => {
-              const baseAmount = parseFloat(compItem.amount) || 100;
-              const scaledAmount = Math.round(baseAmount * scaleFactor);
-              
-              // Calculate scaled macros for this specific ingredient
-              // If the ingredient has macros/100g, we use them, else we scale the base amount
-              const itemKcal = ((parseFloat(compItem.kcal) || (baseKcal / composition.items.length)) * scaleFactor);
-              const itemProtein = ((parseFloat(compItem.protein) || 0) * scaleFactor);
-              const itemCarbs = ((parseFloat(compItem.carbs) || 0) * scaleFactor);
-              const itemFat = ((parseFloat(compItem.fat) || 0) * scaleFactor);
-
-              return {
-                id: crypto.randomUUID(),
-                instanceId: crypto.randomUUID(),
-                name: compItem.name,
-                quantity: scaledAmount,
-                clinical_mass_g: scaledAmount,
-                kcal: itemKcal,
-                protein: itemProtein,
-                carbs: itemCarbs,
-                fat: itemFat,
-                substitutions: [],
-                category: slot
-              };
-            });
-          } else {
-            // Standalone item
-            const targetKcal = (kcal / distribution.length);
-            let quantity = scaleItemToTarget(rawFood, targetKcal, 'kcal');
-            if (!quantity || isNaN(quantity)) quantity = 100;
-
-            const macros = calculateItemMacros(rawFood, quantity);
-            
-            // Get REAL substitutions from the same group
-            const subGroup = rawFood.substitutions_group;
-            const potentialSubs = subGroup ? (substitutesByGroup.get(subGroup) || []) : [];
-            const substitutions = potentialSubs
-              .filter((s: any) => s.id !== rawFood.id)
-              .map((s: any) => {
-                const subQty = scaleItemToTarget(s, macros.kcal, 'kcal');
-                const subMacros = calculateItemMacros(s, subQty);
-                return {
-                  ...s,
-                  name: s.title || s.name,
-                  quantity: subQty,
-                  clinical_mass_g: subQty,
-                  ...subMacros
-                };
-              })
-              .slice(0, 8); // Abundant substitutions
-
-            itemsToPlot.push({
-              ...rawFood,
+      // SOBERANIA CLÍNICA: Prioritize static snapshots
+      if (selectedTemplate.plan_snapshot) {
+        const snapshotKey = kcal.toString();
+        const snapshot = selectedTemplate.plan_snapshot[snapshotKey] || Object.values(selectedTemplate.plan_snapshot)[0];
+        
+        if (snapshot && snapshot.meals) {
+          // Re-generate instance IDs to avoid conflicts
+          const freshMeals = snapshot.meals.map(meal => ({
+            ...meal,
+            id: crypto.randomUUID(),
+            items: meal.items.map(item => ({
+              ...item,
               instanceId: crypto.randomUUID(),
-              name: rawFood.title || rawFood.name,
-              quantity,
-              clinical_mass_g: quantity,
-              substitutions,
-              category: rawFood.category || slot,
-              ...macros
-            });
+              // Ensure substitutions also have instance IDs if they were to be expanded
+            }))
+          }));
+
+          const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay];
+          const mealsToHydrate = isWeekly 
+            ? freshMeals 
+            : freshMeals.filter(m => (m.day_of_week || 1) === activeDay);
+
+          if (isWeekly) {
+            store.hydrateMeals(mealsToHydrate);
+          } else {
+            const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
+            store.hydrateMeals([...otherDayMeals, ...mealsToHydrate]);
           }
 
+          toast.success('Template Clínico carregado com sucesso!', { id: toastId });
+          return;
+        }
+      }
+
+      // FALLBACK: If no snapshot, use the distribution to create empty slots
+      // (The user hates the old "generator", so we don't scale anymore)
+      const distribution = (selectedTemplate.meal_distribution as any[]) || [];
+      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay];
+      const newMeals: any[] = [];
+
+      for (const day of days) {
+        for (const dist of distribution) {
           newMeals.push({
             id: crypto.randomUUID(),
-            name: slot,
+            name: dist.slot,
             time: dist.time || "08:00",
             day_of_week: day,
-            items: itemsToPlot
+            items: [] // Start empty, nutritionist adds from library
           });
         }
       }
@@ -272,10 +176,10 @@ export default function EditorV3Page() {
       const otherDayMeals = store.meals.filter(m => !days.includes(m.day_of_week || 0));
       store.hydrateMeals([...otherDayMeals, ...newMeals]);
       
-      toast.success('Plano Soberano gerado com sucesso!', { id: toastId });
+      toast.success('Estrutura carregada. Adicione os alimentos manualmente.', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao gerar plano modular', { id: toastId });
+      toast.error('Erro ao carregar template', { id: toastId });
     }
   };
 
