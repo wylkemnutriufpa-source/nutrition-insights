@@ -442,36 +442,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
    * Esta função é usada APENAS para VALIDAÇÃO VISUAL (Frontend Guard).
    */
   const calculateVisualMacrosFromDescription = (description: string) => {
-    const { foodLines } = parseDescriptionLines(description);
-    let totalCal = 0, totalProt = 0, totalCarb = 0, totalFat = 0;
-    
-    foodLines.forEach(line => {
-      const content = line.startsWith("•") ? line.slice(1).trim() : line;
-      const name = content.split("—")[0]?.trim() || content;
-      const match = findFoodInDatabase(name);
-      if (match) {
-        const portionMatch = content.match(/—\s*(\d+)\s*g/i);
-        const dbPortionMatch = match.portion.match(/(\d+)\s*g/i);
-        
-        let scale = 1;
-        if (portionMatch && dbPortionMatch) {
-          const grams = parseInt(portionMatch[1]);
-          const dbGrams = parseInt(dbPortionMatch[1]);
-          if (dbGrams > 0) scale = grams / dbGrams;
-        }
-
-        totalCal += match.calories * scale;
-        totalProt += match.protein * scale;
-        totalCarb += match.carbs * scale;
-        totalFat += match.fat * scale;
-      }
-    });
-
     return {
-      calories: Math.round(totalCal),
-      protein: Math.round(totalProt),
-      carbs: Math.round(totalCarb),
-      fat: Math.round(totalFat),
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
     };
   };
   // Fetch visual library images when picker opens
