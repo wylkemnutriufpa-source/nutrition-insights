@@ -616,7 +616,14 @@ export default function Settings() {
                     {pushLoading ? "..." : isSubscribed ? t("settings.deactivate") : t("settings.activate")}
                   </Button>
                 ) : (
-                  <span className="text-xs text-destructive font-medium">{t("settings.blocked")}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs text-destructive font-bold flex items-center gap-1">
+                      {t("settings.blocked")} 🚫
+                    </span>
+                    <Badge variant="outline" className="text-[9px] border-destructive/30 text-destructive">
+                      Bloqueio no Navegador
+                    </Badge>
+                  </div>
                 )}
               </div>
               {permission === "denied" && (
