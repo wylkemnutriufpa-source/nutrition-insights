@@ -51,14 +51,20 @@ export const searchV3LibraryItems = async (
     return [];
   }
 
-  const items = (data || []).map((item: any) => ({
-    ...item,
-    name: item.title || item.name || "Alimento", 
-    kcal: item.kcal_base || item.kcal_100g || item.kcal || 0,
-    protein: item.protein_base || item.protein_100g || item.protein || 0,
-    carbs: item.carbs_base || item.carb_100g || item.carbs || 0,
-    fat: item.fats_base || item.fat_100g || item.fat || 0
-  }));
+  const items = (data || []).map((item: any) => {
+    // Busca imagem real no banco ou nas relações de imagens
+    const imageUrl = item.imageUrl || (item.images && item.images.length > 0 ? item.images[0].image_url : null);
+    
+    return {
+      ...item,
+      name: item.title || item.name || "Alimento", 
+      kcal: item.kcal_base || item.kcal_100g || item.kcal || 0,
+      protein: item.protein_base || item.protein_100g || item.protein || 0,
+      carbs: item.carbs_base || item.carb_100g || item.carbs || 0,
+      fat: item.fats_base || item.fat_100g || item.fat || 0,
+      imageUrl
+    };
+  });
   
   // Parallel fetch for substitutes if items have groups
   const itemsWithEquivalents = await Promise.all(items.map(async (item: any) => {
