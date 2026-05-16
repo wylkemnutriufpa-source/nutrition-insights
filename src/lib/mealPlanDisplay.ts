@@ -173,10 +173,10 @@ function withSubstitutionMetadata(group: GroupedMeal): DisplayMealPlanItem {
     id: item.id,
     title: item.title,
     description: item.description,
-    meta_calorias: item.meta_calorias,
-    meta_proteinas: item.meta_proteinas,
-    meta_carboidratos: item.meta_carboidratos,
-    meta_gorduras: item.meta_gorduras,
+    meta_calorias: item.meta_calorias ?? (item as any).kcal ?? (item as any).calories,
+    meta_proteinas: item.meta_proteinas ?? (item as any).protein,
+    meta_carboidratos: item.meta_carboidratos ?? (item as any).carbs,
+    meta_gorduras: item.meta_gorduras ?? (item as any).fat,
   }));
 
   return {

@@ -167,7 +167,7 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
     });
     
     return {
-      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
+      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
       protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
       carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
       fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
@@ -175,7 +175,7 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
   }, [items]);
 
   const hasData = items.length > 0;
-  const showCalculating = totalsStatus === 'incomplete' || (totals.calories === 0 && hasData);
+  const showCalculating = totalsStatus === 'incomplete' || (totals.calories === 0 && hasData && totalsStatus !== 'ok');
 
   return (
     <div className="space-y-6">
@@ -618,10 +618,10 @@ const MealSlotCard = memo(function MealSlotCard({
     return items.reduce((acc, item) => {
       const meta = item.metadata || {};
       return {
-        calories: acc.calories + (item.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0),
-        protein: acc.protein + (item.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0),
-        carbs: acc.carbs + (item.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs ?? 0),
-        fat: acc.fat + (item.meta_gorduras ?? meta.meta_gorduras ?? meta.fat ?? 0),
+        calories: acc.calories + (item.meta_calorias ?? (item as any).kcal ?? (item as any).calories ?? meta.meta_calorias ?? meta.calories ?? 0),
+        protein: acc.protein + (item.meta_proteinas ?? (item as any).protein ?? meta.meta_proteinas ?? meta.protein ?? 0),
+        carbs: acc.carbs + (item.meta_carboidratos ?? (item as any).carbs ?? meta.meta_carboidratos ?? meta.carbs ?? 0),
+        fat: acc.fat + (item.meta_gorduras ?? (item as any).fat ?? meta.meta_gorduras ?? meta.fat ?? 0),
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   }, [items]);
