@@ -439,6 +439,8 @@ export default function EditorV3Page() {
                         onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
                         onRemoveMeal={() => store.removeMeal(meal.id)}
                         onAddSubstitution={(itemId, food) => store.addSubstitutionToItem(meal.id, itemId, food)}
+                        onUpdateMealHeader={(updates) => store.updateMealHeader(meal.id, updates)}
+                        onUpdateFoodName={(itemId, name) => store.updateMealItemName(meal.id, itemId, name)}
                       />
                     </motion.div>
                   ))}

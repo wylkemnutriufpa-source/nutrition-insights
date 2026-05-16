@@ -13,10 +13,11 @@ interface FoodItemRowProps {
   onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
   onRequestSubstitution: () => void;
+  onUpdateName?: (name: string) => void;
 }
 
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
-  item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution 
+  item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution, onUpdateName 
 }) => {
   return (
     <div className="group relative flex flex-col p-3 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
@@ -25,9 +26,13 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 relative z-10">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <h4 className="text-base font-black uppercase italic tracking-tight text-white group-hover:text-emerald-400 transition-colors">
-              {item.name}
-            </h4>
+            <input
+              type="text"
+              value={item.name}
+              onChange={(e) => onUpdateName?.(e.target.value)}
+              className="bg-transparent border-none p-0 text-base font-black uppercase italic tracking-tight text-white focus:ring-0 focus:text-emerald-400 transition-colors w-full"
+              placeholder="Nome do Alimento"
+            />
           </div>
 
           <div className="flex flex-wrap gap-3">

@@ -19,10 +19,12 @@ interface MealCardProps {
   onAddFood: (food: Food) => void;
   onRemoveMeal: () => void;
   onAddSubstitution: (itemInstanceId: string, food: Food) => void;
+  onUpdateMealHeader: (updates: Partial<Meal>) => void;
+  onUpdateFoodName?: (itemInstanceId: string, name: string) => void;
 }
 
 export const MealCard: React.FC<MealCardProps> = ({ 
-  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution 
+  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
 }) => {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -105,21 +107,33 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
         {/* Header Modal */}
-        <div className="p-4 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
+        <div className="p-4 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
               <Utensils className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-base font-black uppercase italic tracking-tighter text-white">Editar Refeição</h3>
+            <div className="flex flex-col">
+              <input
+                type="text"
+                value={meal.name}
+                onChange={(e) => onUpdateMealHeader({ name: e.target.value })}
+                className="bg-transparent border-none p-0 text-base font-black uppercase italic tracking-tighter text-white focus:ring-0 focus:text-emerald-400 transition-colors w-full sm:w-64"
+                placeholder="Nome da Refeição"
+              />
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">{meal.name}</span>
+                <Clock className="w-3 h-3 text-white/20" />
+                <input
+                  type="time"
+                  value={meal.time || "08:00"}
+                  onChange={(e) => onUpdateMealHeader({ time: e.target.value })}
+                  className="bg-transparent border-none p-0 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 focus:ring-0 focus:text-emerald-400 transition-colors"
+                />
               </div>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-right flex-shrink-0">
             <p className="text-2xl md:text-3xl font-black italic text-white leading-none">
               {Math.round(mealTotals.kcal)}
               <span className="text-xs uppercase ml-1 opacity-30 font-bold">kcal</span>
@@ -138,6 +152,7 @@ export const MealCard: React.FC<MealCardProps> = ({
                   onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
                   onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
                   onRemove={() => onRemoveFood(item.instanceId)}
+                  onUpdateName={onUpdateFoodName ? (name) => onUpdateFoodName(item.instanceId, name) : undefined}
                   onRequestSubstitution={() => {
                     setActiveItemForSub(item);
                     setIsSearchOpen(true);
