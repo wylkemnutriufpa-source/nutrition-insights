@@ -19,16 +19,15 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
   item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution 
 }) => {
   return (
-    <div className="group relative flex flex-col p-8 bg-neutral-800/20 border border-white/5 rounded-[2.5rem] hover:bg-neutral-800/40 hover:border-emerald-500/30 hover:shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] -mr-16 -mt-16 rounded-full group-hover:bg-emerald-500/10 transition-all duration-700" />
+    <div className="group relative flex flex-col p-4 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px] -mr-12 -mt-12 rounded-full group-hover:bg-emerald-500/10 transition-all duration-300" />
       
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 relative z-10">
         <div className="flex-1">
-          <div className="flex items-center gap-4 mb-3">
-            <h4 className="text-xl font-black uppercase italic tracking-tighter text-white group-hover:text-emerald-400 transition-colors duration-500">
+          <div className="flex items-center gap-3 mb-2">
+            <h4 className="text-base font-black uppercase italic tracking-tight text-white group-hover:text-emerald-400 transition-colors">
               {item.name}
             </h4>
-            <Badge variant="outline" className="text-[8px] uppercase font-black bg-emerald-500/10 border-emerald-500/20 text-emerald-500 px-2 py-0.5 h-4 tracking-widest rounded-md">Alimento Real</Badge>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -68,9 +67,9 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
               type="number"
               value={item.clinical_mass_g || item.quantity || 0}
               onChange={(e) => onUpdateQuantity(Number(e.target.value))}
-              className="bg-neutral-900/80 border-white/5 text-right pr-7 h-12 w-32 font-black text-base rounded-2xl focus:ring-emerald-500/30 hover:border-emerald-500/20 transition-all backdrop-blur-sm shadow-inner"
+              className="bg-neutral-900/80 border-white/5 text-right pr-6 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
           </div>
           
           <Button

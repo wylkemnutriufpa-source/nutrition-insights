@@ -1,7 +1,8 @@
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, MealItem, Food } from '../types/types';
-import { calculateItemMacros, adjustSubstitutionsProportionally, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
+import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 
 interface EditorState {
   meals: Meal[];
@@ -30,7 +31,6 @@ interface EditorState {
   addSubstitutionToItem: (mealId: string, itemInstanceId: string, food: Food) => void;
 }
 
-
 export const useEditorState = create<EditorState>()(
   persist(
     (set, get) => ({
@@ -57,17 +57,30 @@ export const useEditorState = create<EditorState>()(
             if (item.instanceId !== itemInstanceId) return item;
 
             const oldQty = item.clinical_mass_g || item.quantity || 100;
-            const updatedSubs = adjustSubstitutionsProportionally(item.substitutions || [], oldQty, newQuantity);
+            const safeNewQty = Math.round(newQuantity);
             
-            // Calculate new macros for the item itself
-            const newMacros = calculateItemMacros(item, newQuantity);
+            // Adjust substitutions proportionally but with rounding to avoid decimals
+            const updatedSubs = (item.substitutions || []).map(sub => {
+              const subOldQty = sub.clinical_mass_g || sub.quantity || 100;
+              const ratio = oldQty > 0 ? (safeNewQty / oldQty) : 1;
+              const subNewQty = Math.round(subOldQty * ratio);
+              const subMacros = calculateItemMacros(sub, subNewQty);
+              return { 
+                ...sub, 
+                quantity: subNewQty, 
+                clinical_mass_g: subNewQty,
+                ...subMacros
+              };
+            });
+            
+            const newMacros = calculateItemMacros(item, safeNewQty);
 
             return {
               ...item,
-              quantity: newQuantity,
-              clinical_mass_g: newQuantity,
+              quantity: safeNewQty,
+              clinical_mass_g: safeNewQty,
               substitutions: updatedSubs,
-              ...newMacros // Update kcal, protein, carbs, fat
+              ...newMacros
             };
           });
 
@@ -94,7 +107,7 @@ export const useEditorState = create<EditorState>()(
         const updatedMeals = meals.map(meal => {
           if (meal.id !== mealId) return meal;
           
-          const quantity = food.portionValue || 100;
+          const quantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
           const macros = calculateItemMacros(food, quantity);
           
           const newItem: MealItem = {
@@ -145,9 +158,22 @@ export const useEditorState = create<EditorState>()(
           const updatedItems = meal.items.map(item => {
             if (item.instanceId !== itemInstanceId) return item;
 
-            const newQuantity = scaleItemToTarget(item, targetValue, macroType);
+            const newQuantity = Math.round(scaleItemToTarget(item, targetValue, macroType));
             const oldQty = item.clinical_mass_g || item.quantity || 100;
-            const updatedSubs = adjustSubstitutionsProportionally(item.substitutions || [], oldQty, newQuantity);
+            
+            const updatedSubs = (item.substitutions || []).map(sub => {
+              const subOldQty = sub.clinical_mass_g || sub.quantity || 100;
+              const ratio = oldQty > 0 ? (newQuantity / oldQty) : 1;
+              const subNewQty = Math.round(subOldQty * ratio);
+              const subMacros = calculateItemMacros(sub, subNewQty);
+              return { 
+                ...sub, 
+                quantity: subNewQty, 
+                clinical_mass_g: subNewQty,
+                ...subMacros
+              };
+            });
+
             const newMacros = calculateItemMacros(item, newQuantity);
 
             return {
@@ -173,8 +199,10 @@ export const useEditorState = create<EditorState>()(
           const updatedItems = meal.items.map(item => {
             if (item.instanceId !== itemInstanceId) return item;
 
-            const targetKcal = item.kcal || 100;
-            const substituteQuantity = scaleItemToTarget(food, targetKcal, 'kcal');
+            // SOBERANIA V3: If the substitute has a born-ready quantity, use it
+            const substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || 
+                                     scaleItemToTarget(food, item.kcal || 100, 'kcal'));
+            
             const subMacros = calculateItemMacros(food, substituteQuantity);
 
             const newSub = {

@@ -7,7 +7,7 @@ export interface Food {
   id: string;
   name: string;
   kcal: number;
-  calories: number; // Keep for backward compatibility
+  calories?: number; // Keep for backward compatibility
   protein: number;
   protein_g?: number; // Keep for backward compatibility
   carbs: number;
@@ -19,11 +19,11 @@ export interface Food {
   protein_100g?: number;
   carb_100g?: number;
   fat_100g?: number;
-  portionValue: number;
-  portionUnitLabel: string;
-  portionUnit: string; // Keep for backward compatibility
-  portionLabel: string; // Keep for backward compatibility
-  measurementType: 'unit' | 'gram' | 'spoon' | 'ml';
+  portionValue?: number;
+  portionUnitLabel?: string;
+  portionUnit?: string; // Keep for backward compatibility
+  portionLabel?: string; // Keep for backward compatibility
+  measurementType?: 'unit' | 'gram' | 'spoon' | 'ml';
   category?: string;
   isMarmita?: boolean;
   locked?: boolean;
@@ -33,12 +33,14 @@ export interface Food {
   ingredients?: any[];
   instructions?: string;
   isVisualLibraryItem?: boolean;
-  isVisualLibraryParent?: boolean; // V3: Define se este item governa a imagem da refeição
-  portionMode?: 'standard' | 'free'; // V3: Define se o item tem gramagem ou é livre
-  library_item_slug?: string;      // V3: Referência ao slug da biblioteca soberana
-  composition_metadata?: any;      // V3: Estrutura da refeição (ingredientes, pesos base)
+  isVisualLibraryParent?: boolean; 
+  portionMode?: 'standard' | 'free'; 
+  library_item_slug?: string;      
+  composition_metadata?: any;      
   nutritionistId?: string;
   substitutions?: any[];
+  quantity?: number; // V3: Born-ready quantity
+  clinical_mass_g?: number; // V3: Born-ready mass
 }
 
 export interface MealItem extends Food {
@@ -165,7 +167,7 @@ export interface V3DietTemplate {
   template_type: string;
   objective: string;
   family?: TemplateFamily;
-  style_contract?: TemplateStyleContract; // NOVO: Soberania de Identidade Clínica
+  style_contract?: TemplateStyleContract; 
   meal_distribution: Array<{ slot: string; time: string }>;
   cluster_map: Record<string, string>;
   kcal_profiles: number[] | KcalProfile[];
@@ -173,7 +175,8 @@ export interface V3DietTemplate {
   substitutions_enabled: boolean;
   editable: boolean;
   active: boolean;
-  meal_integrity_threshold?: number; // 0.5 to 2.0 (factor)
+  meal_integrity_threshold?: number; 
+  plan_snapshot?: Record<string, { meals: Meal[] }>; // Kcal-keyed snapshots
 }
 
 export interface MealTemplate {

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -6,10 +7,8 @@ import { MealCard } from './MealCard';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, Save, Plus, Target, Flame, 
-  CheckCircle2, AlertCircle, Info, Send,
-  Trash2, Copy, MoreHorizontal, Settings, Library,
-  Layout, Search, Loader2, User, Activity, Calculator,
-  ChevronRight, Check, ChevronsUpDown, Calendar
+  Trash2, Library, Search, Loader2, User, 
+  ChevronRight, Check, ChevronsUpDown, Calendar, Send
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -38,13 +37,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/lib/auth';
-import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
-import { calculateBMR, calculateTDEE, calculateTargetMacros, Gender, ActivityLevel, Goal } from '@/lib/nutritionalEquations';
 import { AnimatePresence, motion } from 'framer-motion';
-
-// No translation mapper needed anymore as keys are PT-BR by default
-const translateSlot = (s: string) => s;
-
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -66,30 +59,12 @@ export default function EditorV3Page() {
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
-  // Nutritional Targets (Automatic Calculation Only)
-  const nutritionalTargets = useMemo(() => {
-    if (!patientData) return null;
-    
-    const weight = Number(patientData.current_weight_kg) || 70;
-    const height = Number(patientData.current_height_cm) || 170;
-    const age = Number(patientData.age) || 30;
-    const gender = (patientData.gender === 'feminino' ? 'female' : 'male') as Gender;
-    const activityLevel = (patientData.activity_level || 'moderate') as ActivityLevel;
-    const goal = (patientData.goal || 'maintenance') as Goal;
-
-    const bmr = calculateBMR(weight, height, age, gender);
-    const tdee = calculateTDEE(bmr, activityLevel);
-    return calculateTargetMacros(weight, tdee, goal);
-  }, [patientData]);
-
   useEffect(() => {
     async function loadInitialData() {
       try {
-        // Fetch templates
         const fetchedTemplates = await getV3Templates();
         setTemplates(fetchedTemplates);
 
-        // Fetch patients filtered by this nutritionist's patients
         if (user?.id) {
           const { data: links } = await supabase
             .from('nutritionist_patients')
@@ -121,183 +96,72 @@ export default function EditorV3Page() {
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
-      const clusterMap = (selectedTemplate.cluster_map as any) || {};
-      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay]; 
-      const newMeals: any[] = [];
-      const distribution = (selectedTemplate.meal_distribution as any[]) || [];
+      if (selectedTemplate.plan_snapshot) {
+        const snapshotKey = kcal.toString();
+        const snapshot = selectedTemplate.plan_snapshot[snapshotKey] || Object.values(selectedTemplate.plan_snapshot)[0];
+        
+        if (snapshot && snapshot.meals) {
+          const freshMeals = snapshot.meals.map(meal => ({
+            ...meal,
+            id: crypto.randomUUID(),
+            items: meal.items.map(item => ({
+              ...item,
+              instanceId: crypto.randomUUID()
+            }))
+          }));
 
-      if (distribution.length === 0) {
-        throw new Error('Template sem distribuição de refeições configurada.');
-      }
+          const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay];
+          const mealsToHydrate = isWeekly 
+            ? freshMeals 
+            : freshMeals.filter(m => (m.day_of_week || 1) === activeDay);
 
-      // 1. Get all clusters for the whole template
-      const allClusterSlugs = Object.values(clusterMap) as string[];
-      
-      // 2. Fetch primary items for those clusters
-      const { data: primaryItems } = await supabase
-        .from('v3_library_items')
-        .select('*')
-        .in('cluster_slug', allClusterSlugs);
-
-      if (!primaryItems || primaryItems.length === 0) {
-        throw new Error('Nenhum alimento encontrado para os clusters deste template.');
-      }
-
-      // 3. Identify substitution groups for these items
-      const subGroups = Array.from(new Set(primaryItems
-        .map(i => i.substitutions_group)
-        .filter(Boolean))) as string[];
-
-      // 4. Fetch all substitutes in parallel
-      const { data: allSubstitutes } = await supabase
-        .from('v3_library_items')
-        .select('*')
-        .in('substitutions_group', subGroups.length > 0 ? subGroups : ['none']);
-
-      // 5. Organize data for efficient processing
-      const itemsByCluster = new Map<string, any[]>();
-      primaryItems.forEach(item => {
-        if (!itemsByCluster.has(item.cluster_slug)) itemsByCluster.set(item.cluster_slug, []);
-        itemsByCluster.get(item.cluster_slug)?.push(item);
-      });
-
-      const substitutesByGroup = new Map<string, any[]>();
-      (allSubstitutes || []).forEach(sub => {
-        if (!substitutesByGroup.has(sub.substitutions_group)) substitutesByGroup.set(sub.substitutions_group, []);
-        substitutesByGroup.get(sub.substitutions_group)?.push(sub);
-      });
-
-      // 6. Generate the plan
-      for (const day of days) {
-        for (const dist of distribution) {
-          const slot = dist.slot;
-          const clusterSlug = clusterMap[slot];
-          
-          if (!clusterSlug) continue;
-
-          const clusterFoods = itemsByCluster.get(clusterSlug) || [];
-          if (clusterFoods.length === 0) continue;
-
-          // Variety: prioritize foods that haven't been used yet or based on day
-          const foodToUseIndex = day % clusterFoods.length;
-          const rawFood = clusterFoods[foodToUseIndex];
-
-          // BREAK DOWN PACKAGED MEALS: If the item has ingredients/composition, we extract them
-          // BUT the user wants INDIVIDUAL items. If a cluster food represents a "plate", 
-          // we should ideally have individual items in the library.
-          // For now, if composition exists, we plot them as separate items.
-          
-          let itemsToPlot: any[] = [];
-          const composition = rawFood.composition as any;
-          
-          if (composition && Array.isArray(composition.items) && composition.items.length > 0) {
-            // It's a "packaged" meal, we break it down into individual items
-            const mealTargetKcal = (kcal / distribution.length);
-            const baseKcal = Number(rawFood.kcal_base || 1); // Avoid div by zero
-            const scaleFactor = mealTargetKcal / baseKcal;
-
-            itemsToPlot = composition.items.map((compItem: any) => {
-              const baseAmount = parseFloat(compItem.amount) || 100;
-              const scaledAmount = Math.round(baseAmount * scaleFactor);
-              
-              // Calculate scaled macros for this specific ingredient
-              // If the ingredient has macros/100g, we use them, else we scale the base amount
-              const itemKcal = ((parseFloat(compItem.kcal) || (baseKcal / composition.items.length)) * scaleFactor);
-              const itemProtein = ((parseFloat(compItem.protein) || 0) * scaleFactor);
-              const itemCarbs = ((parseFloat(compItem.carbs) || 0) * scaleFactor);
-              const itemFat = ((parseFloat(compItem.fat) || 0) * scaleFactor);
-
-              return {
-                id: crypto.randomUUID(),
-                instanceId: crypto.randomUUID(),
-                name: compItem.name,
-                quantity: scaledAmount,
-                clinical_mass_g: scaledAmount,
-                kcal: itemKcal,
-                protein: itemProtein,
-                carbs: itemCarbs,
-                fat: itemFat,
-                substitutions: [],
-                category: slot
-              };
-            });
+          if (isWeekly) {
+            store.hydrateMeals(mealsToHydrate);
           } else {
-            // Standalone item
-            const targetKcal = (kcal / distribution.length);
-            let quantity = scaleItemToTarget(rawFood, targetKcal, 'kcal');
-            if (!quantity || isNaN(quantity)) quantity = 100;
-
-            const macros = calculateItemMacros(rawFood, quantity);
-            
-            // Get REAL substitutions from the same group
-            const subGroup = rawFood.substitutions_group;
-            const potentialSubs = subGroup ? (substitutesByGroup.get(subGroup) || []) : [];
-            const substitutions = potentialSubs
-              .filter((s: any) => s.id !== rawFood.id)
-              .map((s: any) => {
-                const subQty = scaleItemToTarget(s, macros.kcal, 'kcal');
-                const subMacros = calculateItemMacros(s, subQty);
-                return {
-                  ...s,
-                  name: s.title || s.name,
-                  quantity: subQty,
-                  clinical_mass_g: subQty,
-                  ...subMacros
-                };
-              })
-              .slice(0, 8); // Abundant substitutions
-
-            itemsToPlot.push({
-              ...rawFood,
-              instanceId: crypto.randomUUID(),
-              name: rawFood.title || rawFood.name,
-              quantity,
-              clinical_mass_g: quantity,
-              substitutions,
-              category: rawFood.category || slot,
-              ...macros
-            });
+            const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
+            store.hydrateMeals([...otherDayMeals, ...mealsToHydrate]);
           }
 
+          toast.success('Template Clínico carregado!', { id: toastId });
+          return;
+        }
+      }
+
+      const distribution = (selectedTemplate.meal_distribution as any[]) || [];
+      const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay];
+      const newMeals: any[] = [];
+
+      for (const day of days) {
+        for (const dist of distribution) {
           newMeals.push({
             id: crypto.randomUUID(),
-            name: slot,
+            name: dist.slot,
             time: dist.time || "08:00",
             day_of_week: day,
-            items: itemsToPlot
+            items: []
           });
         }
       }
 
       const otherDayMeals = store.meals.filter(m => !days.includes(m.day_of_week || 0));
       store.hydrateMeals([...otherDayMeals, ...newMeals]);
-      
-      toast.success('Plano Soberano gerado com sucesso!', { id: toastId });
+      toast.success('Estrutura carregada.', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao gerar plano modular', { id: toastId });
+      toast.error('Erro ao carregar template', { id: toastId });
     }
   };
 
-
-
-
   useEffect(() => {
     async function loadPlan() {
-      // 1. Prioritize patient ID if present in URL
       if (effectivePatientId) {
         store.setPatientId(effectivePatientId);
-        
-        // Load patient data even without a specific plan
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', effectivePatientId)
           .maybeSingle();
-        
-        if (profile) {
-          setPatientData(profile);
-        }
+        if (profile) setPatientData(profile);
       }
 
       if (!effectiveId) {
@@ -307,59 +171,30 @@ export default function EditorV3Page() {
 
       setLoading(true);
       try {
-        const { data: plan, error } = await (supabase
-          .from('meal_plans') as any)
+        const { data: plan, error } = await (supabase.from('meal_plans') as any)
           .select('*, patient:profiles(*)')
           .eq('id', effectiveId)
-          .maybeSingle(); // Use maybeSingle to avoid throw on not found
-
-        if (error) {
-          console.error('Database error:', error);
-          setLoading(false);
-          return;
-        }
-
-        if (!plan) {
-          console.warn('Plan not found:', effectiveId);
-          setLoading(false);
-          return;
-        }
+          .maybeSingle();
 
         if (error) throw error;
-
-        const planData = plan as any;
-        if (planData?.patient) {
-          setPatientData(planData.patient);
-        }
-
-        if (planData?.snapshot && (planData.snapshot as any).meals) {
-          store.hydrateMeals((planData.snapshot as any).meals);
-        } else if (planData?.items_payload && (planData.items_payload as any).meals) {
-          store.hydrateMeals((planData.items_payload as any).meals);
-        } else if (planData?.meals) {
-          store.hydrateMeals(planData.meals as any);
-        }
-        
-        if (planData?.patient_id) {
-          store.setPatientId(planData.patient_id);
+        if (plan) {
+          const planData = plan as any;
+          if (planData?.patient) setPatientData(planData.patient);
+          const loadedMeals = planData?.snapshot?.meals || planData?.items_payload?.meals || planData?.meals || [];
+          store.hydrateMeals(loadedMeals);
+          if (planData?.patient_id) store.setPatientId(planData.patient_id);
         }
       } catch (err) {
         console.error('Erro ao carregar plano:', err);
-        toast.error('Erro ao carregar dados do plano');
       } finally {
         setLoading(false);
       }
     }
-
     loadPlan();
   }, [effectiveId, effectivePatientId]);
 
-
-  // Totals for the whole plan (Sum of PRIMARY items only)
   const planTotals = useMemo(() => {
     const totals = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-    
-    // Sum macros ONLY for the currently active day
     store.meals
       .filter(m => (m.day_of_week || 0) === activeDay)
       .forEach((meal) => {
@@ -370,25 +205,18 @@ export default function EditorV3Page() {
           totals.fat += item.fat || 0;
         });
       });
-
     return totals;
   }, [store.meals, activeDay]);
-
 
   const handleSave = async () => {
     if (!effectiveId) return;
     setSaving(true);
-    const toastId = toast.loading('Salvando alterações...');
-    
+    const toastId = toast.loading('Salvando...');
     try {
-      // In a real implementation, we would persist store.meals to the DB
-      // For now, let's simulate and update the metadata
-      // Check if items_payload or snapshot should be used
       const { error } = await supabase
         .from('meal_plans')
         .update({
           snapshot: { meals: store.meals },
-          // We include items_payload just in case other parts of the system expect it
           items_payload: { meals: store.meals },
           total_meta_calorias: Math.round(planTotals.kcal),
           total_meta_proteinas: Math.round(planTotals.protein),
@@ -397,29 +225,20 @@ export default function EditorV3Page() {
           updated_at: new Date().toISOString()
         } as any)
         .eq('id', effectiveId);
-
-
       if (error) throw error;
-      toast.success('Plano salvo com sucesso!', { id: toastId });
+      toast.success('Salvo!', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar plano', { id: toastId });
+      toast.error('Erro ao salvar', { id: toastId });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleAddMeal = () => {
-    const names = ["Café da Manhã", "Lanche", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
-    const currentCount = store.meals.length;
-    const name = names[currentCount % names.length];
-    store.addMeal(name);
-  };
-
   const handleClearAll = () => {
-    if (confirm("Deseja realmente apagar todas as refeições deste plano?")) {
+    if (confirm("Deseja apagar todas as refeições?")) {
       store.setMeals([]);
-      toast.success("Plano limpo com sucesso");
+      toast.success("Limpo!");
     }
   };
 
@@ -433,305 +252,134 @@ export default function EditorV3Page() {
     );
   }
 
-
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white selection:bg-emerald-500/30 font-sans">
-        {/* Header Superior */}
-        <header className="px-8 py-5 bg-neutral-900/60 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-2xl backdrop-blur-2xl transition-all duration-500">
-          <div className="flex items-center gap-8">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate(-1)}
-              className="h-11 w-11 text-white/40 hover:text-white hover:bg-white/5 rounded-2xl transition-all duration-300"
-            >
-              <ArrowLeft className="w-5 h-5" />
+      <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white font-sans overflow-hidden">
+        {/* Compact Clinical Header */}
+        <header className="px-6 py-3 bg-neutral-900 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-xl backdrop-blur-3xl">
+          <div className="flex items-center gap-6">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9 text-white/40 hover:text-white rounded-lg">
+              <ArrowLeft className="w-4 h-4" />
             </Button>
             
-            <div className="flex items-center gap-6">
-              <div className="hidden lg:block group">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-black uppercase italic tracking-tighter leading-none group-hover:text-emerald-400 transition-colors">FitJourney</h1>
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md">V3 PRO</Badge>
-                </div>
-                <p className="text-[10px] text-white/20 uppercase font-bold tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
-                  <div className="w-1 h-1 rounded-full bg-emerald-500/50 animate-pulse" />
-                  Editor de Planos
-                </p>
-              </div>
-
-              <div className="h-10 w-px bg-white/10 hidden lg:block mx-1" />
-
-              <Popover open={isPatientSearchOpen} onOpenChange={setIsPatientSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={isPatientSearchOpen}
-                    className="w-[240px] h-11 bg-white/5 border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl justify-between hover:bg-white/10 hover:border-emerald-500/30 transition-all"
-                  >
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-emerald-500" />
-                      {effectivePatientId 
-                        ? availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name 
-                        : "Selecionar Paciente..."}
-                    </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[240px] p-0 bg-neutral-900 border-white/10 shadow-2xl">
-                  <Command className="bg-transparent">
-                    <CommandInput placeholder="Buscar paciente..." className="h-9 text-[10px] font-bold uppercase text-white" />
-                    <CommandList>
-                      <CommandEmpty className="py-6 text-center text-[10px] uppercase font-black text-white/20">Nenhum paciente encontrado.</CommandEmpty>
-                      <CommandGroup>
-                        {availablePatients.map((p) => (
-                          <CommandItem
-                            key={p.user_id}
-                            value={p.full_name}
-                            onSelect={() => {
-                              navigate(`/editor-v3/${p.user_id}`);
-                              setIsPatientSearchOpen(false);
-                            }}
-                            className="text-[10px] font-black uppercase text-white/60 hover:text-emerald-400 hover:bg-white/5 cursor-pointer"
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4 text-emerald-500",
-                                effectivePatientId === p.user_id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {p.full_name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+            <div className="hidden lg:flex items-center gap-3">
+              <h1 className="text-xl font-black uppercase italic tracking-tighter">FitJourney</h1>
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px] font-black uppercase tracking-widest px-1.5 py-0">V3 CLINIC</Badge>
             </div>
 
-
+            <Popover open={isPatientSearchOpen} onOpenChange={setIsPatientSearchOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[220px] h-9 bg-white/5 border-white/10 text-[10px] font-black uppercase tracking-widest rounded-lg justify-between hover:border-emerald-500/30">
+                  <div className="flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="truncate">{effectivePatientId ? availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name : "Selecionar Paciente"}</span>
+                  </div>
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-30" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[220px] p-0 bg-neutral-900 border-white/10 shadow-2xl">
+                <Command className="bg-transparent">
+                  <CommandInput placeholder="Buscar..." className="h-9 text-[10px] font-bold" />
+                  <CommandList>
+                    <CommandEmpty className="py-4 text-center text-[9px] uppercase font-black text-white/20">Nada encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {availablePatients.map((p) => (
+                        <CommandItem key={p.user_id} onSelect={() => { navigate(`/editor-v3/${p.user_id}`); setIsPatientSearchOpen(false); }} className="text-[10px] font-black uppercase text-white/60 hover:text-emerald-400 cursor-pointer">
+                          {p.full_name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
               <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="bg-white/5 border-white/10 hover:bg-emerald-500/10 hover:border-emerald-500/30 text-white/60 hover:text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-8 rounded-2xl hidden md:flex transition-all duration-300 shadow-lg"
-                >
-                  <Library className="w-5 h-5 mr-3" /> Biblioteca Premium
+                <Button variant="outline" className="bg-white/5 border-white/10 hover:border-emerald-500/30 text-[10px] font-black uppercase tracking-widest h-9 px-6 rounded-lg hidden md:flex">
+                  <Library className="w-4 h-4 mr-2" /> Biblioteca
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-neutral-950 border-white/10 text-white p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col gap-0">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] -mr-64 -mt-64 rounded-full pointer-events-none" />
-                
-                <DialogHeader className="mb-6 md:mb-8 relative z-10">
-                  <div className="flex items-center gap-4 md:gap-6">
-                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.5rem] md:rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
-                      <Library className="w-6 h-6 md:w-8 md:h-8" />
-                    </div>
-                    <div>
-                      <DialogTitle className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter leading-none text-white">Biblioteca de Templates</DialogTitle>
-                      <p className="text-[9px] md:text-[11px] text-white/20 uppercase font-black tracking-[0.3em] mt-2 md:mt-3 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Templates verificados
-                      </p>
-                    </div>
-                  </div>
+              <DialogContent className="max-w-5xl h-[85vh] bg-neutral-950 border-white/10 text-white p-8 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
+                <DialogHeader className="mb-6">
+                  <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">Protocolos Clínicos</DialogTitle>
                 </DialogHeader>
-                
-                <PremiumGallery 
-                  templates={templates} 
-                  onSelect={(template) => {
-                    setIsGalleryOpen(false); // Close gallery when selecting a template
-                    setSelectedTemplate(template);
-                    setTimeout(() => setIsTemplateModalOpen(true), 100);
-                  }} 
-                />
+                <PremiumGallery templates={templates} onSelect={(t) => { setIsGalleryOpen(false); setSelectedTemplate(t); setTimeout(() => setIsTemplateModalOpen(true), 100); }} />
               </DialogContent>
             </Dialog>
 
-            <TemplateV3Modal 
-              isOpen={isTemplateModalOpen}
-              onClose={() => setIsTemplateModalOpen(false)}
-              template={selectedTemplate}
-              onSelectProfile={handleSelectProfile}
-            />
+            <TemplateV3Modal isOpen={isTemplateModalOpen} onClose={() => setIsTemplateModalOpen(false)} template={selectedTemplate} onSelectProfile={handleSelectProfile} />
 
-            <Button 
-              variant="outline" 
-              onClick={handleClearAll}
-              className="bg-white/5 border-white/10 hover:bg-red-500/10 hover:text-red-400 text-white/40 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
-            >
-              <Trash2 className="w-5 h-5 mr-3" /> Limpar
+            <Button variant="outline" onClick={handleClearAll} className="bg-white/5 border-white/10 text-white/30 text-[9px] font-black uppercase tracking-widest h-9 px-4 rounded-lg hidden xl:flex">
+              <Trash2 className="w-4 h-4 mr-2" /> Limpar
             </Button>
 
-            <Button 
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-[0.2em] h-12 px-10 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 text-[11px]"
-            >
-              <Save className="w-5 h-5 mr-3" /> Salvar Plano
+            <Button onClick={() => setIsShareDialogOpen(true)} className="bg-neutral-800 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest h-9 px-6 rounded-lg hidden md:flex">
+              <Send className="w-4 h-4 mr-2" /> Enviar
             </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setIsShareDialogOpen(true)}
-              className="bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] h-12 px-6 rounded-2xl hidden md:flex transition-all"
-            >
-              <Send className="w-5 h-5 mr-3" /> Enviar
+
+            <Button onClick={handleSave} disabled={saving} className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-9 px-8 rounded-lg shadow-lg shadow-emerald-500/10 text-[10px]">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar
             </Button>
           </div>
         </header>
 
         <SharePlanDialog 
-          open={isShareDialogOpen}
-          onOpenChange={setIsShareDialogOpen}
+          open={isShareDialogOpen} 
+          onOpenChange={setIsShareDialogOpen} 
           data={patientData ? {
             planTitle: "Plano Alimentar Soberano",
             patientName: patientData.full_name || "Paciente",
-            nutritionistName: user?.email || "Nutricionista", // Fallback for name
+            nutritionistName: user?.email || "Nutricionista",
             startDate: new Date().toLocaleDateString('pt-BR'),
-            items: store.meals.flatMap(meal => meal.items.flatMap(item => {
-              const primaryId = item.instanceId;
-              
-              const primary: any = {
-                id: primaryId,
-                mealType: meal.name,
-                title: item.name,
-                description: item.description,
-                meta_calorias: item.kcal,
-                meta_proteinas: item.protein,
-                meta_carboidratos: item.carbs,
-                meta_gorduras: item.fat,
-                day_of_week: meal.day_of_week || 0,
-                scheduled_time: meal.time,
-                is_primary: true,
-                clinical_mass_g: item.clinical_mass_g,
-                substitution_group_id: primaryId
-              };
-
-              const subs = (item.substitutions || []).map((sub: any) => ({
-                id: sub.instanceId || sub.id || crypto.randomUUID(),
-                mealType: meal.name,
-                title: sub.name || sub.title,
-                description: sub.description || "",
-                meta_calorias: sub.kcal,
-                meta_proteinas: sub.protein,
-                meta_carboidratos: sub.carbs,
-                meta_gorduras: sub.fat,
-                day_of_week: meal.day_of_week || 0,
-                scheduled_time: meal.time,
-                is_primary: false,
-                clinical_mass_g: sub.clinical_mass_g,
-                substitution_group_id: primaryId
-              }));
-
-              return [primary, ...subs];
-            })),
-            targetCalories: planTotals.kcal,
-            targetProtein: planTotals.protein,
-            targetCarbs: planTotals.carbs,
-            targetFat: planTotals.fat
-          } : null}
+            items: store.meals.flatMap(meal => meal.items.flatMap(item => [
+              { id: item.instanceId, mealType: meal.name, title: item.name, meta_calorias: item.kcal, meta_proteinas: item.protein, meta_carboidratos: item.carbs, meta_gorduras: item.fat, day_of_week: meal.day_of_week || 0, scheduled_time: meal.time, is_primary: true, clinical_mass_g: item.clinical_mass_g },
+              ...(item.substitutions || []).map(s => ({ id: (s as any).instanceId || s.id, mealType: meal.name, title: s.name, meta_calorias: s.kcal, meta_proteinas: s.protein, meta_carboidratos: s.carbs, meta_gorduras: s.fat, day_of_week: meal.day_of_week || 0, scheduled_time: meal.time, is_primary: false, clinical_mass_g: s.clinical_mass_g }))
+            ])),
+            targetCalories: planTotals.kcal, targetProtein: planTotals.protein, targetCarbs: planTotals.carbs, targetFat: planTotals.fat
+          } : null} 
         />
 
-        {/* Dashboard de Macros */}
-        <div className="px-10 py-10 bg-neutral-900/40 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-12 items-center backdrop-blur-3xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">
-          <div className="space-y-2 group">
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-orange-500 transition-colors duration-500">
-              <Flame className="w-4 h-4 text-orange-500" /> Valor Calórico
-            </p>
-            <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.kcal)}</span>
-              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">kcal</span>
+        {/* Macros Dashboard */}
+        <div className="px-10 py-6 bg-neutral-900/50 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { label: 'Calorias', value: planTotals.kcal, unit: 'kcal', icon: <Flame className="w-3.5 h-3.5 text-orange-500" /> },
+            { label: 'Proteínas', value: planTotals.protein, unit: 'g', icon: <Target className="w-3.5 h-3.5 text-emerald-500" /> },
+            { label: 'Carbos', value: planTotals.carbs, unit: 'g', icon: <Target className="w-3.5 h-3.5 text-blue-500" /> },
+            { label: 'Gorduras', value: planTotals.fat, unit: 'g', icon: <Target className="w-3.5 h-3.5 text-amber-500" /> }
+          ].map(stat => (
+            <div key={stat.label} className="space-y-1">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/20 flex items-center gap-2">{stat.icon} {stat.label}</p>
+              <p className="text-2xl font-black italic tracking-tighter tabular-nums">{Math.round(stat.value)}<span className="text-[10px] uppercase ml-1.5 opacity-20">{stat.unit}</span></p>
             </div>
-          </div>
-
-          <div className="space-y-2 group">
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-emerald-500 transition-colors duration-500">
-              <Target className="w-4 h-4 text-emerald-500" /> Proteínas
-            </p>
-            <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.protein)}</span>
-              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
-            </div>
-          </div>
-
-          <div className="space-y-2 group">
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-blue-500 transition-colors duration-500">
-              <Target className="w-4 h-4 text-blue-500" /> Carboidratos
-            </p>
-            <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.carbs)}</span>
-              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
-            </div>
-          </div>
-
-          <div className="space-y-2 group">
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-2.5 group-hover:text-amber-500 transition-colors duration-500">
-              <Target className="w-4 h-4 text-amber-500" /> Lipídeos
-            </p>
-            <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-black italic tracking-tighter text-white tabular-nums">{Math.round(planTotals.fat)}</span>
-              <span className="text-[11px] font-black uppercase text-white/10 tracking-[0.2em]">g</span>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Workspace Principal */}
-        <main className="flex-1 overflow-hidden flex flex-col">
-          {/* Seletor de Dias - Essencial para evitar o CAOS */}
-          <div className="px-10 py-4 bg-neutral-900/20 border-b border-white/5 flex items-center justify-between backdrop-blur-md">
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-10 py-3 bg-neutral-900/30 border-b border-white/5 flex items-center justify-between backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <Calendar className="w-4 h-4 text-emerald-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Cronograma Semanal</span>
+              <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Cronograma</span>
             </div>
-            
             <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
-              {[
-                { id: 1, label: "SEG" },
-                { id: 2, label: "TER" },
-                { id: 3, label: "QUA" },
-                { id: 4, label: "QUI" },
-                { id: 5, label: "SEX" },
-                { id: 6, label: "SÁB" },
-                { id: 0, label: "DOM" },
-              ].map((day) => (
-                <button
-                  key={day.id}
-                  onClick={() => setActiveDay(day.id)}
-                  className={cn(
-                    "h-8 px-4 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all",
-                    activeDay === day.id 
-                      ? "bg-emerald-500 text-black shadow-lg" 
-                      : "text-white/30 hover:text-white hover:bg-white/5"
-                  )}
-                >
-                  {day.label}
+              {[ {id:1,l:"SEG"}, {id:2,l:"TER"}, {id:3,l:"QUA"}, {id:4,l:"QUI"}, {id:5,l:"SEX"}, {id:6,l:"SÁB"}, {id:0,l:"DOM"} ].map(d => (
+                <button key={d.id} onClick={() => setActiveDay(d.id)} className={cn("h-7 px-4 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all", activeDay === d.id ? "bg-emerald-500 text-black shadow-lg" : "text-white/30 hover:text-white hover:bg-white/5")}>
+                  {d.l}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Timeline de Refeições */}
-          <ScrollArea className="flex-1 h-full px-8 py-12">
-            <div className="max-w-5xl mx-auto space-y-12 pb-32">
+          <ScrollArea className="flex-1 px-8 py-8">
+            <div className="max-w-4xl mx-auto space-y-6 pb-32">
               <AnimatePresence mode="popLayout">
                 {store.meals
                   .filter(m => (m.day_of_week || 0) === activeDay)
                   .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
                   .map((meal, idx) => (
-                    <motion.div
-                      key={meal.id}
-                      layout
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: idx * 0.05 }}
-                    >
+                    <motion.div key={meal.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.4, delay: idx * 0.05 }}>
                       <MealCard 
                         meal={meal} 
                         onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
@@ -749,33 +397,17 @@ export default function EditorV3Page() {
                 onClick={() => {
                   const names = ["Café da Manhã", "Lanche", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
                   const currentCount = store.meals.filter(m => (m.day_of_week || 0) === activeDay).length;
-                  const name = names[currentCount % names.length];
-                  
-                  // Use standard zustand set pattern to ensure immediate day assignment
-                  const newId = crypto.randomUUID();
-                  const newMeal = {
-                    id: newId,
-                    name,
-                    time: "08:00",
-                    day_of_week: activeDay,
-                    items: []
-                  };
-                  store.setMeals([...store.meals, newMeal]);
+                  store.setMeals([...store.meals, { id: crypto.randomUUID(), name: names[currentCount % names.length], time: "08:00", day_of_week: activeDay, items: [] }]);
                 }}
-                variant="outline" 
-                className="w-full h-24 bg-white/[0.02] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-[2.5rem] transition-all group/add-meal shadow-inner"
+                variant="outline" className="w-full h-16 bg-white/[0.01] border-dashed border-white/5 hover:bg-emerald-500/[0.02] text-white/10 hover:text-emerald-400 rounded-2xl transition-all"
               >
-                <Plus className="w-8 h-8 mr-4 group-hover/add-meal:scale-125 transition-transform duration-500" />
-                <span className="uppercase text-xs font-black tracking-[0.3em]">Adicionar Nova Refeição ao Dia</span>
+                <Plus className="w-5 h-5 mr-3" />
+                <span className="uppercase text-[10px] font-black tracking-widest">Nova Refeição</span>
               </Button>
             </div>
           </ScrollArea>
-
-          {/* Lateral Info / Sidebar de Metas (Opcional) */}
         </main>
       </div>
-
-
     </DashboardLayout>
   );
 }
