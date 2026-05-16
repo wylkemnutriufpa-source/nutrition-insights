@@ -35,8 +35,8 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
   }, [templates, search, activeCategory]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col md:flex-row gap-6 mb-10 items-end">
+    <div className="flex flex-col h-full max-h-[80vh]">
+      <div className="flex flex-col md:flex-row gap-6 mb-10 items-end flex-shrink-0">
         <div className="flex-1 w-full relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
           <Input 
@@ -47,13 +47,13 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
           />
         </div>
         
-        <div className="flex gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/10">
-          {categories.slice(0, 4).map(cat => (
+        <div className="flex gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar max-w-full">
+          {categories.map(cat => (
             <Button
               key={cat}
               variant={activeCategory === cat ? 'default' : 'ghost'}
               onClick={() => setActiveCategory(cat)}
-              className={`h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+              className={`h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex-shrink-0 ${
                 activeCategory === cat 
                   ? 'bg-emerald-500 text-black hover:bg-emerald-400' 
                   : 'text-white/40 hover:text-white hover:bg-white/5'
@@ -65,71 +65,73 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
         </div>
       </div>
 
-      <ScrollArea className="flex-1 pr-6 -mr-6">
-        <AnimatePresence mode="popLayout">
-          <motion.div 
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {filteredTemplates.map((template, idx) => (
-              <motion.button
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.4, delay: idx * 0.05 }}
-                key={template.id}
-                onClick={() => onSelect(template)}
-                className="flex flex-col p-8 rounded-[3rem] bg-neutral-900/40 border border-white/5 hover:border-emerald-500/40 hover:bg-neutral-900 transition-all duration-700 text-left group relative overflow-hidden shadow-2xl"
-              >
-                <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 blur-[60px] -mr-20 -mt-20 rounded-full group-hover:bg-emerald-500/15 transition-all duration-700" />
-                
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-white/20 group-hover:text-emerald-500 group-hover:bg-emerald-500/10 transition-all duration-500">
-                    <Zap className="w-5 h-5" />
-                  </div>
-                  <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-white/10 text-white/20 px-2 py-0.5 rounded-md">
-                    {template.objective || 'Soberano'}
-                  </Badge>
-                </div>
-
-                <h4 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-emerald-400 transition-colors duration-500 leading-none">
-                  {template.title}
-                </h4>
-                
-                <p className="text-[11px] text-white/20 mt-6 line-clamp-3 uppercase font-bold leading-relaxed tracking-wide group-hover:text-white/40 transition-colors">
-                  {template.description}
-                </p>
-
-                <div className="mt-10 flex items-center justify-between border-t border-white/5 pt-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-white/20">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span className="text-[9px] font-black tracking-widest">7 DIAS</span>
+      <ScrollArea className="flex-1 -mx-4 px-4 overflow-y-auto">
+        <div className="pb-20">
+          <AnimatePresence mode="popLayout">
+            <motion.div 
+              layout
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {filteredTemplates.map((template, idx) => (
+                <motion.button
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.4, delay: idx * 0.03 }}
+                  key={template.id}
+                  onClick={() => onSelect(template)}
+                  className="flex flex-col p-8 rounded-[3rem] bg-neutral-900/40 border border-white/5 hover:border-emerald-500/40 hover:bg-neutral-900 transition-all duration-700 text-left group relative overflow-hidden shadow-2xl h-full"
+                >
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 blur-[60px] -mr-20 -mt-20 rounded-full group-hover:bg-emerald-500/15 transition-all duration-700" />
+                  
+                  <div className="flex items-center gap-3 mb-6 relative z-10">
+                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-white/20 group-hover:text-emerald-500 group-hover:bg-emerald-500/10 transition-all duration-500">
+                      <Zap className="w-5 h-5" />
                     </div>
-                    <div className="flex items-center gap-1.5 text-white/20">
-                      <Star className="w-3.5 h-3.5" />
-                      <span className="text-[9px] font-black tracking-widest">PRO</span>
+                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-white/10 text-white/20 px-2 py-0.5 rounded-md">
+                      {template.objective || 'Soberano'}
+                    </Badge>
+                  </div>
+
+                  <h4 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-emerald-400 transition-colors duration-500 leading-none relative z-10">
+                    {template.title}
+                  </h4>
+                  
+                  <p className="text-[11px] text-white/20 mt-6 line-clamp-3 uppercase font-bold leading-relaxed tracking-wide group-hover:text-white/40 transition-colors relative z-10">
+                    {template.description}
+                  </p>
+
+                  <div className="mt-auto pt-10 flex items-center justify-between border-t border-white/5 relative z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-white/20">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span className="text-[9px] font-black tracking-widest uppercase">7 Dias</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-white/20">
+                        <Star className="w-3.5 h-3.5" />
+                        <span className="text-[9px] font-black tracking-widest">PRO</span>
+                      </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-black transition-all duration-700 shadow-xl">
+                      <ChevronRight className="w-5 h-5" />
                     </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-black transition-all duration-700 shadow-xl">
-                    <ChevronRight className="w-5 h-5" />
-                  </div>
-                </div>
-              </motion.button>
-            ))}
-          </motion.div>
-        </AnimatePresence>
-        
-        {filteredTemplates.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
-              <Search className="w-10 h-10 text-white/10" />
+                </motion.button>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+          
+          {filteredTemplates.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                <Search className="w-10 h-10 text-white/10" />
+              </div>
+              <h3 className="text-xl font-black uppercase italic tracking-tighter text-white/40">Nenhum template encontrado</h3>
+              <p className="text-xs text-white/20 uppercase font-bold tracking-widest mt-2">Tente ajustar sua busca ou filtros</p>
             </div>
-            <h3 className="text-xl font-black uppercase italic tracking-tighter text-white/40">Nenhum template encontrado</h3>
-            <p className="text-xs text-white/20 uppercase font-bold tracking-widest mt-2">Tente ajustar sua busca ou filtros</p>
-          </div>
-        )}
+          )}
+        </div>
       </ScrollArea>
     </div>
   );
