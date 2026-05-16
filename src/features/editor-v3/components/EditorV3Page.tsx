@@ -509,17 +509,17 @@ export default function EditorV3Page() {
                   <Library className="w-5 h-5 mr-3" /> Biblioteca Premium
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-6xl h-[85vh] bg-neutral-950 border-white/10 text-white p-12 rounded-[3.5rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col">
+              <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-neutral-950 border-white/10 text-white p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col">
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] -mr-64 -mt-64 rounded-full pointer-events-none" />
                 
-                <DialogHeader className="mb-12 relative z-10">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
-                      <Library className="w-8 h-8" />
+                <DialogHeader className="mb-6 md:mb-8 relative z-10">
+                  <div className="flex items-center gap-4 md:gap-6">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.5rem] md:rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+                      <Library className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
                     <div>
-                      <DialogTitle className="text-4xl font-black uppercase italic tracking-tighter leading-none text-white">Biblioteca de Templates</DialogTitle>
-                      <p className="text-[11px] text-white/20 uppercase font-black tracking-[0.3em] mt-3 flex items-center gap-2">
+                      <DialogTitle className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter leading-none text-white">Biblioteca de Templates</DialogTitle>
+                      <p className="text-[9px] md:text-[11px] text-white/20 uppercase font-black tracking-[0.3em] mt-2 md:mt-3 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         Templates verificados
                       </p>
