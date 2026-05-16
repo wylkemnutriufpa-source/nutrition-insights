@@ -145,69 +145,84 @@ function isCurrentMeal(timeRange: string): boolean {
 }
 
 // ── Macro Summary Bar (memoized) ──
-const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: { items: MealPlanItem[], totalsStatus?: string }) {
+const MacroSummary = memo(function MacroSummary({ 
+  items, 
+  totalsStatus = 'ok',
+  targets 
+}: { 
+  items: MealPlanItem[], 
+  totalsStatus?: string,
+  targets?: {
+    calories?: number | null;
+    protein?: number | null;
+    carbs?: number | null;
+    fat?: number | null;
+  }
+}) {
   const totals = useMemo(() => {
-    // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo
     const primaryOnly = items.filter(i => {
-      // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo.
-      // No V3, builds como buildDailyDisplayItems já retornam apenas os primários
-      // com as substituições acopladas no metadata.
       if (i.is_primary === false) return false;
-      
-      // Bloqueio de substituições órfãs que escaparam do build
       if ((i as any).is_substitution === true) return false;
 
       const lowerTitle = (i.title || "").toLowerCase();
       const lowerDesc = (i.description || "").toLowerCase();
       
-      // Se for explicitamente uma linha de substituição visual (legado), ignora.
       if ((lowerTitle.includes("substitu") || lowerDesc.includes("substitu")) && i.is_primary !== true) return false;
       
       return true;
     });
     
     return {
-      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
-      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
-      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
-      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
+      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories ?? (i as any).meta_calories ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
+      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein ?? (i as any).protein_g ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
+      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs ?? (i as any).carbs_g ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
+      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat ?? (i as any).fat_g ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
     };
   }, [items]);
 
+  // SOBERANIA V3: Prioritize targets from plan if available
+  const displayKcal = targets?.calories && targets.calories > 0 ? targets.calories : totals.calories;
+  const displayProtein = targets?.protein && targets.protein > 0 ? targets.protein : totals.protein;
+  const displayCarbs = targets?.carbs && targets.carbs > 0 ? targets.carbs : totals.carbs;
+  const displayFat = targets?.fat && targets.fat > 0 ? targets.fat : totals.fat;
+
   const hasData = items.length > 0;
-  const showCalculating = totalsStatus === 'incomplete' || (totals.calories === 0 && hasData && totalsStatus !== 'ok');
+  // Only show warning if BOTH items sum and plan targets are 0
+  const showCalculating = totalsStatus === 'incomplete' || (displayKcal === 0 && hasData && totalsStatus !== 'ok');
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 px-1">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.3em]">Metas Nutricionais do Dia</span>
+        <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.3em]">
+          {targets?.calories ? "Suas Metas Diárias" : "Metas Nutricionais do Dia"}
+        </span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Flame className="w-5 h-5 mx-auto text-orange-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Kcal</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(totals.calories, "0")}</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(displayKcal, "0")}</p>
         </div>
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Beef className="w-5 h-5 mx-auto text-red-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Prot</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(totals.protein, "0")}g</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(displayProtein, "0")}g</p>
         </div>
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Wheat className="w-5 h-5 mx-auto text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Carbs</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(totals.carbs, "0")}g</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(displayCarbs, "0")}g</p>
         </div>
         <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
           <Droplets className="w-5 h-5 mx-auto text-yellow-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Gord</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(totals.fat, "0")}g</p>
+          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(displayFat, "0")}g</p>
         </div>
       </div>
       
       {showCalculating && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+        <div className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-in fade-in duration-500">
           <Clock className="w-4 h-4 text-amber-500" />
           <p className="text-[11px] text-amber-600 font-bold uppercase tracking-widest leading-tight">
             Valores Nutricionais Pendentes no Template
@@ -242,13 +257,15 @@ const MealItemCard = memo(function MealItemCard({
     enabled: !!fallbackImage,
   });
   const resolvedImage = useMemo(() => {
-    const raw = item.image_url || signedFallback || null;
-    if (raw && raw.includes("source.unsplash.com")) {
-      const query = item.title || "food";
-      return `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+    const raw = item.image_url || signedFallback || (item as any).imageUrl || null;
+    
+    // SOBERANIA V3: Fix Unsplash deprecated source endpoint and resolution
+    if (raw && (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured"))) {
+      const query = item.title || "saudável";
+      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${item.id}`;
     }
     return raw;
-  }, [item.image_url, item.title, signedFallback]);
+  }, [item.image_url, (item as any).imageUrl, item.title, signedFallback]);
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
     : status === "partial" ? "border-amber-500/30 bg-amber-500/5 shadow-inner"

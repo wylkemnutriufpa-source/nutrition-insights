@@ -280,10 +280,10 @@ export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
 
   return primaryItems.reduce(
     (acc, item) => ({
-      calories: acc.calories + asNumber(item.meta_calorias ?? (item as any).metadata?.meta_calorias ?? (item as any).metadata?.calories),
-      protein: acc.protein + asNumber(item.meta_proteinas ?? (item as any).metadata?.meta_proteinas ?? (item as any).metadata?.protein),
-      carbs: acc.carbs + asNumber(item.meta_carboidratos ?? (item as any).metadata?.meta_carboidratos ?? (item as any).metadata?.carbs),
-      fat: acc.fat + asNumber(item.meta_gorduras ?? (item as any).metadata?.meta_gorduras ?? (item as any).metadata?.fat),
+      calories: acc.calories + asNumber(item.meta_calorias ?? (item as any).kcal ?? (item as any).calories ?? (item as any).meta_calories ?? (item as any).metadata?.meta_calorias ?? (item as any).metadata?.calories),
+      protein: acc.protein + asNumber(item.meta_proteinas ?? (item as any).protein ?? (item as any).protein_g ?? (item as any).metadata?.meta_proteinas ?? (item as any).metadata?.protein),
+      carbs: acc.carbs + asNumber(item.meta_carboidratos ?? (item as any).carbs ?? (item as any).carbs_g ?? (item as any).metadata?.meta_carboidratos ?? (item as any).metadata?.carbs),
+      fat: acc.fat + asNumber(item.meta_gorduras ?? (item as any).fat ?? (item as any).fat_g ?? (item as any).metadata?.meta_gorduras ?? (item as any).metadata?.fat),
     }),
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
