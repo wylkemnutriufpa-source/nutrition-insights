@@ -101,33 +101,33 @@ export default function EditorV3Page() {
         const snapshot = selectedTemplate.plan_snapshot[snapshotKey] || Object.values(selectedTemplate.plan_snapshot)[0];
         
         if (snapshot && snapshot.meals) {
-          const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay];
+          // GARANTIA SOBERANA: Gerar exatamente 7 dias (0-6)
+          const days = [1, 2, 3, 4, 5, 6, 0];
           const allNewMeals: any[] = [];
 
           for (const day of days) {
-            // Se for semanal, tentamos variar os alimentos mantendo as mesmas calorias
-            const freshMeals = snapshot.meals.map(meal => {
+            // VARIEDADE REAL: Cada dia recebe uma versão rotacionada do snapshot
+            const freshMeals = snapshot.meals.map((meal, mealIdx) => {
               const mealId = crypto.randomUUID();
               return {
                 ...meal,
                 id: mealId,
                 day_of_week: day,
-                items: meal.items.map(item => {
+                items: meal.items.map((item, itemIdx) => {
                   const instanceId = crypto.randomUUID();
                   
-                  // LOGICA DE VARIAÇÃO SOBERANA:
-                  // Se o item tem substitutos e estamos gerando um plano semanal,
-                  // rotacionamos os substitutos para cada dia para não ficar repetitivo,
-                  // mas mantendo a mesma caloria (escala automática para equivalentes).
+                  // LOGICA DE VARIAÇÃO SOBERANA V4:
+                  // Rotacionamos os itens usando substitutos reais da biblioteca.
                   let finalItem = { ...item, instanceId };
                   
-                  if (isWeekly && item.substitutions && item.substitutions.length > 0) {
-                    // Escolhe um substituto baseado no dia da semana para garantir variedade
-                    const subIndex = (day + 1) % (item.substitutions.length + 1);
+                  if (item.substitutions && item.substitutions.length > 0) {
+                    // O índice de rotação depende do dia e da posição da refeição/item
+                    // para evitar que todos os dias fiquem iguais ou que a rotação seja óbvia.
+                    const rotationSeed = (day + mealIdx + itemIdx);
+                    const subIndex = rotationSeed % (item.substitutions.length + 1);
+                    
                     if (subIndex > 0) {
                       const sub = item.substitutions[subIndex - 1];
-                      // Criamos uma cópia do item original mas com os dados do substituto
-                      // A caloria deve ser a mesma, então escalamos a gramagem do substituto
                       const targetKcal = item.kcal;
                       const subKcal100g = sub.kcal_100g || sub.kcal || 1;
                       const neededQty = Math.round((targetKcal / subKcal100g) * 100);
@@ -138,11 +138,12 @@ export default function EditorV3Page() {
                         quantity: neededQty,
                         clinical_mass_g: neededQty,
                         kcal: targetKcal,
-                        // Mantemos os macros proporcionais
                         protein: (sub.protein || 0) * (neededQty / 100),
                         carbs: (sub.carbs || 0) * (neededQty / 100),
                         fat: (sub.fat || 0) * (neededQty / 100),
-                        substitutions: item.substitutions // Mantém a lista de troca disponível
+                        substitutions: item.substitutions,
+                        // GARANTIA VISUAL: Mantém imagem do substituto
+                        imageUrl: sub.imageUrl || (sub as any).image_url || null
                       } as any;
                     }
                   }
@@ -157,11 +158,13 @@ export default function EditorV3Page() {
           if (isWeekly) {
             store.hydrateMeals(allNewMeals);
           } else {
+            // Se for apenas o dia ativo, pegamos apenas as refeições daquele dia na lista gerada
+            const dailyMeals = allNewMeals.filter(m => m.day_of_week === activeDay);
             const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
-            store.hydrateMeals([...otherDayMeals, ...allNewMeals]);
+            store.hydrateMeals([...otherDayMeals, ...dailyMeals]);
           }
 
-          toast.success('Template Clínico carregado com variações!', { id: toastId });
+          toast.success('Plano Semanal Soberano Gerado com Variedade Real!', { id: toastId });
           return;
         }
       }
