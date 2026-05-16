@@ -39,7 +39,15 @@ export const patientService = {
 
       // 🛡️ Blindagem: Suportar estrutura de dias (Soberania V3)
       const currentDow = new Date().getDay();
-      const dayData = snapshot.days?.find((d: any) => d.day_of_week === currentDow) || snapshot.days?.[0];
+      const snapshotDays = Array.isArray(snapshot.days) ? snapshot.days : null;
+      let dayData = null;
+      
+      if (snapshotDays) {
+        dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
+      } else if (snapshot.meals && Array.isArray(snapshot.meals)) {
+        const mealsForDay = snapshot.meals.filter((m: any) => m.day_of_week === currentDow || m.day_of_week === undefined);
+        dayData = { meals: mealsForDay.length > 0 ? mealsForDay : snapshot.meals };
+      }
       
       // 🛡️ SOBERANIA V3: Mapear respeitando hierarquia de substituições
       const mappedMeals = (dayData?.meals || snapshot.meals || []).map((m: any) => {
