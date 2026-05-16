@@ -120,6 +120,20 @@ export async function promoteDraftToMealPlan(
         v3_sandbox_delivery: options?.v3_sandbox_delivery || false,
         delivered_via: options?.v3_sandbox_delivery ? 'ControlledClinicalDelivery' : 'StandardPromote'
       },
+      snapshot: {
+        meals: draft.payload?.meals || [],
+        targets: {
+          kcal: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || 0,
+          protein_g: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || 0,
+          carbs_g: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || 0,
+          fat_g: draft.meta_fat || draft.payload?.nutritional_score?.totals?.fat || 0
+        },
+        version: 'v3',
+        days: Array.from(new Set((draft.payload?.meals || []).map(m => m.day_of_week ?? 1))).map(day => ({
+          day_of_week: day,
+          meals: (draft.payload?.meals || []).filter(m => (m.day_of_week ?? 1) === day)
+        }))
+      }
     } as any)
     .select('id, sharing_token')
     .single();
