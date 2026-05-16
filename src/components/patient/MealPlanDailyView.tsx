@@ -149,19 +149,28 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
   const totals = useMemo(() => {
     // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo
     const primaryOnly = items.filter(i => {
+      // 🛡️ SOBERANIA V3: Garantir que apenas itens primários entram no cálculo.
+      // No V3, builds como buildDailyDisplayItems já retornam apenas os primários
+      // com as substituições acopladas no metadata.
       if (i.is_primary === false) return false;
-      if (i.metadata?.substitution_group_id || (i as any).edit_metadata?.substitution_group_id) return false;
+      
+      // Bloqueio de substituições órfãs que escaparam do build
+      if ((i as any).is_substitution === true) return false;
+
       const lowerTitle = (i.title || "").toLowerCase();
       const lowerDesc = (i.description || "").toLowerCase();
+      
+      // Se for explicitamente uma linha de substituição visual (legado), ignora.
       if ((lowerTitle.includes("substitu") || lowerDesc.includes("substitu")) && i.is_primary !== true) return false;
+      
       return true;
     });
     
     return {
-      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
-      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
-      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
-      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
+      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
+      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
+      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
+      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
     };
   }, [items]);
 
@@ -307,42 +316,24 @@ const MealItemCard = memo(function MealItemCard({
                 const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3";
 
                 // V3 prioritization: display_quantity > clinical_mass_g
-                const dQty = item.display_quantity || editMeta?.display_quantity;
-                const dUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || "";
+                const dQty = item.display_quantity || editMeta?.display_quantity || item.clinical_mass_g || (item as any).grams;
+                const dUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || (item.clinical_mass_g || (item as any).grams ? "g" : "");
                 const cMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
 
-                if (isV3 && dQty) {
+                if (dQty) {
                   return (
                     <p className="text-xs font-bold text-primary mb-0.5">
-                      {dQty} {dUnit}
+                      {dQty}{dUnit ? ` ${dUnit}` : ""}
                     </p>
                   );
                 }
                 
-                if (isV3 && cMass && !dQty) {
+                if (cMass) {
                   return (
                     <p className="text-xs font-bold text-primary mb-0.5">
                       {cMass}g
                     </p>
                   );
-                }
-
-                // V2 Fallback (only if not already rendered by V3 logic)
-                if (!isV3) {
-                  if (dQty) {
-                    return (
-                      <p className="text-xs font-bold text-primary mb-0.5">
-                        {dQty} {dUnit}
-                      </p>
-                    );
-                  }
-                  if (cMass) {
-                    return (
-                      <p className="text-xs font-bold text-primary mb-0.5">
-                        {cMass}g
-                      </p>
-                    );
-                  }
                 }
 
                 return null;
