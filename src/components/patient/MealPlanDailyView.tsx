@@ -618,10 +618,10 @@ const MealSlotCard = memo(function MealSlotCard({
     return items.reduce((acc, item) => {
       const meta = item.metadata || {};
       return {
-        calories: acc.calories + (item.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0),
-        protein: acc.protein + (item.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0),
-        carbs: acc.carbs + (item.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs ?? 0),
-        fat: acc.fat + (item.meta_gorduras ?? meta.meta_gorduras ?? meta.fat ?? 0),
+        calories: acc.calories + (item.meta_calorias ?? (item as any).kcal ?? (item as any).calories ?? meta.meta_calorias ?? meta.calories ?? 0),
+        protein: acc.protein + (item.meta_proteinas ?? (item as any).protein ?? meta.meta_proteinas ?? meta.protein ?? 0),
+        carbs: acc.carbs + (item.meta_carboidratos ?? (item as any).carbs ?? meta.meta_carboidratos ?? meta.carbs ?? 0),
+        fat: acc.fat + (item.meta_gorduras ?? (item as any).fat ?? meta.meta_gorduras ?? meta.fat ?? 0),
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   }, [items]);
