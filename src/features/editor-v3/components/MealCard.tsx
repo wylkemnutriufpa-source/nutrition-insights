@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Clock, Plus, Trash2, Utensils } from 'lucide-react';
+import { Clock, Plus, Trash2, Utensils, Search } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Meal, Food, MealItem } from '../types/types';
