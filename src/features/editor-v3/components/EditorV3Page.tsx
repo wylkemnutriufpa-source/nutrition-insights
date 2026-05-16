@@ -101,28 +101,67 @@ export default function EditorV3Page() {
         const snapshot = selectedTemplate.plan_snapshot[snapshotKey] || Object.values(selectedTemplate.plan_snapshot)[0];
         
         if (snapshot && snapshot.meals) {
-          const freshMeals = snapshot.meals.map(meal => ({
-            ...meal,
-            id: crypto.randomUUID(),
-            items: meal.items.map(item => ({
-              ...item,
-              instanceId: crypto.randomUUID()
-            }))
-          }));
-
           const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay];
-          const mealsToHydrate = isWeekly 
-            ? freshMeals 
-            : freshMeals.filter(m => (m.day_of_week || 1) === activeDay);
+          const allNewMeals: any[] = [];
 
-          if (isWeekly) {
-            store.hydrateMeals(mealsToHydrate);
-          } else {
-            const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
-            store.hydrateMeals([...otherDayMeals, ...mealsToHydrate]);
+          for (const day of days) {
+            // Se for semanal, tentamos variar os alimentos mantendo as mesmas calorias
+            const freshMeals = snapshot.meals.map(meal => {
+              const mealId = crypto.randomUUID();
+              return {
+                ...meal,
+                id: mealId,
+                day_of_week: day,
+                items: meal.items.map(item => {
+                  const instanceId = crypto.randomUUID();
+                  
+                  // LOGICA DE VARIAÇÃO SOBERANA:
+                  // Se o item tem substitutos e estamos gerando um plano semanal,
+                  // rotacionamos os substitutos para cada dia para não ficar repetitivo,
+                  // mas mantendo a mesma caloria (escala automática para equivalentes).
+                  let finalItem = { ...item, instanceId };
+                  
+                  if (isWeekly && item.substitutions && item.substitutions.length > 0) {
+                    // Escolhe um substituto baseado no dia da semana para garantir variedade
+                    const subIndex = (day + 1) % (item.substitutions.length + 1);
+                    if (subIndex > 0) {
+                      const sub = item.substitutions[subIndex - 1];
+                      // Criamos uma cópia do item original mas com os dados do substituto
+                      // A caloria deve ser a mesma, então escalamos a gramagem do substituto
+                      const targetKcal = item.kcal;
+                      const subKcal100g = sub.kcal_100g || sub.kcal || 1;
+                      const neededQty = Math.round((targetKcal / subKcal100g) * 100);
+                      
+                      finalItem = {
+                        ...sub,
+                        instanceId,
+                        quantity: neededQty,
+                        clinical_mass_g: neededQty,
+                        kcal: targetKcal,
+                        // Mantemos os macros proporcionais
+                        protein: (sub.protein || 0) * (neededQty / 100),
+                        carbs: (sub.carbs || 0) * (neededQty / 100),
+                        fat: (sub.fat || 0) * (neededQty / 100),
+                        substitutions: item.substitutions // Mantém a lista de troca disponível
+                      } as any;
+                    }
+                  }
+
+                  return finalItem;
+                })
+              };
+            });
+            allNewMeals.push(...freshMeals);
           }
 
-          toast.success('Template Clínico carregado!', { id: toastId });
+          if (isWeekly) {
+            store.hydrateMeals(allNewMeals);
+          } else {
+            const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
+            store.hydrateMeals([...otherDayMeals, ...allNewMeals]);
+          }
+
+          toast.success('Template Clínico carregado com variações!', { id: toastId });
           return;
         }
       }
