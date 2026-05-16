@@ -187,7 +187,7 @@ export const MealCard: React.FC<MealCardProps> = ({
             <Button
               variant="outline"
               onClick={onRemoveMeal}
-              className="h-14 w-14 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all"
+              className="h-12 w-12 md:h-14 md:w-14 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all"
             >
               <Trash2 className="w-5 h-5" />
             </Button>
