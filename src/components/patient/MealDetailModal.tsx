@@ -271,15 +271,16 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
   // 🛡️ SOBERANIA V3: Estabilização de Imagem
   const resolvedImage = useMemo(() => {
-    const raw = meal?.image_url;
+    const raw = meal?.image_url || (meal as any).imageUrl;
     if (!raw) return null;
-    if (raw.includes("source.unsplash.com")) {
-      // Unsplash Source está instável. Tentando redirecionar para imagens reais de alta qualidade via Unsplash normal
-      const query = meal?.title || "food";
-      return `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+    
+    // Unsplash Source está instável/depreciado. Redirecionando para featured images temáticas.
+    if (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured")) {
+      const query = meal?.title || "alimento saudável";
+      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
     }
     return raw;
-  }, [meal?.image_url, meal?.title]);
+  }, [meal?.image_url, (meal as any).imageUrl, meal?.title]);
 
   const fetchDbHistory = async (offset = 0) => {
     if (!meal?.itemId) return;
