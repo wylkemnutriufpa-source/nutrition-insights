@@ -119,12 +119,18 @@ function parseJsonField<T>(value: any): T[] {
 }
 
 /** Parse description text into main food lines and substitution lines */
-function parseDescriptionLines(description: string | null | undefined): {
+function parseDescriptionLines(description: string | null | undefined, title?: string): {
   foodLines: string[];
   substitutionLines: string[];
   rawSubstitutionHeader: string;
 } {
-  if (!description) return { foodLines: [], substitutionLines: [], rawSubstitutionHeader: "" };
+  if (!description) {
+    return { 
+      foodLines: title ? [`• ${title}`] : [], 
+      substitutionLines: [], 
+      rawSubstitutionHeader: "" 
+    };
+  }
 
   const parts = description.split(/\n\n🔄 Substituições:\n/);
   const mainSection = parts[0] || "";
