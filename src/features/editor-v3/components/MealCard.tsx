@@ -157,10 +157,10 @@ export const MealCard: React.FC<MealCardProps> = ({
         </ScrollArea>
 
         {/* Footer Modal */}
-        <div className="p-10 border-t border-white/5 bg-neutral-900/50 flex items-center justify-between">
-          <div className="flex gap-6">
-            <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
-              <p className="text-lg font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
+        <div className="p-6 md:p-8 border-t border-white/5 bg-neutral-900/50 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex gap-4 md:gap-6">
+            <div className="text-center px-4 md:px-6 py-2 md:py-3 bg-white/5 rounded-2xl border border-white/5">
+              <p className="text-base md:text-lg font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
               <p className="text-[8px] uppercase font-black tracking-widest text-white/20">Proteína</p>
             </div>
             <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
