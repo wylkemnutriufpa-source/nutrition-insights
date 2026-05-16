@@ -105,15 +105,15 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-xl bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="max-w-lg bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
         {/* Header Modal */}
-        <div className="p-5 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-              <Utensils className="w-5 h-5" />
+        <div className="p-4 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+              <Utensils className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-lg font-black uppercase italic tracking-tighter text-white">Editar Refeição</h3>
+              <h3 className="text-base font-black uppercase italic tracking-tighter text-white">Editar Refeição</h3>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">{meal.name}</span>
               </div>
