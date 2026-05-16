@@ -706,6 +706,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   <div class="premium-header">
     <div class="logo-text">
       <span class="logo-fit">Fit</span><span class="logo-journey">Journey</span>
+      <div style="font-size: 8px; font-family: 'Montserrat', sans-serif; font-weight: 900; letter-spacing: 2px; color: #D4A84B; margin-top: 5px; opacity: 0.8;">✨ PROTOCOLO SOBERANO</div>
     </div>
     <div class="patient-info">
       <div class="label">Plano Alimentar de:</div>

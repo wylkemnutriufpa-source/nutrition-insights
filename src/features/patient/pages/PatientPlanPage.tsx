@@ -142,8 +142,8 @@ export const PatientPlanPage = () => {
       // Convertemos o formato do snapshot para o formato esperado pelo modal (compatibilidade visual)
       const mappedSubs = snapshotSubs.map((food: any) => ({
         food,
-        grams: item.clinical_mass_g || item.quantity || 100, // Mantém a massa clínica ou quantidade
-        unit_label: food.portionUnitLabel || 'unidade'
+        grams: food.clinical_mass_g || food.quantity || 100, // Use o dado soberano do próprio substituto
+        unit_label: food.display_unit || food.portionUnitLabel || 'unidade'
       }));
 
       setSubstitutions(mappedSubs);
