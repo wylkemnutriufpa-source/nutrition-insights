@@ -234,14 +234,29 @@ export default function PatientMealPlan() {
       const currentDow = new Date(date + "T12:00:00").getDay();
       const flatItems: any[] = [];
 
-      // 🛡️ Snapshot V3: hidrata TODOS os dias quando o plano é semanal.
-      // Antes só hidratava o dia atual e o weekly acabava repetindo/copiadando a mesma estrutura.
+      // 🛡️ Snapshot V3: hidrata os dias de forma inteligente
       const snapshotDays = Array.isArray(snapshot.days) ? snapshot.days : null;
-      const daysToHydrate = snapshotDays
-        ? (planData.plan_mode === 'single_day'
+      let daysToHydrate: any[] = [];
+      
+      if (snapshotDays) {
+        daysToHydrate = (planData.plan_mode === 'single_day'
             ? [snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0]].filter(Boolean)
-            : snapshotDays)
-        : [{ day_of_week: currentDow, meals: snapshot.meals || [] }];
+            : snapshotDays);
+      } else if (snapshot.meals && Array.isArray(snapshot.meals)) {
+        // Fallback: Se não tem 'days', mas 'meals' tem day_of_week, agrupamos localmente
+        const hasDayData = snapshot.meals.some((m: any) => m.day_of_week !== undefined);
+        if (hasDayData && planData.plan_mode === 'weekly') {
+          const daysMap = new Map();
+          snapshot.meals.forEach((m: any) => {
+            const d = m.day_of_week ?? currentDow;
+            if (!daysMap.has(d)) daysMap.set(d, []);
+            daysMap.get(d).push(m);
+          });
+          daysToHydrate = Array.from(daysMap.entries()).map(([d, meals]) => ({ day_of_week: d, meals }));
+        } else {
+          daysToHydrate = [{ day_of_week: currentDow, meals: snapshot.meals }];
+        }
+      }
 
       // 🛡️ ASSERT: Auditoria de hierarquia durante a hidratação do Snapshot
       daysToHydrate.forEach((dayNode: any) => {
