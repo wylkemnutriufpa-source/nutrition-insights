@@ -199,12 +199,7 @@ export default function NextMealWidget() {
             </span>
           </div>
           
-          {(totalsStatus === "incomplete" || nextMeal.total_kcal === 0) && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/5 rounded-lg border border-amber-500/10">
-              <Clock className="w-3 h-3 text-amber-500 animate-pulse" />
-              <span className="text-[9px] text-amber-600 font-medium">Sincronizando macros...</span>
-            </div>
-          )}
+          {/* Status de sincronização removido para evitar que o app do paciente "pense" */}
         </div>
       </motion.div>
     </Link>
