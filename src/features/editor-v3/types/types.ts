@@ -19,11 +19,11 @@ export interface Food {
   protein_100g?: number;
   carb_100g?: number;
   fat_100g?: number;
-  portionValue: number;
-  portionUnitLabel: string;
+  portionValue?: number;
+  portionUnitLabel?: string;
   portionUnit?: string; // Keep for backward compatibility
   portionLabel?: string; // Keep for backward compatibility
-  measurementType: 'unit' | 'gram' | 'spoon' | 'ml';
+  measurementType?: 'unit' | 'gram' | 'spoon' | 'ml';
   category?: string;
   isMarmita?: boolean;
   locked?: boolean;
