@@ -367,48 +367,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   /**
    * Sugestões inteligentes baseadas no delta de macros
    */
+  /** Sugestões inteligentes baseadas no delta de macros REMOVIDAS do Patient App */
   const getSmartSuggestions = (delta: { protein: number; carbs: number; fat: number }) => {
-    const suggestions: { label: string; action: () => void; icon: React.ReactNode }[] = [];
-    const currentVisual = calculateVisualMacrosFromDescription(meal.description || "");
-    
-    // Helper para preparar sugestão com preview
-    const prepareSuggestion = (name: string, portion: string, label: string) => {
-      const newLine = `• ${name} — ${portion}`;
-      const newDescription = rebuildDescription([...foodLines, newLine], substitutionLines);
-      const afterMacros = calculateVisualMacrosFromDescription(newDescription);
-      
-      setPendingSuggestion({
-        name,
-        portion,
-        before: currentVisual,
-        after: afterMacros
-      });
-    };
-
-    // Proteína Baixa
-    if (delta.protein < -5) {
-      suggestions.push({
-        label: `+${Math.abs(Math.round(delta.protein * 4))}g de Frango`,
-        icon: <Beef className="w-3 h-3 text-red-500" />,
-        action: () => prepareSuggestion("Frango Grelhado", `${Math.abs(Math.round(delta.protein * 4))}g`, "Frango")
-      });
-      suggestions.push({
-        label: "+1 Ovo Cozido",
-        icon: <Beef className="w-3 h-3 text-red-500" />,
-        action: () => prepareSuggestion("Ovo Cozido", "1 unidade", "Ovo")
-      });
-    }
-    
-    // Carboidrato Baixo
-    if (delta.carbs < -10) {
-      suggestions.push({
-        label: `+${Math.abs(Math.round(delta.carbs * 5))}g de Arroz`,
-        icon: <Wheat className="w-3 h-3 text-amber-500" />,
-        action: () => prepareSuggestion("Arroz Branco", `${Math.abs(Math.round(delta.carbs * 5))}g`, "Arroz")
-      });
-    }
-
-    return suggestions.slice(0, 3);
+    return [];
   };
 
   const confirmSuggestion = async () => {
