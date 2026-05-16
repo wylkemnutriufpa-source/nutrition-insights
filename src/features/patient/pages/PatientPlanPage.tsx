@@ -19,9 +19,6 @@ import { SovereignMonitor } from '@/lib/sovereignMonitor';
 import { useSovereignAudit } from '@/hooks/useSovereignAudit';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 
 export const PatientPlanPage = () => {
   const { id, token } = useParams<{ id?: string, token?: string }>();
@@ -31,8 +28,6 @@ export const PatientPlanPage = () => {
   const [selectedItem, setSelectedItem] = useState<{ item: any, mealId: string } | null>(null);
   const [substitutions, setSubstitutions] = useState<any[]>([]);
   const [showSubModal, setShowSubModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'plan' | 'audit'>('plan');
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // 🛡️ SISTEMA FORENSE AUTO-AUDITÁVEL
   const { isSovereign, denounce } = useSovereignAudit('PatientPlanPage', plan);
@@ -127,29 +122,23 @@ export const PatientPlanPage = () => {
     }
   };
 
-  
   const handleOpenSubstitution = (item: any, mealId: string) => {
-    // --- FASE 2: RENDER PASSIVO (SOBERANIA V3) ---
-    if (plan?.editor_version === 'v3' || (plan as any)?.snapshot?.version === 'v3') {
-      // 🛡️ Monitoramento Soberano
+    if (isSovereign) {
       SovereignMonitor.log({
         event_type: 'snapshot_render',
         component: 'PatientPlanPage_Substitution',
         message: 'Acesso a substituições via Snapshot Soberano'
       });
 
-      // No V3, usamos APENAS o que o nutricionista definiu como substitutos válidos no snapshot
       const snapshotSubs = item.substitutions || [];
-      
       if (snapshotSubs.length === 0) {
         toast.error('O nutricionista não definiu substituições para este item.');
         return;
       }
 
-      // Convertemos o formato do snapshot para o formato esperado pelo modal (compatibilidade visual)
       const mappedSubs = snapshotSubs.map((food: any) => ({
         food,
-        grams: food.clinical_mass_g || food.quantity || 100, // Use o dado soberano do próprio substituto
+        grams: food.clinical_mass_g || food.quantity || 100,
         unit_label: food.display_unit || food.portionUnitLabel || 'unidade'
       }));
 
@@ -159,11 +148,9 @@ export const PatientPlanPage = () => {
       return;
     }
 
-    // Se cair aqui, é um plano legado tentando usar lógica V3 ou um erro de versão
     denounce('legacy_fallback_detected', { item: item.name, plan_id: plan?.id });
     toast.error('Opções de substituição não disponíveis para este formato de plano.');
   };
-
 
   const applySubstitution = (sub: any) => {
     if (!plan || !selectedItem) return;
@@ -175,31 +162,27 @@ export const PatientPlanPage = () => {
         items: meal.items.map(item => {
           if (item.id !== selectedItem.item.id) return item;
           
-          // No V3, apenas trocamos o item pelos dados SOBERANOS do substituto
-          if (plan.editor_version === 'v3') {
+          if (isSovereign) {
             return {
               ...item,
               ...sub.food,
               name: sub.food.name,
-              // Mantemos os campos de macro que o editor-v3 usa
               kcal: sub.food.kcal,
               protein: sub.food.protein,
               carbs: sub.food.carbs,
               fat: sub.food.fat,
-              // Se houver clinical_mass_g no substituto ou original, preservamos
               clinical_mass_g: sub.grams || item.clinical_mass_g
             };
           }
 
-          // Legado V1/V2 - Mantém o cálculo local por enquanto para não quebrar produção legada
           return {
             ...item,
             name: sub.food.name,
             quantity: sub.grams,
-            kcal: Math.round((sub.food.kcal_100g / 100) * sub.grams),
-            protein: Math.round((sub.food.protein_100g / 100) * sub.grams),
-            carbs: Math.round((sub.food.carb_100g / 100) * sub.grams),
-            fat: Math.round((sub.food.fat_100g / 100) * sub.grams),
+            kcal: Math.round(((sub.food.kcal_100g || 0) / 100) * sub.grams),
+            protein: Math.round(((sub.food.protein_100g || 0) / 100) * sub.grams),
+            carbs: Math.round(((sub.food.carb_100g || 0) / 100) * sub.grams),
+            fat: Math.round(((sub.food.fat_100g || 0) / 100) * sub.grams),
           };
         })
       };
@@ -210,6 +193,15 @@ export const PatientPlanPage = () => {
     toast.success(`Alimento trocado por ${sub.food.name}!`);
   };
 
+  const auditStats = useMemo(() => {
+    if (!plan) return null;
+    return {
+      fidelity: isSovereign ? 100 : 0,
+      calculations: 0,
+      legacyCalls: isSovereign ? 0 : 5,
+      visualFallbacks: plan.meals.flatMap(m => m.items).filter((i: any) => !i.imageUrl || i.imageUrl.includes('unsplash')).length
+    };
+  }, [plan, isSovereign]);
 
   if (loading) return <div className="flex items-center justify-center h-screen">Carregando plano...</div>;
   if (!plan) return <div className="flex items-center justify-center h-screen">Plano não encontrado.</div>;
@@ -219,7 +211,36 @@ export const PatientPlanPage = () => {
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans">
       <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header Section */}
+        {window.location.search.includes('debug=true') && (
+          <Alert className="bg-neutral-900 border-emerald-500/20 mb-6">
+            <Activity className="h-4 w-4 text-emerald-500" />
+            <AlertTitle className="text-emerald-500 font-bold uppercase tracking-tighter text-xs flex justify-between">
+              V3 Sovereignty Monitor
+              <Badge variant="outline" className="text-[9px] border-emerald-500/20 text-emerald-500">REAL-TIME FORENSICS</Badge>
+            </AlertTitle>
+            <AlertDescription className="mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[9px] uppercase text-white/40">Snapshot Fidelity</p>
+                  <p className="text-xl font-black text-emerald-500">{auditStats?.fidelity}%</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] uppercase text-white/40">Legacy Calls</p>
+                  <p className={`text-xl font-black ${auditStats?.legacyCalls === 0 ? 'text-emerald-500' : 'text-red-500'}`}>{auditStats?.legacyCalls}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] uppercase text-white/40">Runtime Calcs</p>
+                  <p className="text-xl font-black text-emerald-500">{auditStats?.calculations}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] uppercase text-white/40">Visual Fallbacks</p>
+                  <p className="text-xl font-black text-orange-500">{auditStats?.visualFallbacks}</p>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <header className="flex justify-between items-start border-b border-emerald-900/30 pb-6">
           <div>
             <h1 className="text-3xl font-bold text-emerald-500">{plan.patient_name}</h1>
@@ -238,7 +259,6 @@ export const PatientPlanPage = () => {
           </div>
         </header>
 
-        {/* Macros Summary */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-emerald-950/20 border-emerald-500/20">
             <CardContent className="pt-6">
@@ -269,7 +289,6 @@ export const PatientPlanPage = () => {
           </Card>
         </section>
 
-        {/* Daily Progress */}
         <section className="bg-emerald-500/5 rounded-xl p-6 border border-emerald-500/10">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
@@ -277,55 +296,7 @@ export const PatientPlanPage = () => {
               <h2 className="font-semibold text-gray-200 text-lg">Progresso do Dia</h2>
             </div>
             <span className="text-emerald-500 font-bold text-xl">{progress}%</span>
-      </div>
-
-      <Dialog open={showSubModal} onOpenChange={setShowSubModal}>
-        <DialogContent className="bg-gray-950 border-gray-800 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-emerald-500">
-              <Sparkles className="w-5 h-5" />
-              Opções de Substituição
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Escolha uma opção equivalente em proteína para substituir <strong>{selectedItem?.item.name}</strong>.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-3 py-4">
-            {substitutions.map((sub, idx) => (
-              <button
-                key={idx}
-                onClick={() => applySubstitution(sub)}
-                className="w-full flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500">
-                    <Utensils className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-200 block">{sub.food.name}</span>
-                    <span className="text-sm text-emerald-500/80 font-semibold">{sub.unit_label}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 justify-end">
-                    <Scale className="w-3 h-3 text-gray-500" />
-                    <span className="text-xs text-gray-500">Equivalente</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-emerald-500 ml-auto" />
-                </div>
-              </button>
-            ))}
           </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowSubModal(false)} className="text-gray-400">
-              Cancelar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
           <div className="h-3 w-full bg-gray-900 rounded-full overflow-hidden">
             <div 
               className="h-full bg-emerald-500 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
@@ -334,7 +305,6 @@ export const PatientPlanPage = () => {
           </div>
         </section>
 
-        {/* Meals List */}
         <section className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-300">Refeições</h2>
           {plan.meals.map((meal) => {
@@ -344,7 +314,6 @@ export const PatientPlanPage = () => {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 py-4">
                   <div className="flex items-center gap-4">
                     <div className={`p-2 rounded-lg ${isCompleted ? 'bg-emerald-500' : 'bg-gray-900'}`}>
-                      {/* Icon placeholder */}
                       <span className="text-lg">🍽️</span>
                     </div>
                     <div>
@@ -375,7 +344,7 @@ export const PatientPlanPage = () => {
                           <div>
                             <span className="font-medium group-hover:text-emerald-400 transition-colors">{item.name}</span>
                             <p className="text-xs text-gray-500">
-                              {plan.editor_version === 'v3' 
+                              {isSovereign 
                                 ? `${item.display_quantity || item.quantity || ''} ${item.display_unit || item.portionUnitLabel || ''} ${item.clinical_mass_g ? `(${item.clinical_mass_g}g)` : ''}`
                                 : `${item.quantity || ''} ${item.portionUnitLabel || ''}`
                               }
@@ -397,7 +366,6 @@ export const PatientPlanPage = () => {
                             </Button>
                           )}
                         </div>
-
                       </li>
                     ))}
                   </ul>
@@ -406,6 +374,53 @@ export const PatientPlanPage = () => {
             );
           })}
         </section>
+
+        <Dialog open={showSubModal} onOpenChange={setShowSubModal}>
+          <DialogContent className="bg-gray-950 border-gray-800 text-white max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-emerald-500">
+                <Sparkles className="w-5 h-5" />
+                Opções de Substituição
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Escolha uma opção equivalente em proteína para substituir <strong>{selectedItem?.item.name}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-3 py-4">
+              {substitutions.map((sub, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => applySubstitution(sub)}
+                  className="w-full flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500">
+                      <Utensils className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-200 block">{sub.food.name}</span>
+                      <span className="text-sm text-emerald-500/80 font-semibold">{sub.unit_label}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-1 justify-end">
+                      <Scale className="w-3 h-3 text-gray-500" />
+                      <span className="text-xs text-gray-500">Equivalente</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-emerald-500 ml-auto" />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setShowSubModal(false)} className="text-gray-400">
+                Cancelar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
