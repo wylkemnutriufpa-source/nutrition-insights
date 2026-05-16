@@ -40,7 +40,7 @@ export default function NextMealWidget() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const [nextMeal, setNextMeal] = useState<(MealSlot & { isNow?: boolean }) | null>(null);
-  const [totalsStatus, setTotalsStatus] = useState<string>("ok");
+  // totalsStatus removido: O paciente não precisa saber de estados internos de cálculo do editor.
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function NextMealWidget() {
       ).maybeSingle();
 
       if (!plan) { setLoading(false); return; }
-      setTotalsStatus(plan.totals_status || "ok");
+      // totalsStatus ignorado no Patient App
 
       // Get current day of week (0=Sunday, 5=Friday)
       const now_dow = new Date().getDay();
@@ -199,12 +199,7 @@ export default function NextMealWidget() {
             </span>
           </div>
           
-          {(totalsStatus === "incomplete" || nextMeal.total_kcal === 0) && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/5 rounded-lg border border-amber-500/10">
-              <Clock className="w-3 h-3 text-amber-500 animate-pulse" />
-              <span className="text-[9px] text-amber-600 font-medium">Sincronizando macros...</span>
-            </div>
-          )}
+          {/* Status de sincronização removido para evitar que o app do paciente "pense" */}
         </div>
       </motion.div>
     </Link>

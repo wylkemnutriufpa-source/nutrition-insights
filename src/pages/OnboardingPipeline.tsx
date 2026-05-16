@@ -1004,7 +1004,7 @@ export default function OnboardingPipeline() {
                           {activeJob?.current_step || "Iniciando"}...
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          O Protocolo FitJourney está calculando sua estratégia nutricional.
+                          Aguardando a liberação do seu plano alimentar pelo profissional.
                         </p>
                       </div>
 

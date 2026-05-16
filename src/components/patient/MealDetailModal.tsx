@@ -367,48 +367,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   /**
    * Sugestões inteligentes baseadas no delta de macros
    */
+  /** Sugestões inteligentes baseadas no delta de macros REMOVIDAS do Patient App */
   const getSmartSuggestions = (delta: { protein: number; carbs: number; fat: number }) => {
-    const suggestions: { label: string; action: () => void; icon: React.ReactNode }[] = [];
-    const currentVisual = calculateVisualMacrosFromDescription(meal.description || "");
-    
-    // Helper para preparar sugestão com preview
-    const prepareSuggestion = (name: string, portion: string, label: string) => {
-      const newLine = `• ${name} — ${portion}`;
-      const newDescription = rebuildDescription([...foodLines, newLine], substitutionLines);
-      const afterMacros = calculateVisualMacrosFromDescription(newDescription);
-      
-      setPendingSuggestion({
-        name,
-        portion,
-        before: currentVisual,
-        after: afterMacros
-      });
-    };
-
-    // Proteína Baixa
-    if (delta.protein < -5) {
-      suggestions.push({
-        label: `+${Math.abs(Math.round(delta.protein * 4))}g de Frango`,
-        icon: <Beef className="w-3 h-3 text-red-500" />,
-        action: () => prepareSuggestion("Frango Grelhado", `${Math.abs(Math.round(delta.protein * 4))}g`, "Frango")
-      });
-      suggestions.push({
-        label: "+1 Ovo Cozido",
-        icon: <Beef className="w-3 h-3 text-red-500" />,
-        action: () => prepareSuggestion("Ovo Cozido", "1 unidade", "Ovo")
-      });
-    }
-    
-    // Carboidrato Baixo
-    if (delta.carbs < -10) {
-      suggestions.push({
-        label: `+${Math.abs(Math.round(delta.carbs * 5))}g de Arroz`,
-        icon: <Wheat className="w-3 h-3 text-amber-500" />,
-        action: () => prepareSuggestion("Arroz Branco", `${Math.abs(Math.round(delta.carbs * 5))}g`, "Arroz")
-      });
-    }
-
-    return suggestions.slice(0, 3);
+    return [];
   };
 
   const confirmSuggestion = async () => {
@@ -430,16 +391,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         // O versionamento e auditoria agora ocorrem via Trigger no DB
         onUpdateItem(meal.itemId, { description: newDescription });
         
-        // Verificação pós-persistência (Detecção de Falha Silenciosa)
-        const { data: verifiedItem, error: fetchError } = await supabase
-          .from("meal_plan_items")
-          .select("description")
-          .eq("id", meal.itemId)
-          .single();
-          
-        if (fetchError || verifiedItem.description !== newDescription) {
-          throw new Error("Divergência de persistência detectada.");
-        }
+        // Auditoria Pós-Persistência Removida (Patient App é passivo)
+        toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
 
         toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
       } catch (err: any) {
@@ -489,36 +442,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
    * Esta função é usada APENAS para VALIDAÇÃO VISUAL (Frontend Guard).
    */
   const calculateVisualMacrosFromDescription = (description: string) => {
-    const { foodLines } = parseDescriptionLines(description);
-    let totalCal = 0, totalProt = 0, totalCarb = 0, totalFat = 0;
-    
-    foodLines.forEach(line => {
-      const content = line.startsWith("•") ? line.slice(1).trim() : line;
-      const name = content.split("—")[0]?.trim() || content;
-      const match = findFoodInDatabase(name);
-      if (match) {
-        const portionMatch = content.match(/—\s*(\d+)\s*g/i);
-        const dbPortionMatch = match.portion.match(/(\d+)\s*g/i);
-        
-        let scale = 1;
-        if (portionMatch && dbPortionMatch) {
-          const grams = parseInt(portionMatch[1]);
-          const dbGrams = parseInt(dbPortionMatch[1]);
-          if (dbGrams > 0) scale = grams / dbGrams;
-        }
-
-        totalCal += match.calories * scale;
-        totalProt += match.protein * scale;
-        totalCarb += match.carbs * scale;
-        totalFat += match.fat * scale;
-      }
-    });
-
     return {
-      calories: Math.round(totalCal),
-      protein: Math.round(totalProt),
-      carbs: Math.round(totalCarb),
-      fat: Math.round(totalFat),
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
     };
   };
   // Fetch visual library images when picker opens
