@@ -225,6 +225,20 @@ export const useEditorState = create<EditorState>()(
           return { ...meal, items: updatedItems };
         });
         set({ meals: updatedMeals });
+      },
+
+      updateMealItemName: (mealId, itemInstanceId, name) => {
+        const { meals } = get();
+        const updatedMeals = meals.map(meal => {
+          if (meal.id !== mealId) return meal;
+          return {
+            ...meal,
+            items: meal.items.map(item => 
+              item.instanceId === itemInstanceId ? { ...item, name } : item
+            )
+          };
+        });
+        set({ meals: updatedMeals });
       }
     }),
 
