@@ -143,7 +143,7 @@ export default function EditorV3Page() {
                         fat: (sub.fat || 0) * (neededQty / 100),
                         substitutions: item.substitutions,
                         // GARANTIA VISUAL: Mantém imagem do substituto
-                        imageUrl: sub.imageUrl || sub.image_url || null
+                        imageUrl: sub.imageUrl || (sub as any).image_url || null
                       } as any;
                     }
                   }
