@@ -17,32 +17,145 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
   {
     id: 't1',
     slug: 'hipertrofia',
-    title: 'Hipertrofia',
+    title: 'Hipertrofia 2500 kcal',
     description: 'Foco em ganho de massa muscular com estrutura fisiológica e alimentos reais.',
     template_type: 'visual_v3',
     objective: 'hipertrofia',
     family: 'hipertrofia',
     meal_distribution: [
       { slot: 'cafe_da_manha', time: '07:00' },
-      { slot: 'lanche_da_manha', time: '10:00' },
-      { slot: 'almoço', time: '13:00' },
+      { slot: 'almoco', time: '13:00' },
       { slot: 'lanche_da_tarde', time: '16:00' },
-      { slot: 'jantar', time: '20:00' },
-      { slot: 'ceia', time: '22:30' }
+      { slot: 'jantar', time: '20:00' }
     ],
     cluster_map: {
       'cafe_da_manha': 'cafe_tradicional',
-      'lanche_da_manha': 'lanche_pratico',
-      'almoço': 'almoco_tradicional',
+      'almoco': 'almoco_tradicional',
       'lanche_da_tarde': 'lanche_proteico',
-      'jantar': 'jantar_leve',
-      'ceia': 'lanche_leve'
+      'jantar': 'jantar_leve'
     },
-    kcal_profiles: KCAL_PROFILES,
+    kcal_profiles: [2500],
     visual_style: 'clean',
     substitutions_enabled: true,
     editable: true,
-    active: true
+    active: true,
+    plan_snapshot: {
+      "2500": {
+        meals: [
+          {
+            id: 'm1',
+            name: 'Café da Manhã',
+            time: '07:00',
+            day_of_week: 1,
+            items: [
+              {
+                id: 'i1',
+                instanceId: 'i1-1',
+                name: 'Pão Integral',
+                quantity: 2,
+                clinical_mass_g: 50,
+                kcal: 140,
+                protein: 6,
+                carbs: 25,
+                fat: 2,
+                substitutions: [],
+                portionValue: 1,
+                portionUnitLabel: 'fatia',
+                measurementType: 'unit'
+              },
+              {
+                id: 'i2',
+                instanceId: 'i2-1',
+                name: 'Ovo Mexido',
+                quantity: 3,
+                clinical_mass_g: 150,
+                kcal: 210,
+                protein: 18,
+                carbs: 2,
+                fat: 15,
+                substitutions: [],
+                portionValue: 1,
+                portionUnitLabel: 'unid',
+                measurementType: 'unit'
+              }
+            ]
+          },
+          {
+            id: 'm2',
+            name: 'Almoço',
+            time: '13:00',
+            day_of_week: 1,
+            items: [
+              {
+                id: 'i3',
+                instanceId: 'i3-1',
+                name: 'Arroz Branco',
+                quantity: 120,
+                clinical_mass_g: 120,
+                kcal: 156,
+                protein: 3,
+                carbs: 34,
+                fat: 0.3,
+                substitutions: [
+                  { id: 'sub1', name: 'Macarrão Integral', kcal: 156, protein: 5, carbs: 30, fat: 1, quantity: 100, clinical_mass_g: 100 }
+                ],
+                portionValue: 100,
+                portionUnitLabel: 'g',
+                measurementType: 'gram'
+              },
+              {
+                id: 'i4',
+                instanceId: 'i4-1',
+                name: 'Feijão Carioca',
+                quantity: 100,
+                clinical_mass_g: 100,
+                kcal: 76,
+                protein: 5,
+                carbs: 14,
+                fat: 0.5,
+                substitutions: [],
+                portionValue: 100,
+                portionUnitLabel: 'g',
+                measurementType: 'gram'
+              },
+              {
+                id: 'i5',
+                instanceId: 'i5-1',
+                name: 'Frango Grelhado',
+                quantity: 150,
+                clinical_mass_g: 150,
+                kcal: 240,
+                protein: 45,
+                carbs: 0,
+                fat: 6,
+                substitutions: [
+                  { id: 'sub2', name: 'Patinho Moído', kcal: 240, protein: 42, carbs: 0, fat: 8, quantity: 150, clinical_mass_g: 150 },
+                  { id: 'sub3', name: 'Tilápia Grelhada', kcal: 240, protein: 48, carbs: 0, fat: 4, quantity: 180, clinical_mass_g: 180 }
+                ],
+                portionValue: 100,
+                portionUnitLabel: 'g',
+                measurementType: 'gram'
+              },
+              {
+                id: 'i6',
+                instanceId: 'i6-1',
+                name: 'Salada Variada',
+                quantity: 80,
+                clinical_mass_g: 80,
+                kcal: 25,
+                protein: 1,
+                carbs: 4,
+                fat: 0,
+                substitutions: [],
+                portionValue: 100,
+                portionUnitLabel: 'g',
+                measurementType: 'gram'
+              }
+            ]
+          }
+        ]
+      }
+    }
   },
   {
     id: 't2',
