@@ -39,22 +39,20 @@ export const MealCard: React.FC<MealCardProps> = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="bg-neutral-900/60 border border-white/5 rounded-[3rem] overflow-hidden backdrop-blur-2xl group/meal hover:bg-neutral-900/80 hover:border-emerald-500/30 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer ring-offset-neutral-950 focus:ring-2 focus:ring-emerald-500/50">
+        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-2xl group/meal hover:bg-neutral-900/80 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer focus:ring-2 focus:ring-emerald-500/50">
           {/* Header */}
-          <div className="p-10 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
-            <div className="flex items-center gap-8">
-              <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-105 group-hover/meal:bg-emerald-500/20 group-hover/meal:border-emerald-500/40 transition-all duration-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
-                <Utensils className="w-8 h-8" />
+          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-105 transition-all shadow-inner">
+                <Utensils className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors duration-500">
+                <h3 className="text-lg font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors duration-300">
                   {meal.name}
                 </h3>
-                <div className="flex items-center gap-2.5 mt-1.5">
-                  <Clock className="w-3.5 h-3.5 text-white/20" />
-                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/20">{meal.time || '08:00'}</span>
-                  <div className="w-1 h-1 rounded-full bg-white/10" />
-                  <Badge variant="outline" className="text-[8px] uppercase font-black border-white/10 text-white/30 px-2 py-0">Refeição Principal</Badge>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Clock className="w-3 h-3 text-white/20" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white/20">{meal.time || '08:00'}</span>
                 </div>
               </div>
             </div>
@@ -75,51 +73,49 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
 
           {/* Quick View Items */}
-          <div className="p-8 space-y-2">
-            {meal.items.slice(0, 3).map((item) => (
-              <div key={item.instanceId} className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
-                <span>{item.name}</span>
-                <span>{Math.round(item.kcal)} kcal</span>
+          <div className="p-6 space-y-1">
+            {meal.items.slice(0, 4).map((item) => (
+              <div key={item.instanceId} className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-white/40">
+                <span className="truncate pr-4">{item.name}</span>
+                <span className="flex-shrink-0">{Math.round(item.kcal)} kcal</span>
               </div>
             ))}
-            {meal.items.length > 3 && (
-              <p className="text-[9px] font-black text-emerald-500/50 mt-2 uppercase tracking-[0.2em]">+{meal.items.length - 3} itens adicionais</p>
+            {meal.items.length > 4 && (
+              <p className="text-[8px] font-black text-emerald-500/50 mt-1 uppercase tracking-widest">+{meal.items.length - 4} itens</p>
             )}
             {meal.items.length === 0 && (
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/10 py-4 text-center">Refeição Vazia</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/10 py-2 text-center">Refeição Vazia</p>
             )}
           </div>
 
           {/* Footer Macros */}
-          <div className="px-10 py-6 bg-white/[0.01] border-t border-white/5 grid grid-cols-3 gap-8">
+          <div className="px-6 py-4 bg-white/[0.01] border-t border-white/5 grid grid-cols-3 gap-4">
             <div className="text-center">
-              <p className="text-sm font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
-              <p className="text-[8px] uppercase font-black tracking-widest text-white/10">Proteína</p>
+              <p className="text-xs font-black text-emerald-500">{Math.round(mealTotals.protein)}g</p>
+              <p className="text-[7px] uppercase font-black text-white/10">Prot</p>
             </div>
             <div className="text-center">
-              <p className="text-sm font-black text-blue-400">{Math.round(mealTotals.carbs)}g</p>
-              <p className="text-[8px] uppercase font-black tracking-widest text-white/10">Carbo</p>
+              <p className="text-xs font-black text-blue-400">{Math.round(mealTotals.carbs)}g</p>
+              <p className="text-[7px] uppercase font-black text-white/10">Carb</p>
             </div>
             <div className="text-center">
-              <p className="text-sm font-black text-amber-400">{Math.round(mealTotals.fat)}g</p>
-              <p className="text-[8px] uppercase font-black tracking-widest text-white/10">Gordura</p>
+              <p className="text-xs font-black text-amber-400">{Math.round(mealTotals.fat)}g</p>
+              <p className="text-[7px] uppercase font-black text-white/10">Gord</p>
             </div>
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl bg-neutral-950 border-white/10 text-white rounded-[2rem] p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="max-w-xl bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
         {/* Header Modal */}
-        <div className="p-6 md:p-8 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
-          <div className="flex items-center gap-4 md:gap-6">
-            <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.2rem] md:rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-              <Utensils className="w-6 h-6 md:w-8 md:h-8" />
+        <div className="p-5 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+              <Utensils className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter text-white">Gerenciar Refeição</h3>
-              <div className="flex items-center gap-3 mt-1.5">
-                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">{meal.name}</span>
-                <div className="w-1 h-1 rounded-full bg-white/10" />
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/20">Editor de Itens e Substituições</p>
+              <h3 className="text-lg font-black uppercase italic tracking-tighter text-white">Editar Refeição</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">{meal.name}</span>
               </div>
             </div>
           </div>
