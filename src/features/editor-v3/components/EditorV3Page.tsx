@@ -370,10 +370,11 @@ export default function EditorV3Page() {
     try {
       // In a real implementation, we would persist store.meals to the DB
       // For now, let's simulate and update the metadata
+      // Check if items_payload or snapshot should be used
       const { error } = await supabase
         .from('meal_plans')
         .update({
-          items_payload: { meals: store.meals },
+          snapshot: { meals: store.meals },
           total_meta_calorias: Math.round(planTotals.kcal),
           total_meta_proteinas: Math.round(planTotals.protein),
           total_meta_carboidratos: Math.round(planTotals.carbs),
