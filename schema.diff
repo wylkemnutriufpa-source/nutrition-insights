@@ -1,18 +1,52 @@
 {
-  "summary": "Summary:",
+  "summary": "Summary:\nColumns:\n+ meal_plan_items.meta_calorias\n+ meal_plan_items.meta_carboidratos\n+ meal_plan_items.meta_gorduras\n+ meal_plan_items.meta_proteinas\n+ meal_plan_items.tipo_refeicao\n+ meal_plans.global_meta_calorias\n+ meal_plans.global_meta_carboidratos\n+ meal_plans.global_meta_gorduras\n+ meal_plans.global_meta_proteinas\n+ meal_plans.total_meta_calorias\n+ meal_plans.total_meta_carboidratos\n+ meal_plans.total_meta_gorduras\n+ meal_plans.total_meta_proteinas\n- meal_plan_items.calories_target\n- meal_plan_items.carbs_target\n- meal_plan_items.fat_target\n- meal_plan_items.meal_type\n- meal_plan_items.protein_target\n- meal_plans.global_calories_target\n- meal_plans.global_carbs_target\n- meal_plans.global_fat_target\n- meal_plans.global_protein_target\n- meal_plans.total_target_calories\n- meal_plans.total_target_carbs\n- meal_plans.total_target_fat\n- meal_plans.total_target_protein",
   "details": {
-    "timestamp": "2026-05-15T16:23:48.702Z",
-    "duration": "0.1s",
-    "lastSnapshotMigration": "20260514150348_8567b7bc-49b2-407b-92d7-03ad865402c7.sql",
-    "lastActualMigration": "20260515153116_84df69f2-9aca-4e2c-8d02-5d7ae4453486.sql",
+    "timestamp": "2026-05-16T10:03:24.373Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260515153116_84df69f2-9aca-4e2c-8d02-5d7ae4453486.sql",
+    "lastActualMigration": "20260516021426_d36a42c4-7a4a-435e-99bb-09db5512af9e.sql",
     "missingMigrations": [
-      "20260514212822_195763cf-c098-40de-99a4-8dde7fe6e65b.sql",
-      "20260514212849_2bd312a2-4b33-4261-9424-342c3132aa3f.sql",
-      "20260514220256_4fd24ca5-9224-418d-b743-ec6be5960675.sql",
-      "20260515132631_7960848f-8892-4a51-b871-df827594585c.sql",
-      "20260515142817_839206fb-c62b-4463-bf86-da740f00731e.sql",
-      "20260515153116_84df69f2-9aca-4e2c-8d02-5d7ae4453486.sql"
+      "20260515163501_f825847c-31c7-4450-9d3d-c6ac673585f6.sql",
+      "20260515164243_407d9463-ba17-49e1-b415-2ced136b7eac.sql",
+      "20260515174445_e6f40b6c-ab29-4642-93ba-6a96453c21bd.sql",
+      "20260515174613_3535b61e-7a29-4e31-8586-a4ad20b76561.sql",
+      "20260515174640_87816e1c-9c7c-46e4-bc70-cd11b6145230.sql",
+      "20260515174712_01694a48-a6aa-489f-9e66-5f756b7d6336.sql",
+      "20260515180556_7ad28668-69b0-4d56-9577-3c58cd51aac2.sql",
+      "20260515180658_638042ab-f603-4cf2-8bce-8bf19c5305ff.sql",
+      "20260515180743_89d91df9-114b-40d3-acce-294dbeb1c2a8.sql",
+      "20260515191114_f25021e8-e0ae-4705-9dea-6a2fc7768785.sql",
+      "20260515191201_c070c4b0-80fd-4cfc-9758-33f3ce32e81b.sql",
+      "20260515191243_7d004a85-d62b-4cb0-a1f8-dbea34a18367.sql",
+      "20260515205923_15622d6b-5384-4d7d-b37f-f675c0cbef93.sql",
+      "20260515210233_6900bec4-72af-41ea-a52c-cc97e1b6dbea.sql",
+      "20260515220555_78b49bce-c438-4c9e-9bc2-e1230fe3f71f.sql",
+      "20260516015407_59b9febe-3f7d-41a3-bb5c-782574e94169.sql",
+      "20260516021244_b5644b13-3ffc-4f7c-8d64-ea2cb044e17c.sql",
+      "20260516021335_7755df21-ea75-4183-ad04-17d83c7ed917.sql",
+      "20260516021426_d36a42c4-7a4a-435e-99bb-09db5512af9e.sql"
     ],
-    "diffResults": []
+    "diffResults": [
+      {
+        "table": "meal_plan_items",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "meta_calorias, meta_carboidratos, meta_gorduras, meta_proteinas, tipo_refeicao"
+      },
+      {
+        "table": "meal_plan_items",
+        "type": "EXTRA_IN_SNAPSHOT",
+        "columns": "calories_target, carbs_target, fat_target, meal_type, protein_target"
+      },
+      {
+        "table": "meal_plans",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "global_meta_calorias, global_meta_carboidratos, global_meta_gorduras, global_meta_proteinas, total_meta_calorias, total_meta_carboidratos, total_meta_gorduras, total_meta_proteinas"
+      },
+      {
+        "table": "meal_plans",
+        "type": "EXTRA_IN_SNAPSHOT",
+        "columns": "global_calories_target, global_carbs_target, global_fat_target, global_protein_target, total_target_calories, total_target_carbs, total_target_fat, total_target_protein"
+      }
+    ]
   }
 }
