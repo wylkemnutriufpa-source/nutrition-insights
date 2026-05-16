@@ -51,6 +51,18 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
       const subject = `Seu Plano Alimentar - ${data?.patientName ?? ""}`.trim();
       const message = `Olá${data?.patientName ? `, ${data.patientName}` : ""}! Aqui está seu plano alimentar: ${url}`;
 
+      // Registro de Auditoria (Opcional, mas garante o fechamento do ciclo)
+      try {
+        await supabase.from('audit_exports_log').insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          export_format: mode.toUpperCase(),
+          record_count: data?.items?.length || 0,
+          filter_params: { type: 'share_external', mode }
+        });
+      } catch (auditErr) {
+        console.warn("Falha silenciosa no log de auditoria:", auditErr);
+      }
+
       if (mode === "link") {
         const success = await copyToClipboard(url);
         if (success) {
@@ -72,7 +84,7 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
         const phone = contact.replace(/\D/g, "");
         const wa = phone
           ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
-          : `https://wa.me/?text=${encodeURIComponent(message)}`;
+          : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
         window.open(wa, "_blank");
         toast.success("Abrindo WhatsApp...");
       }
