@@ -278,7 +278,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     // Unsplash Source está instável/depreciado. Redirecionando para featured images temáticas.
     if (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured")) {
       const query = meal?.title || "alimento saudável";
-      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${meal.itemId || meal.title}`;
     }
     return raw;
   }, [meal?.image_url, (meal as any).imageUrl, meal?.title]);
@@ -574,7 +574,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!rawImageUrl) return null;
     if (rawImageUrl.includes("source.unsplash.com") || rawImageUrl.includes("images.unsplash.com/featured")) {
       const query = meal.title || "alimento saudável";
-      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${meal.itemId || meal.title}`;
     }
     return rawImageUrl;
   }, [rawImageUrl, meal.title]);

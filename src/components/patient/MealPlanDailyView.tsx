@@ -262,7 +262,7 @@ const MealItemCard = memo(function MealItemCard({
     // SOBERANIA V3: Fix Unsplash deprecated source endpoint and resolution
     if (raw && (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured"))) {
       const query = item.title || "saudável";
-      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+      return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${item.id}`;
     }
     return raw;
   }, [item.image_url, (item as any).imageUrl, item.title, signedFallback]);
