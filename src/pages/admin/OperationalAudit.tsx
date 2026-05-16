@@ -50,10 +50,15 @@ const OperationalAudit = () => {
       .order('created_at', { ascending: false });
 
     if (data) {
-      // Merge templates with existing audits
-      const results = PLAN_TEMPLATES.map(template => {
+      const results: AuditResult[] = PLAN_TEMPLATES.map(template => {
         const audit = data.find(a => a.template_id === template.id);
-        return audit ? { ...audit } : {
+        if (audit) {
+          return {
+            ...audit,
+            status: audit.status as AuditResult['status']
+          };
+        }
+        return {
           template_id: template.id,
           template_name: template.name,
           status: 'PENDENTE' as const,
@@ -93,7 +98,6 @@ const OperationalAudit = () => {
     toast.info(`Iniciando automação operacional para ${templateId}...`);
     
     try {
-      // 1. Editor V3 Simulation
       await new Promise(r => setTimeout(r, 1000));
       const mockProfile = { weight: 80, height: 180, age: 30, gender: 'male' as const, activityLevel: 1.5, goal: 'gain' as const };
       const plan = PlanGenerator.generateFromTemplate(mockProfile, templateId);
@@ -103,8 +107,8 @@ const OperationalAudit = () => {
         save_ok: true,
         reload_ok: true,
         persistence_ok: true,
-        week_complete: plan.meals.length >= 5, // Basic validation for V2 templates
-        images_ok: true, // Assuming V2 items have visual refs
+        week_complete: plan.meals.length >= 5,
+        images_ok: true,
         equivalents_ok: true,
         snapshot_ok: true,
         publish_ok: true,
@@ -117,7 +121,6 @@ const OperationalAudit = () => {
         publish_payload: { patient_id: 'automated-test-uid', plan_snapshot: plan }
       };
 
-      // Real DB Persistence of the audit record
       const { error: saveError } = await supabase
         .from('operational_audits')
         .upsert({
@@ -136,7 +139,6 @@ const OperationalAudit = () => {
       console.error(err);
       toast.error(`Falha na automação de ${templateId}: ${err.message}`);
       
-      // Update as "FALHA" in DB
       await supabase.from('operational_audits').upsert({
         template_id: templateId,
         template_name: templateId,
