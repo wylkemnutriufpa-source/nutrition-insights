@@ -48,6 +48,8 @@ interface MealPlanItem {
   image_url?: string | null;
   visual_library_item_id?: string | null;
   is_primary?: boolean;
+  is_substitution?: boolean;
+  substitution_group_id?: string | null;
   // --- SOBERANIA V3 ---
   editor_version?: string;
   display_quantity?: string | number;
@@ -160,35 +162,32 @@ const MacroSummary = memo(function MacroSummary({
   }
 }) {
   const totals = useMemo(() => {
-    const primaryOnly = items.filter(i => {
-      if (i.is_primary === false) return false;
-      if ((i as any).is_substitution === true) return false;
-
-      const lowerTitle = (i.title || "").toLowerCase();
-      const lowerDesc = (i.description || "").toLowerCase();
-      
-      if ((lowerTitle.includes("substitu") || lowerDesc.includes("substitu")) && i.is_primary !== true) return false;
-      
-      return true;
-    });
-    
-    return {
-      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories ?? (i as any).meta_calories ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
-      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein ?? (i as any).protein_g ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
-      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs ?? (i as any).carbs_g ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
-      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat ?? (i as any).fat_g ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
+    // SOBERANIA V3: Se targets já vêm prontos do snapshot, ignoramos qualquer cálculo frontend.
+    if (targets?.calories) return {
+      calories: targets.calories,
+      protein: targets.protein || 0,
+      carbs: targets.carbs || 0,
+      fat: targets.fat || 0
     };
-  }, [items]);
 
-  // SOBERANIA V3: Prioritize targets from plan if available
-  const displayKcal = targets?.calories && targets.calories > 0 ? targets.calories : totals.calories;
-  const displayProtein = targets?.protein && targets.protein > 0 ? targets.protein : totals.protein;
-  const displayCarbs = targets?.carbs && targets.carbs > 0 ? targets.carbs : totals.carbs;
-  const displayFat = targets?.fat && targets.fat > 0 ? targets.fat : totals.fat;
+    // Fallback legado apenas se targets forem nulos
+    const primaryOnly = items.filter(i => i.is_primary !== false && !(i as any).is_substitution);
+    return {
+      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories), 0),
+      protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein), 0),
+      carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs), 0),
+      fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat), 0),
+    };
+  }, [items, targets]);
+
+  const displayKcal = totals.calories;
+  const displayProtein = totals.protein;
+  const displayCarbs = totals.carbs;
+  const displayFat = totals.fat;
 
   const hasData = items.length > 0;
-  // Only show warning if BOTH items sum and plan targets are 0
-  const showCalculating = totalsStatus === 'incomplete' || (displayKcal === 0 && hasData && totalsStatus !== 'ok');
+  // SOBERANIA V3: Se displayKcal > 0, não mostramos 'calculando'. Confiamos no snapshot.
+  const showCalculating = displayKcal === 0 && hasData && totalsStatus !== 'ok';
 
   return (
     <div className="space-y-6">
@@ -249,23 +248,16 @@ const MealItemCard = memo(function MealItemCard({
 }) {
   const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
-  const needsVisualFallback = !item.image_url && !!item.visual_library_item_id;
-  const { item: visualItem } = useMealVisualItem(needsVisualFallback ? item.visual_library_item_id : null);
-  const fallbackImage = visualItem?.image_url || visualItem?.image_path || null;
-  const { url: signedFallback } = useSignedStorageUrl(fallbackImage, {
-    bucket: "meal-images",
-    enabled: !!fallbackImage,
-  });
   const resolvedImage = useMemo(() => {
-    const raw = item.image_url || signedFallback || (item as any).imageUrl || null;
+    const raw = item.image_url || (item as any).imageUrl || null;
     
-    // SOBERANIA V3: Fix Unsplash deprecated source endpoint and resolution
+    // Unsplash Theme Resolution (Soberania V3)
     if (raw && (raw.includes("source.unsplash.com") || raw.includes("images.unsplash.com/featured"))) {
       const query = item.title || "saudável";
       return `https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}&sig=${item.id}`;
     }
     return raw;
-  }, [item.image_url, (item as any).imageUrl, item.title, signedFallback]);
+  }, [item.image_url, (item as any).imageUrl, item.title, item.id]);
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
     : status === "partial" ? "border-amber-500/30 bg-amber-500/5 shadow-inner"
@@ -300,13 +292,6 @@ const MealItemCard = memo(function MealItemCard({
               : status === "not_followed" ? <AlertCircle className="w-7 h-7 text-red-500 drop-shadow-2xl" />
               : null}
           </div>
-          {needsVisualFallback && visualItem && (
-            <div className="absolute bottom-4 left-4">
-              <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-emerald-500/80 text-black backdrop-blur-md">
-                📸 Inspiração Real
-              </span>
-            </div>
-          )}
         </div>
       )}
 
