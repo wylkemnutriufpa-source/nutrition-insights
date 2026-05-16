@@ -208,6 +208,7 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
   const out: DisplayMealPlanItem[] = [];
   for (const item of items) {
     const key = [
+      String(item.day_of_week ?? ""), // SOBERANIA SEMANAL: Incluir o dia na chave de deduplicação
       String(item.tipo_refeicao ?? ""),
       String(item.title ?? "").trim().toLowerCase(),
       isPrimaryMealItem(item) ? "p" : "s",
@@ -220,6 +221,7 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
   }
   return out;
 }
+
 
 export function selectCanonicalDayItems(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
   if (items.length === 0) return [];
