@@ -165,7 +165,17 @@ export const patientService = {
       }
 
       const currentDow = new Date().getDay();
-      const dayData = snapshot.days?.find((d: any) => d.day_of_week === currentDow) || snapshot.days?.[0];
+      // 🛡️ SOBERANIA V3: Tenta encontrar o dia atual no snapshot estruturado
+      const snapshotDays = Array.isArray(snapshot.days) ? snapshot.days : null;
+      let dayData = null;
+      
+      if (snapshotDays) {
+        dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
+      } else if (snapshot.meals && Array.isArray(snapshot.meals)) {
+        // Fallback para quando o snapshot ainda está no formato flat
+        const mealsForDay = snapshot.meals.filter((m: any) => m.day_of_week === currentDow || m.day_of_week === undefined);
+        dayData = { meals: mealsForDay.length > 0 ? mealsForDay : snapshot.meals };
+      }
       
       // 🛡️ SOBERANIA V3: Mapear respeitando hierarquia de substituições
       const mappedMeals = (dayData?.meals || snapshot.meals || []).map((m: any) => {
