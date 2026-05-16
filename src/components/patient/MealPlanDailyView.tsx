@@ -186,8 +186,9 @@ const MacroSummary = memo(function MacroSummary({
   const displayFat = totals.fat;
 
   const hasData = items.length > 0;
-  // SOBERANIA V3: Se temos calorias > 0, NUNCA mostramos "calculando", pois os dados são soberanos.
-  const showCalculating = displayKcal === 0 && hasData && totalsStatus !== 'ok' && totalsStatus !== 'calculated';
+  // SOBERANIA V3: NUNCA mostramos "calculando" ou "pendente" para o paciente. 
+  // O paciente vê o que está no snapshot, sem exceção.
+  const showCalculating = false;
 
   return (
     <div className="space-y-6">
@@ -219,15 +220,6 @@ const MacroSummary = memo(function MacroSummary({
           <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(displayFat, "0")}g</p>
         </div>
       </div>
-      
-      {showCalculating && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-in fade-in duration-500">
-          <Clock className="w-4 h-4 text-amber-500" />
-          <p className="text-[11px] text-amber-600 font-bold uppercase tracking-widest leading-tight">
-            Valores Nutricionais Pendentes no Template
-          </p>
-        </div>
-      )}
     </div>
   );
 });
