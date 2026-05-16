@@ -585,7 +585,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const hasMacros = calories > 0 || protein > 0 || carbs > 0 || fat > 0;
 
   const canEdit = !!meal.itemId && (!!onRemoveFoodLine || !!onUpdateItem);
-  const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
+  const { foodLines, substitutionLines } = parseDescriptionLines(meal.description, meal.title);
   const hasDescriptionLines = foodLines.length > 0;
 
   const handleUpdateTitle = () => {
