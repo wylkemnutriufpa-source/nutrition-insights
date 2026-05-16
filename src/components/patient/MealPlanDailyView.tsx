@@ -241,7 +241,14 @@ const MealItemCard = memo(function MealItemCard({
     bucket: "meal-images",
     enabled: !!fallbackImage,
   });
-  const resolvedImage = item.image_url || signedFallback || null;
+  const resolvedImage = useMemo(() => {
+    const raw = item.image_url || signedFallback || null;
+    if (raw && raw.includes("source.unsplash.com")) {
+      const query = item.title || "food";
+      return `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+    }
+    return raw;
+  }, [item.image_url, item.title, signedFallback]);
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
     : status === "partial" ? "border-amber-500/30 bg-amber-500/5 shadow-inner"
