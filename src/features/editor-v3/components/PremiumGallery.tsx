@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { V3DietTemplate } from '../types/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface PremiumGalleryProps {
   templates: V3DietTemplate[];
@@ -85,8 +86,13 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px] -mr-12 -mt-12 rounded-full group-hover:bg-emerald-500/10 transition-all" />
                 
                 <div className="flex items-center justify-between mb-4 relative z-10">
-                  <Badge variant="outline" className="text-[7px] font-black uppercase tracking-[0.15em] border-emerald-500/20 bg-emerald-500/5 text-emerald-500 px-2 py-0.5 rounded-sm">
-                    {template.objective?.split(' ')[0] || 'V3'}
+                  <Badge variant="outline" className={cn(
+                    "text-[7px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm",
+                    template.plan_snapshot 
+                      ? "border-amber-500/20 bg-amber-500/10 text-amber-500" 
+                      : "border-emerald-500/20 bg-emerald-500/5 text-emerald-500"
+                  )}>
+                    {template.plan_snapshot ? 'SOBERANO' : (template.objective?.split(' ')[0] || 'V3')}
                   </Badge>
                   <div className="flex items-center gap-1.5 opacity-30 group-hover:opacity-100 transition-opacity">
                     <Star className="w-3 h-3 text-emerald-500" />

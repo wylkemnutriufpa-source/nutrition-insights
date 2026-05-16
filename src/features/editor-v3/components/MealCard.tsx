@@ -105,7 +105,7 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-lg bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="max-w-md bg-neutral-950 border-white/10 text-white rounded-[1.5rem] p-0 overflow-hidden shadow-2xl">
         {/* Header Modal */}
         <div className="p-4 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -192,14 +192,14 @@ export const MealCard: React.FC<MealCardProps> = ({
 
         {/* Common Search Dialog - Moved out of the row to avoid nesting */}
         <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-xl rounded-[3rem] p-12 shadow-2xl">
-            <DialogHeader className="mb-8">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-                  <Search className="w-6 h-6" />
+          <DialogContent className="bg-neutral-950 border-white/10 text-white max-w-lg rounded-[2rem] p-6 shadow-2xl">
+            <DialogHeader className="mb-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                  <Search className="w-5 h-5" />
                 </div>
                 <div>
-                  <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">
+                  <DialogTitle className="text-xl font-black uppercase italic tracking-tighter">
                     {activeItemForSub ? "Trocar Equivalentes" : "Biblioteca Soberana"}
                   </DialogTitle>
                   <p className="text-[10px] uppercase font-black tracking-widest text-white/20 mt-1">
@@ -209,7 +209,7 @@ export const MealCard: React.FC<MealCardProps> = ({
               </div>
               
               {activeItemForSub && (
-                <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex items-center justify-between">
+                <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl flex items-center justify-between">
                   <div>
                     <p className="text-[9px] uppercase font-black text-emerald-500/60 mb-0.5">Substituindo item:</p>
                     <p className="text-sm font-black text-white">{activeItemForSub.name}</p>
