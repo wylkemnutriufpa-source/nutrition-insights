@@ -65,7 +65,7 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar pb-20">
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-32">
         <AnimatePresence mode="popLayout">
           <motion.div 
             layout
