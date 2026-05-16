@@ -38,6 +38,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/lib/auth';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useDraftSync } from '../hooks/useDraftSync';
+import { planPersistenceService } from '../services/planPersistenceService';
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -58,6 +60,29 @@ export default function EditorV3Page() {
   const [activeDay, setActiveDay] = useState<number>(1); // 1 = Segunda-feira (Padrão)
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
+
+  // 🛡️ SOBERANIA V3: Sincronização de Rascunho Soberana
+  const { 
+    draftId, 
+    syncState, 
+    initialMeals, 
+    scheduleSave, 
+    setLocked 
+  } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
+
+  // Efeito para hidratar o rascunho quando carregado
+  useEffect(() => {
+    if (initialMeals && initialMeals.length > 0 && store.meals.length === 0) {
+      store.hydrateMeals(initialMeals);
+    }
+  }, [initialMeals]);
+
+  // Efeito para agendar salvamento automático
+  useEffect(() => {
+    if (store.meals.length > 0) {
+      scheduleSave(store.meals, []);
+    }
+  }, [store.meals, scheduleSave]);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -272,142 +297,44 @@ export default function EditorV3Page() {
   }, [store.meals, activeDay]);
 
   const handleSave = async () => {
-    if (!effectivePatientId && !effectiveId) {
+    if (!effectivePatientId) {
       toast.error('Selecione um paciente para salvar o plano.');
       return;
     }
     
     setSaving(true);
-    const toastId = toast.loading('Salvando plano...');
+    setLocked(true); // 🛡️ LOCK DE EDIÇÃO: Pausar auto-save
+    const toastId = toast.loading('Salvando e Publicando Plano Soberano...');
+    
     try {
-      // 🛡️ SOBERANIA V3: Auditoria de Identidade
-      const { data: nutritionistProfile } = await supabase
-        .from('profiles')
-        .select('tenant_id')
-        .eq('user_id', user?.id)
-        .single();
-
-      const tenantId = nutritionistProfile?.tenant_id || '20081963-8db9-4a6c-8181-6a820b86e12f';
-
-      // 🛡️ ESTRUTURA SOBERANA V3: Snapshot estruturado por dias para o Patient App
-      const daysList = Array.from(new Set(store.meals.map(m => m.day_of_week ?? 1))).sort((a, b) => a - b);
-      const structuredSnapshot = {
-        meals: store.meals, // Mantém flat para compatibilidade
+      const result = await planPersistenceService.publishPlan({
+        patientId: effectivePatientId,
+        nutritionistId: user?.id || '',
+        meals: store.meals,
         targets: {
           kcal: planTotals.kcal,
-          protein_g: planTotals.protein,
-          carbs_g: planTotals.carbs,
-          fat_g: planTotals.fat
+          protein: planTotals.protein,
+          carbs: planTotals.carbs,
+          fat: planTotals.fat
         },
-        days: daysList.map(day => ({
-          day_of_week: day,
-          meals: store.meals.filter(m => (m.day_of_week ?? 1) === day)
-        })),
-        version: 'v3'
-      };
+        planId: effectiveId,
+        draftId: draftId
+      });
 
-      const payload: any = {
-        patient_id: effectivePatientId,
-        nutritionist_id: user?.id,
-        snapshot: structuredSnapshot,
-        total_meta_calorias: Math.round(planTotals.kcal),
-        total_meta_proteinas: Math.round(planTotals.protein),
-        total_meta_carboidratos: Math.round(planTotals.carbs),
-        total_meta_gorduras: Math.round(planTotals.fat),
-        updated_at: new Date().toISOString(),
-        title: "Plano Alimentar Soberano V3",
-        start_date: new Date().toISOString().split('T')[0],
-        plan_status: 'published_to_patient', // 🛡️ SOBERANIA: Salvar no V3 já é publicar
-        is_active: true,
-        tenant_id: tenantId,
-        plan_mode: 'weekly',
-        editor_version: 'v3'
-      };
-
-      let savedPlanId = effectiveId;
-
-      if (effectiveId) {
-        const { error } = await supabase
-          .from('meal_plans')
-          .update(payload as any)
-          .eq('id', effectiveId);
-        if (error) throw error;
+      if (result.ok) {
+        toast.success('Plano publicado com sucesso!', { id: toastId });
+        if (!effectiveId && result.planId) {
+          navigate(`/editor-v3/${effectivePatientId}/${result.planId}`, { replace: true });
+        }
       } else {
-        const { data: newPlan, error } = await supabase
-          .from('meal_plans')
-          .insert([payload as any])
-          .select()
-          .single();
-        if (error) throw error;
-        if (newPlan) {
-          savedPlanId = newPlan.id;
-          navigate(`/editor-v3/${effectivePatientId}/${newPlan.id}`, { replace: true });
-        }
+        toast.error(result.error || 'Erro ao publicar plano', { id: toastId });
       }
-
-      // 🛡️ EXPLOSÃO RELACIONAL: Garantir que meal_plan_items existam para Shopping List e Relatórios
-      if (savedPlanId) {
-        // Removemos itens antigos do plano atual
-        await supabase.from('meal_plan_items').delete().eq('meal_plan_id', savedPlanId);
-        
-        const itemsRows: any[] = [];
-        store.meals.forEach(meal => {
-          meal.items.forEach(item => {
-            const groupId = item.substitution_group_id || crypto.randomUUID();
-            const mealType = meal.name; 
-            
-            itemsRows.push({
-              meal_plan_id: savedPlanId,
-              tenant_id: tenantId,
-              tipo_refeicao: mealType,
-              day_of_week: meal.day_of_week ?? 1,
-              title: item.name,
-              description: item.portionLabel || `${item.quantity || 1}${item.portionUnit || 'g'}`,
-              meta_calorias: Math.round(item.kcal || 0),
-              meta_proteinas: Number((item.protein || 0).toFixed(1)),
-              meta_carboidratos: Number((item.carbs || 0).toFixed(1)),
-              meta_gorduras: Number((item.fat || 0).toFixed(1)),
-              image_url: item.imageUrl,
-              is_primary: true,
-              substitution_group_id: groupId,
-              editor_version: 'v3'
-            });
-
-            if (item.substitutions) {
-              item.substitutions.forEach((sub: any) => {
-                itemsRows.push({
-                  meal_plan_id: savedPlanId,
-                  tenant_id: tenantId,
-                  tipo_refeicao: mealType,
-                  day_of_week: meal.day_of_week ?? 1,
-                  title: sub.name,
-                  description: sub.portionLabel || `${sub.quantity || 100}g`,
-                  meta_calorias: Math.round(sub.kcal || 0),
-                  meta_proteinas: Number((sub.protein || 0).toFixed(1)),
-                  meta_carboidratos: Number((sub.carbs || 0).toFixed(1)),
-                  meta_gorduras: Number((sub.fat || 0).toFixed(1)),
-                  image_url: sub.imageUrl,
-                  is_primary: false,
-                  substitution_group_id: groupId,
-                  editor_version: 'v3'
-                });
-              });
-            }
-          });
-        });
-
-        if (itemsRows.length > 0) {
-          await supabase.from('meal_plan_items').insert(itemsRows);
-        }
-      }
-      
-      console.log(`[FORENSIC] Plano V3 Publicado: ${savedPlanId}. Status: published_to_patient. Snapshot days: ${daysList.length}`);
-      toast.success('Plano salvo e publicado com sucesso!', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar plano', { id: toastId });
+      toast.error('Erro fatal ao salvar plano', { id: toastId });
     } finally {
       setSaving(false);
+      setLocked(false); // Liberar lock
     }
   };
 
