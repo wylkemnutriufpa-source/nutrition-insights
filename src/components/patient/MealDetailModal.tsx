@@ -561,7 +561,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const clinicalTags: string[] = parseJsonField<string>(meta.clinical_tags || meta.clinical_tag);
   const source: string | undefined = meta.source;
   const mealTypeInfo = MEAL_TYPE_LABELS[meal.tipo_refeicao || ""] || null;
-  const imageUrl = meal.image_url || meta.image_url;
+  const rawImageUrl = meal.image_url || meta.image_url;
+  const imageUrl = useMemo(() => {
+    if (!rawImageUrl) return null;
+    if (rawImageUrl.includes("source.unsplash.com")) {
+      const query = meal.title || "food";
+      return `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+    }
+    return rawImageUrl;
+  }, [rawImageUrl, meal.title]);
 
   const calories = Number(meal.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0);
   const protein = Number(meal.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0);
