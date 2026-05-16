@@ -59,16 +59,15 @@ export const useEditorState = create<EditorState>()(
             const oldQty = item.clinical_mass_g || item.quantity || 100;
             const safeNewQty = Math.round(newQuantity);
             
-            // Adjust substitutions proportionally but with rounding to avoid decimals
+            // SOBERANIA V3: Substitutos são IMUTÁVEIS. Não escalamos automaticamente.
+            // O nutricionista define a gramagem de cada substituto manualmente ou via template.
             const updatedSubs = (item.substitutions || []).map(sub => {
-              const subOldQty = sub.clinical_mass_g || sub.quantity || 100;
-              const ratio = oldQty > 0 ? (safeNewQty / oldQty) : 1;
-              const subNewQty = Math.round(subOldQty * ratio);
-              const subMacros = calculateItemMacros(sub, subNewQty);
+              const subQty = sub.clinical_mass_g || sub.quantity || 100;
+              const subMacros = calculateItemMacros(sub, subQty);
               return { 
                 ...sub, 
-                quantity: subNewQty, 
-                clinical_mass_g: subNewQty,
+                quantity: subQty, 
+                clinical_mass_g: subQty,
                 ...subMacros
               };
             });
@@ -161,15 +160,14 @@ export const useEditorState = create<EditorState>()(
             const newQuantity = Math.round(scaleItemToTarget(item, targetValue, macroType));
             const oldQty = item.clinical_mass_g || item.quantity || 100;
             
+            // SOBERANIA V3: Substitutos são IMUTÁVEIS.
             const updatedSubs = (item.substitutions || []).map(sub => {
-              const subOldQty = sub.clinical_mass_g || sub.quantity || 100;
-              const ratio = oldQty > 0 ? (newQuantity / oldQty) : 1;
-              const subNewQty = Math.round(subOldQty * ratio);
-              const subMacros = calculateItemMacros(sub, subNewQty);
+              const subQty = sub.clinical_mass_g || sub.quantity || 100;
+              const subMacros = calculateItemMacros(sub, subQty);
               return { 
                 ...sub, 
-                quantity: subNewQty, 
-                clinical_mass_g: subNewQty,
+                quantity: subQty, 
+                clinical_mass_g: subQty,
                 ...subMacros
               };
             });
@@ -199,9 +197,9 @@ export const useEditorState = create<EditorState>()(
           const updatedItems = meal.items.map(item => {
             if (item.instanceId !== itemInstanceId) return item;
 
-            // SOBERANIA V3: If the substitute has a born-ready quantity, use it
-            const substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || 
-                                     scaleItemToTarget(food, item.kcal || 100, 'kcal'));
+            // SOBERANIA V3: Se o substituto já tem uma gramagem clínica, usamos ela. 
+            // Caso contrário, usamos a gramagem padrão do alimento (100g ou porção).
+            const substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
             
             const subMacros = calculateItemMacros(food, substituteQuantity);
 
