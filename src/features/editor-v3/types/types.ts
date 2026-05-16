@@ -165,7 +165,7 @@ export interface V3DietTemplate {
   template_type: string;
   objective: string;
   family?: TemplateFamily;
-  style_contract?: TemplateStyleContract; // NOVO: Soberania de Identidade Clínica
+  style_contract?: TemplateStyleContract; 
   meal_distribution: Array<{ slot: string; time: string }>;
   cluster_map: Record<string, string>;
   kcal_profiles: number[] | KcalProfile[];
@@ -173,7 +173,8 @@ export interface V3DietTemplate {
   substitutions_enabled: boolean;
   editable: boolean;
   active: boolean;
-  meal_integrity_threshold?: number; // 0.5 to 2.0 (factor)
+  meal_integrity_threshold?: number; 
+  plan_snapshot?: Record<string, { meals: Meal[] }>; // Kcal-keyed snapshots
 }
 
 export interface MealTemplate {

@@ -20074,6 +20074,7 @@ export type Database = {
           kcal_profiles: Json | null
           meal_distribution: Json
           objective: string
+          plan_snapshot: Json | null
           slug: string
           substitutions_enabled: boolean | null
           template_type: string | null
@@ -20091,6 +20092,7 @@ export type Database = {
           kcal_profiles?: Json | null
           meal_distribution: Json
           objective: string
+          plan_snapshot?: Json | null
           slug: string
           substitutions_enabled?: boolean | null
           template_type?: string | null
@@ -20108,6 +20110,7 @@ export type Database = {
           kcal_profiles?: Json | null
           meal_distribution?: Json
           objective?: string
+          plan_snapshot?: Json | null
           slug?: string
           substitutions_enabled?: boolean | null
           template_type?: string | null
