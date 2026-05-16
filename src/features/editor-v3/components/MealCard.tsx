@@ -107,7 +107,7 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl bg-neutral-950 border-white/10 text-white rounded-[3rem] p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="max-w-2xl bg-neutral-950 border-white/10 text-white rounded-[2rem] p-0 overflow-hidden shadow-2xl">
         {/* Header Modal */}
         <div className="p-10 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-between">
           <div className="flex items-center gap-8">
