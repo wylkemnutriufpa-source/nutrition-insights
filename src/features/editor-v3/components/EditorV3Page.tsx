@@ -509,7 +509,7 @@ export default function EditorV3Page() {
                   <Library className="w-5 h-5 mr-3" /> Biblioteca Premium
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-neutral-950 border-white/10 text-white p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col">
+              <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-neutral-950 border-white/10 text-white p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col gap-0">
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] -mr-64 -mt-64 rounded-full pointer-events-none" />
                 
                 <DialogHeader className="mb-6 md:mb-8 relative z-10">
