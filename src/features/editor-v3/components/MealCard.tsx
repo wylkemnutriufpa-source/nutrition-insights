@@ -132,7 +132,7 @@ export const MealCard: React.FC<MealCardProps> = ({
         </div>
 
         {/* Content Modal */}
-        <ScrollArea className="max-h-[50vh] p-10">
+        <ScrollArea className="max-h-[50vh] p-6 md:p-8">
           <div className="space-y-4">
             {meal.items.length > 0 ? (
               meal.items.map((item) => (
