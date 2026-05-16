@@ -124,7 +124,7 @@ export const MealCard: React.FC<MealCardProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-black italic text-white leading-none">
+            <p className="text-2xl md:text-3xl font-black italic text-white leading-none">
               {Math.round(mealTotals.kcal)}
               <span className="text-xs uppercase ml-1 opacity-30 font-bold">kcal</span>
             </p>
