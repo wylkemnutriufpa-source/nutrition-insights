@@ -84,6 +84,22 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (!data) return;
+    const html = buildPremiumMealPlanHTML(data);
+    const blob = new Blob([html], { type: "text/html; charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const filename = `Plano-Alimentar-${(data.patientName || "paciente").replace(/\s+/g, "-")}.html`;
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Plano exportado com sucesso!");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
