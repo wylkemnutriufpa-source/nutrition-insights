@@ -585,20 +585,40 @@ export default function EditorV3Page() {
             patientName: patientData.full_name || "Paciente",
             nutritionistName: user?.email || "Nutricionista", // Fallback for name
             startDate: new Date().toLocaleDateString('pt-BR'),
-            items: store.meals.flatMap(meal => meal.items.map(item => ({
-              id: item.instanceId,
-              mealType: meal.name,
-              title: item.name,
-              description: item.description,
-              meta_calorias: item.kcal,
-              meta_proteinas: item.protein,
-              meta_carboidratos: item.carbs,
-              meta_gorduras: item.fat,
-              day_of_week: meal.day_of_week || 0,
-              scheduled_time: meal.time,
-              is_primary: true,
-              clinical_mass_g: item.clinical_mass_g
-            }))),
+            items: store.meals.flatMap(meal => meal.items.flatMap(item => [
+              // Primary Item
+              {
+                id: item.instanceId,
+                mealType: meal.name,
+                title: item.name,
+                description: item.description,
+                meta_calorias: item.kcal,
+                meta_proteinas: item.protein,
+                meta_carboidratos: item.carbs,
+                meta_gorduras: item.fat,
+                day_of_week: meal.day_of_week || 0,
+                scheduled_time: meal.time,
+                is_primary: true,
+                clinical_mass_g: item.clinical_mass_g,
+                substitution_group_id: item.instanceId // Group key to link subs
+              },
+              // Substitutions (Exact Transcription)
+              ...(item.substitutions || []).map(sub => ({
+                id: sub.instanceId || crypto.randomUUID(),
+                mealType: meal.name,
+                title: sub.name || sub.title,
+                description: sub.description,
+                meta_calorias: sub.kcal,
+                meta_proteinas: sub.protein,
+                meta_carboidratos: sub.carbs,
+                meta_gorduras: sub.fat,
+                day_of_week: meal.day_of_week || 0,
+                scheduled_time: meal.time,
+                is_primary: false,
+                clinical_mass_g: sub.clinical_mass_g,
+                substitution_group_id: item.instanceId
+              }))
+            ])),
             targetCalories: planTotals.kcal,
             targetProtein: planTotals.protein,
             targetCarbs: planTotals.carbs,
