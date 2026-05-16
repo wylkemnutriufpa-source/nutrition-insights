@@ -581,9 +581,28 @@ export default function EditorV3Page() {
           open={isShareDialogOpen}
           onOpenChange={setIsShareDialogOpen}
           data={patientData ? {
-            patientName: patientData.full_name,
-            meals: store.meals,
-            totals: planTotals
+            planTitle: "Plano Alimentar Soberano",
+            patientName: patientData.full_name || "Paciente",
+            nutritionistName: user?.email || "Nutricionista", // Fallback for name
+            startDate: new Date().toLocaleDateString('pt-BR'),
+            items: store.meals.flatMap(meal => meal.items.map(item => ({
+              id: item.instanceId,
+              mealType: meal.name,
+              title: item.name,
+              description: item.description,
+              meta_calorias: item.kcal,
+              meta_proteinas: item.protein,
+              meta_carboidratos: item.carbs,
+              meta_gorduras: item.fat,
+              day_of_week: meal.day_of_week || 0,
+              scheduled_time: meal.time,
+              is_primary: true,
+              clinical_mass_g: item.clinical_mass_g
+            }))),
+            targetCalories: planTotals.kcal,
+            targetProtein: planTotals.protein,
+            targetCarbs: planTotals.carbs,
+            targetFat: planTotals.fat
           } : null}
         />
 
