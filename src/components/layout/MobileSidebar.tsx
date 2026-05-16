@@ -134,7 +134,7 @@ export default function MobileSidebar({
       },
       {
         id: "diagnostics",
-        label: "System Diagnostics",
+        label: "Diagnóstico do Sistema",
         route: "/admin/diagnostics",
         icon: Shield,
         colorClass: "text-cyan-500",

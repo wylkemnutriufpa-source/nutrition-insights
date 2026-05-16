@@ -255,7 +255,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                           className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all text-primary hover:bg-primary/5"
                         >
                           <Users className="h-4 w-4" />
-                          <span className="text-xs font-bold">Ver Todos Pacientes</span>
+                          <span className="text-xs font-bold">Ver Todos os Pacientes</span>
                         </Link>
                       )}
                       {sorted.map((item) => {
@@ -305,7 +305,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                           className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all text-primary hover:bg-primary/5"
                         >
                           <Users className="h-4 w-4" />
-                          <span className="text-xs font-bold">Ver Todos Pacientes</span>
+                          <span className="text-xs font-bold">Ver Todos os Pacientes</span>
                         </Link>
                       )}
                       {sorted.map((item) => {

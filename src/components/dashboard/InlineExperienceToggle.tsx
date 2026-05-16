@@ -19,7 +19,7 @@ interface ModeOption {
 const PRO_MODES: ModeOption[] = [
   { key: "basic", label: "Básico", shortLabel: "Básico", icon: Zap },
   { key: "pro", label: "Profissional", shortLabel: "Pro", icon: BarChart3 },
-  { key: "advanced", label: "Avançado", shortLabel: "Full", icon: Rocket },
+  { key: "advanced", label: "Avançado", shortLabel: "Avançado", icon: Rocket },
 ];
 
 const PATIENT_MODES: ModeOption[] = [
