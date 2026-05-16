@@ -647,12 +647,15 @@ export default function EditorV3Page() {
               <AnimatePresence mode="popLayout">
                 {store.meals
                   .filter(m => (m.day_of_week || 0) === activeDay)
+                  .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
                   .map((meal, idx) => (
                     <motion.div
                       key={meal.id}
+                      layout
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: idx * 0.1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: idx * 0.05 }}
                     >
                       <MealCard 
                         meal={meal} 
@@ -672,17 +675,17 @@ export default function EditorV3Page() {
                   const names = ["Café da Manhã", "Lanche", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
                   const currentCount = store.meals.filter(m => (m.day_of_week || 0) === activeDay).length;
                   const name = names[currentCount % names.length];
-                  store.addMeal(name, "08:00");
                   
-                  // Update the new meal to the active day (since addMeal doesn't take day)
-                  // We need to wait for the store to update
-                  setTimeout(() => {
-                    const meals = useEditorState.getState().meals;
-                    const lastMeal = meals[meals.length - 1];
-                    if (lastMeal) {
-                      useEditorState.getState().updateMealHeader(lastMeal.id, { day_of_week: activeDay });
-                    }
-                  }, 50);
+                  // Use standard zustand set pattern to ensure immediate day assignment
+                  const newId = crypto.randomUUID();
+                  const newMeal = {
+                    id: newId,
+                    name,
+                    time: "08:00",
+                    day_of_week: activeDay,
+                    items: []
+                  };
+                  store.setMeals([...store.meals, newMeal]);
                 }}
                 variant="outline" 
                 className="w-full h-24 bg-white/[0.02] border-dashed border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/30 text-white/10 hover:text-emerald-400 rounded-[2.5rem] transition-all group/add-meal shadow-inner"
