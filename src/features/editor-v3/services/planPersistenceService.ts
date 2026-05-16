@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Meal, DraftPayload } from '../types';
+import type { Meal, MealItem } from '../types';
 import { saveDraft } from './draftService';
 
 export interface PlanSaveOptions {
@@ -58,15 +58,44 @@ export const planPersistenceService = {
         .single();
       const tenantId = profile?.tenant_id || '20081963-8db9-4a6c-8181-6a820b86e12f';
 
-      // 2. Construir Snapshot Soberano V3
-      // O Patient App apenas RENDERIZA este objeto.
-      const daysList = Array.from(new Set(meals.map(m => m.day_of_week ?? 1))).sort((a, b) => a - b);
+      // 2. Higienização Soberana das Imagens (Remover Unsplash Fallbacks automáticos)
+      const sanitizedMeals = meals.map(meal => ({
+        ...meal,
+        items: meal.items.map(item => {
+          let imageUrl = item.imageUrl;
+          // Se for uma URL do unsplash que parece ser automática (contendo search terms), removemos.
+          if (imageUrl && imageUrl.includes('source.unsplash.com') && imageUrl.includes('?')) {
+            imageUrl = null;
+          }
+          return {
+            ...item,
+            imageUrl,
+            display_quantity: item.display_quantity || item.quantity,
+            display_unit: item.display_unit || item.portionUnitLabel || item.portionLabel || 'g',
+            substitutions: (item.substitutions || []).map(sub => {
+              let subImg = (sub as any).imageUrl || (sub as any).image_url;
+              if (subImg && subImg.includes('source.unsplash.com') && subImg.includes('?')) {
+                subImg = null;
+              }
+              return {
+                ...sub,
+                imageUrl: subImg,
+                display_quantity: (sub as any).display_quantity || sub.quantity || (sub as any).suggestedQuantity || (sub as any).portionValue,
+                display_unit: (sub as any).display_unit || (sub as any).portionUnitLabel || (sub as any).portionLabel || (sub as any).portionUnit || 'g'
+              };
+            })
+          };
+        })
+      }));
+
+      // 3. Construir Snapshot Soberano V3
+      const daysList = Array.from(new Set(sanitizedMeals.map(m => m.day_of_week ?? 1))).sort((a, b) => a - b);
       const snapshot = {
-        meals, // Flat list para busca rápida
+        meals: sanitizedMeals,
         targets,
         days: daysList.map(day => ({
           day_of_week: day,
-          meals: meals.filter(m => (m.day_of_week ?? 1) === day)
+          meals: sanitizedMeals.filter(m => (m.day_of_week ?? 1) === day)
         })),
         version: 'v3',
         published_at: new Date().toISOString()
@@ -91,7 +120,7 @@ export const planPersistenceService = {
 
       let finalPlanId = planId;
 
-      // 3. Persistência Principal (meal_plans)
+      // 4. Persistência Principal
       if (planId) {
         const { error } = await supabase
           .from('meal_plans')
@@ -99,7 +128,6 @@ export const planPersistenceService = {
           .eq('id', planId);
         if (error) throw error;
       } else {
-        // Desativar planos antigos se for novo
         await supabase
           .from('meal_plans')
           .update({ is_active: false } as any)
@@ -114,23 +142,22 @@ export const planPersistenceService = {
         finalPlanId = newPlan.id;
       }
 
-      // 4. Persistência Relacional (meal_plan_items) — Para Shopping List e Relatórios
+      // 5. Persistência Relacional
       if (finalPlanId) {
         await supabase.from('meal_plan_items').delete().eq('meal_plan_id', finalPlanId);
         
         const itemsRows: any[] = [];
-        meals.forEach(meal => {
+        sanitizedMeals.forEach(meal => {
           meal.items.forEach(item => {
             const groupId = item.substitution_group_id || crypto.randomUUID();
             
-            // Primário
             itemsRows.push({
               meal_plan_id: finalPlanId,
               tenant_id: tenantId,
               tipo_refeicao: meal.name,
               day_of_week: meal.day_of_week ?? 1,
               title: item.name,
-              description: item.portionLabel || `${item.quantity || 1}${item.portionUnit || 'g'}`,
+              description: `${item.display_quantity || item.quantity} ${item.display_unit || 'g'}`,
               meta_calorias: Math.round(item.kcal || 0),
               meta_proteinas: Number((item.protein || 0).toFixed(1)),
               meta_carboidratos: Number((item.carbs || 0).toFixed(1)),
@@ -142,7 +169,6 @@ export const planPersistenceService = {
               edit_metadata: { ...item, editor_version: 'v3' }
             });
 
-            // Substituições
             if (item.substitutions) {
               item.substitutions.forEach((sub: any) => {
                 itemsRows.push({
@@ -151,7 +177,7 @@ export const planPersistenceService = {
                   tipo_refeicao: meal.name,
                   day_of_week: meal.day_of_week ?? 1,
                   title: sub.name,
-                  description: sub.portionLabel || `${sub.quantity || 100}g`,
+                  description: `${sub.display_quantity || sub.quantity || 100} ${sub.display_unit || 'g'}`,
                   meta_calorias: Math.round(sub.kcal || 0),
                   meta_proteinas: Number((sub.protein || 0).toFixed(1)),
                   meta_carboidratos: Number((sub.carbs || 0).toFixed(1)),
@@ -172,7 +198,6 @@ export const planPersistenceService = {
         }
       }
 
-      // 5. Atualizar Draft (se houver)
       if (draftId) {
         await supabase
           .from('v3_drafts' as any)
