@@ -115,7 +115,7 @@ export const MealCard: React.FC<MealCardProps> = ({
               <Utensils className="w-6 h-6 md:w-8 md:h-8" />
             </div>
             <div>
-              <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white">Gerenciar Refeição</h3>
+              <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter text-white">Gerenciar Refeição</h3>
               <div className="flex items-center gap-3 mt-1.5">
                 <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">{meal.name}</span>
                 <div className="w-1 h-1 rounded-full bg-white/10" />
