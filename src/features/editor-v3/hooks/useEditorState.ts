@@ -173,15 +173,18 @@ export const useEditorState = create<EditorState>()(
           const updatedItems = meal.items.map(item => {
             if (item.instanceId !== itemInstanceId) return item;
 
-            const targetKcal = item.kcal || 100;
-            const substituteQuantity = scaleItemToTarget(food, targetKcal, 'kcal');
+            // SOBERANIA V3: If the substitute has a born-ready quantity, use it
+            // otherwise, fallback to proportional scaling (but we prefer clinical data)
+            const substituteQuantity = food.clinical_mass_g || food.quantity || 
+                                     scaleItemToTarget(food, item.kcal || 100, 'kcal');
+            
             const subMacros = calculateItemMacros(food, substituteQuantity);
 
             const newSub = {
               ...food,
               name: food.name,
-              quantity: substituteQuantity,
-              clinical_mass_g: substituteQuantity,
+              quantity: Math.round(substituteQuantity),
+              clinical_mass_g: Math.round(substituteQuantity),
               ...subMacros
             };
 
