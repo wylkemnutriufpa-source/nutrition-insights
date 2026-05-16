@@ -48,6 +48,7 @@ interface MealPlanItem {
   image_url?: string | null;
   visual_library_item_id?: string | null;
   is_primary?: boolean;
+  is_substitution?: boolean;
   // --- SOBERANIA V3 ---
   editor_version?: string;
   display_quantity?: string | number;
@@ -290,13 +291,6 @@ const MealItemCard = memo(function MealItemCard({
               : status === "not_followed" ? <AlertCircle className="w-7 h-7 text-red-500 drop-shadow-2xl" />
               : null}
           </div>
-          {needsVisualFallback && visualItem && (
-            <div className="absolute bottom-4 left-4">
-              <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-emerald-500/80 text-black backdrop-blur-md">
-                📸 Inspiração Real
-              </span>
-            </div>
-          )}
         </div>
       )}
 
