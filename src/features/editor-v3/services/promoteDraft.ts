@@ -1,49 +1,8 @@
 /**
- * Editor V3 — Promotor de Drafts
+ * Editor V3 — Promotor de Drafts (Wrapper Soberano)
  */
-import { supabase } from '@/integrations/supabase/client';
-import type { Meal, MealItem } from '../types';
+import { planPersistenceService } from './planPersistenceService';
 import type { DraftRecord } from './draftService';
-// Removed nutricore and snapshot imports
-
-type ClinicalMealType =
-  | 'Café da Manhã' | 'Lanche da Manhã' | 'Almoço' | 'Lanche da Tarde' | 'Jantar' | 'Ceia';
-
-const NAME_TO_MEAL_TYPE: Record<string, ClinicalMealType> = {
-  'café da manhã': 'Café da Manhã',
-  'cafe da manha': 'Café da Manhã',
-  'lanche da manhã': 'Lanche da Manhã',
-  'lanche da manha': 'Lanche da Manhã',
-  'almoço': 'Almoço',
-  'almoco': 'Almoço',
-  'lanche da tarde': 'Lanche da Tarde',
-  'jantar': 'Jantar',
-  'ceia': 'Ceia',
-};
-
-function mealNameToType(name: string): ClinicalMealType {
-  const norm = name.trim().toLowerCase();
-  return NAME_TO_MEAL_TYPE[norm] ?? 'Almoço';
-}
-
-function buildItemTitle(item: MealItem): string {
-  return item.name;
-}
-
-function buildItemDescription(item: MealItem): string {
-  return item.portionLabel || `${item.quantity || 1}${item.portionUnit || 'g'}`;
-}
-
-function sumMealMacros(meal: Meal) {
-  let kcal = 0, p = 0, c = 0, f = 0;
-  for (const i of meal.items) {
-    kcal += i.kcal ?? 0;
-    p += i.protein ?? 0;
-    c += i.carbs ?? 0;
-    f += i.fat ?? 0;
-  }
-  return { kcal, p, c, f };
-}
 
 export interface PromoteResult {
   ok: boolean;
@@ -52,244 +11,30 @@ export interface PromoteResult {
   error?: string;
 }
 
-
 /**
- * Promove um draft para um plano clínico oficial.
- * Agora publica diretamente para o paciente para garantir visibilidade imediata.
+ * Promove um draft para um plano clínico oficial usando o serviço unificado de persistência.
  */
 export async function promoteDraftToMealPlan(
   draft: DraftRecord,
-  options?: { title?: string, v3_sandbox_delivery?: boolean }
+  options?: { title?: string }
 ): Promise<PromoteResult> {
-  const meals = draft.payload?.meals ?? [];
-  const today = new Date().toISOString().slice(0, 10);
-  const title = options?.title ?? `Plano V3 — ${new Date().toLocaleDateString('pt-BR')}`;
-
-  // 🛡️ SOBERANIA MANUAL: Removida barreira de Safety Net procedural.
-  // O nutricionista tem soberania total sobre o plano editado.
-
-
-  // 0) Resolve o ID real do Auth (auth.users.id) e do Perfil (profiles.id)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, user_id')
-    .or(`id.eq.${draft.patient_id},user_id.eq.${draft.patient_id}`)
-    .maybeSingle();
-
-  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-  if (!isUuid(draft.patient_id)) {
-    console.error(`[FATAL-IDENTITY] Patient ID inválido no promoteDraft: ${draft.patient_id}`);
-    return { ok: false, error: `RUPTURA DE IDENTIDADE: Patient ID "${draft.patient_id}" não é um UUID soberano.` };
-  }
-
-  const authUserId = profile?.user_id || draft.patient_id;
-  const profileId = profile?.id || draft.patient_id;
-
-  // 0.1) Desativa TODOS os planos ativos anteriores para este paciente
-  // (Garante que a unique constraint 'idx_one_active_plan_per_patient' não seja violada)
-  await supabase
-    .from('meal_plans')
-    .update({ is_active: false } as any)
-    .eq('patient_id', authUserId);
-
-  // 1) INSERT-FIRST: cria o meal_plan oficial já PUBLICADO
-  const isWeeklyMode = meals.some(m => m.selectionMode === 'week');
-  const planMode = isWeeklyMode ? 'weekly' : 'single_day';
-
-  const { data: plan, error: planErr } = await supabase
-    .from('meal_plans')
-    .insert({
-      patient_id: authUserId,
-      nutritionist_id: draft.nutritionist_id,
-      tenant_id: draft.tenant_id,
-      title,
-      start_date: today,
-      plan_status: 'published_to_patient',
-      is_active: true,
-      plan_mode: planMode,
-      total_meta_calorias: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || null,
-      total_meta_proteinas: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || null,
-      total_meta_carboidratos: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || null,
-      total_meta_gorduras: draft.meta_fat || draft.payload?.nutritional_score?.totals?.fat || null,
-      generation_source: 'manual',
-      editor_version: 'v3',
-      generation_metadata: {
-        editor_v3: true,
-        promoted_from_draft_id: draft.id,
-        promoted_at: new Date().toISOString(),
-        v3_sandbox_delivery: options?.v3_sandbox_delivery || false,
-        delivered_via: options?.v3_sandbox_delivery ? 'ControlledClinicalDelivery' : 'StandardPromote'
-      },
-      snapshot: {
-        meals: draft.payload?.meals || [],
-        targets: {
-          kcal: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || 0,
-          protein_g: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || 0,
-          carbs_g: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || 0,
-          fat_g: draft.meta_fat || draft.payload?.nutritional_score?.totals?.fat || 0
-        },
-        version: 'v3',
-        days: Array.from(new Set((draft.payload?.meals || []).map(m => m.day_of_week ?? 1))).map(day => ({
-          day_of_week: day,
-          meals: (draft.payload?.meals || []).filter(m => (m.day_of_week ?? 1) === day)
-        }))
-      }
-    } as any)
-    .select('id, sharing_token')
-    .single();
-
-  if (planErr || !plan) {
-    return { ok: false, error: planErr?.message ?? 'Falha ao criar meal_plan' };
-  }
-
-  // 2) Insere meal_plan_items explodindo itens primários e suas substituições
-  const itemsRows: any[] = [];
-  const primaryGroupsTracker = new Set<string>();
-  
-  for (const meal of meals) {
-    if (meal.items.length === 0) continue;
-
-    for (const item of meal.items) {
-      // 🛡️ FASE 4: IDENTIDADE SOBERANA — SANITIZAÇÃO
-      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      
-      // 🛡️ HIERARCHY PERSISTENCE (V3): 1 Slot = 1 Group
-      // Se múltiplos itens chegarem com o mesmo blockId/groupId, apenas o PRIMEIRO será is_primary=true.
-      const blockId = item.blockId;
-      const rawGroupId = item.substitution_group_id || blockId || crypto.randomUUID();
-      
-      // Se não for UUID (ex: vindo do SimpleMealGenerator como 'lunch_protein_0'), 
-      // mantemos o rastro mas garantimos que o DB aceite.
-      // O DB exige UUID, então vamos gerar um UUID estável para strings conhecidas ou aleatório para novas.
-      const groupId = isUuid(rawGroupId) ? rawGroupId : crypto.randomUUID();
-      
-      const mealType = mealNameToType(meal.name);
-      
-      // 🛡️ RECOGNITION LOCK: Se este grupo já teve um primary neste plano/dia, este item vira substituição.
-      // Isso impede a explosão calórica de Luciana (133 primaries).
-      const trackerKey = `${mealType}_${meal.day_of_week ?? 0}_${groupId}`;
-      const isPrimary = !primaryGroupsTracker.has(trackerKey);
-      
-      if (isPrimary) {
-        primaryGroupsTracker.add(trackerKey);
-      }
-
-      const rawMacros = {
-        kcal: Number(item.kcal || 0),
-        protein: Number(item.protein || 0),
-        carbs: Number(item.carbs || 0),
-        fat: Number(item.fat || 0)
-      };
-      
-      let cleanMacros = rawMacros;
-      // Removed auto-recalculation logic
-
-      const itemInstanceId = isUuid(item.instanceId) ? item.instanceId : crypto.randomUUID();
-      const itemImageUrl = (item as any).imageUrl || meal.imageUrl || null;
-
-      itemsRows.push({
-        id: itemInstanceId,
-        meal_plan_id: plan.id,
-        tenant_id: draft.tenant_id,
-        tipo_refeicao: mealType,
-        day_of_week: meal.day_of_week ?? 0,
-        title: buildItemTitle(item),
-        description: buildItemDescription(item),
-        meta_calorias: Math.round(cleanMacros.kcal || 0),
-        meta_proteinas: Number((cleanMacros.protein || 0).toFixed(1)),
-        meta_carboidratos: Number((cleanMacros.carbs || 0).toFixed(1)),
-        meta_gorduras: Number((cleanMacros.fat || 0).toFixed(1)),
-        image_url: itemImageUrl,
-        item_origin: 'manual',
-        is_manually_edited: true,
-        is_locked: (item as any).locked || false,
-        is_primary: isPrimary, // 🛡️ ENFORCED SOBERANIA
-        substitution_group_id: groupId,
-        edit_metadata: {
-          ...item,
-          blockId,
-          imageUrl: itemImageUrl,
-          mealImageUrl: meal.imageUrl || null,
-          display_quantity: item.quantity,
-          display_unit: item.portionUnitLabel || item.portionLabel || item.portionUnit,
-          day_of_week: meal.day_of_week ?? 0,
-          editor_version: 'v3',
-        }
-      });
-
-      // 2.2) Substituições (sempre is_primary = false)
-      if (item.substitutions && Array.isArray(item.substitutions)) {
-        item.substitutions.forEach((sub: any) => {
-          itemsRows.push({
-            id: isUuid(sub.instanceId || sub.id) ? (sub.instanceId || sub.id) : crypto.randomUUID(),
-            meal_plan_id: plan.id,
-            tenant_id: draft.tenant_id,
-            tipo_refeicao: mealType,
-            day_of_week: meal.day_of_week ?? 0,
-            title: sub.name,
-            description: sub.portionLabel || `${sub.suggestedQuantity || sub.portionValue || 100}g`,
-            meta_calorias: Math.round(sub.kcal || sub.calories || 0),
-            meta_proteinas: Number((sub.protein || 0).toFixed(1)),
-            meta_carboidratos: Number((sub.carbs || 0).toFixed(1)),
-            meta_gorduras: Number((sub.fat || 0).toFixed(1)),
-            image_url: sub.imageUrl || null,
-            item_origin: 'auto',
-            is_manually_edited: false,
-            is_locked: false,
-            is_primary: false, // Substituições nunca são primárias na promoção
-            substitution_group_id: groupId,
-            edit_metadata: {
-              ...sub,
-              blockId,
-              display_quantity: sub.suggestedQuantity || sub.portionValue || 100,
-              display_unit: sub.portionLabel || sub.portionUnitLabel || sub.portionUnit || 'g',
-              day_of_week: meal.day_of_week ?? 0,
-              editor_version: 'v3',
-            }
-          });
-        });
-      }
-    }
-  }
-
-  if (itemsRows.length > 0) {
-    const { error: itemsErr } = await supabase
-      .from('meal_plan_items')
-      .insert(itemsRows);
-
-    if (itemsErr) {
-      // Rollback best-effort
-      await supabase
-        .from('meal_plans')
-        .update({ plan_status: 'archived', is_active: false } as any)
-        .eq('id', plan.id);
-      return { ok: false, error: itemsErr.message };
-    }
-  }
-
-  // 3) (Desativação dos anteriores já feita no passo 0.1 antes do insert)
-
-  // 4) Só agora marca o draft como promovido
-  await supabase
-    .from('v3_drafts' as any)
-    .update({
-      draft_status: 'promoted',
-      promoted_meal_plan_id: plan.id,
-      promoted_at: new Date().toISOString(),
-    })
-    .eq('id', draft.id);
-
-  // Snapshot persistence removed - following minimalist approach
-
-  // Log removido com a desativação dos motores procedurais.
-
-  await supabase.from('access_logs').insert({
-    user_id: draft.nutritionist_id,
-    patient_id: profileId,
-    action: 'export',
-    resource: 'meal_plan',
-    user_agent: navigator.userAgent
+  const result = await planPersistenceService.publishPlan({
+    patientId: draft.patient_id,
+    nutritionistId: draft.nutritionist_id,
+    meals: draft.payload?.meals || [],
+    targets: {
+      kcal: draft.meta_kcal || draft.payload?.nutritional_score?.totals?.kcal || 0,
+      protein: draft.meta_protein || draft.payload?.nutritional_score?.totals?.protein || 0,
+      carbs: draft.meta_carbs || draft.payload?.nutritional_score?.totals?.carbs || 0,
+      fat: draft.meta_fat || draft.payload?.nutritional_score?.totals?.fat || 0
+    },
+    title: options?.title,
+    draftId: draft.id
   });
 
-  return { ok: true, mealPlanId: plan.id, sharingToken: (plan as any).sharing_token };
+  return {
+    ok: result.ok,
+    mealPlanId: result.planId,
+    error: result.error
+  };
 }

@@ -63,7 +63,7 @@ export default function DailyMealPlanInline() {
     try {
       const { data: planData } = await supabase
         .from("meal_plans")
-        .select("id, title, start_date, totals_status, plan_mode")
+        .select("id, title, start_date, totals_status, plan_mode, snapshot")
         .eq("patient_id", user.id)
         .eq("is_active", true)
         .eq("plan_status", "published_to_patient")
@@ -78,24 +78,49 @@ export default function DailyMealPlanInline() {
         setIsRefreshing(false);
         return; 
       }
-      setPlan(planData as MealPlan);
+      setPlan(planData as any);
 
-      const { data: itemsData } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", planData.id)
-        .order("created_at");
-
-      const currentItems = (itemsData || []) as MealPlanItem[];
-      
-      // 🛡️ SOBERANIA V3: Usar o pipeline oficial de exibição diária que lida com:
-      // 1. Filtragem por dia da semana
-      // 2. Agrupamento de substituições (Coupling)
-      // 3. Deduplicação de itens legados
+      // 🛡️ SOBERANIA SNAPSHOT V3: O paciente é um espelho burro.
+      // Se existe snapshot V3, usamos EXATAMENTE o que está lá, sem processamento extra.
+      const snapshot = planData.snapshot as any;
       const dayOfWeek = new Date(date + "T12:00:00").getDay();
-      const displayItems = buildDailyDisplayItems(currentItems as any, dayOfWeek);
       
-      setItems(displayItems as MealPlanItem[]);
+      if (snapshot && snapshot.version === 'v3') {
+        const dayData = snapshot.days?.find((d: any) => d.day_of_week === dayOfWeek) || 
+                        snapshot.days?.[0];
+        
+        if (dayData) {
+          // Transformamos os meals do snapshot para o formato que os componentes esperam
+          const snapshotItems = dayData.meals.flatMap((m: any) => m.items.map((it: any) => ({
+            ...it,
+            tipo_refeicao: m.name,
+            day_of_week: m.day_of_week,
+            // Adicionamos metadados de substituição se existirem
+            metadata: {
+              ...it.metadata,
+              substitution_options: it.substitutions?.map((s: any) => ({
+                id: s.id || s.instanceId,
+                title: s.name,
+                meta_calorias: s.kcal
+              }))
+            }
+          })));
+          setItems(snapshotItems);
+        } else {
+          setItems([]);
+        }
+      } else {
+        // Fallback Legado (V2) - Apenas se não houver snapshot V3
+        const { data: itemsData } = await supabase
+          .from("meal_plan_items")
+          .select("*")
+          .eq("meal_plan_id", planData.id)
+          .order("created_at");
+
+        const currentItems = (itemsData || []) as MealPlanItem[];
+        const displayItems = buildDailyDisplayItems(currentItems as any, dayOfWeek);
+        setItems(displayItems as MealPlanItem[]);
+      }
 
       const { data: completionsData } = await supabase
         .from("meal_item_completions")

@@ -46,6 +46,7 @@ export interface Food {
 export interface MealItem extends Food {
   instanceId: string;
   quantity: number; // display_quantity: UI only (e.g., 6 spoons, 2 units)
+  display_quantity?: string | number;
   clinical_mass_g?: number; // clinical_mass_g: SINGLE SOURCE OF TRUTH for math
   unit_count?: number; // Physical count of units
   display_unit?: string; // UI unit label
