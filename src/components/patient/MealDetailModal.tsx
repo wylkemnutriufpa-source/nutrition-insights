@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -119,12 +119,18 @@ function parseJsonField<T>(value: any): T[] {
 }
 
 /** Parse description text into main food lines and substitution lines */
-function parseDescriptionLines(description: string | null | undefined): {
+function parseDescriptionLines(description: string | null | undefined, title?: string): {
   foodLines: string[];
   substitutionLines: string[];
   rawSubstitutionHeader: string;
 } {
-  if (!description) return { foodLines: [], substitutionLines: [], rawSubstitutionHeader: "" };
+  if (!description) {
+    return { 
+      foodLines: title ? [`• ${title}`] : [], 
+      substitutionLines: [], 
+      rawSubstitutionHeader: "" 
+    };
+  }
 
   const parts = description.split(/\n\n🔄 Substituições:\n/);
   const mainSection = parts[0] || "";
@@ -262,6 +268,18 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     before: { protein: number; carbs: number; fat: number; calories: number };
     after: { protein: number; carbs: number; fat: number; calories: number };
   } | null>(null);
+
+  // 🛡️ SOBERANIA V3: Estabilização de Imagem
+  const resolvedImage = useMemo(() => {
+    const raw = meal?.image_url;
+    if (!raw) return null;
+    if (raw.includes("source.unsplash.com")) {
+      // Unsplash Source está instável. Tentando redirecionar para imagens reais de alta qualidade via Unsplash normal
+      const query = meal?.title || "food";
+      return `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+    }
+    return raw;
+  }, [meal?.image_url, meal?.title]);
 
   const fetchDbHistory = async (offset = 0) => {
     if (!meal?.itemId) return;
@@ -549,7 +567,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const clinicalTags: string[] = parseJsonField<string>(meta.clinical_tags || meta.clinical_tag);
   const source: string | undefined = meta.source;
   const mealTypeInfo = MEAL_TYPE_LABELS[meal.tipo_refeicao || ""] || null;
-  const imageUrl = meal.image_url || meta.image_url;
+  const rawImageUrl = meal.image_url || meta.image_url;
+  const imageUrl = useMemo(() => {
+    if (!rawImageUrl) return null;
+    if (rawImageUrl.includes("source.unsplash.com")) {
+      const query = meal.title || "food";
+      return `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(query)}`;
+    }
+    return rawImageUrl;
+  }, [rawImageUrl, meal.title]);
 
   const calories = Number(meal.meta_calorias ?? meta.meta_calorias ?? meta.calories ?? 0);
   const protein = Number(meal.meta_proteinas ?? meta.meta_proteinas ?? meta.protein ?? 0);
@@ -559,7 +585,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const hasMacros = calories > 0 || protein > 0 || carbs > 0 || fat > 0;
 
   const canEdit = !!meal.itemId && (!!onRemoveFoodLine || !!onUpdateItem);
-  const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
+  const { foodLines, substitutionLines } = parseDescriptionLines(meal.description, meal.title);
   const hasDescriptionLines = foodLines.length > 0;
 
   const handleUpdateTitle = () => {
