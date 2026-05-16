@@ -19,4 +19,5 @@ export const calculateNutritionalScore = () => ({});
 export const validatePlanClinically = () => [];
 export const validatePlanBeforePublish = () => ({ errors: [], warnings: [] });
 export const logClinicalEvent = () => {};
-export const SovereignFatalGuard: any = { assert: () => {}, validate: () => {} };
+export const SovereignFatalGuard: any = { assert: () => {}, validate: () => {}, blockLegacyNormalization: () => {} };
+export const SovereignTelemetry: any = { log: () => {} };

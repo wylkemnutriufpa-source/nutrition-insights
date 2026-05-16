@@ -187,6 +187,7 @@ export async function loadOrCreateDraft(
       meta_protein: macros.protein,
       meta_carbs: macros.carbs,
       meta_fat: macros.fat,
+      editor_version: 'v3'
     } as any)
     .select('*')
     .single();
@@ -228,6 +229,7 @@ export async function saveDraft(
       meta_protein: macros.protein,
       meta_carbs: macros.carbs,
       meta_fat: macros.fat,
+      editor_version: 'v3'
     } as any)
     .eq('id', draftId)
     .select('*')
