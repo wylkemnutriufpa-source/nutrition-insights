@@ -392,15 +392,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         onUpdateItem(meal.itemId, { description: newDescription });
         
         // Auditoria Pós-Persistência Removida (Patient App é passivo)
-        const verifiedItem = { id: meal.itemId };
-        const fetchError = null;
-          .select("description")
-          .eq("id", meal.itemId)
-          .single();
-          
-        if (fetchError || verifiedItem.description !== newDescription) {
-          throw new Error("Divergência de persistência detectada.");
-        }
+        toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
 
         toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
       } catch (err: any) {
