@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, MealItem, Food } from '../types/types';
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
+import { SovereignTelemetry } from '../utils/FakeUtils';
 
 interface EditorState {
   meals: Meal[];
@@ -47,7 +48,7 @@ export const useEditorState = create<EditorState>()(
       setMeals: (meals) => set({ meals }),
       setPatientId: (id) => set({ patientId: id }),
       hydrateMeals: (meals) => set({ meals }),
-      resetEditor: () => set({ meals: [], patientId: null }),
+      resetEditor: () => set({ meals: [], patientId: null, nutritionalScore: null, validationIssues: [] }),
 
       updateFoodQuantity: (mealId, itemInstanceId, newQuantity) => {
         const { meals } = get();

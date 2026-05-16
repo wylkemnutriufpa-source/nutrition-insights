@@ -93,9 +93,11 @@ export const patientService = {
     const data = rawData as any;
     const patientData = data.nutritionist_patients;
     
-    // --- SNAPSHOT-FIRST: não depende de editor_version ---
+    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
+    // Se existe snapshot estruturado, ele é a ÚNICA VERDADE, independente de editor_version
     if (data.snapshot && (Array.isArray(data.snapshot.days) || Array.isArray(data.snapshot.meals))) {
-      return this.mapSnapshotPlan(data, patientData, data.editor_version || 'snapshot');
+      console.log(`[PatientService] Snapshot estruturado detectado. Renderizando via Soberania V3.`);
+      return this.mapSnapshotPlan(data, patientData, data.editor_version || 'v3');
     }
 
     // Fallback para V1/V2 (Legacy Relational)
@@ -147,9 +149,10 @@ export const patientService = {
     const data = rawData as any;
     const patientData = data.nutritionist_patients;
 
-    // --- SNAPSHOT-FIRST: não depende de editor_version ---
+    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
     if (data.snapshot && (Array.isArray(data.snapshot.days) || Array.isArray(data.snapshot.meals))) {
-      return this.mapSnapshotPlan(data, patientData, data.editor_version || 'snapshot');
+      console.log(`[PatientService] Snapshot estruturado detectado via Token. Renderizando via Soberania V3.`);
+      return this.mapSnapshotPlan(data, patientData, data.editor_version || 'v3');
     }
 
     // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
