@@ -61,6 +61,7 @@ export default function EditorV3Page() {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [activeDay, setActiveDay] = useState<number>(1); // 1 = Segunda-feira (Padrão)
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
