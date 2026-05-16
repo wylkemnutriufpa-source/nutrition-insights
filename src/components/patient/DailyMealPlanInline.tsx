@@ -94,14 +94,21 @@ export default function DailyMealPlanInline() {
           const snapshotItems = dayData.meals.flatMap((m: any) => m.items.map((it: any) => ({
             ...it,
             tipo_refeicao: m.name,
-            day_of_week: m.day_of_week,
+            day_of_week: m.day_of_week ?? dayOfWeek,
+            // SOBERANIA V3: Garantimos que o item saiba que é primário no contexto do snapshot
+            is_primary: true,
             // Adicionamos metadados de substituição se existirem
             metadata: {
               ...it.metadata,
+              substitution_group_id: it.instanceId || it.id,
               substitution_options: it.substitutions?.map((s: any) => ({
-                id: s.id || s.instanceId,
+                id: s.id || s.instanceId || crypto.randomUUID(),
                 title: s.name,
-                meta_calorias: s.kcal
+                meta_calorias: s.kcal,
+                meta_proteinas: s.protein,
+                meta_carboidratos: s.carbs,
+                meta_gorduras: s.fat,
+                description: s.description || ""
               }))
             }
           })));

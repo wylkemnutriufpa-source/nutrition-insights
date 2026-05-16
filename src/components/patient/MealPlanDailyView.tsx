@@ -163,14 +163,14 @@ const MacroSummary = memo(function MacroSummary({
 }) {
   const totals = useMemo(() => {
     // SOBERANIA V3: Se targets já vêm prontos do snapshot, ignoramos qualquer cálculo frontend.
-    if (targets?.calories) return {
+    if (targets?.calories && Number(targets.calories) > 0) return {
       calories: targets.calories,
       protein: targets.protein || 0,
       carbs: targets.carbs || 0,
       fat: targets.fat || 0
     };
 
-    // Fallback legado apenas se targets forem nulos
+    // Fallback legado apenas se targets forem nulos ou zero
     const primaryOnly = items.filter(i => i.is_primary !== false && !(i as any).is_substitution);
     return {
       calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories), 0),
