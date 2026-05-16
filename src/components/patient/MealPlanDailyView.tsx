@@ -167,7 +167,7 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
     });
     
     return {
-      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
+      calories: primaryOnly.reduce((s, i) => s + safeNum(i.meta_calorias ?? (i as any).kcal ?? (i as any).calories ?? i.metadata?.meta_calorias ?? i.metadata?.calories), 0),
       protein: primaryOnly.reduce((s, i) => s + safeNum(i.meta_proteinas ?? (i as any).protein ?? i.metadata?.meta_proteinas ?? i.metadata?.protein), 0),
       carbs: primaryOnly.reduce((s, i) => s + safeNum(i.meta_carboidratos ?? (i as any).carbs ?? i.metadata?.meta_carboidratos ?? i.metadata?.carbs), 0),
       fat: primaryOnly.reduce((s, i) => s + safeNum(i.meta_gorduras ?? (i as any).fat ?? i.metadata?.meta_gorduras ?? i.metadata?.fat), 0),
@@ -175,7 +175,7 @@ const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: 
   }, [items]);
 
   const hasData = items.length > 0;
-  const showCalculating = totalsStatus === 'incomplete' || (totals.calories === 0 && hasData);
+  const showCalculating = totalsStatus === 'incomplete' || (totals.calories === 0 && hasData && totalsStatus !== 'ok');
 
   return (
     <div className="space-y-6">

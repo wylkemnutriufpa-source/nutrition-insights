@@ -288,18 +288,26 @@ export default function PatientMealPlan() {
           };
 
           // 1. Mapeia o item preservando a soberania primário/substituição do snapshot.
-          // Bug anterior: todo item do snapshot virava primário, somando substituições no dia.
           const blockId = item.block_id || item.blockId || item.substitution_group_id || item.id || item.instanceId;
+          const kcal = item.macros?.kcal ?? item.meta_calorias ?? item.kcal ?? (item as any).calories ?? 0;
+          const protein = item.macros?.protein_g ?? item.meta_proteinas ?? item.protein ?? 0;
+          const carbs = item.macros?.carbs_g ?? item.meta_carboidratos ?? item.carbs ?? 0;
+          const fat = item.macros?.fat_g ?? item.meta_gorduras ?? item.fat ?? 0;
+          
           flatItems.push({
             ...item,
             ...common,
             id: item.id || item.instanceId,
             title: item.title || item.name,
             description: item.description || item.instructions,
-            meta_calorias: item.macros?.kcal ?? item.meta_calorias ?? item.kcal ?? (item as any).calories ?? 0,
-            meta_proteinas: item.macros?.protein_g ?? item.meta_proteinas ?? item.protein ?? 0,
-            meta_carboidratos: item.macros?.carbs_g ?? item.meta_carboidratos ?? item.carbs ?? 0,
-            meta_gorduras: item.macros?.fat_g ?? item.meta_gorduras ?? item.fat ?? 0,
+            meta_calorias: kcal,
+            meta_proteinas: protein,
+            meta_carboidratos: carbs,
+            meta_gorduras: fat,
+            kcal: kcal,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
             image_url: item.image_url || item.imageUrl || (item as any).metadata?.image_url,
             display_quantity: item.display_quantity || item.quantity || (item as any).metadata?.display_quantity || item.clinical_mass_g || (item as any).grams,
             display_unit: item.display_unit || item.portionUnitLabel || (item as any).metadata?.display_unit || (item.clinical_mass_g || (item as any).grams ? "g" : ""),
@@ -330,6 +338,10 @@ export default function PatientMealPlan() {
                 meta_proteinas: sub.macros?.protein_g ?? sub.meta_proteinas ?? sub.protein ?? 0,
                 meta_carboidratos: sub.macros?.carbs_g ?? sub.meta_carboidratos ?? sub.carbs ?? 0,
                 meta_gorduras: sub.macros?.fat_g ?? sub.meta_gorduras ?? sub.fat ?? 0,
+                kcal: sub.macros?.kcal ?? sub.meta_calorias ?? sub.kcal ?? (sub as any).calories ?? 0,
+                protein: sub.macros?.protein_g ?? sub.meta_proteinas ?? sub.protein ?? 0,
+                carbs: sub.macros?.carbs_g ?? sub.meta_carboidratos ?? sub.carbs ?? 0,
+                fat: sub.macros?.fat_g ?? sub.meta_gorduras ?? sub.fat ?? 0,
                 image_url: sub.image_url || sub.imageUrl || (sub as any).metadata?.image_url,
                 display_quantity: sub.display_quantity || sub.quantity || sub.suggestedQuantity || (sub as any).metadata?.display_quantity || sub.clinical_mass_g || (sub as any).grams,
                 display_unit: sub.display_unit || sub.portionUnitLabel || sub.portionLabel || (sub as any).metadata?.display_unit || (sub.clinical_mass_g || (sub as any).grams ? "g" : ""),
