@@ -11,10 +11,15 @@ export const patientService = {
 
     const currentDow = new Date().getDay();
     const snapshotDays = snapshot.days || [];
+    const daysOrder = [1, 2, 3, 4, 5, 6, 0];
     
     // Tenta encontrar o dia atual no snapshot. Se não houver, pega o primeiro dia.
-    const dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
-    
+    // 🛡️ SOBERANIA V3: Se day_of_week não existir no objeto do dia, inferimos pelo índice do array.
+    const dayData = snapshotDays.find((d: any, idx: number) => {
+      const dow = (d.day_of_week !== undefined && d.day_of_week !== null) ? d.day_of_week : daysOrder[idx % 7];
+      return dow === currentDow;
+    }) || snapshotDays[0];
+
     if (!dayData) {
       return this.mapLegacyPlan(data, patientData);
     }
