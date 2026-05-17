@@ -16,6 +16,7 @@ export interface SovereignMacros {
 export interface SovereignItem {
   id: string;
   title: string;
+  blockId: string; // 🛡️ IDENTIFICADOR ÚNICO DE HIERARQUIA
   quantity_display: string;
   clinical_mass_g?: number;
   macros: SovereignMacros;
