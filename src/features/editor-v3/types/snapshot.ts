@@ -27,6 +27,7 @@ export interface SovereignItem {
 export interface SovereignSubstitution {
   id: string;
   title: string;
+  blockId?: string; // 🛡️ VINCULADO AO PAI SE SUBSTITUIÇÃO
   quantity_display: string;
   macros: SovereignMacros;
   visual: SovereignVisual;
