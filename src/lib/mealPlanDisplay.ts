@@ -69,7 +69,7 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
   // 🛡️ ANTI-CRASH: Se o item for nulo ou indefinido, abortamos silenciosamente para evitar quebra de render.
   if (!item) return;
 
-  const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3" || safeAccess(item, 'edit_metadata.editor_version', '') === "v3";
+  const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3" || safeAccess<string>(item, 'edit_metadata.editor_version', '') === "v3";
   
   // 1. Regra de BlockId (Obrigatório e Imutável em V3)
   const blockId = (item as any).blockId || safeAccess(item, 'edit_metadata.blockId', '') || item.substitution_group_id;
