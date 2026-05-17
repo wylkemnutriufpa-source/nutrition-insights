@@ -106,6 +106,7 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
   const snapshot = rawData.snapshot || rawData.items_payload || (rawData.meals ? rawData : {});
   const rawMeals: any[] = [];
   
+  // 🛡️ SOBERANIA V3: Estrutura complexa (snapshot.days -> meals)
   if (snapshot && Array.isArray(snapshot.days)) {
     snapshot.days.forEach((day: any) => {
       const dayIdx = day.day_of_week !== undefined && day.day_of_week !== null ? Number(day.day_of_week) : 0;
@@ -119,19 +120,42 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
       }
     });
   } 
+  // 🛡️ SOBERANIA V3: Estrutura flat (snapshot.meals)
   else if (snapshot && Array.isArray(snapshot.meals)) {
     rawMeals.push(...snapshot.meals);
   }
+  // 🛡️ SOBERANIA V3: Estrutura única (legado) ou Itens Relacionais (V2)
   else if (snapshot && (snapshot.items || snapshot.meal_type || snapshot.name)) {
     rawMeals.push({
       ...snapshot,
-      name: snapshot.name || snapshot.meal_type || 'Refeição',
+      name: snapshot.name || snapshot.meal_type || translateType(snapshot.type || snapshot.tipo_refeicao),
       day_of_week: snapshot.day_of_week || 0,
       items: Array.isArray(snapshot.items) ? snapshot.items : []
     });
   }
 
-  if (rawMeals.length === 0 && Array.isArray(rawData.items) && rawData.items.length > 0) {
+  // 🛡️ RECONCILIAÇÃO LEGADA: Se nada foi encontrado no snapshot, tenta ler de meal_plan_items
+  if (rawMeals.length === 0 && Array.isArray(rawData.meal_plan_items) && rawData.meal_plan_items.length > 0) {
+    const groups = new Map();
+    rawData.meal_plan_items.forEach((it: any) => {
+      const day = it.day_of_week !== null && it.day_of_week !== undefined ? it.day_of_week : 0;
+      const type = it.tipo_refeicao || 'Refeição';
+      const key = `${day}-${type}`;
+      
+      if (!groups.has(key)) {
+        groups.set(key, { 
+          id: `group-${key}`,
+          name: translateType(type),
+          day_of_week: day,
+          items: [] 
+        });
+      }
+      groups.get(key).items.push(it);
+    });
+    rawMeals.push(...Array.from(groups.values()));
+  }
+  // Tenta também .items (outra variante legada)
+  else if (rawMeals.length === 0 && Array.isArray(rawData.items) && rawData.items.length > 0) {
     const groups = new Map();
     rawData.items.forEach((it: any) => {
       const day = it.day_of_week !== null && it.day_of_week !== undefined ? it.day_of_week : 0;
