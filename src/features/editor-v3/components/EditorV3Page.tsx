@@ -274,7 +274,9 @@ export default function EditorV3Page() {
           // 🛡️ SOBERANIA V3: Usar normalizador universal para garantir carregamento 
           // mesmo em snapshots com estruturas atípicas ou corrompidas.
           const normalized = normalizeMealPlan(planData);
-          store.hydrateMeals(normalized.meals);
+          
+          // Hydrate meals directly - NormalizedMeal is compatible with V3 Editor Meal structure
+          store.hydrateMeals(normalized.meals as any);
           
           if (planData?.patient_id) store.setPatientId(planData.patient_id);
         }
