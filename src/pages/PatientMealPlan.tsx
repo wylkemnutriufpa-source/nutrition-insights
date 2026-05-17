@@ -513,7 +513,6 @@ export default function PatientMealPlan() {
           onOpenDetail={setSelectedMeal}
           onOpenSubstitution={setSubstitutionItem}
         />
-      </div>
     </motion.div>
   );
 }
