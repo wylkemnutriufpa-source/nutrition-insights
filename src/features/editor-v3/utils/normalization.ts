@@ -176,8 +176,13 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
   
   // Estrutura complexa: snapshot.days -> meals
   if (Array.isArray(snapshot.days)) {
-    snapshot.days.forEach((day: any) => {
-      const dayIdx = day.day_of_week !== undefined ? Number(day.day_of_week) : 0;
+    snapshot.days.forEach((day: any, index: number) => {
+      // 🛡️ SOBERANIA V3: Se day_of_week não existir no objeto do dia, inferimos pelo índice do array.
+      // Seguindo a ordem do Editor [1, 2, 3, 4, 5, 6, 0] (Segunda a Domingo)
+      const daysOrder = [1, 2, 3, 4, 5, 6, 0];
+      const fallbackDay = daysOrder[index % 7];
+      const dayIdx = (day.day_of_week !== undefined && day.day_of_week !== null) ? Number(day.day_of_week) : fallbackDay;
+
       if (Array.isArray(day.meals)) {
         day.meals.forEach((m: any) => {
           rawMeals.push({
@@ -196,7 +201,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
   else if (snapshot.items) {
     rawMeals.push({
       ...snapshot,
-      day_of_week: snapshot.day_of_week || 0,
+      day_of_week: snapshot.day_of_week !== undefined ? snapshot.day_of_week : 0,
       items: snapshot.items
     });
   }
