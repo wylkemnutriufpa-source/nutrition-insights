@@ -19,6 +19,7 @@ import {
   calculatePrimaryTotals,
 } from "@/lib/mealPlanDisplay";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
+import { safeAccess } from "@/lib/safeRender";
 import { toast } from "sonner";
 
 interface PatientProfileMealPlanProps {
@@ -318,7 +319,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           mealPlanId={activeMealPlanId || ""}
           patientId={patientId}
           mealSlot={(substitutingItem as any)?.tipo_refeicao}
-          options={substitutingItem.metadata?.substitution_options}
+          options={safeAccess(substitutingItem, 'metadata.substitution_options', [])}
           onSubstitute={() => {
             fetchData();
             setSubstitutingItem(null);
