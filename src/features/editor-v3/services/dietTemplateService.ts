@@ -58,7 +58,8 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 substitutions: [],
                 portionValue: 1,
                 portionUnitLabel: 'fatia',
-                measurementType: 'unit'
+                measurementType: 'unit',
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/torrada-integral/torrada-integral.jpg'
               },
               {
                 id: 'i2',
@@ -73,7 +74,8 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 substitutions: [],
                 portionValue: 1,
                 portionUnitLabel: 'unid',
-                measurementType: 'unit'
+                measurementType: 'unit',
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/ovo-mexido.jpg'
               }
             ]
           },
@@ -98,7 +100,8 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 ],
                 portionValue: 100,
                 portionUnitLabel: 'g',
-                measurementType: 'gram'
+                measurementType: 'gram',
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/arroz-branco.jpg'
               },
               {
                 id: 'i4',
@@ -113,7 +116,8 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 substitutions: [],
                 portionValue: 100,
                 portionUnitLabel: 'g',
-                measurementType: 'gram'
+                measurementType: 'gram',
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/feijao-carioca.jpg'
               },
               {
                 id: 'i5',
@@ -131,92 +135,8 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 ],
                 portionValue: 100,
                 portionUnitLabel: 'g',
-                measurementType: 'gram'
-              },
-              {
-                id: 'i6',
-                instanceId: 'i6-1',
-                name: 'Salada Variada',
-                quantity: 80,
-                clinical_mass_g: 80,
-                kcal: 25,
-                protein: 1,
-                carbs: 4,
-                fat: 0,
-                substitutions: [],
-                portionValue: 100,
-                portionUnitLabel: 'g',
-                measurementType: 'gram'
-              }
-            ]
-          }
-        ]
-      }
-    }
-  },
-  {
-    id: 't2',
-    slug: 'emagrecimento',
-    title: 'Emagrecimento 1600 kcal',
-    description: 'Déficit calórico controlado com alta saciedade e alimentos nutritivos.',
-    template_type: 'visual_v3',
-    objective: 'emagrecimento',
-    family: 'emagrecimento',
-    meal_distribution: [
-      { slot: 'cafe_da_manha', time: '08:00' },
-      { slot: 'almoco', time: '13:00' },
-      { slot: 'lanche_da_tarde', time: '17:00' },
-      { slot: 'jantar', time: '20:00' }
-    ],
-    cluster_map: {
-      'cafe_da_manha': 'cafe_saudavel',
-      'almoco': 'almoco_tradicional',
-      'lanche_da_tarde': 'lanche_fruta',
-      'jantar': 'jantar_leve'
-    },
-    kcal_profiles: [1600],
-    visual_style: 'clean',
-    substitutions_enabled: true,
-    editable: true,
-    active: true,
-    plan_snapshot: {
-      "1600": {
-        meals: [
-          {
-            id: 'm3',
-            name: 'Café da Manhã',
-            time: '08:00',
-            day_of_week: 1,
-            items: [
-              {
-                id: 'i7',
-                instanceId: 'i7-1',
-                name: 'Iogurte Natural',
-                quantity: 170,
-                clinical_mass_g: 170,
-                kcal: 110,
-                protein: 7,
-                carbs: 10,
-                fat: 4.5,
-                substitutions: [],
-                portionValue: 1,
-                portionUnitLabel: 'pote',
-                measurementType: 'unit'
-              },
-              {
-                id: 'i8',
-                instanceId: 'i8-1',
-                name: 'Morango',
-                quantity: 100,
-                clinical_mass_g: 100,
-                kcal: 32,
-                protein: 0.7,
-                carbs: 7.7,
-                fat: 0.3,
-                substitutions: [],
-                portionValue: 100,
-                portionUnitLabel: 'g',
-                measurementType: 'gram'
+                measurementType: 'gram',
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/peito-de-frango-grelhado.jpg'
               }
             ]
           }

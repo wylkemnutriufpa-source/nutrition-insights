@@ -1,4 +1,3 @@
-import { getHardcodedImageUrl } from "./mealVisualMatcher";
 
 export interface NormalizedMealPlan {
   id: string;
@@ -42,11 +41,6 @@ function translateType(type: string | undefined): string {
   return TYPE_MAP[lower] || type;
 }
 
-function isPlaceholderUrl(url: string | null | undefined): boolean {
-  if (!url) return true;
-  return url.includes("unsplash.com") || url.includes("placeholder.svg") || url.includes("via.placeholder") || url.includes("images.unsplash.com");
-}
-
 export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
   if (!rawData) return { id: 'unknown', meals: [] };
 
@@ -74,21 +68,9 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
       name: mealName,
       day_of_week: m.day_of_week !== undefined && m.day_of_week !== null ? Number(m.day_of_week) : 0,
       items: (m.items || []).map((it: any) => {
-        const originalImg = it.imageUrl || it.image_url || it.metadata?.image_url || it.metadata?.imageUrl || it.edit_metadata?.image_url;
-        
-        let finalImg = originalImg;
-        if (isPlaceholderUrl(originalImg)) {
-          const matchedImg = getHardcodedImageUrl(it.title || it.name || "");
-          if (matchedImg) {
-            finalImg = matchedImg;
-          }
-        }
-        
-        // Final fallback audit
-        if (!finalImg || isPlaceholderUrl(finalImg)) {
-          const matchedImg = getHardcodedImageUrl(it.title || it.name || "");
-          if (matchedImg) finalImg = matchedImg;
-        }
+        // SIMPLICITY: Just trust the image URL in the data. 
+        // No engines, no matchers, no placeholders detection.
+        const img = it.image_url || it.imageUrl || it.metadata?.image_url || it.metadata?.imageUrl || it.edit_metadata?.image_url;
         
         return {
           id: it.id || it.instanceId || Math.random().toString(),
@@ -98,8 +80,8 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
           protein: Number(it.meta_proteinas ?? it.protein ?? it.macros?.protein_g ?? 0),
           carbs: Number(it.meta_carboidratos ?? it.carbs ?? it.macros?.carbs_g ?? 0),
           fat: Number(it.meta_gorduras ?? it.fat ?? it.macros?.fat_g ?? 0),
-          imageUrl: finalImg,
-          image_url: finalImg,
+          imageUrl: img,
+          image_url: img,
           display_quantity: it.display_quantity || it.quantity,
           display_unit: it.display_unit || it.unit,
           metadata: it.metadata || it.edit_metadata || {}
@@ -110,3 +92,4 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
 
   return { id: rawData.id, meals };
 }
+

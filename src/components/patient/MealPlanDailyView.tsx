@@ -12,7 +12,7 @@ import {
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
   Info, Clock,
 } from "lucide-react";
-import { useMealVisualItem } from "@/hooks/useMealVisualItem";
+// useMealVisualItem removed as images are now hardcoded in the data
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 import { safeAccess } from "@/lib/safeRender";
