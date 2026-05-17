@@ -132,24 +132,34 @@ export async function loadOrCreateDraft(
     return record;
   }
 
-  // 2. Se não houver rascunho e houver mealPlanId, tentar migrar dados do plano oficial (Legado V2 -> V3)
+  // 2. Se não houver rascunho e houver mealPlanId, tentar migrar dados do plano oficial (Híbrido Snapshot V3 / Itens V2)
   let initialMealsToUse = seedMeals;
   if (mealPlanId && (!initialMealsToUse || initialMealsToUse.length === 0)) {
     console.info('[v3-draft] No draft found. Attempting to seed from official meal plan:', mealPlanId);
     
-    // Tenta carregar o plano oficial (seja ele v2 ou v3)
+    // Tenta carregar o plano oficial
     const { data: officialPlan } = await supabase
       .from('meal_plans')
       .select('*, meal_plan_items(*)')
       .eq('id', mealPlanId)
       .single();
 
-    if (officialPlan && officialPlan.meal_plan_items) {
-      // Usar o Migration Guard para garantir compatibilidade total
-      const convertedMeals = normalizeV2ToV3(officialPlan.meal_plan_items);
-      
-      if (convertedMeals.length > 0) {
-        initialMealsToUse = convertedMeals;
+    if (officialPlan) {
+      // 🛡️ SOBERANIA V3: Primeiro tentamos o snapshot, que é o caminho mais fiel
+      if (officialPlan.snapshot) {
+        console.info('[v3-draft] Seeding from Snapshot V3');
+        const snapshotMeals = normalizeSnapshotToV3(officialPlan.snapshot);
+        if (snapshotMeals.length > 0) {
+          initialMealsToUse = snapshotMeals;
+        }
+      } 
+      // Fallback para itens relacionais (V2 ou V3 incompleto)
+      if (initialMealsToUse.length === 0 && officialPlan.meal_plan_items) {
+        console.info('[v3-draft] Seeding from relational items');
+        const convertedMeals = normalizeV2ToV3(officialPlan.meal_plan_items);
+        if (convertedMeals.length > 0) {
+          initialMealsToUse = convertedMeals;
+        }
       }
     }
   }
