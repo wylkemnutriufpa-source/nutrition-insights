@@ -63,7 +63,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         const snapshot = planData.snapshot as any;
         const meals = snapshot.meals || [];
         
-        allResolvedItems = meals.flatMap((m: any) => (m.items || []).map((it: any) => ({
+        allResolvedItems = meals.flatMap((m: any) => (m.items || []).filter(Boolean).map((it: any) => ({
           ...it,
           id: it.id || it.instanceId,
           title: it.title || it.name,
@@ -82,7 +82,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         // Filtro Diário do Snapshot
         const dayData = snapshot.days?.find((d: any) => d.day_of_week === dayOfWeek) || snapshot.days?.[0];
         const dailyItems = (dayData?.meals || []).flatMap((m: any) => 
-          (m.items || []).map((it: any) => ({
+          (m.items || []).filter(Boolean).map((it: any) => ({
             ...it,
             id: it.id || it.instanceId,
             title: it.title || it.name,
@@ -98,7 +98,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         const meals = snapshot?.meals || snapshot?.days?.flatMap((d: any) => d.meals || []) || [];
         
         if (meals.length > 0) {
-          allResolvedItems = meals.flatMap((m: any) => (m.items || []).map((it: any) => ({
+          allResolvedItems = meals.flatMap((m: any) => (m.items || []).filter(Boolean).map((it: any) => ({
             ...it,
             id: it.id || it.instanceId,
             title: it.title || it.name,
@@ -302,13 +302,15 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         onOpenSubstitution={setSubstitutingItem}
       />
 
-      <MealDetailModal
-        open={!!selectedMeal}
-        onOpenChange={(open) => !open && setSelectedMeal(null)}
-        meal={selectedMeal}
+      {selectedMeal && (
+        <MealDetailModal
+          open={!!selectedMeal}
+          onOpenChange={(open) => !open && setSelectedMeal(null)}
+          meal={selectedMeal}
         onUpdateItem={handleUpdateItem}
-        onChangeImage={handleChangeImage}
-      />
+          onChangeImage={handleChangeImage}
+        />
+      )}
 
       {substitutingItem && (
         <MealSubstitutionModal

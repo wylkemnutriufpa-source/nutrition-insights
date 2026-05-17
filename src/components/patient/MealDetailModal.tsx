@@ -276,10 +276,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
   // 🛡️ SOBERANIA V3: Estabilização de Imagem
   const resolvedImage = useMemo(() => {
-    // SOBERANIA V3: O Patient App é um RENDERIZADOR PASSIVO.
-    // Ele não deve "resolver" URLs nem buscar fallbacks aleatórios.
-    return meal?.image_url || (meal as any).imageUrl || null;
-  }, [meal?.image_url, (meal as any).imageUrl]);
+    if (!meal) return null;
+    return meal.image_url || (meal as any)?.imageUrl || null;
+  }, [meal?.image_url, (meal as any)?.imageUrl]);
 
 
   const fetchDbHistory = async (offset = 0) => {
