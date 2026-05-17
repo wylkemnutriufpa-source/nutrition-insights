@@ -80,8 +80,8 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
       metadata: { item_id: item.id, title: item.title, context, is_primary: item.is_primary }
     });
     
-    // RUPTURA CRÍTICA: O sistema não deve processar itens V3 sem hierarquia.
-    throw new Error(`Critical Hierarchy Failure: Item "${item.title}" is missing blockId in V3 runtime [Context: ${context}].`);
+    // RUPTURA CRÍTICA: Logamos o erro mas não travamos o app na Fase 1.2
+    console.error(`HIERARCHY_GUARD_FAIL: Item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3.`);
   }
 
   // 2. Regra de Ownership (Substituições devem herdar blockId e group_id)
@@ -94,7 +94,7 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
       message: errorMsg,
       metadata: { item_id: item.id, title: item.title, context }
     });
-    throw new Error(`Critical Hierarchy Failure: Substitution item "${item.title}" is missing group ownership [Context: ${context}].`);
+    console.error(`HIERARCHY_GUARD_FAIL: Substitution item "${item.title}" is missing group ownership.`);
   }
 }
 

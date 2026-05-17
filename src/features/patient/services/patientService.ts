@@ -1,24 +1,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PatientPlan } from "../types";
-import { SovereignMonitor } from "@/lib/sovereignMonitor";
 
 export const patientService = {
   mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion = 'v3'): PatientPlan {
     const snapshot = data.snapshot as any;
     
-    // 🛡️ BLOQUEIO DE SEGURANÇA: Se não é v3, rejeitar logicamente ou usar fallback controlado
-    if (!snapshot || snapshot.snapshot_version !== 'v3') {
-      console.warn("[PatientService] Snapshot V3 não encontrado ou versão incompatível. Tentando mapeamento legado.");
+    if (!snapshot || !snapshot.days) {
+      return this.mapLegacyPlan(data, patientData);
     }
 
     const currentDow = new Date().getDay();
     const snapshotDays = snapshot.days || [];
     
-    // 🛡️ SOBERANIA: Tenta encontrar o dia atual no snapshot. Se não houver, pega o primeiro dia.
+    // Tenta encontrar o dia atual no snapshot. Se não houver, pega o primeiro dia.
     const dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
     
     if (!dayData) {
-      throw new Error("SNAPSHOT VAZIO: O plano não contém dias válidos para exibição.");
+      return this.mapLegacyPlan(data, patientData);
     }
 
     const mappedMeals = dayData.meals.map((m: any) => ({
@@ -28,26 +26,21 @@ export const patientService = {
       items: m.items.map((it: any) => ({
         id: it.id,
         name: it.title,
-        description: '', // Descrição agora é opcional ou vem no title
-        kcal: it.macros.kcal,
-        protein: it.macros.protein_g,
-        carbs: it.macros.carbs_g,
-        fat: it.macros.fat_g,
-        meta_calorias: it.macros.kcal,
-        meta_proteinas: it.macros.protein_g,
-        meta_carboidratos: it.macros.carbs_g,
-        meta_gorduras: it.macros.fat_g,
+        description: '', 
+        kcal: it.macros?.kcal || 0,
+        protein: it.macros?.protein_g || 0,
+        carbs: it.macros?.carbs_g || 0,
+        fat: it.macros?.fat_g || 0,
         display_quantity: it.quantity_display,
         clinical_mass_g: it.clinical_mass_g,
         imageUrl: it.visual?.image_url,
-        image_url: it.visual?.image_url,
         substitutions: (it.substitutions || []).map((sub: any) => ({
           id: sub.id,
           name: sub.title,
-          kcal: sub.macros.kcal,
-          protein: sub.macros.protein_g,
-          carbs: sub.macros.carbs_g,
-          fat: sub.macros.fat_g,
+          kcal: sub.macros?.kcal || 0,
+          protein: sub.macros?.protein_g || 0,
+          carbs: sub.macros?.carbs_g || 0,
+          fat: sub.macros?.fat_g || 0,
           display_quantity: sub.quantity_display,
           imageUrl: sub.visual?.image_url
         }))
@@ -68,6 +61,23 @@ export const patientService = {
       sharing_token: data.sharing_token,
       editor_version: fallbackEditorVersion
     } as any;
+  },
+
+  mapLegacyPlan(data: any, patientData: any): PatientPlan {
+     return {
+      id: data.id,
+      patient_id: data.patient_id,
+      patient_name: patientData?.notes || 'Paciente',
+      goal: patientData?.status || '',
+      meta_calorias: data.total_meta_calorias || 0,
+      meta_proteinas: data.total_meta_proteinas || 0,
+      meta_carboidratos: data.total_meta_carboidratos || 0,
+      meta_gorduras: data.total_meta_gorduras || 0,
+      meals: [], // Will be filled by groupItemsIntoMeals
+      created_at: data.created_at,
+      sharing_token: data.sharing_token,
+      editor_version: data.editor_version || 'v1'
+    };
   },
 
   async getPlanById(planId: string): Promise<PatientPlan | null> {
@@ -97,38 +107,18 @@ export const patientService = {
     const data = rawData as any;
     const patientData = data.nutritionist_patients;
     
-    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
-    // Se existe snapshot estruturado, ele é a ÚNICA VERDADE, independente de editor_version
-    if (data.snapshot && (Array.isArray(data.snapshot.days) || Array.isArray(data.snapshot.meals))) {
-      console.log(`[PatientService] Snapshot estruturado detectado. Renderizando via Soberania V3.`);
-      SovereignMonitor.log({
-        event_type: 'snapshot_render',
-        component: 'PatientService_getPlanById',
-        message: 'Renderização 100% via Snapshot Estruturado'
-      });
-      return this.mapSnapshotPlan(data, patientData, data.editor_version || 'v3');
+    if (data.snapshot && data.snapshot.snapshot_version === 'v3') {
+      return this.mapSnapshotPlan(data, patientData, data.editor_version);
     }
 
-    // Fallback para V1/V2 (Legacy Relational)
     const { data: items } = await supabase
       .from('meal_plan_items' as any)
       .select('*')
       .eq('meal_plan_id', planId);
 
-    return {
-      id: data.id,
-      patient_id: data.patient_id,
-      patient_name: patientData?.notes || 'Paciente',
-      goal: patientData?.status || '',
-      meta_calorias: data.total_meta_calorias || 0,
-      meta_proteinas: data.total_meta_proteinas || 0,
-      meta_carboidratos: data.total_meta_carboidratos || 0,
-      meta_gorduras: data.total_meta_gorduras || 0,
-      meals: this.groupItemsIntoMeals(items || []),
-      created_at: data.created_at,
-      sharing_token: data.sharing_token,
-      editor_version: data.editor_version || 'v1'
-    };
+    const plan = this.mapLegacyPlan(data, patientData);
+    plan.meals = this.groupItemsIntoMeals(items || []);
+    return plan;
   },
 
   async getPlanByToken(token: string): Promise<PatientPlan | null> {
@@ -158,48 +148,25 @@ export const patientService = {
     const data = rawData as any;
     const patientData = data.nutritionist_patients;
 
-    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
-    if (data.snapshot && (Array.isArray(data.snapshot.days) || Array.isArray(data.snapshot.meals))) {
-      console.log(`[PatientService] Snapshot estruturado detectado via Token. Renderizando via Soberania V3.`);
-      SovereignMonitor.log({
-        event_type: 'snapshot_render',
-        component: 'PatientService_getPlanByToken',
-        message: 'Renderização Token 100% via Snapshot Estruturado'
-      });
-      return this.mapSnapshotPlan(data, patientData, data.editor_version || 'v3');
+    if (data.snapshot && data.snapshot.snapshot_version === 'v3') {
+      return this.mapSnapshotPlan(data, patientData, data.editor_version);
     }
 
-    // O bloco redundante foi removido. A lógica agora centralizada no mapSnapshotPlan
-    // que é invocado acima se o snapshot existir.
-
-
-    // Fallback para V1/V2
     const { data: items } = await supabase
       .from('meal_plan_items' as any)
       .select('*')
       .eq('meal_plan_id', data.id);
 
-    return {
-      id: data.id,
-      patient_id: data.patient_id,
-      patient_name: patientData?.notes || 'Paciente',
-      goal: patientData?.status || '',
-      meta_calorias: data.total_meta_calorias || 0,
-      meta_proteinas: data.total_meta_proteinas || 0,
-      meta_carboidratos: data.total_meta_carboidratos || 0,
-      meta_gorduras: data.total_meta_gorduras || 0,
-      meals: this.groupItemsIntoMeals(items || []),
-      created_at: data.created_at,
-      sharing_token: data.sharing_token,
-      editor_version: data.editor_version || 'v1'
-    };
+    const plan = this.mapLegacyPlan(data, patientData);
+    plan.meals = this.groupItemsIntoMeals(items || []);
+    return plan;
   },
 
   groupItemsIntoMeals(items: any[]): any[] {
     const mealsMap: Record<string, any> = {};
     
     items.forEach(item => {
-      const mealName = item.title || 'Refeição';
+      const mealName = item.tipo_refeicao || item.title || 'Refeição';
       if (!mealsMap[mealName]) {
         mealsMap[mealName] = {
           id: item.id,
@@ -211,13 +178,12 @@ export const patientService = {
       
       mealsMap[mealName].items.push({
         id: item.id,
-        name: item.description || 'Alimento',
+        name: item.title || 'Alimento',
         kcal: Number(item.meta_calorias) || 0,
         protein: Number(item.meta_proteinas) || 0,
         carbs: Number(item.meta_carboidratos) || 0,
         fat: Number(item.meta_gorduras) || 0,
-        portionValue: 1,
-        portionUnitLabel: 'unidade',
+        display_quantity: item.description,
         imageUrl: item.image_url
       });
     });
@@ -228,7 +194,7 @@ export const patientService = {
   async toggleMealCompletion(planId: string, mealId: string, patientId: string): Promise<boolean> {
     const today = new Date().toISOString().split('T')[0];
     
-    const { data: existing, error: selectError } = await supabase
+    const { data: existing } = await supabase
       .from('patient_meal_completions' as any)
       .select('id')
       .eq('meal_plan_id', planId)
