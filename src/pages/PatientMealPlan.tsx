@@ -281,7 +281,7 @@ export default function PatientMealPlan() {
             const dow = day.day_of_week ?? currentDow;
             (day.meals || []).forEach((meal: any) => {
               const mealType = meal.tipo_refeicao || meal.type || meal.name;
-              (meal.items || []).forEach((item: any) => {
+              (meal.items || []).filter(Boolean).forEach((item: any) => {
                 const hydrated = hydrateItem(item, dow, mealType);
                 flatItems.push(hydrated);
                 
@@ -302,7 +302,7 @@ export default function PatientMealPlan() {
           mealsAtRoot.forEach((meal: any) => {
             const dow = meal.day_of_week ?? currentDow;
             const mealType = meal.tipo_refeicao || meal.type || meal.name;
-            (meal.items || []).forEach((item: any) => {
+            (meal.items || []).filter(Boolean).forEach((item: any) => {
               const hydrated = hydrateItem(item, dow, mealType);
               flatItems.push(hydrated);
               
@@ -319,7 +319,7 @@ export default function PatientMealPlan() {
             });
           });
         } else if (itemsAtRoot.length > 0) {
-          itemsAtRoot.forEach((item: any) => {
+          itemsAtRoot.filter(Boolean).forEach((item: any) => {
             const dow = item.day_of_week ?? currentDow;
             const mealType = item.tipo_refeicao || item.type || item.mealType || "Almoço";
             const hydrated = hydrateItem(item, dow, mealType);
@@ -327,7 +327,7 @@ export default function PatientMealPlan() {
           });
         }
       } else {
-        flatItems = (planData.items || []).map((i: any) => hydrateItem(i, i.day_of_week, i.tipo_refeicao));
+        flatItems = (planData.items || []).filter(Boolean).map((i: any) => hydrateItem(i, i.day_of_week, i.tipo_refeicao));
       }
 
       setPlan({
