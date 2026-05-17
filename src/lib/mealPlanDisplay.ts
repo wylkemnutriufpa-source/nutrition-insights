@@ -80,8 +80,8 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
       metadata: { item_id: item.id, title: item.title, context, is_primary: item.is_primary }
     });
     
-    // RUPTURA CRÍTICA: Logamos o erro mas não travamos o app na Fase 1.2
-    console.error(`HIERARCHY_GUARD_FAIL: Item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3.`);
+    // RUPTURA EVITADA: Degradagem graciosa em vez de crash.
+    console.warn(`HIERARCHY_GUARD_WARNING: Item "${item.title}" (ID: ${item.id}) sem blockId. Renderizando em modo degradado.`);
   }
 
   // 2. Regra de Ownership (Substituições devem herdar blockId e group_id)
@@ -94,7 +94,7 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
       message: errorMsg,
       metadata: { item_id: item.id, title: item.title, context }
     });
-    console.error(`HIERARCHY_GUARD_FAIL: Substitution item "${item.title}" is missing group ownership.`);
+    console.warn(`HIERARCHY_GUARD_WARNING: Substitution item "${item.title}" is missing group ownership. Renderizando sem hierarquia.`);
   }
 }
 

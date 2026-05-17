@@ -120,6 +120,7 @@ export const planPersistenceService = {
 
           const sovereignItem: SovereignItem = {
             id: it.instanceId || it.id || crypto.randomUUID(),
+            blockId: it.blockId || it.id || crypto.randomUUID(), // 🛡️ ASSEGURAR BLOCK_ID NO SNAPSHOT
             title: it.name || (it as any).title,
             quantity_display: `${it.display_quantity || it.quantity} ${it.display_unit || it.portionUnitLabel || 'g'}`,
 
