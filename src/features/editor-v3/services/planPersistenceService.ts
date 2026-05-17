@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Meal, MealItem } from '../types';
 import { saveDraft } from './draftService';
+import { SovereignSnapshotV3, SovereignDay, SovereignMeal, SovereignItem, SovereignMacros } from '../types/snapshot';
 
 export interface PlanSaveOptions {
   patientId: string;
@@ -24,6 +25,8 @@ export interface SaveResult {
   error?: string;
 }
 
+const OFFICIAL_PLACEHOLDER = "/placeholder.svg";
+
 /**
  * SERVIÇO SOBERANO DE PERSISTÊNCIA V3
  * Único caminho para salvar e publicar planos.
@@ -35,6 +38,143 @@ export const planPersistenceService = {
   async saveAsDraft(draftId: string, meals: Meal[], auditLog: any[] = []): Promise<boolean> {
     const result = await saveDraft(draftId, meals, auditLog);
     return !!result;
+  },
+
+  /**
+   * Resolve a imagem final de um item, priorizando a biblioteca soberana.
+   */
+  async resolveVisual(item: any): Promise<{ image_url: string; is_placeholder: boolean; library_item_id?: string }> {
+    // 🛡️ REGRAS DE OURO: Sem Unsplash fallbacks
+    let url = item.imageUrl || item.image_url;
+    
+    if (url && (url.includes('unsplash.com') || url.includes('source.unsplash.com'))) {
+      url = null;
+    }
+
+    if (item.library_item_id || item.id) {
+      // Tentar buscar na biblioteca se for um item da biblioteca
+      // Nota: Em um ambiente de alta performance, isso poderia ser pré-carregado
+      const { data } = await supabase
+        .from('meal_visual_library')
+        .select('image_url')
+        .eq('id', item.library_item_id || item.id)
+        .maybeSingle();
+      
+      if (data?.image_url) {
+        return { 
+          image_url: data.image_url, 
+          is_placeholder: false, 
+          library_item_id: item.library_item_id || item.id 
+        };
+      }
+    }
+
+    return {
+      image_url: url || OFFICIAL_PLACEHOLDER,
+      is_placeholder: !url
+    };
+  },
+
+  /**
+   * Constrói o Snapshot Soberano seguindo o contrato V3.
+   */
+  async buildSovereignSnapshot(options: PlanSaveOptions): Promise<SovereignSnapshotV3> {
+    const { meals, targets, title } = options;
+    const daysList = Array.from(new Set(meals.map(m => m.day_of_week ?? 1))).sort((a, b) => a - b);
+    
+    const snapshotDays: SovereignDay[] = [];
+    const dailyTotals: Record<number, SovereignMacros> = {};
+
+    for (const dayNum of daysList) {
+      const dayMeals = meals.filter(m => (m.day_of_week ?? 1) === dayNum);
+      const sovereignMeals: SovereignMeal[] = [];
+      
+      let dayKcal = 0, dayProt = 0, dayCarb = 0, dayFat = 0;
+
+      for (let i = 0; i < dayMeals.length; i++) {
+        const m = dayMeals[i];
+        const sovereignItems: SovereignItem[] = [];
+
+        for (const it of m.items) {
+          const visual = await this.resolveVisual(it);
+          const subs: any[] = [];
+          
+          if (it.substitutions) {
+            for (const sub of it.substitutions) {
+              const subVisual = await this.resolveVisual(sub);
+              subs.push({
+                id: sub.id || crypto.randomUUID(),
+                title: sub.name || sub.title,
+                quantity_display: `${sub.display_quantity || sub.quantity || 100} ${sub.display_unit || sub.portionUnitLabel || 'g'}`,
+                macros: {
+                  kcal: Math.round(sub.kcal || 0),
+                  protein_g: Number((sub.protein || 0).toFixed(1)),
+                  carbs_g: Number((sub.carbs || 0).toFixed(1)),
+                  fat_g: Number((sub.fat || 0).toFixed(1))
+                },
+                visual: subVisual
+              });
+            }
+          }
+
+          const sovereignItem: SovereignItem = {
+            id: it.instanceId || it.id || crypto.randomUUID(),
+            title: it.name || it.title,
+            quantity_display: `${it.display_quantity || it.quantity} ${it.display_unit || it.portionUnitLabel || 'g'}`,
+            clinical_mass_g: it.clinical_mass_g,
+            macros: {
+              kcal: Math.round(it.kcal || 0),
+              protein_g: Number((it.protein || 0).toFixed(1)),
+              carbs_g: Number((it.carbs || 0).toFixed(1)),
+              fat_g: Number((it.fat || 0).toFixed(1))
+            },
+            visual,
+            substitutions: subs
+          };
+
+          sovereignItems.push(sovereignItem);
+          dayKcal += sovereignItem.macros.kcal;
+          dayProt += sovereignItem.macros.protein_g;
+          dayCarb += sovereignItem.macros.carbs_g;
+          dayFat += sovereignItem.macros.fat_g;
+        }
+
+        sovereignMeals.push({
+          id: m.id || crypto.randomUUID(),
+          name: m.name,
+          time: m.time,
+          order_index: i,
+          items: sovereignItems
+        });
+      }
+
+      snapshotDays.push({
+        day_of_week: dayNum,
+        meals: sovereignMeals
+      });
+
+      dailyTotals[dayNum] = {
+        kcal: Math.round(dayKcal),
+        protein_g: Number(dayProt.toFixed(1)),
+        carbs_g: Number(dayCarb.toFixed(1)),
+        fat_g: Number(dayFat.toFixed(1))
+      };
+    }
+
+    return {
+      publication_id: crypto.randomUUID(),
+      snapshot_version: 'v3',
+      generated_at: new Date().toISOString(),
+      targets: {
+        kcal: Math.round(targets.kcal),
+        protein_g: Number(targets.protein.toFixed(1)),
+        carbs_g: Number(targets.carbs.toFixed(1)),
+        fat_g: Number(targets.fat.toFixed(1))
+      },
+      days: snapshotDays,
+      daily_totals: dailyTotals,
+      notes: title
+    };
   },
 
   /**
@@ -61,47 +201,8 @@ export const planPersistenceService = {
         .single();
       const tenantId = profile?.tenant_id || '20081963-8db9-4a6c-8181-6a820b86e12f';
 
-      // 2. Higienização Soberana das Imagens (Remover Unsplash Fallbacks automáticos)
-      const sanitizedMeals = meals.map(meal => ({
-        ...meal,
-        items: meal.items.map(item => {
-          let imageUrl = item.imageUrl;
-          if (imageUrl && imageUrl.includes('source.unsplash.com') && imageUrl.includes('?')) {
-            imageUrl = null;
-          }
-          return {
-            ...item,
-            imageUrl,
-            display_quantity: item.display_quantity || item.quantity,
-            display_unit: item.display_unit || item.portionUnitLabel || item.portionLabel || 'g',
-            substitutions: (item.substitutions || []).map(sub => {
-              let subImg = (sub as any).imageUrl || (sub as any).image_url;
-              if (subImg && subImg.includes('source.unsplash.com') && subImg.includes('?')) {
-                subImg = null;
-              }
-              return {
-                ...sub,
-                imageUrl: subImg,
-                display_quantity: (sub as any).display_quantity || sub.quantity || (sub as any).suggestedQuantity || (sub as any).portionValue,
-                display_unit: (sub as any).display_unit || (sub as any).portionUnitLabel || (sub as any).portionLabel || (sub as any).portionUnit || 'g'
-              };
-            })
-          };
-        })
-      }));
-
-      // 3. Construir Snapshot Soberano V3
-      const daysList = Array.from(new Set(sanitizedMeals.map(m => m.day_of_week ?? 1))).sort((a, b) => a - b);
-      const snapshot = {
-        meals: sanitizedMeals,
-        targets,
-        days: daysList.map(day => ({
-          day_of_week: day,
-          meals: sanitizedMeals.filter(m => (m.day_of_week ?? 1) === day)
-        })),
-        version: 'v3',
-        published_at: new Date().toISOString()
-      };
+      // 2. Construir Snapshot Soberano V3 (RESOLVE IMAGENS E MACROS AQUI)
+      const snapshot = await this.buildSovereignSnapshot(options);
 
       const payload: any = {
         patient_id: patientId,
@@ -121,7 +222,6 @@ export const planPersistenceService = {
       };
 
       // 🛡️ SNAPSHOT VALIDATOR (Anti-Traição)
-      // Compara se o payload final preserva os macros calculados pelo nutricionista
       const snapshotKcal = payload.snapshot.targets.kcal;
       const payloadKcal = payload.total_meta_calorias;
       
@@ -132,7 +232,7 @@ export const planPersistenceService = {
 
       let finalPlanId = planId;
 
-      // 4. Persistência Principal
+      // 3. Persistência Principal
       if (planId) {
         console.log(`[Persistence-V3] Atualizando plano existente ${planId}.`);
         const { error } = await supabase
@@ -142,7 +242,6 @@ export const planPersistenceService = {
         if (error) throw error;
       } else {
         console.log(`[Persistence-V3] Criando novo plano para o paciente.`);
-        // Desativar planos anteriores
         await supabase
           .from('meal_plans')
           .update({ is_active: false } as any)
@@ -157,54 +256,52 @@ export const planPersistenceService = {
         finalPlanId = newPlan.id;
       }
 
-      // 5. Persistência Relacional (Somente para compatibilidade de lista, Patient App V3 usa Snapshot)
+      // 4. Persistência Relacional (Somente para compatibilidade de lista legado, App V3 usa Snapshot)
       if (finalPlanId) {
         await supabase.from('meal_plan_items').delete().eq('meal_plan_id', finalPlanId);
         
         const itemsRows: any[] = [];
-        sanitizedMeals.forEach(meal => {
-          meal.items.forEach(item => {
-            const groupId = item.substitution_group_id || crypto.randomUUID();
-            
-            itemsRows.push({
-              meal_plan_id: finalPlanId,
-              tenant_id: tenantId,
-              tipo_refeicao: meal.name,
-              day_of_week: meal.day_of_week ?? 1,
-              title: item.name,
-              description: `${item.display_quantity || item.quantity} ${item.display_unit || 'g'}`,
-              meta_calorias: Math.round(item.kcal || 0),
-              meta_proteinas: Number((item.protein || 0).toFixed(1)),
-              meta_carboidratos: Number((item.carbs || 0).toFixed(1)),
-              meta_gorduras: Number((item.fat || 0).toFixed(1)),
-              image_url: item.imageUrl,
-              is_primary: true,
-              substitution_group_id: groupId,
-              editor_version: 'v3',
-              edit_metadata: { ...item, editor_version: 'v3' }
-            });
+        snapshot.days.forEach(day => {
+          day.meals.forEach(meal => {
+            meal.items.forEach(item => {
+              const groupId = crypto.randomUUID();
+              
+              itemsRows.push({
+                meal_plan_id: finalPlanId,
+                tenant_id: tenantId,
+                tipo_refeicao: meal.name,
+                day_of_week: day.day_of_week,
+                title: item.title,
+                description: item.quantity_display,
+                meta_calorias: item.macros.kcal,
+                meta_proteinas: item.macros.protein_g,
+                meta_carboidratos: item.macros.carbs_g,
+                meta_gorduras: item.macros.fat_g,
+                image_url: item.visual.image_url,
+                is_primary: true,
+                substitution_group_id: groupId,
+                editor_version: 'v3'
+              });
 
-            if (item.substitutions) {
-              item.substitutions.forEach((sub: any) => {
+              item.substitutions.forEach(sub => {
                 itemsRows.push({
                   meal_plan_id: finalPlanId,
                   tenant_id: tenantId,
                   tipo_refeicao: meal.name,
-                  day_of_week: meal.day_of_week ?? 1,
-                  title: sub.name,
-                  description: `${sub.display_quantity || sub.quantity || 100} ${sub.display_unit || 'g'}`,
-                  meta_calorias: Math.round(sub.kcal || 0),
-                  meta_proteinas: Number((sub.protein || 0).toFixed(1)),
-                  meta_carboidratos: Number((sub.carbs || 0).toFixed(1)),
-                  meta_gorduras: Number((sub.fat || 0).toFixed(1)),
-                  image_url: sub.imageUrl,
+                  day_of_week: day.day_of_week,
+                  title: sub.title,
+                  description: sub.quantity_display,
+                  meta_calorias: sub.macros.kcal,
+                  meta_proteinas: sub.macros.protein_g,
+                  meta_carboidratos: sub.macros.carbs_g,
+                  meta_gorduras: sub.macros.fat_g,
+                  image_url: sub.visual.image_url,
                   is_primary: false,
                   substitution_group_id: groupId,
-                  editor_version: 'v3',
-                  edit_metadata: { ...sub, editor_version: 'v3' }
+                  editor_version: 'v3'
                 });
               });
-            }
+            });
           });
         });
 
