@@ -79,12 +79,13 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           meta_carboidratos: it.carbs,
           meta_gorduras: it.fat,
           image_url: it.imageUrl,
-          is_primary: true
+          is_primary: true,
+          metadata: it.metadata || {}
         }))
       );
 
       setAllItems(allResolved);
-      const daily = buildDailyDisplayItems(allResolved, dayOfWeek);
+      const daily = buildDailyDisplayItems(allResolved as any, dayOfWeek);
       setItems(daily as MealPlanItem[]);
 
       // 3. Fetch Completions

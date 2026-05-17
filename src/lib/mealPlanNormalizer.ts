@@ -13,6 +13,7 @@ export interface NormalizedMeal {
 export interface NormalizedItem {
   id: string;
   title: string;
+  description: string;
   calories: number;
   protein: number;
   carbs: number;
@@ -20,6 +21,7 @@ export interface NormalizedItem {
   imageUrl?: string | null;
   display_quantity?: string | number;
   display_unit?: string;
+  metadata?: Record<string, any> | null;
 }
 
 const TYPE_MAP: Record<string, string> = {
@@ -49,13 +51,15 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
     items: (m.items || []).map((it: any) => ({
       id: it.id || it.instanceId || Math.random().toString(),
       title: it.title || it.name || "Refeição",
+      description: it.description || it.instructions || "",
       calories: Number(it.meta_calorias ?? it.kcal ?? it.calories ?? it.macros?.kcal ?? 0),
       protein: Number(it.meta_proteinas ?? it.protein ?? it.macros?.protein_g ?? 0),
       carbs: Number(it.meta_carboidratos ?? it.carbs ?? it.macros?.carbs_g ?? 0),
       fat: Number(it.meta_gorduras ?? it.fat ?? it.macros?.fat_g ?? 0),
       imageUrl: it.imageUrl || it.image_url || it.metadata?.image_url,
       display_quantity: it.display_quantity || it.quantity,
-      display_unit: it.display_unit || it.unit
+      display_unit: it.display_unit || it.unit,
+      metadata: it.metadata || {}
     }))
   }));
 
