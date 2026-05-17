@@ -1,5 +1,6 @@
 import type { Tables } from "@/integrations/supabase/types";
 import { SovereignTelemetry } from "./sovereignTelemetry";
+import { safeAccess } from "./safeRender";
 
 export type DisplayMealPlanItem = Tables<"meal_plan_items"> & {
   metadata?: Record<string, any> | null;
@@ -68,10 +69,10 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
   // 🛡️ ANTI-CRASH: Se o item for nulo ou indefinido, abortamos silenciosamente para evitar quebra de render.
   if (!item) return;
 
-  const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3" || (item as any).edit_metadata?.editor_version === "v3";
+  const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3" || safeAccess(item, 'edit_metadata.editor_version', '') === "v3";
   
   // 1. Regra de BlockId (Obrigatório e Imutável em V3)
-  const blockId = (item as any).blockId || (item as any).edit_metadata?.blockId || item.substitution_group_id;
+  const blockId = (item as any).blockId || safeAccess(item, 'edit_metadata.blockId', '') || item.substitution_group_id;
   
   if (isV3 && !blockId) {
     const errorMsg = `HIERARCHY_GUARD: item "${item.title}" (ID: ${item.id}) sem blockId em runtime V3. BLOQUEIO FATAL.`;
@@ -220,8 +221,8 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
       String(item.title ?? "").trim().toLowerCase(),
       isPrimaryMealItem(item) ? "p" : "s",
       // Macros são parte da chave para evitar dedupé de itens diferentes com mesmo nome
-      String(Math.round(asNumber(item.meta_calorias ?? (item as any).kcal ?? (item as any).calories))),
-      String(Math.round(asNumber(item.meta_proteinas ?? (item as any).protein)))
+      String(Math.round(asNumber(item.meta_calorias ?? safeAccess(item, 'metadata.meta_calorias', 0) ?? safeAccess(item, 'metadata.calories', 0)))),
+      String(Math.round(asNumber(item.meta_proteinas ?? safeAccess(item, 'metadata.protein', 0))))
     ].join("|");
     
     if (seen.has(key)) {
@@ -304,10 +305,10 @@ export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
 
   return primaryItems.reduce(
     (acc, item) => ({
-      calories: acc.calories + asNumber(item.meta_calorias ?? (item as any).kcal ?? (item as any).calories ?? (item as any).meta_calories ?? (item as any).metadata?.meta_calorias ?? (item as any).metadata?.calories),
-      protein: acc.protein + asNumber(item.meta_proteinas ?? (item as any).protein ?? (item as any).protein_g ?? (item as any).metadata?.meta_proteinas ?? (item as any).metadata?.protein),
-      carbs: acc.carbs + asNumber(item.meta_carboidratos ?? (item as any).carbs ?? (item as any).carbs_g ?? (item as any).metadata?.meta_carboidratos ?? (item as any).metadata?.carbs),
-      fat: acc.fat + asNumber(item.meta_gorduras ?? (item as any).fat ?? (item as any).fat_g ?? (item as any).metadata?.meta_gorduras ?? (item as any).metadata?.fat),
+      calories: acc.calories + asNumber(item.meta_calorias ?? (item as any).kcal ?? (item as any).calories ?? (item as any).meta_calories ?? safeAccess(item, 'metadata.meta_calorias', 0) ?? safeAccess(item, 'metadata.calories', 0)),
+      protein: acc.protein + asNumber(item.meta_proteinas ?? (item as any).protein ?? (item as any).protein_g ?? safeAccess(item, 'metadata.meta_proteinas', 0) ?? safeAccess(item, 'metadata.protein', 0)),
+      carbs: acc.carbs + asNumber(item.meta_carboidratos ?? (item as any).carbs ?? (item as any).carbs_g ?? safeAccess(item, 'metadata.meta_carboidratos', 0) ?? safeAccess(item, 'metadata.carbs', 0)),
+      fat: acc.fat + asNumber(item.meta_gorduras ?? (item as any).fat ?? (item as any).fat_g ?? safeAccess(item, 'metadata.meta_gorduras', 0) ?? safeAccess(item, 'metadata.fat', 0)),
     }),
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );

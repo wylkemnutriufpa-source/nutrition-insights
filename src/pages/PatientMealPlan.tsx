@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { safeAccess } from "@/lib/safeRender";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -969,7 +970,7 @@ export default function PatientMealPlan() {
             mealPlanId={plan?.id || ""}
             patientId={user?.id || ""}
             mealSlot={(substitutionItem as any)?.tipo_refeicao}
-            options={(substitutionItem?.metadata as any)?.substitution_options}
+            options={safeAccess(substitutionItem, 'metadata.substitution_options', [])}
             onSubstitute={(food: FoodItem, originalTitle: string) => {
               // Update overlay map — plan data stays untouched
               if (substitutionItem) {
