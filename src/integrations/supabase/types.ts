@@ -20229,6 +20229,7 @@ export type Database = {
         Row: {
           created_at: string
           draft_status: string
+          editor_version: string | null
           id: string
           meta_carbs: number | null
           meta_fat: number | null
@@ -20245,6 +20246,7 @@ export type Database = {
         Insert: {
           created_at?: string
           draft_status?: string
+          editor_version?: string | null
           id?: string
           meta_carbs?: number | null
           meta_fat?: number | null
@@ -20261,6 +20263,7 @@ export type Database = {
         Update: {
           created_at?: string
           draft_status?: string
+          editor_version?: string | null
           id?: string
           meta_carbs?: number | null
           meta_fat?: number | null

@@ -1,0 +1,2 @@
+ALTER TABLE public.v3_drafts ADD COLUMN IF NOT EXISTS editor_version TEXT DEFAULT 'v3';
+COMMENT ON COLUMN public.v3_drafts.editor_version IS 'Indicates which version of the editor was used to create this draft (v2, v3, etc.)';
