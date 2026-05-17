@@ -40,8 +40,8 @@ import { useAuth } from '@/lib/auth';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { planPersistenceService } from '../services/planPersistenceService';
-// Removed visual matcher engine
 import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
+import { normalizeSnapshotToV3 } from '../utils/normalization';
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
