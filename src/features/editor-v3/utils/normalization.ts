@@ -108,7 +108,6 @@ export function normalizeFood(food: any): Food {
 export function normalizeV2ToV3(v2Data: any): Meal[] {
   console.log('[Migration] Concluindo migração técnica para plataforma estável');
 
-  
   if (!v2Data || !Array.isArray(v2Data)) {
     console.warn('[Migration Guard] Dados V2 inválidos ou ausentes');
     return [];
@@ -126,7 +125,6 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
     mealsArray = Object.entries(itemsByMealType).map(([type, items]) => ({
       id: crypto.randomUUID(),
       name: translateSlot(type),
-
       time: type === 'Café da Manhã' ? '08:00' : (type === 'Almoço' ? '12:00' : (type === 'Jantar' ? '20:00' : '00:00')),
       items: items
     }));
@@ -151,13 +149,6 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
         quantity: normalized.quantity ?? 1,
         clinical_mass_g: normalized.clinical_mass_g ?? (() => {
           const fallback = normalized.measurementType === 'gram' ? normalized.quantity : (normalized.quantity * (normalized.portionValue || 1));
-          SovereignTelemetry.log({
-            runtime_source: 'normalization_v3_legacy_migration',
-            event_type: 'missing_clinical_mass',
-            severity: 'warning',
-            message: `Inferring clinical_mass_g for ${normalized.name} during V2 migration.`,
-            metadata: { name: normalized.name, fallback }
-          });
           return fallback;
         })(),
         substitutions: (normalized.substitutions || []).map((sub: any) => normalizeFood(sub))
@@ -172,6 +163,81 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
       time: meal.time || '00:00'
     } as Meal;
   });
+}
+
+/**
+ * Normaliza um snapshot V3 diretamente para a estrutura do Editor V3.
+ * Este é o caminho mais fiel, pois o snapshot V3 já segue a lógica do Editor.
+ */
+export function normalizeSnapshotToV3(snapshot: any): Meal[] {
+  if (!snapshot) return [];
+  
+  const rawMeals: any[] = [];
+  
+  // Estrutura complexa: snapshot.days -> meals
+  if (Array.isArray(snapshot.days)) {
+    snapshot.days.forEach((day: any) => {
+      const dayIdx = day.day_of_week !== undefined ? Number(day.day_of_week) : 0;
+      if (Array.isArray(day.meals)) {
+        day.meals.forEach((m: any) => {
+          rawMeals.push({
+            ...m,
+            day_of_week: dayIdx
+          });
+        });
+      }
+    });
+  } 
+  // Estrutura flat: snapshot.meals
+  else if (Array.isArray(snapshot.meals)) {
+    rawMeals.push(...snapshot.meals);
+  }
+  // Estrutura única (legado)
+  else if (snapshot.items) {
+    rawMeals.push({
+      ...snapshot,
+      day_of_week: snapshot.day_of_week || 0,
+      items: snapshot.items
+    });
+  }
+
+  return rawMeals.map(m => ({
+    id: m.id || crypto.randomUUID(),
+    name: m.name || translateSlot(m.meal_type || m.type || 'Refeição'),
+    time: m.time || m.scheduled_time || "08:00",
+    day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 0,
+    items: (m.items || []).map((it: any) => {
+      const img = it.image_url || it.imageUrl || it.visual?.image_url;
+      const kcal = Number(it.kcal ?? it.meta_calorias ?? it.macros?.kcal ?? 0);
+      const prot = Number(it.protein ?? it.meta_proteinas ?? it.macros?.protein_g ?? 0);
+      const carb = Number(it.carbs ?? it.meta_carboidratos ?? it.macros?.carbs_g ?? 0);
+      const fat = Number(it.fat ?? it.meta_gorduras ?? it.macros?.fat_g ?? 0);
+      const qty = Number(it.quantity ?? it.display_quantity ?? it.clinical_mass_g ?? 0);
+
+      return {
+        id: it.id || it.instanceId || crypto.randomUUID(),
+        instanceId: it.instanceId || it.id || crypto.randomUUID(),
+        name: it.name || it.title || "Refeição",
+        kcal,
+        protein: prot,
+        carbs: carb,
+        fat: fat,
+        quantity: qty,
+        clinical_mass_g: it.clinical_mass_g || qty,
+        imageUrl: img,
+        substitution_group_id: it.substitution_group_id || it.blockId,
+        substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => ({
+          ...s,
+          name: s.name || s.title,
+          kcal: Number(s.kcal ?? s.meta_calorias ?? s.macros?.kcal ?? 0),
+          protein: Number(s.protein ?? s.meta_proteinas ?? s.macros?.protein_g ?? 0),
+          carbs: Number(s.carbs ?? s.meta_carboidratos ?? s.macros?.carbs_g ?? 0),
+          fat: Number(s.fat ?? s.meta_gorduras ?? s.macros?.fat_g ?? 0),
+          imageUrl: s.image_url || s.imageUrl || s.visual?.image_url
+        })) : []
+      };
+    })
+  }));
 }
 
 /**
