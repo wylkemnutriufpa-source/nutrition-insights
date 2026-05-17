@@ -17,56 +17,30 @@ const isWholeWordMatch = (text: string, keyword: string): boolean => {
 };
 
 const findBestVisual = async (foodName: string): Promise<string | undefined> => {
-  const norm = normalize(foodName);
+  const norm = foodName.toLowerCase().trim();
   
-  // 1. Try exact alias match (Priority 1)
-  const { data: aliasData } = await supabase
-    .from("meal_visual_aliases" as any)
-    .select("library_item_id")
-    .eq("normalized_alias", norm)
+  // 1. Tenta buscar no banco pelo nome exato (display_name ou name)
+  const { data: match } = await supabase
+    .from('meal_visual_library')
+    .select('image_url')
+    .or(`name.ilike."${norm}",display_name.ilike."${norm}"`)
+    .eq('is_active', true)
     .maybeSingle();
 
-  if (aliasData) {
-    const { data: item } = await supabase
-      .from("meal_visual_library")
-      .select("image_url")
-      .eq("id", (aliasData as any).library_item_id)
-      .maybeSingle();
-    if (item?.image_url) return item.image_url;
+  if (match?.image_url) {
+    return match.image_url;
   }
 
-  // 2. Try exact name match in library (Priority 2)
-  const { data: libraryData } = await supabase
-    .from("meal_visual_library")
-    .select("image_url")
-    .ilike("name", foodName)
-    .is("nutritionist_id", null) // Prioritize system images for auto-match to avoid randomness
-    .limit(1)
-    .maybeSingle();
+  // 2. Mapeamento Direto por Slug (Solicitado pelo Usuário)
+  const slug = norm
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 
-  if (libraryData?.image_url) return libraryData.image_url;
-
-  // 3. Try keywords with whole-word matching (Priority 3)
-  const keywords = norm.split(' ');
-  const importantKeywords = keywords.filter(k => k.length > 3 && !['com', 'para', 'sem'].includes(k));
-  
-  if (importantKeywords.length > 0) {
-    for (const kw of importantKeywords) {
-      const { data: kwMatches } = await supabase
-        .from("meal_visual_library")
-        .select("image_url, name")
-        .ilike("name", `%${kw}%`)
-        .is("nutritionist_id", null)
-        .limit(5);
-      
-      if (kwMatches && kwMatches.length > 0) {
-        const bestKwMatch = kwMatches.find(m => isWholeWordMatch(m.name, kw));
-        if (bestKwMatch?.image_url) return bestKwMatch.image_url;
-      }
-    }
-  }
-
-  return undefined;
+  const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
+  return `${baseUrl}/${slug}.jpg`;
 };
 
 export const searchFoods = async (query: string): Promise<Food[]> => {

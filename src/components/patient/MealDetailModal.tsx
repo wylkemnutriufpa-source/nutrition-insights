@@ -274,11 +274,24 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     after: { protein: number; carbs: number; fat: number; calories: number };
   } | null>(null);
 
-  // 🛡️ SOBERANIA V3: Estabilização de Imagem
+  // 🛡️ SOBERANIA V3: Estabilização de Imagem (Determinística conforme regra do usuário)
   const resolvedImage = useMemo(() => {
     if (!meal) return null;
-    return meal.image_url || (meal as any)?.imageUrl || meal.metadata?.image_url || meal.metadata?.imageUrl || null;
-  }, [meal]);
+    const img = meal.image_url || (meal as any)?.imageUrl || meal.metadata?.image_url || meal.metadata?.imageUrl || null;
+    
+    if (img && !img.includes('unsplash.com')) return img;
+
+    const foodName = (meal.title || "").toLowerCase().trim();
+    const slug = foodName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
+    return `${baseUrl}/${slug}.jpg`;
+  }, [meal?.image_url, (meal as any)?.imageUrl, meal?.metadata?.image_url, meal?.metadata?.imageUrl, meal?.title]);
 
 
   const fetchDbHistory = async (offset = 0) => {
