@@ -138,12 +138,14 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     fetchData();
   }, [fetchData]);
 
-  const groupedItems = useMemo(() =>
-    MEAL_TYPES.map(mt => ({
+  const groupedItems = useMemo(() => {
+    // 🛡️ ANTI-CRASH: Garantir que items seja um array antes de filtrar
+    const safeItems = Array.isArray(items) ? items : [];
+    return MEAL_TYPES.map(mt => ({
       ...mt,
-      items: items.filter(i => i.tipo_refeicao === mt.key),
-    })).filter(g => g.items.length > 0),
-  [items]);
+      items: safeItems.filter(i => i && i.tipo_refeicao === mt.key),
+    })).filter(g => g.items.length > 0);
+  }, [items]);
 
   const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
 
