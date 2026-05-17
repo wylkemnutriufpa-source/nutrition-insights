@@ -65,6 +65,9 @@ export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
  * NUNCA permite que metadados críticos sejam perdidos ou normalizados incorretamente.
  */
 export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: string): void {
+  // 🛡️ ANTI-CRASH: Se o item for nulo ou indefinido, abortamos silenciosamente para evitar quebra de render.
+  if (!item) return;
+
   const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3" || (item as any).edit_metadata?.editor_version === "v3";
   
   // 1. Regra de BlockId (Obrigatório e Imutável em V3)
@@ -99,7 +102,8 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
 }
 
 export function sortPlanItems<T extends DisplayMealPlanItem>(items: T[]): T[] {
-  return [...items].sort((a, b) => {
+  // 🛡️ ANTI-CRASH: Filtrar nulos antes de ordenar
+  return items.filter(Boolean).sort((a, b) => {
     // 🛡️ ASSERT: Auditoria de integridade durante a ordenação
     assertHierarchyIntegrity(a, "sortPlanItems_A");
     assertHierarchyIntegrity(b, "sortPlanItems_B");
@@ -283,10 +287,13 @@ export function buildWeeklyDisplayDays(items: DisplayMealPlanItem[]): Array<{ da
 }
 
 export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
+  // 🛡️ ANTI-CRASH: Garantir que items seja um array e filtrar nulos
+  const safeItems = (Array.isArray(items) ? items : []).filter(Boolean);
+  
   // 🛡️ ASSERT: Auditoria em massa para o cálculo de macros
-  items.forEach(item => assertHierarchyIntegrity(item, "calculatePrimaryTotals"));
+  safeItems.forEach(item => assertHierarchyIntegrity(item, "calculatePrimaryTotals"));
 
-  const groups = dedupeGroups(groupItems(items));
+  const groups = dedupeGroups(groupItems(safeItems));
   // Filtro reforçado: Apenas o item primário de cada grupo entra no cálculo
   const primaryItems = groups.map((group) => group.primary).filter(item => {
     // Soberania absoluta: Se is_primary for false, está fora.
@@ -307,7 +314,7 @@ export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
 }
 
 export function buildPdfItemsForDailyPlan(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
-  const dayItems = selectCanonicalDayItems(items, requestedDay);
+  const dayItems = selectCanonicalDayItems(items, requestedDay).filter(Boolean);
   // 🛡️ ASSERT: Auditoria antes de gerar PDF
   dayItems.forEach(item => assertHierarchyIntegrity(item, "buildPdfItemsForDailyPlan"));
   

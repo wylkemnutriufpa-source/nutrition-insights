@@ -80,13 +80,15 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         
         // Filtro Diário do Snapshot
         const dayData = snapshot.days?.find((d: any) => d.day_of_week === dayOfWeek) || snapshot.days?.[0];
-        const dailyItems = dayData ? dayData.meals.flatMap((m: any) => m.items.map((it: any) => ({
-          ...it,
-          id: it.id || it.instanceId,
-          title: it.title || it.name,
-          tipo_refeicao: m.name,
-          day_of_week: m.day_of_week
-        }))) : [];
+        const dailyItems = (dayData?.meals || []).flatMap((m: any) => 
+          (m.items || []).map((it: any) => ({
+            ...it,
+            id: it.id || it.instanceId,
+            title: it.title || it.name,
+            tipo_refeicao: m.name,
+            day_of_week: m.day_of_week || dayData.day_of_week
+          }))
+        );
         
         setItems(dailyItems as any);
       } else {
@@ -136,12 +138,14 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     fetchData();
   }, [fetchData]);
 
-  const groupedItems = useMemo(() =>
-    MEAL_TYPES.map(mt => ({
+  const groupedItems = useMemo(() => {
+    // 🛡️ ANTI-CRASH: Garantir que items seja um array antes de filtrar
+    const safeItems = Array.isArray(items) ? items : [];
+    return MEAL_TYPES.map(mt => ({
       ...mt,
-      items: items.filter(i => i.tipo_refeicao === mt.key),
-    })).filter(g => g.items.length > 0),
-  [items]);
+      items: safeItems.filter(i => i && i.tipo_refeicao === mt.key),
+    })).filter(g => g.items.length > 0);
+  }, [items]);
 
   const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
 
