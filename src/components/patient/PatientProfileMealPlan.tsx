@@ -20,6 +20,7 @@ import {
 } from "@/lib/mealPlanDisplay";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import { safeAccess } from "@/lib/safeRender";
+import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
 import { toast } from "sonner";
 
 interface PatientProfileMealPlanProps {
@@ -65,95 +66,27 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         return;
       }
 
-      let allResolvedItems: any[] = [];
-
-      // 2. Resolve Items: Snapshot SOBERANO V3 (Espelho Burro)
-      if (planData?.snapshot && (planData.snapshot as any).version === 'v3') {
-        const snapshot = planData.snapshot as any;
-        const meals = snapshot.meals || [];
-        
-        allResolvedItems = meals.flatMap((m: any) => (m.items || []).filter(Boolean).map((it: any) => ({
+      // 2. Resolve Items via Normalizador Sistêmico
+      const normalized = normalizeMealPlan(planData);
+      
+      const allResolved: MealPlanItem[] = normalized.meals.flatMap(m => 
+        m.items.map(it => ({
           ...it,
-          id: it.id || it.instanceId,
-          title: it.title || it.name,
-          description: it.description || it.instructions,
-          meta_calorias: it.kcal ?? 0,
-          meta_proteinas: it.protein ?? 0,
-          meta_carboidratos: it.carbs ?? 0,
-          meta_gorduras: it.fat ?? 0,
-          tipo_refeicao: m.name,
-          day_of_week: m.day_of_week ?? 1,
-          image_url: it.imageUrl || null // SEM FALLBACKS AQUI
-        })));
+          tipo_refeicao: m.name as any,
+          day_of_week: m.day_of_week,
+          meta_calorias: it.calories,
+          meta_proteinas: it.protein,
+          meta_carboidratos: it.carbs,
+          meta_gorduras: it.fat,
+          image_url: it.imageUrl,
+          is_primary: true,
+          metadata: it.metadata || {}
+        }))
+      );
 
-        setAllItems(allResolvedItems);
-        
-        // Filtro Diário do Snapshot
-        const dayData = snapshot.days?.find((d: any) => d.day_of_week === dayOfWeek) || snapshot.days?.[0];
-        const dailyItems = (dayData?.meals || []).flatMap((m: any) => 
-          (m.items || []).filter(Boolean).map((it: any) => ({
-            ...it,
-            id: it.id || it.instanceId,
-            title: it.title || it.name,
-            tipo_refeicao: m.name,
-            day_of_week: m.day_of_week || dayData.day_of_week
-          }))
-        );
-        
-        setItems(dailyItems as any);
-      } else {
-        // Fallback Legado (V2/Snapshot Híbrido)
-        const snapshot = planData?.snapshot as any;
-        const meals = snapshot?.meals || snapshot?.days?.flatMap((d: any) => d.meals || []) || [];
-        
-        if (meals.length > 0) {
-          allResolvedItems = meals.flatMap((m: any) => {
-            const mealType = m.tipo_refeicao || m.type || m.name;
-            const dow = m.day_of_week ?? 1;
-            
-            return (m.items || []).filter(Boolean).flatMap((it: any) => {
-              const primary = {
-                ...it,
-                id: it.id || it.instanceId,
-                title: it.title || it.name,
-                tipo_refeicao: mealType,
-                day_of_week: dow,
-                meta_calorias: it.meta_calorias ?? it.kcal ?? it.calories ?? 0,
-                meta_proteinas: it.meta_proteinas ?? it.protein ?? 0,
-                meta_carboidratos: it.meta_carboidratos ?? it.carbs ?? 0,
-                meta_gorduras: it.meta_gorduras ?? it.fat ?? 0,
-                is_primary: true
-              };
-              
-              const subs = (it.substitutions || []).map((s: any) => ({
-                ...s,
-                id: s.id || s.instanceId || `sub-${Math.random()}`,
-                title: s.title || s.name,
-                tipo_refeicao: mealType,
-                day_of_week: dow,
-                meta_calorias: s.meta_calorias ?? s.kcal ?? s.calories ?? 0,
-                meta_proteinas: s.meta_proteinas ?? s.protein ?? 0,
-                meta_carboidratos: s.meta_carboidratos ?? s.carbs ?? 0,
-                meta_gorduras: s.meta_gorduras ?? s.fat ?? 0,
-                is_primary: false,
-                substitution_group_id: primary.id
-              }));
-              
-              return [primary, ...subs];
-            });
-          });
-        } else {
-          const { data: itemsData } = await supabase
-            .from("meal_plan_items")
-            .select("*")
-            .eq("meal_plan_id", activeMealPlanId);
-          allResolvedItems = itemsData || [];
-        }
-
-        setAllItems(allResolvedItems);
-        const daily = buildDailyDisplayItems(allResolvedItems, dayOfWeek);
-        setItems(daily as MealPlanItem[]);
-      }
+      setAllItems(allResolved);
+      const daily = buildDailyDisplayItems(allResolved as any, dayOfWeek);
+      setItems(daily as MealPlanItem[]);
 
       // 3. Fetch Completions
       const { data: completionsData } = await supabase
