@@ -65,6 +65,9 @@ export function isPrimaryMealItem(item: DisplayMealPlanItem): boolean {
  * NUNCA permite que metadados críticos sejam perdidos ou normalizados incorretamente.
  */
 export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: string): void {
+  // 🛡️ ANTI-CRASH: Se o item for nulo ou indefinido, abortamos silenciosamente para evitar quebra de render.
+  if (!item) return;
+
   const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3" || (item as any).edit_metadata?.editor_version === "v3";
   
   // 1. Regra de BlockId (Obrigatório e Imutável em V3)
@@ -99,7 +102,8 @@ export function assertHierarchyIntegrity(item: DisplayMealPlanItem, context: str
 }
 
 export function sortPlanItems<T extends DisplayMealPlanItem>(items: T[]): T[] {
-  return [...items].sort((a, b) => {
+  // 🛡️ ANTI-CRASH: Filtrar nulos antes de ordenar
+  return items.filter(Boolean).sort((a, b) => {
     // 🛡️ ASSERT: Auditoria de integridade durante a ordenação
     assertHierarchyIntegrity(a, "sortPlanItems_A");
     assertHierarchyIntegrity(b, "sortPlanItems_B");
