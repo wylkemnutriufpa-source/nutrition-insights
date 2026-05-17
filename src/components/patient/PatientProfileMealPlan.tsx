@@ -52,10 +52,10 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     setLoading(true);
 
     try {
-      // 1. Fetch Plan Header (including snapshot)
+      // 1. Fetch Plan Header (including snapshot) and also meal_plan_items as fallback
       const { data: planData, error: planError } = await supabase
         .from("meal_plans")
-        .select("id, snapshot, editor_version, title")
+        .select("id, snapshot, editor_version, title, meal_plan_items(*)")
         .eq("id", activeMealPlanId)
         .maybeSingle();
 

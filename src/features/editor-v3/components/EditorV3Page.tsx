@@ -264,7 +264,7 @@ export default function EditorV3Page() {
       setLoading(true);
       try {
         const { data: plan, error } = await (supabase.from('meal_plans') as any)
-          .select('*, patient:profiles(*)')
+          .select('*')
           .eq('id', effectiveId)
           .maybeSingle();
 
