@@ -10,24 +10,33 @@ export interface NormalizedMeal {
   day_of_week: number;
   items: NormalizedItem[];
   time?: string;
+  icon?: string;
+  description?: string;
+  imageUrl?: string;
 }
 
 export interface NormalizedItem {
   id: string;
-  title: string;
+  instanceId: string; // V3 Editor compatibility
+  name: string;      // V3 Editor compatibility
+  title: string;     // Backward compatibility
   description: string;
-  calories: number;
+  kcal: number;      // V3 Editor compatibility
+  calories: number;  // Backward compatibility
   protein: number;
   carbs: number;
   fat: number;
-  imageUrl?: string | null;
-  image_url?: string | null;
+  quantity: number;  // V3 Editor compatibility
   display_quantity?: string | number;
   display_unit?: string;
   clinical_mass_g?: number;
+  imageUrl?: string | null;
+  image_url?: string | null;
   substitution_group_id?: string | null;
   is_primary?: boolean;
+  substitutions: any[]; // V3 Editor compatibility
   metadata?: Record<string, any> | null;
+  instructions?: string;
 }
 
 const TYPE_MAP: Record<string, string> = {
@@ -122,26 +131,34 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
         const img = it.image_url || it.imageUrl || it.visual?.image_url || it.metadata?.image_url || it.metadata?.imageUrl || it.edit_metadata?.image_url;
         
         // Resolve macros de qualquer esquema possível (v2, v3, snapshot, rpc)
-        const kcal = Number(it.meta_calorias ?? it.kcal ?? it.calories ?? it.macros?.kcal ?? 0);
-        const prot = Number(it.meta_proteinas ?? it.protein ?? it.macros?.protein_g ?? 0);
-        const carb = Number(it.meta_carboidratos ?? it.carbs ?? it.macros?.carbs_g ?? 0);
-        const fat = Number(it.meta_gorduras ?? it.fat ?? it.macros?.fat_g ?? 0);
+        const kcal = Number(it.kcal ?? it.meta_calorias ?? it.calories ?? it.macros?.kcal ?? 0);
+        const prot = Number(it.protein ?? it.meta_proteinas ?? it.macros?.protein_g ?? 0);
+        const carb = Number(it.carbs ?? it.meta_carboidratos ?? it.macros?.carbs_g ?? 0);
+        const fat = Number(it.fat ?? it.meta_gorduras ?? it.macros?.fat_g ?? 0);
+
+        const qty = Number(it.quantity ?? it.display_quantity ?? it.clinical_mass_g ?? 0);
 
         return {
           id: it.id || it.instanceId || Math.random().toString(),
+          instanceId: it.instanceId || it.id || Math.random().toString(),
+          name: it.name || it.title || "Refeição",
           title: it.title || it.name || "Refeição",
           description: it.description || it.instructions || "",
+          instructions: it.instructions || it.description || "",
+          kcal: kcal,
           calories: kcal,
           protein: prot,
           carbs: carb,
           fat: fat,
+          quantity: qty,
+          display_quantity: it.display_quantity || it.quantity_display || qty || "",
+          display_unit: it.display_unit || it.unit || it.portionUnitLabel || "g",
+          clinical_mass_g: it.clinical_mass_g || it.grams || qty,
           imageUrl: img,
           image_url: img,
-          display_quantity: it.display_quantity || it.quantity_display || it.quantity,
-          display_unit: it.display_unit || it.unit || it.portionUnitLabel,
-          clinical_mass_g: it.clinical_mass_g || it.grams,
           substitution_group_id: it.substitution_group_id || it.blockId,
           is_primary: it.is_primary ?? true,
+          substitutions: it.substitutions || [],
           metadata: it.metadata || it.edit_metadata || it.macros || {}
         };
       })
