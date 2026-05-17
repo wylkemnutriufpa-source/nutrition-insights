@@ -261,7 +261,20 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                }}>
                  Próximo <Calendar className="w-4 h-4 ml-2" />
                </Button>
-            </div>
+            {groupedItems.length === 0 && !loading && (
+              <div className="flex flex-col items-center justify-center py-12 px-6 bg-black/40 rounded-3xl border border-white/5 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Nenhum item encontrado para este dia</p>
+                  <p className="text-xs text-muted-foreground max-w-[200px] mx-auto">
+                    O plano ativo pode não ter refeições configuradas para este dia da semana.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
 
             {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
               <MealGroup
