@@ -59,7 +59,7 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 portionValue: 1,
                 portionUnitLabel: 'fatia',
                 measurementType: 'unit',
-                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/torrada-integral/torrada-integral.jpg'
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/pao-integral.jpg'
               },
               {
                 id: 'i2',
