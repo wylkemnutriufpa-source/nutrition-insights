@@ -15,6 +15,7 @@ import {
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
+import { safeAccess } from "@/lib/safeRender";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 /** Resolve a human-readable portion string from the item data hierarchy. */
 const formatDisplayPortion = (item: any): string => {
@@ -462,14 +463,14 @@ const MealItemCard = memo(function MealItemCard({
                   ))}
                 </div>
               )}
-              {(item.metadata?.substitution_count > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
+              {(safeAccess(item, 'metadata.substitution_count', 0) > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}
                   className="flex items-center gap-1.5 mt-1 px-3 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary/10 transition-all w-full justify-center shadow-sm"
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5" />
-                  Trocar Opção ({item.metadata?.substitution_count || (item as any).edit_metadata?.substitution_count || 0})
+                  Trocar Opção ({safeAccess(item, 'metadata.substitution_count', 0) || (item as any).edit_metadata?.substitution_count || 0})
                 </button>
               )}
             </div>
