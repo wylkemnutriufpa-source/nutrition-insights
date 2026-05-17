@@ -105,6 +105,7 @@ export const planPersistenceService = {
               const subItem = sub as any;
               subs.push({
                 id: sub.id || crypto.randomUUID(),
+                blockId: it.blockId || it.id, // 🛡️ HERDA BLOCK_ID DO PAI
                 title: sub.name || subItem.title,
                 quantity_display: `${subItem.display_quantity || sub.quantity || 100} ${subItem.display_unit || sub.portionUnitLabel || 'g'}`,
                 macros: {
