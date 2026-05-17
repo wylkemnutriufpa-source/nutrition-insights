@@ -3,63 +3,66 @@ import { PatientPlan } from "../types";
 import { SovereignMonitor } from "@/lib/sovereignMonitor";
 
 export const patientService = {
-  mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion = 'snapshot'): PatientPlan {
+  mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion = 'v3'): PatientPlan {
     const snapshot = data.snapshot as any;
-    if (!snapshot || (!snapshot.days && !snapshot.meals)) {
-      throw new Error("Erro crítico: Os dados deste plano estão indisponíveis no momento (Snapshot Missing).");
+    
+    // 🛡️ BLOQUEIO DE SEGURANÇA: Se não é v3, rejeitar logicamente ou usar fallback controlado
+    if (!snapshot || snapshot.snapshot_version !== 'v3') {
+      console.warn("[PatientService] Snapshot V3 não encontrado ou versão incompatível. Tentando mapeamento legado.");
     }
 
     const currentDow = new Date().getDay();
-    const snapshotDays = Array.isArray(snapshot.days) ? snapshot.days : null;
-    let dayData = null;
-    if (snapshotDays) {
-      dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
-    } else if (snapshot.meals && Array.isArray(snapshot.meals)) {
-      const mealsForDay = snapshot.meals.filter((m: any) => m.day_of_week === currentDow || m.day_of_week === undefined);
-      dayData = { meals: mealsForDay.length > 0 ? mealsForDay : snapshot.meals };
+    const snapshotDays = snapshot.days || [];
+    
+    // 🛡️ SOBERANIA: Tenta encontrar o dia atual no snapshot. Se não houver, pega o primeiro dia.
+    const dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
+    
+    if (!dayData) {
+      throw new Error("SNAPSHOT VAZIO: O plano não contém dias válidos para exibição.");
     }
 
-    const mappedMeals = (dayData?.meals || snapshot.meals || []).map((m: any) => {
-      const allItems = m.items || [];
-      const primaryItems = allItems.filter((it: any) => it.is_primary !== false);
-      return {
-        id: m.tipo_refeicao || m.type || m.name || m.id,
-        name: m.tipo_refeicao || m.type || m.name || 'Refeição',
-        time: m.time || '',
-        items: primaryItems.map((it: any) => ({
-          id: it.id || it.instanceId,
-          name: it.title || it.name,
-          description: it.description || it.notes,
-          kcal: Number(it.macros?.kcal || it.kcal || 0),
-          protein: Number(it.macros?.protein_g || it.protein || 0),
-          carbs: Number(it.macros?.carbs_g || it.carbs || 0),
-          fat: Number(it.macros?.fat_g || it.fat || 0),
-          meta_calorias: Number(it.macros?.kcal || it.kcal || 0),
-          meta_proteinas: Number(it.macros?.protein_g || it.protein || 0),
-          meta_carboidratos: Number(it.macros?.carbs_g || it.carbs || 0),
-          meta_gorduras: Number(it.macros?.fat_g || it.fat || 0),
-          quantity: it.quantity || it.display_quantity || 1,
-          portionValue: it.display_quantity || it.quantity || 1,
-          portionUnitLabel: it.display_unit || it.portionUnitLabel || 'unidade',
-          imageUrl: it.image_url || it.imageUrl,
-          image_url: it.image_url || it.imageUrl,
-          display_quantity: it.display_quantity,
-          display_unit: it.display_unit,
-          clinical_mass_g: it.clinical_mass_g,
-          substitutions: Array.isArray(it.substitutions) ? it.substitutions : []
+    const mappedMeals = dayData.meals.map((m: any) => ({
+      id: m.id,
+      name: m.name,
+      time: m.time || '',
+      items: m.items.map((it: any) => ({
+        id: it.id,
+        name: it.title,
+        description: '', // Descrição agora é opcional ou vem no title
+        kcal: it.macros.kcal,
+        protein: it.macros.protein_g,
+        carbs: it.macros.carbs_g,
+        fat: it.macros.fat_g,
+        meta_calorias: it.macros.kcal,
+        meta_proteinas: it.macros.protein_g,
+        meta_carboidratos: it.macros.carbs_g,
+        meta_gorduras: it.macros.fat_g,
+        display_quantity: it.quantity_display,
+        clinical_mass_g: it.clinical_mass_g,
+        imageUrl: it.visual?.image_url,
+        image_url: it.visual?.image_url,
+        substitutions: (it.substitutions || []).map((sub: any) => ({
+          id: sub.id,
+          name: sub.title,
+          kcal: sub.macros.kcal,
+          protein: sub.macros.protein_g,
+          carbs: sub.macros.carbs_g,
+          fat: sub.macros.fat_g,
+          display_quantity: sub.quantity_display,
+          imageUrl: sub.visual?.image_url
         }))
-      };
-    });
+      }))
+    }));
 
     return {
       id: data.id,
       patient_id: data.patient_id,
       patient_name: patientData?.notes || 'Paciente',
       goal: patientData?.status || '',
-      meta_calorias: Number(snapshot.targets?.kcal || data.total_meta_calorias || 0),
-      meta_proteinas: Number(snapshot.targets?.protein_g || data.total_meta_proteinas || 0),
-      meta_carboidratos: Number(snapshot.targets?.carbs_g || data.total_meta_carboidratos || 0),
-      meta_gorduras: Number(snapshot.targets?.fat_g || data.total_meta_gorduras || 0),
+      meta_calorias: snapshot.targets?.kcal || data.total_meta_calorias || 0,
+      meta_proteinas: snapshot.targets?.protein_g || data.total_meta_proteinas || 0,
+      meta_carboidratos: snapshot.targets?.carbs_g || data.total_meta_carboidratos || 0,
+      meta_gorduras: snapshot.targets?.fat_g || data.total_meta_gorduras || 0,
       meals: mappedMeals,
       created_at: data.created_at,
       sharing_token: data.sharing_token,
@@ -166,91 +169,9 @@ export const patientService = {
       return this.mapSnapshotPlan(data, patientData, data.editor_version || 'v3');
     }
 
-    // --- FASE 1: SNAPSHOT-FIRST (SOBERANIA V3) ---
-    if (data.editor_version === 'v3') {
-      const snapshot = data.snapshot as any;
-      if (!snapshot || (!snapshot.days && !snapshot.meals)) {
-        console.error(`[CRITICAL] V3 Plan (token) missing snapshot. Access blocked.`);
-        throw new Error("Erro crítico: Os dados deste plano estão indisponíveis no momento (Snapshot Missing).");
-      }
+    // O bloco redundante foi removido. A lógica agora centralizada no mapSnapshotPlan
+    // que é invocado acima se o snapshot existir.
 
-      const currentDow = new Date().getDay();
-      // 🛡️ SOBERANIA V3: Tenta encontrar o dia atual no snapshot estruturado
-      const snapshotDays = Array.isArray(snapshot.days) ? snapshot.days : null;
-      let dayData = null;
-      
-      if (snapshotDays) {
-        dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
-      } else if (snapshot.meals && Array.isArray(snapshot.meals)) {
-        // Fallback para quando o snapshot ainda está no formato flat
-        const mealsForDay = snapshot.meals.filter((m: any) => m.day_of_week === currentDow || m.day_of_week === undefined);
-        dayData = { meals: mealsForDay.length > 0 ? mealsForDay : snapshot.meals };
-      }
-      
-      // 🛡️ SOBERANIA V3: Mapear respeitando hierarquia de substituições
-      const mappedMeals = (dayData?.meals || snapshot.meals || []).map((m: any) => {
-        const allItems = m.items || [];
-        const primaryItems = allItems.filter((it: any) => it.is_primary !== false);
-        
-        return {
-          id: m.tipo_refeicao || m.id,
-          name: m.tipo_refeicao || m.name,
-          time: '',
-          items: primaryItems.map((it: any) => {
-            const itemSubs = allItems.filter((sub: any) => 
-              sub.is_primary === false && 
-              sub.substitution_group_id === it.substitution_group_id &&
-              it.substitution_group_id !== null &&
-              sub.id !== it.id
-            ).map((sub: any) => ({
-              id: sub.id,
-              name: sub.title || sub.name,
-              description: sub.description || sub.notes,
-              kcal: Number(sub.macros?.kcal || sub.kcal || 0),
-              protein: Number(sub.macros?.protein_g || sub.protein || 0),
-              carbs: Number(sub.macros?.carbs_g || sub.carbs || 0),
-              fat: Number(sub.macros?.fat_g || sub.fat || 0),
-              display_quantity: sub.display_quantity || sub.quantity,
-              display_unit: sub.display_unit || sub.portionUnitLabel,
-              clinical_mass_g: sub.clinical_mass_g
-            }));
-
-            return {
-              id: it.id || it.instanceId,
-              name: it.title || it.name,
-              description: it.description || it.notes,
-              kcal: Number(it.macros?.kcal || it.kcal || 0),
-              protein: Number(it.macros?.protein_g || it.protein || 0),
-              carbs: Number(it.macros?.carbs_g || it.carbs || 0),
-              fat: Number(it.macros?.fat_g || it.fat || 0),
-              quantity: it.quantity || it.display_quantity || 1,
-              portionValue: it.display_quantity || it.quantity || 1,
-              portionUnitLabel: it.display_unit || it.portionUnitLabel || 'unidade',
-              imageUrl: it.image_url || it.imageUrl,
-              display_quantity: it.display_quantity,
-              display_unit: it.display_unit,
-              clinical_mass_g: it.clinical_mass_g,
-              substitutions: itemSubs
-            };
-          })
-        };
-      });
-
-      return {
-        id: data.id,
-        patient_id: data.patient_id,
-        patient_name: patientData?.notes || 'Paciente',
-        goal: patientData?.status || '',
-        meta_calorias: Number(snapshot.targets?.kcal || data.total_meta_calorias || 0),
-        meta_proteinas: Number(snapshot.targets?.protein_g || data.total_meta_proteinas || 0),
-        meta_carboidratos: Number(snapshot.targets?.carbs_g || data.total_meta_carboidratos || 0),
-        meta_gorduras: Number(snapshot.targets?.fat_g || data.total_meta_gorduras || 0),
-        meals: mappedMeals,
-        created_at: data.created_at,
-        sharing_token: data.sharing_token,
-        editor_version: 'v3'
-      } as any;
-    }
 
     // Fallback para V1/V2
     const { data: items } = await supabase

@@ -175,15 +175,17 @@ export const PatientPlanPage = () => {
             };
           }
 
-          return {
-            ...item,
-            name: sub.food.name,
-            quantity: sub.grams,
-            kcal: Math.round(((sub.food.kcal_100g || 0) / 100) * sub.grams),
-            protein: Math.round(((sub.food.protein_100g || 0) / 100) * sub.grams),
-            carbs: Math.round(((sub.food.carb_100g || 0) / 100) * sub.grams),
-            fat: Math.round(((sub.food.fat_100g || 0) / 100) * sub.grams),
-          };
+            return {
+              ...item,
+              name: sub.food.name || sub.food.title,
+              kcal: sub.food.kcal,
+              protein: sub.food.protein,
+              carbs: sub.food.carbs,
+              fat: sub.food.fat,
+              display_quantity: sub.food.display_quantity || sub.food.quantity_display,
+              imageUrl: sub.food.imageUrl
+            };
+
         })
       };
     });
