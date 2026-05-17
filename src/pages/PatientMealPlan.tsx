@@ -166,15 +166,14 @@ export default function PatientMealPlan() {
           ...it,
           itemId: it.id,
           tipo_refeicao: m.name as any,
-          day_of_week: m.day_of_week,
-          meta_calorias: it.calories,
+          day_of_week: m.day_of_week ?? 0,
+          meta_calorias: it.kcal,
           meta_proteinas: it.protein,
           meta_carboidratos: it.carbs,
           meta_gorduras: it.fat,
-          image_url: it.imageUrl || it.image_url,
-          imageUrl: it.imageUrl || it.image_url,
-          is_primary: true,
-          metadata: { ...(it.metadata || {}), image_url: it.imageUrl || it.image_url, imageUrl: it.imageUrl || it.image_url }
+          image_url: it.imageUrl,
+          imageUrl: it.imageUrl,
+          metadata: { ...(it.metadata || {}), image_url: it.imageUrl, imageUrl: it.imageUrl }
         }))
       );
       setPlan({
