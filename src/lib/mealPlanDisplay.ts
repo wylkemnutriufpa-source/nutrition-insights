@@ -161,7 +161,7 @@ export function dedupeGroups(groups: GroupedMeal[]): GroupedMeal[] {
     const key = [
       String(group.primary.tipo_refeicao ?? ""),
       String(group.primary.title ?? "").trim().toLowerCase(),
-      String(group.primary.meta_calorias ?? (group.primary as any).metadata?.meta_calorias ?? (group.primary as any).metadata?.calories ?? ""),
+      String(group.primary.meta_calorias ?? safeAccess(group.primary, 'metadata.meta_calorias', '') ?? safeAccess(group.primary, 'metadata.calories', '') ?? ""),
       String(group.substitutions.length)
     ].join("|");
     
