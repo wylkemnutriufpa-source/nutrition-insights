@@ -7,7 +7,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
-import { normalizeMeals, normalizeV2ToV3 } from '../utils/normalization';
+import { normalizeMeals, normalizeV2ToV3, normalizeSnapshotToV3 } from '../utils/normalization';
 // engines removed
 const calculateItemMacros: any = () => ({});
 const logSovereignEvent: any = () => {};
