@@ -98,13 +98,41 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         const meals = snapshot?.meals || snapshot?.days?.flatMap((d: any) => d.meals || []) || [];
         
         if (meals.length > 0) {
-          allResolvedItems = meals.flatMap((m: any) => (m.items || []).filter(Boolean).map((it: any) => ({
-            ...it,
-            id: it.id || it.instanceId,
-            title: it.title || it.name,
-            tipo_refeicao: m.tipo_refeicao || m.type || m.name,
-            day_of_week: m.day_of_week ?? it.day_of_week
-          })));
+          allResolvedItems = meals.flatMap((m: any) => {
+            const mealType = m.tipo_refeicao || m.type || m.name;
+            const dow = m.day_of_week ?? 1;
+            
+            return (m.items || []).filter(Boolean).flatMap((it: any) => {
+              const primary = {
+                ...it,
+                id: it.id || it.instanceId,
+                title: it.title || it.name,
+                tipo_refeicao: mealType,
+                day_of_week: dow,
+                meta_calorias: it.meta_calorias ?? it.kcal ?? it.calories ?? 0,
+                meta_proteinas: it.meta_proteinas ?? it.protein ?? 0,
+                meta_carboidratos: it.meta_carboidratos ?? it.carbs ?? 0,
+                meta_gorduras: it.meta_gorduras ?? it.fat ?? 0,
+                is_primary: true
+              };
+              
+              const subs = (it.substitutions || []).map((s: any) => ({
+                ...s,
+                id: s.id || s.instanceId || `sub-${Math.random()}`,
+                title: s.title || s.name,
+                tipo_refeicao: mealType,
+                day_of_week: dow,
+                meta_calorias: s.meta_calorias ?? s.kcal ?? s.calories ?? 0,
+                meta_proteinas: s.meta_proteinas ?? s.protein ?? 0,
+                meta_carboidratos: s.meta_carboidratos ?? s.carbs ?? 0,
+                meta_gorduras: s.meta_gorduras ?? s.fat ?? 0,
+                is_primary: false,
+                substitution_group_id: primary.id
+              }));
+              
+              return [primary, ...subs];
+            });
+          });
         } else {
           const { data: itemsData } = await supabase
             .from("meal_plan_items")
