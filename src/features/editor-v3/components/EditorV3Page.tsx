@@ -40,6 +40,7 @@ import { useAuth } from '@/lib/auth';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { planPersistenceService } from '../services/planPersistenceService';
+import { getHardcodedImageUrl } from '@/lib/mealVisualMatcher';
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -190,9 +191,9 @@ export default function EditorV3Page() {
                     }
                   }
 
-                  // 3. Garantia Visual SOBERANA: Se não tem imagem, tentamos manter a do item original ou placeholder
-                  if (!finalItem.imageUrl) {
-                    finalItem.imageUrl = item.imageUrl || `https://source.unsplash.com/400x300/?${encodeURIComponent(finalItem.name)}`;
+                  // 3. Garantia Visual SOBERANA: Se não tem imagem, tentamos manter a do item original ou fallback da biblioteca
+                  if (!finalItem.imageUrl || finalItem.imageUrl.includes('unsplash.com')) {
+                    finalItem.imageUrl = item.imageUrl || getHardcodedImageUrl(finalItem.name) || `https://source.unsplash.com/400x300/?${encodeURIComponent(finalItem.name)}`;
                   }
 
                   return finalItem;
