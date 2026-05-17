@@ -91,8 +91,8 @@ export function MealSlotModal({
                 <Utensils className="w-3 h-3" /> Itens da Refeição
               </h4>
               <div className="space-y-3">
-                {items.map((item) => {
-                  const completion = completions.find(c => c.meal_plan_item_id === item.id);
+                {items.filter(Boolean).map((item) => {
+                  const completion = (completions || []).find(c => c && c.meal_plan_item_id === item.id);
                   return (
                     <div key={item.id} className="relative">
                       <MealItemCard

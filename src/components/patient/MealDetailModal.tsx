@@ -277,8 +277,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   // 🛡️ SOBERANIA V3: Estabilização de Imagem
   const resolvedImage = useMemo(() => {
     if (!meal) return null;
-    return meal.image_url || (meal as any)?.imageUrl || null;
-  }, [meal?.image_url, (meal as any)?.imageUrl]);
+    return meal.image_url || (meal as any)?.imageUrl || meal.metadata?.image_url || meal.metadata?.imageUrl || null;
+  }, [meal]);
 
 
   const fetchDbHistory = async (offset = 0) => {

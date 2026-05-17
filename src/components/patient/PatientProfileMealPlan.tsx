@@ -114,7 +114,18 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     const safeItems = Array.isArray(items) ? items : [];
     return MEAL_TYPES.map(mt => ({
       ...mt,
-      items: safeItems.filter(i => i && i.tipo_refeicao === mt.key),
+      items: safeItems.filter(i => {
+        if (!i || !i.tipo_refeicao) return false;
+        const type = String(i.tipo_refeicao).toLowerCase();
+        const key = mt.key.toLowerCase();
+        // Match by key, label or common variations
+        return type === key || 
+               type === mt.label.toLowerCase() || 
+               (key === "lanche da tarde" && type === "afternoon_snack") ||
+               (key === "café da manhã" && type === "breakfast") ||
+               (key === "almoço" && type === "lunch") ||
+               (key === "jantar" && type === "dinner");
+      }),
     })).filter(g => g.items.length > 0);
   }, [items]);
 
