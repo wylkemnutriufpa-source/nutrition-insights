@@ -327,7 +327,13 @@ export default function PatientMealPlan() {
           });
         }
       } else {
-        flatItems = (planData.items || []).filter(Boolean).map((i: any) => hydrateItem(i, i.day_of_week, i.tipo_refeicao));
+        flatItems = (planData.items || []).filter(Boolean).map((i: any) => ({
+          ...hydrateItem(i, i.day_of_week, i.tipo_refeicao),
+          meta_calorias: i.meta_calorias ?? i.kcal ?? i.calories ?? 0,
+          meta_proteinas: i.meta_proteinas ?? i.protein ?? 0,
+          meta_carboidratos: i.meta_carboidratos ?? i.carbs ?? 0,
+          meta_gorduras: i.meta_gorduras ?? i.fat ?? 0
+        }));
       }
 
       setPlan({
