@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PatientPlan } from "../types";
 
 export const patientService = {
-  mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion = 'v3'): PatientPlan {
+  mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion?: string): PatientPlan {
     const snapshot = data.snapshot as any;
     
     if (!snapshot || !snapshot.days) {

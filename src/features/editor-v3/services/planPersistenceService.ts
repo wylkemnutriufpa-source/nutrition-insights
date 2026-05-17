@@ -105,6 +105,7 @@ export const planPersistenceService = {
               const subItem = sub as any;
               subs.push({
                 id: sub.id || crypto.randomUUID(),
+                blockId: it.blockId || it.id, // 🛡️ HERDA BLOCK_ID DO PAI
                 title: sub.name || subItem.title,
                 quantity_display: `${subItem.display_quantity || sub.quantity || 100} ${subItem.display_unit || sub.portionUnitLabel || 'g'}`,
                 macros: {
@@ -120,6 +121,7 @@ export const planPersistenceService = {
 
           const sovereignItem: SovereignItem = {
             id: it.instanceId || it.id || crypto.randomUUID(),
+            blockId: it.blockId || it.id || crypto.randomUUID(), // 🛡️ ASSEGURAR BLOCK_ID NO SNAPSHOT
             title: it.name || (it as any).title,
             quantity_display: `${it.display_quantity || it.quantity} ${it.display_unit || it.portionUnitLabel || 'g'}`,
 
@@ -266,7 +268,7 @@ export const planPersistenceService = {
         snapshot.days.forEach(day => {
           day.meals.forEach(meal => {
             meal.items.forEach(item => {
-              const groupId = crypto.randomUUID();
+              const groupId = item.blockId;
               
               itemsRows.push({
                 meal_plan_id: finalPlanId,
