@@ -7,7 +7,7 @@ export interface NormalizedMealPlan {
 export interface NormalizedMeal {
   id: string;
   name: string;
-  day_of_week: number;
+  day_of_week?: number;
   items: NormalizedItem[];
   time?: string;
   icon?: string;
@@ -17,24 +17,25 @@ export interface NormalizedMeal {
 
 export interface NormalizedItem {
   id: string;
-  instanceId: string; // V3 Editor compatibility
-  name: string;      // V3 Editor compatibility
-  title: string;     // Backward compatibility
+  instanceId: string; 
+  name: string;      
+  title: string;     
   description: string;
-  kcal: number;      // V3 Editor compatibility
-  calories: number;  // Backward compatibility
+  kcal: number;      
+  calories: number;  
   protein: number;
   carbs: number;
   fat: number;
-  quantity: number;  // V3 Editor compatibility
+  quantity: number;  
   display_quantity?: string | number;
   display_unit?: string;
   clinical_mass_g?: number;
   imageUrl?: string | null;
   image_url?: string | null;
   substitution_group_id?: string | null;
+  blockId?: string | null;
   is_primary?: boolean;
-  substitutions: any[]; // V3 Editor compatibility
+  substitutions: any[]; 
   metadata?: Record<string, any> | null;
   instructions?: string;
 }
@@ -63,13 +64,48 @@ function translateType(type: string | undefined): string {
   return TYPE_MAP[lower] || type;
 }
 
+function normalizeItem(it: any): NormalizedItem {
+  const img = it.image_url || it.imageUrl || it.visual?.image_url || it.metadata?.image_url || it.metadata?.imageUrl || it.edit_metadata?.image_url;
+  
+  const kcal = Number(it.kcal ?? it.meta_calorias ?? it.calories ?? it.macros?.kcal ?? 0);
+  const prot = Number(it.protein ?? it.meta_proteinas ?? it.macros?.protein_g ?? 0);
+  const carb = Number(it.carbs ?? it.meta_carboidratos ?? it.macros?.carbs_g ?? 0);
+  const fat = Number(it.fat ?? it.meta_gorduras ?? it.macros?.fat_g ?? 0);
+
+  const qty = Number(it.quantity ?? it.display_quantity ?? it.clinical_mass_g ?? 0);
+
+  return {
+    id: it.id || it.instanceId || Math.random().toString(),
+    instanceId: it.instanceId || it.id || Math.random().toString(),
+    name: it.name || it.title || "Refeição",
+    title: it.title || it.name || "Refeição",
+    description: it.description || it.instructions || "",
+    instructions: it.instructions || it.description || "",
+    kcal: kcal,
+    calories: kcal,
+    protein: prot,
+    carbs: carb,
+    fat: fat,
+    quantity: qty,
+    display_quantity: it.display_quantity || it.quantity_display || qty || "",
+    display_unit: it.display_unit || it.unit || it.portionUnitLabel || "g",
+    clinical_mass_g: it.clinical_mass_g || it.grams || qty,
+    imageUrl: img,
+    image_url: img,
+    substitution_group_id: it.substitution_group_id || it.blockId,
+    blockId: it.blockId || it.substitution_group_id,
+    is_primary: it.is_primary ?? true,
+    substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => normalizeItem(s)) : [],
+    metadata: it.metadata || it.edit_metadata || it.macros || {}
+  };
+}
+
 export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
   if (!rawData) return { id: 'unknown', meals: [] };
 
   const snapshot = rawData.snapshot || rawData.items_payload || (rawData.meals ? rawData : {});
   const rawMeals: any[] = [];
   
-  // 1. SOBERANIA V3: Estrutura oficial por dias
   if (snapshot && Array.isArray(snapshot.days)) {
     snapshot.days.forEach((day: any) => {
       const dayIdx = day.day_of_week !== undefined && day.day_of_week !== null ? Number(day.day_of_week) : 0;
@@ -83,11 +119,9 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
       }
     });
   } 
-  // 2. COMPATIBILIDADE V2: Lista de refeições direta no snapshot
   else if (snapshot && Array.isArray(snapshot.meals)) {
     rawMeals.push(...snapshot.meals);
   }
-  // 3. FALLBACK DE EMERGÊNCIA: Snapshot é um objeto de refeição única ou lista de itens plana
   else if (snapshot && (snapshot.items || snapshot.meal_type || snapshot.name)) {
     rawMeals.push({
       ...snapshot,
@@ -97,7 +131,6 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
     });
   }
 
-  // 4. ÚLTIMO RECURSO: Se o snapshot falhou, mas temos itens relacionais (RPC or regular fetch)
   if (rawMeals.length === 0 && Array.isArray(rawData.items) && rawData.items.length > 0) {
     const groups = new Map();
     rawData.items.forEach((it: any) => {
@@ -126,42 +159,7 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
       name: mealName,
       time: m.time || m.scheduled_time || "08:00",
       day_of_week: m.day_of_week !== undefined && m.day_of_week !== null ? Number(m.day_of_week) : 0,
-      items: (m.items || []).map((it: any) => {
-        // Resolve a imagem de qualquer lugar possível no objeto
-        const img = it.image_url || it.imageUrl || it.visual?.image_url || it.metadata?.image_url || it.metadata?.imageUrl || it.edit_metadata?.image_url;
-        
-        // Resolve macros de qualquer esquema possível (v2, v3, snapshot, rpc)
-        const kcal = Number(it.kcal ?? it.meta_calorias ?? it.calories ?? it.macros?.kcal ?? 0);
-        const prot = Number(it.protein ?? it.meta_proteinas ?? it.macros?.protein_g ?? 0);
-        const carb = Number(it.carbs ?? it.meta_carboidratos ?? it.macros?.carbs_g ?? 0);
-        const fat = Number(it.fat ?? it.meta_gorduras ?? it.macros?.fat_g ?? 0);
-
-        const qty = Number(it.quantity ?? it.display_quantity ?? it.clinical_mass_g ?? 0);
-
-        return {
-          id: it.id || it.instanceId || Math.random().toString(),
-          instanceId: it.instanceId || it.id || Math.random().toString(),
-          name: it.name || it.title || "Refeição",
-          title: it.title || it.name || "Refeição",
-          description: it.description || it.instructions || "",
-          instructions: it.instructions || it.description || "",
-          kcal: kcal,
-          calories: kcal,
-          protein: prot,
-          carbs: carb,
-          fat: fat,
-          quantity: qty,
-          display_quantity: it.display_quantity || it.quantity_display || qty || "",
-          display_unit: it.display_unit || it.unit || it.portionUnitLabel || "g",
-          clinical_mass_g: it.clinical_mass_g || it.grams || qty,
-          imageUrl: img,
-          image_url: img,
-          substitution_group_id: it.substitution_group_id || it.blockId,
-          is_primary: it.is_primary ?? true,
-          substitutions: it.substitutions || [],
-          metadata: it.metadata || it.edit_metadata || it.macros || {}
-        };
-      })
+      items: (m.items || []).map((it: any) => normalizeItem(it))
     };
   });
 
