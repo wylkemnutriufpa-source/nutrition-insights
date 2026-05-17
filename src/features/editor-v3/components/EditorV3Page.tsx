@@ -271,12 +271,26 @@ export default function EditorV3Page() {
           const planData = plan as any;
           if (planData?.patient) setPatientData(planData.patient);
           
-          // 🛡️ SOBERANIA V3: Usar normalizador universal para garantir carregamento 
-          // mesmo em snapshots com estruturas atípicas ou corrompidas.
-          const normalized = normalizeMealPlan(planData);
+          // 🛡️ SOBERANIA V3: Usar o normalizador mais fiel ao snapshot (o mesmo que o PDF usaria internamente)
+          // Se houver snapshot, usamos normalizeSnapshotToV3. Se não, usamos o normalizador universal.
+          let mealsToHydrate = [];
+          if (planData.snapshot) {
+            mealsToHydrate = normalizeSnapshotToV3(planData.snapshot);
+          } else {
+            const normalized = normalizeMealPlan(planData);
+            mealsToHydrate = normalized.meals as any;
+          }
           
-          // Hydrate meals directly - NormalizedMeal is compatible with V3 Editor Meal structure
-          store.hydrateMeals(normalized.meals as any);
+          if (mealsToHydrate.length > 0) {
+            store.hydrateMeals(mealsToHydrate);
+            
+            // 🛡️ SMART DAY SELECTOR: Se o dia atual (Segunda) está vazio, 
+            // muda para o primeiro dia que tem conteúdo no plano carregado.
+            const daysWithContent = [...new Set(mealsToHydrate.map((m: any) => m.day_of_week ?? 0))];
+            if (!daysWithContent.includes(activeDay) && daysWithContent.length > 0) {
+              setActiveDay(daysWithContent[0]);
+            }
+          }
           
           if (planData?.patient_id) store.setPatientId(planData.patient_id);
         }
@@ -288,6 +302,16 @@ export default function EditorV3Page() {
     }
     loadPlan();
   }, [effectiveId, effectivePatientId]);
+
+  // Efeito adicional para garantir que o activeDay mude se o store for hidratado via rascunho
+  useEffect(() => {
+    if (store.meals.length > 0) {
+      const daysWithContent = [...new Set(store.meals.map(m => m.day_of_week ?? 0))];
+      if (!daysWithContent.includes(activeDay) && daysWithContent.length > 0) {
+        setActiveDay(daysWithContent[0]);
+      }
+    }
+  }, [store.meals.length]);
 
   const planTotals = useMemo(() => {
     const totals = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
