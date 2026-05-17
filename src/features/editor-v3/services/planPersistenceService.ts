@@ -102,10 +102,11 @@ export const planPersistenceService = {
           if (it.substitutions) {
             for (const sub of it.substitutions) {
               const subVisual = await this.resolveVisual(sub);
+              const subItem = sub as any;
               subs.push({
                 id: sub.id || crypto.randomUUID(),
-                title: sub.name || sub.title,
-                quantity_display: `${sub.display_quantity || sub.quantity || 100} ${sub.display_unit || sub.portionUnitLabel || 'g'}`,
+                title: sub.name || subItem.title,
+                quantity_display: `${subItem.display_quantity || sub.quantity || 100} ${subItem.display_unit || sub.portionUnitLabel || 'g'}`,
                 macros: {
                   kcal: Math.round(sub.kcal || 0),
                   protein_g: Number((sub.protein || 0).toFixed(1)),
@@ -119,8 +120,9 @@ export const planPersistenceService = {
 
           const sovereignItem: SovereignItem = {
             id: it.instanceId || it.id || crypto.randomUUID(),
-            title: it.name || it.title,
+            title: it.name || (it as any).title,
             quantity_display: `${it.display_quantity || it.quantity} ${it.display_unit || it.portionUnitLabel || 'g'}`,
+
             clinical_mass_g: it.clinical_mass_g,
             macros: {
               kcal: Math.round(it.kcal || 0),
