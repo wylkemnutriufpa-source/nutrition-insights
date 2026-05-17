@@ -956,11 +956,13 @@ export default function PatientMealPlan() {
             onOpenSubstitution={setSubstitutionItem}
           />
 
-          <MealDetailModal
-            open={!!selectedMeal}
-            onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
-            meal={selectedMeal}
-          />
+          {selectedMeal && (
+            <MealDetailModal
+              open={!!selectedMeal}
+              onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
+              meal={selectedMeal}
+            />
+          )}
 
           <MealSubstitutionModal
             open={!!substitutionItem}
