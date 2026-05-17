@@ -459,6 +459,8 @@ export default function PatientMealPlan() {
         ...item,
         title: `${sub.foodName}`,
         description: `Substituição de: ${sub.originalTitle}${item.description ? ` • ${item.description}` : ""}`,
+        image_url: item.image_url || (item as any).imageUrl, // Garantir preservação da imagem na substituição
+        imageUrl: item.image_url || (item as any).imageUrl
       };
     }),
   [items, activeSubstitutions]);
