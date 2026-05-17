@@ -259,7 +259,7 @@ export default function PatientMealPlan() {
           image_url: resolvedImg,
           display_quantity: item.display_quantity || item.quantity || item.metadata?.display_quantity,
           display_unit: item.display_unit || item.portionUnitLabel || item.metadata?.display_unit,
-          editor_version: planData.editor_version || 'v3'
+          editor_version: planData.editor_version
         };
       };
 
