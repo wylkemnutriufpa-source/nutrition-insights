@@ -41,6 +41,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { planPersistenceService } from '../services/planPersistenceService';
 // Removed visual matcher engine
+import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -269,8 +270,12 @@ export default function EditorV3Page() {
         if (plan) {
           const planData = plan as any;
           if (planData?.patient) setPatientData(planData.patient);
-          const loadedMeals = planData?.snapshot?.meals || planData?.items_payload?.meals || planData?.meals || [];
-          store.hydrateMeals(loadedMeals);
+          
+          // 🛡️ SOBERANIA V3: Usar normalizador universal para garantir carregamento 
+          // mesmo em snapshots com estruturas atípicas ou corrompidas.
+          const normalized = normalizeMealPlan(planData);
+          store.hydrateMeals(normalized.meals);
+          
           if (planData?.patient_id) store.setPatientId(planData.patient_id);
         }
       } catch (err) {
