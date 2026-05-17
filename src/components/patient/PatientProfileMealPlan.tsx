@@ -66,20 +66,19 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         return;
       }
 
-      // 2. Resolve Items via Normalizador Sistêmico
+      // 2. Resolve Items via Normalizador Sistêmico Soberano
       const normalized = normalizeMealPlan(planData);
       
       const allResolved: MealPlanItem[] = normalized.meals.flatMap(m => 
         m.items.map(it => ({
           ...it,
           tipo_refeicao: m.name as any,
-          day_of_week: m.day_of_week,
-          meta_calorias: it.calories,
+          day_of_week: m.day_of_week ?? it.day_of_week,
+          meta_calorias: it.kcal,
           meta_proteinas: it.protein,
           meta_carboidratos: it.carbs,
           meta_gorduras: it.fat,
           image_url: it.imageUrl, // 🛡️ SOBERANIA V3: Garantir compatibilidade com MealItemCard
-          is_primary: true,
           metadata: it.metadata || {}
         }))
       );
