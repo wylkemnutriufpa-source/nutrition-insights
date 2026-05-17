@@ -44,34 +44,30 @@ export const planPersistenceService = {
    * Resolve a imagem final de um item, priorizando a biblioteca soberana.
    */
   async resolveVisual(item: any): Promise<{ image_url: string; is_placeholder: boolean; library_item_id?: string }> {
-    // 🛡️ REGRAS DE OURO: Sem Unsplash fallbacks
-    let url = item.imageUrl || item.image_url;
+    const foodName = (item.name || item.title || "").toLowerCase().trim();
     
-    if (url && (url.includes('unsplash.com') || url.includes('source.unsplash.com'))) {
-      url = null;
-    }
+    // 🛡️ REGRAS DE OURO: Mapeamento Direto por Nome (Solicitado pelo Usuário)
+    const slug = foodName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
 
-    if (item.library_item_id || item.id) {
-      // Tentar buscar na biblioteca se for um item da biblioteca
-      // Nota: Em um ambiente de alta performance, isso poderia ser pré-carregado
-      const { data } = await supabase
-        .from('meal_visual_library')
-        .select('image_url')
-        .eq('id', item.library_item_id || item.id)
-        .maybeSingle();
-      
-      if (data?.image_url) {
-        return { 
-          image_url: data.image_url, 
-          is_placeholder: false, 
-          library_item_id: item.library_item_id || item.id 
-        };
-      }
+    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
+    
+    // Se o item já tem uma imagem que parece válida (não placeholder e não unsplash), mantemos.
+    // Mas se o usuário quer "vincular uma coisa à outra", podemos forçar o slug se houver divergência.
+    let currentUrl = item.imageUrl || item.image_url;
+    
+    if (!currentUrl || currentUrl.includes('unsplash.com') || currentUrl === OFFICIAL_PLACEHOLDER) {
+      currentUrl = `${baseUrl}/${slug}.jpg`;
     }
 
     return {
-      image_url: url || OFFICIAL_PLACEHOLDER,
-      is_placeholder: !url
+      image_url: currentUrl,
+      is_placeholder: false,
+      library_item_id: item.library_item_id || item.id
     };
   },
 
