@@ -136,7 +136,7 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 portionValue: 100,
                 portionUnitLabel: 'g',
                 measurementType: 'gram',
-                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/peito-de-frango-grelhado.jpg'
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/frango-grelhado.jpg'
               }
             ]
           }
