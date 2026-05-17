@@ -73,7 +73,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         m.items.map(it => ({
           ...it,
           tipo_refeicao: m.name as any,
-          day_of_week: m.day_of_week ?? it.day_of_week,
+          day_of_week: m.day_of_week ?? 0,
           meta_calorias: it.kcal,
           meta_proteinas: it.protein,
           meta_carboidratos: it.carbs,
