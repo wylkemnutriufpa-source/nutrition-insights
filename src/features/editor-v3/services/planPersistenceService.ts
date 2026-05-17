@@ -267,7 +267,7 @@ export const planPersistenceService = {
         snapshot.days.forEach(day => {
           day.meals.forEach(meal => {
             meal.items.forEach(item => {
-              const groupId = crypto.randomUUID();
+              const groupId = item.blockId;
               
               itemsRows.push({
                 meal_plan_id: finalPlanId,
