@@ -29,29 +29,6 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
 
-/** 
- * Resolve a human-readable portion string from the item data hierarchy. 
- * Patient App should NEVER recalibrate this. It just shows what's in the snapshot.
- */
-const formatDisplayPortion = (item: any): string => {
-  if (!item) return '';
-  const meta = item.edit_metadata || item.metadata || {};
-  
-  if (item.display_quantity && item.display_unit) return `${item.display_quantity} ${item.display_unit}`;
-  if (item.display_quantity) return `${item.display_quantity}`;
-  
-  const dQty = meta.display_quantity;
-  const dUnit = meta.display_unit || meta.portionLabel || meta.portionUnit || '';
-  if (dQty) return `${dQty} ${dUnit}`.trim();
-  
-  const mass = item.clinical_mass_g || item.grams || meta.clinical_mass_g;
-  if (mass) return `${mass}g`;
-  
-  if (item.description) return item.description;
-  return '';
-};
-
-import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
   MEAL_TYPES, DAYS, MealSlotCard,
@@ -65,12 +42,7 @@ import {
   buildPdfItemsForDailyPlan,
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
-  DAY_ORDER,
-  assertHierarchyIntegrity,
-  type DisplayMealPlanItem
 } from "@/lib/mealPlanDisplay";
-
-const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 interface MealPlan {
   id: string;
@@ -159,7 +131,6 @@ export default function PatientMealPlan() {
   const xpTimerRef = useRef<number | null>(null);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const { isStreakAtRisk, isNearCompletion, identityStatus } = useEngagement();
   const [previewData, setPreviewData] = useState<PremiumMealPlanPDFData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
@@ -170,9 +141,7 @@ export default function PatientMealPlan() {
   useEffect(() => {
     if (isBasic) {
       const today = new Date().toISOString().split("T")[0];
-      if (date !== today) {
-        setDate(today);
-      }
+      if (date !== today) setDate(today);
     }
   }, [isBasic]);
 
@@ -184,136 +153,74 @@ export default function PatientMealPlan() {
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-
     try {
-      const { data: result, error } = await supabase.rpc(
-        "resolve_patient_meal_plan",
-        { p_patient_id: user.id, p_date: date }
-      );
-
+      const { data: result, error } = await supabase.rpc("resolve_patient_meal_plan", { p_patient_id: user.id, p_date: date });
       if (error || !result) {
-        setPlan(null);
-        setItems([]);
-        setAllItems([]);
-        setCompletions([]);
-        setWeekCompletions([]);
-        setLoading(false);
+        setPlan(null); setItems([]); setAllItems([]); setCompletions([]); setWeekCompletions([]); setLoading(false);
         return;
       }
-
       const planData = result as any;
       const normalized = normalizeMealPlan(planData);
-      
       const flatItems: MealPlanItem[] = normalized.meals.flatMap(m => 
         m.items.map(it => ({
           ...it,
-          itemId: it.id, // 🛡️ SOBERANIA V3: Compatibilidade total com MealDetailModal
+          itemId: it.id,
           tipo_refeicao: m.name as any,
           day_of_week: m.day_of_week,
           meta_calorias: it.calories,
           meta_proteinas: it.protein,
           meta_carboidratos: it.carbs,
           meta_gorduras: it.fat,
-          image_url: it.imageUrl || it.image_url, // 🛡️ SOBERANIA V3: Forçar preservação de imagem resolvida
+          image_url: it.imageUrl || it.image_url,
           imageUrl: it.imageUrl || it.image_url,
           is_primary: true,
-          metadata: {
-            ...(it.metadata || {}),
-            image_url: it.imageUrl || it.image_url,
-            imageUrl: it.imageUrl || it.image_url
-          }
+          metadata: { ...(it.metadata || {}), image_url: it.imageUrl || it.image_url, imageUrl: it.imageUrl || it.image_url }
         }))
       );
-
       setPlan({
-        id: planData.id,
-        title: planData.title,
-        start_date: planData.start_date,
-        totals_status: planData.totals_status || 'ok',
-        plan_mode: planData.plan_mode,
-        editor_version: planData.editor_version,
-        total_meta_calorias: planData.total_meta_calorias,
-        total_meta_proteinas: planData.total_meta_proteinas,
-        total_meta_carboidratos: planData.total_meta_carboidratos,
-        total_meta_gorduras: planData.total_meta_gorduras,
+        id: planData.id, title: planData.title, start_date: planData.start_date, totals_status: planData.totals_status || 'ok',
+        plan_mode: planData.plan_mode, editor_version: planData.editor_version,
+        total_meta_calorias: planData.total_meta_calorias, total_meta_proteinas: planData.total_meta_proteinas,
+        total_meta_carboidratos: planData.total_meta_carboidratos, total_meta_gorduras: planData.total_meta_gorduras,
       } as any);
-
       setAllItems(flatItems);
-      
       const dailyItems = buildDailyDisplayItems(flatItems as any, dayOfWeek);
       setItems(dailyItems as MealPlanItem[]);
-
       const [subsResponse, completionsResponse, weekResponse] = await Promise.all([
         supabase.from("patient_meal_substitutions" as any).select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id),
         supabase.from("meal_item_completions").select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id).eq("date", date),
         supabase.from("meal_item_completions").select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id).gte("date", weekDates[0]).lte("date", weekDates[6])
       ]);
-
       if (subsResponse.data) {
         const subsMap: Record<string, any> = {};
         subsResponse.data.forEach((s: any) => { subsMap[s.meal_plan_item_id] = { foodName: s.substituted_food, originalTitle: s.original_food }; });
         setActiveSubstitutions(subsMap);
       }
-
       setCompletions((completionsResponse.data || []) as any);
       setWeekCompletions((weekResponse.data || []) as any);
-
-    } catch (err: any) {
-      console.error("[PatientApp] Fetch Error:", err);
-      toast.error("Erro ao carregar dados do plano.");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error("[PatientApp] Fetch Error:", err); toast.error("Erro ao carregar dados."); }
+    finally { setLoading(false); }
   }, [user, date, weekDates, dayOfWeek]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  useEffect(() => {
-    if (!user || !plan) return;
-    const channel = supabase
-      .channel("meal-completions-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "meal_item_completions", filter: `patient_id=eq.${user.id}` }, () => fetchData())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, plan, fetchData]);
 
   const setAdherence = useCallback(async (item: MealPlanItem, status: AdherenceStatus, forDate?: string) => {
     if (!user || !plan) return;
     const targetDate = forDate || date;
     const todayStr = new Date().toISOString().split("T")[0];
-    
-    if (targetDate > todayStr) {
-      toast.error("📅 Não é possível marcar refeições de dias futuros.");
-      return;
-    }
-
+    if (targetDate > todayStr) { toast.error("📅 Não é possível marcar futuro."); return; }
     const relevantCompletions = forDate ? weekCompletions.filter(c => (c as any).date === forDate) : completions;
     const existing = relevantCompletions.find(c => c.meal_plan_item_id === item.id);
-
     if (existing && existing.adherence_status === status) {
       await supabase.from("meal_item_completions").delete().eq("id", existing.id);
-      fetchData();
-      return;
+      fetchData(); return;
     }
-
     if (existing) {
-      await supabase.from("meal_item_completions").update({
-        adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString(),
-      }).eq("id", existing.id);
+      await supabase.from("meal_item_completions").update({ adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString() }).eq("id", existing.id);
     } else {
-      await supabase.from("meal_item_completions").insert({
-        patient_id: user.id, meal_plan_item_id: item.id, meal_plan_id: plan.id,
-        date: targetDate, adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString(),
-      });
+      await supabase.from("meal_item_completions").insert({ patient_id: user.id, meal_plan_item_id: item.id, meal_plan_id: plan.id, date: targetDate, adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString() });
     }
-
-    if (status === "followed") {
-      setJustCompleted(item.id);
-      setXpPopup({ show: true, points: 10 });
-      setTimeout(() => { setXpPopup({ show: false, points: 0 }); setJustCompleted(null); }, 2000);
-      toast.success("✅ Muito bem!");
-    }
-
+    if (status === "followed") { setJustCompleted(item.id); setXpPopup({ show: true, points: 10 }); setTimeout(() => { setXpPopup({ show: false, points: 0 }); setJustCompleted(null); }, 2000); }
     fetchData();
   }, [user, plan, date, completions, weekCompletions, fetchData]);
 
@@ -323,196 +230,86 @@ export default function PatientMealPlan() {
     setDate(d.toISOString().split("T")[0]);
   }, [date]);
 
-  const handleDateSelect = useCallback((selectedDate: Date | undefined) => {
-    if (selectedDate) {
-      setDate(selectedDate.toISOString().split("T")[0]);
-      setShowOthersModal(false);
-    }
-  }, []);
-
   const handleExportPDF = useCallback(async () => {
     if (!user || !plan || allItems.length === 0) return;
     setExportingPDF(true);
     try {
-      let patientName = "Paciente";
       const { data: myProfile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
-      if (myProfile?.full_name) patientName = myProfile.full_name;
-
       const pdfItems = plan.editor_version === 'v3' ? allItems : buildPdfItemsForDailyPlan(allItems as any, dayOfWeek) as MealPlanItem[];
-      
       const data: PremiumMealPlanPDFData = {
-        planTitle: plan.title || "Plano Alimentar",
-        patientName,
-        nutritionistName: "Seu Nutricionista",
-        startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
+        planTitle: plan.title || "Plano Alimentar", patientName: myProfile?.full_name || "Paciente",
+        nutritionistName: "Nutricionista", startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
         planMode: "single_day",
-        items: pdfItems.map(i => ({
-          mealType: i.tipo_refeicao || "Refeição",
-          title: i.title || "Item",
-          description: i.description || undefined,
-          meta_calorias: i.meta_calorias || undefined,
-          meta_proteinas: i.meta_proteinas || undefined,
-          meta_carboidratos: i.meta_carboidratos || undefined,
-          meta_gorduras: i.meta_gorduras || undefined,
-          day_of_week: i.day_of_week ?? undefined,
-          is_primary: i.is_primary !== false,
-        })),
+        items: pdfItems.map(i => ({ mealType: i.tipo_refeicao || "Refeição", title: i.title || "Item", description: i.description || undefined, meta_calorias: i.meta_calorias || undefined, meta_proteinas: i.meta_proteinas || undefined, meta_carboidratos: i.meta_carboidratos || undefined, meta_gorduras: i.meta_gorduras || undefined, day_of_week: i.day_of_week ?? undefined, is_primary: i.is_primary !== false })),
         targetCalories: plan.total_meta_calorias || undefined,
       };
-
-      setPreviewData(data);
-      setShowPreview(true);
-    } catch (err) {
-      toast.error("Erro ao gerar PDF");
-    } finally {
-      setExportingPDF(false);
-    }
+      setPreviewData(data); setShowPreview(true);
+    } catch { toast.error("Erro ao gerar PDF"); }
+    finally { setExportingPDF(false); }
   }, [user, plan, allItems, dayOfWeek]);
 
   const overlayedItems = useMemo(() =>
     items.map(item => {
       const sub = activeSubstitutions[item.id];
       if (!sub) return item;
-      return {
-        ...item,
-        title: `${sub.foodName}`,
-        description: `Substituição de: ${sub.originalTitle}${item.description ? ` • ${item.description}` : ""}`,
-        image_url: item.image_url || (item as any).imageUrl,
-        imageUrl: item.image_url || (item as any).imageUrl
-      };
-    }),
-  [items, activeSubstitutions]);
+      return { ...item, title: sub.foodName, description: `Substituição de: ${sub.originalTitle}${item.description ? ` • ${item.description}` : ""}`, image_url: item.image_url || (item as any).imageUrl, imageUrl: item.image_url || (item as any).imageUrl };
+    }), [items, activeSubstitutions]);
 
   const groupedItems = useMemo(() =>
-    MEAL_TYPES.map(mt => ({
-      ...mt,
-      items: overlayedItems.filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()),
-    })).filter(g => g.items.length > 0),
+    MEAL_TYPES.map(mt => ({ ...mt, items: overlayedItems.filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) })).filter(g => g.items.length > 0),
   [overlayedItems]);
 
   const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
 
-  const visibleCompletions = useMemo(() => {
-    const visibleIds = new Set(items.map((item) => item.id));
-    return completions.filter((completion) => visibleIds.has(completion.meal_plan_item_id));
+  const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
+    const visibleIds = new Set(items.map(i => i.id));
+    const dayComps = completions.filter(c => visibleIds.has(c.meal_plan_item_id));
+    const f = dayComps.filter(c => c.adherence_status === "followed").length;
+    const p = dayComps.filter(c => c.adherence_status === "partial").length;
+    const nf = dayComps.filter(c => c.adherence_status === "not_followed").length;
+    const adh = items.length > 0 ? ((f * 100 + p * 50) / (items.length * 100)) * 100 : 0;
+    return { followedCount: f, partialCount: p, notFollowedCount: nf, dailyAdherence: adh, allMarked: dayComps.length >= items.length && items.length > 0 };
   }, [completions, items]);
 
-  const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
-    const followed = visibleCompletions.filter(c => c.adherence_status === "followed").length;
-    const partial = visibleCompletions.filter(c => c.adherence_status === "partial").length;
-    const notFollowed = visibleCompletions.filter(c => c.adherence_status === "not_followed").length;
-    const adherence = items.length > 0 ? ((followed * 100 + partial * 50) / (items.length * 100)) * 100 : 0;
-    return { followedCount: followed, partialCount: partial, notFollowedCount: notFollowed, dailyAdherence: adherence, allMarked: visibleCompletions.length >= items.length && items.length > 0 };
-  }, [visibleCompletions, items]);
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!plan || allItems.length === 0) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-2xl mx-auto py-12 px-4 text-center">
-          <Utensils className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-bold text-lg">Nenhum plano alimentar ativo</h3>
-          <Button onClick={fetchData} variant="outline" className="mt-4">Tentar atualizar</Button>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading) return <DashboardLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div></DashboardLayout>;
+  if (!plan || allItems.length === 0) return <DashboardLayout><div className="max-w-2xl mx-auto py-12 px-4 text-center"><Utensils className="w-12 h-12 text-muted-foreground mx-auto mb-4" /><h3 className="font-bold text-lg">Nenhum plano ativo</h3><Button onClick={fetchData} variant="outline" className="mt-4">Atualizar</Button></div></DashboardLayout>;
 
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-5 pb-10">
         {isToday && <PatientRetentionAlerts />}
         <XPPopup show={xpPopup.show} points={xpPopup.points} />
-        
-        <div className="text-center">
-          <h1 className="font-display text-2xl font-bold">{isBasic ? "Sua dieta de hoje" : "Meu Plano Alimentar"}</h1>
-          <p className="text-muted-foreground text-sm">{plan.title}</p>
-        </div>
-
-        <div className="flex justify-center gap-2">
-          <Button variant={viewMode === "daily" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("daily")}>Modo diário</Button>
-          <Button variant={viewMode === "weekly" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("weekly")}>Modo semanal</Button>
-          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exportingPDF}><FileDown className="w-4 h-4 mr-1" /> PDF</Button>
-        </div>
+        <div className="text-center"><h1 className="font-display text-2xl font-bold">{isBasic ? "Sua dieta de hoje" : "Meu Plano Alimentar"}</h1><p className="text-muted-foreground text-sm">{plan.title}</p></div>
+        <div className="flex justify-center gap-2"><Button variant={viewMode === "daily" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("daily")}>Diário</Button><Button variant={viewMode === "weekly" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("weekly")}>Semanal</Button><Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exportingPDF}><FileDown className="w-4 h-4 mr-1" /> PDF</Button></div>
 
         {viewMode === "daily" ? (
           <>
             <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
             <AdherenceCard dailyAdherence={dailyAdherence} followedCount={followedCount} partialCount={partialCount} notFollowedCount={notFollowedCount} completionsCount={completions.length} totalItems={items.length} allMarked={allMarked} />
             <MacroSummary items={items} targets={{ calories: plan.total_meta_calorias, protein: plan.total_meta_proteinas, carbs: plan.total_meta_carboidratos, fat: plan.total_meta_gorduras }} />
-            <div className="space-y-6">
-              {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
-                <MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} />
-              ))}
-            </div>
+            <div className="space-y-6">{groupedItems.map(({ key, label, icon, time, items: mealItems }) => (<MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} />))}</div>
           </>
         ) : (
-          <div className="space-y-6">
-            {weeklyDisplayDays.map(({ day, items: dayItems }) => {
-              const dayDate = weekDates[day === 0 ? 0 : day] || date;
-              const groupedDayItems = MEAL_TYPES.map(mt => ({
-                ...mt,
-                items: (dayItems as MealPlanItem[]).filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()),
-              })).filter(g => g.items.length > 0);
-
-              if (groupedDayItems.length === 0) return null;
-
-              return (
-                <section key={day} className="rounded-2xl border p-4 space-y-4 bg-card/50">
-                  <h3 className="font-bold">{DAYS[day]}</h3>
-                  {groupedDayItems.map(({ key, label, icon, time, items: mealItems }) => (
-                    <MealGroup key={`${day}-${key}`} mealType={{ key, label, icon, time }} items={mealItems} completions={weekCompletions.filter(c => (c as any).date === dayDate)} onSetAdherence={(item, status) => setAdherence(item, status, dayDate)} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} />
-                  ))}
-                </section>
-              );
-            })}
-          </div>
+          <div className="space-y-6">{weeklyDisplayDays.map(({ day, items: dayItems }) => {
+            const dayDate = weekDates[day === 0 ? 0 : day] || date;
+            const groupedDayItems = MEAL_TYPES.map(mt => ({ ...mt, items: (dayItems as MealPlanItem[]).filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) })).filter(g => g.items.length > 0);
+            if (groupedDayItems.length === 0) return null;
+            return (<section key={day} className="rounded-2xl border p-4 space-y-4 bg-card/50"><h3 className="font-bold">{DAYS[day]}</h3>{groupedDayItems.map(({ key, label, icon, time, items: mealItems }) => (<MealGroup key={`${day}-${key}`} mealType={{ key, label, icon, time }} items={mealItems} completions={weekCompletions.filter(c => (c as any).date === dayDate)} onSetAdherence={(item, status) => setAdherence(item, status, dayDate)} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} />))}</section>);
+          })}</div>
         )}
 
-        {selectedMeal && (
-          <MealDetailModal 
-            open={!!selectedMeal} 
-            onOpenChange={(open) => !open && setSelectedMeal(null)} 
-            meal={{ ...selectedMeal, itemId: selectedMeal.itemId || (selectedMeal as any).id, image_url: selectedMeal.image_url || (selectedMeal as any).imageUrl }} 
-          />
-        )}
+        {selectedMeal && (<MealDetailModal open={!!selectedMeal} onOpenChange={(open) => !open && setSelectedMeal(null)} meal={{ ...selectedMeal, itemId: selectedMeal.itemId || (selectedMeal as any).id, image_url: selectedMeal.image_url || (selectedMeal as any).imageUrl }} />)}
+        {substitutionItem && (<MealSubstitutionModal open={!!substitutionItem} onOpenChange={(open) => !open && setSubstitutionItem(null)} mealTitle={substitutionItem.title} mealPlanItemId={substitutionItem.id} mealPlanId={plan.id} patientId={user.id} mealSlot={(substitutionItem as any).tipo_refeicao} options={safeAccess(substitutionItem, 'metadata.substitution_options', [])} onSubstitute={(food, originalTitle) => { setActiveSubstitutions(prev => ({ ...prev, [substitutionItem.id]: { foodName: food.name, originalTitle } })); setSubstitutionItem(null); }} />)}
+        <MealSlotModal open={!!selectedSlot} onOpenChange={(open) => !open && setSelectedSlot(null)} mealType={selectedSlot?.type || ""} items={selectedSlot?.items || []} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} />
+      </div>
 
-        {substitutionItem && (
-          <MealSubstitutionModal
-            open={!!substitutionItem}
-            onOpenChange={(open) => !open && setSubstitutionItem(null)}
-            mealTitle={substitutionItem.title}
-            mealPlanItemId={substitutionItem.id}
-            mealPlanId={plan.id}
-            patientId={user.id}
-            mealSlot={(substitutionItem as any).tipo_refeicao}
-            options={safeAccess(substitutionItem, 'metadata.substitution_options', [])}
-            onSubstitute={(food: FoodItem, originalTitle: string) => {
-              setActiveSubstitutions(prev => ({ ...prev, [substitutionItem.id]: { foodName: food.name, originalTitle } }));
-              setSubstitutionItem(null);
-            }}
-          />
-        )}
-
-        <MealSlotModal
-          open={!!selectedSlot}
-          onOpenChange={(open) => !open && setSelectedSlot(null)}
-          mealType={selectedSlot?.type || ""}
-          items={selectedSlot?.items || []}
-          completions={completions}
-          onSetAdherence={setAdherence}
-          onOpenDetail={setSelectedMeal}
-          onOpenSubstitution={setSubstitutionItem}
-        />
-    </motion.div>
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50 border-none rounded-3xl">
+          <DialogHeader className="p-6 bg-white border-b shrink-0"><DialogTitle className="font-display text-2xl font-bold flex items-center gap-2"><FileDown className="w-6 h-6 text-primary" /> Visualização do Plano</DialogTitle></DialogHeader>
+          <div className="flex-1 overflow-auto p-4 bg-slate-100/50"><div className="bg-white shadow-2xl rounded-2xl mx-auto max-w-[800px] min-h-full overflow-hidden">{previewData && (<iframe srcDoc={buildPremiumMealPlanHTML(previewData)} className="w-full h-[calc(90vh-140px)] border-none" title="PDF Preview" />)}</div></div>
+          <div className="p-4 border-t bg-white flex justify-end gap-3"><Button variant="outline" onClick={() => setShowPreview(false)}>Fechar</Button><Button onClick={() => { if (previewData) generatePremiumMealPlanPDF(previewData); setShowPreview(false); }}>Confirmar e Imprimir</Button></div>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
   );
 }
