@@ -230,6 +230,13 @@ export default function PatientMealPlan() {
     setDate(d.toISOString().split("T")[0]);
   }, [date]);
 
+  const handleDateSelect = useCallback((selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      setDate(selectedDate.toISOString().split("T")[0]);
+      setShowOthersModal(false);
+    }
+  }, []);
+
   const handleExportPDF = useCallback(async () => {
     if (!user || !plan || allItems.length === 0) return;
     setExportingPDF(true);
@@ -287,14 +294,25 @@ export default function PatientMealPlan() {
             <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
             <AdherenceCard dailyAdherence={dailyAdherence} followedCount={followedCount} partialCount={partialCount} notFollowedCount={notFollowedCount} completionsCount={completions.length} totalItems={items.length} allMarked={allMarked} />
             <MacroSummary items={items} targets={{ calories: plan.total_meta_calorias, protein: plan.total_meta_proteinas, carbs: plan.total_meta_carboidratos, fat: plan.total_meta_gorduras }} />
-            <div className="space-y-6">{groupedItems.map(({ key, label, icon, time, items: mealItems }) => (<MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} />))}</div>
+            <div className="space-y-6">
+              {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
+                <MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} justCompleted={justCompleted} focusMode={focusMode} />
+              ))}
+            </div>
           </>
         ) : (
           <div className="space-y-6">{weeklyDisplayDays.map(({ day, items: dayItems }) => {
             const dayDate = weekDates[day === 0 ? 0 : day] || date;
             const groupedDayItems = MEAL_TYPES.map(mt => ({ ...mt, items: (dayItems as MealPlanItem[]).filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) })).filter(g => g.items.length > 0);
             if (groupedDayItems.length === 0) return null;
-            return (<section key={day} className="rounded-2xl border p-4 space-y-4 bg-card/50"><h3 className="font-bold">{DAYS[day]}</h3>{groupedDayItems.map(({ key, label, icon, time, items: mealItems }) => (<MealGroup key={`${day}-${key}`} mealType={{ key, label, icon, time }} items={mealItems} completions={weekCompletions.filter(c => (c as any).date === dayDate)} onSetAdherence={(item, status) => setAdherence(item, status, dayDate)} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} />))}</section>);
+            return (
+              <section key={day} className="rounded-2xl border p-4 space-y-4 bg-card/50">
+                <h3 className="font-bold">{DAYS[day]}</h3>
+                {groupedDayItems.map(({ key, label, icon, time, items: mealItems }) => (
+                  <MealGroup key={`${day}-${key}`} mealType={{ key, label, icon, time }} items={mealItems} completions={weekCompletions.filter(c => (c as any).date === dayDate)} onSetAdherence={(item, status) => setAdherence(item, status, dayDate)} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} justCompleted={justCompleted} focusMode={focusMode} />
+                ))}
+              </section>
+            );
           })}</div>
         )}
 
