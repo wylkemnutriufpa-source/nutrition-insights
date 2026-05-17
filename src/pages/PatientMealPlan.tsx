@@ -160,7 +160,10 @@ export default function PatientMealPlan() {
         return;
       }
       const planData = result as any;
+      
+      // 🛡️ SOBERANIA V3: Usar o mesmo caminho robusto que o Editor e o PDF
       const normalized = normalizeMealPlan(planData);
+      
       const flatItems: MealPlanItem[] = normalized.meals.flatMap(m => 
         m.items.map(it => ({
           ...it,
@@ -173,14 +176,34 @@ export default function PatientMealPlan() {
           meta_gorduras: it.fat,
           image_url: it.imageUrl,
           imageUrl: it.imageUrl,
-          metadata: { ...(it.metadata || {}), image_url: it.imageUrl, imageUrl: it.imageUrl }
+          metadata: { 
+            ...(it.metadata || {}), 
+            image_url: it.imageUrl, 
+            imageUrl: it.imageUrl,
+            substitution_options: it.substitutions?.map(s => ({
+              id: s.id,
+              title: s.name || s.title,
+              meta_calorias: s.kcal,
+              meta_proteinas: s.protein,
+              meta_carboidratos: s.carbs,
+              meta_gorduras: s.fat,
+              image_url: s.imageUrl
+            })) || []
+          }
         }))
       );
+      
       setPlan({
-        id: planData.id, title: planData.title, start_date: planData.start_date, totals_status: planData.totals_status || 'ok',
-        plan_mode: planData.plan_mode, editor_version: planData.editor_version,
-        total_meta_calorias: planData.total_meta_calorias, total_meta_proteinas: planData.total_meta_proteinas,
-        total_meta_carboidratos: planData.total_meta_carboidratos, total_meta_gorduras: planData.total_meta_gorduras,
+        id: planData.id, 
+        title: planData.title, 
+        start_date: planData.start_date, 
+        totals_status: planData.totals_status || 'ok',
+        plan_mode: planData.plan_mode, 
+        editor_version: planData.editor_version || 'v3',
+        total_meta_calorias: planData.total_meta_calorias || planData.snapshot?.targets?.kcal, 
+        total_meta_proteinas: planData.total_meta_proteinas || planData.snapshot?.targets?.protein_g,
+        total_meta_carboidratos: planData.total_meta_carboidratos || planData.snapshot?.targets?.carbs_g, 
+        total_meta_gorduras: planData.total_meta_gorduras || planData.snapshot?.targets?.fat_g,
       } as any);
       setAllItems(flatItems);
       const dailyItems = buildDailyDisplayItems(flatItems as any, dayOfWeek);
