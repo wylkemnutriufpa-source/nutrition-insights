@@ -221,7 +221,8 @@ export default function PatientMealPlan() {
           meta_carboidratos: it.carbs,
           meta_gorduras: it.fat,
           image_url: it.imageUrl,
-          is_primary: true
+          is_primary: true,
+          metadata: it.metadata || {}
         }))
       );
 
