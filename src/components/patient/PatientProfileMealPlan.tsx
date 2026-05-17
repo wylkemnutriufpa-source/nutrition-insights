@@ -43,18 +43,27 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   const isToday = date === new Date().toISOString().split("T")[0];
 
   const fetchData = useCallback(async () => {
-    if (!patientId || !activeMealPlanId) return;
+    if (!patientId || !activeMealPlanId) {
+      console.log("[PatientProfileMealPlan] Missing IDs:", { patientId, activeMealPlanId });
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
       // 1. Fetch Plan Header (including snapshot)
       const { data: planData, error: planError } = await supabase
         .from("meal_plans")
-        .select("id, snapshot, editor_version")
+        .select("id, snapshot, editor_version, title")
         .eq("id", activeMealPlanId)
         .maybeSingle();
 
       if (planError) throw planError;
+      if (!planData) {
+        console.warn("[PatientProfileMealPlan] Plan not found for ID:", activeMealPlanId);
+        setLoading(false);
+        return;
+      }
 
       let allResolvedItems: any[] = [];
 
@@ -196,7 +205,19 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     await handleUpdateItem(itemId, { image_url: newImageUrl });
   };
 
-  if (!activeMealPlanId) return null;
+  if (!activeMealPlanId) {
+    return (
+      <div className="p-8 text-center bg-black/40 rounded-3xl border border-white/5 space-y-4">
+        <div className="w-12 h-12 rounded-full bg-zinc-500/10 flex items-center justify-center mx-auto">
+          <ChefHat className="w-6 h-6 text-zinc-500" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-zinc-400">Nenhum plano alimentar ativo</p>
+          <p className="text-xs text-muted-foreground">O paciente ainda não possui um plano alimentar publicado.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
