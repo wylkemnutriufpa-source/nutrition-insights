@@ -314,7 +314,7 @@ export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
 }
 
 export function buildPdfItemsForDailyPlan(items: DisplayMealPlanItem[], requestedDay?: number): DisplayMealPlanItem[] {
-  const dayItems = selectCanonicalDayItems(items, requestedDay);
+  const dayItems = selectCanonicalDayItems(items, requestedDay).filter(Boolean);
   // 🛡️ ASSERT: Auditoria antes de gerar PDF
   dayItems.forEach(item => assertHierarchyIntegrity(item, "buildPdfItemsForDailyPlan"));
   
