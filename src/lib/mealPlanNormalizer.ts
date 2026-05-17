@@ -92,6 +92,12 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
           }
         }
         
+        // 🛡️ SOBERANIA V3: Auditoria forçada - se ainda for nulo ou placeholder, tentamos match pelo nome do item
+        if (!finalImg || isPlaceholderUrl(finalImg)) {
+          const matchedImg = getHardcodedImageUrl(it.title || it.name || "");
+          if (matchedImg) finalImg = matchedImg;
+        }
+        
         return {
           id: it.id || it.instanceId || Math.random().toString(),
           title: it.title || it.name || "Refeição",

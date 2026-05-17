@@ -214,6 +214,7 @@ export default function PatientMealPlan() {
       const flatItems: MealPlanItem[] = normalized.meals.flatMap(m => 
         m.items.map(it => ({
           ...it,
+          itemId: it.id, // 🛡️ SOBERANIA V3: Garantir que itemId esteja presente para o modal
           tipo_refeicao: m.name as any,
           day_of_week: m.day_of_week,
           meta_calorias: it.calories,
@@ -856,7 +857,10 @@ export default function PatientMealPlan() {
             <MealDetailModal
               open={!!selectedMeal}
               onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
-              meal={selectedMeal}
+              meal={{
+                ...selectedMeal,
+                itemId: selectedMeal.itemId || (selectedMeal as any).id // Garantir que o modal tenha o ID para carregar dados
+              }}
             />
           )}
 
