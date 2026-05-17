@@ -191,9 +191,9 @@ export default function EditorV3Page() {
                     }
                   }
 
-                  // 3. Garantia Visual SOBERANA: Se não tem imagem, tentamos manter a do item original ou fallback da biblioteca
+                  // 3. Garantia Visual SOBERANA: Usamos a imagem que já vem no template/item
                   if (!finalItem.imageUrl || finalItem.imageUrl.includes('unsplash.com')) {
-                    finalItem.imageUrl = item.imageUrl || getHardcodedImageUrl(finalItem.name) || `https://source.unsplash.com/400x300/?${encodeURIComponent(finalItem.name)}`;
+                    finalItem.imageUrl = item.imageUrl || (item as any).image_url || null;
                   }
 
                   return finalItem;
