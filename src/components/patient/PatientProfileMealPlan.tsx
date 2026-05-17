@@ -43,18 +43,27 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   const isToday = date === new Date().toISOString().split("T")[0];
 
   const fetchData = useCallback(async () => {
-    if (!patientId || !activeMealPlanId) return;
+    if (!patientId || !activeMealPlanId) {
+      console.log("[PatientProfileMealPlan] Missing IDs:", { patientId, activeMealPlanId });
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
       // 1. Fetch Plan Header (including snapshot)
       const { data: planData, error: planError } = await supabase
         .from("meal_plans")
-        .select("id, snapshot, editor_version")
+        .select("id, snapshot, editor_version, title")
         .eq("id", activeMealPlanId)
         .maybeSingle();
 
       if (planError) throw planError;
+      if (!planData) {
+        console.warn("[PatientProfileMealPlan] Plan not found for ID:", activeMealPlanId);
+        setLoading(false);
+        return;
+      }
 
       let allResolvedItems: any[] = [];
 
@@ -98,13 +107,41 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         const meals = snapshot?.meals || snapshot?.days?.flatMap((d: any) => d.meals || []) || [];
         
         if (meals.length > 0) {
-          allResolvedItems = meals.flatMap((m: any) => (m.items || []).filter(Boolean).map((it: any) => ({
-            ...it,
-            id: it.id || it.instanceId,
-            title: it.title || it.name,
-            tipo_refeicao: m.tipo_refeicao || m.type || m.name,
-            day_of_week: m.day_of_week ?? it.day_of_week
-          })));
+          allResolvedItems = meals.flatMap((m: any) => {
+            const mealType = m.tipo_refeicao || m.type || m.name;
+            const dow = m.day_of_week ?? 1;
+            
+            return (m.items || []).filter(Boolean).flatMap((it: any) => {
+              const primary = {
+                ...it,
+                id: it.id || it.instanceId,
+                title: it.title || it.name,
+                tipo_refeicao: mealType,
+                day_of_week: dow,
+                meta_calorias: it.meta_calorias ?? it.kcal ?? it.calories ?? 0,
+                meta_proteinas: it.meta_proteinas ?? it.protein ?? 0,
+                meta_carboidratos: it.meta_carboidratos ?? it.carbs ?? 0,
+                meta_gorduras: it.meta_gorduras ?? it.fat ?? 0,
+                is_primary: true
+              };
+              
+              const subs = (it.substitutions || []).map((s: any) => ({
+                ...s,
+                id: s.id || s.instanceId || `sub-${Math.random()}`,
+                title: s.title || s.name,
+                tipo_refeicao: mealType,
+                day_of_week: dow,
+                meta_calorias: s.meta_calorias ?? s.kcal ?? s.calories ?? 0,
+                meta_proteinas: s.meta_proteinas ?? s.protein ?? 0,
+                meta_carboidratos: s.meta_carboidratos ?? s.carbs ?? 0,
+                meta_gorduras: s.meta_gorduras ?? s.fat ?? 0,
+                is_primary: false,
+                substitution_group_id: primary.id
+              }));
+              
+              return [primary, ...subs];
+            });
+          });
         } else {
           const { data: itemsData } = await supabase
             .from("meal_plan_items")
@@ -168,7 +205,19 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     await handleUpdateItem(itemId, { image_url: newImageUrl });
   };
 
-  if (!activeMealPlanId) return null;
+  if (!activeMealPlanId) {
+    return (
+      <div className="p-8 text-center bg-black/40 rounded-3xl border border-white/5 space-y-4">
+        <div className="w-12 h-12 rounded-full bg-zinc-500/10 flex items-center justify-center mx-auto">
+          <ChefHat className="w-6 h-6 text-zinc-500" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-zinc-400">Nenhum plano alimentar ativo</p>
+          <p className="text-xs text-muted-foreground">O paciente ainda não possui um plano alimentar publicado.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -233,7 +282,20 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                }}>
                  Próximo <Calendar className="w-4 h-4 ml-2" />
                </Button>
-            </div>
+            {groupedItems.length === 0 && !loading && (
+              <div className="flex flex-col items-center justify-center py-12 px-6 bg-black/40 rounded-3xl border border-white/5 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Nenhum item encontrado para este dia</p>
+                  <p className="text-xs text-muted-foreground max-w-[200px] mx-auto">
+                    O plano ativo pode não ter refeições configuradas para este dia da semana.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
 
             {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
               <MealGroup

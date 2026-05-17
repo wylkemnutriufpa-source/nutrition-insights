@@ -221,8 +221,8 @@ function dedupeIdenticalItems(items: DisplayMealPlanItem[]): DisplayMealPlanItem
       String(item.title ?? "").trim().toLowerCase(),
       isPrimaryMealItem(item) ? "p" : "s",
       // Macros são parte da chave para evitar dedupé de itens diferentes com mesmo nome
-      String(Math.round(asNumber(item.meta_calorias ?? safeAccess(item, 'metadata.meta_calorias', 0) ?? safeAccess(item, 'metadata.calories', 0)))),
-      String(Math.round(asNumber(item.meta_proteinas ?? safeAccess(item, 'metadata.protein', 0))))
+      String(Math.round(asNumber(item.meta_calorias ?? (item as any).kcal ?? (item as any).calories ?? safeAccess(item, 'metadata.meta_calorias', 0) ?? safeAccess(item, 'metadata.calories', 0)))),
+      String(Math.round(asNumber(item.meta_proteinas ?? (item as any).protein ?? safeAccess(item, 'metadata.protein', 0))))
     ].join("|");
     
     if (seen.has(key)) {

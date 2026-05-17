@@ -1191,6 +1191,17 @@ export default function PatientDetail() {
                     ) : (
                       <p className="text-muted-foreground italic">Nenhum plano ativo encontrado.</p>
                     )}
+                    
+                    <div className="pt-6 border-t border-white/5">
+                       <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
+                         <UtensilsCrossed className="w-4 h-4 text-emerald-500" /> Plano Alimentar Ativo
+                       </h4>
+                       <PatientProfileMealPlan 
+                         patientId={resolvedPatientId} 
+                         activeMealPlanId={activeMealPlan?.id} 
+                       />
+                    </div>
+
                     <Button className="w-full bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => setPlanOpen(true)}>
                       Editar Plano / Assinatura
                     </Button>
