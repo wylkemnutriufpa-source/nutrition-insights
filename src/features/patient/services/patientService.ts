@@ -112,7 +112,7 @@ export const patientService = {
     const data = rawData as any;
     const patientData = data.nutritionist_patients;
     
-    if (data.snapshot && data.snapshot.snapshot_version === 'v3') {
+    if (data.snapshot && (data.snapshot.snapshot_version === 'v3' || data.snapshot.days)) {
       return this.mapSnapshotPlan(data, patientData, data.editor_version);
     }
 
