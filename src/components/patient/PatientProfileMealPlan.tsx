@@ -78,7 +78,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           meta_proteinas: it.protein,
           meta_carboidratos: it.carbs,
           meta_gorduras: it.fat,
-          image_url: it.imageUrl,
+          image_url: it.imageUrl, // 🛡️ SOBERANIA V3: Garantir compatibilidade com MealItemCard
           is_primary: true,
           metadata: it.metadata || {}
         }))
