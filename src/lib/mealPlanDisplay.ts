@@ -287,10 +287,13 @@ export function buildWeeklyDisplayDays(items: DisplayMealPlanItem[]): Array<{ da
 }
 
 export function calculatePrimaryTotals(items: DisplayMealPlanItem[]) {
+  // 🛡️ ANTI-CRASH: Garantir que items seja um array e filtrar nulos
+  const safeItems = (Array.isArray(items) ? items : []).filter(Boolean);
+  
   // 🛡️ ASSERT: Auditoria em massa para o cálculo de macros
-  items.forEach(item => assertHierarchyIntegrity(item, "calculatePrimaryTotals"));
+  safeItems.forEach(item => assertHierarchyIntegrity(item, "calculatePrimaryTotals"));
 
-  const groups = dedupeGroups(groupItems(items));
+  const groups = dedupeGroups(groupItems(safeItems));
   // Filtro reforçado: Apenas o item primário de cada grupo entra no cálculo
   const primaryItems = groups.map((group) => group.primary).filter(item => {
     // Soberania absoluta: Se is_primary for false, está fora.
