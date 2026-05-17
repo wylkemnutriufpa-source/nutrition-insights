@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useEditorState } from '../hooks/useEditorState';
 import { MealCard } from './MealCard';
@@ -45,7 +45,9 @@ import { normalizeSnapshotToV3 } from '../utils/normalization';
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
-  const effectiveId = planId || id;
+  const [searchParams] = useSearchParams();
+  const queryPlanId = searchParams.get('planId');
+  const effectiveId = planId || queryPlanId || id;
   const effectivePatientId = patientId;
 
   const navigate = useNavigate();
