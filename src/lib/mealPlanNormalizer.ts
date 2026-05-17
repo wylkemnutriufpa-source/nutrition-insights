@@ -1,3 +1,5 @@
+import { getHardcodedImageUrl } from "./mealVisualMatcher";
+
 export interface NormalizedMealPlan {
   id: string;
   meals: NormalizedMeal[];
@@ -74,7 +76,7 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
         protein: Number(it.meta_proteinas ?? it.protein ?? it.macros?.protein_g ?? 0),
         carbs: Number(it.meta_carboidratos ?? it.carbs ?? it.macros?.carbs_g ?? 0),
         fat: Number(it.meta_gorduras ?? it.fat ?? it.macros?.fat_g ?? 0),
-        imageUrl: rawImg,
+        imageUrl: rawImg || getHardcodedImageUrl(it.title || it.name || ""),
         display_quantity: it.display_quantity || it.quantity,
         display_unit: it.display_unit || it.unit,
         metadata: it.metadata || it.edit_metadata || {}
