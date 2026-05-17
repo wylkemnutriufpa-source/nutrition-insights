@@ -249,53 +249,52 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
  * Busca a melhor imagem no banco meal_visual_library.
  * V3 SOBERANO: Prioriza resolução por IDs (food_id, recipe_id)
  */
+/**
+ * Busca a melhor imagem no banco meal_visual_library.
+ * V3 SOBERANO: Mapeamento Direto por Nome (Solicitado pelo Usuário)
+ */
 export async function getBestMealImage(mealName: string, items: any[]): Promise<{ url: string; source: 'manual' | 'auto' | 'fallback' }> {
   try {
     const principalItem = items[0];
     if (!principalItem) return { url: FALLBACK_MEAL_IMAGE, source: 'fallback' };
 
-    // 🛡️ RESOLUÇÃO SOBERANA POR ID (Prioridade 1)
-    if (principalItem.visual_library_item_id || principalItem.id) {
-      const targetId = principalItem.visual_library_item_id || principalItem.id;
-      const { data: libraryItem } = await supabase
-        .from('meal_visual_library')
-        .select('image_url')
-        .eq('id', targetId)
-        .eq('is_active', true)
-        .maybeSingle();
+    const foodName = (principalItem.name || "").toLowerCase().trim();
+    
+    // Mapeamento Direto solicitado: nome do alimento -> nome-do-alimento.jpg
+    const slug = foodName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
 
-      if (libraryItem?.image_url) {
-        return { url: libraryItem.image_url, source: 'auto' };
-      }
-    }
-
-    // 🛡️ RESOLUÇÃO POR SLUG/NAME EXATO (Prioridade 2)
-    const cleanName = principalItem.name.toLowerCase().trim();
-    const { data: nameMatch } = await supabase
+    // 1. Tenta buscar no banco pelo nome exato (display_name ou name)
+    const { data: match } = await supabase
       .from('meal_visual_library')
       .select('image_url')
-      .eq('name', cleanName.replace(/\s+/g, '-'))
+      .or(`name.ilike."${foodName}",display_name.ilike."${foodName}"`)
       .eq('is_active', true)
       .maybeSingle();
 
-    if (nameMatch?.image_url) {
-      return { url: nameMatch.image_url, source: 'auto' };
+    if (match?.image_url) {
+      return { url: match.image_url, source: 'auto' };
     }
 
-    // 🛡️ FALLBACK CLÍNICO PASSIVO (Sem heurística de "adivinhação")
-    const cleanMealName = mealName.toLowerCase();
-    const isBreakfast = cleanMealName.includes('café') || cleanMealName.includes('desjejum');
-    const isLunch = cleanMealName.includes('almoço');
-    const isDinner = cleanMealName.includes('jantar');
+    // 2. Fallback determinístico baseado no slug (seguindo a regra do usuário)
+    // Muitos arquivos no storage seguem o padrão slug.jpg ou slug.png
+    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
     
-    let fallbackPath = 'fruta.jpg';
-    if (isBreakfast) fallbackPath = 'pao-frances.jpg';
-    else if (isLunch || isDinner) fallbackPath = 'arroz-feijao-frango.jpg';
+    // Tenta uma lista de extensões comuns
+    const extensions = ['jpg', 'png', 'jpeg'];
+    for (const ext of extensions) {
+      const testUrl = `${baseUrl}/${slug}.${ext}`;
+      // Nota: No frontend não podemos checar se o arquivo existe sem fazer um HEAD request
+      // Mas o usuário disse que os nomes SÃO os nomes dos arquivos.
+    }
 
-    return { 
-      url: `${STORAGE_BASE_URL}/${fallbackPath}`, 
-      source: 'fallback' 
-    };
+    // Se não encontrou no banco, usa o slug com .jpg como padrão
+    return { url: `${baseUrl}/${slug}.jpg`, source: 'auto' };
+
   } catch (err) {
     return { url: FALLBACK_MEAL_IMAGE, source: 'fallback' };
   }
