@@ -42,7 +42,7 @@ import {
   buildPdfItemsForDailyPlan,
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
-} from "@/lib/mealPlanDisplay";
+} from "@/lib/legacy/mealPlanDisplay";
 
 interface MealPlan {
   id: string;
