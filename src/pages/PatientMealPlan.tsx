@@ -175,8 +175,16 @@ export default function PatientMealPlan() {
       // 🛡️ SOBERANIA V3: O App é um RENDERIZADOR BURRO.
       // Extração direta do snapshot sem re-interpretação.
       const allSnapshotItems: MealPlanItem[] = [];
+      const macrosMap: Record<string, any> = {};
+
       snapshot.days.forEach((day: any) => {
         day.meals.forEach((meal: any) => {
+          // Chave única por dia e tipo de refeição
+          const mKey = `${day.day_of_week}_${meal.name.toLowerCase()}`;
+          if (meal.macros) {
+            macrosMap[mKey] = meal.macros;
+          }
+
           meal.items.forEach((item: any) => {
             const mapped: MealPlanItem = {
               id: item.id,
@@ -211,6 +219,9 @@ export default function PatientMealPlan() {
           });
         });
       });
+      
+      setMealMacros(macrosMap);
+
 
       const planMeta = {
         id: planData.id,
