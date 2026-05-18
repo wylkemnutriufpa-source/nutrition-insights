@@ -300,11 +300,17 @@ export const seedPremiumV3Templates = async () => {
   try {
     const templates = generatePremiumTemplates();
     for (const t of templates) {
-      const { error } = await supabase.from('v3_diet_templates').upsert({
+      // First, ensure we don't have duplicates by slug if we are re-inserting
+      const { error: upsertError } = await supabase.from('v3_diet_templates').upsert({
         ...t,
         updated_at: new Date().toISOString()
       }, { onConflict: 'slug' });
-      if (error) console.error('Error inserting template:', t.title, error);
+      
+      if (upsertError) {
+        console.error('Error inserting template:', t.title, upsertError);
+      } else {
+        console.log('Successfully seeded template:', t.title);
+      }
     }
     return true;
   } catch (err) {
@@ -312,3 +318,10 @@ export const seedPremiumV3Templates = async () => {
     return false;
   }
 };
+
+// Auto-execute if requested via specific environment trigger or manual call
+if (typeof window !== 'undefined' && (window as any).FORCE_SEED_V3) {
+  seedPremiumV3Templates().then(success => {
+    if (success) console.log("✨ Premium V3 Templates Seeded Successfully via Force Trigger");
+  });
+}
