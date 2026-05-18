@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { safeAccess } from "@/lib/safeRender";
-import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
+import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
