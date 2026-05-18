@@ -60,6 +60,7 @@ import {
   FileDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import { seedPremiumV3Templates } from "@/lib/seedV3Templates";
 
 type FoodItem = {
   name?: string | null;
@@ -382,6 +383,24 @@ export default function TemplateNutritionAudit() {
     toast.success("Checklist exportado com sucesso!");
   };
 
+  const [isSeeding, setIsSeeding] = useState(false);
+  const handleSeedPremiumTemplates = async () => {
+    if (!window.confirm("Isso irá injetar os 5 templates Premium V3 no banco de dados. Deseja continuar?")) return;
+    setIsSeeding(true);
+    try {
+      const success = await seedPremiumV3Templates();
+      if (success) {
+        toast.success("Templates Premium injetados com sucesso!");
+      } else {
+        toast.error("Erro ao injetar templates.");
+      }
+    } catch (e) {
+      toast.error("Erro ao injetar templates: " + (e as any).message);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const refreshVersions = async () => {
     setVersionsLoading(true);
     try {
@@ -563,6 +582,10 @@ export default function TemplateNutritionAudit() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="default" size="sm" onClick={handleSeedPremiumTemplates} disabled={isSeeding}>
+              <Sparkles className={`w-4 h-4 mr-2 ${isSeeding ? "animate-spin" : ""}`} />
+              Injetar Templates V3 Premium
+            </Button>
             <Button variant="outline" size="sm" onClick={() => window.open("/admin/template-mass-reformulation", "_blank")}>
               <Sparkles className="w-4 h-4 mr-2" />
               Reformular em Massa
