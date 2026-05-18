@@ -40,7 +40,7 @@ import { useAuth } from '@/lib/auth';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { planPersistenceService } from '../services/planPersistenceService';
-import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
+import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { normalizeSnapshotToV3 } from '../utils/normalization';
 
 export default function EditorV3Page() {

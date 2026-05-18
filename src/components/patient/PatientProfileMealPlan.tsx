@@ -17,10 +17,10 @@ import {
   buildDailyDisplayItems,
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
-} from "@/lib/mealPlanDisplay";
+} from "@/lib/legacy/mealPlanDisplay";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import { safeAccess } from "@/lib/safeRender";
-import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
+import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { toast } from "sonner";
 
 interface PatientProfileMealPlanProps {
