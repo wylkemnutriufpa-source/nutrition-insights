@@ -5,8 +5,12 @@ export const patientService = {
   mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion?: string): PatientPlan {
     const snapshot = data.snapshot as any;
     
-    // 🛡️ SOBERANIA V3: Se não há snapshot ou não é V3, usamos o legado.
-    if (!snapshot || snapshot.snapshot_version !== 'v3') {
+    // 🛡️ SOBERANIA V3: Se o plano é V3, o snapshot é OBRIGATÓRIO e SOBERANO.
+    if (data.editor_version === 'v3' || (snapshot && snapshot.snapshot_version === 'v3')) {
+      if (!snapshot) {
+        throw new Error("[Sovereign App] CRITICAL: Plano V3 sem Snapshot detectado. Abortando renderização.");
+      }
+    } else {
       return this.mapLegacyPlan(data, patientData);
     }
 
