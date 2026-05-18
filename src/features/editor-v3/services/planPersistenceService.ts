@@ -45,20 +45,20 @@ export const planPersistenceService = {
    * Único ponto de verdade para imagens. Proibido fallback dinâmico no App.
    */
   async resolveVisual(item: any): Promise<{ image_url: string; is_placeholder: boolean; library_item_id?: string }> {
+    // 🛡️ PRIORIDADE 1: Se o item já tem uma URL de imagem explícita (do editor/template), usá-la diretamente.
+    // Este é o campo que os templates preenchem e que o editor preserva.
+    const existingUrl = item.imageUrl || item.image_url || item.visual?.image_url;
+    if (existingUrl && !existingUrl.includes('unsplash.com') && !existingUrl.includes('placeholder.svg')) {
+      return {
+        image_url: existingUrl,
+        is_placeholder: false,
+        library_item_id: item.library_item_id || item.id
+      };
+    }
+
+    // 🛡️ PRIORIDADE 2: Tentar encontrar no banco de imagens da biblioteca visual
     const foodName = (item.name || item.title || "").toLowerCase().trim();
     
-    // 🛡️ REGRAS DE OURO: Mapeamento Direto por Nome (Solicitado pelo Usuário)
-    // Se o nome é "Pão Integral", o arquivo deve ser "pao-integral.jpg"
-    const slug = foodName
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
-    
-    // Tenta encontrar o registro no banco para pegar a URL exata se existir
     const { data: libMatch } = await supabase
       .from('meal_visual_library')
       .select('image_url')
@@ -74,8 +74,15 @@ export const planPersistenceService = {
       };
     }
 
-    // Se não encontrou no banco, usamos o slug determinístico com .jpg
-    // Isso garante que se o arquivo existir no storage com esse nome, ele será carregado.
+    // 🛡️ PRIORIDADE 3: Slug determinístico como último recurso
+    const slug = foodName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
     return {
       image_url: `${baseUrl}/${slug}.jpg`,
       is_placeholder: false,
