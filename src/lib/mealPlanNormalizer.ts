@@ -107,13 +107,11 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
   const snapshot = rawData.snapshot || rawData.items_payload || (rawData.meals ? rawData : null);
   const rawMeals: any[] = [];
   
-  // 1. Prioridade Soberana: Snapshot V3 (days structure)
-  if (snapshot && Array.isArray(snapshot.days)) {
-    snapshot.days.forEach((day: any, index: number) => {
-      const daysOrder = [1, 2, 3, 4, 5, 6, 0];
-      const fallbackDay = daysOrder[index % 7];
-      const dayIdx = (day.day_of_week !== undefined && day.day_of_week !== null) ? Number(day.day_of_week) : fallbackDay;
-
+  // 1. Prioridade Soberana: Snapshot V3 (Estrutura Compilada)
+  // O App do Paciente (ou Profissional) deve apenas de-estruturar.
+  if (snapshot && snapshot.snapshot_version === 'v3' && Array.isArray(snapshot.days)) {
+    snapshot.days.forEach((day: any) => {
+      const dayIdx = Number(day.day_of_week);
       if (Array.isArray(day.meals)) {
         day.meals.forEach((m: any) => {
           rawMeals.push({
@@ -124,32 +122,34 @@ export function normalizeMealPlan(rawData: any): NormalizedMealPlan {
       }
     });
   } 
-  // 2. Snapshot V3 Flat Structure
+  // 2. Snapshot Legado ou Flat Structure
   else if (snapshot && Array.isArray(snapshot.meals)) {
     rawMeals.push(...snapshot.meals);
   }
-  // 3. Fallback: Meal Plan Items (from database table or RPC result)
-  const itemsSource = rawData.meal_plan_items || rawData.items || (Array.isArray(rawData) ? rawData : []);
-  
-  if (rawMeals.length === 0 && Array.isArray(itemsSource) && itemsSource.length > 0) {
-    const groups = new Map();
-    itemsSource.forEach((it: any) => {
-      if (!it) return;
-      const day = it.day_of_week !== null && it.day_of_week !== undefined ? it.day_of_week : 0;
-      const type = it.tipo_refeicao || it.meal_type || 'Refeição';
-      const key = `${day}-${type}`;
-      
-      if (!groups.has(key)) {
-        groups.set(key, { 
-          id: `group-${key}`,
-          name: translateType(type),
-          day_of_week: day,
-          items: [] 
-        });
-      }
-      groups.get(key).items.push(it);
-    });
-    rawMeals.push(...Array.from(groups.values()));
+  // 3. Fallback: Meal Plan Items (Legado V1/V2)
+  else {
+    const itemsSource = rawData.meal_plan_items || rawData.items || (Array.isArray(rawData) ? rawData : []);
+    
+    if (Array.isArray(itemsSource) && itemsSource.length > 0) {
+      const groups = new Map();
+      itemsSource.forEach((it: any) => {
+        if (!it) return;
+        const day = it.day_of_week !== null && it.day_of_week !== undefined ? it.day_of_week : 0;
+        const type = it.tipo_refeicao || it.meal_type || 'Refeição';
+        const key = `${day}-${type}`;
+        
+        if (!groups.has(key)) {
+          groups.set(key, { 
+            id: `group-${key}`,
+            name: translateType(type),
+            day_of_week: day,
+            items: [] 
+          });
+        }
+        groups.get(key).items.push(it);
+      });
+      rawMeals.push(...Array.from(groups.values()));
+    }
   }
 
   // Final mapping to Normalized structure
