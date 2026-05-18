@@ -20,14 +20,19 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 /** Resolve a human-readable portion string from the item data hierarchy. */
 const formatDisplayPortion = (item: any): string => {
   if (!item) return '';
-  const meta = item.edit_metadata || item.metadata || {};
-  const dQty = item.display_quantity || meta.display_quantity;
-  const dUnit = item.display_unit || meta.display_unit || meta.portionLabel || meta.portionUnit || '';
-  if (dQty) return `${dQty} ${dUnit}`.trim();
-  const mass = item.clinical_mass_g || item.grams || meta.clinical_mass_g;
+  // 🛡️ SOBERANIA V3: Prioridade absoluta para campos pré-formatados pelo compiler.
+  const dQty = item.display_quantity || item.quantity_display;
+  const dUnit = item.display_unit;
+  
+  if (dQty) {
+    if (dUnit) return `${dQty} ${dUnit}`.trim();
+    return String(dQty);
+  }
+
+  // Fallback mínimo para itens legados que ainda não foram migrados
+  const mass = item.clinical_mass_g || item.grams;
   if (mass) return `${mass}g`;
-  if (item.description) return item.description;
-  return '';
+  return item.description || '';
 };
 
 import type { Database } from "@/integrations/supabase/types";
