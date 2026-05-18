@@ -74,8 +74,16 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
 
       if (isV3 && Array.isArray(snapshot.days)) {
         // 🛡️ SOBERANIA V3: Extração DIRETA do snapshot. ZERO normalization.
+        const macrosMap: Record<string, any> = {};
+
         for (const day of snapshot.days) {
           for (const meal of (day.meals || [])) {
+            // Chave única por dia e tipo de refeição
+            const mealKey = `${day.day_of_week}_${meal.name.toLowerCase()}`;
+            if (meal.macros) {
+              macrosMap[mealKey] = meal.macros;
+            }
+
             for (const item of (meal.items || [])) {
               allResolved.push({
                 id: item.id,
@@ -108,6 +116,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
             }
           }
         }
+        setMealMacros(macrosMap);
         daily = allResolved.filter(i => i.day_of_week === dayOfWeek);
         if (daily.length === 0 && allResolved.length > 0) {
           const firstDay = allResolved[0].day_of_week;
