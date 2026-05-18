@@ -301,7 +301,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
             )}
           </div>
 
-            {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
+            {groupedItems.map(({ key, label, icon, time, items: mealItems, macros }) => (
               <MealGroup
                 key={key}
                 mealType={{ key, label, icon, time }}
@@ -313,6 +313,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                 onOpenDetail={(meal) => setSelectedMeal(meal as any)}
                 onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
                 onOpenSubstitution={setSubstitutingItem}
+                macros={macros}
               />
             ))}
 
