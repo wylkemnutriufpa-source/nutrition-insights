@@ -107,6 +107,7 @@ export const planPersistenceService = {
       for (let i = 0; i < sortedMeals.length; i++) {
         const m = sortedMeals[i];
         const sovereignItems: SovereignItem[] = [];
+        let mealKcal = 0, mealProt = 0, mealCarb = 0, mealFat = 0;
 
         for (const it of m.items) {
           const visual = await this.resolveVisual(it);
@@ -154,6 +155,12 @@ export const planPersistenceService = {
 
           sovereignItems.push(sovereignItem);
           
+          // Somar totais da refeição
+          mealKcal += sovereignItem.macros.kcal;
+          mealProt += sovereignItem.macros.protein_g;
+          mealCarb += sovereignItem.macros.carbs_g;
+          mealFat += sovereignItem.macros.fat_g;
+          
           // Somar totais diários (sempre do item primário)
           dayKcal += sovereignItem.macros.kcal;
           dayProt += sovereignItem.macros.protein_g;
@@ -166,6 +173,12 @@ export const planPersistenceService = {
           name: m.name || "Refeição",
           time: m.time || "00:00",
           order_index: i,
+          macros: {
+            kcal: Math.round(mealKcal),
+            protein_g: Number(mealProt.toFixed(1)),
+            carbs_g: Number(mealCarb.toFixed(1)),
+            fat_g: Number(mealFat.toFixed(1))
+          },
           items: sovereignItems
         });
       }

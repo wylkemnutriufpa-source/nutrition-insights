@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import { 
   buildDailyDisplayItems,
   calculatePrimaryTotals 
-} from "@/lib/mealPlanDisplay";
+} from "@/lib/legacy/mealPlanDisplay";
 import { fmtMacro, isMacroInconsistent, isCalorieClamped, getCalorieClampValue, safeNum } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 

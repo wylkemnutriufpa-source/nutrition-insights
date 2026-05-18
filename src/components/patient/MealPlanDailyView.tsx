@@ -20,14 +20,19 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 /** Resolve a human-readable portion string from the item data hierarchy. */
 const formatDisplayPortion = (item: any): string => {
   if (!item) return '';
-  const meta = item.edit_metadata || item.metadata || {};
-  const dQty = item.display_quantity || meta.display_quantity;
-  const dUnit = item.display_unit || meta.display_unit || meta.portionLabel || meta.portionUnit || '';
-  if (dQty) return `${dQty} ${dUnit}`.trim();
-  const mass = item.clinical_mass_g || item.grams || meta.clinical_mass_g;
+  // 🛡️ SOBERANIA V3: Prioridade absoluta para campos pré-formatados pelo compiler.
+  const dQty = item.display_quantity || item.quantity_display;
+  const dUnit = item.display_unit;
+  
+  if (dQty) {
+    if (dUnit) return `${dQty} ${dUnit}`.trim();
+    return String(dQty);
+  }
+
+  // Fallback mínimo para itens legados que ainda não foram migrados
+  const mass = item.clinical_mass_g || item.grams;
   if (mass) return `${mass}g`;
-  if (item.description) return item.description;
-  return '';
+  return item.description || '';
 };
 
 import type { Database } from "@/integrations/supabase/types";
@@ -590,15 +595,28 @@ const DateNavigator = memo(function DateNavigator({
 
 // ── Meal Slot Summary Card (New for V3 Coupling) ──
 const MealSlotCard = memo(function MealSlotCard({
-  mealType, items, completions, isCurrent, onClick
+  mealType, items, completions, isCurrent, onClick, macros
 }: {
   mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
   items: MealPlanItem[];
   completions: MealCompletion[];
   isCurrent: boolean;
   onClick: () => void;
+  macros?: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
 }) {
   const totals = useMemo(() => {
+    // 🛡️ SOBERANIA V3: Se o snapshot já traz os macros calculados, usamos eles.
+    // Zero processamento ou soma em runtime se os dados estiverem prontos.
+    if (macros) {
+      return {
+        calories: macros.kcal,
+        protein: macros.protein_g,
+        carbs: macros.carbs_g,
+        fat: macros.fat_g
+      };
+    }
+
+    // Fallback apenas para planos legados (V1/V2)
     return items.reduce((acc, item) => {
       const meta = item.metadata || {};
       return {
@@ -608,7 +626,7 @@ const MealSlotCard = memo(function MealSlotCard({
         fat: acc.fat + (item.meta_gorduras ?? (item as any).fat ?? meta.meta_gorduras ?? meta.fat ?? 0),
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
-  }, [items]);
+  }, [items, macros]);
 
   const mealFollowedCount = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const isFullyFollowed = mealFollowedCount === items.length && items.length > 0;
@@ -704,7 +722,7 @@ const MealSlotCard = memo(function MealSlotCard({
 // ── Meal Group (memoized) ──
 const MealGroup = memo(function MealGroup({
   mealType, items, completions, justCompleted, focusMode,
-  onSetAdherence, onOpenDetail, onOpenSubstitution, onOpenSlot,
+  onSetAdherence, onOpenDetail, onOpenSubstitution, onOpenSlot, macros
 }: {
   mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
   items: MealPlanItem[];
@@ -715,6 +733,7 @@ const MealGroup = memo(function MealGroup({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
   onOpenSlot?: (mealType: string, items: MealPlanItem[]) => void;
+  macros?: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
 }) {
   const { isBasic } = useExperienceUI();
   const isCurrent = isCurrentMeal(mealType.time);
@@ -731,6 +750,7 @@ const MealGroup = memo(function MealGroup({
         completions={completions}
         isCurrent={isCurrent}
         onClick={() => onOpenSlot && onOpenSlot(mealType.key, items)}
+        macros={macros}
       />
     );
   }

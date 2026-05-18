@@ -17,10 +17,10 @@ import {
   buildDailyDisplayItems,
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
-} from "@/lib/mealPlanDisplay";
+} from "@/lib/legacy/mealPlanDisplay";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import { safeAccess } from "@/lib/safeRender";
-import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
+import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { toast } from "sonner";
 
 interface PatientProfileMealPlanProps {
@@ -31,6 +31,7 @@ interface PatientProfileMealPlanProps {
 export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: PatientProfileMealPlanProps) {
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [allItems, setAllItems] = useState<MealPlanItem[]>([]);
+  const [mealMacros, setMealMacros] = useState<Record<string, any>>({});
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -73,8 +74,16 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
 
       if (isV3 && Array.isArray(snapshot.days)) {
         // 🛡️ SOBERANIA V3: Extração DIRETA do snapshot. ZERO normalization.
+        const macrosMap: Record<string, any> = {};
+
         for (const day of snapshot.days) {
           for (const meal of (day.meals || [])) {
+            // Chave única por dia e tipo de refeição
+            const mealKey = `${day.day_of_week}_${meal.name.toLowerCase()}`;
+            if (meal.macros) {
+              macrosMap[mealKey] = meal.macros;
+            }
+
             for (const item of (meal.items || [])) {
               allResolved.push({
                 id: item.id,
@@ -107,6 +116,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
             }
           }
         }
+        setMealMacros(macrosMap);
         daily = allResolved.filter(i => i.day_of_week === dayOfWeek);
         if (daily.length === 0 && allResolved.length > 0) {
           const firstDay = allResolved[0].day_of_week;
@@ -158,22 +168,26 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   const groupedItems = useMemo(() => {
     // 🛡️ ANTI-CRASH: Garantir que items seja um array antes de filtrar
     const safeItems = Array.isArray(items) ? items : [];
-    return MEAL_TYPES.map(mt => ({
-      ...mt,
-      items: safeItems.filter(i => {
-        if (!i || !i.tipo_refeicao) return false;
-        const type = String(i.tipo_refeicao).toLowerCase();
-        const key = mt.key.toLowerCase();
-        // Match by key, label or common variations
-        return type === key || 
-               type === mt.label.toLowerCase() || 
-               (key === "lanche da tarde" && type === "afternoon_snack") ||
-               (key === "café da manhã" && type === "breakfast") ||
-               (key === "almoço" && type === "lunch") ||
-               (key === "jantar" && type === "dinner");
-      }),
-    })).filter(g => g.items.length > 0);
-  }, [items]);
+    return MEAL_TYPES.map(mt => {
+      const mealKey = `${dayOfWeek}_${mt.key.toLowerCase()}`;
+      return {
+        ...mt,
+        macros: mealMacros[mealKey],
+        items: safeItems.filter(i => {
+          if (!i || !i.tipo_refeicao) return false;
+          const type = String(i.tipo_refeicao).toLowerCase();
+          const key = mt.key.toLowerCase();
+          // Match by key, label or common variations
+          return type === key || 
+                 type === mt.label.toLowerCase() || 
+                 (key === "lanche da tarde" && type === "afternoon_snack") ||
+                 (key === "café da manhã" && type === "breakfast") ||
+                 (key === "almoço" && type === "lunch") ||
+                 (key === "jantar" && type === "dinner");
+        }),
+      };
+    }).filter(g => g.items.length > 0);
+  }, [items, mealMacros, dayOfWeek]);
 
   const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
 
@@ -287,7 +301,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
             )}
           </div>
 
-            {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
+            {groupedItems.map(({ key, label, icon, time, items: mealItems, macros }) => (
               <MealGroup
                 key={key}
                 mealType={{ key, label, icon, time }}
@@ -299,6 +313,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
                 onOpenDetail={(meal) => setSelectedMeal(meal as any)}
                 onOpenSlot={(type, items) => setSelectedSlot({ type, items })}
                 onOpenSubstitution={setSubstitutingItem}
+                macros={macros}
               />
             ))}
 

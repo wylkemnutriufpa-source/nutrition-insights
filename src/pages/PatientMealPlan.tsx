@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { safeAccess } from "@/lib/safeRender";
-import { normalizeMealPlan } from "@/lib/mealPlanNormalizer";
+import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -42,7 +42,7 @@ import {
   buildPdfItemsForDailyPlan,
   buildWeeklyDisplayDays,
   calculatePrimaryTotals,
-} from "@/lib/mealPlanDisplay";
+} from "@/lib/legacy/mealPlanDisplay";
 
 interface MealPlan {
   id: string;
@@ -115,6 +115,7 @@ export default function PatientMealPlan() {
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [allItems, setAllItems] = useState<MealPlanItem[]>([]);
+  const [mealMacros, setMealMacros] = useState<Record<string, any>>({});
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
   const [weekCompletions, setWeekCompletions] = useState<MealCompletion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,8 +175,16 @@ export default function PatientMealPlan() {
       // 🛡️ SOBERANIA V3: O App é um RENDERIZADOR BURRO.
       // Extração direta do snapshot sem re-interpretação.
       const allSnapshotItems: MealPlanItem[] = [];
+      const macrosMap: Record<string, any> = {};
+
       snapshot.days.forEach((day: any) => {
         day.meals.forEach((meal: any) => {
+          // Chave única por dia e tipo de refeição
+          const mKey = `${day.day_of_week}_${meal.name.toLowerCase()}`;
+          if (meal.macros) {
+            macrosMap[mKey] = meal.macros;
+          }
+
           meal.items.forEach((item: any) => {
             const mapped: MealPlanItem = {
               id: item.id,
@@ -210,6 +219,9 @@ export default function PatientMealPlan() {
           });
         });
       });
+      
+      setMealMacros(macrosMap);
+
 
       const planMeta = {
         id: planData.id,
@@ -307,8 +319,15 @@ export default function PatientMealPlan() {
     }), [items, activeSubstitutions]);
 
   const groupedItems = useMemo(() =>
-    MEAL_TYPES.map(mt => ({ ...mt, items: overlayedItems.filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) })).filter(g => g.items.length > 0),
-  [overlayedItems]);
+    MEAL_TYPES.map(mt => {
+      const mKey = `${dayOfWeek}_${mt.key.toLowerCase()}`;
+      return {
+        ...mt,
+        macros: mealMacros[mKey],
+        items: overlayedItems.filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase())
+      };
+    }).filter(g => g.items.length > 0),
+  [overlayedItems, mealMacros, dayOfWeek]);
 
   const weeklyDisplayDays = useMemo(() => {
     // 🛡️ SOBERANIA V3: Para planos V3, agrupar por day_of_week diretamente
@@ -350,8 +369,8 @@ export default function PatientMealPlan() {
             <AdherenceCard dailyAdherence={dailyAdherence} followedCount={followedCount} partialCount={partialCount} notFollowedCount={notFollowedCount} completionsCount={completions.length} totalItems={items.length} allMarked={allMarked} />
             <MacroSummary items={items} targets={{ calories: plan.total_meta_calorias, protein: plan.total_meta_proteinas, carbs: plan.total_meta_carboidratos, fat: plan.total_meta_gorduras }} />
             <div className="space-y-6">
-              {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
-                <MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} justCompleted={justCompleted} focusMode={focusMode} />
+              {groupedItems.map(({ key, label, icon, time, items: mealItems, macros }) => (
+                <MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} justCompleted={justCompleted} focusMode={focusMode} macros={macros} />
               ))}
             </div>
           </>
