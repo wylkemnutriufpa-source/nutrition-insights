@@ -31,6 +31,7 @@ interface PatientProfileMealPlanProps {
 export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: PatientProfileMealPlanProps) {
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [allItems, setAllItems] = useState<MealPlanItem[]>([]);
+  const [mealMacros, setMealMacros] = useState<Record<string, any>>({});
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
