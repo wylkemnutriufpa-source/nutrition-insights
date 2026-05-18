@@ -115,6 +115,7 @@ export default function PatientMealPlan() {
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [allItems, setAllItems] = useState<MealPlanItem[]>([]);
+  const [mealMacros, setMealMacros] = useState<Record<string, any>>({});
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
   const [weekCompletions, setWeekCompletions] = useState<MealCompletion[]>([]);
   const [loading, setLoading] = useState(true);
