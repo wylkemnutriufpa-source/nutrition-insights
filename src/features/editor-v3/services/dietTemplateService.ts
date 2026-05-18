@@ -20,16 +20,16 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
     objective: 'hipertrofia',
     family: 'hipertrofia',
     meal_distribution: [
-      { slot: 'cafe_da_manha', time: '07:00' },
-      { slot: 'almoco', time: '13:00' },
-      { slot: 'lanche_da_tarde', time: '16:00' },
-      { slot: 'jantar', time: '20:00' }
+      { slot: 'Café da Manhã', time: '07:00' },
+      { slot: 'Almoço', time: '13:00' },
+      { slot: 'Lanche da Tarde', time: '16:00' },
+      { slot: 'Jantar', time: '20:00' }
     ],
     cluster_map: {
-      'cafe_da_manha': 'cafe_tradicional',
-      'almoco': 'almoco_tradicional',
-      'lanche_da_tarde': 'lanche_proteico',
-      'jantar': 'jantar_leve'
+      'Café da Manhã': 'cafe_tradicional',
+      'Almoço': 'almoco_tradicional',
+      'Lanche da Tarde': 'lanche_proteico',
+      'Jantar': 'jantar_leve'
     },
     kcal_profiles: [2500],
     visual_style: 'clean',
@@ -137,6 +137,54 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
                 portionUnitLabel: 'g',
                 measurementType: 'gram',
                 imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/frango-grelhado.jpg'
+              }
+            ]
+          },
+          {
+            id: 'm3',
+            name: 'Lanche da Tarde',
+            time: '16:00',
+            day_of_week: 1,
+            items: [
+              {
+                id: 'i6',
+                instanceId: 'i6-1',
+                name: 'Iogurte com Frutas',
+                quantity: 1,
+                clinical_mass_g: 200,
+                kcal: 180,
+                protein: 12,
+                carbs: 25,
+                fat: 4,
+                substitutions: [],
+                portionValue: 1,
+                portionUnitLabel: 'unid',
+                measurementType: 'unit',
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/iogurte-com-frutas.jpg'
+              }
+            ]
+          },
+          {
+            id: 'm4',
+            name: 'Jantar',
+            time: '20:00',
+            day_of_week: 1,
+            items: [
+              {
+                id: 'i7',
+                instanceId: 'i7-1',
+                name: 'Sopa de Legumes',
+                quantity: 1,
+                clinical_mass_g: 350,
+                kcal: 250,
+                protein: 25,
+                carbs: 15,
+                fat: 8,
+                substitutions: [],
+                portionValue: 1,
+                portionUnitLabel: 'porção',
+                measurementType: 'unit',
+                imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/sopa-de-legumes%2Fsopa-de-legumes.jpg'
               }
             ]
           }
