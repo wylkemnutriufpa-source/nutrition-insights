@@ -6,6 +6,7 @@ const BASE_IMAGE_URL = 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/obje
 
 const IMAGE_MAP: Record<string, string> = {
   'Pão Integral': 'pao-integral.jpg',
+  'Pão Francês': 'pao-frances.jpg',
   'Ovo Mexido': 'ovos-mexidos.jpg',
   'Arroz Branco': 'arroz-branco.jpg',
   'Feijão Carioca': 'feijao-carioca.jpg',
@@ -14,7 +15,9 @@ const IMAGE_MAP: Record<string, string> = {
   'Sopa de Legumes': 'sopa-de-legumes.jpg',
   'Banana com Aveia': 'banana-com-aveia.jpg',
   'Whey Protein': 'whey-protein.jpg',
-  'Carne Grelhada': 'carne-grelhada.jpg'
+  'Carne Grelhada': 'carne-grelhada.jpg',
+  'Tapioca': 'tapioca-com-queijo.jpg',
+  'Macarrão Integral': 'peixe-com-legumes.jpg' // Fallback visual similar
 };
 
 const createMeal = (name: string, time: string, day: number, items: any[]): Meal => ({
