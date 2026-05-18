@@ -41,14 +41,14 @@ export const planPersistenceService = {
   },
 
   /**
-   * RESOLVEDOR SOBERANO DE VISUAIS (BATERIA DE TESTES)
-   * Único ponto de verdade para imagens. Proibido fallback dinâmico no App.
+   * COMPILADOR DE VISUAIS SOBERANO
+   * Único ponto de verdade para imagens durante a compilação do snapshot.
+   * Proibido fallback dinâmico ou inferência semântica no Patient App.
    */
   async resolveVisual(item: any): Promise<{ image_url: string; is_placeholder: boolean; library_item_id?: string }> {
-    // 🛡️ PRIORIDADE 1: Se o item já tem uma URL de imagem explícita (do editor/template), usá-la diretamente.
-    // Este é o campo que os templates preenchem e que o editor preserva.
+    // 🛡️ PRIORIDADE 1: Se o item já tem uma imagem explícita e válida
     const existingUrl = item.imageUrl || item.image_url || item.visual?.image_url;
-    if (existingUrl && !existingUrl.includes('unsplash.com') && !existingUrl.includes('placeholder.svg')) {
+    if (existingUrl && existingUrl.startsWith('http') && !existingUrl.includes('placeholder')) {
       return {
         image_url: existingUrl,
         is_placeholder: false,
@@ -56,36 +56,30 @@ export const planPersistenceService = {
       };
     }
 
-    // 🛡️ PRIORIDADE 2: Tentar encontrar no banco de imagens da biblioteca visual
-    const foodName = (item.name || item.title || "").toLowerCase().trim();
-    
-    const { data: libMatch } = await supabase
-      .from('meal_visual_library')
-      .select('image_url')
-      .or(`name.ilike."${foodName}",display_name.ilike."${foodName}"`)
-      .limit(1)
-      .maybeSingle();
+    // 🛡️ PRIORIDADE 2: Vínculo explícito por nome na meal_visual_library (Compilação)
+    const foodName = (item.name || item.title || "").trim();
+    if (foodName) {
+      const { data: libMatch } = await supabase
+        .from('meal_visual_library')
+        .select('image_url')
+        .eq('name', foodName)
+        .limit(1)
+        .maybeSingle();
 
-    if (libMatch?.image_url) {
-      return {
-        image_url: libMatch.image_url,
-        is_placeholder: false,
-        library_item_id: item.library_item_id || item.id
-      };
+      if (libMatch?.image_url) {
+        return {
+          image_url: libMatch.image_url,
+          is_placeholder: false,
+          library_item_id: item.library_item_id || item.id
+        };
+      }
     }
 
-    // 🛡️ PRIORIDADE 3: Slug determinístico como último recurso
-    const slug = foodName
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
+    // 🛡️ PRIORIDADE 3: Fallback SOBERANO (Placeholder Oficial)
+    // Se não há imagem vinculada, usamos o placeholder. NUNCA adivinhar no App.
     return {
-      image_url: `${baseUrl}/${slug}.jpg`,
-      is_placeholder: false,
+      image_url: OFFICIAL_PLACEHOLDER,
+      is_placeholder: true,
       library_item_id: item.library_item_id || item.id
     };
   },

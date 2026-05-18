@@ -106,17 +106,10 @@ const IMPACT_TAGS: Record<string, { icon: React.ReactNode; label: string; color:
 };
 
 function getImpactTags(meal: MealPlanItem) {
-  const tags: string[] = [];
-  const meta = meal.metadata || {};
-  const p = Number(meal.meta_proteinas ?? meta.meta_proteinas ?? meta.protein) || 0;
-  const c = Number(meal.meta_carboidratos ?? meta.meta_carboidratos ?? meta.carbs) || 0;
-  const f = Number(meal.meta_gorduras ?? meta.meta_gorduras ?? meta.fat) || 0;
-  const cal = Number(meal.meta_calorias ?? meta.meta_calorias ?? meta.calories) || 0;
-  if (p > 20) tags.push("recovery");
-  if (p > 15 && f > 8) tags.push("satiety");
-  if (c > 30 && cal > 200) tags.push("energy");
-  if (p > c && c < 40) tags.push("glycemic");
-  return tags;
+  // 🛡️ SOBERANIA V3: ZERO inferência runtime.
+  // As tags devem vir do snapshot se desejado. Por enquanto, retornamos vazio
+  // para garantir obediência sistêmica absoluta.
+  return [];
 }
 
 function getMotivationalMessage(pct: number): { emoji: string; message: string; color: string } {
@@ -238,11 +231,14 @@ const MealItemCard = memo(function MealItemCard({
   // 🛡️ SOBERANIA V3: Imagem vem EXCLUSIVAMENTE do snapshot. ZERO inferência runtime.
   const resolvedImage = useMemo(() => {
     if (!item) return null;
-    const img = item.image_url || (item as any)?.imageUrl || item.metadata?.image_url || (item as any)?.edit_metadata?.image_url;
-    if (img && !img.includes('unsplash.com') && !img.includes('placeholder')) return img;
-    // Se não há imagem no snapshot, retornamos null. O renderer exibe sem imagem.
+    // O snapshot compilado já traz a URL final.
+    const img = item.image_url || (item as any)?.imageUrl || item.metadata?.image_url;
+    
+    if (img && img.startsWith('http') && !img.includes('placeholder')) {
+      return img;
+    }
     return null;
-  }, [item?.image_url, (item as any)?.imageUrl, item?.metadata?.image_url, (item as any)?.edit_metadata?.image_url]);
+  }, [item?.image_url, (item as any)?.imageUrl, item?.metadata?.image_url]);
 
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
