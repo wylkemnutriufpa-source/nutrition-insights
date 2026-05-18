@@ -2,22 +2,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { planPersistenceService } from '../services/planPersistenceService';
 
-// Mock Supabase with a better chain support
-const mockSupabase = {
-  from: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  insert: vi.fn().mockReturnThis(),
-  update: vi.fn().mockReturnThis(),
-  delete: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  single: vi.fn().mockImplementation(() => Promise.resolve({ data: { tenant_id: '123' }, error: null })),
-  maybeSingle: vi.fn().mockImplementation(() => Promise.resolve({ data: { image_url: 'https://test-image.com/food.jpg' }, error: null })),
-};
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  const mock = {
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn().mockImplementation(() => Promise.resolve({ data: { tenant_id: '123' }, error: null })),
+    maybeSingle: vi.fn().mockImplementation(() => Promise.resolve({ data: { image_url: 'https://test-image.com/food.jpg' }, error: null })),
+  };
+  return { supabase: mock };
+});
 
 describe('Sovereign Snapshot Integrity (V3)', () => {
   const mockOptions = {
