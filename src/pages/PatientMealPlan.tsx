@@ -319,8 +319,15 @@ export default function PatientMealPlan() {
     }), [items, activeSubstitutions]);
 
   const groupedItems = useMemo(() =>
-    MEAL_TYPES.map(mt => ({ ...mt, items: overlayedItems.filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) })).filter(g => g.items.length > 0),
-  [overlayedItems]);
+    MEAL_TYPES.map(mt => {
+      const mKey = `${dayOfWeek}_${mt.key.toLowerCase()}`;
+      return {
+        ...mt,
+        macros: mealMacros[mKey],
+        items: overlayedItems.filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase())
+      };
+    }).filter(g => g.items.length > 0),
+  [overlayedItems, mealMacros, dayOfWeek]);
 
   const weeklyDisplayDays = useMemo(() => {
     // 🛡️ SOBERANIA V3: Para planos V3, agrupar por day_of_week diretamente
