@@ -54,7 +54,18 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
       "2000": {
         meals: [1, 2, 3, 4, 5, 6, 0].flatMap(d => [
           createMeal('Café da Manhã', '08:00', d, [
-            { id: 'i-pao', name: 'Pão Integral', kcal: 140, protein: 6, carbs: 25, fat: 2, clinical_mass_g: 50 },
+            { 
+              id: 'i-pao', 
+              name: 'Pão Integral', 
+              kcal: 140, 
+              protein: 6, 
+              carbs: 25, 
+              fat: 2, 
+              clinical_mass_g: 50,
+              substitutions: [
+                { id: 's-tapioca', name: 'Tapioca', kcal: 140, protein: 1, carbs: 34, fat: 0, clinical_mass_g: 50, imageUrl: `${BASE_IMAGE_URL}tapioca-com-queijo.jpg` }
+              ]
+            },
             { id: 'i-ovo', name: 'Ovo Mexido', kcal: 140, protein: 12, carbs: 1, fat: 10, clinical_mass_g: 100 }
           ]),
           createMeal('Almoço', '13:00', d, [
