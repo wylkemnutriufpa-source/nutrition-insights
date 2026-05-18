@@ -41,12 +41,14 @@ export const planPersistenceService = {
   },
 
   /**
-   * Resolve a imagem final de um item, priorizando a biblioteca soberana.
+   * RESOLVEDOR SOBERANO DE VISUAIS (BATERIA DE TESTES)
+   * Único ponto de verdade para imagens. Proibido fallback dinâmico no App.
    */
   async resolveVisual(item: any): Promise<{ image_url: string; is_placeholder: boolean; library_item_id?: string }> {
     const foodName = (item.name || item.title || "").toLowerCase().trim();
     
     // 🛡️ REGRAS DE OURO: Mapeamento Direto por Nome (Solicitado pelo Usuário)
+    // Se o nome é "Pão Integral", o arquivo deve ser "pao-integral.jpg"
     const slug = foodName
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -56,23 +58,34 @@ export const planPersistenceService = {
 
     const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
     
-    // Se o item já tem uma imagem que parece válida (não placeholder e não unsplash), mantemos.
-    // Mas se o usuário quer "vincular uma coisa à outra", podemos forçar o slug se houver divergência.
-    let currentUrl = item.imageUrl || item.image_url;
-    
-    if (!currentUrl || currentUrl.includes('unsplash.com') || currentUrl === OFFICIAL_PLACEHOLDER) {
-      currentUrl = `${baseUrl}/${slug}.jpg`;
+    // Tenta encontrar o registro no banco para pegar a URL exata se existir
+    const { data: libMatch } = await supabase
+      .from('meal_visual_library')
+      .select('image_url')
+      .or(`name.ilike."${foodName}",display_name.ilike."${foodName}"`)
+      .limit(1)
+      .maybeSingle();
+
+    if (libMatch?.image_url) {
+      return {
+        image_url: libMatch.image_url,
+        is_placeholder: false,
+        library_item_id: item.library_item_id || item.id
+      };
     }
 
+    // Se não encontrou no banco, usamos o slug determinístico com .jpg
+    // Isso garante que se o arquivo existir no storage com esse nome, ele será carregado.
     return {
-      image_url: currentUrl,
+      image_url: `${baseUrl}/${slug}.jpg`,
       is_placeholder: false,
       library_item_id: item.library_item_id || item.id
     };
   },
 
   /**
-   * Constrói o Snapshot Soberano seguindo o contrato V3.
+   * COMPILADOR SOBERANO DE SNAPSHOT V3
+   * Transforma o estado do editor em um artefato final e auto-suficiente.
    */
   async buildSovereignSnapshot(options: PlanSaveOptions): Promise<SovereignSnapshotV3> {
     const { meals, targets, title } = options;
@@ -87,29 +100,36 @@ export const planPersistenceService = {
       
       let dayKcal = 0, dayProt = 0, dayCarb = 0, dayFat = 0;
 
-      for (let i = 0; i < dayMeals.length; i++) {
-        const m = dayMeals[i];
+      // Ordenar refeições por horário ou id para consistência
+      const sortedMeals = [...dayMeals].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+      for (let i = 0; i < sortedMeals.length; i++) {
+        const m = sortedMeals[i];
         const sovereignItems: SovereignItem[] = [];
 
         for (const it of m.items) {
           const visual = await this.resolveVisual(it);
-          const subs: any[] = [];
+          const subs: SovereignSubstitution[] = [];
           
-          if (it.substitutions) {
+          if (it.substitutions && Array.isArray(it.substitutions)) {
             for (const sub of it.substitutions) {
               const subVisual = await this.resolveVisual(sub);
               const subItem = sub as any;
+              
+              // 🛡️ MACRO CALCULATION: PURIFICAÇÃO NO COMPILER
+              const subMacros = {
+                kcal: Math.round(sub.kcal || 0),
+                protein_g: Number((sub.protein || 0).toFixed(1)),
+                carbs_g: Number((sub.carbs || 0).toFixed(1)),
+                fat_g: Number((sub.fat || 0).toFixed(1))
+              };
+
               subs.push({
                 id: sub.id || crypto.randomUUID(),
-                blockId: it.blockId || it.id, // 🛡️ HERDA BLOCK_ID DO PAI
-                title: sub.name || subItem.title,
+                title: sub.name || subItem.title || "Substituto",
+                blockId: it.blockId || it.id, // HERANÇA SOBERANA
                 quantity_display: `${subItem.display_quantity || sub.quantity || 100} ${subItem.display_unit || sub.portionUnitLabel || 'g'}`,
-                macros: {
-                  kcal: Math.round(sub.kcal || 0),
-                  protein_g: Number((sub.protein || 0).toFixed(1)),
-                  carbs_g: Number((sub.carbs || 0).toFixed(1)),
-                  fat_g: Number((sub.fat || 0).toFixed(1))
-                },
+                macros: subMacros,
                 visual: subVisual
               });
             }
@@ -117,11 +137,10 @@ export const planPersistenceService = {
 
           const sovereignItem: SovereignItem = {
             id: it.instanceId || it.id || crypto.randomUUID(),
-            blockId: it.blockId || it.id || crypto.randomUUID(), // 🛡️ ASSEGURAR BLOCK_ID NO SNAPSHOT
-            title: it.name || (it as any).title,
-            quantity_display: `${it.display_quantity || it.quantity} ${it.display_unit || it.portionUnitLabel || 'g'}`,
-
-            clinical_mass_g: it.clinical_mass_g,
+            blockId: it.blockId || it.id || crypto.randomUUID(),
+            title: it.name || (it as any).title || "Alimento",
+            quantity_display: `${it.display_quantity || it.quantity || 100} ${it.display_unit || it.portionUnitLabel || 'g'}`,
+            clinical_mass_g: it.clinical_mass_g || (it.quantity || 100),
             macros: {
               kcal: Math.round(it.kcal || 0),
               protein_g: Number((it.protein || 0).toFixed(1)),
@@ -133,6 +152,8 @@ export const planPersistenceService = {
           };
 
           sovereignItems.push(sovereignItem);
+          
+          // Somar totais diários (sempre do item primário)
           dayKcal += sovereignItem.macros.kcal;
           dayProt += sovereignItem.macros.protein_g;
           dayCarb += sovereignItem.macros.carbs_g;
@@ -141,8 +162,8 @@ export const planPersistenceService = {
 
         sovereignMeals.push({
           id: m.id || crypto.randomUUID(),
-          name: m.name,
-          time: m.time,
+          name: m.name || "Refeição",
+          time: m.time || "00:00",
           order_index: i,
           items: sovereignItems
         });
