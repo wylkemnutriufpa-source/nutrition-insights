@@ -238,11 +238,14 @@ const MealItemCard = memo(function MealItemCard({
   // 🛡️ SOBERANIA V3: Imagem vem EXCLUSIVAMENTE do snapshot. ZERO inferência runtime.
   const resolvedImage = useMemo(() => {
     if (!item) return null;
-    const img = item.image_url || (item as any)?.imageUrl || item.metadata?.image_url || (item as any)?.edit_metadata?.image_url;
-    if (img && !img.includes('unsplash.com') && !img.includes('placeholder')) return img;
-    // Se não há imagem no snapshot, retornamos null. O renderer exibe sem imagem.
+    // O snapshot compilado já traz a URL final.
+    const img = item.image_url || (item as any)?.imageUrl || item.metadata?.image_url;
+    
+    if (img && img.startsWith('http') && !img.includes('placeholder')) {
+      return img;
+    }
     return null;
-  }, [item?.image_url, (item as any)?.imageUrl, item?.metadata?.image_url, (item as any)?.edit_metadata?.image_url]);
+  }, [item?.image_url, (item as any)?.imageUrl, item?.metadata?.image_url]);
 
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
