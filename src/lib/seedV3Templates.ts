@@ -33,24 +33,40 @@ const FOODS = {
   castanha: { title: 'Mix de Castanhas', qty: '1 punhado', mass: 30, m: {kcal: 180, protein_g: 4, carbs_g: 6, fat_g: 16}, img: `${BASE_IMG}/mix-castanhas.jpg` }
 };
 
-const makeItem = (food: any, isPrimary = false, subs: any[] = []) => ({
-  id: genId(),
-  title: food.title,
-  quantity_display: food.qty,
-  clinical_mass_g: food.mass,
-  macros: food.m,
-  // SOBERANIA V3: imageUrl na raiz do item para renderização garantida!
-  ...(food.img ? { imageUrl: food.img } : {}),
-  is_primary: isPrimary,
-  substitutions: subs.map(sub => ({
-    id: genId(),
-    title: sub.title,
-    quantity_display: sub.qty,
-    clinical_mass_g: sub.mass,
-    macros: sub.m,
-    ...(sub.img ? { imageUrl: sub.img } : {})
-  }))
-});
+const makeItem = (food: any, isPrimary = false, subs: any[] = []) => {
+  const id = genId();
+  return {
+    id,
+    instanceId: genId(),
+    name: food.title,
+    title: food.title,
+    kcal: food.m.kcal,
+    protein: food.m.protein_g,
+    carbs: food.m.carbs_g,
+    fat: food.m.fat_g,
+    quantity: 1,
+    quantity_display: food.qty,
+    clinical_mass_g: food.mass,
+    macros: food.m,
+    imageUrl: food.img || null,
+    is_primary: isPrimary,
+    substitutions: subs.map(sub => ({
+      id: genId(),
+      instanceId: genId(),
+      name: sub.title,
+      title: sub.title,
+      kcal: sub.m.kcal,
+      protein: sub.m.protein_g,
+      carbs: sub.m.carbs_g,
+      fat: sub.m.fat_g,
+      quantity: 1,
+      quantity_display: sub.qty,
+      clinical_mass_g: sub.mass,
+      macros: sub.m,
+      imageUrl: sub.img || null
+    }))
+  };
+};
 
 const buildMeal = (name: string, time: string, main: any, sides: any[]) => ({
   id: genId(),
@@ -284,11 +300,17 @@ export const seedPremiumV3Templates = async () => {
   try {
     const templates = generatePremiumTemplates();
     for (const t of templates) {
-      const { error } = await supabase.from('v3_diet_templates').upsert({
+      // First, ensure we don't have duplicates by slug if we are re-inserting
+      const { error: upsertError } = await supabase.from('v3_diet_templates').upsert({
         ...t,
         updated_at: new Date().toISOString()
       }, { onConflict: 'slug' });
-      if (error) console.error('Error inserting template:', t.title, error);
+      
+      if (upsertError) {
+        console.error('Error inserting template:', t.title, upsertError);
+      } else {
+        console.log('Successfully seeded template:', t.title);
+      }
     }
     return true;
   } catch (err) {
@@ -296,3 +318,10 @@ export const seedPremiumV3Templates = async () => {
     return false;
   }
 };
+
+// Auto-execute if requested via specific environment trigger or manual call
+if (typeof window !== 'undefined' && (window as any).FORCE_SEED_V3) {
+  seedPremiumV3Templates().then(success => {
+    if (success) console.log("✨ Premium V3 Templates Seeded Successfully via Force Trigger");
+  });
+}
