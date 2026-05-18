@@ -750,6 +750,7 @@ const MealGroup = memo(function MealGroup({
         completions={completions}
         isCurrent={isCurrent}
         onClick={() => onOpenSlot && onOpenSlot(mealType.key, items)}
+        macros={macros}
       />
     );
   }
