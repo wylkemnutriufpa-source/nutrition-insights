@@ -582,9 +582,15 @@ export default function TemplateNutritionAudit() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="default" size="sm" onClick={handleSeedPremiumTemplates} disabled={isSeeding}>
-              <Sparkles className={`w-4 h-4 mr-2 ${isSeeding ? "animate-spin" : ""}`} />
-              Injetar Templates V3 Premium
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleSeedPremiumTemplates} 
+              disabled={isSeeding}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] border-blue-400 font-bold transition-all hover:scale-105 active:scale-95"
+            >
+              <Sparkles className={`w-4 h-4 mr-2 ${isSeeding ? "animate-spin" : "text-yellow-300"}`} />
+              ✨ Injetar Templates V3 Premium
             </Button>
             <Button variant="outline" size="sm" onClick={() => window.open("/admin/template-mass-reformulation", "_blank")}>
               <Sparkles className="w-4 h-4 mr-2" />
