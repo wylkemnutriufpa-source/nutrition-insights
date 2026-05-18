@@ -2,8 +2,14 @@
 // Este arquivo está mantido apenas para compatibilidade com planos antigos.
 // Planos V3 utilizam Snapshot Soberano e não passam por esta normalização.
 
+export type DisplayMealPlanItem = any;
+
 export function isPrimaryMealItem(item: any): boolean {
   return item.is_primary !== false;
+}
+
+export function assertHierarchyIntegrity(item: any, context: string): void {
+  // No-op para V3
 }
 
 export function calculatePrimaryTotals(items: any[]) {
