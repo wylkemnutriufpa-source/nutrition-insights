@@ -722,7 +722,7 @@ const MealSlotCard = memo(function MealSlotCard({
 // ── Meal Group (memoized) ──
 const MealGroup = memo(function MealGroup({
   mealType, items, completions, justCompleted, focusMode,
-  onSetAdherence, onOpenDetail, onOpenSubstitution, onOpenSlot,
+  onSetAdherence, onOpenDetail, onOpenSubstitution, onOpenSlot, macros
 }: {
   mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
   items: MealPlanItem[];
@@ -733,6 +733,7 @@ const MealGroup = memo(function MealGroup({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
   onOpenSlot?: (mealType: string, items: MealPlanItem[]) => void;
+  macros?: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
 }) {
   const { isBasic } = useExperienceUI();
   const isCurrent = isCurrentMeal(mealType.time);
