@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Meal, MealItem } from '../types';
 import { saveDraft } from './draftService';
-import { SovereignSnapshotV3, SovereignDay, SovereignMeal, SovereignItem, SovereignMacros } from '../types/snapshot';
+import { SovereignSnapshotV3, SovereignDay, SovereignMeal, SovereignItem, SovereignMacros, SovereignSubstitution } from '../types/snapshot';
 
 export interface PlanSaveOptions {
   patientId: string;
