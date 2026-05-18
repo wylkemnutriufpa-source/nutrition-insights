@@ -5,25 +5,24 @@ export const patientService = {
   mapSnapshotPlan(data: any, patientData: any, fallbackEditorVersion?: string): PatientPlan {
     const snapshot = data.snapshot as any;
     
-    if (!snapshot || !snapshot.days) {
+    // 🛡️ SOBERANIA V3: Se não há snapshot ou não é V3, usamos o legado.
+    if (!snapshot || snapshot.snapshot_version !== 'v3') {
       return this.mapLegacyPlan(data, patientData);
     }
 
     const currentDow = new Date().getDay();
     const snapshotDays = snapshot.days || [];
-    const daysOrder = [1, 2, 3, 4, 5, 6, 0];
     
-    // Tenta encontrar o dia atual no snapshot. Se não houver, pega o primeiro dia.
-    // 🛡️ SOBERANIA V3: Se day_of_week não existir no objeto do dia, inferimos pelo índice do array.
-    const dayData = snapshotDays.find((d: any, idx: number) => {
-      const dow = (d.day_of_week !== undefined && d.day_of_week !== null) ? d.day_of_week : daysOrder[idx % 7];
-      return dow === currentDow;
-    }) || snapshotDays[0];
+    // 🛡️ SOBERANIA V3: Localizar o dia atual estritamente pelo day_of_week compilado no snapshot.
+    // O Patient App não infere mais nada.
+    const dayData = snapshotDays.find((d: any) => d.day_of_week === currentDow) || snapshotDays[0];
 
     if (!dayData) {
+      console.error("[Sovereign App] Snapshot V3 está incompleto ou corrompido: Nenhum dia encontrado.");
       return this.mapLegacyPlan(data, patientData);
     }
 
+    // 🛡️ MAPEAMENTO PASSIVO: Apenas de-estruturamos o que o Compiler gerou.
     const mappedMeals = dayData.meals.map((m: any) => ({
       id: m.id,
       name: m.name,
@@ -31,7 +30,7 @@ export const patientService = {
       items: m.items.map((it: any) => ({
         id: it.id,
         name: it.title,
-        description: '', 
+        description: '', // Descrição agora é responsabilidade do snapshot/instructions
         kcal: it.macros?.kcal || 0,
         protein: it.macros?.protein_g || 0,
         carbs: it.macros?.carbs_g || 0,
@@ -57,14 +56,15 @@ export const patientService = {
       patient_id: data.patient_id,
       patient_name: patientData?.notes || 'Paciente',
       goal: patientData?.status || '',
-      meta_calorias: snapshot.targets?.kcal || data.total_meta_calorias || 0,
-      meta_proteinas: snapshot.targets?.protein_g || data.total_meta_proteinas || 0,
-      meta_carboidratos: snapshot.targets?.carbs_g || data.total_meta_carboidratos || 0,
-      meta_gorduras: snapshot.targets?.fat_g || data.total_meta_gorduras || 0,
+      // Usar targets compilados no snapshot
+      meta_calorias: snapshot.targets?.kcal || 0,
+      meta_proteinas: snapshot.targets?.protein_g || 0,
+      meta_carboidratos: snapshot.targets?.carbs_g || 0,
+      meta_gorduras: snapshot.targets?.fat_g || 0,
       meals: mappedMeals,
       created_at: data.created_at,
       sharing_token: data.sharing_token,
-      editor_version: fallbackEditorVersion
+      editor_version: 'v3'
     } as any;
   },
 
