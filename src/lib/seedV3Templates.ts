@@ -6,114 +6,146 @@ const BASE_IMG_URL = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object
 const genId = () => crypto.randomUUID();
 
 export const generatePremiumTemplates = () => {
-  const createDay = (dayIndex: number, calories: number, theme: string) => {
-    // Basic variations based on day
-    const dayName = dayIndex;
+  const generate7DaysOfMeals = (calories: number, theme: string) => {
+    const allMeals: any[] = [];
     
-    const breakfast = {
-      id: genId(),
-      name: 'Café da Manhã',
-      time: '07:30',
-      items: [
+    for (let day = 1; day <= 7; day++) {
+      const dayCalories = calories; // Keeping it consistent per user preference for "perfection"
+      
+      const dayMeals = [
         {
           id: genId(),
-          title: theme === 'hipertrofia' ? 'Ovos Mexidos com Pão Integral e Abacate' : 'Omelete de Claras com Espinafre',
-          quantity_display: '1 porção',
-          clinical_mass_g: 300,
-          macros: { kcal: Math.round(calories * 0.22), protein_g: 25, carbs_g: 30, fat_g: 15 },
-          visual: { image_url: `${BASE_IMG_URL}/ovo-mexido.jpg` },
-          substitutions: [
+          name: 'Café da Manhã',
+          time: '07:30',
+          day_of_week: day,
+          items: [
             {
               id: genId(),
-              title: 'Panqueca de Aveia com Whey',
-              macros: { kcal: Math.round(calories * 0.22), protein_g: 22, carbs_g: 35, fat_g: 10 },
-              visual: { image_url: `${BASE_IMG_URL}/panqueca-de-aveia.jpg` }
+              instanceId: genId(),
+              name: theme === 'hipertrofia' ? 'Ovos Mexidos com Pão Integral e Abacate' : 'Omelete de Claras com Espinafre',
+              quantity: 1,
+              display_quantity: '1 porção',
+              clinical_mass_g: 300,
+              kcal: Math.round(dayCalories * 0.22),
+              protein: 25,
+              carbs: 30,
+              fat: 15,
+              imageUrl: `${BASE_IMG_URL}/ovo-mexido.jpg`,
+              substitutions: [
+                {
+                  id: genId(),
+                  name: 'Panqueca de Aveia com Whey',
+                  kcal: Math.round(dayCalories * 0.22),
+                  protein: 22,
+                  carbs: 35,
+                  fat: 10,
+                  imageUrl: `${BASE_IMG_URL}/panqueca-de-aveia.jpg`
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: genId(),
+          name: 'Almoço',
+          time: '13:00',
+          day_of_week: day,
+          items: [
+            {
+              id: genId(),
+              instanceId: genId(),
+              name: theme === 'hipertrofia' ? 'Patinho Moído com Mandioca e Brócolis' : 'Frango Grelhado com Salada e Quinoa',
+              quantity: 1,
+              display_quantity: '1 prato',
+              clinical_mass_g: 500,
+              kcal: Math.round(dayCalories * 0.35),
+              protein: 50,
+              carbs: 60,
+              fat: 15,
+              imageUrl: theme === 'hipertrofia' ? `${BASE_IMG_URL}/patinho-moido.jpg` : `${BASE_IMG_URL}/frango-grelhado.jpg`,
+              substitutions: [
+                {
+                  id: genId(),
+                  name: 'Tilápia com Batata Doce',
+                  kcal: Math.round(dayCalories * 0.35),
+                  protein: 45,
+                  carbs: 55,
+                  fat: 12,
+                  imageUrl: `${BASE_IMG_URL}/tilapia-grelhada.jpg`
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: genId(),
+          name: 'Lanche da Tarde',
+          time: '16:30',
+          day_of_week: day,
+          items: [
+            {
+              id: genId(),
+              instanceId: genId(),
+              name: 'Iogurte com Whey e Frutas',
+              quantity: 1,
+              display_quantity: '1 bowl',
+              clinical_mass_g: 250,
+              kcal: Math.round(dayCalories * 0.15),
+              protein: 30,
+              carbs: 25,
+              fat: 8,
+              imageUrl: `${BASE_IMG_URL}/iogurte-com-frutas.jpg`,
+              substitutions: [
+                {
+                  id: genId(),
+                  name: 'Mix de Castanhas e Fruta',
+                  kcal: Math.round(dayCalories * 0.15),
+                  protein: 10,
+                  carbs: 30,
+                  fat: 18,
+                  imageUrl: `${BASE_IMG_URL}/mix-castanhas.jpg`
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: genId(),
+          name: 'Jantar',
+          time: '20:00',
+          day_of_week: day,
+          items: [
+            {
+              id: genId(),
+              instanceId: genId(),
+              name: theme === 'hipertrofia' ? 'Filé de Frango com Arroz e Legumes' : 'Sopa de Legumes com Frango',
+              quantity: 1,
+              display_quantity: '1 prato',
+              clinical_mass_g: 450,
+              kcal: Math.round(dayCalories * 0.28),
+              protein: 45,
+              carbs: 40,
+              fat: 12,
+              imageUrl: theme === 'hipertrofia' ? `${BASE_IMG_URL}/frango-grelhado.jpg` : `${BASE_IMG_URL}/sopa-de-legumes.jpg`,
+              substitutions: [
+                {
+                  id: genId(),
+                  name: 'Omelete Completo',
+                  kcal: Math.round(dayCalories * 0.28),
+                  protein: 35,
+                  carbs: 10,
+                  fat: 25,
+                  imageUrl: `${BASE_IMG_URL}/ovo-mexido.jpg`
+                }
+              ]
             }
           ]
         }
-      ]
-    };
-
-    const lunch = {
-      id: genId(),
-      name: 'Almoço',
-      time: '13:00',
-      items: [
-        {
-          id: genId(),
-          title: theme === 'hipertrofia' ? 'Patinho Moído com Mandioca e Brócolis' : 'Frango Grelhado com Salada e Quinoa',
-          quantity_display: '1 prato',
-          clinical_mass_g: 500,
-          macros: { kcal: Math.round(calories * 0.35), protein_g: 50, carbs_g: 60, fat_g: 15 },
-          visual: { image_url: theme === 'hipertrofia' ? `${BASE_IMG_URL}/patinho-moido.jpg` : `${BASE_IMG_URL}/frango-grelhado.jpg` },
-          substitutions: [
-            {
-              id: genId(),
-              title: 'Tilápia com Batata Doce',
-              macros: { kcal: Math.round(calories * 0.35), protein_g: 45, carbs_g: 55, fat_g: 12 },
-              visual: { image_url: `${BASE_IMG_URL}/tilapia-grelhada.jpg` }
-            }
-          ]
-        }
-      ]
-    };
-
-    const snack = {
-      id: genId(),
-      name: 'Lanche da Tarde',
-      time: '16:30',
-      items: [
-        {
-          id: genId(),
-          title: 'Iogurte com Whey e Frutas',
-          quantity_display: '1 bowl',
-          clinical_mass_g: 250,
-          macros: { kcal: Math.round(calories * 0.15), protein_g: 30, carbs_g: 25, fat_g: 8 },
-          visual: { image_url: `${BASE_IMG_URL}/iogurte-com-frutas.jpg` },
-          substitutions: [
-            {
-              id: genId(),
-              title: 'Mix de Castanhas e Fruta',
-              macros: { kcal: Math.round(calories * 0.15), protein_g: 10, carbs_g: 30, fat_g: 18 },
-              visual: { image_url: `${BASE_IMG_URL}/mix-castanhas.jpg` }
-            }
-          ]
-        }
-      ]
-    };
-
-    const dinner = {
-      id: genId(),
-      name: 'Jantar',
-      time: '20:00',
-      items: [
-        {
-          id: genId(),
-          title: theme === 'hipertrofia' ? 'Filé de Frango com Arroz e Legumes' : 'Sopa de Legumes com Frango',
-          quantity_display: '1 prato',
-          clinical_mass_g: 450,
-          macros: { kcal: Math.round(calories * 0.28), protein_g: 45, carbs_g: 40, fat_g: 12 },
-          visual: { image_url: theme === 'hipertrofia' ? `${BASE_IMG_URL}/frango-grelhado.jpg` : `${BASE_IMG_URL}/sopa-de-legumes.jpg` },
-          substitutions: [
-            {
-              id: genId(),
-              title: 'Omelete Completo',
-              macros: { kcal: Math.round(calories * 0.28), protein_g: 35, carbs_g: 10, fat_g: 25 },
-              visual: { image_url: `${BASE_IMG_URL}/ovo-mexido.jpg` }
-            }
-          ]
-        }
-      ]
-    };
-
-    return {
-      day_of_week: dayIndex,
-      meals: [breakfast, lunch, snack, dinner]
-    };
-  };
-
-  const generate7Days = (calories: number, theme: string) => {
-    return Array.from({ length: 7 }, (_, i) => createDay(i + 1, calories, theme));
+      ];
+      allMeals.push(...dayMeals);
+    }
+    
+    return allMeals;
   };
 
   return [
@@ -144,7 +176,7 @@ export const generatePremiumTemplates = () => {
       ],
       plan_snapshot: {
         "2500": {
-          days: generate7Days(2500, 'hipertrofia')
+          meals: generate7DaysOfMeals(2500, 'hipertrofia')
         }
       }
     },
@@ -175,7 +207,7 @@ export const generatePremiumTemplates = () => {
       ],
       plan_snapshot: {
         "1600": {
-          days: generate7Days(1600, 'emagrecimento')
+          meals: generate7DaysOfMeals(1600, 'emagrecimento')
         }
       }
     },
@@ -206,7 +238,7 @@ export const generatePremiumTemplates = () => {
       ],
       plan_snapshot: {
         "1800": {
-          days: generate7Days(1800, 'low_carb')
+          meals: generate7DaysOfMeals(1800, 'low_carb')
         }
       }
     },
@@ -237,7 +269,7 @@ export const generatePremiumTemplates = () => {
       ],
       plan_snapshot: {
         "1800": {
-          days: generate7Days(1800, 'clinico')
+          meals: generate7DaysOfMeals(1800, 'clinico')
         }
       }
     },
@@ -268,11 +300,11 @@ export const generatePremiumTemplates = () => {
       ],
       plan_snapshot: {
         "1800": {
-          days: generate7Days(1800, 'clinico')
+          meals: generate7DaysOfMeals(1800, 'clinico')
         }
       }
     }
-  ];
+  ] as any[];
 };
 
 export const seedPremiumV3Templates = async () => {
