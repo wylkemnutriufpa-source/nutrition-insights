@@ -29,6 +29,12 @@ export const PatientPlanPage = () => {
         }
 
         if (data) {
+          // 🛡️ AUDITORIA SOBERANA: Validar integridade antes de renderizar
+          import('../utils/sovereign-guard').then(({ sovereignGuard }) => {
+            sovereignGuard.validate(data);
+            sovereignGuard.auditRuntime();
+          });
+          
           setPlan(data);
           const todayCompletions = await patientService.getTodayCompletions(data.id);
           setCompletions(todayCompletions);
