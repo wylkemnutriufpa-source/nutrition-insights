@@ -3,18 +3,23 @@ import { describe, it, expect, vi } from 'vitest';
 import { planPersistenceService } from '../services/planPersistenceService';
 
 vi.mock('@/integrations/supabase/client', () => {
-  const mock = {
-    from: vi.fn().mockReturnThis(),
+  const chainable = {
     select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockImplementation((payload) => Promise.resolve({ data: payload[0], error: null })),
+    insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
-    single: vi.fn().mockImplementation(() => Promise.resolve({ data: { tenant_id: '123' }, error: null })),
+    single: vi.fn().mockImplementation(() => Promise.resolve({ data: { id: 'new-plan-123', tenant_id: '123' }, error: null })),
     maybeSingle: vi.fn().mockImplementation(() => Promise.resolve({ data: { image_url: 'https://test-image.com/food.jpg' }, error: null })),
+    then: vi.fn().mockImplementation((cb) => Promise.resolve({ data: [], error: null }).then(cb)),
   };
-  return { supabase: mock };
+  
+  const mockSupabase = {
+    from: vi.fn().mockReturnValue(chainable),
+  };
+  
+  return { supabase: mockSupabase };
 });
 
 describe('Sovereign Snapshot Integrity (V3)', () => {
@@ -48,21 +53,17 @@ describe('Sovereign Snapshot Integrity (V3)', () => {
   };
 
   it('deve garantir Equivalência Total: Editor (Build) == Snapshot (Publish)', async () => {
-    // 1. O que o Editor produz (Compilação isolada)
+    // 1. O que o Editor produz
     const editorSnapshot = await planPersistenceService.buildSovereignSnapshot(mockOptions as any);
 
     // 2. O que é publicado
     const result = await planPersistenceService.publishPlan(mockOptions as any);
     expect(result.ok).toBe(true);
 
-    // 3. Capturar o que foi enviado para o Supabase (simulando o banco)
-    const { supabase } = await import('@/integrations/supabase/client');
-    const lastCall = vi.mocked(supabase.from).mock.results.find(r => r.type === 'return');
-    // Nota: Em um teste real, poderíamos espionar o insert payload
-    
-    // Validar se o snapshot publicado contém a versão correta e dados congelados
+    // 3. Validar se o snapshot publicado contém a versão correta e dados congelados
     expect(editorSnapshot.snapshot_version).toBe('v3');
     expect(editorSnapshot.days[0].meals[0].items[0].visual.image_url).toBe('https://test-image.com/food.jpg');
+    expect(editorSnapshot.targets.kcal).toBe(2000);
   });
 
   it('deve falhar se o snapshot for gerado com macros zerados', async () => {
