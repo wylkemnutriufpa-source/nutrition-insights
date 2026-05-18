@@ -128,38 +128,46 @@ const FOOD_LIBRARY: Record<string, Food> = {
   }
 };
 
-const TEMPLATE_SLUGS = [
-  'mediterranea-pro',
-  'performance-crossfit',
-  'lifestyle-saudavel',
-  'tradicional-brasileiro-fit',
-  'hipertrofia-masculina',
-  'sop-menopausa',
-  'soberano-tradicional-brasileiro',
-  'soberano-emagrecimento-feminino',
-  'emagrecimento-feminino',
-  'corrida-endurance',
-  'diabetes-control',
-  'hipertensao-care',
-  'low-carb-elite',
-  'fit-economico'
-];
+const TEMPLATES: Record<string, number[]> = {
+  'mediterranea-pro': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'performance-crossfit': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'lifestyle-saudavel': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'tradicional-brasileiro-fit': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'hipertrofia-masculina': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'sop-menopausa': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'soberano-tradicional-brasileiro': [1800, 2200, 2500],
+  'soberano-emagrecimento-feminino': [1200, 1400, 1600],
+  'emagrecimento-feminino': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'corrida-endurance': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'diabetes-control': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'hipertensao-care': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'low-carb-elite': [1200, 1400, 1600, 1800, 2000, 2500, 3000],
+  'fit-economico': [1200, 1400, 1600, 1800, 2000, 2500, 3000]
+};
 
-function createMealItem(foodKey: string, day: number, slot: string): any {
+function createMealItem(foodKey: string, day: number, slot: string, scale: number): any {
   const food = FOOD_LIBRARY[foodKey];
   if (!food) return null;
+  
+  // Apply scaling to mass and macros
+  const scaledMass = Math.round(food.mass * scale);
+  const scaledKcal = Math.round(food.kcal * scale);
+  const scaledProtein = Math.round(food.protein * scale);
+  const scaledCarbs = Math.round(food.carbs * scale);
+  const scaledFat = Math.round(food.fat * scale);
+
   return {
     id: `i-${foodKey}-${day}`,
     instanceId: `inst-${foodKey}-${day}-${slot}`,
     name: food.name,
     title: food.name,
-    kcal: food.kcal,
-    protein: food.protein,
-    carbs: food.carbs,
-    fat: food.fat,
+    kcal: scaledKcal,
+    protein: scaledProtein,
+    carbs: scaledCarbs,
+    fat: scaledFat,
     quantity: 1,
-    display_quantity: food.quantity,
-    clinical_mass_g: food.mass,
+    display_quantity: `${scaledMass}g`,
+    clinical_mass_g: scaledMass,
     imageUrl: BASE_IMAGE_URL + food.image,
     substitutions: food.substitutions.map(s => ({
       ...s,
@@ -172,7 +180,10 @@ function generateSnapshot(slug: string, kcal: number) {
   const meals: any[] = [];
   const days = [1, 2, 3, 4, 5, 6, 0];
   
-  // Basic logic for different templates
+  // Base scale relative to 2000 kcal
+  // We'll calculate a scale to reach the target kcal roughly
+  const targetKcal = kcal;
+  
   let planItems = {
     'Café da Manhã': ['pao-integral', 'ovos-mexidos'],
     'Almoço': ['arroz-branco', 'feijao-carioca', 'frango-grelhado'],
@@ -196,6 +207,16 @@ function generateSnapshot(slug: string, kcal: number) {
     };
   }
 
+  // Calculate base kcal of the plan items at scale 1
+  let baseKcal = 0;
+  Object.values(planItems).forEach(foods => {
+    foods.forEach(f => {
+      baseKcal += FOOD_LIBRARY[f].kcal;
+    });
+  });
+
+  const scale = targetKcal / baseKcal;
+
   days.forEach(day => {
     Object.entries(planItems).forEach(([slot, foods]) => {
       meals.push({
@@ -203,7 +224,7 @@ function generateSnapshot(slug: string, kcal: number) {
         name: slot,
         time: slot === 'Café da Manhã' ? '08:00' : slot === 'Almoço' ? '13:00' : slot === 'Lanche da Tarde' ? '16:00' : '20:00',
         day_of_week: day,
-        items: foods.map(f => createMealItem(f, day, slot)).filter(Boolean)
+        items: foods.map(f => createMealItem(f, day, slot, scale)).filter(Boolean)
       });
     });
   });
@@ -211,16 +232,15 @@ function generateSnapshot(slug: string, kcal: number) {
   return { meals };
 }
 
-let sql = '';
-TEMPLATE_SLUGS.forEach(slug => {
+let sql = '-- Update all diet templates to Sovereign V3 state\n';
+Object.entries(TEMPLATES).forEach(([slug, kcalProfiles]) => {
   const snapshot: any = {};
-  const kcalProfiles = [1500, 2000, 2500];
   kcalProfiles.forEach(kcal => {
     snapshot[kcal.toString()] = generateSnapshot(slug, kcal);
   });
   
   const json = JSON.stringify(snapshot).replace(/'/g, "''");
-  sql += `UPDATE v3_diet_templates SET plan_snapshot = '${json}', active = true WHERE slug = '${slug}';\n`;
+  sql += `UPDATE v3_diet_templates SET plan_snapshot = '${json}', active = true, sovereign_validated = true WHERE slug = '${slug}';\n`;
 });
 
 console.log(sql);
