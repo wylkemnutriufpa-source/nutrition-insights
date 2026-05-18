@@ -160,54 +160,128 @@ export default function PatientMealPlan() {
         return;
       }
       const planData = result as any;
-      
-      // 🛡️ SOBERANIA V3: Usar o mesmo caminho robusto que o Editor e o PDF
-      const normalized = normalizeMealPlan(planData);
-      
-      const flatItems: MealPlanItem[] = normalized.meals.flatMap(m => 
-        m.items.map(it => ({
-          ...it,
-          itemId: it.id,
-          tipo_refeicao: m.name as any,
-          day_of_week: m.day_of_week ?? 0,
-          meta_calorias: it.kcal,
-          meta_proteinas: it.protein,
-          meta_carboidratos: it.carbs,
-          meta_gorduras: it.fat,
-          image_url: it.imageUrl,
-          imageUrl: it.imageUrl,
-          metadata: { 
-            ...(it.metadata || {}), 
-            image_url: it.imageUrl, 
-            imageUrl: it.imageUrl,
-            substitution_options: it.substitutions?.map(s => ({
-              id: s.id,
-              title: s.name || s.title,
-              meta_calorias: s.kcal,
-              meta_proteinas: s.protein,
-              meta_carboidratos: s.carbs,
-              meta_gorduras: s.fat,
-              image_url: s.imageUrl
-            })) || []
+      const snapshot = planData.snapshot;
+      const isV3 = snapshot && (snapshot.snapshot_version === 'v3' || Array.isArray(snapshot.days));
+
+      let flatItems: MealPlanItem[] = [];
+      let dailyItems: MealPlanItem[] = [];
+      let planMeta: any;
+
+      if (isV3 && Array.isArray(snapshot.days)) {
+        // 🛡️ SOBERANIA V3: Extração DIRETA do snapshot. ZERO normalization, ZERO dedupe, ZERO rebuild.
+        // O Patient App é um RENDERIZADOR BURRO.
+        const allSnapshotItems: MealPlanItem[] = [];
+        for (const day of snapshot.days) {
+          for (const meal of (day.meals || [])) {
+            for (const item of (meal.items || [])) {
+              const mapped: MealPlanItem = {
+                id: item.id,
+                title: item.title,
+                description: item.quantity_display || '',
+                tipo_refeicao: meal.name as any,
+                day_of_week: day.day_of_week ?? 0,
+                meta_calorias: item.macros?.kcal ?? 0,
+                meta_proteinas: item.macros?.protein_g ?? 0,
+                meta_carboidratos: item.macros?.carbs_g ?? 0,
+                meta_gorduras: item.macros?.fat_g ?? 0,
+                image_url: item.visual?.image_url || null,
+                imageUrl: item.visual?.image_url || null,
+                is_primary: true,
+                display_quantity: item.quantity_display,
+                clinical_mass_g: item.clinical_mass_g,
+                metadata: {
+                  image_url: item.visual?.image_url || null,
+                  imageUrl: item.visual?.image_url || null,
+                  substitution_options: (item.substitutions || []).map((s: any) => ({
+                    id: s.id,
+                    title: s.title,
+                    meta_calorias: s.macros?.kcal ?? 0,
+                    meta_proteinas: s.macros?.protein_g ?? 0,
+                    meta_carboidratos: s.macros?.carbs_g ?? 0,
+                    meta_gorduras: s.macros?.fat_g ?? 0,
+                    image_url: s.visual?.image_url || null
+                  })),
+                  substitution_count: (item.substitutions || []).length
+                }
+              } as any;
+              allSnapshotItems.push(mapped);
+            }
           }
-        }))
-      );
-      
-      setPlan({
-        id: planData.id, 
-        title: planData.title, 
-        start_date: planData.start_date, 
-        totals_status: planData.totals_status || 'ok',
-        plan_mode: planData.plan_mode, 
-        editor_version: planData.editor_version || 'v3',
-        total_meta_calorias: planData.total_meta_calorias || planData.snapshot?.targets?.kcal, 
-        total_meta_proteinas: planData.total_meta_proteinas || planData.snapshot?.targets?.protein_g,
-        total_meta_carboidratos: planData.total_meta_carboidratos || planData.snapshot?.targets?.carbs_g, 
-        total_meta_gorduras: planData.total_meta_gorduras || planData.snapshot?.targets?.fat_g,
-      } as any);
+        }
+
+        flatItems = allSnapshotItems;
+        // Filtrar pelo dia corrente diretamente
+        dailyItems = allSnapshotItems.filter(i => i.day_of_week === dayOfWeek);
+        // Se o dia corrente não tem itens, usar o primeiro dia disponível
+        if (dailyItems.length === 0 && allSnapshotItems.length > 0) {
+          const firstDay = allSnapshotItems[0].day_of_week;
+          dailyItems = allSnapshotItems.filter(i => i.day_of_week === firstDay);
+        }
+
+        planMeta = {
+          id: planData.id,
+          title: planData.title,
+          start_date: planData.start_date,
+          totals_status: 'ok',
+          plan_mode: planData.plan_mode,
+          editor_version: 'v3',
+          snapshot: snapshot,
+          // 🛡️ SOBERANIA: Macros vêm do snapshot.targets, NUNCA recalculados
+          total_meta_calorias: snapshot.targets?.kcal ?? planData.total_meta_calorias ?? 0,
+          total_meta_proteinas: snapshot.targets?.protein_g ?? planData.total_meta_proteinas ?? 0,
+          total_meta_carboidratos: snapshot.targets?.carbs_g ?? planData.total_meta_carboidratos ?? 0,
+          total_meta_gorduras: snapshot.targets?.fat_g ?? planData.total_meta_gorduras ?? 0,
+        };
+      } else {
+        // LEGADO V1/V2: Usar caminho de normalização existente
+        const normalized = normalizeMealPlan(planData);
+        flatItems = normalized.meals.flatMap(m =>
+          m.items.map(it => ({
+            ...it,
+            itemId: it.id,
+            tipo_refeicao: m.name as any,
+            day_of_week: m.day_of_week ?? 0,
+            meta_calorias: it.kcal,
+            meta_proteinas: it.protein,
+            meta_carboidratos: it.carbs,
+            meta_gorduras: it.fat,
+            image_url: it.imageUrl,
+            imageUrl: it.imageUrl,
+            metadata: {
+              ...(it.metadata || {}),
+              image_url: it.imageUrl,
+              imageUrl: it.imageUrl,
+              substitution_options: it.substitutions?.map(s => ({
+                id: s.id,
+                title: s.name || s.title,
+                meta_calorias: s.kcal,
+                meta_proteinas: s.protein,
+                meta_carboidratos: s.carbs,
+                meta_gorduras: s.fat,
+                image_url: s.imageUrl
+              })) || []
+            }
+          }))
+        ) as MealPlanItem[];
+        dailyItems = buildDailyDisplayItems(flatItems as any, dayOfWeek) as MealPlanItem[];
+
+        planMeta = {
+          id: planData.id,
+          title: planData.title,
+          start_date: planData.start_date,
+          totals_status: planData.totals_status || 'ok',
+          plan_mode: planData.plan_mode,
+          editor_version: planData.editor_version || 'v1',
+          total_meta_calorias: planData.total_meta_calorias || 0,
+          total_meta_proteinas: planData.total_meta_proteinas || 0,
+          total_meta_carboidratos: planData.total_meta_carboidratos || 0,
+          total_meta_gorduras: planData.total_meta_gorduras || 0,
+        };
+      }
+
+      setPlan(planMeta as any);
       setAllItems(flatItems);
-      const dailyItems = buildDailyDisplayItems(flatItems as any, dayOfWeek);
-      setItems(dailyItems as MealPlanItem[]);
+      setItems(dailyItems);
       const [subsResponse, completionsResponse, weekResponse] = await Promise.all([
         supabase.from("patient_meal_substitutions" as any).select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id),
         supabase.from("meal_item_completions").select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id).eq("date", date),
@@ -288,7 +362,18 @@ export default function PatientMealPlan() {
     MEAL_TYPES.map(mt => ({ ...mt, items: overlayedItems.filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) })).filter(g => g.items.length > 0),
   [overlayedItems]);
 
-  const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
+  const weeklyDisplayDays = useMemo(() => {
+    // 🛡️ SOBERANIA V3: Para planos V3, agrupar por day_of_week diretamente
+    if (plan?.editor_version === 'v3') {
+      const days = [1, 2, 3, 4, 5, 6, 0];
+      return days.map(day => ({
+        day,
+        items: allItems.filter(i => i.day_of_week === day)
+      }));
+    }
+    // Legado: usar o engine existente
+    return buildWeeklyDisplayDays(allItems as any);
+  }, [allItems, plan?.editor_version]);
 
   const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
     const visibleIds = new Set(items.map(i => i.id));

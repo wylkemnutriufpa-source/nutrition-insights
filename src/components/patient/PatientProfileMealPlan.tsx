@@ -52,7 +52,6 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     setLoading(true);
 
     try {
-      // 1. Fetch Plan Header (including snapshot) and also meal_plan_items as fallback
       const { data: planData, error: planError } = await supabase
         .from("meal_plans")
         .select("id, snapshot, editor_version, title, meal_plan_items(*)")
@@ -66,26 +65,74 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         return;
       }
 
-      // 2. Resolve Items via Normalizador Sistêmico Soberano
-      const normalized = normalizeMealPlan(planData);
-      
-      const allResolved: MealPlanItem[] = normalized.meals.flatMap(m => 
-        m.items.map(it => ({
-          ...it,
-          tipo_refeicao: m.name as any,
-          day_of_week: m.day_of_week ?? 0,
-          meta_calorias: it.kcal,
-          meta_proteinas: it.protein,
-          meta_carboidratos: it.carbs,
-          meta_gorduras: it.fat,
-          image_url: it.imageUrl, // 🛡️ SOBERANIA V3: Garantir compatibilidade com MealItemCard
-          metadata: it.metadata || {}
-        }))
-      );
+      const snapshot = (planData as any).snapshot;
+      const isV3 = snapshot && (snapshot.snapshot_version === 'v3' || Array.isArray(snapshot.days));
+
+      let allResolved: MealPlanItem[] = [];
+      let daily: MealPlanItem[] = [];
+
+      if (isV3 && Array.isArray(snapshot.days)) {
+        // 🛡️ SOBERANIA V3: Extração DIRETA do snapshot. ZERO normalization.
+        for (const day of snapshot.days) {
+          for (const meal of (day.meals || [])) {
+            for (const item of (meal.items || [])) {
+              allResolved.push({
+                id: item.id,
+                title: item.title,
+                description: item.quantity_display || '',
+                tipo_refeicao: meal.name as any,
+                day_of_week: day.day_of_week ?? 0,
+                meta_calorias: item.macros?.kcal ?? 0,
+                meta_proteinas: item.macros?.protein_g ?? 0,
+                meta_carboidratos: item.macros?.carbs_g ?? 0,
+                meta_gorduras: item.macros?.fat_g ?? 0,
+                image_url: item.visual?.image_url || null,
+                is_primary: true,
+                display_quantity: item.quantity_display,
+                clinical_mass_g: item.clinical_mass_g,
+                metadata: {
+                  image_url: item.visual?.image_url || null,
+                  substitution_options: (item.substitutions || []).map((s: any) => ({
+                    id: s.id,
+                    title: s.title,
+                    meta_calorias: s.macros?.kcal ?? 0,
+                    meta_proteinas: s.macros?.protein_g ?? 0,
+                    meta_carboidratos: s.macros?.carbs_g ?? 0,
+                    meta_gorduras: s.macros?.fat_g ?? 0,
+                    image_url: s.visual?.image_url || null
+                  })),
+                  substitution_count: (item.substitutions || []).length
+                }
+              } as any);
+            }
+          }
+        }
+        daily = allResolved.filter(i => i.day_of_week === dayOfWeek);
+        if (daily.length === 0 && allResolved.length > 0) {
+          const firstDay = allResolved[0].day_of_week;
+          daily = allResolved.filter(i => i.day_of_week === firstDay);
+        }
+      } else {
+        // Legado: usar normalizador
+        const normalized = normalizeMealPlan(planData);
+        allResolved = normalized.meals.flatMap(m =>
+          m.items.map(it => ({
+            ...it,
+            tipo_refeicao: m.name as any,
+            day_of_week: m.day_of_week ?? 0,
+            meta_calorias: it.kcal,
+            meta_proteinas: it.protein,
+            meta_carboidratos: it.carbs,
+            meta_gorduras: it.fat,
+            image_url: it.imageUrl,
+            metadata: it.metadata || {}
+          }))
+        ) as MealPlanItem[];
+        daily = buildDailyDisplayItems(allResolved as any, dayOfWeek) as MealPlanItem[];
+      }
 
       setAllItems(allResolved);
-      const daily = buildDailyDisplayItems(allResolved as any, dayOfWeek);
-      setItems(daily as MealPlanItem[]);
+      setItems(daily);
 
       // 3. Fetch Completions
       const { data: completionsData } = await supabase
