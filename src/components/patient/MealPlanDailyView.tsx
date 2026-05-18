@@ -235,24 +235,14 @@ const MealItemCard = memo(function MealItemCard({
 }) {
   const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
+  // 🛡️ SOBERANIA V3: Imagem vem EXCLUSIVAMENTE do snapshot. ZERO inferência runtime.
   const resolvedImage = useMemo(() => {
     if (!item) return null;
     const img = item.image_url || (item as any)?.imageUrl || item.metadata?.image_url || (item as any)?.edit_metadata?.image_url;
-    
-    if (img && !img.includes('unsplash.com')) return img;
-
-    // Mapeamento Determinístico (Regra do Usuário: nome -> nome.jpg)
-    const foodName = (item.title || "").toLowerCase().trim();
-    const slug = foodName
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
-    return `${baseUrl}/${slug}.jpg`;
-  }, [item?.image_url, (item as any)?.imageUrl, item?.metadata?.image_url, (item as any)?.edit_metadata?.image_url, item?.title]);
+    if (img && !img.includes('unsplash.com') && !img.includes('placeholder')) return img;
+    // Se não há imagem no snapshot, retornamos null. O renderer exibe sem imagem.
+    return null;
+  }, [item?.image_url, (item as any)?.imageUrl, item?.metadata?.image_url, (item as any)?.edit_metadata?.image_url]);
 
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
