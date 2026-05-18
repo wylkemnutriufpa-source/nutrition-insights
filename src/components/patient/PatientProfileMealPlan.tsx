@@ -168,22 +168,26 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   const groupedItems = useMemo(() => {
     // 🛡️ ANTI-CRASH: Garantir que items seja um array antes de filtrar
     const safeItems = Array.isArray(items) ? items : [];
-    return MEAL_TYPES.map(mt => ({
-      ...mt,
-      items: safeItems.filter(i => {
-        if (!i || !i.tipo_refeicao) return false;
-        const type = String(i.tipo_refeicao).toLowerCase();
-        const key = mt.key.toLowerCase();
-        // Match by key, label or common variations
-        return type === key || 
-               type === mt.label.toLowerCase() || 
-               (key === "lanche da tarde" && type === "afternoon_snack") ||
-               (key === "café da manhã" && type === "breakfast") ||
-               (key === "almoço" && type === "lunch") ||
-               (key === "jantar" && type === "dinner");
-      }),
-    })).filter(g => g.items.length > 0);
-  }, [items]);
+    return MEAL_TYPES.map(mt => {
+      const mealKey = `${dayOfWeek}_${mt.key.toLowerCase()}`;
+      return {
+        ...mt,
+        macros: mealMacros[mealKey],
+        items: safeItems.filter(i => {
+          if (!i || !i.tipo_refeicao) return false;
+          const type = String(i.tipo_refeicao).toLowerCase();
+          const key = mt.key.toLowerCase();
+          // Match by key, label or common variations
+          return type === key || 
+                 type === mt.label.toLowerCase() || 
+                 (key === "lanche da tarde" && type === "afternoon_snack") ||
+                 (key === "café da manhã" && type === "breakfast") ||
+                 (key === "almoço" && type === "lunch") ||
+                 (key === "jantar" && type === "dinner");
+        }),
+      };
+    }).filter(g => g.items.length > 0);
+  }, [items, mealMacros, dayOfWeek]);
 
   const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
 
