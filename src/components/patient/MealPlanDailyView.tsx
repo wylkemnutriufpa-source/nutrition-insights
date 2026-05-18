@@ -595,15 +595,28 @@ const DateNavigator = memo(function DateNavigator({
 
 // ── Meal Slot Summary Card (New for V3 Coupling) ──
 const MealSlotCard = memo(function MealSlotCard({
-  mealType, items, completions, isCurrent, onClick
+  mealType, items, completions, isCurrent, onClick, macros
 }: {
   mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
   items: MealPlanItem[];
   completions: MealCompletion[];
   isCurrent: boolean;
   onClick: () => void;
+  macros?: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
 }) {
   const totals = useMemo(() => {
+    // 🛡️ SOBERANIA V3: Se o snapshot já traz os macros calculados, usamos eles.
+    // Zero processamento ou soma em runtime se os dados estiverem prontos.
+    if (macros) {
+      return {
+        calories: macros.kcal,
+        protein: macros.protein_g,
+        carbs: macros.carbs_g,
+        fat: macros.fat_g
+      };
+    }
+
+    // Fallback apenas para planos legados (V1/V2)
     return items.reduce((acc, item) => {
       const meta = item.metadata || {};
       return {
@@ -613,7 +626,7 @@ const MealSlotCard = memo(function MealSlotCard({
         fat: acc.fat + (item.meta_gorduras ?? (item as any).fat ?? meta.meta_gorduras ?? meta.fat ?? 0),
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
-  }, [items]);
+  }, [items, macros]);
 
   const mealFollowedCount = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const isFullyFollowed = mealFollowedCount === items.length && items.length > 0;
