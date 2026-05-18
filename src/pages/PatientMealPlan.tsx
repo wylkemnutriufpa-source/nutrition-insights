@@ -369,8 +369,8 @@ export default function PatientMealPlan() {
             <AdherenceCard dailyAdherence={dailyAdherence} followedCount={followedCount} partialCount={partialCount} notFollowedCount={notFollowedCount} completionsCount={completions.length} totalItems={items.length} allMarked={allMarked} />
             <MacroSummary items={items} targets={{ calories: plan.total_meta_calorias, protein: plan.total_meta_proteinas, carbs: plan.total_meta_carboidratos, fat: plan.total_meta_gorduras }} />
             <div className="space-y-6">
-              {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
-                <MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} justCompleted={justCompleted} focusMode={focusMode} />
+              {groupedItems.map(({ key, label, icon, time, items: mealItems, macros }) => (
+                <MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} justCompleted={justCompleted} focusMode={focusMode} macros={macros} />
               ))}
             </div>
           </>
