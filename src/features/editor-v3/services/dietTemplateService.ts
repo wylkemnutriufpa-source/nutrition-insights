@@ -1,76 +1,18 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { V3DietTemplate, KcalProfile, Meal } from "../types/types";
+import { V3DietTemplate, KcalProfile, Meal, MealItem } from "../types/types";
 
-// Helper to generate a complete sovereign day
-const createSovereignDay = (day: number) => ({
+// Helper to generate a complete meal for the mock
+const createMeal = (name: string, time: string, day: number, items: any[]): Meal => ({
+  id: `m-${name}-${day}`,
+  name,
+  time,
   day_of_week: day,
-  meals: [
-    {
-      id: `m-breakfast-${day}`,
-      name: 'Café da Manhã',
-      time: '08:00',
-      items: [
-        {
-          id: `i-pao-${day}`,
-          title: 'Pão Integral com Ovo',
-          quantity_display: '2 fatias + 2 ovos',
-          clinical_mass_g: 150,
-          macros: { kcal: 320, protein_g: 18, carbs_g: 30, fat_g: 14 },
-          visual: { image_url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/pao-integral.jpg', is_placeholder: false },
-          substitutions: []
-        }
-      ]
-    },
-    {
-      id: `m-lunch-${day}`,
-      name: 'Almoço',
-      time: '13:00',
-      items: [
-        {
-          id: `i-almoco-${day}`,
-          title: 'Arroz, Feijão e Frango Grelhado',
-          quantity_display: '150g arroz + 100g feijão + 150g frango',
-          clinical_mass_g: 400,
-          macros: { kcal: 550, protein_g: 45, carbs_g: 60, fat_g: 12 },
-          visual: { image_url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/arroz-feijao-frango.png', is_placeholder: false },
-          substitutions: []
-        }
-      ]
-    },
-    {
-      id: `m-snack-${day}`,
-      name: 'Lanche da Tarde',
-      time: '16:00',
-      items: [
-        {
-          id: `i-snack-${day}`,
-          title: 'Iogurte com Frutas',
-          quantity_display: '1 unidade + 100g fruta',
-          clinical_mass_g: 250,
-          macros: { kcal: 180, protein_g: 12, carbs_g: 25, fat_g: 4 },
-          visual: { image_url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/iogurte-com-frutas.jpg', is_placeholder: false },
-          substitutions: []
-        }
-      ]
-    },
-    {
-      id: `m-dinner-${day}`,
-      name: 'Jantar',
-      time: '20:00',
-      items: [
-        {
-          id: `i-dinner-${day}`,
-          title: 'Omelete de Legumes',
-          quantity_display: '3 ovos + legumes à vontade',
-          clinical_mass_g: 300,
-          macros: { kcal: 350, protein_g: 24, carbs_g: 10, fat_g: 22 },
-          visual: { image_url: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/sopa-de-legumes%2Fsopa-de-legumes.jpg', is_placeholder: false },
-          substitutions: []
-        }
-      ]
-    }
-  ]
+  items: items.map(it => ({
+    ...it,
+    instanceId: `inst-${it.id}-${day}`,
+    substitutions: it.substitutions || []
+  })) as MealItem[]
 });
 
 const MOCK_TEMPLATES: V3DietTemplate[] = [
@@ -96,12 +38,99 @@ const MOCK_TEMPLATES: V3DietTemplate[] = [
     active: true,
     plan_snapshot: {
       "2000": {
-        publication_id: 'template-seed-1',
-        snapshot_version: 'v3',
-        generated_at: new Date().toISOString(),
-        targets: { kcal: 2000, protein_g: 120, carbs_g: 200, fat_g: 70 },
-        days: [1, 2, 3, 4, 5, 6, 0].map(d => createSovereignDay(d)),
-        daily_totals: {}
+        meals: [1, 2, 3, 4, 5, 6, 0].flatMap(d => [
+          createMeal('Café da Manhã', '08:00', d, [
+            {
+              id: 'i-pao',
+              name: 'Pão Integral',
+              title: 'Pão Integral com Ovo',
+              quantity: 2,
+              display_quantity: '2 fatias',
+              display_unit: 'fatias',
+              clinical_mass_g: 50,
+              kcal: 140,
+              protein: 6,
+              carbs: 25,
+              fat: 2,
+              imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/pao-integral.jpg'
+            },
+            {
+              id: 'i-ovo',
+              name: 'Ovo Mexido',
+              title: 'Ovo Mexido',
+              quantity: 2,
+              display_quantity: '2 unidades',
+              display_unit: 'unid',
+              clinical_mass_g: 100,
+              kcal: 140,
+              protein: 12,
+              carbs: 1,
+              fat: 10,
+              imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/ovo-mexido.jpg'
+            }
+          ]),
+          createMeal('Almoço', '13:00', d, [
+            {
+              id: 'i-arroz',
+              name: 'Arroz Branco',
+              quantity: 120,
+              clinical_mass_g: 120,
+              kcal: 156,
+              protein: 3,
+              carbs: 34,
+              fat: 0.3,
+              imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/arroz-branco.jpg'
+            },
+            {
+              id: 'i-feijao',
+              name: 'Feijão Carioca',
+              quantity: 100,
+              clinical_mass_g: 100,
+              kcal: 76,
+              protein: 5,
+              carbs: 14,
+              fat: 0.5,
+              imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/feijao-carioca.jpg'
+            },
+            {
+              id: 'i-frango',
+              name: 'Frango Grelhado',
+              quantity: 150,
+              clinical_mass_g: 150,
+              kcal: 240,
+              protein: 45,
+              carbs: 0,
+              fat: 6,
+              imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/frango-grelhado.jpg'
+            }
+          ]),
+          createMeal('Lanche da Tarde', '16:00', d, [
+            {
+              id: 'i-iogurte',
+              name: 'Iogurte com Frutas',
+              quantity: 1,
+              clinical_mass_g: 200,
+              kcal: 180,
+              protein: 12,
+              carbs: 25,
+              fat: 4,
+              imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/iogurte-com-frutas.jpg'
+            }
+          ]),
+          createMeal('Jantar', '20:00', d, [
+            {
+              id: 'i-sopa',
+              name: 'Sopa de Legumes',
+              quantity: 1,
+              clinical_mass_g: 350,
+              kcal: 250,
+              protein: 25,
+              carbs: 15,
+              fat: 8,
+              imageUrl: 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/sopa-de-legumes%2Fsopa-de-legumes.jpg'
+            }
+          ])
+        ])
       }
     }
   }
