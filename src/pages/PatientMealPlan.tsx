@@ -286,7 +286,7 @@ export default function PatientMealPlan() {
     setExportingPDF(true);
     try {
       const { data: myProfile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
-      const pdfItems = plan.editor_version === 'v3' ? allItems : buildPdfItemsForDailyPlan(allItems as any, dayOfWeek) as MealPlanItem[];
+      const pdfItems = allItems;
       const data: PremiumMealPlanPDFData = {
         planTitle: plan.title || "Plano Alimentar", patientName: myProfile?.full_name || "Paciente",
         nutritionistName: "Nutricionista", startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
