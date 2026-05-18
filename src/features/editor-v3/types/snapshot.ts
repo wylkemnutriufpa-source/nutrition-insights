@@ -38,6 +38,7 @@ export interface SovereignMeal {
   name: string;
   time?: string;
   order_index: number;
+  macros: SovereignMacros;
   items: SovereignItem[];
 }
 
