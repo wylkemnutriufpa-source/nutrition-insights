@@ -162,12 +162,13 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
 }
 
 
-function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; description?: string | null }): string {
+function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; description?: string | null; meta_calorias?: number }): string {
   // SOBERANIA V3: prioriza clinical_mass_g (verdade clínica) sobre placeholders
   // tipo "1 g" / "1" / "" que vinham de display_quantity = quantity (multiplicador).
   const rawQty = item.display_quantity;
   const dUnit = (item.display_unit ?? "").toString().trim();
   const cMass = Number(item.clinical_mass_g);
+  const kcal = Number(item.meta_calorias || 0);
   const hasMass = Number.isFinite(cMass) && cMass > 1;
 
   const dqStr = rawQty == null ? "" : String(rawQty).trim();
@@ -176,15 +177,19 @@ function formatPortionText(item: { display_quantity?: any; display_unit?: any; c
 
   if (isPlaceholder && hasMass) return `${Math.round(cMass)} g`;
 
-  if (dqStr) {
+  if (dqStr && !isPlaceholder) {
     // Se já contém unidade (ex.: "3 colheres", "100 g"), devolve direto
     if (/[a-zà-ú]/i.test(dqStr)) return dqStr;
-    if (isPlaceholder && !hasMass) return ""; // Clean up if it's just "1 g" and no mass info
     return dUnit ? `${dqStr} ${dUnit}`.trim() : dqStr;
   }
 
   if (hasMass) return `${Math.round(cMass)} g`;
-  return ""; // Avoid showing "undefined" or description as portion text if not intended
+  
+  // Se for um placeholder "1 g" mas as calorias sugerem que é um item real (ex: > 10 kcal), 
+  // provavelmente é 100g ou uma porção padrão
+  if (isPlaceholder && kcal > 5) return "100 g";
+  
+  return ""; 
 }
 
 function formatSubstitutionDetail(sub: MealPlanPDFItem, _primary: MealPlanPDFItem): string {

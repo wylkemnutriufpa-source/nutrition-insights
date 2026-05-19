@@ -109,7 +109,11 @@ export const useEditorState = create<EditorState>()(
         const updatedMeals = meals.map(meal => {
           if (meal.id !== mealId) return meal;
           
-          const quantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+          let quantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+          // 🛡️ SANITIZAÇÃO V3: Evitar o bug do "1g" vindo de templates malformados
+          if (quantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
+            quantity = 100;
+          }
           const macros = calculateItemMacros(food, quantity);
           
           const newItem: MealItem = {
@@ -203,7 +207,12 @@ export const useEditorState = create<EditorState>()(
 
             // SOBERANIA V3: Se o substituto já tem uma gramagem clínica, usamos ela. 
             // Caso contrário, usamos a gramagem padrão do alimento (100g ou porção).
-            const substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+            let substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+            
+            // 🛡️ SANITIZAÇÃO V3: Evitar o bug do "1g" em substitutos
+            if (substituteQuantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
+              substituteQuantity = 100;
+            }
             
             const subMacros = calculateItemMacros(food, substituteQuantity);
 
