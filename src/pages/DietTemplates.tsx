@@ -334,7 +334,14 @@ export default function DietTemplates() {
         is_v3: true
       }));
 
-      setTemplates([...v3Data, ...v2Data] as DietTemplate[]);
+      const allTemplates = [...v3Data, ...v2Data] as DietTemplate[];
+      // Filter out templates that are truly empty (no meals and no snapshot)
+      const validTemplates = allTemplates.filter(t => {
+        if (t.is_v3) return !!t.plan_snapshot && Object.keys(t.plan_snapshot).length > 0;
+        return Array.isArray(t.meals) && t.meals.length > 0;
+      });
+      
+      setTemplates(validTemplates);
     } catch (e) {
       console.error("[DietTemplates] unexpected error:", e);
     }
