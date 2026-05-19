@@ -1,14 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { compileTemplateFromLibrary } from "./templateCompiler";
-import { BLUEPRINTS } from "./templateBlueprints";
+import { ALL_BLUEPRINTS } from "./templateBlueprints";
+
 
 export const seedPremiumV3Templates = async () => {
   try {
     console.log('[Seeder] Iniciando compilação determinística de templates...');
     
     const compiledTemplates = [];
-    for (const blueprint of BLUEPRINTS) {
+    for (const blueprint of ALL_BLUEPRINTS) {
       const compiled = await compileTemplateFromLibrary(blueprint);
       if (compiled) {
         compiledTemplates.push(compiled);

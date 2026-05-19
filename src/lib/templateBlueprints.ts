@@ -1,7 +1,95 @@
 
-import { seedPremiumV3Templates } from "./seedV3Templates";
+import { BLUEPRINTS } from "./templateBlueprints";
 
-export const BLUEPRINTS = [
+export const ADDITIONAL_BLUEPRINTS = [
+  {
+    slug: 'low-carb-premium-real',
+    title: 'Low Carb Premium Determinístico',
+    description: 'Alta gordura saudável e proteína, zero invenção textual.',
+    template_type: 'visual_v3',
+    objective: 'low_carb',
+    visual_style: 'premium',
+    kcal_profiles: [1600, 1800],
+    meals: [
+      { 
+        name: 'Café da Manhã Keto', 
+        time: '08:30', 
+        main: 'ovos-cozidos', 
+        subs: ['omelete'],
+        sides: [{ slug: 'abacate', subs: ['mix-nuts'] }]
+      },
+      { 
+        name: 'Almoço Low Carb', 
+        time: '13:00', 
+        main: 'maminha', 
+        subs: ['file-de-porco', 'peixe-grelhado'],
+        sides: [
+          { slug: 'legumes-cozidos-jantar', subs: ['salada-verde'] },
+          { slug: 'azeite' }
+        ]
+      },
+      { 
+        name: 'Lanche Sacietógeno', 
+        time: '16:30', 
+        main: 'mix-nuts', 
+        subs: ['abacate-cacau'],
+        sides: []
+      },
+      { 
+        name: 'Jantar Cetogênico', 
+        time: '20:00', 
+        main: 'frango-grelhado', 
+        subs: ['file-de-tilapia'],
+        sides: [{ slug: 'salada-crua-folhas-jantar' }]
+      }
+    ]
+  },
+  {
+    slug: 'emagrecimento-clinico-real',
+    title: 'Emagrecimento Clínico Estrutural',
+    description: 'Densidade nutricional controlada com base em alimentos reais do banco.',
+    template_type: 'visual_v3',
+    objective: 'emagrecimento',
+    visual_style: 'premium',
+    kcal_profiles: [1200, 1400, 1500],
+    meals: [
+      { 
+        name: 'Café da Manhã Leve', 
+        time: '08:00', 
+        main: 'iogurte-natural', 
+        subs: ['crepioca'],
+        sides: [{ slug: 'maca', subs: ['morango', 'melao'] }]
+      },
+      { 
+        name: 'Almoço Equilibrado', 
+        time: '13:00', 
+        main: 'frango-grelhado', 
+        subs: ['file-de-tilapia'],
+        sides: [
+          { slug: 'arroz-integral', subs: ['batata-doce'] },
+          { slug: 'feijao-carioca' },
+          { slug: 'salada-verde' }
+        ]
+      },
+      { 
+        name: 'Lanche de Densidade', 
+        time: '16:00', 
+        main: 'frutas-vermelhas', 
+        subs: ['iogurte-com-banana'],
+        sides: [{ slug: 'mix-nuts' }]
+      },
+      { 
+        name: 'Jantar de Controle', 
+        time: '19:30', 
+        main: 'sopa-de-legumes', 
+        subs: ['peixe-com-legumes'],
+        sides: [{ slug: 'salada-crua-folhas-jantar' }]
+      }
+    ]
+  }
+];
+
+export const ALL_BLUEPRINTS = [
   {
     slug: 'anti-inflamatorio-premium',
     title: 'Protocolo Anti-Inflamatório Real',
@@ -14,8 +102,8 @@ export const BLUEPRINTS = [
       { 
         name: 'Desjejum Bioativo', 
         time: '08:00', 
-        main: 'suco-verde-detox', 
-        subs: ['vitamina-de-frutas'],
+        main: 'vitamina-de-frutas', 
+        subs: ['iogurte-natural'],
         sides: [{ slug: 'ovos-mexidos', subs: ['omelete'] }] 
       },
       { 
@@ -59,7 +147,7 @@ export const BLUEPRINTS = [
         time: '07:00', 
         main: 'pao-com-ovo', 
         subs: ['cuscuz-com-ovo', 'crepioca'],
-        sides: [{ slug: 'banana-com-aveia', subs: ['mamao-com-aveia'] }]
+        sides: [{ slug: 'aveia-com-banana', subs: ['mamao-com-aveia'] }]
       },
       { 
         name: 'Almoço de Performance', 
@@ -87,5 +175,6 @@ export const BLUEPRINTS = [
         sides: [{ slug: 'legumes-cozidos-jantar' }]
       }
     ]
-  }
+  },
+  ...ADDITIONAL_BLUEPRINTS
 ];
