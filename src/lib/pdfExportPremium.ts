@@ -629,8 +629,14 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const fat = Math.round(item.meta_gorduras || 0);
 
       return `
-        <div class="food-line" style="margin-bottom: 8px; border-bottom: 1px solid #f8fafc; padding-bottom: 4px;">
-          <span class="food-bullet" style="background: ${mealInfo.color}; margin-top: 5px;"></span>
+        <div class="food-line" style="margin-bottom: 12px; border-bottom: 1px solid #f8fafc; padding-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;">
+          ${item.visual_image_url ? `
+            <div style="width: 50px; height: 50px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 1px solid #f1f5f9;">
+              <img src="${item.visual_image_url}" style="width: 100%; height: 100%; object-fit: cover;" alt="${escapeHtml(item.title)}" />
+            </div>
+          ` : `
+            <span class="food-bullet" style="background: ${mealInfo.color}; margin-top: 5px;"></span>
+          `}
           <div style="display: flex; flex-direction: column; flex: 1;">
             <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(item.title)}</span>
             <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
