@@ -618,14 +618,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const totalKcal = primaries.reduce((sum, i) => sum + (i.meta_calorias || 0), 0);
 
     const renderItemLine = (item: MealPlanPDFItem) => {
-      const dQty = item.display_quantity || "";
-      const dUnit = item.display_unit || "";
-      const cMass = item.clinical_mass_g || "";
-      
-      let portionText = "";
-      if (dQty) portionText = `${dQty} ${dUnit}`;
-      else if (cMass) portionText = `${cMass}g`;
-      else portionText = item.description || "";
+      const portionText = formatPortionText(item);
 
       return `
         <div class="food-line" style="margin-bottom: 6px;">
