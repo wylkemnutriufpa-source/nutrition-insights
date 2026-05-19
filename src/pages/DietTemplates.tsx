@@ -56,6 +56,7 @@ interface TemplateFood {
   carbs: number;
   fat: number;
   substitutions: string[];
+  imageUrl?: string;
 }
 
 interface TemplateMeal {
@@ -335,7 +336,8 @@ export default function DietTemplates() {
                 fat: i.fat || i.fat_g || 0,
                 substitutions: Array.isArray(i.substitutions) 
                   ? i.substitutions.map((s: any) => s.name || s.title).filter(Boolean)
-                  : []
+                  : [],
+                imageUrl: i.imageUrl || i.image_url
               }))
             }));
           }
@@ -1135,7 +1137,7 @@ export default function DietTemplates() {
 
                             return (
                               <div key={fi} className="flex items-start gap-2 text-sm">
-                                <TemplateFoodVisual foodName={food.name} />
+                                <TemplateFoodVisual foodName={food.name} imageUrl={food.imageUrl} />
                                 <div className="flex-1 flex items-start justify-between gap-2">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
