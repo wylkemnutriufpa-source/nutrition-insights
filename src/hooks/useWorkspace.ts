@@ -42,77 +42,64 @@ export function useWorkspace() {
     if (!user?.id || !isProRole) { setLoading(false); return; }
 
     try {
-      // Try to get existing workspace
-      const { data: existing } = await supabase
-        .from("workspace_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Step 1: Parallel fetch of profile and basic workspace structure
+      const [existingRes, sectionsRes, rawItemsRes] = await Promise.all([
+        supabase.from("workspace_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("workspace_sections").select("*").order("sort_order"), // We'll filter in JS to avoid another RPC wait if possible
+        supabase.from("workspace_items").select("*").order("sort_order")
+      ]);
 
       let workspaceId: string;
+      const existing = existingRes.data;
 
       if (existing) {
         setProfile(existing);
         workspaceId = existing.id;
       } else {
-        // Initialize default workspace via RPC
+        // Fallback for new users: must run RPC once
         const { data: newId } = await supabase.rpc("initialize_default_workspace", {
           _user_id: user.id,
         });
         workspaceId = newId as string;
-
-        const { data: newProfile } = await supabase
-          .from("workspace_profiles")
-          .select("*")
-          .eq("id", workspaceId)
-          .single();
+        
+        const { data: newProfile } = await supabase.from("workspace_profiles").select("*").eq("id", workspaceId).single();
         if (newProfile) setProfile(newProfile);
       }
 
-      // Fetch sections
-      const { data: secs } = await supabase
-        .from("workspace_sections")
-        .select("*")
-        .eq("workspace_id", workspaceId)
-        .order("sort_order");
+      // Filter sections and items by workspaceId locally
+      const filteredSections = (sectionsRes.data || []).filter(s => s.workspace_id === workspaceId);
+      const filteredItems = (rawItemsRes.data || []).filter(i => i.workspace_id === workspaceId);
 
-      setSections(secs || []);
+      setSections(filteredSections);
 
-      // Fetch items with menu_items join
-      const { data: rawItems } = await supabase
-        .from("workspace_items")
-        .select("*")
-        .eq("workspace_id", workspaceId)
-        .order("sort_order");
-
-      // Now enrich with menu_items data
-      const menuItemIds = (rawItems || []).map(i => i.menu_item_id);
-      let menuMap = new Map<string, any>();
-
+      // Step 2: Enrich with menu_items metadata
+      const menuItemIds = filteredItems.map(i => i.menu_item_id);
       if (menuItemIds.length > 0) {
         const { data: menuData } = await supabase
           .from("menu_items")
           .select("id, label, label_key, route, icon, premium_only, feature, role_visibility")
           .in("id", menuItemIds);
 
-        (menuData || []).forEach(m => menuMap.set(m.id, m));
+        const menuMap = new Map(menuData?.map(m => [m.id, m]));
+        
+        const enriched: WorkspaceItem[] = filteredItems.map(item => {
+          const menu = menuMap.get(item.menu_item_id);
+          return {
+            ...item,
+            label: menu?.label || "Item",
+            label_key: menu?.label_key || "",
+            route: menu?.route || "/",
+            icon: menu?.icon || "LayoutDashboard",
+            premium_only: menu?.premium_only || false,
+            feature: menu?.feature || undefined,
+            role_visibility: Array.isArray(menu?.role_visibility) ? (menu.role_visibility as string[]) : [],
+          };
+        });
+
+        setItems(enriched);
+      } else {
+        setItems([]);
       }
-
-      const enriched: WorkspaceItem[] = (rawItems || []).map(item => {
-        const menu = menuMap.get(item.menu_item_id);
-        return {
-          ...item,
-          label: menu?.label || "Item",
-          label_key: menu?.label_key || "",
-          route: menu?.route || "/",
-          icon: menu?.icon || "LayoutDashboard",
-          premium_only: menu?.premium_only || false,
-          feature: menu?.feature || undefined,
-          role_visibility: Array.isArray(menu?.role_visibility) ? (menu.role_visibility as string[]) : [],
-        };
-      });
-
-      setItems(enriched);
     } catch (e) {
       console.error("Workspace init error:", e);
     } finally {
@@ -120,7 +107,9 @@ export function useWorkspace() {
     }
   }, [user?.id, isProRole]);
 
-  useEffect(() => { initialize(); }, [initialize]);
+  useEffect(() => { 
+    if (user?.id) initialize(); 
+  }, [user?.id, initialize]);
 
   // Section CRUD
   const addSection = useCallback(async (name: string, icon: string, color: string) => {
