@@ -18,7 +18,7 @@ interface FoodItemRowProps {
 }
 
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
-  item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution, onUpdateName 
+  item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName 
 }) => {
   return (
     <div className="group relative flex flex-col p-3 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
