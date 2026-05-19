@@ -1035,13 +1035,17 @@ export default function TemplateNutritionAudit() {
               </div>
             </div>
 
-            <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-              <TabsList>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+              <TabsList className="grid w-full grid-cols-5 h-auto">
                 <TabsTrigger value="critical">Críticos ({counts.critical})</TabsTrigger>
                 <TabsTrigger value="warning">Atenção ({counts.warning})</TabsTrigger>
                 <TabsTrigger value="ok">OK ({counts.ok})</TabsTrigger>
                 <TabsTrigger value="all">Todos ({counts.all})</TabsTrigger>
+                <TabsTrigger value="tests" className="gap-2">
+                  <Terminal className="w-4 h-4" /> Testes Automáticos
+                </TabsTrigger>
               </TabsList>
+
 
               <TabsContent value={tab} className="mt-4">
                 {loading ? (
