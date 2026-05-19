@@ -315,7 +315,18 @@ export default function PatientMealPlan() {
     items.map(item => {
       const sub = activeSubstitutions[item.id];
       if (!sub) return item;
-      return { ...item, title: sub.foodName, description: `Substituição de: ${sub.originalTitle}${item.description ? ` • ${item.description}` : ""}`, image_url: item.image_url || (item as any).imageUrl, imageUrl: item.image_url || (item as any).imageUrl };
+      
+      // 🛡️ SOBERANIA V3: Substituições devem ser purificadas para manter a integridade visual/técnica
+      return { 
+        ...item, 
+        title: sub.foodName, 
+        description: `Substituição de: ${sub.originalTitle}${item.description ? ` • ${item.description}` : ""}`, 
+        image_url: item.image_url || (item as any).imageUrl || item.metadata?.image_url, 
+        imageUrl: item.image_url || (item as any).imageUrl || item.metadata?.image_url,
+        // Reset macros se forem divergentes e não estiverem no snapshot do sub (Prevenção de Erro)
+        meta_calorias: sub.substituted_calories || item.meta_calorias,
+        meta_proteinas: sub.substituted_protein || item.meta_proteinas
+      };
     }), [items, activeSubstitutions]);
 
   const groupedItems = useMemo(() =>

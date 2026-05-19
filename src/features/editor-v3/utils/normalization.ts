@@ -260,19 +260,14 @@ export async function getBestMealImage(mealName: string, items: any[]): Promise<
 
     const foodName = (principalItem.name || "").toLowerCase().trim();
     
-    // Mapeamento Direto solicitado: nome do alimento -> nome-do-alimento.jpg
-    const slug = foodName
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
+    // 🛡️ SOBERANIA V3: NUNCA usar inferência por slug em tempo de execução no App.
+    // Apenas busca explícita na biblioteca ou fallback para placeholder.
 
     // 1. Tenta buscar no banco pelo nome exato (display_name ou name)
     const { data: match } = await supabase
       .from('meal_visual_library')
       .select('image_url')
-      .or(`name.ilike."${foodName}",display_name.ilike."${foodName}"`)
+      .or(`name.eq."${foodName}",display_name.eq."${foodName}"`)
       .eq('is_active', true)
       .maybeSingle();
 
@@ -280,20 +275,9 @@ export async function getBestMealImage(mealName: string, items: any[]): Promise<
       return { url: match.image_url, source: 'auto' };
     }
 
-    // 2. Fallback determinístico baseado no slug (seguindo a regra do usuário)
-    // Muitos arquivos no storage seguem o padrão slug.jpg ou slug.png
-    const baseUrl = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
-    
-    // Tenta uma lista de extensões comuns
-    const extensions = ['jpg', 'png', 'jpeg'];
-    for (const ext of extensions) {
-      const testUrl = `${baseUrl}/${slug}.${ext}`;
-      // Nota: No frontend não podemos checar se o arquivo existe sem fazer um HEAD request
-      // Mas o usuário disse que os nomes SÃO os nomes dos arquivos.
-    }
-
-    // Se não encontrou no banco, usa o slug com .jpg como padrão
-    return { url: `${baseUrl}/${slug}.jpg`, source: 'auto' };
+    // 🛡️ SOBERANIA V3: Se não encontrou na biblioteca oficial, retorna o placeholder oficial.
+    // O sistema não deve tentar "adivinhar" extensões ou URLs.
+    return { url: FALLBACK_MEAL_IMAGE, source: 'fallback' };
 
   } catch (err) {
     return { url: FALLBACK_MEAL_IMAGE, source: 'fallback' };
