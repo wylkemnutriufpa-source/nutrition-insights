@@ -30,7 +30,10 @@ const FOODS = {
   banana: { title: 'Banana Prata', qty: '1 unidade', mass: 70, m: {kcal: 70, protein_g: 1, carbs_g: 18, fat_g: 0}, img: `${BASE_IMG}/banana-com-aveia.jpg` },
   maca: { title: 'Maçã', qty: '1 unidade', mass: 100, m: {kcal: 50, protein_g: 0, carbs_g: 13, fat_g: 0}, img: `${BASE_IMG}/maca/maca.jpg` },
   sopa: { title: 'Sopa de Legumes', qty: '1 prato', mass: 350, m: {kcal: 150, protein_g: 5, carbs_g: 25, fat_g: 3}, img: `${BASE_IMG}/sopa-de-legumes/sopa-de-legumes.jpg` },
-  castanha: { title: 'Mix de Castanhas', qty: '1 punhado', mass: 30, m: {kcal: 180, protein_g: 4, carbs_g: 6, fat_g: 16}, img: `${BASE_IMG}/castanhas.jpg` }
+  castanha: { title: 'Mix de Castanhas', qty: '1 punhado', mass: 30, m: {kcal: 180, protein_g: 4, carbs_g: 6, fat_g: 16}, img: `${BASE_IMG}/castanhas.jpg` },
+  cuscuz: { title: 'Cuscuz com Ovo', qty: '2 fatias', mass: 150, m: {kcal: 250, protein_g: 12, carbs_g: 30, fat_g: 8}, img: `${BASE_IMG}/cuscuz-com-ovo.jpg` },
+  omelete: { title: 'Omelete de Legumes', qty: '2 ovos', mass: 180, m: {kcal: 210, protein_g: 14, carbs_g: 5, fat_g: 14}, img: `${BASE_IMG}/omelete.jpg` },
+  carne: { title: 'Carne Grelhada', qty: '1 bife', mass: 120, m: {kcal: 220, protein_g: 30, carbs_g: 0, fat_g: 10}, img: `${BASE_IMG}/carne-grelhada.jpg` }
 };
 
 const makeItem = (food: any, isPrimary = false, subs: any[] = []) => {
