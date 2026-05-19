@@ -179,6 +179,7 @@ export const applyOfficialV2Template = async (
             meta_gorduras: Math.round((opt.fat || 0) * multiplier),
             substitution_group_id: groupId,
             is_primary: idx === 0,
+            visual_library_item_id: opt.visual_library_item_id || null,
           });
         });
       }
