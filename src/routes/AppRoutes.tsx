@@ -55,6 +55,7 @@ const PublicPlans = lazy(() => import("../pages/PublicPlans"));
 const PublicProfile = lazy(() => import("../pages/PublicProfile"));
 const PublicProgram = lazy(() => import("../pages/PublicProgram"));
 const QuickLink = lazy(() => import("../pages/QuickLink"));
+const ViewPlanProxy = lazy(() => import("../pages/ViewPlanProxy"));
 const BiquiniBrancoLanding = lazy(() => import("../pages/BiquiniBrancoLanding"));
 const BiquiniBrancoDetail = lazy(() => import("../pages/BiquiniBrancoDetail"));
 const MyReferrals = lazy(() => import("../pages/MyReferrals"));
