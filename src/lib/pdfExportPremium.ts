@@ -53,6 +53,7 @@ export interface PremiumMealPlanPDFData {
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   breakfast: { label: "Café da Manhã", color: "#6366f1" },
   cafe_da_manha: { label: "Café da Manhã", color: "#6366f1" },
+  cafe: { label: "Café da Manhã", color: "#6366f1" },
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
   lanche_da_manha: { label: "Lanche da Manhã", color: "#10b981" },
   snack_1: { label: "Lanche da Manhã", color: "#10b981" },
