@@ -221,22 +221,23 @@ export default function InvitePatient() {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc("create_patient_canonical", {
-        _name: name,
+        _patient_id: crypto.randomUUID(),
+        _full_name: name,
         _email: email,
         _phone: formattedPhone,
+        _whatsapp: formattedPhone,
         _nutritionist_id: user.id,
-        _auth_method: method,
-        _temp_password: method === "password" ? tempPassword : null,
-        _attendance_mode: attendanceMode
+        _source: 'invite_wizard',
+        _metadata: {
+          auth_method: method,
+          attendance_mode: attendanceMode,
+          temp_password: method === "password" ? tempPassword : null
+        }
       });
 
       if (error) throw error;
       
-      const res = data as any;
-      if (res?.patient_id) {
-        setCreatedPatientId(res.patient_id);
-      }
-
+      // A RPC retorna o paciente criado.
       setCreated(true);
       toast.success("Paciente criado e vinculado via Rota Canônica!");
     } catch (err: any) {
