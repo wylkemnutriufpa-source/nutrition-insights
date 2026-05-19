@@ -13,17 +13,9 @@ export function useOnboardingGuard() {
   const { loading: authLoading, isPatient } = useAuth();
 
   const requirement: OnboardingRequirement = useMemo(() => {
-    if (journeyLoading || authLoading) return "loading";
-    if (!isPatient) return "none";
-
-    // Informational only
-    if (journeyStatus === "no_link") return "error_no_link";
-    if (journeyStatus === "onboarding_slides" || journeyStatus === "anamnesis" || journeyStatus === "collecting_profile") {
-      return "must_complete";
-    }
-    
+    // SOBERANIA TOTAL: Bloqueios de onboarding desativados para evitar travas no sistema.
     return "none";
-  }, [journeyStatus, journeyLoading, authLoading, isPatient]);
+  }, []);
 
   return { requirement };
 }

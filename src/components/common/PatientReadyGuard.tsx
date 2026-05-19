@@ -46,6 +46,6 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     setGraceDone(false);
   }, [result.status, targetId, context]);
 
-  // EMERGENCY BYPASS: Access always allowed in incident mode
+  // EMERGENCY BYPASS: Access always allowed in incident mode (Soberania Total)
   return <>{children}</>;
 }
