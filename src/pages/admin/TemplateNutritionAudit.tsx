@@ -60,8 +60,10 @@ import {
   FileDown,
   PlayCircle,
   XCircle,
-  Terminal
+  Terminal,
+  Loader2
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { seedPremiumV3Templates } from "@/lib/seedV3Templates";
 import { applyOfficialV2Template, applyOfficialV3Template } from "@/lib/templateApplication";
