@@ -368,6 +368,15 @@ function NutritionistDashboardContent() {
     }
   }, [evolutionPeriod]);
 
+  // Secondary data load - Deferred to after first paint
+  useEffect(() => {
+    if (loading || !user?.id) return;
+    const timer = setTimeout(() => {
+      fetchDashboard();
+    }, 1500); // Wait for core UI to settle
+    return () => clearTimeout(timer);
+  }, [user?.id, evolutionPeriod]);
+
   // Priority Initial Load: only non-blocking stats
   useEffect(() => {
     const fetchCoreStats = async () => {
