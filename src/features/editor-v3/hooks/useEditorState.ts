@@ -241,6 +241,23 @@ export const useEditorState = create<EditorState>()(
           };
         });
         set({ meals: updatedMeals });
+      },
+
+      removeSubstitutionFromItem: (mealId, itemInstanceId, subIndex) => {
+        const { meals } = get();
+        const updatedMeals = meals.map(meal => {
+          if (meal.id !== mealId) return meal;
+          return {
+            ...meal,
+            items: meal.items.map(item => {
+              if (item.instanceId !== itemInstanceId) return item;
+              const newSubs = [...(item.substitutions || [])];
+              newSubs.splice(subIndex, 1);
+              return { ...item, substitutions: newSubs };
+            })
+          };
+        });
+        set({ meals: updatedMeals });
       }
     }),
 
