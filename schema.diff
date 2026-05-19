@@ -1,16 +1,12 @@
 {
   "summary": "Summary:",
   "details": {
-    "timestamp": "2026-05-19T21:10:12.715Z",
-    "duration": "0.4s",
-    "lastSnapshotMigration": "20260519114253_ed4fd00f-350e-4748-97b1-fdd694b04397.sql",
-    "lastActualMigration": "20260519184843_411f44dc-3002-4aaf-95ee-edf4b1c2f1ea.sql",
+    "timestamp": "2026-05-19T21:45:06.671Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260519184843_411f44dc-3002-4aaf-95ee-edf4b1c2f1ea.sql",
+    "lastActualMigration": "20260519212143_9f418f86-b6b0-4529-a14c-a08bcff433cc.sql",
     "missingMigrations": [
-      "20260519183642_f30b0267-d432-4679-8abd-34e21f677074.sql",
-      "20260519183751_85f05fe8-b120-4abe-aa59-5eedc08e988d.sql",
-      "20260519183814_df510830-aea3-4fe5-9821-5d165a708e8a.sql",
-      "20260519183841_ce144be8-2386-4c04-98bd-877e3ea30153.sql",
-      "20260519184843_411f44dc-3002-4aaf-95ee-edf4b1c2f1ea.sql"
+      "20260519212143_9f418f86-b6b0-4529-a14c-a08bcff433cc.sql"
     ],
     "diffResults": []
   }
