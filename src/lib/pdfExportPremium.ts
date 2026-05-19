@@ -53,6 +53,7 @@ export interface PremiumMealPlanPDFData {
 const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   breakfast: { label: "Café da Manhã", color: "#6366f1" },
   cafe_da_manha: { label: "Café da Manhã", color: "#6366f1" },
+  cafe: { label: "Café da Manhã", color: "#6366f1" },
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
   lanche_da_manha: { label: "Lanche da Manhã", color: "#10b981" },
   snack_1: { label: "Lanche da Manhã", color: "#10b981" },
@@ -141,7 +142,17 @@ function normalizeMealTypeKey(type: unknown): string {
 
 function resolveCanonicalMealType(type: unknown): CanonicalMealType | string {
   const normalized = normalizeMealTypeKey(type);
-  return MEAL_TYPE_ALIASES[normalized] || normalized;
+  if (MEAL_TYPE_ALIASES[normalized]) return MEAL_TYPE_ALIASES[normalized];
+  
+  // 🛡️ SOBERANIA V3: Substring matching for slugs like "almoco_equilibrado" or "cafe_leve"
+  if (normalized.includes("cafe")) return "Café da Manhã";
+  if (normalized.includes("lanche_manha") || normalized.includes("snack_1")) return "Lanche da Manhã";
+  if (normalized.includes("almoco") || normalized.includes("lunch")) return "Almoço";
+  if (normalized.includes("lanche_tarde") || normalized.includes("snack_2") || (normalized.includes("lanche") && !normalized.includes("noite"))) return "Lanche da Tarde";
+  if (normalized.includes("jantar") || normalized.includes("dinner")) return "Jantar";
+  if (normalized.includes("ceia") || normalized.includes("supper") || normalized.includes("noite")) return "Ceia";
+
+  return normalized;
 }
 
 function getMealGroupKey(item: MealPlanPDFItem): string {
@@ -168,15 +179,29 @@ function formatPortionText(item: { display_quantity?: any; display_unit?: any; c
   if (dqStr) {
     // Se já contém unidade (ex.: "3 colheres", "100 g"), devolve direto
     if (/[a-zà-ú]/i.test(dqStr)) return dqStr;
+    if (isPlaceholder && !hasMass) return ""; // Clean up if it's just "1 g" and no mass info
     return dUnit ? `${dqStr} ${dUnit}`.trim() : dqStr;
   }
 
   if (hasMass) return `${Math.round(cMass)} g`;
-  return (item.description || "").toString();
+  return ""; // Avoid showing "undefined" or description as portion text if not intended
 }
 
 function formatSubstitutionDetail(sub: MealPlanPDFItem, _primary: MealPlanPDFItem): string {
   return formatPortionText(sub);
+}
+
+function cleanTitle(title: string): string {
+  if (!title) return "";
+  // Se parece um slug (sem espaços, com hífens ou underscores)
+  if (!title.includes(" ") && (title.includes("-") || title.includes("_"))) {
+    return title
+      .replace(/[_-]/g, " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+  return title;
 }
 
 function escapeHtml(str: string): string {
@@ -638,7 +663,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <span class="food-bullet" style="background: ${mealInfo.color}; margin-top: 5px;"></span>
           `}
           <div style="display: flex; flex-direction: column; flex: 1;">
-            <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(item.title)}</span>
+            <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(cleanTitle(item.title))}</span>
             <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
           </div>
           <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
@@ -681,7 +706,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
                     const subPortion = formatSubstitutionDetail(sub, sub); // Use sub's own detail
                     return `
                       <div style="background: #fff; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 10px;">
-                        <span style="font-weight: 600; color: #334155;">${escapeHtml(sub.title)}</span>
+                        <span style="font-weight: 600; color: #334155;">${escapeHtml(cleanTitle(sub.title))}</span>
                         ${subPortion ? `<span style="color: #94a3b8; font-size: 9px;"> (${escapeHtml(subPortion)})</span>` : ""}
                       </div>
                     `;

@@ -332,7 +332,22 @@ export default function PatientMealPlan() {
         planTitle: plan.title || "Plano Alimentar", patientName: myProfile?.full_name || "Paciente",
         nutritionistName: "Nutricionista", startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
         planMode: "single_day",
-        items: pdfItems.map(i => ({ mealType: i.tipo_refeicao || "Refeição", title: i.title || "Item", description: i.description || undefined, meta_calorias: i.meta_calorias || undefined, meta_proteinas: i.meta_proteinas || undefined, meta_carboidratos: i.meta_carboidratos || undefined, meta_gorduras: i.meta_gorduras || undefined, day_of_week: i.day_of_week ?? undefined, is_primary: i.is_primary !== false })),
+        items: pdfItems.map(i => ({ 
+          mealType: i.tipo_refeicao || "Refeição", 
+          title: i.title || "Item", 
+          description: i.description || undefined, 
+          meta_calorias: i.meta_calorias || undefined, 
+          meta_proteinas: i.meta_proteinas || undefined, 
+          meta_carboidratos: i.meta_carboidratos || undefined, 
+          meta_gorduras: i.meta_gorduras || undefined, 
+          day_of_week: i.day_of_week ?? undefined, 
+          is_primary: i.is_primary !== false,
+          clinical_mass_g: (i as any).clinical_mass_g || null,
+          display_quantity: (i as any).display_quantity || null,
+          display_unit: (i as any).display_unit || null,
+          visual_image_url: i.image_url || undefined,
+          editor_version: (i as any).editor_version || 'v3'
+        })),
         targetCalories: plan.total_meta_calorias || undefined,
       };
       setPreviewData(data); setShowPreview(true);
