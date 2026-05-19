@@ -863,9 +863,9 @@ export default function AdminDashboard() {
     // Fetch patient roles
     const { data: patRoles } = await supabase.from("user_roles").select("user_id").eq("role", "patient");
 
-    // Fetch suspended users
-    const { data: suspendedRoles } = await supabase.from("user_roles").select("user_id").eq("role", "suspended" as any);
-    const suspendedIds = new Set(suspendedRoles?.map(r => r.user_id) || []);
+    // Fetch suspended users (currently using a placeholder logic since 'suspended' is not an enum value yet)
+    // We'll just set it to an empty set to avoid 400 errors until the enum is updated
+    const suspendedIds = new Set<string>();
 
     // Fetch nutritionist profiles
     const profs: ProfessionalInfo[] = [];

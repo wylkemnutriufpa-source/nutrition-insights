@@ -30,7 +30,7 @@ const AdminBookingSettings = lazy(() => import("../pages/AdminBookingSettings"))
 const AdminSubscriptionMonitor = lazy(() => import("../pages/AdminSubscriptionMonitor"));
 const AuditLogs = lazy(() => import("../pages/admin/AuditLogs"));
 const ClinicalRulesAdmin = lazy(() => import("../pages/admin/ClinicalRules"));
-const TemplateNutritionAudit = lazy(() => import("../pages/admin/TemplateNutritionAudit.tsx"));
+const TemplateNutritionAudit = lazy(() => import("../pages/admin/TemplateNutritionAudit"));
 const AdminExperienceModeAudit = lazy(() => import("../pages/admin/AdminExperienceModeAudit.tsx"));
 const AdminPlanLoadingDiagnostics = lazy(() => import("../pages/admin/AdminPlanLoadingDiagnostics.tsx"));
 const MealVisualLibraryAdmin = lazyDebug(() => import("../pages/admin/MealVisualLibraryAdmin.tsx"), "Biblioteca Visual Admin");
