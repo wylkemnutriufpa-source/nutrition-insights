@@ -706,7 +706,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
                     const subPortion = formatSubstitutionDetail(sub, sub); // Use sub's own detail
                     return `
                       <div style="background: #fff; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 10px;">
-                        <span style="font-weight: 600; color: #334155;">${escapeHtml(sub.title)}</span>
+                        <span style="font-weight: 600; color: #334155;">${escapeHtml(cleanTitle(sub.title))}</span>
                         ${subPortion ? `<span style="color: #94a3b8; font-size: 9px;"> (${escapeHtml(subPortion)})</span>` : ""}
                       </div>
                     `;
