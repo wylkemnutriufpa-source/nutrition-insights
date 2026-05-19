@@ -120,6 +120,8 @@ export const AppRoutes = () => {
       <Route path="/program/:programId" element={<Suspense fallback={<PageLoader />}><PublicProgram /></Suspense>} />
       <Route path="/quick-link/:nutriId" element={<Suspense fallback={<PageLoader />}><QuickLink /></Suspense>} />
       
+      <Route path="/view-plan/:userId/:fileName" element={<Suspense fallback={<PageLoader />}><ViewPlanProxy /></Suspense>} />
+      
       {/* Miscellaneous / Intelligence */}
       <Route path="/curiosidades" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Curiosidades /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/global-tips" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><GlobalTips /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
