@@ -287,8 +287,13 @@ function buildPremiumCSS(): string {
       @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
       @page {
-        margin: 15mm 10mm;
+        margin: 0;
         size: A4;
+      }
+
+      .print-container {
+        padding: 15mm 12mm;
+        min-height: 100vh;
       }
 
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -310,9 +315,9 @@ function buildPremiumCSS(): string {
 
       /* Estilo Premium para o Header */
       .premium-header {
-        background: linear-gradient(145deg, #020617 0%, #0f172a 100%);
-        padding: 45px 50px;
-        margin-bottom: 30px;
+        background: #0f172a;
+        padding: 35px 40px;
+        margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -726,6 +731,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   ${buildPremiumCSS()}
 </head>
 <body>
+  <div class="print-container">
   <div class="premium-header">
     <div class="logo-text">
       <span class="logo-fit">Fit</span><span class="logo-journey">Journey</span>
@@ -815,6 +821,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       <div style="font-size: 8px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Documento Confidencial • Direitos Reservados</div>
     </div>
     <div style="margin-bottom: 40px;"></div>
+  </div>
 </body></html>`;
 
   return html;
