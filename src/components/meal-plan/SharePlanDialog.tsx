@@ -77,7 +77,7 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
       }
 
       if (mode === "link") {
-        const success = await copyToClipboard(url);
+        const success = await copyToClipboard(finalUrl);
         if (success) {
           setCopied(true);
           setClipboardError(false);
