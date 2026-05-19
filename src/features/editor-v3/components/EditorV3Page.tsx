@@ -149,21 +149,16 @@ export default function EditorV3Page() {
           const allNewMeals: any[] = [];
           
           // Detectar se o snapshot já tem múltiplos dias
-          const snapshotDays = [...new Set(snapshot.meals.map((m: any) => m.day_of_week || 1))];
+          const snapshotDays = snapshot.days || (snapshot.meals ? [{ day_of_week: 1, meals: snapshot.meals }] : []);
+          const dayNumbersInSnapshot = snapshotDays.map((d: any) => d.day_of_week || 1);
           const hasMultiDaySnapshot = snapshotDays.length > 1;
 
           for (const day of days) {
-            // Se o snapshot tem múltiplos dias, tentamos pegar o dia correspondente ou ciclar
-            let mealsToUse = snapshot.meals;
+            let mealsToUse = snapshotMeals;
             if (hasMultiDaySnapshot) {
-              // Tenta achar meals para o dia específico, senão cicla usando o índice
-              const targetDayInSnapshot = snapshotDays.includes(day) ? day : snapshotDays[day % snapshotDays.length];
-              mealsToUse = snapshot.meals.filter((m: any) => (m.day_of_week || 1) === targetDayInSnapshot);
-              
-              // Se não achou nada (snapshot incompleto), pega o primeiro dia disponível
-              if (mealsToUse.length === 0) {
-                mealsToUse = snapshot.meals.filter((m: any) => (m.day_of_week || 1) === snapshotDays[0]);
-              }
+              const targetDayInSnapshot = dayNumbersInSnapshot.includes(day) ? day : dayNumbersInSnapshot[day % dayNumbersInSnapshot.length];
+              const dayObj = snapshotDays.find((d: any) => (d.day_of_week || 1) === targetDayInSnapshot);
+              mealsToUse = dayObj?.meals || snapshotMeals;
             }
 
             const freshMeals = mealsToUse.map((meal: any, mealIdx: number) => {
