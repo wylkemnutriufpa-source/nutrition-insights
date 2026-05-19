@@ -46,15 +46,25 @@ export const PlanResult = ({ plan }: { plan: DailyPlan }) => {
               </div>
             </div>
 
-            <div className="pl-11 space-y-2">
-              {meal.items.map((item, i) => (
-                <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-white/5 last:border-0">
-                  <span className="text-slate-300">Item #{item.foodId}</span>
-                  <span className="font-mono text-slate-500 uppercase tracking-tighter">
-                    {item.quantity} {item.foodId.startsWith('m') ? 'Unid' : 'gramas'}
-                  </span>
-                </div>
-              ))}
+            <div className="pl-11 space-y-3">
+              {meal.items.map((item, i) => {
+                const food = MealBuilder.getFood(item.foodId);
+                return (
+                  <div key={i} className="flex items-center gap-3 text-xs py-2 border-b border-white/5 last:border-0">
+                    {food.imageUrl && (
+                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700/50">
+                        <img src={food.imageUrl} alt={food.name} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1 flex justify-between items-center">
+                      <span className="text-slate-200 font-medium">{food.name}</span>
+                      <span className="font-mono text-slate-500 uppercase tracking-tighter">
+                        {item.quantity} {food.category === 'marmita' ? 'Unid' : 'g'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
