@@ -174,8 +174,9 @@ function NutritionistDashboardContent() {
   const fetchDashboard = useCallback(async () => {
     const userId = userIdRef.current;
     if (!userId) return;
-    if (fetchingRef.current) return; // prevent concurrent/loop calls
+    if (fetchingRef.current) return;
     fetchingRef.current = true;
+    setLoading(true);
 
     try {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
