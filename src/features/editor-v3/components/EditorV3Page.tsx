@@ -44,6 +44,8 @@ import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { normalizeSnapshotToV3 } from '../utils/normalization';
 import { BookMarked } from 'lucide-react';
 import { SaveCustomTemplateModal } from './SaveCustomTemplateModal';
+import { SectionalErrorBoundary } from '@/components/common/SectionalErrorBoundary';
+
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -264,7 +266,7 @@ export default function EditorV3Page() {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_id', effectivePatientId)
+          .or(`user_id.eq.${effectivePatientId},id.eq.${effectivePatientId}`)
           .maybeSingle();
         if (profile) setPatientData(profile);
       }
@@ -405,6 +407,7 @@ export default function EditorV3Page() {
   return (
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white font-sans overflow-hidden">
+        <SectionalErrorBoundary name="EditorV3Header">
         {/* Compact Clinical Header */}
         <header className="px-6 py-3 bg-neutral-900 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-xl backdrop-blur-3xl">
           <div className="flex items-center gap-6">
@@ -422,7 +425,7 @@ export default function EditorV3Page() {
                 <Button variant="outline" className="w-[220px] h-9 bg-white/5 border-white/10 text-[10px] font-black uppercase tracking-widest rounded-lg justify-between hover:border-emerald-500/30">
                   <div className="flex items-center gap-2">
                     <User className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="truncate">{effectivePatientId ? availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name : "Selecionar Paciente"}</span>
+                    <span className="truncate">{effectivePatientId ? (patientData?.full_name || availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name || "Carregando...") : "Selecionar Paciente"}</span>
                   </div>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-30" />
                 </Button>
@@ -598,6 +601,7 @@ export default function EditorV3Page() {
             </div>
           </ScrollArea>
         </main>
+        </SectionalErrorBoundary>
       </div>
     </DashboardLayout>
   );
