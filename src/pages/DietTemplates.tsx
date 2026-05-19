@@ -306,26 +306,38 @@ export default function DietTemplates() {
         base_calories: t.kcal_profiles?.[0] || 0,
         macro_ratio: { protein: 30, carbs: 40, fat: 30 }, // Fallback macro ratio
         meals: (() => {
-          // Extract meals from the first available kcal profile for preview
-          const firstKcal = t.kcal_profiles?.[0];
-          if (firstKcal && t.plan_snapshot?.[String(firstKcal)]) {
-            const profile = t.plan_snapshot[String(firstKcal)];
-            const day = profile.days?.[0];
-            if (day && Array.isArray(day.meals)) {
-              return day.meals.map((m: any) => ({
-                tipo_refeicao: m.name,
-                title: m.name,
-                foods: (m.items || []).map((i: any) => ({
-                  name: i.name,
-                  portion: i.quantity_display || "",
-                  calories: i.kcal || 0,
-                  protein: i.protein || 0,
-                  carbs: i.carbs || 0,
-                  fat: i.fat || 0,
-                  substitutions: (i.substitutions || []).map((s: any) => s.name || s.title).filter(Boolean)
-                }))
-              }));
-            }
+          // 🛡️ SOBERANIA V3: Extração de refeições robusta para preview no catálogo
+          if (!t.plan_snapshot) return [];
+          
+          // Tentar encontrar o primeiro perfil calórico disponível
+          const profileKeys = Object.keys(t.plan_snapshot);
+          if (profileKeys.length === 0) return [];
+          
+          const firstKcal = t.kcal_profiles?.[0] || profileKeys[0];
+          const profile = t.plan_snapshot[String(firstKcal)] || t.plan_snapshot[profileKeys[0]];
+          
+          if (!profile) return [];
+          
+          // Tentar pegar do primeiro dia ou do array flat de meals
+          const day = profile.days?.[0];
+          const mealsSource = day?.meals || profile.meals;
+          
+          if (Array.isArray(mealsSource)) {
+            return mealsSource.map((m: any) => ({
+              tipo_refeicao: m.name || m.title || "Refeição",
+              title: m.name || m.title || "Refeição",
+              foods: (m.items || []).map((i: any) => ({
+                name: i.name || i.title || "Alimento",
+                portion: i.quantity_display || i.display_quantity || "",
+                calories: i.kcal || i.calories || 0,
+                protein: i.protein || i.protein_g || 0,
+                carbs: i.carbs || i.carbs_g || 0,
+                fat: i.fat || i.fat_g || 0,
+                substitutions: Array.isArray(i.substitutions) 
+                  ? i.substitutions.map((s: any) => s.name || s.title).filter(Boolean)
+                  : []
+              }))
+            }));
           }
           return [];
         })(),
