@@ -6,29 +6,29 @@ const genId = () => crypto.randomUUID();
 // Dicionário de alimentos base para reuso (garante itens detalhados com macros e substituições)
 const FOODS = {
   frango: { title: 'Frango Grelhado', qty: '1 filé grande', mass: 150, m: {kcal: 240, protein_g: 45, carbs_g: 0, fat_g: 6}, img: `${BASE_IMG}/frango-grelhado.jpg` },
-  tilapia: { title: 'Filé de Tilápia', qty: '1 filé', mass: 150, m: {kcal: 200, protein_g: 40, carbs_g: 0, fat_g: 4}, img: `${BASE_IMG}/tilapia-grelhada.jpg` },
-  patinho: { title: 'Patinho Moído', qty: '4 colheres', mass: 150, m: {kcal: 300, protein_g: 40, carbs_g: 0, fat_g: 12}, img: `${BASE_IMG}/patinho-moido.jpg` },
-  salmao: { title: 'Salmão Assado', qty: '1 posta', mass: 150, m: {kcal: 350, protein_g: 35, carbs_g: 0, fat_g: 22}, img: `${BASE_IMG}/salmao-grelhado.jpg` },
-  ovo: { title: 'Ovos Mexidos', qty: '3 ovos', mass: 150, m: {kcal: 220, protein_g: 18, carbs_g: 1, fat_g: 15}, img: `${BASE_IMG}/ovo-mexido.jpg` },
+  tilapia: { title: 'Filé de Tilápia', qty: '1 filé', mass: 150, m: {kcal: 200, protein_g: 40, carbs_g: 0, fat_g: 4}, img: `${BASE_IMG}/file-de-tilapia.jpg` },
+  patinho: { title: 'Patinho Moído', qty: '4 colheres', mass: 150, m: {kcal: 300, protein_g: 40, carbs_g: 0, fat_g: 12}, img: `${BASE_IMG}/macarrao-com-carne-moida.jpg` },
+  salmao: { title: 'Salmão Assado', qty: '1 posta', mass: 150, m: {kcal: 350, protein_g: 35, carbs_g: 0, fat_g: 22}, img: `${BASE_IMG}/peixe-com-legumes.jpg` },
+  ovo: { title: 'Ovos Mexidos', qty: '3 ovos', mass: 150, m: {kcal: 220, protein_g: 18, carbs_g: 1, fat_g: 15}, img: `${BASE_IMG}/ovos-mexidos.jpg` },
   
-  arroz: { title: 'Arroz Branco', qty: '4 colheres', mass: 100, m: {kcal: 130, protein_g: 2, carbs_g: 28, fat_g: 0} },
-  arrozInt: { title: 'Arroz Integral', qty: '4 colheres', mass: 100, m: {kcal: 120, protein_g: 3, carbs_g: 25, fat_g: 1} },
-  feijao: { title: 'Feijão Carioca', qty: '1 concha', mass: 100, m: {kcal: 70, protein_g: 5, carbs_g: 13, fat_g: 0} },
-  lentilha: { title: 'Lentilha Cozida', qty: '1 concha', mass: 100, m: {kcal: 80, protein_g: 6, carbs_g: 14, fat_g: 0} },
-  macarrao: { title: 'Macarrão', qty: '1 escumadeira', mass: 100, m: {kcal: 140, protein_g: 4, carbs_g: 28, fat_g: 1} },
-  batata: { title: 'Batata Doce', qty: '1 pedaço', mass: 100, m: {kcal: 90, protein_g: 1, carbs_g: 20, fat_g: 0} },
+  arroz: { title: 'Arroz Branco', qty: '4 colheres', mass: 100, m: {kcal: 130, protein_g: 2, carbs_g: 28, fat_g: 0}, img: `${BASE_IMG}/arroz-branco.jpg` },
+  arrozInt: { title: 'Arroz Integral', qty: '4 colheres', mass: 100, m: {kcal: 120, protein_g: 3, carbs_g: 25, fat_g: 1}, img: `${BASE_IMG}/arroz-integral.jpg` },
+  feijao: { title: 'Feijão Carioca', qty: '1 concha', mass: 100, m: {kcal: 70, protein_g: 5, carbs_g: 13, fat_g: 0}, img: `${BASE_IMG}/feijao.jpg` },
+  lentilha: { title: 'Lentilha Cozida', qty: '1 concha', mass: 100, m: {kcal: 80, protein_g: 6, carbs_g: 14, fat_g: 0}, img: `${BASE_IMG}/feijao.jpg` },
+  macarrao: { title: 'Macarrão', qty: '1 escumadeira', mass: 100, m: {kcal: 140, protein_g: 4, carbs_g: 28, fat_g: 1}, img: `${BASE_IMG}/macarrao-com-carne-moida.jpg` },
+  batata: { title: 'Batata Doce', qty: '1 pedaço', mass: 100, m: {kcal: 90, protein_g: 1, carbs_g: 20, fat_g: 0}, img: `${BASE_IMG}/frango-com-batata-doce.jpg` },
   
-  salada: { title: 'Salada Verde', qty: '1 prato', mass: 100, m: {kcal: 20, protein_g: 1, carbs_g: 4, fat_g: 0} },
-  legumes: { title: 'Legumes no Vapor', qty: '1 escumadeira', mass: 100, m: {kcal: 40, protein_g: 2, carbs_g: 8, fat_g: 0} },
+  salada: { title: 'Salada Verde', qty: '1 prato', mass: 100, m: {kcal: 20, protein_g: 1, carbs_g: 4, fat_g: 0}, img: `${BASE_IMG}/salada-completa.jpg` },
+  legumes: { title: 'Legumes no Vapor', qty: '1 escumadeira', mass: 100, m: {kcal: 40, protein_g: 2, carbs_g: 8, fat_g: 0}, img: `${BASE_IMG}/peixe-com-legumes.jpg` },
   
   pao: { title: 'Pão Integral', qty: '2 fatias', mass: 50, m: {kcal: 120, protein_g: 4, carbs_g: 24, fat_g: 1}, img: `${BASE_IMG}/pao-integral.jpg` },
   tapioca: { title: 'Tapioca', qty: '3 colheres', mass: 60, m: {kcal: 150, protein_g: 0, carbs_g: 36, fat_g: 0}, img: `${BASE_IMG}/crepioca.jpg` },
   
   iogurte: { title: 'Iogurte Natural', qty: '1 pote', mass: 170, m: {kcal: 100, protein_g: 7, carbs_g: 10, fat_g: 3}, img: `${BASE_IMG}/iogurte-com-frutas.jpg` },
-  whey: { title: 'Whey Protein', qty: '1 scoop', mass: 30, m: {kcal: 120, protein_g: 24, carbs_g: 3, fat_g: 1}, img: `${BASE_IMG}/suco-verde.jpg` },
-  aveia: { title: 'Aveia em Flocos', qty: '2 colheres', mass: 30, m: {kcal: 110, protein_g: 4, carbs_g: 17, fat_g: 2} },
-  banana: { title: 'Banana Prata', qty: '1 unidade', mass: 70, m: {kcal: 70, protein_g: 1, carbs_g: 18, fat_g: 0} },
-  maca: { title: 'Maçã', qty: '1 unidade', mass: 100, m: {kcal: 50, protein_g: 0, carbs_g: 13, fat_g: 0} },
+  whey: { title: 'Whey Protein', qty: '1 scoop', mass: 30, m: {kcal: 120, protein_g: 24, carbs_g: 3, fat_g: 1}, img: `${BASE_IMG}/vitamina-de-fruta.jpg` },
+  aveia: { title: 'Aveia em Flocos', qty: '2 colheres', mass: 30, m: {kcal: 110, protein_g: 4, carbs_g: 17, fat_g: 2}, img: `${BASE_IMG}/mamao-com-aveia.jpg` },
+  banana: { title: 'Banana Prata', qty: '1 unidade', mass: 70, m: {kcal: 70, protein_g: 1, carbs_g: 18, fat_g: 0}, img: `${BASE_IMG}/acai-com-aveia.jpg` },
+  maca: { title: 'Maçã', qty: '1 unidade', mass: 100, m: {kcal: 50, protein_g: 0, carbs_g: 13, fat_g: 0}, img: `${BASE_IMG}/maca.jpg` },
   sopa: { title: 'Sopa de Legumes', qty: '1 prato', mass: 350, m: {kcal: 150, protein_g: 5, carbs_g: 25, fat_g: 3}, img: `${BASE_IMG}/sopa-de-legumes.jpg` },
   castanha: { title: 'Mix de Castanhas', qty: '1 punhado', mass: 30, m: {kcal: 180, protein_g: 4, carbs_g: 6, fat_g: 16}, img: `${BASE_IMG}/mix-castanhas.jpg` }
 };
