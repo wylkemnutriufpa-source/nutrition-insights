@@ -72,14 +72,16 @@ export async function ensurePlanTotals(
   current: { total_calories?: number | null } | null | undefined,
 ): Promise<PlanTotals> {
   const calories = Number(current?.total_calories) || 0;
-  if (calories > 0) {
+  const protein = Number((current as any)?.total_protein) || 0;
+  
+  if (calories > 0 && protein > 0) {
     return {
       success: true,
       totals_status: "ok",
       total_calories: calories,
-      total_protein: 0,
-      total_carbs: 0,
-      total_fat: 0,
+      total_protein: protein,
+      total_carbs: Number((current as any)?.total_carbs) || 0,
+      total_fat: Number((current as any)?.total_fat) || 0,
     };
   }
   return calculatePlanTotals(planId);
