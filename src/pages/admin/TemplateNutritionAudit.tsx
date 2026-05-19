@@ -270,66 +270,79 @@ function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
   const triggered: { key: RuleKey; message: string }[] = [];
 
   if (isV3) {
-    // V3 logic: iterate through plan_snapshot (multiple calorie profiles)
     const snapshot = t.plan_snapshot || {};
     const profiles = Object.keys(snapshot);
     
     if (profiles.length === 0) {
       triggered.push({ key: "noItems", message: "V3: Snapshot de plano vazio (sem perfis de kcal)" });
     } else {
-      // Audit the first profile found
-      const firstProfile = snapshot[profiles[0]];
-      const days = firstProfile.days || [];
-      
-      if (days.length === 0) {
-        triggered.push({ key: "noItems", message: "V3: Nenhum dia configurado no snapshot" });
-      } else {
-        days.forEach((day: any) => {
-          const meals = day.meals || [];
-          meals.forEach((meal: any) => {
-            const mealItems = meal.items || [];
-            itemsTotal += mealItems.length;
-            mealItems.forEach((item: any) => {
-              if (isItemBroken({
-                name: item.name || item.title,
-                kcal: item.kcal,
-                protein: item.protein,
-                carbs: item.carbs,
-                fat: item.fat
-              })) {
-                itemsBroken++;
-              }
+      // Audit across all profiles to be sure
+      profiles.forEach(profileKey => {
+        const profile = snapshot[profileKey];
+        const days = profile?.days || [];
+        
+        if (days.length === 0) {
+          triggered.push({ key: "noItems", message: `V3: Perfil ${profileKey} sem dias configurados` });
+        } else {
+          days.forEach((day: any) => {
+            const meals = day.meals || [];
+            meals.forEach((meal: any) => {
+              const mealItems = meal.items || [];
+              itemsTotal += mealItems.length;
+              mealItems.forEach((item: any) => {
+                if (isItemBroken({
+                  name: item.name || item.title,
+                  kcal: item.kcal,
+                  protein: item.protein,
+                  carbs: item.carbs,
+                  fat: item.fat
+                })) {
+                  itemsBroken++;
+                }
+              });
             });
           });
-        });
-      }
+        }
+      });
     }
   } else if (isLegacyDiet) {
-    // Legacy V2 logic
     const meals = Array.isArray((t as any).meals) ? (t as any).meals : [];
     itemsTotal = meals.reduce((acc: number, m: any) => acc + (Array.isArray(m.blocks) ? m.blocks.length : (Array.isArray(m.foods) ? m.foods.length : 0)), 0);
-    // ...
+    
+    meals.forEach((meal: any) => {
+      const title = (meal.title || "").toLowerCase();
+      const isLunch = title.includes("almoço") || title.includes("jantar") || title.includes("Almoço") || title.includes("Jantar");
+      const allOptions = (meal.blocks || []).flatMap((b: any) => b.options || []);
+      const legacySubs = (meal.foods || []).flatMap((f: any) => f.substitutions || []);
+      
+      allOptions.forEach((opt: any) => {
+        if (isLunch && (opt.name || "").toLowerCase().includes("pão") && !opt.name.toLowerCase().includes("frango")) {
+          triggered.push({ key: "incoherentSubstitutions", message: `Refeição '${meal.title}': Opção '${opt.name}' parece incoerente.` });
+        }
+      });
+    });
   } else {
-    // Nutritionist simple template
     const items = Array.isArray(t.foods_structure) ? t.foods_structure : [];
     itemsTotal = items.length;
     itemsBroken = items.filter(isItemBroken).length;
   }
 
-  if (itemsTotal === 0 && triggered.length === 0) triggered.push({ key: "noItems", message: "Template sem itens ou blocos configurados" });
+  if (itemsTotal === 0 && triggered.length === 0) {
+    triggered.push({ key: "noItems", message: "Template sem itens ou blocos configurados" });
+  }
   
-  // kcal_base check
   const kcal = isV3 ? (t as any).kcal_profiles?.[0] : (isLegacyDiet ? (t as any).base_calories : t.kcal_base);
-  if (isMissingNumber(kcal) || Number(kcal) <= 0)
+  if (isMissingNumber(kcal) || Number(kcal) <= 0) {
     triggered.push({ key: "kcalBaseMissing", message: "Caloria base ausente ou zero (causa NaN no UI)" });
+  }
 
-  if (itemsBroken > 0)
+  if (itemsBroken > 0) {
     triggered.push({
       key: "itemsBroken",
       message: `${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`,
     });
+  }
 
-  // Apply user-configured severity, drop ignored.
   const issues = triggered
     .map((t) => ({ ...t, severity: config[t.key] || "warning" }))
     .filter((i) => i.severity !== "ignore");
