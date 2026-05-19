@@ -117,7 +117,8 @@ export const useEditorState = create<EditorState>()(
             instanceId: crypto.randomUUID(),
             quantity,
             clinical_mass_g: quantity,
-            substitutions: food.substitutions || food.ingredients || [],
+            substitutions: food.substitutions || [],
+            imageUrl: food.imageUrl || (food as any).image_url || null,
             ...macros
           };
 
