@@ -109,7 +109,7 @@ function NutritionistDashboardContent() {
   const { user } = useAuth();
   const { minMode, isBasic } = useExperienceMode();
   const navigate = useNavigate();
-  const [authLoading, setLoading] = useState(false);
+  const [internalLoading, setLoading] = useState(false);
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
   const [programCount, setProgramCount] = useState(0);
