@@ -198,8 +198,17 @@ export default function MealPlanEditorV2() {
 
       // Calculate current daily averages to use if goal is missing or suspicious
       const weekKcal = store.items.reduce((s, i) => s + (i.meta_calorias || 0), 0);
+      const weekProtein = store.items.reduce((s, i) => s + (i.meta_proteinas || 0), 0);
+      const weekCarbs = store.items.reduce((s, i) => s + (i.meta_carboidratos || 0), 0);
+      const weekFat = store.items.reduce((s, i) => s + (i.meta_gorduras || 0), 0);
+      
       const daysWithItems = new Set(store.items.map((i) => i.day_of_week)).size;
-      const avgKcal = daysWithItems > 0 ? Math.round(weekKcal / daysWithItems) : 0;
+      const divisor = daysWithItems > 0 ? daysWithItems : 1;
+      
+      const avgKcal = Math.round(weekKcal / divisor);
+      const avgProtein = Math.round(weekProtein / divisor);
+      const avgCarbs = Math.round(weekCarbs / divisor);
+      const avgFat = Math.round(weekFat / divisor);
 
       // Prepare data for the premium export engine
       const pdfData: PremiumMealPlanPDFData = {
