@@ -182,15 +182,23 @@ function NutritionistDashboardContent() {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-      const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, programsListRes, sessionsRes] = await Promise.all([
+      const [
+        patientsRes, 
+        protocolsRes, 
+        programsRes, 
+        plansRes, 
+        aptsRes, 
+        chatsRes, 
+        pendingRes, 
+        sessionsRes
+      ] = await Promise.all([
         supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", userId).eq("status", "active"),
         supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", userId),
-        supabase.from("programs").select("id", { count: "exact" }).eq("created_by", userId).eq("is_active", true),
+        supabase.from("programs").select("id, title", { count: "exact" }).eq("created_by", userId).eq("is_active", true),
         supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", userId).eq("is_active", true),
         supabase.from("patient_appointments").select("id", { count: "exact" }).eq("nutritionist_id", userId).gte("appointment_date", todayStart.toISOString()).lte("appointment_date", todayEnd.toISOString()),
         supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
         supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", userId).eq("status", "pending"),
-        supabase.from("programs").select("id, title").eq("created_by", userId).eq("is_active", true).limit(5),
         supabase.from("in_office_sessions" as any).select("*").eq("nutritionist_id", userId).is("completed_at", null).order("created_at", { ascending: false }),
       ]);
 
