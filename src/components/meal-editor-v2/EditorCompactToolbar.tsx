@@ -173,6 +173,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
         display_quantity: (i as any).display_quantity,
         display_unit: (i as any).display_unit,
         clinical_mass_g: (i as any).clinical_mass_g,
+        editor_version: (i as any).editor_version || 'v3',
       })),
       targetCalories: plan?.total_meta_calorias || undefined,
       targetProtein: plan?.total_meta_proteinas || undefined,
