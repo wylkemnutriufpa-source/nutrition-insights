@@ -11,10 +11,7 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
   if (!usesLegacyConvite) return url;
 
   const message = `[invitation:guard] URL não-canônica detectada (${url}). Forçando /cadastro?code=...`;
-  if (import.meta.env.DEV) {
-    throw new Error(message);
-  }
-  console.error(message);
+  console.warn(message);
   
   return `${PRODUCTION_URL}/cadastro?code=${encodeURIComponent(code)}`;
 };
