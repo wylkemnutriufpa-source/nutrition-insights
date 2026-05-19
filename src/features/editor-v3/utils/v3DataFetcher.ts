@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Food, MealTemplate, V3DietTemplate } from "../types/types";
 import { DietTemplateService } from "../services/dietTemplateService";
@@ -6,7 +5,8 @@ import { DietTemplateService } from "../services/dietTemplateService";
 export const searchV3LibraryItems = async (
   query: string,
   category?: string,
-  mealSlot?: string
+  mealSlot?: string,
+  useLegacyLibrary = true
 ): Promise<any[]> => {
   let queryBuilder = supabase
     .from("v3_library_items")
@@ -44,24 +44,54 @@ export const searchV3LibraryItems = async (
     queryBuilder = queryBuilder.or(`title.ilike.%${query}%,slug.ilike.%${query}%,category.ilike.%${query}%`);
   }
 
-  const { data, error } = await queryBuilder.limit(50);
+  const { data: v3Data, error: v3Error } = await queryBuilder.limit(40);
 
-  if (error) {
-    console.error("Error searching V3 Library:", error);
-    return [];
+  if (v3Error) {
+    console.error("Error searching V3 Library:", v3Error);
   }
 
-  const items = (data || []).map((item: any) => {
+  // 🛡️ INTEGRAÇÃO LEGADA: Buscar também no banco de alimentos principal (TACO/IBGE) e banco de refeições
+  let legacyData: any[] = [];
+  if (useLegacyLibrary && (query.length >= 2 || !query)) {
+    try {
+      const [{ data: foodData }, { data: mealData }] = await Promise.all([
+        supabase.from("food_database")
+          .select("*")
+          .or(`name.ilike.%${query}%,category.ilike.%${query}%`)
+          .limit(30),
+        supabase.from("meal_visual_library")
+          .select("*")
+          .or(`name.ilike.%${query}%,slug.ilike.%${query}%`)
+          .limit(20)
+      ]);
+
+      legacyData = [
+        ...(foodData || []).map(f => ({ ...f, type: 'food' })),
+        ...(mealData || []).map(m => ({ ...m, type: 'meal' }))
+      ];
+    } catch (err) {
+      console.warn("Legacy search failed:", err);
+    }
+  }
+
+  const combinedData = [...(v3Data || []), ...legacyData];
+
+  const items = combinedData.map((item: any) => {
     // Busca imagem real no banco ou nas relações de imagens
-    const imageUrl = item.imageUrl || (item.images && item.images.length > 0 ? item.images[0].image_url : null);
+    let imageUrl = item.imageUrl || item.image_url || (item.images && item.images.length > 0 ? item.images[0].image_asset || item.images[0].image_url : null);
+    
+    // Fallback para nomes de arquivos no storage se for do banco de refeições legado
+    if (!imageUrl && item.slug && item.type === 'meal') {
+      imageUrl = `https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/${item.slug}.jpg`;
+    }
     
     return {
       ...item,
       name: item.title || item.name || "Alimento", 
-      kcal: item.kcal_base || item.kcal_100g || item.kcal || 0,
-      protein: item.protein_base || item.protein_100g || item.protein || 0,
-      carbs: item.carbs_base || item.carb_100g || item.carbs || 0,
-      fat: item.fats_base || item.fat_100g || item.fat || 0,
+      kcal: item.kcal_base || item.kcal_100g || item.kcal || item.calories || 0,
+      protein: item.protein_base || item.protein_100g || item.protein || item.protein_g || 0,
+      carbs: item.carbs_base || item.carb_100g || item.carbs || item.carbs_g || 0,
+      fat: item.fats_base || item.fat_100g || item.fat || item.fat_g || 0,
       imageUrl
     };
   });
@@ -91,7 +121,6 @@ export const searchV3LibraryItems = async (
 
   return itemsWithEquivalents;
 };
-
 
 export const getV3Templates = async (): Promise<V3DietTemplate[]> => {
   return await DietTemplateService.listTemplates();
