@@ -1,6 +1,7 @@
 import React from 'react';
 import { DailyPlan } from '../types';
 import { Utensils, Zap, BarChart3, Clock } from 'lucide-react';
+import { MealBuilder } from '../core/meal-builder';
 
 export const PlanResult = ({ plan }: { plan: DailyPlan }) => {
   return (
