@@ -76,13 +76,12 @@ export const planPersistenceService = {
     return !!result;
   },
 
-  /**
+   /**
    * COMPILADOR DE VISUAIS SOBERANO
    * Único ponto de verdade para imagens durante a compilação do snapshot.
    * Proibido fallback dinâmico ou inferência semântica no Patient App.
    */
   async resolveVisual(item: any): Promise<{ image_url: string; is_placeholder: boolean; library_item_id?: string }> {
-    // 🛡️ PRIORIDADE 1: Se o item já tem uma imagem explícita e válida
     const existingUrl = item.imageUrl || item.image_url || item.visual?.image_url;
     if (existingUrl && existingUrl.startsWith('http') && !existingUrl.includes('placeholder')) {
       return {
@@ -92,7 +91,6 @@ export const planPersistenceService = {
       };
     }
 
-    // 🛡️ PRIORIDADE 2: Vínculo explícito por nome na meal_visual_library (Compilação)
     const foodName = (item.name || item.title || "").trim();
     if (foodName) {
       const { data: libMatch } = await supabase
@@ -111,8 +109,6 @@ export const planPersistenceService = {
       }
     }
 
-    // 🛡️ PRIORIDADE 3: Fallback SOBERANO (Placeholder Oficial)
-    // Se não há imagem vinculada, usamos o placeholder. NUNCA adivinhar no App.
     return {
       image_url: OFFICIAL_PLACEHOLDER,
       is_placeholder: true,
