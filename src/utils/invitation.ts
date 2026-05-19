@@ -24,7 +24,9 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
  * @returns A URL completa.
  */
 export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = false) => {
-  const origin = PRODUCTION_URL;
+  // Se forceProduction for true (ex: envio real), usa PRODUCTION_URL.
+  // Senão, usa o origin atual para permitir testes no preview.
+  const origin = forceProduction ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
   
   if (code && code.length <= 12) {
     return `${origin}/convite/${code}`;
