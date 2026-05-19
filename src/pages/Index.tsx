@@ -358,8 +358,7 @@ function NutritionistDashboardContent() {
           avgScore: limitedIds.length > 0 ? Math.round(totalScore / limitedIds.length) : 0,
         });
 
-        if (patientDataForAI.length > 0) {
-          fetchAIInsights(patientDataForAI);
+          setTimeout(() => fetchAIInsights(patientDataForAI), 1000);
         }
       }
     } finally {
