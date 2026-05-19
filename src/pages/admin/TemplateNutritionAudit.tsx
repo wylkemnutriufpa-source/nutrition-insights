@@ -1125,7 +1125,84 @@ export default function TemplateNutritionAudit() {
                     </Table>
                   </div>
                 )}
+              <TabsContent value="tests" className="mt-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg border">
+                    <div>
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <PlayCircle className="w-4 h-4 text-primary" /> Teste de Aplicação Real
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Executa o motor de aplicação de templates para a paciente Silvia Luz.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={runAutomatedBatchTest} 
+                      disabled={isRunningTests || audited.length === 0}
+                      className="gap-2"
+                    >
+                      {isRunningTests ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+                      {isRunningTests ? "Executando..." : "Testar Todos na Silvia Luz"}
+                    </Button>
+                  </div>
+
+                  <div className="rounded-md border bg-card">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Template</TableHead>
+                          <TableHead>Versão</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Detalhes/Erro</TableHead>
+                          <TableHead className="text-right">Data</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {testResults.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                              Nenhum teste registrado. Clique no botão acima para iniciar a validação real.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          testResults.map((res, i) => (
+                            <TableRow key={res.id || i}>
+                              <TableCell className="font-medium">{res.template_name}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{res.version}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {res.status === "testing" && (
+                                  <Badge variant="secondary" className="gap-1 animate-pulse">
+                                    <RefreshCw className="w-3 h-3 animate-spin" /> Testando
+                                  </Badge>
+                                )}
+                                {res.status === "success" && (
+                                  <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> Passou
+                                  </Badge>
+                                )}
+                                {res.status === "error" && (
+                                  <Badge variant="destructive" className="gap-1">
+                                    <XCircle className="w-3 h-3" /> Falhou
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="max-w-md truncate text-[10px] text-muted-foreground">
+                                {res.error_message || "—"}
+                              </TableCell>
+                              <TableCell className="text-right text-[9px] text-muted-foreground">
+                                {res.created_at ? new Date(res.created_at).toLocaleString('pt-BR') : "Agora"}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               </TabsContent>
+
             </Tabs>
           </CardContent>
         </Card>
