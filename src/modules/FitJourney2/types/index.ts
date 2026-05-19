@@ -9,6 +9,7 @@ export interface FoodItem {
   fat: number;
   tamanho_porcao: number; // em gramas ou unidades
   category: 'proteína' | 'carboidrato' | 'gordura' | 'fruta' | 'laticínio' | 'marmita';
+  imageUrl?: string;
 }
 
 export interface Meal {
