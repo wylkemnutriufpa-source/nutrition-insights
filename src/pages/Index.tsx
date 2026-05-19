@@ -355,9 +355,12 @@ function NutritionistDashboardContent() {
         }
       }
     } finally {
+      setLoading(false);
       fetchingRef.current = false;
     }
-  }, [evolutionPeriod]); // stable — uses ref for userId
+  }, [evolutionPeriod]);
+
+  if (loading) return <DashboardSkeleton />;
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
