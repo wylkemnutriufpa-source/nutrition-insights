@@ -238,9 +238,9 @@ function NutritionistDashboardContent() {
       }
 
       // Program performance
-      if (programsListRes.data && programsListRes.data.length > 0) {
+      if (programsRes.data && programsRes.data.length > 0) {
         const perfList: typeof programPerformance = [];
-        for (const prog of programsListRes.data) {
+        for (const prog of programsRes.data) {
           const { count } = await supabase.from("program_patients").select("id", { count: "exact", head: true }).eq("program_id", prog.id).eq("status", "active");
           const { data: progressData } = await supabase.from("program_patient_progress").select("adherence_score").eq("program_id", prog.id);
           const scores = (progressData || []).filter(p => p.adherence_score != null).map(p => p.adherence_score as number);
