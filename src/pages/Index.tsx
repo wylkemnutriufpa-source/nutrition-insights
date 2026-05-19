@@ -368,7 +368,25 @@ function NutritionistDashboardContent() {
     }
   }, [evolutionPeriod]);
 
-  if (loading) return <DashboardSkeleton />;
+  // Priority Initial Load: only non-blocking stats
+  useEffect(() => {
+    const fetchCoreStats = async () => {
+      if (!user?.id) return;
+      try {
+        const [patientsRes, aptsRes, pendingRes] = await Promise.all([
+          supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("status", "active"),
+          supabase.from("patient_appointments").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).gte("appointment_date", new Date().toISOString().split('T')[0]).lte("appointment_date", new Date(Date.now() + 86400000).toISOString().split('T')[0]),
+          supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("status", "pending"),
+        ]);
+        setPatientCount(patientsRes.count || 0);
+        setAppointmentsToday(aptsRes.count || 0);
+        setPendingCheckins(pendingRes.count || 0);
+      } catch (e) { console.error("Stats fail:", e); }
+    };
+    fetchCoreStats();
+  }, [user?.id]);
+
+  if (loading && patientCount === 0) return <DashboardSkeleton />;
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
