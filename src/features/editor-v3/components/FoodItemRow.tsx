@@ -13,6 +13,7 @@ interface FoodItemRowProps {
   onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
   onRequestSubstitution: () => void;
+  onRemoveSubstitution?: (idx: number) => void;
   onUpdateName?: (name: string) => void;
 }
 
