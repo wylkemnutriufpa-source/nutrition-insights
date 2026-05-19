@@ -405,6 +405,7 @@ export default function EditorV3Page() {
   return (
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-64px)] bg-neutral-950 text-white font-sans overflow-hidden">
+        <SectionalErrorBoundary componentName="EditorV3Header">
         {/* Compact Clinical Header */}
         <header className="px-6 py-3 bg-neutral-900 border-b border-white/5 flex items-center justify-between sticky top-0 z-30 shadow-xl backdrop-blur-3xl">
           <div className="flex items-center gap-6">
