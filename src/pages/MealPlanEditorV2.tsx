@@ -228,6 +228,7 @@ export default function MealPlanEditorV2() {
           day_of_week: i.day_of_week ?? undefined,
           is_primary: i.is_primary !== false,
           substitution_group_id: (i as any).substitution_group_id || null,
+          visual_image_url: i.image_url || undefined,
         })),
         targetCalories: (plan.total_meta_calorias && plan.total_meta_calorias > 50) ? plan.total_meta_calorias : avgKcal,
         targetProtein: (plan.total_meta_proteinas && plan.total_meta_proteinas > 5) ? plan.total_meta_proteinas : avgProtein,
