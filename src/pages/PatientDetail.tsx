@@ -331,7 +331,14 @@ export default function PatientDetail() {
         .from("shared-meal-plans")
         .getPublicUrl(fileName);
 
-      const message = `Olá ${profile?.full_name?.split(" ")[0]}! Aqui está seu plano alimentar FitJourney: ${publicUrl}`;
+      // 🛡️ SOBERANIA V3: Personalização de link com domínio próprio
+      const isDev = window.location.hostname.includes("lovable.app") || window.location.hostname.includes("localhost");
+      const domain = isDev ? window.location.origin : "https://www.fitjourney.com.br";
+      const urlParts = publicUrl.split("/shared-meal-plans/");
+      const relativePath = urlParts.length > 1 ? urlParts[1] : "";
+      const finalUrl = relativePath ? `${domain}/view-plan/${relativePath}` : publicUrl;
+
+      const message = `Olá ${profile?.full_name?.split(" ")[0]}! Aqui está seu plano alimentar FitJourney: ${finalUrl}`;
       
       const { buildWhatsAppUrl } = await import("@/utils/whatsappNotification");
       const whatsappUrl = buildWhatsAppUrl(profile?.phone || "", message);
