@@ -305,13 +305,43 @@ export default function DietTemplates() {
         category: t.objective || "lifestyle",
         base_calories: t.kcal_profiles?.[0] || 0,
         macro_ratio: { protein: 30, carbs: 40, fat: 30 }, // Fallback macro ratio
-        meals: [], // V3 uses plan_snapshot
+        meals: (() => {
+          // Extract meals from the first available kcal profile for preview
+          const firstKcal = t.kcal_profiles?.[0];
+          if (firstKcal && t.plan_snapshot?.[String(firstKcal)]) {
+            const profile = t.plan_snapshot[String(firstKcal)];
+            const day = profile.days?.[0];
+            if (day && Array.isArray(day.meals)) {
+              return day.meals.map((m: any) => ({
+                tipo_refeicao: m.name,
+                title: m.name,
+                foods: (m.items || []).map((i: any) => ({
+                  name: i.name,
+                  portion: i.quantity_display || "",
+                  calories: i.kcal || 0,
+                  protein: i.protein || 0,
+                  carbs: i.carbs || 0,
+                  fat: i.fat || 0,
+                  substitutions: (i.substitutions || []).map((s: any) => s.name || s.title).filter(Boolean)
+                }))
+              }));
+            }
+          }
+          return [];
+        })(),
         tags: [t.objective, "premium", "v3"].filter(Boolean),
         template_generation: 'official_v3',
         is_v3: true
       }));
 
-      setTemplates([...v3Data, ...v2Data] as DietTemplate[]);
+      const allTemplates = [...v3Data, ...v2Data] as DietTemplate[];
+      // Filter out templates that are truly empty (no meals and no snapshot)
+      const validTemplates = allTemplates.filter(t => {
+        if (t.is_v3) return !!t.plan_snapshot && Object.keys(t.plan_snapshot).length > 0;
+        return Array.isArray(t.meals) && t.meals.length > 0;
+      });
+      
+      setTemplates(validTemplates);
     } catch (e) {
       console.error("[DietTemplates] unexpected error:", e);
     }
