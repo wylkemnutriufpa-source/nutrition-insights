@@ -1111,7 +1111,7 @@ export default function Index() {
   }
 
   // Regression Guard: If still loading auth roles, show simple brain loader
-  if (loading && !showIntro) {
+  if (loading && !showIntro && !isAdmin && !isNutritionist && !isPersonal) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <BrainLoader text="Iniciando FitJourney..." />
