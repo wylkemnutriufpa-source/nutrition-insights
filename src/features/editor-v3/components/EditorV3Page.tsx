@@ -93,11 +93,19 @@ export default function EditorV3Page() {
     }
   }, [store.meals, scheduleSave]);
 
+  const loadTemplates = useCallback(async () => {
+    try {
+      const fetchedTemplates = await getV3Templates();
+      setTemplates(fetchedTemplates);
+    } catch (err) {
+      console.error('Error loading templates:', err);
+    }
+  }, []);
+
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const fetchedTemplates = await getV3Templates();
-        setTemplates(fetchedTemplates);
+        await loadTemplates();
 
         if (user?.id) {
           const { data: links } = await supabase
@@ -121,7 +129,7 @@ export default function EditorV3Page() {
       }
     }
     loadInitialData();
-  }, [user?.id]);
+  }, [user?.id, loadTemplates]);
 
   const handleSelectProfile = async (kcal: number, isWeekly: boolean) => {
     if (!selectedTemplate) return;
