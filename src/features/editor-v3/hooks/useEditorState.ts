@@ -31,6 +31,7 @@ interface EditorState {
   updateMealItemMacros: (mealId: string, itemInstanceId: string, targetValue: number, macroType: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   addSubstitutionToItem: (mealId: string, itemInstanceId: string, food: Food) => void;
   updateMealItemName: (mealId: string, itemInstanceId: string, name: string) => void;
+  removeSubstitutionFromItem: (mealId: string, itemInstanceId: string, subIndex: number) => void;
 }
 
 export const useEditorState = create<EditorState>()(
