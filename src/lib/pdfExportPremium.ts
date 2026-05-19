@@ -859,6 +859,15 @@ function openPremiumPrintWindow(html: string, title: string) {
   printWindow.onload = () => {
     setTimeout(() => {
       printWindow.print();
-    }, 500);
+    }, 1000); // Increased delay for stability
   };
+
+  // Fallback: If onload doesn't fire (some browsers/conditions)
+  setTimeout(() => {
+    if (printWindow.document.readyState === 'complete') {
+      // already printing or handled
+    } else {
+      printWindow.print();
+    }
+  }, 3000);
 }
