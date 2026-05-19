@@ -358,6 +358,7 @@ function NutritionistDashboardContent() {
           avgScore: limitedIds.length > 0 ? Math.round(totalScore / limitedIds.length) : 0,
         });
 
+        if (patientDataForAI.length > 0) {
           setTimeout(() => fetchAIInsights(patientDataForAI), 1000);
         }
       }
