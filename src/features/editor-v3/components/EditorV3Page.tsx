@@ -588,9 +588,17 @@ export default function EditorV3Page() {
 
               <Button 
                 onClick={() => {
-                  const names = ["Café da Manhã", "Lanche", "Almoço", "Lanche da Tarde", "Jantar", "Ceia"];
+                  const slots = [
+                    { name: "Café da Manhã", time: "08:00" },
+                    { name: "Lanche da Manhã", time: "10:00" },
+                    { name: "Almoço", time: "12:30" },
+                    { name: "Lanche da Tarde", time: "16:00" },
+                    { name: "Jantar", time: "19:30" },
+                    { name: "Ceia", time: "21:30" },
+                  ];
                   const currentCount = store.meals.filter(m => (m.day_of_week || 0) === activeDay).length;
-                  store.setMeals([...store.meals, { id: crypto.randomUUID(), name: names[currentCount % names.length], time: "08:00", day_of_week: activeDay, items: [] }]);
+                  const slot = slots[currentCount % slots.length];
+                  store.setMeals([...store.meals, { id: crypto.randomUUID(), name: slot.name, time: slot.time, day_of_week: activeDay, items: [] }]);
                 }}
                 variant="outline" className="w-full h-16 bg-white/[0.01] border-dashed border-white/5 hover:bg-emerald-500/[0.02] text-white/10 hover:text-emerald-400 rounded-2xl transition-all"
               >

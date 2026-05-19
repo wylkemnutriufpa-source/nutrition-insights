@@ -36,24 +36,52 @@ export const SaveCustomTemplateModal: React.FC<SaveCustomTemplateModalProps> = (
 
     setIsSaving(true);
     try {
-      // Create a snapshot mimicking the Premium Templates
-      const snapshot = {
-        "custom": {
-          days: [
-            {
-              day_of_week: 1, // Store as a generic single day plan
-              meals: currentPlanData.meals || []
-            }
-          ]
-        }
-      };
+      const allMeals = currentPlanData.meals || [];
 
-      const mealDistribution = currentPlanData.meals?.map((m: any) => ({
+      // Calcular kcal total real
+      let totalKcal = 0;
+      const day1Meals = allMeals.filter((m: any) => (m.day_of_week ?? 1) === (allMeals[0]?.day_of_week ?? 1));
+      for (const m of day1Meals) {
+        for (const it of (m.items || [])) {
+          totalKcal += (it.kcal || 0);
+        }
+      }
+      const kcalKey = Math.round(totalKcal / 100) * 100 || 2000;
+
+      // Agrupar meals por day_of_week
+      const dayMap = new Map<number, any[]>();
+      for (const m of allMeals) {
+        const d = m.day_of_week ?? 1;
+        if (!dayMap.has(d)) dayMap.set(d, []);
+        dayMap.get(d)!.push(m);
+      }
+
+      const days = Array.from(dayMap.entries()).map(([d, meals]) => ({
+        day_of_week: d,
+        meals
+      }));
+
+      // Se só tem 1 dia, replicar para 7
+      if (days.length === 1) {
+        const baseMeals = days[0].meals;
+        days.length = 0;
+        for (let d = 0; d < 7; d++) {
+          days.push({
+            day_of_week: d,
+            meals: baseMeals.map((m: any) => ({ ...m, id: crypto.randomUUID(), day_of_week: d }))
+          });
+        }
+      }
+
+      const snapshot = { [String(kcalKey)]: { days } };
+
+      // Extrair distribuição de refeições do primeiro dia
+      const firstDayMeals = days[0]?.meals || [];
+      const mealDistribution = firstDayMeals.map((m: any) => ({
         slot: m.name,
         time: m.time || '08:00'
-      })) || [];
+      }));
 
-      // Create slug
       const slug = `custom-${user.id.substring(0,6)}-${Date.now()}`;
 
       const { error } = await supabase.from('v3_diet_templates').insert({
@@ -64,7 +92,7 @@ export const SaveCustomTemplateModal: React.FC<SaveCustomTemplateModalProps> = (
         objective: 'personalizado',
         meal_distribution: mealDistribution,
         cluster_map: {},
-        kcal_profiles: [],
+        kcal_profiles: [kcalKey],
         visual_style: 'premium',
         substitutions_enabled: true,
         editable: true,

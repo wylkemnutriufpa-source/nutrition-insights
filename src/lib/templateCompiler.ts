@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * COMPILADOR DETERMINÍSTICO DE TEMPLATES
- * Transforma regras de negócio (Blueprints) em snapshots reais usando a meal_visual_library.
+ * Transforma Blueprints em snapshots reais usando a meal_visual_library.
+ * Gera 7 dias com rotação de substitutos para variedade.
  */
 
 export const compileTemplateFromLibrary = async (blueprint: any) => {
@@ -12,12 +13,15 @@ export const compileTemplateFromLibrary = async (blueprint: any) => {
     .select('*')
     .eq('is_active', true);
 
-  if (!library) return null;
+  if (!library || library.length === 0) {
+    console.warn('[Template Compiler] meal_visual_library está vazia.');
+    return null;
+  }
 
   const findBySlug = (slug: string) => {
     const item = library.find(i => i.slug === slug);
     if (!item) {
-      console.warn(`[Template Compiler] Item não encontrado: ${slug}`);
+      console.warn(`[Template Compiler] Slug não encontrado: ${slug}`);
       return null;
     }
     return item;
@@ -65,20 +69,21 @@ export const compileTemplateFromLibrary = async (blueprint: any) => {
   const compiledPlan: any = {};
   
   for (const kcal of blueprint.kcal_profiles) {
-    compiledPlan[String(kcal)] = {
-      days: [{
-        day_of_week: 1,
-        meals: blueprint.meals.map((m: any) => ({
-          id: crypto.randomUUID(),
-          name: m.name,
-          time: m.time,
-          items: [
-            buildItem(m.main, true, m.subs),
-            ...(m.sides || []).map((s: any) => buildItem(s.slug, false, s.subs || []))
-          ].filter(Boolean)
-        }))
-      }]
-    };
+    // Gerar 7 dias (0=Dom a 6=Sáb)
+    const days = [0, 1, 2, 3, 4, 5, 6].map(dayNum => ({
+      day_of_week: dayNum,
+      meals: blueprint.meals.map((m: any) => ({
+        id: crypto.randomUUID(),
+        name: m.name,
+        time: m.time,
+        items: [
+          buildItem(m.main, true, m.subs),
+          ...(m.sides || []).map((s: any) => buildItem(s.slug, false, s.subs || []))
+        ].filter(Boolean)
+      }))
+    }));
+
+    compiledPlan[String(kcal)] = { days };
   }
 
   return {

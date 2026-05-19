@@ -147,7 +147,7 @@ if (hasDiff) {
   if (IS_DEV && !IS_CI && !process.env.SKIP_AUTO_UPDATE) {
     console.log("\nAmbiente local detectado. Executando auto-update...");
     try {
-      execSync("bun run schema:update", { stdio: "inherit" });
+      execSync("npm run schema:update", { stdio: "inherit" });
       const newMigrations = fs.readdirSync(migrationsDir).filter(f => f.endsWith(".sql")).sort();
       fs.writeFileSync(cachePath, JSON.stringify({ hash: getMigrationsHash(newMigrations) }));
       process.exit(0);
