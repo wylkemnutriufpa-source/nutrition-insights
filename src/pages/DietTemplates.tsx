@@ -43,6 +43,9 @@ interface DietTemplate {
   meals: TemplateMeal[];
   tags: string[];
   template_generation?: string;
+  is_v3?: boolean;
+  plan_snapshot?: any;
+  kcal_profiles?: number[];
 }
 
 interface TemplateFood {
@@ -278,17 +281,37 @@ export default function DietTemplates() {
 
   const fetchTemplates = async () => {
     try {
-      const { data, error } = await supabase
-        .from("diet_templates")
-        .select("*")
-        .eq("is_active", true)
-        .order("name");
-      console.log("[DietTemplates] fetch result:", { count: data?.length, error, sample: data?.[0]?.name });
-      if (error) {
-        console.error("[DietTemplates] fetch error:", error);
-        toast.error("Erro ao carregar templates: " + error.message);
+      const [v2Result, v3Result] = await Promise.all([
+        supabase.from("diet_templates").select("*").eq("is_active", true).order("name"),
+        supabase.from("v3_diet_templates").select("*").eq("active", true).order("title")
+      ]);
+
+      if (v2Result.error) {
+        console.error("[DietTemplates] V2 fetch error:", v2Result.error);
+        toast.error("Erro ao carregar templates V2");
       }
-      setTemplates((data as any) || []);
+      
+      if (v3Result.error) {
+        console.error("[DietTemplates] V3 fetch error:", v3Result.error);
+      }
+
+      const v2Data = (v2Result.data || []).map(t => ({ ...t, is_v3: false }));
+      const v3Data = (v3Result.data || []).map(t => ({
+        ...t,
+        id: t.id,
+        name: t.title,
+        description: t.description || "Template Premium V3",
+        icon: t.visual_style === 'premium' ? "✨" : "🥗",
+        category: t.objective || "lifestyle",
+        base_calories: t.kcal_profiles?.[0] || 0,
+        macro_ratio: { protein: 30, carbs: 40, fat: 30 }, // Fallback macro ratio
+        meals: [], // V3 uses plan_snapshot
+        tags: [t.objective, "premium", "v3"].filter(Boolean),
+        template_generation: 'official_v3',
+        is_v3: true
+      }));
+
+      setTemplates([...v3Data, ...v2Data]);
     } catch (e) {
       console.error("[DietTemplates] unexpected error:", e);
     }
@@ -360,8 +383,8 @@ export default function DietTemplates() {
     return result;
   }, [templates, search, categoryFilter]);
 
-  const officialTemplates = useMemo(() => filtered.filter(t => t.template_generation === 'official_v2'), [filtered]);
-  const legacyTemplates = useMemo(() => filtered.filter(t => t.template_generation !== 'official_v2'), [filtered]);
+  const officialTemplates = useMemo(() => filtered.filter(t => t.template_generation === 'official_v2' || t.template_generation === 'official_v3'), [filtered]);
+  const legacyTemplates = useMemo(() => filtered.filter(t => t.template_generation !== 'official_v2' && t.template_generation !== 'official_v3'), [filtered]);
 
   const categories = useMemo(() => {
     const cats = new Set(templates.map((t) => t.goal_category || t.category));
@@ -637,6 +660,94 @@ export default function DietTemplates() {
     return plan.id;
   };
 
+  const applyOfficialV3Template = async (template: DietTemplate): Promise<string> => {
+    if (!template.plan_snapshot) throw new Error("Template V3 sem snapshot de plano");
+
+    const targetKcal = getAdjustedCalories(template);
+    const availableProfiles = Object.keys(template.plan_snapshot).map(Number).sort((a, b) => Math.abs(a - targetKcal) - Math.abs(b - targetKcal));
+    const bestProfile = availableProfiles[0];
+    const profile = template.plan_snapshot[String(bestProfile)];
+
+    if (!profile) throw new Error(`Nenhum perfil de calorias encontrado para ${targetKcal} kcal`);
+
+    // 1. Create plan
+    const { data: plan, error: planErr } = await (supabase
+      .from("meal_plans")
+      .insert([{
+        patient_id: patientId,
+        nutritionist_id: user!.id,
+        title: template.name + (patientName ? ` - ${patientName}` : ""),
+        description: `Modelo Premium V3 "${template.name}". Perfil: ${bestProfile} kcal.`,
+        start_date: new Date().toISOString().split("T")[0],
+        is_active: false,
+        plan_status: "draft_template",
+        tenant_id: tenantId || null,
+        editor_version: "v3",
+        generation_source: "v3",
+        total_calories: targetKcal,
+      }] as any) as any)
+      .select("id")
+      .single();
+
+    if (planErr || !plan) throw new Error(planErr?.message || "Falha ao criar plano V3");
+
+    // 2. Insert items
+    const dayData = profile.days?.[0]; // Usually V3 templates have 1 day
+    if (!dayData) throw new Error("Template V3 sem dados de dia");
+
+    const items: any[] = [];
+    const multiplier = targetKcal / bestProfile;
+
+    for (const meal of dayData.meals) {
+      for (const item of meal.items) {
+        const groupId = crypto.randomUUID();
+        
+        // Primary item
+        items.push({
+          meal_plan_id: plan.id,
+          day_of_week: 0,
+          tipo_refeicao: meal.name || meal.tipo_refeicao,
+          title: item.title || item.name,
+          description: item.quantity_display,
+          meta_calorias: Math.round((item.kcal || 0) * multiplier),
+          meta_proteinas: Math.round((item.protein || 0) * multiplier),
+          meta_carboidratos: Math.round((item.carbs || 0) * multiplier),
+          meta_gorduras: Math.round((item.fat || 0) * multiplier),
+          substitution_group_id: groupId,
+          is_primary: true,
+          visual_library_item_id: item.visual_library_item_id || null,
+        });
+
+        // Substitutions
+        if (Array.isArray(item.substitutions)) {
+          for (const sub of item.substitutions) {
+            items.push({
+              meal_plan_id: plan.id,
+              day_of_week: 0,
+              tipo_refeicao: meal.name || meal.tipo_refeicao,
+              title: sub.title || sub.name,
+              description: sub.quantity_display,
+              meta_calorias: Math.round((sub.kcal || 0) * multiplier),
+              meta_proteinas: Math.round((sub.protein || 0) * multiplier),
+              meta_carboidratos: Math.round((sub.carbs || 0) * multiplier),
+              meta_gorduras: Math.round((sub.fat || 0) * multiplier),
+              substitution_group_id: groupId,
+              is_primary: false,
+              visual_library_item_id: sub.visual_library_item_id || null,
+            });
+          }
+        }
+      }
+    }
+
+    if (items.length > 0) {
+      const { error: itemsErr } = await supabase.from("meal_plan_items").insert(items);
+      if (itemsErr) throw itemsErr;
+    }
+
+    return plan.id;
+  };
+
   const handleApplyTemplate = async (template: DietTemplate) => {
     if (!user || !patientId) {
       toast.error("Paciente não selecionado");
@@ -691,7 +802,15 @@ export default function DietTemplates() {
       // template clínico (ex.: diabetes) por um plano qualquer e reintroduzir
       // bloqueios de divergência que não pertencem ao fluxo de template.
       let outcome: { id: string; count: number } | null = null;
-      if (isV2) {
+      if (template.is_v3) {
+        const id = await applyOfficialV3Template(template);
+        const { count } = await supabase
+          .from("meal_plan_items")
+          .select("*", { count: "exact", head: true })
+          .eq("meal_plan_id", id);
+        outcome = { id, count: count || 0 };
+        console.log("[DietTemplates] PATH V3 applied:", outcome);
+      } else if (isV2) {
         outcome = await tryPathA();
         console.log("[DietTemplates] PATH A applied:", outcome);
       } else {

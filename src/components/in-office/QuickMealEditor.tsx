@@ -179,12 +179,47 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const loadTemplates = useCallback(async () => {
     if (!user?.id) return;
     setTemplatesLoading(true);
-    const { data } = await supabase
+    const { data: nutritionistTemplates } = await supabase
       .from("quick_meal_templates" as any)
       .select("*")
       .eq("nutritionist_id", user.id)
       .order("created_at", { ascending: false });
-    setTemplates((data as any as SavedTemplate[]) || []);
+
+    const { data: v3Templates } = await supabase
+      .from("v3_diet_templates")
+      .select("*")
+      .eq("active", true)
+      .order("title");
+
+    const mappedV3 = (v3Templates || []).map(t => {
+      const kcal = t.kcal_profiles?.[0] || 0;
+      const snapshot = t.plan_snapshot?.[String(kcal)];
+      const items = (snapshot?.days?.[0]?.meals || []).flatMap((m: any) => 
+        (m.items || []).map((i: any) => ({
+          name: i.name || i.title,
+          calories: i.kcal || 0,
+          protein: i.protein || 0,
+          carbs: i.carbs || 0,
+          fat: i.fat || 0,
+          tipo_refeicao: m.name || m.tipo_refeicao,
+          is_primary: true
+        }))
+      );
+
+      return {
+        id: t.id,
+        template_name: `✨ ${t.title}`,
+        template_type: "premium_v3",
+        items,
+        total_calories: kcal,
+        total_protein: items.reduce((s: number, i: any) => s + i.protein, 0),
+        total_carbs: items.reduce((s: number, i: any) => s + i.carbs, 0),
+        total_fat: items.reduce((s: number, i: any) => s + i.fat, 0),
+        created_at: t.created_at
+      };
+    });
+
+    setTemplates([...mappedV3, ...(nutritionistTemplates as any as SavedTemplate[] || [])]);
     setTemplatesLoading(false);
   }, [user?.id]);
 
