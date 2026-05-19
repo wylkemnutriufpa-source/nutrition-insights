@@ -100,6 +100,28 @@ function StreakBadge({ count }: { count: number }) {
   );
 }
 
+function MealPlanSkeleton() {
+  return (
+    <div className="max-w-2xl mx-auto space-y-6 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-muted rounded-lg" />
+          <div className="h-4 w-32 bg-muted rounded-md" />
+        </div>
+        <div className="h-10 w-10 rounded-full bg-muted" />
+      </div>
+      <div className="h-32 w-full bg-muted/20 rounded-3xl border border-border/10" />
+      <div className="h-12 w-full bg-muted/10 rounded-2xl" />
+      {[1, 2, 3].map(i => (
+        <div key={i} className="space-y-3">
+          <div className="h-6 w-24 bg-muted/30 rounded-md" />
+          <div className="h-24 w-full bg-muted/20 rounded-2xl border border-border/10" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function PatientMealPlan() {
   const { user, isAdmin, isNutritionist, isPersonal, isPatient } = useAuth();
   const navigate = useNavigate();
