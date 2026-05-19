@@ -285,23 +285,38 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     if (!templateName.trim() || !user?.id) return;
     
     enqueuePersistence(async () => {
-      const { data: np } = await supabase
-        .from("nutritionist_patients")
-        .select("tenant_id")
-        .eq("patient_id", patientId)
-        .eq("nutritionist_id", user.id)
-        .eq("status", "active")
-        .maybeSingle();
+      let finalTenantId = tenantId;
+      
+      if (!finalTenantId) {
+        const { data: np } = await supabase
+          .from("nutritionist_patients")
+          .select("tenant_id")
+          .eq("patient_id", patientId)
+          .eq("nutritionist_id", user.id)
+          .eq("status", "active")
+          .maybeSingle();
+        
+        finalTenantId = np?.tenant_id;
+      }
 
-      if (!np?.tenant_id) {
-        toast.error("Vínculo com paciente não encontrado.");
+      if (!finalTenantId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("tenant_id")
+          .eq("id", patientId)
+          .maybeSingle();
+        finalTenantId = profile?.tenant_id;
+      }
+
+      if (!finalTenantId) {
+        toast.error("Vínculo com paciente não encontrado ou tenant inválido.");
         return;
       }
 
       const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, tipo_refeicao: b.type })));
       const { error } = await supabase.from("quick_meal_templates" as any).insert({
         nutritionist_id: user.id,
-        tenant_id: np.tenant_id,
+        tenant_id: finalTenantId,
         template_name: templateName,
         template_type: "day",
         items: templateItems as any,
