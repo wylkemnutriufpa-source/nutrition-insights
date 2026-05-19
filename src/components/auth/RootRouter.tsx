@@ -102,7 +102,17 @@ export function RootRouter() {
 
   // Flow Profissional - Bloqueio de contaminação Patient
   if (isProRole && savedContext !== "patient") {
-    const target = (nextPath && nextPath !== "/admin/dashboard" && !nextPath.startsWith("/client")) ? nextPath : "/dashboard";
+    // Se for admin, o target default deve ser /admin/dashboard se ele estiver tentando acessar algo admin
+    // ou se não houver um nextPath definido.
+    const isAdmin = roles?.some(r => ["admin", "admin_master"].includes(r));
+    let defaultTarget = "/dashboard";
+    
+    if (isAdmin) {
+      // Se for admin, preferimos o dashboard de admin se ele não tiver um nextPath específico de nutri
+      defaultTarget = "/admin/dashboard";
+    }
+
+    const target = (nextPath && !nextPath.startsWith("/client")) ? nextPath : defaultTarget;
     console.warn(`[RASTREADOR] Redirect para ${target} disparado por: RootRouter (Pro Flow)`);
     return <Navigate to={target} replace />;
   }

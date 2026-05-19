@@ -12,11 +12,12 @@ import { toast } from 'sonner';
 interface SaveCustomTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSaved?: () => void;
   currentPlanData: any; // The state from EditorV3 (meals, etc)
 }
 
 export const SaveCustomTemplateModal: React.FC<SaveCustomTemplateModalProps> = ({
-  isOpen, onClose, currentPlanData
+  isOpen, onClose, onSaved, currentPlanData
 }) => {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
@@ -75,6 +76,7 @@ export const SaveCustomTemplateModal: React.FC<SaveCustomTemplateModalProps> = (
       if (error) throw error;
 
       toast.success('Template salvo com sucesso! Você pode encontrá-lo na Galeria de Templates.');
+      if (onSaved) onSaved();
       onClose();
       setTitle('');
       setDescription('');

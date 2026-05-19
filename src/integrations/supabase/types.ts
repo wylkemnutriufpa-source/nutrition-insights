@@ -20175,9 +20175,9 @@ export type Database = {
           id: string
           kcal_profiles: Json | null
           meal_distribution: Json
+          nutritionist_id: string | null
           objective: string
           plan_snapshot: Json | null
-          receptionist_id: string | null
           slug: string
           sovereign_validated: boolean | null
           substitutions_enabled: boolean | null
@@ -20195,9 +20195,9 @@ export type Database = {
           id?: string
           kcal_profiles?: Json | null
           meal_distribution: Json
+          nutritionist_id?: string | null
           objective: string
           plan_snapshot?: Json | null
-          receptionist_id?: string | null
           slug: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
@@ -20215,9 +20215,9 @@ export type Database = {
           id?: string
           kcal_profiles?: Json | null
           meal_distribution?: Json
+          nutritionist_id?: string | null
           objective?: string
           plan_snapshot?: Json | null
-          receptionist_id?: string | null
           slug?: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
