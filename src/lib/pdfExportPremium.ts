@@ -416,7 +416,10 @@ function buildPremiumCSS(): string {
       }
 
       /* Seções de Dias */
-      .day-section { margin-bottom: 16px; page-break-inside: avoid; }
+      /* NÃO usar page-break-inside: avoid no dia inteiro — dias geralmente excedem 1 página
+         e o "avoid" empurra todo o dia para a próxima página, deixando a primeira em branco. */
+      .day-section { margin-bottom: 16px; }
+      .day-section:first-of-type { page-break-before: avoid; }
 
       .day-header {
         background: #0f172a;
