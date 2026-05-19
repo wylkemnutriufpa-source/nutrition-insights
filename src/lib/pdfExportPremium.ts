@@ -617,15 +617,28 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
     const renderItemLine = (item: MealPlanPDFItem) => {
       const portionText = formatPortionText(item);
+      const kcal = Math.round(item.meta_calorias || 0);
+      const prot = Math.round(item.meta_proteinas || 0);
+      const carb = Math.round(item.meta_carboidratos || 0);
+      const fat = Math.round(item.meta_gorduras || 0);
 
       return `
-        <div class="food-line" style="margin-bottom: 6px;">
-          <span class="food-bullet" style="background: ${mealInfo.color}"></span>
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-weight: 700; color: #1e293b;">${escapeHtml(item.title)}</span>
+        <div class="food-line" style="margin-bottom: 8px; border-bottom: 1px solid #f8fafc; padding-bottom: 4px;">
+          <span class="food-bullet" style="background: ${mealInfo.color}; margin-top: 5px;"></span>
+          <div style="display: flex; flex-direction: column; flex: 1;">
+            <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(item.title)}</span>
             <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
           </div>
-          <span style="margin-left: auto; font-size: 9px; font-weight: 600; color: #94a3b8;">${item.meta_calorias || 0} kcal</span>
+          <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
+            <div style="text-align: right; min-width: 45px;">
+              <div style="font-size: 9px; font-weight: 700; color: #1e293b;">${kcal} <span style="font-size: 7px; color: #94a3b8;">kcal</span></div>
+            </div>
+            <div style="display: flex; gap: 4px; font-size: 8px; font-weight: 600;">
+              <span style="color: #ef4444;">P: ${prot}g</span>
+              <span style="color: #f59e0b;">C: ${carb}g</span>
+              <span style="color: #3b82f6;">G: ${fat}g</span>
+            </div>
+          </div>
         </div>
       `;
     };
