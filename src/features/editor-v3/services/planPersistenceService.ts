@@ -28,6 +28,42 @@ export interface SaveResult {
 const OFFICIAL_PLACEHOLDER = "/placeholder.svg";
 
 /**
+ * 🛡️ Constrói quantity_display priorizando massa clínica real sobre
+ * o multiplicador "quantity" (que costuma vir como 1 dos templates V3).
+ * Evita o bug crônico do "1 g" no PDF e nas telas do paciente.
+ */
+function buildQuantityDisplay(item: any, fallback: any): string {
+  const rawQty = item?.display_quantity ?? fallback?.display_quantity;
+  const dUnit = String(item?.display_unit ?? fallback?.display_unit ?? fallback?.portionUnitLabel ?? '').trim();
+  const cMass = Number(item?.clinical_mass_g ?? fallback?.clinical_mass_g);
+  const qty = Number(item?.quantity ?? fallback?.quantity);
+
+  const qStr = rawQty == null ? '' : String(rawQty).trim();
+  const placeholder = qStr === '' || /^1\s*g?$/i.test(qStr);
+
+  // Unidade não-grama com display_quantity válido → usa o display textual
+  if (dUnit && dUnit !== 'g' && qStr && !placeholder) {
+    return `${qStr} ${dUnit}`.trim();
+  }
+
+  // Massa clínica é a verdade quando o display é placeholder
+  if (placeholder && Number.isFinite(cMass) && cMass > 1) {
+    return `${Math.round(cMass)} g`;
+  }
+
+  // Display textual já tem unidade embutida (ex.: "3 colheres", "100 g")
+  if (qStr && /[a-zà-ú]/i.test(qStr)) return qStr;
+
+  if (qStr && !placeholder) {
+    return dUnit ? `${qStr} ${dUnit}`.trim() : `${qStr} g`;
+  }
+
+  if (Number.isFinite(cMass) && cMass > 1) return `${Math.round(cMass)} g`;
+  if (Number.isFinite(qty) && qty > 1) return `${Math.round(qty)} g`;
+  return `100 g`;
+}
+
+/**
  * SERVIÇO SOBERANO DE PERSISTÊNCIA V3
  * Único caminho para salvar e publicar planos.
  */
@@ -130,7 +166,7 @@ export const planPersistenceService = {
                 id: sub.id || crypto.randomUUID(),
                 title: sub.name || subItem.title || "Substituto",
                 blockId: it.blockId || it.id, // HERANÇA SOBERANA
-                quantity_display: `${subItem.display_quantity || sub.quantity || 100} ${subItem.display_unit || sub.portionUnitLabel || 'g'}`,
+                quantity_display: buildQuantityDisplay(subItem, sub),
                 macros: subMacros,
                 visual: subVisual
               });
@@ -141,8 +177,10 @@ export const planPersistenceService = {
             id: it.instanceId || it.id || crypto.randomUUID(),
             blockId: it.blockId || it.id || crypto.randomUUID(),
             title: it.name || (it as any).title || "Alimento",
-            quantity_display: `${it.display_quantity || it.quantity || 100} ${it.display_unit || it.portionUnitLabel || 'g'}`,
-            clinical_mass_g: it.clinical_mass_g || (it.quantity || 100),
+            quantity_display: buildQuantityDisplay(it as any, it),
+            clinical_mass_g: Number((it as any).clinical_mass_g) > 1
+              ? Math.round(Number((it as any).clinical_mass_g))
+              : (typeof it.quantity === 'number' && it.quantity > 1 ? Math.round(it.quantity) : 100),
             macros: {
               kcal: Math.round(it.kcal || 0),
               protein_g: Number((it.protein || 0).toFixed(1)),

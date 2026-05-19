@@ -151,17 +151,32 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
 }
 
 
-function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem): string {
-  // SOBERANIA V3: O PDF não interpreta porções, ele apenas exibe o que o snapshot enviou.
-  const dQty = sub.display_quantity || "";
-  const dUnit = sub.display_unit || "";
-  const cMass = sub.clinical_mass_g || "";
-  
-  if (dQty) return `${dQty} ${dUnit}`.trim();
-  if (cMass) return `${cMass}g`.trim();
-  
-  // Fallback: Se não houver campos V3, tenta limpar a descrição se ela já contiver a porção
-  return sub.description || "";
+function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; description?: string | null }): string {
+  // SOBERANIA V3: prioriza clinical_mass_g (verdade clínica) sobre placeholders
+  // tipo "1 g" / "1" / "" que vinham de display_quantity = quantity (multiplicador).
+  const rawQty = item.display_quantity;
+  const dUnit = (item.display_unit ?? "").toString().trim();
+  const cMass = Number(item.clinical_mass_g);
+  const hasMass = Number.isFinite(cMass) && cMass > 1;
+
+  const dqStr = rawQty == null ? "" : String(rawQty).trim();
+  // Placeholders inúteis: vazio, "1", "1g", "1 g"
+  const isPlaceholder = dqStr === "" || /^1\s*g?$/i.test(dqStr);
+
+  if (isPlaceholder && hasMass) return `${Math.round(cMass)} g`;
+
+  if (dqStr) {
+    // Se já contém unidade (ex.: "3 colheres", "100 g"), devolve direto
+    if (/[a-zà-ú]/i.test(dqStr)) return dqStr;
+    return dUnit ? `${dqStr} ${dUnit}`.trim() : dqStr;
+  }
+
+  if (hasMass) return `${Math.round(cMass)} g`;
+  return (item.description || "").toString();
+}
+
+function formatSubstitutionDetail(sub: MealPlanPDFItem, _primary: MealPlanPDFItem): string {
+  return formatPortionText(sub);
 }
 
 function escapeHtml(str: string): string {
@@ -416,7 +431,10 @@ function buildPremiumCSS(): string {
       }
 
       /* Seções de Dias */
-      .day-section { margin-bottom: 16px; page-break-inside: avoid; }
+      /* NÃO usar page-break-inside: avoid no dia inteiro — dias geralmente excedem 1 página
+         e o "avoid" empurra todo o dia para a próxima página, deixando a primeira em branco. */
+      .day-section { margin-bottom: 16px; }
+      .day-section:first-of-type { page-break-before: avoid; }
 
       .day-header {
         background: #0f172a;
@@ -600,14 +618,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const totalKcal = primaries.reduce((sum, i) => sum + (i.meta_calorias || 0), 0);
 
     const renderItemLine = (item: MealPlanPDFItem) => {
-      const dQty = item.display_quantity || "";
-      const dUnit = item.display_unit || "";
-      const cMass = item.clinical_mass_g || "";
-      
-      let portionText = "";
-      if (dQty) portionText = `${dQty} ${dUnit}`;
-      else if (cMass) portionText = `${cMass}g`;
-      else portionText = item.description || "";
+      const portionText = formatPortionText(item);
 
       return `
         <div class="food-line" style="margin-bottom: 6px;">
