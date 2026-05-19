@@ -44,6 +44,8 @@ import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { normalizeSnapshotToV3 } from '../utils/normalization';
 import { BookMarked } from 'lucide-react';
 import { SaveCustomTemplateModal } from './SaveCustomTemplateModal';
+import { SectionalErrorBoundary } from '@/components/common/SectionalErrorBoundary';
+
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
