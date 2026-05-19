@@ -6,12 +6,12 @@ import { useEffect } from "react";
 
 export default function WorkspaceRouteGuard({ children }: { children: React.ReactNode }) {
   const { isPatientContext, isProfessionalContext } = useWorkspaceContext();
-  const { isPatient, isNutritionist, isPersonal, isAdmin, roles, authStatus, loading } = useAuth();
+  const { isPatient, isNutritionist, isPersonal, isAdmin, isAdminMaster, roles, authStatus, loading } = useAuth();
   const location = useLocation();
 
   // [RASTREADOR]
   useEffect(() => {
-    const isPro = isNutritionist || isPersonal || isAdmin;
+    const isPro = isNutritionist || isPersonal || isAdmin || isAdminMaster;
     const isAuthRoute = ["/auth", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
     
     if (!loading && authStatus === "authenticated" && roles !== null && !isAuthRoute) {
@@ -37,7 +37,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     return <>{children}</>;
   }
 
-  const isPro = isNutritionist || isPersonal || isAdmin;
+  const isPro = isNutritionist || isPersonal || isAdmin || isAdminMaster;
 
   // 1. Proteção de Admin/Profissional
   if (location.pathname.startsWith("/admin")) {
