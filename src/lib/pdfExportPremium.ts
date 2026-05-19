@@ -821,6 +821,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       <div style="font-size: 8px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Documento Confidencial • Direitos Reservados</div>
     </div>
     <div style="margin-bottom: 40px;"></div>
+  </div>
 </body></html>`;
 
   return html;
