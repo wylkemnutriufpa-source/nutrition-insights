@@ -1,0 +1,20 @@
+{
+  "summary": "Summary:",
+  "details": {
+    "timestamp": "2026-05-19T13:55:18.133Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260518224058_e510edf8-7d7b-491f-9fde-2f22524dcc67.sql",
+    "lastActualMigration": "20260519114253_ed4fd00f-350e-4748-97b1-fdd694b04397.sql",
+    "missingMigrations": [
+      "20260519010313_f5428a62-2862-45fd-b443-5ea3d755887a.sql",
+      "20260519015411_4251e6b2-2e01-442c-a88c-63b67d66427e.sql",
+      "20260519015559_01aa9af2-0578-4c50-91f4-26a4a2d8e6fc.sql",
+      "20260519020205_390f336a-f917-4aae-b44e-0d1c6dba24aa.sql",
+      "20260519021357_258fd418-90ca-415e-9f1d-2614dbd4fdf1.sql",
+      "20260519023809_95d1be87-76b2-4bce-812c-f57aaf123d04.sql",
+      "20260519112035_c193fff2-c676-45cb-b74d-712311f3dc74.sql",
+      "20260519114253_ed4fd00f-350e-4748-97b1-fdd694b04397.sql"
+    ],
+    "diffResults": []
+  }
+}
