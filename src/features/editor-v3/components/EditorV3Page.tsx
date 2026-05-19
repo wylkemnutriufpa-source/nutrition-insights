@@ -113,8 +113,7 @@ export default function EditorV3Page() {
           const { data: links } = await supabase
             .from('nutritionist_patients')
             .select('patient_id')
-            .eq('nutritionist_id', user.id)
-            .eq('status', 'active');
+            .eq('nutritionist_id', user.id); // Removido filtro de status para evitar bloqueio de rascunhos em pacientes inativos
 
           if (links && links.length > 0) {
             const patientIds = links.map((l: any) => l.patient_id);
