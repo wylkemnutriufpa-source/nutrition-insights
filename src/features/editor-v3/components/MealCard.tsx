@@ -27,7 +27,7 @@ interface MealCardProps {
 export const MealCard: React.FC<MealCardProps> = ({ 
   meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
 }) => {
-
+  const store = useEditorState();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeItemForSub, setActiveItemForSub] = useState<MealItem | null>(null);
 
