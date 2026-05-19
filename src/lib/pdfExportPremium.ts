@@ -287,7 +287,7 @@ function buildPremiumCSS(): string {
       @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
       @page {
-        margin: 0;
+        margin: 15mm 10mm;
         size: A4;
       }
 
