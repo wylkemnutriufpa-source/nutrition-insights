@@ -264,7 +264,7 @@ export default function EditorV3Page() {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_id', effectivePatientId)
+          .or(`user_id.eq.${effectivePatientId},id.eq.${effectivePatientId}`)
           .maybeSingle();
         if (profile) setPatientData(profile);
       }
