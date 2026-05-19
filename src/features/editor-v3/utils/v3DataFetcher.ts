@@ -6,7 +6,8 @@ import { DietTemplateService } from "../services/dietTemplateService";
 export const searchV3LibraryItems = async (
   query: string,
   category?: string,
-  mealSlot?: string
+  mealSlot?: string,
+  useLegacyLibrary = true
 ): Promise<any[]> => {
   let queryBuilder = supabase
     .from("v3_library_items")
