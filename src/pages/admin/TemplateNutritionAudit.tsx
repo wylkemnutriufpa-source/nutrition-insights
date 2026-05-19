@@ -58,9 +58,14 @@ import {
   Equal,
   Sparkles,
   FileDown,
+  PlayCircle,
+  XCircle,
+  Terminal
 } from "lucide-react";
 import { toast } from "sonner";
 import { seedPremiumV3Templates } from "@/lib/seedV3Templates";
+import { applyOfficialV2Template, applyOfficialV3Template } from "@/lib/templateApplication";
+
 
 type FoodItem = {
   name?: string | null;
