@@ -29,28 +29,40 @@ import { PlanTemplate } from '../types';
 
 export const PLAN_TEMPLATES: PlanTemplate[] = [
   {
+    id: 't-anti-inf-1',
+    name: 'Protocolo Anti-Inflamatório',
+    description: 'Rico em ômega-3, antioxidantes e fitoquímicos. Foco em saúde intestinal e redução de citocinas.',
+    category: 'saúde',
+    meals: [
+      { name: 'Desjejum Bioativo', type: 'Café da Manhã', items: [{ foodId: 'o1', quantity: 150 }, { foodId: 'a1', quantity: 100 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Lanche Manhã', type: 'Lanche da Manhã', items: [{ foodId: 'b1', quantity: 100 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Almoço Funcional', type: 'Almoço', items: [{ foodId: 'm19', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Lanche Tarde', type: 'Lanche da Tarde', items: [{ foodId: 'i1', quantity: 170 }, { foodId: 'c1', quantity: 30 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Jantar Leve', type: 'Jantar', items: [{ foodId: 'm3', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
+    ]
+  },
+  {
     id: 't-hyper-1',
-    name: 'Hipertrofia Clássica',
-    description: 'Focado em 2.2g/kg de proteína com carboidratos complexos.',
+    name: 'Hipertrofia Estrutural',
+    description: 'Focado em 2.2g/kg de proteína com carboidratos complexos e alta densidade calórica.',
     category: 'hipertrofia',
     meals: [
-      { name: 'Café da Manhã', type: 'Café da Manhã', items: [{ foodId: 'p1', quantity: 100 }, { foodId: 'o1', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Lanche Manhã', type: 'Lanche da Manhã', items: [{ foodId: 'i1', quantity: 170 }, { foodId: 'b1', quantity: 100 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Almoço (Marmita)', type: 'Almoço', items: [{ foodId: 'm2', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Lanche Tarde', type: 'Lanche da Tarde', items: [{ foodId: 'p1', quantity: 50 }, { foodId: 'q1', quantity: 60 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Jantar (Marmita)', type: 'Jantar', items: [{ foodId: 'm1', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
+      { name: 'Café de Campeão', type: 'Café da Manhã', items: [{ foodId: 't1', quantity: 100 }, { foodId: 'o1', quantity: 200 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Almoço (Construção)', type: 'Almoço', items: [{ foodId: 'm1', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Lanche Pós-Treino', type: 'Lanche da Tarde', items: [{ foodId: 'p1', quantity: 100 }, { foodId: 'i1', quantity: 200 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Jantar (Reparação)', type: 'Jantar', items: [{ foodId: 'm20', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
     ]
   },
   {
     id: 't-loss-1',
     name: 'Definição Máxima',
-    description: 'Baixo carboidrato com alto volume de vegetais e proteínas magras.',
+    description: 'Baixo carboidrato com alto volume de vegetais e proteínas magras para máxima queima.',
     category: 'emagrecimento',
     meals: [
-      { name: 'Café da Manhã', type: 'Café da Manhã', items: [{ foodId: 'o1', quantity: 200 }, { foodId: 'm_fruta', quantity: 150 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Almoço (Marmita)', type: 'Almoço', items: [{ foodId: 'm12', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Café da Manhã', type: 'Café da Manhã', items: [{ foodId: 'o1', quantity: 200 }, { foodId: 'b1', quantity: 100 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
+      { name: 'Almoço (Marmita)', type: 'Almoço', items: [{ foodId: 'm3', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
       { name: 'Lanche Tarde', type: 'Lanche da Tarde', items: [{ foodId: 'i1', quantity: 170 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } },
-      { name: 'Jantar (Marmita)', type: 'Jantar', items: [{ foodId: 'm14', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
+      { name: 'Jantar (Marmita)', type: 'Jantar', items: [{ foodId: 'm2', quantity: 1 }], totalMacros: { calories: 0, protein: 0, carbs: 0, fat: 0 } }
     ]
   }
 ];
