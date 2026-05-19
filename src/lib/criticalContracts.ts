@@ -1,4 +1,9 @@
-export type CriticalContractId = string;
+export type CriticalContractId = 
+  | "draft_integrity"
+  | "clinical_validity"
+  | "engine_determinism"
+  | "persistence_safety"
+  | "ui_consistency";
 
 export const draftIntegrityContract = (opts: any) => {
   if (!opts.meals) return { ok: false, violations: ["meals nunca pode ser null"] };
@@ -30,4 +35,12 @@ export const uiConsistencyContract = (opts: any) => {
   if (opts.dbStatus !== opts.uiStatus && !opts.errorVisible) return { ok: false, violations: ["Erro NÃO está visível"] };
   if (opts.hasInvisibleState) return { ok: false, violations: ["Nenhum estado invisível permitido"] };
   return { ok: true, violations: [] };
+};
+
+export const CRITICAL_CONTRACTS: Record<CriticalContractId, (opts: any) => { ok: boolean; violations: string[] }> = {
+  draft_integrity: draftIntegrityContract,
+  clinical_validity: clinicalValidityContract,
+  engine_determinism: engineDeterminismContract,
+  persistence_safety: persistenceSafetyContract,
+  ui_consistency: uiConsistencyContract
 };
