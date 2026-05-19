@@ -130,7 +130,7 @@ export const planPersistenceService = {
                 id: sub.id || crypto.randomUUID(),
                 title: sub.name || subItem.title || "Substituto",
                 blockId: it.blockId || it.id, // HERANÇA SOBERANA
-                quantity_display: `${subItem.display_quantity || sub.quantity || 100} ${subItem.display_unit || sub.portionUnitLabel || 'g'}`,
+                quantity_display: buildQuantityDisplay(subItem, sub),
                 macros: subMacros,
                 visual: subVisual
               });
@@ -141,8 +141,10 @@ export const planPersistenceService = {
             id: it.instanceId || it.id || crypto.randomUUID(),
             blockId: it.blockId || it.id || crypto.randomUUID(),
             title: it.name || (it as any).title || "Alimento",
-            quantity_display: `${it.display_quantity || it.quantity || 100} ${it.display_unit || it.portionUnitLabel || 'g'}`,
-            clinical_mass_g: it.clinical_mass_g || (it.quantity || 100),
+            quantity_display: buildQuantityDisplay(it as any, it),
+            clinical_mass_g: Number((it as any).clinical_mass_g) > 1
+              ? Math.round(Number((it as any).clinical_mass_g))
+              : (typeof it.quantity === 'number' && it.quantity > 1 ? Math.round(it.quantity) : 100),
             macros: {
               kcal: Math.round(it.kcal || 0),
               protein_g: Number((it.protein || 0).toFixed(1)),
