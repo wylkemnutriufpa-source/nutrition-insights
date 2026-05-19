@@ -599,6 +599,7 @@ export default function EditorV3Page() {
             </div>
           </ScrollArea>
         </main>
+        </SectionalErrorBoundary>
       </div>
     </DashboardLayout>
   );
