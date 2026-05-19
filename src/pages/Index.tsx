@@ -1077,14 +1077,14 @@ export default function Index() {
     const hasSeenIntro = sessionStorage.getItem(INTRO_STORAGE_KEY) === "1";
     
     // Mostramos a intro se for forçado VIA URL ou se for o primeiro acesso logado do usuário nesta sessão
-    if (forceIntro || (!hasSeenIntro && !authLoading && user)) {
+    if (forceIntro || (!hasSeenIntro && !loading && user)) {
       setShowIntro(true);
     }
-  }, [location.search, authLoading, user]);
+  }, [location.search, loading, user]);
 
   // Auto-trigger tour after onboarding — with 30min cooldown
   useEffect(() => {
-    if (authLoading || showIntro) return;
+    if (loading || showIntro) return;
     const onboardingDone = localStorage.getItem(onboardingKey) === "true";
     const tourDone = localStorage.getItem(tourKey) === "true";
     if (tourDone || !onboardingDone) return;
@@ -1097,7 +1097,7 @@ export default function Index() {
 
     const timer = setTimeout(() => setShowTour(true), 1500);
     return () => clearTimeout(timer);
-  }, [authLoading, onboardingKey, tourKey, showIntro]);
+  }, [loading, onboardingKey, tourKey, showIntro]);
 
   if (showIntro) {
     return (
@@ -1110,8 +1110,8 @@ export default function Index() {
     );
   }
 
-  // Regression Guard: If still authLoading auth roles, show simple brain loader
-  if (authLoading && !showIntro && !isAdmin && !isNutritionist && !isPersonal) {
+  // Regression Guard: If still loading auth roles, show simple brain loader
+  if (loading && !showIntro && !isAdmin && !isNutritionist && !isPersonal) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <BrainLoader text="Iniciando FitJourney..." />
