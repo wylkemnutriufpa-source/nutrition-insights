@@ -109,7 +109,7 @@ function NutritionistDashboardContent() {
   const { user } = useAuth();
   const { minMode, isBasic } = useExperienceMode();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [internalLoading, setLoading] = useState(false);
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
   const [programCount, setProgramCount] = useState(0);
@@ -258,11 +258,11 @@ function NutritionistDashboardContent() {
 
         // Batch all patient data in parallel (5 bulk queries)
         const [allProfiles, allAnamnesis, allChecks, allMeals, allAssess] = await Promise.all([
-          supabase.from("profiles").select("user_id, full_name").in("user_id", limitedIds),
-          supabase.from("patient_anamnesis").select("user_id, answers, status").in("user_id", limitedIds).order("created_at", { ascending: false }),
-          supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", limitedIds).gte("date", periodDate.split("T")[0]),
-          supabase.from("meals").select("user_id, logged_at").in("user_id", limitedIds).gte("logged_at", periodDate),
-          supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", limitedIds).order("assessment_date", { ascending: false }),
+          supabase.from("profiles").select("user_id, full_name").in("user_id", limitedIds).limit(50),
+          supabase.from("patient_anamnesis").select("user_id, answers, status").in("user_id", limitedIds).order("created_at", { ascending: false }).limit(50),
+          supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", limitedIds).gte("date", periodDate.split("T")[0]).limit(100),
+          supabase.from("meals").select("user_id, logged_at").in("user_id", limitedIds).gte("logged_at", periodDate).limit(100),
+          supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", limitedIds).order("assessment_date", { ascending: false }).limit(50),
         ]);
 
         // Index data by patient
@@ -359,7 +359,7 @@ function NutritionistDashboardContent() {
         });
 
         if (patientDataForAI.length > 0) {
-          fetchAIInsights(patientDataForAI);
+          setTimeout(() => fetchAIInsights(patientDataForAI), 1000);
         }
       }
     } finally {
@@ -368,7 +368,34 @@ function NutritionistDashboardContent() {
     }
   }, [evolutionPeriod]);
 
-  if (loading) return <DashboardSkeleton />;
+  // Secondary data load - Deferred to after first paint
+  useEffect(() => {
+    if (internalLoading || !user?.id) return;
+    const timer = setTimeout(() => {
+      fetchDashboard();
+    }, 1500); // Wait for core UI to settle
+    return () => clearTimeout(timer);
+  }, [user?.id, evolutionPeriod]);
+
+  // Priority Initial Load: only non-blocking stats
+  useEffect(() => {
+    const fetchCoreStats = async () => {
+      if (!user?.id) return;
+      try {
+        const [patientsRes, aptsRes, pendingRes] = await Promise.all([
+          supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("status", "active"),
+          supabase.from("patient_appointments").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).gte("appointment_date", new Date().toISOString().split('T')[0]).lte("appointment_date", new Date(Date.now() + 86400000).toISOString().split('T')[0]),
+          supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("status", "pending"),
+        ]);
+        setPatientCount(patientsRes.count || 0);
+        setAppointmentsToday(aptsRes.count || 0);
+        setPendingCheckins(pendingRes.count || 0);
+      } catch (e) { console.error("Stats fail:", e); }
+    };
+    fetchCoreStats();
+  }, [user?.id]);
+
+  if (internalLoading && patientCount === 0) return <DashboardSkeleton />;
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
@@ -390,8 +417,8 @@ function NutritionistDashboardContent() {
     setAiLoading(false);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
+  // remove the original fetchDashboard call from here
+  // useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
 
   const quickActions = [
     { label: "Modo Consultório", icon: Stethoscope, to: "/in-office", color: "bg-primary/20 text-primary hover:bg-primary/30 shadow-md shadow-primary/5 border border-primary/20" },
@@ -1083,7 +1110,8 @@ export default function Index() {
     );
   }
 
-  if (loading && !showIntro) {
+  // Regression Guard: If still loading auth roles, show simple brain loader
+  if (loading && !showIntro && !isAdmin && !isNutritionist && !isPersonal) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <BrainLoader text="Iniciando FitJourney..." />
