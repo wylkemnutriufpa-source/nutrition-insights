@@ -2,6 +2,7 @@
 /**
  * BLUEPRINTS DE TEMPLATES DETERMINÍSTICOS
  * Define a estrutura das dietas usando apenas SLUGS do banco real (meal_visual_library).
+ * Todos os templates agora incluem obrigatoriamente Café, Lanche M, Almoço, Lanche T, Jantar e Ceia.
  */
 
 export const ALL_BLUEPRINTS = [
@@ -12,14 +13,21 @@ export const ALL_BLUEPRINTS = [
     template_type: 'visual_v3',
     objective: 'clinico',
     visual_style: 'premium',
-    kcal_profiles: [1800, 2000],
+    kcal_profiles: [1600, 1800, 2000],
     meals: [
       { 
-        name: 'Desjejum Bioativo', 
+        name: 'Café da Manhã Bioativo', 
         time: '08:00', 
         main: 'vitamina-de-frutas', 
-        subs: ['iogurte-natural'],
+        subs: ['iogurte-natural', 'kefir'],
         sides: [{ slug: 'ovos-mexidos', subs: ['omelete'] }] 
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:30', 
+        main: 'castanha', 
+        subs: ['mix-nuts'],
+        sides: [{ slug: 'abacaxi', subs: ['melao'] }] 
       },
       { 
         name: 'Almoço Anti-Inflamatório', 
@@ -45,6 +53,13 @@ export const ALL_BLUEPRINTS = [
         main: 'sopa-de-legumes', 
         subs: ['frango-grelhado'],
         sides: [{ slug: 'salada-crua-folhas-jantar' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '21:30', 
+        main: 'cha-com-torrada', 
+        subs: ['gelatina'],
+        sides: []
       }
     ]
   },
@@ -55,7 +70,7 @@ export const ALL_BLUEPRINTS = [
     template_type: 'visual_v3',
     objective: 'hipertrofia',
     visual_style: 'premium',
-    kcal_profiles: [2500, 3000],
+    kcal_profiles: [2200, 2500, 2800, 3000],
     meals: [
       { 
         name: 'Café da Manhã Anabólico', 
@@ -63,6 +78,13 @@ export const ALL_BLUEPRINTS = [
         main: 'pao-com-ovo', 
         subs: ['cuscuz-com-ovo', 'crepioca'],
         sides: [{ slug: 'aveia-com-banana', subs: ['mamao-com-aveia'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'iogurte-com-fruta', 
+        subs: ['sanduiche-natural'],
+        sides: [{ slug: 'mix-nuts' }]
       },
       { 
         name: 'Almoço de Performance', 
@@ -88,6 +110,13 @@ export const ALL_BLUEPRINTS = [
         main: 'arroz-com-frango', 
         subs: ['macarronada-de-camarao', 'lombo-suino'],
         sides: [{ slug: 'legumes-cozidos-jantar' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '22:30', 
+        main: 'caseina', 
+        subs: ['iogurte-natural'],
+        sides: [{ slug: 'banana-com-canela' }]
       }
     ]
   },
@@ -98,7 +127,7 @@ export const ALL_BLUEPRINTS = [
     template_type: 'visual_v3',
     objective: 'low_carb',
     visual_style: 'premium',
-    kcal_profiles: [1600, 1800],
+    kcal_profiles: [1500, 1600, 1800, 2000],
     meals: [
       { 
         name: 'Café da Manhã Keto', 
@@ -106,6 +135,13 @@ export const ALL_BLUEPRINTS = [
         main: 'ovos-cozidos', 
         subs: ['omelete'],
         sides: [{ slug: 'abacate', subs: ['mix-nuts'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:30', 
+        main: 'fat-bomb', 
+        subs: ['castanha'],
+        sides: []
       },
       { 
         name: 'Almoço Low Carb', 
@@ -130,6 +166,13 @@ export const ALL_BLUEPRINTS = [
         main: 'frango-grelhado', 
         subs: ['file-de-tilapia'],
         sides: [{ slug: 'salada-crua-folhas-jantar' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '22:00', 
+        main: 'gelatina', 
+        subs: ['cha-com-torrada'],
+        sides: []
       }
     ]
   },
@@ -140,7 +183,7 @@ export const ALL_BLUEPRINTS = [
     template_type: 'visual_v3',
     objective: 'emagrecimento',
     visual_style: 'premium',
-    kcal_profiles: [1200, 1400, 1500],
+    kcal_profiles: [1200, 1400, 1500, 1600],
     meals: [
       { 
         name: 'Café da Manhã Leve', 
@@ -148,6 +191,13 @@ export const ALL_BLUEPRINTS = [
         main: 'iogurte-natural', 
         subs: ['crepioca'],
         sides: [{ slug: 'maca', subs: ['morango', 'melao'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'fruta', 
+        subs: ['agua-de-coco'],
+        sides: []
       },
       { 
         name: 'Almoço Equilibrado', 
@@ -173,6 +223,240 @@ export const ALL_BLUEPRINTS = [
         main: 'sopa-de-legumes', 
         subs: ['peixe-com-legumes'],
         sides: [{ slug: 'salada-crua-folhas-jantar' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '21:30', 
+        main: 'gelatina', 
+        subs: ['cha-com-torrada'],
+        sides: []
+      }
+    ]
+  },
+  {
+    slug: 'vegetariano-premium-real',
+    title: 'Protocolo Vegetariano Estrutural',
+    description: 'Equilíbrio de aminoácidos usando leguminosas e ovos do banco real.',
+    template_type: 'visual_v3',
+    objective: 'vegetariano',
+    visual_style: 'premium',
+    kcal_profiles: [1600, 1800, 2000],
+    meals: [
+      { 
+        name: 'Café da Manhã Veggie', 
+        time: '07:30', 
+        main: 'tapioca-com-queijo', 
+        subs: ['pao-com-queijo'],
+        sides: [{ slug: 'mamao-com-aveia' }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'iogurte-com-fruta', 
+        subs: ['mix-nuts'],
+        sides: []
+      },
+      { 
+        name: 'Almoço Vegetariano', 
+        time: '12:30', 
+        main: 'omelete', 
+        subs: ['legumes-gratinados-jantar'],
+        sides: [
+          { slug: 'arroz-feijao-carne', subs: ['macarrao-integral'] },
+          { slug: 'feijao-carioca' },
+          { slug: 'salada-completa' }
+        ]
+      },
+      { 
+        name: 'Lanche da Tarde', 
+        time: '16:00', 
+        main: 'banana-com-pasta-amendoim', 
+        subs: ['sanduiche-natural'],
+        sides: []
+      },
+      { 
+        name: 'Jantar Vegetariano', 
+        time: '19:30', 
+        main: 'sopa-de-legumes', 
+        subs: ['peixe-com-legumes'],
+        sides: [{ slug: 'ovos-cozidos' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '22:00', 
+        main: 'banana-com-canela', 
+        subs: ['cha-com-torrada'],
+        sides: []
+      }
+    ]
+  },
+  {
+    slug: 'lifestyle-saudavel-premium',
+    title: 'Lifestyle Saudável Brasileiro',
+    description: 'Dieta equilibrada com pratos tradicionais e foco em adesão real.',
+    template_type: 'visual_v3',
+    objective: 'performance',
+    visual_style: 'premium',
+    kcal_profiles: [1800, 2000, 2200],
+    meals: [
+      { 
+        name: 'Café da Manhã Tradicional', 
+        time: '07:30', 
+        main: 'pao-frances', 
+        subs: ['pao-com-ovo'],
+        sides: [{ slug: 'mamao-com-aveia', subs: ['abacaxi'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'fruta', 
+        subs: ['agua-de-coco'],
+        sides: []
+      },
+      { 
+        name: 'Almoço Brasileiro', 
+        time: '12:30', 
+        main: 'carne-assada-de-panela', 
+        subs: ['strogonoff-frango', 'coxa-e-sobrecoxa'],
+        sides: [
+          { slug: 'arroz-feijao-carne', subs: ['arroz-com-frango'] },
+          { slug: 'feijao-carioca' },
+          { slug: 'salada-completa' }
+        ]
+      },
+      { 
+        name: 'Lanche da Tarde', 
+        time: '16:00', 
+        main: 'sanduiche-natural-de-frango', 
+        subs: ['wrap-integral'],
+        sides: [{ slug: 'suco-detox' }]
+      },
+      { 
+        name: 'Jantar Leve', 
+        time: '19:30', 
+        main: 'omelete', 
+        subs: ['sopa-de-legumes'],
+        sides: [{ slug: 'salada-verde' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '22:00', 
+        main: 'gelatina', 
+        subs: ['cha-com-torrada'],
+        sides: []
+      }
+    ]
+  },
+  {
+    slug: 'diabetes-premium-real',
+    title: 'Protocolo Controle Glicêmico Real',
+    description: 'Foco em fibras, proteínas e gorduras boas para estabilidade da insulina.',
+    template_type: 'visual_v3',
+    objective: 'clinico',
+    visual_style: 'premium',
+    kcal_profiles: [1400, 1600, 1800],
+    meals: [
+      { 
+        name: 'Café da Manhã Fibroso', 
+        time: '07:30', 
+        main: 'omelete', 
+        subs: ['ovos-cozidos'],
+        sides: [{ slug: 'mamao-com-aveia', subs: ['abacate'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'castanha', 
+        subs: ['abacate'],
+        sides: []
+      },
+      { 
+        name: 'Almoço Glicêmico Estável', 
+        time: '12:30', 
+        main: 'frango-grelhado', 
+        subs: ['file-de-tilapia'],
+        sides: [
+          { slug: 'arroz-integral', subs: ['batata-doce'] },
+          { slug: 'feijao-carioca' },
+          { slug: 'salada-completa' }
+        ]
+      },
+      { 
+        name: 'Lanche da Tarde', 
+        time: '16:00', 
+        main: 'iogurte-natural', 
+        subs: ['mix-nuts'],
+        sides: [{ slug: 'morango' }]
+      },
+      { 
+        name: 'Jantar Leve', 
+        time: '19:30', 
+        main: 'peixe-com-legumes', 
+        subs: ['sopa-de-legumes'],
+        sides: [{ slug: 'salada-verde' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '21:30', 
+        main: 'cha-com-torrada', 
+        subs: ['gelatina'],
+        sides: []
+      }
+    ]
+  },
+  {
+    slug: 'hipertrofia-feminina-premium',
+    title: 'Hipertrofia Feminina Estrutural',
+    description: 'Foco em volume muscular e energia para treinos intensos com alimentos reais.',
+    template_type: 'visual_v3',
+    objective: 'hipertrofia',
+    visual_style: 'premium',
+    kcal_profiles: [1800, 2000, 2200],
+    meals: [
+      { 
+        name: 'Café da Manhã de Força', 
+        time: '07:30', 
+        main: 'crepioca', 
+        subs: ['panqueca-proteica'],
+        sides: [{ slug: 'mamao-com-aveia', subs: ['banana-com-pasta-amendoim'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'iogurte-com-fruta', 
+        subs: ['fruta'],
+        sides: [{ slug: 'mix-nuts' }]
+      },
+      { 
+        name: 'Almoço de Performance', 
+        time: '12:30', 
+        main: 'maminha', 
+        subs: ['acem'],
+        sides: [
+          { slug: 'arroz-feijao-carne', subs: ['macarrao-integral'] },
+          { slug: 'salada-completa' }
+        ]
+      },
+      { 
+        name: 'Lanche Pré-Treino', 
+        time: '16:00', 
+        main: 'pao-com-frango-desfiado', 
+        subs: ['sanduiche-natural'],
+        sides: [{ slug: 'agua-de-coco' }]
+      },
+      { 
+        name: 'Jantar de Recuperação', 
+        time: '19:30', 
+        main: 'arroz-com-frango', 
+        subs: ['file-de-tilapia'],
+        sides: [{ slug: 'legumes-cozidos-jantar' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '22:00', 
+        main: 'banana-com-canela', 
+        subs: ['gelatina'],
+        sides: []
       }
     ]
   }

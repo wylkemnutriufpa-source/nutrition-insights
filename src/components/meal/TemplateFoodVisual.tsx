@@ -5,6 +5,7 @@ import { ChefHat } from "lucide-react";
 
 interface TemplateFoodVisualProps {
   foodName: string;
+  imageUrl?: string;
   className?: string;
   size?: "sm" | "md" | "lg";
 }
@@ -15,7 +16,7 @@ const SIZE_MAP = {
   lg: "w-16 h-16 rounded-xl",
 };
 
-export function TemplateFoodVisual({ foodName, className = "", size = "md" }: TemplateFoodVisualProps) {
+export function TemplateFoodVisual({ foodName, imageUrl, className = "", size = "md" }: TemplateFoodVisualProps) {
   const match = useMealVisualMatch(foodName);
   const [recipeOpen, setRecipeOpen] = useState(false);
 
@@ -30,7 +31,8 @@ export function TemplateFoodVisual({ foodName, className = "", size = "md" }: Te
     }
   }, [match?.base_recipe]);
 
-  if (!match?.image_url) return null;
+  const displayImageUrl = imageUrl || match?.image_url;
+  if (!displayImageUrl) return null;
 
   const hasRecipe = !!recipe;
   const sizeClasses = SIZE_MAP[size];
@@ -44,7 +46,7 @@ export function TemplateFoodVisual({ foodName, className = "", size = "md" }: Te
         title={hasRecipe ? `Ver receita: ${match.display_name}` : match.display_name}
       >
         <img
-          src={match.image_url}
+          src={displayImageUrl}
           alt={match.display_name || foodName}
           className={`${sizeClasses} object-cover shadow-sm border border-border/30 transition-transform group-hover:scale-105`}
           loading="lazy"
@@ -61,7 +63,7 @@ export function TemplateFoodVisual({ foodName, className = "", size = "md" }: Te
           open={recipeOpen}
           onOpenChange={setRecipeOpen}
           recipe={recipe}
-          imageUrl={match.image_url}
+          imageUrl={displayImageUrl}
           displayName={match.display_name}
         />
       )}

@@ -56,6 +56,7 @@ interface TemplateFood {
   carbs: number;
   fat: number;
   substitutions: string[];
+  imageUrl?: string;
 }
 
 interface TemplateMeal {
@@ -335,7 +336,8 @@ export default function DietTemplates() {
                 fat: i.fat || i.fat_g || 0,
                 substitutions: Array.isArray(i.substitutions) 
                   ? i.substitutions.map((s: any) => s.name || s.title).filter(Boolean)
-                  : []
+                  : [],
+                imageUrl: i.imageUrl || i.image_url
               }))
             }));
           }
@@ -1118,7 +1120,16 @@ export default function DietTemplates() {
                       <div key={mi} className="glass rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            {MEAL_ICONS[meal.tipo_refeicao || (meal as any).type]}
+                            {(() => {
+                              const title = (meal.tipo_refeicao || (meal as any).type || "").toLowerCase();
+                              if (title.includes("café") || title.includes("desjejum")) return MEAL_ICONS["Café da Manhã"];
+                              if (title.includes("lanche da manhã")) return MEAL_ICONS["Lanche da Manhã"];
+                              if (title.includes("almoço")) return MEAL_ICONS["Almoço"];
+                              if (title.includes("lanche da tarde") || title.includes("lanche")) return MEAL_ICONS["Lanche da Tarde"];
+                              if (title.includes("jantar")) return MEAL_ICONS["Jantar"];
+                              if (title.includes("ceia")) return MEAL_ICONS["Ceia"];
+                              return <Utensils className="w-4 h-4" />;
+                            })()}
                             <h4 className="font-display font-semibold text-sm">{meal.title}</h4>
                           </div>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -1135,7 +1146,7 @@ export default function DietTemplates() {
 
                             return (
                               <div key={fi} className="flex items-start gap-2 text-sm">
-                                <TemplateFoodVisual foodName={food.name} />
+                                <TemplateFoodVisual foodName={food.name} imageUrl={food.imageUrl} />
                                 <div className="flex-1 flex items-start justify-between gap-2">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
