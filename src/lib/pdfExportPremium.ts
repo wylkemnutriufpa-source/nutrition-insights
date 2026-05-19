@@ -315,9 +315,9 @@ function buildPremiumCSS(): string {
 
       /* Estilo Premium para o Header */
       .premium-header {
-        background: linear-gradient(145deg, #020617 0%, #0f172a 100%);
-        padding: 45px 50px;
-        margin-bottom: 30px;
+        background: #0f172a;
+        padding: 35px 40px;
+        margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
