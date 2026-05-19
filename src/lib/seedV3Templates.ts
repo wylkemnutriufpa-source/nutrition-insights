@@ -299,6 +299,11 @@ export const generatePremiumTemplates = () => {
 export const seedPremiumV3Templates = async () => {
   try {
     const templates = generatePremiumTemplates();
+    
+    // First, clear existing V3 official templates to avoid duplicates or stale data
+    const { error: deleteError } = await supabase.from('v3_diet_templates').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (deleteError) console.error('Error clearing old templates:', deleteError);
+
     for (const t of templates) {
       // First, ensure we don't have duplicates by slug if we are re-inserting
       const { error: upsertError } = await supabase.from('v3_diet_templates').upsert({

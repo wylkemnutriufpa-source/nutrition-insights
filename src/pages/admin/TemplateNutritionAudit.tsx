@@ -978,9 +978,9 @@ export default function TemplateNutritionAudit() {
                         {filtered.map((t) => (
                           <TableRow key={t.id}>
                             <TableCell>
-                              <div className="font-medium">{t.name}</div>
+                              <div className="font-medium">{t.name || (t as any).title}</div>
                               <div className="text-xs text-muted-foreground">
-                                {t.tipo_refeicao || "—"}
+                                {t.tipo_refeicao || (t as any).objective || "—"}
                                 {t.is_global ? " · global" : ""}
                               </div>
                             </TableCell>
@@ -1000,7 +1000,7 @@ export default function TemplateNutritionAudit() {
                               <div className="text-xs text-muted-foreground">quebrados/total</div>
                             </TableCell>
                             <TableCell className="hidden lg:table-cell text-xs font-mono">
-                              {t.kcal_base ?? "—"}kcal · P{t.protein_base ?? "—"} · C
+                              {t.kcal_base ?? (t as any).kcal_profiles?.[0] ?? "—"}kcal · P{t.protein_base ?? "—"} · C
                               {t.carbs_base ?? "—"} · G{t.fat_base ?? "—"}
                             </TableCell>
                             <TableCell>
