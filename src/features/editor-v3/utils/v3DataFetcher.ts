@@ -41,7 +41,7 @@ export const searchV3LibraryItems = async (
   }
 
   if (query && query.length >= 2) {
-    queryBuilder = queryBuilder.or(`title.ilike.%${query}%,slug.ilike.%${query}%`);
+    queryBuilder = queryBuilder.or(`title.ilike.%${query}%,slug.ilike.%${query}%,category.ilike.%${query}%`);
   }
 
   const { data, error } = await queryBuilder.limit(50);
