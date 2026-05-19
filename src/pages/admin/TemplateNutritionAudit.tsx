@@ -74,13 +74,16 @@ type FoodItem = {
 type TemplateRow = {
   id: string;
   name: string;
+  title?: string;
   tipo_refeicao: string | null;
+  category?: string | null;
   is_global: boolean | null;
   kcal_base: number | null;
   protein_base: number | null;
   carbs_base: number | null;
   fat_base: number | null;
   foods_structure: FoodItem[] | null;
+  plan_snapshot?: any | null;
   updated_at: string | null;
 };
 
@@ -258,71 +261,73 @@ const isItemBroken = (item: FoodItem): boolean => {
 };
 
 function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
-  // We handle both TableRow (nutritionist_meal_templates) and DietTemplate (diet_templates)
-  const isDietTemplate = 'meals' in t;
-  const items = Array.isArray(t.foods_structure) ? t.foods_structure : [];
-  const meals = Array.isArray((t as any).meals) ? (t as any).meals : [];
+  // We handle nutritionist_meal_templates, diet_templates (legacy) and v3_diet_templates
+  const isV3 = !!t.plan_snapshot;
+  const isLegacyDiet = 'meals' in t;
   
-  const itemsTotal = isDietTemplate 
-    ? meals.reduce((acc: number, m: any) => acc + (Array.isArray(m.blocks) ? m.blocks.length : (Array.isArray(m.foods) ? m.foods.length : 0)), 0)
-    : items.length;
-    
-  const itemsBroken = isDietTemplate ? 0 : items.filter(isItemBroken).length;
-
+  let itemsTotal = 0;
+  let itemsBroken = 0;
   const triggered: { key: RuleKey; message: string }[] = [];
 
-  if (itemsTotal === 0) triggered.push({ key: "noItems", message: "Template sem itens ou blocos configurados" });
+  if (isV3) {
+    // V3 logic: iterate through plan_snapshot (multiple calorie profiles)
+    const snapshot = t.plan_snapshot || {};
+    const profiles = Object.keys(snapshot);
+    
+    if (profiles.length === 0) {
+      triggered.push({ key: "noItems", message: "V3: Snapshot de plano vazio (sem perfis de kcal)" });
+    } else {
+      // Audit the first profile found
+      const firstProfile = snapshot[profiles[0]];
+      const days = firstProfile.days || [];
+      
+      if (days.length === 0) {
+        triggered.push({ key: "noItems", message: "V3: Nenhum dia configurado no snapshot" });
+      } else {
+        days.forEach((day: any) => {
+          const meals = day.meals || [];
+          meals.forEach((meal: any) => {
+            const mealItems = meal.items || [];
+            itemsTotal += mealItems.length;
+            mealItems.forEach((item: any) => {
+              if (isItemBroken({
+                name: item.name || item.title,
+                kcal: item.kcal,
+                protein: item.protein,
+                carbs: item.carbs,
+                fat: item.fat
+              })) {
+                itemsBroken++;
+              }
+            });
+          });
+        });
+      }
+    }
+  } else if (isLegacyDiet) {
+    // Legacy V2 logic
+    const meals = Array.isArray((t as any).meals) ? (t as any).meals : [];
+    itemsTotal = meals.reduce((acc: number, m: any) => acc + (Array.isArray(m.blocks) ? m.blocks.length : (Array.isArray(m.foods) ? m.foods.length : 0)), 0);
+    // ...
+  } else {
+    // Nutritionist simple template
+    const items = Array.isArray(t.foods_structure) ? t.foods_structure : [];
+    itemsTotal = items.length;
+    itemsBroken = items.filter(isItemBroken).length;
+  }
+
+  if (itemsTotal === 0 && triggered.length === 0) triggered.push({ key: "noItems", message: "Template sem itens ou blocos configurados" });
   
-  // kcal_base check (DietTemplate uses base_calories)
-  const kcal = isDietTemplate ? (t as any).base_calories : t.kcal_base;
+  // kcal_base check
+  const kcal = isV3 ? (t as any).kcal_profiles?.[0] : (isLegacyDiet ? (t as any).base_calories : t.kcal_base);
   if (isMissingNumber(kcal) || Number(kcal) <= 0)
     triggered.push({ key: "kcalBaseMissing", message: "Caloria base ausente ou zero (causa NaN no UI)" });
-  
-  if (!isDietTemplate) {
-    if (isMissingNumber(t.protein_base)) triggered.push({ key: "proteinBaseMissing", message: "protein_base ausente" });
-    if (isMissingNumber(t.carbs_base)) triggered.push({ key: "carbsBaseMissing", message: "carbs_base ausente" });
-    if (isMissingNumber(t.fat_base)) triggered.push({ key: "fatBaseMissing", message: "fat_base ausente" });
-  }
 
   if (itemsBroken > 0)
     triggered.push({
       key: "itemsBroken",
       message: `${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`,
     });
-
-  // Legacy structure check
-  if (isDietTemplate) {
-    const hasLegacy = meals.some((m: any) => Array.isArray(m.foods) && m.foods.length > 0);
-    const hasV2 = meals.some((m: any) => Array.isArray(m.blocks) && m.blocks.length > 0);
-    if (hasLegacy && !hasV2) {
-      triggered.push({ key: "legacyStructure", message: "Usa estrutura 'foods' (Legado V1) em vez de 'blocks' (V2)" });
-    }
-  }
-
-  // Coherence check (Simplified heuristic)
-  if (isDietTemplate) {
-    meals.forEach((meal: any) => {
-      const title = (meal.title || "").toLowerCase();
-      const isLunch = title.includes("almoço") || title.includes("jantar") || title.includes("Almoço") || title.includes("Jantar");
-      
-      const allOptions = (meal.blocks || []).flatMap((b: any) => b.options || []);
-      const legacySubs = (meal.foods || []).flatMap((f: any) => f.substitutions || []);
-      
-      allOptions.forEach((opt: any) => {
-        const optName = (opt.name || "").toLowerCase();
-        if (isLunch && (optName.includes("pão") || optName.includes("tapioca")) && !optName.includes("frango") && !optName.includes("carne")) {
-          triggered.push({ key: "incoherentSubstitutions", message: `Refeição '${meal.title}': Opção '${opt.name}' parece ser de Café da Manhã.` });
-        }
-      });
-
-      legacySubs.forEach((sub: string) => {
-        const subName = sub.toLowerCase();
-        if (isLunch && (subName.includes("pão") || subName.includes("tapioca"))) {
-          triggered.push({ key: "incoherentSubstitutions", message: `Refeição '${meal.title}': Substituição '${sub}' parece ser de Café da Manhã.` });
-        }
-      });
-    });
-  }
 
   // Apply user-configured severity, drop ignored.
   const issues = triggered
@@ -333,7 +338,14 @@ function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
   if (issues.some((i) => i.severity === "critical")) level = "critical";
   else if (issues.some((i) => i.severity === "warning")) level = "warning";
 
-  return { ...t, level, issues, itemsTotal, itemsBroken };
+  return { 
+    ...t, 
+    name: t.name || t.title || "Sem nome",
+    level, 
+    issues, 
+    itemsTotal, 
+    itemsBroken 
+  };
 }
 
 const levelStyles: Record<IssueLevel, { label: string; cls: string }> = {
@@ -518,10 +530,10 @@ export default function TemplateNutritionAudit() {
 
   const fetchTemplates = async () => {
     setLoading(true);
-    const table = templateSource === "nutritionist" ? "nutritionist_meal_templates" : "diet_templates";
+    const table = templateSource === "nutritionist" ? "nutritionist_meal_templates" : "v3_diet_templates";
     const columns = templateSource === "nutritionist" 
       ? "id, name, tipo_refeicao, is_global, kcal_base, protein_base, carbs_base, fat_base, foods_structure, updated_at"
-      : "id, name, category, base_calories, meals, updated_at";
+      : "id, title, objective, kcal_profiles, plan_snapshot, updated_at";
 
     const { data, error } = await supabase
       .from(table as any)
