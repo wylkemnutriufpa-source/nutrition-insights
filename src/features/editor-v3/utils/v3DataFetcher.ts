@@ -50,11 +50,11 @@ export const searchV3LibraryItems = async (
     console.error("Error searching V3 Library:", v3Error);
   }
 
-  // 🛡️ INTEGRAÇÃO LEGADA: Buscar também no banco de alimentos principal (TACO/IBGE) e banco de refeições
+  // 🛡️ INTEGRAÇÃO PREMIUM: Buscar também no banco de refeições do nutricionista e bases legadas
   let legacyData: any[] = [];
   if (useLegacyLibrary && (query.length >= 2 || !query)) {
     try {
-      const [{ data: foodData }, { data: mealData }] = await Promise.all([
+      const [{ data: foodData }, { data: mealData }, { data: nutryMealData }] = await Promise.all([
         supabase.from("food_database")
           .select("*")
           .or(`name.ilike.%${query}%,category.ilike.%${query}%`)
@@ -62,15 +62,20 @@ export const searchV3LibraryItems = async (
         supabase.from("meal_visual_library")
           .select("*")
           .or(`name.ilike.%${query}%,slug.ilike.%${query}%`)
+          .limit(20),
+        supabase.from("nutritionist_meal_templates")
+          .select("*")
+          .or(`name.ilike.%${query}%,tipo_refeicao.ilike.%${query}%`)
           .limit(20)
       ]);
 
       legacyData = [
         ...(foodData || []).map(f => ({ ...f, type: 'food' })),
-        ...(mealData || []).map(m => ({ ...m, type: 'meal' }))
+        ...(mealData || []).map(m => ({ ...m, type: 'meal' })),
+        ...(nutryMealData || []).map(n => ({ ...n, type: 'nutritionist_meal', title: n.name, kcal_base: n.kcal_base }))
       ];
     } catch (err) {
-      console.warn("Legacy search failed:", err);
+      console.warn("Extended search failed:", err);
     }
   }
 
