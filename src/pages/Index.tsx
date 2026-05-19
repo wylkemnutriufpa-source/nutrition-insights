@@ -109,7 +109,7 @@ function NutritionistDashboardContent() {
   const { user } = useAuth();
   const { minMode, isBasic } = useExperienceMode();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [authLoading, setLoading] = useState(false);
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
   const [programCount, setProgramCount] = useState(0);
@@ -370,7 +370,7 @@ function NutritionistDashboardContent() {
 
   // Secondary data load - Deferred to after first paint
   useEffect(() => {
-    if (loading || !user?.id) return;
+    if (authLoading || !user?.id) return;
     const timer = setTimeout(() => {
       fetchDashboard();
     }, 1500); // Wait for core UI to settle
@@ -395,7 +395,7 @@ function NutritionistDashboardContent() {
     fetchCoreStats();
   }, [user?.id]);
 
-  if (loading && patientCount === 0) return <DashboardSkeleton />;
+  if (authLoading && patientCount === 0) return <DashboardSkeleton />;
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
@@ -1048,7 +1048,7 @@ function generateLocalInsights(patients: any[]) {
 }
 
 export default function Index() {
-  const { user, isNutritionist, isPersonal, isAdmin, loading: authLoading } = useAuth();
+  const { user, isNutritionist, isPersonal, isAdmin, authLoading: authLoading } = useAuth();
   const { isPatientContext, isHybridUser } = useWorkspaceContext();
   const { minMode } = useExperienceMode();
   const [showTour, setShowTour] = useState(false);
@@ -1077,14 +1077,14 @@ export default function Index() {
     const hasSeenIntro = sessionStorage.getItem(INTRO_STORAGE_KEY) === "1";
     
     // Mostramos a intro se for forçado VIA URL ou se for o primeiro acesso logado do usuário nesta sessão
-    if (forceIntro || (!hasSeenIntro && !loading && user)) {
+    if (forceIntro || (!hasSeenIntro && !authLoading && user)) {
       setShowIntro(true);
     }
-  }, [location.search, loading, user]);
+  }, [location.search, authLoading, user]);
 
   // Auto-trigger tour after onboarding — with 30min cooldown
   useEffect(() => {
-    if (loading || showIntro) return;
+    if (authLoading || showIntro) return;
     const onboardingDone = localStorage.getItem(onboardingKey) === "true";
     const tourDone = localStorage.getItem(tourKey) === "true";
     if (tourDone || !onboardingDone) return;
@@ -1097,7 +1097,7 @@ export default function Index() {
 
     const timer = setTimeout(() => setShowTour(true), 1500);
     return () => clearTimeout(timer);
-  }, [loading, onboardingKey, tourKey, showIntro]);
+  }, [authLoading, onboardingKey, tourKey, showIntro]);
 
   if (showIntro) {
     return (
@@ -1110,8 +1110,8 @@ export default function Index() {
     );
   }
 
-  // Regression Guard: If still loading auth roles, show simple brain loader
-  if (loading && !showIntro && !isAdmin && !isNutritionist && !isPersonal) {
+  // Regression Guard: If still authLoading auth roles, show simple brain loader
+  if (authLoading && !showIntro && !isAdmin && !isNutritionist && !isPersonal) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <BrainLoader text="Iniciando FitJourney..." />
