@@ -123,7 +123,7 @@ export default function PatientMealPlan() {
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ type: string; items: MealPlanItem[] } | null>(null);
-  const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
+  const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string; substituted_calories?: number; substituted_protein?: number }>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showOthersModal, setShowOthersModal] = useState(false);
