@@ -86,7 +86,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
         day_of_week: i.day_of_week ?? undefined,
         is_primary: (i as any).is_primary,
         substitution_group_id: (i as any).substitution_group_id,
-        visual_image_url: i.imageUrl || (i as any).visual_image_url,
+        visual_image_url: i.image_url || (i as any).visual_image_url || (i as any).imageUrl,
         display_quantity: (i as any).display_quantity,
         display_unit: (i as any).display_unit,
         clinical_mass_g: (i as any).clinical_mass_g,
