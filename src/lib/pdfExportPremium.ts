@@ -287,7 +287,7 @@ function buildPremiumCSS(): string {
       @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
       @page {
-        margin: 0;
+        margin: 15mm 10mm;
         size: A4;
       }
 
@@ -322,6 +322,7 @@ function buildPremiumCSS(): string {
         position: relative;
         overflow: hidden;
         border-bottom: 2px solid rgba(212, 168, 75, 0.3);
+        page-break-inside: avoid;
       }
 
       .premium-header::after {
@@ -431,10 +432,8 @@ function buildPremiumCSS(): string {
       }
 
       /* Seções de Dias */
-      /* NÃO usar page-break-inside: avoid no dia inteiro — dias geralmente excedem 1 página
-         e o "avoid" empurra todo o dia para a próxima página, deixando a primeira em branco. */
-      .day-section { margin-bottom: 16px; }
-      .day-section:first-of-type { page-break-before: avoid; }
+      .day-section { margin-bottom: 24px; page-break-inside: auto; }
+      .day-section:first-of-type { page-break-before: auto; }
 
       .day-header {
         background: #0f172a;
@@ -619,15 +618,28 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
     const renderItemLine = (item: MealPlanPDFItem) => {
       const portionText = formatPortionText(item);
+      const kcal = Math.round(item.meta_calorias || 0);
+      const prot = Math.round(item.meta_proteinas || 0);
+      const carb = Math.round(item.meta_carboidratos || 0);
+      const fat = Math.round(item.meta_gorduras || 0);
 
       return `
-        <div class="food-line" style="margin-bottom: 6px;">
-          <span class="food-bullet" style="background: ${mealInfo.color}"></span>
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-weight: 700; color: #1e293b;">${escapeHtml(item.title)}</span>
+        <div class="food-line" style="margin-bottom: 8px; border-bottom: 1px solid #f8fafc; padding-bottom: 4px;">
+          <span class="food-bullet" style="background: ${mealInfo.color}; margin-top: 5px;"></span>
+          <div style="display: flex; flex-direction: column; flex: 1;">
+            <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(item.title)}</span>
             <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
           </div>
-          <span style="margin-left: auto; font-size: 9px; font-weight: 600; color: #94a3b8;">${item.meta_calorias || 0} kcal</span>
+          <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
+            <div style="text-align: right; min-width: 45px;">
+              <div style="font-size: 9px; font-weight: 700; color: #1e293b;">${kcal} <span style="font-size: 7px; color: #94a3b8;">kcal</span></div>
+            </div>
+            <div style="display: flex; gap: 4px; font-size: 8px; font-weight: 600;">
+              <span style="color: #ef4444;">P: ${prot}g</span>
+              <span style="color: #f59e0b;">C: ${carb}g</span>
+              <span style="color: #3b82f6;">G: ${fat}g</span>
+            </div>
+          </div>
         </div>
       `;
     };
@@ -848,6 +860,15 @@ function openPremiumPrintWindow(html: string, title: string) {
   printWindow.onload = () => {
     setTimeout(() => {
       printWindow.print();
-    }, 500);
+    }, 1000); // Increased delay for stability
   };
+
+  // Fallback: If onload doesn't fire (some browsers/conditions)
+  setTimeout(() => {
+    if (printWindow.document.readyState === 'complete') {
+      // already printing or handled
+    } else {
+      printWindow.print();
+    }
+  }, 3000);
 }
