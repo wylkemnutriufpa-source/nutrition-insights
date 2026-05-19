@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import InOfficeWizard from './pages/InOfficeWizard';
-import { BrowserRouter } from 'react-router-dom';
-import { supabase } from './integrations/supabase/client';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './lib/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
@@ -15,21 +15,37 @@ vi.mock('@/components/in-office/InOfficeStepAssessment', () => ({ default: () =>
 vi.mock('@/components/in-office/InOfficeStepMealPlan', () => ({ default: () => <div data-testid="step-4">Plano</div> }));
 vi.mock('@/components/in-office/InOfficeStepFinalize', () => ({ default: () => <div data-testid="step-5">Finalizar</div> }));
 
-vi.mock('./integrations/supabase/client', () => ({
-  supabase: {
+vi.mock('@/lib/onboardingPlanResolver', () => ({
+  resolvePatientIdentity: vi.fn((id) => Promise.resolve({ canonicalId: id, profileId: id + '_prof', allIds: [id] }))
+}));
+
+vi.mock('@/integrations/supabase/client', () => {
+  const mock = {
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
     is: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn(),
     single: vi.fn(),
-  }
-}));
+    rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+      unsubscribe: vi.fn(),
+    })),
+    removeChannel: vi.fn(),
+    getChannels: vi.fn(() => []),
+    then: vi.fn(),
+  };
+  return { supabase: mock };
+});
 
 vi.mock('./lib/auth', () => ({ useAuth: vi.fn() }));
 
@@ -42,29 +58,58 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false 
 
 describe('InOfficeWizard - Fluxo de Etapas', () => {
   const mockUser = { id: 'nutri-123' };
-  const mockProfile = { full_name: 'Paciente Teste' };
-  const mockSession = { id: 'sess-123', current_step: 1, patient_id: 'pat-123' };
+  let lastTable = '';
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useAuth as any).mockReturnValue({ user: mockUser, loading: false });
     
     const mockSupabase = supabase as any;
-    // Mock inicial: profile then session
-    mockSupabase.maybeSingle
-      .mockResolvedValueOnce({ data: mockProfile, error: null })
-      .mockResolvedValueOnce({ data: mockSession, error: null });
-    
-    mockSupabase.update.mockResolvedValue({ data: null, error: null });
+    lastTable = '';
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      lastTable = table;
+      return mockSupabase;
+    });
+
+    const chainMethods = ['select', 'insert', 'update', 'delete', 'eq', 'or', 'in', 'is', 'order', 'limit'];
+    chainMethods.forEach(method => {
+      mockSupabase[method].mockReturnValue(mockSupabase);
+    });
+
+    mockSupabase.maybeSingle.mockImplementation(() => {
+      if (lastTable === 'profiles') {
+        return Promise.resolve({ data: { id: 'pat-123', user_id: 'pat-123', full_name: 'Paciente Teste' }, error: null });
+      }
+      if (lastTable === 'in_office_sessions') {
+        return Promise.resolve({ data: { id: 'sess-123', current_step: 1, patient_id: 'pat-123' }, error: null });
+      }
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mockSupabase.single.mockImplementation(() => {
+      if (lastTable === 'in_office_sessions') {
+        return Promise.resolve({ data: { id: 'sess-123', current_step: 1, patient_id: 'pat-123' }, error: null });
+      }
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mockSupabase.then.mockImplementation((onfulfilled: any) => {
+      const res = { data: null, error: null };
+      if (onfulfilled) return Promise.resolve(res).then(onfulfilled);
+      return Promise.resolve(res);
+    });
   });
 
   it('deve percorrer o fluxo completo e atualizar current_step', async () => {
     const mockSupabase = supabase as any;
     render(
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InOfficeWizard />
-        </BrowserRouter>
+        <MemoryRouter initialEntries={['/in-office/pat-123']}>
+          <Routes>
+            <Route path="/in-office/:patientId" element={<InOfficeWizard />} />
+          </Routes>
+        </MemoryRouter>
       </QueryClientProvider>
     );
 

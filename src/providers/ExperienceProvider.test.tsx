@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+vi.unmock("./ExperienceProvider");
+vi.unmock("@/hooks/useExperienceMode");
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { ExperienceProvider, useExperienceContext } from "./ExperienceProvider";
 import { useAuth } from "@/lib/auth";
@@ -10,15 +12,23 @@ vi.mock("@/lib/auth", () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn().mockReturnThis(),
-    })),
-    removeChannel: vi.fn(),
-  },
-}));
+vi.mock("@/integrations/supabase/client", () => {
+  const chain = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    then: vi.fn((resolve) => resolve({ data: [], error: null })),
+  };
+  return {
+    supabase: {
+      channel: vi.fn(() => ({
+        on: vi.fn().mockReturnThis(),
+        subscribe: vi.fn().mockReturnThis(),
+      })),
+      removeChannel: vi.fn(),
+      from: vi.fn(() => chain),
+    },
+  };
+});
 
 describe("ExperienceProvider", () => {
   const mockUser = { id: "user-123" };

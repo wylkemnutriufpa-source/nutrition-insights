@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
-// Mock Supabase with full chaining support
+// Mock Supabase with full chaining and RPC/Auth support
 vi.mock('@/integrations/supabase/client', () => {
   const mockQueryBuilder = {
     select: vi.fn().mockReturnThis(),
@@ -21,6 +21,11 @@ vi.mock('@/integrations/supabase/client', () => {
 
   const mockSupabase = {
     from: vi.fn().mockReturnValue(mockQueryBuilder),
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'patient-123' } }, error: null }),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    },
+    rpc: vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
     functions: {
       invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
     },
@@ -67,7 +72,6 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
 
   it('should choose a template and publish the plan successfully', async () => {
     const mockSupabase = supabase as any;
-    const mockQuery = mockSupabase.from();
     renderComponent();
 
     // Verify initial state
@@ -76,26 +80,22 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     const publishButton = await screen.findByTestId('publish-button');
     expect(publishButton).toBeInTheDocument();
 
-    // Mock successful update
-    mockQuery.in.mockResolvedValue({ data: null, error: null });
-
     // Click Publish
     fireEvent.click(publishButton);
 
     // Verify button is disabled and shows "Publicando..."
     expect(publishButton).toBeDisabled();
 
-    // Verify publication process
+    // Verify publication process calls publish_meal_plan RPC
     await waitFor(() => {
-      expect(mockSupabase.from).toHaveBeenCalledWith('meal_plans');
-      expect(mockQuery.update).toHaveBeenCalledWith(expect.objectContaining({
-        plan_status: 'published_to_patient',
-        is_active: true
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('publish_meal_plan', expect.objectContaining({
+        _plan_id: 'plan-123',
+        _nutritionist_id: 'patient-123'
       }));
-    }, { timeout: 3000 });
+    }, { timeout: 4500 });
 
     // Verify success message (updated UI)
-    await waitFor(() => expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument(), { timeout: 4500 });
 
     // Verify "Ver perfil do paciente" button is visible and can be clicked
     const viewProfileButton = screen.getByRole('button', { name: /Ver perfil do paciente/i });
@@ -104,13 +104,12 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
 
   it('should show retry button when publication fails and allow retrying', async () => {
     const mockSupabase = supabase as any;
-    const mockQuery = mockSupabase.from();
     renderComponent();
 
     const publishButton = await screen.findByTestId('publish-button');
     
-    // Mock failure
-    mockQuery.in.mockResolvedValueOnce({ data: null, error: { message: 'Database connection failed' } });
+    // Mock failure on the RPC call
+    mockSupabase.rpc.mockResolvedValueOnce({ data: { success: false, error: 'Database connection failed' }, error: null });
 
     fireEvent.click(publishButton);
 
@@ -118,17 +117,16 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     await waitFor(() => {
       expect(screen.getByText(/Falha no envio/i)).toBeInTheDocument();
       expect(screen.getByTestId('retry-publish-button')).toBeInTheDocument();
-    }, { timeout: 3000 });
-
+    }, { timeout: 4500 });
 
     // Mock success for second attempt
-    mockQuery.in.mockResolvedValueOnce({ data: null, error: null });
+    mockSupabase.rpc.mockResolvedValueOnce({ data: { success: true }, error: null });
     
     fireEvent.click(screen.getByTestId('retry-publish-button'));
 
     // Verify success
     await waitFor(() => {
       expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument();
-    }, { timeout: 3000 });
+    }, { timeout: 4500 });
   });
 });

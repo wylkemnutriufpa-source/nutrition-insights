@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+
 import { toast } from "sonner";
 import {
   CheckCircle2, XCircle, AlertTriangle, Loader2, ShieldCheck,
@@ -219,11 +219,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
     setLoading(true);
     setResult(null);
     try {
-      // CRITICAL: flush any pending editor changes before validating against DB
-      const editorState = useMealPlanEditorV2Store.getState();
-      if (editorState.planId === mealPlanId && editorState.hydrated) {
-        await editorState._flushQueue();
-      }
+
 
       const data = await validateMealPlan(mealPlanId);
       setResult(data as unknown as AuditResult);
@@ -244,10 +240,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
     setResult(null);
     try {
       console.info("[PlanAuditPanel] runValidateAndFix starting", { mealPlanId, patientId });
-      const editorState = useMealPlanEditorV2Store.getState();
-      if (editorState.planId === mealPlanId && editorState.hydrated) {
-        await editorState._flushQueue();
-      }
+
 
       const data = await validateMealPlan(mealPlanId);
       console.info("[PlanAuditPanel] Validation result", { mealPlanId, success: data?.success, score: data?.score, finalDecision: (data as any)?.final_decision });

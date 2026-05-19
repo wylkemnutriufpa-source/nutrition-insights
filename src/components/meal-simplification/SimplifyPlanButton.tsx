@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wand2, Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import type { MealPlanItem } from "@/lib/mealPlanSort";
 import {
   calculatePlanSimplicityScore,
   type MealItemForAudit,

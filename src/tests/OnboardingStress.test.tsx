@@ -91,44 +91,31 @@ describe('Onboarding Stress & Stability Test', () => {
     // if (isTransitioning) { console.warn(...); return; }
   });
 
-  it('PROVE: Should remain linear even with high latency', async () => {
-    (useAuth as any).mockReturnValue({ user: { id: 'test-user' }, isPatient: true });
-
-    // Mock slow DB response
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn().mockImplementation(() => new Promise(resolve => 
-            setTimeout(() => resolve({ data: { patient_state: 'anamnesis' }, error: null }), 500)
-          )),
-        })),
-      })),
-    });
-
-    const { result } = renderHook(() => usePatientJourneyStatus(), { wrapper });
-
-    // Should be loading initially
-    expect(result.current.loading).toBe(true);
-    
-    // Wait for the slow response
-    await waitFor(() => expect(result.current.loading).toBe(false), { timeout: 1000 });
-    expect(result.current.status).toBe('anamnesis');
-  });
-
-  it('PROVE: Should persist state even after forced local storage reset', async () => {
-    (useAuth as any).mockReturnValue({ user: { id: 'test-user' }, isPatient: true });
-
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn().mockResolvedValue({ data: { patient_state: 'anamnesis' }, error: null }),
-        })),
-      })),
+  it('PROVE: Should reflect patient state from auth profile', async () => {
+    (useAuth as any).mockReturnValue({ 
+      user: { id: 'test-user' }, 
+      isPatient: true,
+      authLoading: false,
+      profile: { patient_state: 'anamnesis' }
     });
 
     const { result } = renderHook(() => usePatientJourneyStatus(), { wrapper });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.status).toBe('anamnesis');
+  });
+
+  it('PROVE: Should fallback to onboarding_slides if profile lacks patient_state', async () => {
+    (useAuth as any).mockReturnValue({ 
+      user: { id: 'test-user' }, 
+      isPatient: true,
+      authLoading: false,
+      profile: {} // Missing patient_state
+    });
+
+    const { result } = renderHook(() => usePatientJourneyStatus(), { wrapper });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.status).toBe('onboarding_slides');
   });
 });

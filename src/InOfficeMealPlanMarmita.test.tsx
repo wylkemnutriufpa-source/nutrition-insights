@@ -10,25 +10,27 @@ import '@testing-library/jest-dom';
 // Mocks
 vi.mock('@/components/layout/DashboardLayout', () => ({ default: ({ children }: any) => <div>{children}</div> }));
 
-vi.mock('./integrations/supabase/client', () => {
-  const mockQuery = {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    is: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn(),
-    single: vi.fn(),
-    then: vi.fn()
-  };
+vi.mock('@/integrations/supabase/client', () => {
+  const mockChain = {} as any;
+  mockChain.select = vi.fn().mockReturnValue(mockChain);
+  mockChain.insert = vi.fn().mockReturnValue(Promise.resolve({ data: [], error: null }));
+  mockChain.update = vi.fn().mockReturnValue(mockChain);
+  mockChain.delete = vi.fn().mockReturnValue(mockChain);
+  mockChain.eq = vi.fn().mockReturnValue(mockChain);
+  mockChain.or = vi.fn().mockReturnValue(mockChain);
+  mockChain.not = vi.fn().mockReturnValue(mockChain);
+  mockChain.in = vi.fn().mockReturnValue(mockChain);
+  mockChain.is = vi.fn().mockReturnValue(mockChain);
+  mockChain.order = vi.fn().mockReturnValue(mockChain);
+  mockChain.limit = vi.fn().mockReturnValue(Promise.resolve({ data: [], error: null }));
+  mockChain.range = vi.fn().mockReturnValue(Promise.resolve({ data: [], error: null }));
+  mockChain.maybeSingle = vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null }));
+  mockChain.single = vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null }));
+  mockChain.then = vi.fn();
   
   return {
     supabase: {
-      from: vi.fn(() => mockQuery),
+      from: vi.fn(() => mockChain)
     }
   };
 });
@@ -71,6 +73,7 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
         update: vi.fn().mockImplementation(() => chain),
         delete: vi.fn().mockImplementation(() => chain),
         eq: vi.fn().mockImplementation(() => chain),
+        or: vi.fn().mockImplementation(() => chain),
         in: vi.fn().mockImplementation(() => chain),
         is: vi.fn().mockImplementation(() => chain),
         order: vi.fn().mockImplementation(() => chain),

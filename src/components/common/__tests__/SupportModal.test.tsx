@@ -55,7 +55,9 @@ describe("SupportModal - Accessibility & Interaction", () => {
     fireEvent.click(copyBtn);
     
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("fj_sess_test123");
-    expect(screen.getByText(/COPIADO/i)).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText(/COPIADO/i)).toBeDefined();
+    });
   });
 
   it("calls onClose when modal should close", async () => {

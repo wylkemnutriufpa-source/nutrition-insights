@@ -19,7 +19,7 @@ vi.mock('@/components/in-office/InOfficeStepMealPlan', () => ({ default: () => <
 vi.mock('@/components/in-office/InOfficeStepFinalize', () => ({ default: () => <div data-testid="step-5">Finalizar</div> }));
 
 // Mock Supabase
-vi.mock('./integrations/supabase/client', () => {
+vi.mock('@/integrations/supabase/client', () => {
   const mock = {
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
@@ -27,6 +27,7 @@ vi.mock('./integrations/supabase/client', () => {
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
     is: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),

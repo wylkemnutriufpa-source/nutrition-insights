@@ -11,22 +11,29 @@ vi.mock("sonner", () => ({
   },
 }));
 
-// Mock do supabase client
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          not: vi.fn(() => ({
-            order: vi.fn(() => ({
-              limit: vi.fn(() => Promise.resolve({ data: [], error: null }))
-            }))
-          }))
-        }))
-      }))
-    }))
-  }
-}));
+vi.mock("@/integrations/supabase/client", () => {
+  const mockChain = {} as any;
+  mockChain.select = vi.fn().mockReturnValue(mockChain);
+  mockChain.insert = vi.fn().mockReturnValue(Promise.resolve({ data: [], error: null }));
+  mockChain.update = vi.fn().mockReturnValue(mockChain);
+  mockChain.delete = vi.fn().mockReturnValue(mockChain);
+  mockChain.eq = vi.fn().mockReturnValue(mockChain);
+  mockChain.or = vi.fn().mockReturnValue(mockChain);
+  mockChain.not = vi.fn().mockReturnValue(mockChain);
+  mockChain.in = vi.fn().mockReturnValue(mockChain);
+  mockChain.is = vi.fn().mockReturnValue(mockChain);
+  mockChain.order = vi.fn().mockReturnValue(mockChain);
+  mockChain.limit = vi.fn().mockReturnValue(Promise.resolve({ data: [], error: null }));
+  mockChain.range = vi.fn().mockReturnValue(Promise.resolve({ data: [], error: null }));
+  mockChain.maybeSingle = vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null }));
+  mockChain.single = vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null }));
+  
+  return {
+    supabase: {
+      from: vi.fn(() => mockChain)
+    }
+  };
+});
 
 import { PORTION_ERROR_MESSAGE, PORTION_PLACEHOLDER } from "@/lib/portionValidation";
 

@@ -10,18 +10,30 @@ import '@testing-library/jest-dom';
 import InOfficeStepFinalize from '@/components/in-office/InOfficeStepFinalize';
 import NextMealWidget from '@/components/patient/NextMealWidget';
 
+const mockQuery = {
+  select: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  in: vi.fn().mockReturnThis(),
+  order: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
+  maybeSingle: vi.fn(),
+  then: vi.fn()
+};
+
+const mockRpc = vi.fn().mockResolvedValue({ data: { success: true }, error: null });
+const mockGetUser = vi.fn().mockResolvedValue({ data: { user: { id: 'patient-123' } }, error: null });
+
 vi.mock('@/integrations/supabase/client', () => {
-  const mockQuery = {
-    select: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn(),
-    then: vi.fn()
+  return {
+    supabase: {
+      from: vi.fn(() => mockQuery),
+      rpc: (...args: any[]) => mockRpc(...args),
+      auth: {
+        getUser: () => mockGetUser()
+      }
+    }
   };
-  return { supabase: { from: vi.fn(() => mockQuery) } };
 });
 
 vi.mock('@/lib/auth', () => ({ 
@@ -41,6 +53,8 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRpc.mockClear();
+    mockGetUser.mockClear();
   });
 
   it('Nutricionista publica plano e Paciente visualiza macros não-zerados', async () => {
@@ -76,18 +90,6 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
       };
       
       chain.then = (resolve: any) => chain.maybeSingle().then(resolve);
-      
-      // Captura o update de status
-      chain.update.mockImplementation((patch: any) => {
-        if (table === 'meal_plans' && patch.plan_status === 'published_to_patient') {
-            // Verifica que não estamos publicando com total_calories zerado (lógica de teste)
-            // No sistema real, o total_calories é persistido no banco via trigger ou save anterior.
-            // Aqui garantimos que o teste simula o estado correto.
-            return chain;
-        }
-        return chain;
-      });
-
       return chain;
     });
 
@@ -105,19 +107,15 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
     );
 
     // Clica no botão Publicar (específico para o botão, não o label)
-    const publishBtn = await screen.findByRole('button', { name: /Publicar Plano/i });
+    const publishBtn = await screen.findByTestId('publish-button');
     fireEvent.click(publishBtn);
 
     await waitFor(() => {
-      expect(mockSupabase.from).toHaveBeenCalledWith('meal_plans');
-      // Verifica se o update foi chamado com o status correto
-      const mealPlanCalls = mockSupabase.from.mock.calls.filter((c: any) => c[0] === 'meal_plans');
-      const updateCall = mealPlanCalls.find((c: any, i: number) => {
-          const results = mockSupabase.from.mock.results[mockSupabase.from.mock.calls.indexOf(c)];
-          return results.value.update.mock.calls.length > 0;
+      expect(mockRpc).toHaveBeenCalledWith('publish_meal_plan', {
+        _plan_id: mockPlanId,
+        _nutritionist_id: 'patient-123'
       });
-      expect(updateCall).toBeDefined();
-    });
+    }, { timeout: 4000 });
 
     // 2. MOCK PARA VISUALIZAÇÃO (PACIENTE)
     // Alteramos o mock para refletir o plano publicado e com macros
@@ -125,17 +123,18 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
       const chain: any = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        or: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn(() => {
           if (table === 'meal_plans') {
-            return Promise.resolve({ data: { id: mockPlanId, plan_status: 'published_to_patient' }, error: null });
+            return Promise.resolve({ data: { id: mockPlanId, plan_status: 'published_to_patient', is_active: true }, error: null });
           }
           if (table === 'meal_plan_items') {
-            const dayOfWeek = (new Date().getDay() + 6) % 7;
+            const dayOfWeek = new Date().getDay();
             return Promise.resolve({ 
               data: [
-                { tipo_refeicao: 'Almoço', title: 'Marmita Publicada', meta_calorias: 2000, meta_proteinas: 150, meta_carboidratos: 200, meta_gorduras: 60, day_of_week: dayOfWeek }
+                { tipo_refeicao: 'Almoço', title: 'Marmita Publicada', meta_calorias: 2000, meta_proteinas: 150, meta_carboidratos: 200, meta_gorduras: 60, day_of_week: dayOfWeek, is_primary: true }
               ], 
               error: null 
             });

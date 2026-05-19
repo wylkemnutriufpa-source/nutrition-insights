@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import type { MealPlanItem } from "@/lib/mealPlanSort";
 import type { SimplicityScore } from "@/lib/planSimplicityEngine";
 import PlanSimplicityScoreCard from "./PlanSimplicityScoreCard";
 import { getMealTypeLabel } from "@/lib/planSimplicityEngine";

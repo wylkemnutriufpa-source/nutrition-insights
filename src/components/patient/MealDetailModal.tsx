@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtMacro, isMacroInconsistent, getMacroStatusColor, getMacroStatusLabel, safeNum } from "@/lib/formatMacros";
-import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import type { MealPlanItem } from "@/lib/mealPlanSort";
 import MealSubstitutionModal from "./MealSubstitutionModal";
 import { useAuth } from "@/lib/auth";
 import {

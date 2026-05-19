@@ -14,6 +14,7 @@ vi.mock('@/integrations/supabase/client', () => {
   const mockQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     gte: vi.fn().mockReturnThis(),
@@ -24,6 +25,7 @@ vi.mock('@/integrations/supabase/client', () => {
   return { 
     supabase: { 
       from: vi.fn(() => mockQuery), 
+      rpc: vi.fn(),
       channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
       removeChannel: vi.fn() 
     } 
@@ -47,6 +49,14 @@ vi.mock('@/components/layout/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>
 }));
 
+vi.mock('@/hooks/useExperienceUI', () => ({
+  useExperienceUI: () => ({
+    isBasic: false,
+    showMacros: true,
+    showDetailedAdherence: true
+  })
+}));
+
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 describe('E2E: Proteção contra Dados Parciais (API returning 0/null)', () => {
@@ -60,6 +70,7 @@ describe('E2E: Proteção contra Dados Parciais (API returning 0/null)', () => {
       const chain: any = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        or: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         gte: vi.fn().mockReturnThis(),
@@ -98,6 +109,44 @@ describe('E2E: Proteção contra Dados Parciais (API returning 0/null)', () => {
       };
       return chain;
     });
+
+    mockSupabase.rpc.mockImplementation(async (fn: string) => {
+      if (fn === "resolve_patient_meal_plan") {
+        const dayOfWeek = new Date().getDay();
+        return {
+          data: {
+            id: mockPlanId,
+            title: 'Plano Incompleto',
+            start_date: '2026-01-01',
+            plan_mode: 'single_day',
+            snapshot: {
+              snapshot_version: 'v3',
+              targets: { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+              days: [
+                {
+                  day_of_week: dayOfWeek,
+                  meals: [
+                    {
+                      name: 'Almoço',
+                      macros: { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+                      items: [
+                        {
+                          id: 'item-zero',
+                          title: 'Processando Macros...',
+                          macros: { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          error: null
+        };
+      }
+      return { data: null, error: null };
+    });
   });
 
   it('NextMealWidget deve mostrar "..." em vez de 0 ou NaN', async () => {
@@ -131,15 +180,19 @@ describe('E2E: Proteção contra Dados Parciais (API returning 0/null)', () => {
     );
 
     await waitFor(() => {
-      // Procura especificamente pelas áreas de valor dos macros
-      // No Componente, temos labels "Calorias", "Proteína", etc.
-      const caloriesVal = screen.getByText(/Calorias/i).parentElement;
-      expect(caloriesVal?.textContent).toContain("...");
-      expect(caloriesVal?.textContent).not.toContain("0");
+      // Procura especificamente pelas áreas de valor dos macros usando os data attributes
+      const kcalEl = document.querySelector('[data-macro="kcal"]');
+      if (!kcalEl) {
+        console.error("DEBUG HTML:", document.body.innerHTML);
+      }
+      expect(kcalEl).toBeInTheDocument();
+      expect(kcalEl?.textContent).toContain("...");
+      expect(kcalEl?.textContent).not.toContain("0");
 
-      const proteinVal = screen.getByText(/Proteína/i).parentElement;
-      expect(proteinVal?.textContent).toContain("...");
-      expect(proteinVal?.textContent).not.toContain("0");
+      const protEl = document.querySelector('[data-macro="protein"]');
+      expect(protEl).toBeInTheDocument();
+      expect(protEl?.textContent).toContain("...");
+      expect(protEl?.textContent).not.toContain("0");
     });
     
     console.log("✅ E2E: Fallbacks de API parcial validados.");

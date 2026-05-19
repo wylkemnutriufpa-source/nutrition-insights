@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Smartphone, CheckCircle2, AlertCircle, X, Maximize2, MousePointer2, Camera, Download, FileText, Settings, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
+
 import { useMobileValidation } from "@/hooks/useMobileValidation";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
@@ -49,7 +49,6 @@ export default function MobileQA() {
   const animationFrameRef = useRef<number | null>(null);
 
   const testScreens = [
-    { id: "strategy", label: "Consultor de Estratégia", icon: MousePointer2, component: "StrategyAdvisor" },
     { id: "settings", label: "Configurações Profissionais", icon: Settings, component: "ProfessionalSettings" },
     { id: "profile", label: "Perfil do Usuário", icon: User, component: "UserProfile" },
     { id: "wizard", label: "InOffice Wizard", icon: Maximize2, component: "InOfficeWizard" },
@@ -436,20 +435,12 @@ export default function MobileQA() {
                     <div className="p-4 overflow-y-auto overflow-x-hidden flex-1 bg-background">
                       <div className="space-y-4">
                         <h2 className="text-xl font-bold">Simulação: {screen.label}</h2>
-                        {screen.id === "strategy" ? (
-                          <StrategyAdvisorPanel 
-                            patientId="test-id" 
-                            onStrategyConfirmed={() => toast.success("Confirmado!")}
-                            onCancel={() => {}}
-                          />
-                        ) : (
-                          <div className="p-20 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground italic">
-                            Conteúdo de {screen.label} (Scroll-Test)
-                            <div style={{ width: '110%', height: '100px', background: 'linear-gradient(90deg, transparent, red)' }} className="mt-4 opacity-10">
-                              Simulador de Overflow
-                            </div>
+                        <div className="p-20 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground italic">
+                          Conteúdo de {screen.label} (Scroll-Test)
+                          <div style={{ width: '110%', height: '100px', background: 'linear-gradient(90deg, transparent, red)' }} className="mt-4 opacity-10">
+                            Simulador de Overflow
                           </div>
-                        )}
+                        </div>
                         <div className="h-[1000px] w-full bg-gradient-to-b from-muted/20 to-transparent rounded-lg">
                           Área de Scroll Longo
                         </div>

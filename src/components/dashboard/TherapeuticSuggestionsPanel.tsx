@@ -5,7 +5,6 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { applyTherapeuticAdjustment } from "@/lib/applyTherapeuticAdjustment";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import {
   Zap, AlertTriangle, TrendingDown, ArrowUpRight, ArrowDownRight,
   Pause, RefreshCw, Check, X, Eye, ChevronDown, ChevronUp,
@@ -177,13 +176,7 @@ export default function TherapeuticSuggestionsPanel() {
       queryClient.invalidateQueries({ queryKey: ["therapeutic-interventions"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["meal-plans"] });
-      // If the editor is open on the adjusted plan, force re-hydration from DB
-      if (variables.status === "applied" && (intervention as any)?.plan_id) {
-        const editorState = useMealPlanEditorV2Store.getState();
-        if (editorState.planId === (intervention as any).plan_id && editorState.hydrated) {
-          editorState.hydrate((intervention as any).plan_id, user?.id ?? "");
-        }
-      }
+      // V2 editor hydration bypassed as V3 is the unified system standard
 
       if (variables.status === "applied") {
         const result = (intervention as any)?._adjustmentResult;

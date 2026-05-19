@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { MealDetailModal, type MealDetailData } from "@/components/patient/MealDetailModal";
-import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import type { MealPlanItem } from "@/lib/mealPlanSort";
 
 interface MealDetailContextType {
   openMealDetail: (meal: MealDetailData) => void;

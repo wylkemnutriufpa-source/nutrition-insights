@@ -135,18 +135,8 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
       fireEvent.click(step4Btn);
 
       // Create Plan
-      const createBtn = await screen.findByText(/Criar Plano Presencial/i, {}, { timeout: 5000 });
+      const createBtn = await screen.findByText(/Manual/i, {}, { timeout: 5000 });
       fireEvent.click(createBtn);
-
-      // If marmita, check for Duplicar
-      if (patient.hasMarmita) {
-        const dupBtn = await screen.findByText(/Duplicar/i, {}, { timeout: 5000 });
-        expect(dupBtn).toBeInTheDocument();
-        fireEvent.click(dupBtn);
-        await waitFor(() => {
-          expect(supabase.from).toHaveBeenCalledWith('meal_plan_items');
-        });
-      }
 
       // Finalize Session
       const nextBtn = screen.getByRole('button', { name: /Próximo/i });

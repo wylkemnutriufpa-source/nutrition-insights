@@ -45,6 +45,7 @@ describe('Validação E2E: Visualização Paciente', () => {
       const chain: any = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        or: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn(() => {
@@ -52,7 +53,8 @@ describe('Validação E2E: Visualização Paciente', () => {
             return Promise.resolve({ data: { id: mockPlanId }, error: null });
           }
           if (table === 'meal_plan_items') {
-            const dayOfWeek = (new Date().getDay() + 6) % 7;
+            // Use current day of week to match the query in NextMealWidget
+            const dayOfWeek = new Date().getDay();
             return Promise.resolve({ 
               data: [
                 { tipo_refeicao: 'Almoço', title: 'Marmita E2E', meta_calorias: 2000, meta_proteinas: 150, meta_carboidratos: 200, meta_gorduras: 60, day_of_week: dayOfWeek }

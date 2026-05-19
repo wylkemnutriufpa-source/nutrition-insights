@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import InOfficeWizard from './pages/InOfficeWizard';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { supabase } from './integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock dependências
 vi.mock('./components/layout/DashboardLayout', () => ({
@@ -45,7 +45,7 @@ const createMockChain = () => {
   return chain;
 };
 
-vi.mock('./integrations/supabase/client', () => ({
+vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(() => createMockChain()),
     rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),

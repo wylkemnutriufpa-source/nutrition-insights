@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAppState } from "@/hooks/useAppState";
+import { calculateTMB } from "@/lib/deterministicEngine";
 
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -204,13 +205,11 @@ export default function PhysicalAssessment() {
     // BMR (Mifflin-St Jeor)
     let bmr = 0;
     if (w > 0 && h > 0) {
-      bmr = sex === "male"
-        ? 10 * w + 6.25 * h - 5 * age + 5
-        : 10 * w + 6.25 * h - 5 * age - 161;
+      bmr = calculateTMB(w, h, age, sex as any);
     }
 
     // TDEE
-    const tdee = bmr * af;
+    const tdee = Math.round(bmr * af);
 
     // TEF (Thermic Effect of Food ~10%)
     const tef = tdee * 0.1;

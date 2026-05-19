@@ -49,7 +49,7 @@ import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap, RefreshCw, Sparkles } from "lucide-react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
-import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
+
 import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
 import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
 
@@ -526,13 +526,11 @@ export default function MealPlans() {
                   </select>
                 </div>
                 {form.patient_id ? (
-                  <GenerationModeSelector
-                    patientId={form.patient_id}
-                    onGenerated={() => {
-                      setOpen(false);
-                      fetchPlans();
-                    }}
-                  />
+                  <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                    <Button type="submit" className="w-full" disabled={submitting}>
+                      {submitting ? "Criando..." : "Criar Plano Manualmente"}
+                    </Button>
+                  </form>
                 ) : (
                   <div className="text-center py-6 text-muted-foreground text-sm">
                     <Zap className="w-8 h-8 mx-auto mb-2 opacity-40" />

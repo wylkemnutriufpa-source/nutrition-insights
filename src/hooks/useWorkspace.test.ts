@@ -15,6 +15,7 @@ vi.mock("@/integrations/supabase/client", () => ({
           order: vi.fn(),
         })),
         in: vi.fn(),
+        order: vi.fn(),
       })),
       insert: vi.fn(() => ({
         select: vi.fn(() => ({
@@ -72,6 +73,7 @@ describe("useWorkspace", () => {
       if (table === "workspace_sections") {
         return {
           select: vi.fn(() => ({
+            order: vi.fn().mockResolvedValue({ data: mockSections, error: null }),
             eq: vi.fn(() => ({
               order: vi.fn().mockResolvedValue({ data: mockSections, error: null }),
             })),
@@ -88,6 +90,7 @@ describe("useWorkspace", () => {
       if (table === "workspace_items") {
         return {
           select: vi.fn(() => ({
+            order: vi.fn().mockResolvedValue({ data: mockItems, error: null }),
             eq: vi.fn(() => ({
               order: vi.fn().mockResolvedValue({ data: mockItems, error: null }),
             })),

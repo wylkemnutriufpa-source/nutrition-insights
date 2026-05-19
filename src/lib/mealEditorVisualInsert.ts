@@ -1,5 +1,6 @@
 import type { TablesInsert } from "@/integrations/supabase/types";
-import type { MealType } from "@/stores/mealPlanEditorV2Store";
+
+export type MealType = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
 
 export interface DraggedVisualLibraryItem {
   source: "visual_library";

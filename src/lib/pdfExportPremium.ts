@@ -175,8 +175,18 @@ function formatPortionText(item: { display_quantity?: any; display_unit?: any; c
   return (item.description || "").toString();
 }
 
-function formatSubstitutionDetail(sub: MealPlanPDFItem, _primary: MealPlanPDFItem): string {
-  return formatPortionText(sub);
+function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem | undefined): string {
+  const portion = formatPortionText(sub);
+  if (portion && portion !== "Substituição" && portion !== "substituição" && portion !== "Sub") {
+    return portion;
+  }
+  if (primary) {
+    const primaryPortion = formatPortionText(primary);
+    if (primaryPortion) {
+      return `Porção equivalente: ${primaryPortion}`;
+    }
+  }
+  return portion;
 }
 
 function escapeHtml(str: string): string {
@@ -673,12 +683,22 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             const targetPrimary = primaries.find(p => p.substitution_group_id === gId);
             const targetName = targetPrimary ? targetPrimary.title : "Itens acima";
             
+            const subKcal = items.reduce((sum, item) => sum + (item.meta_calorias || 0), 0);
+            const subProt = items.reduce((sum, item) => sum + (item.meta_proteinas || 0), 0);
+            const subCarb = items.reduce((sum, item) => sum + (item.meta_carboidratos || 0), 0);
+            const subFat = items.reduce((sum, item) => sum + (item.meta_gorduras || 0), 0);
+
             return `
               <div style="margin-bottom: 8px; last-child: margin-bottom: 0;">
-                <div style="font-size: 9px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">Substituindo ${escapeHtml(targetName)}:</div>
+                <div style="font-size: 9px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">
+                  Substituindo ${escapeHtml(targetName)}:
+                  <span style="font-weight: normal; margin-left: 8px;">
+                    Macros não considerados: <span style="margin-left: 4px;">${Math.round(subKcal)} kcal · P ${Math.round(subProt)}g · C ${Math.round(subCarb)}g · G ${Math.round(subFat)}g</span>
+                  </span>
+                </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                   ${items.map(sub => {
-                    const subPortion = formatSubstitutionDetail(sub, sub); // Use sub's own detail
+                    const subPortion = formatSubstitutionDetail(sub, targetPrimary);
                     return `
                       <div style="background: #fff; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 10px;">
                         <span style="font-weight: 600; color: #334155;">${escapeHtml(sub.title)}</span>

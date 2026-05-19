@@ -2,8 +2,16 @@
  * Utilitário de cópia resiliente para evitar erros da Clipboard API em navegadores restritos ou via iframe.
  */
 
-export function copyToClipboard(text: string): Promise<boolean> {
-  return Promise.resolve(fallbackCopy(text));
+export async function copyToClipboard(text: string): Promise<boolean> {
+  if (navigator?.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      console.warn("[clipboard] Modern clipboard writeText failed, using fallback:", err);
+    }
+  }
+  return fallbackCopy(text);
 }
 
 function fallbackCopy(text: string): boolean {

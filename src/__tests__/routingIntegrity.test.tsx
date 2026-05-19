@@ -68,7 +68,7 @@ describe("Routing Integrity Suite", () => {
         </MemoryRouter>
       );
       expect(screen.getByTestId(testId)).toBeInTheDocument();
-      expect(screen.queryByText("Página não encontrada")).not.toBeInTheDocument();
+      expect(screen.queryByText(/Rota não encontrada/i)).not.toBeInTheDocument();
     });
   });
 
@@ -78,7 +78,7 @@ describe("Routing Integrity Suite", () => {
         <AppRoutes />
       </MemoryRouter>
     );
-    expect(screen.getByText("Página não encontrada")).toBeInTheDocument();
+    expect(screen.getByText(/Rota não encontrada/i)).toBeInTheDocument();
     expect(screen.getByText("404")).toBeInTheDocument();
     expect(screen.getByText("/invalid-path-999")).toBeInTheDocument();
   });

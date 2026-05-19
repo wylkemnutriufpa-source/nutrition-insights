@@ -7,9 +7,29 @@
 
 export type Gender = 'male' | 'female';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-export type Goal = 'lose_weight' | 'maintain' | 'gain_muscle';
+export type Goal = 'lose_weight' | 'maintain' | 'gain_muscle' | 'maintenance' | 'loss' | 'gain' | 'aggressive_loss';
 
-const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
+export interface MetabolicProfile {
+  age: number;
+  weight: number;
+  height: number;
+  gender: Gender;
+  activityLevel: ActivityLevel;
+  goal: Goal;
+}
+
+export interface MetabolicResult {
+  tmb: number; // Taxa Metabólica Basal
+  get: number; // Gasto Energético Total (TDEE)
+  vet: number; // Valor Energético Total (Alvo Calórico)
+  macros: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+}
+
+export const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   sedentary: 1.2,
   light: 1.375,
   moderate: 1.55,
@@ -17,14 +37,24 @@ const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   very_active: 1.9
 };
 
+const GOAL_ADJUSTMENTS: Record<string, number> = {
+  lose_weight: -500,
+  loss: -500,
+  aggressive_loss: -800,
+  maintain: 0,
+  maintenance: 0,
+  gain_muscle: 300,
+  gain: 400
+};
+
 /**
  * Cálculo de Taxa Metabólica Basal (Mifflin-St Jeor)
  */
 export function calculateTMB(weight: number, height: number, age: number, gender: Gender): number {
   if (gender === 'male') {
-    return (10 * weight) + (6.25 * height) - (5 * age) + 5;
+    return Math.round((10 * weight) + (6.25 * height) - (5 * age) + 5);
   }
-  return (10 * weight) + (6.25 * height) - (5 * age) - 161;
+  return Math.round((10 * weight) + (6.25 * height) - (5 * age) - 161);
 }
 
 /**
@@ -36,28 +66,62 @@ export function calculateGET(tmb: number, activityLevel: ActivityLevel): number 
 }
 
 /**
- * Meta Calórica e Macronutrientes Determinísticos
+ * Motor Central de Cálculo
+ * 🛡️ DETERMINÍSTICO: Mesmos inputs sempre geram mesmos outputs.
  */
-export function calculateDeterministicPlan(weight: number, get: number, goal: Goal) {
-  let kcal = get;
-  
-  // Definição de superávit/déficit fixo
-  if (goal === 'lose_weight') kcal = get - 500;
-  if (goal === 'gain_muscle') kcal = get + 300;
+export function solveMetabolicProfile(profile: MetabolicProfile): MetabolicResult {
+  const tmb = calculateTMB(profile.weight, profile.height, profile.age, profile.gender);
+  const get = calculateGET(tmb, profile.activityLevel);
+  const adjustment = GOAL_ADJUSTMENTS[profile.goal] !== undefined ? GOAL_ADJUSTMENTS[profile.goal] : 0;
+  const vet = Math.round(get + adjustment);
 
-  // Proteína fixa por objetivo (g/kg)
-  let proteinPerKg = 2.0;
-  if (goal === 'lose_weight') proteinPerKg = 2.2;
-  if (goal === 'maintain') proteinPerKg = 1.8;
+  // Estratégia de Macros Padrão (Proporções Clínicas)
+  // Proteína: 2.0g/kg para perda/ganho, 1.8g/kg manutenção
+  const isMaintenance = profile.goal === 'maintenance' || profile.goal === 'maintain';
+  const proteinPerKg = isMaintenance ? 1.8 : 2.0;
+  const proteinG = Math.round(profile.weight * proteinPerKg);
   
-  const protein_g = Math.round(weight * proteinPerKg);
-  const fat_g = Math.round(weight * 0.8); // 0.8g/kg de gordura como padrão estável
-  const carb_g = Math.round((kcal - (protein_g * 4) - (fat_g * 9)) / 4);
+  // Gordura: 0.8g/kg fixo
+  const fatG = Math.round(profile.weight * 0.8);
+  
+  // Carbos: O que sobrar das calorias
+  const proteinKcal = proteinG * 4;
+  const fatKcal = fatG * 9;
+  const carbKcal = Math.max(0, vet - (proteinKcal + fatKcal));
+  const carbsG = Math.round(carbKcal / 4);
 
   return {
-    kcal: Math.round(kcal),
-    protein_g,
-    carb_g: Math.max(0, carb_g),
-    fat_g
+    tmb,
+    get,
+    vet,
+    macros: {
+      protein: proteinG,
+      carbs: carbsG,
+      fat: fatG
+    }
   };
 }
+
+/**
+ * Meta Calórica e Macronutrientes Determinísticos (Legado)
+ */
+export function calculateDeterministicPlan(weight: number, get: number, goal: Goal) {
+  const profile: MetabolicProfile = {
+    age: 30, // default if not provided
+    weight,
+    height: 170, // default if not provided
+    gender: 'male', // default if not provided
+    activityLevel: 'moderate',
+    goal
+  };
+  
+  const result = solveMetabolicProfile(profile);
+  
+  return {
+    kcal: result.vet,
+    protein_g: result.macros.protein,
+    carb_g: result.macros.carbs,
+    fat_g: result.macros.fat
+  };
+}
+

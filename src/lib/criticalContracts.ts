@@ -1,15 +1,33 @@
-// Stub: critical contracts.
 export type CriticalContractId = string;
 
-export const CRITICAL_CONTRACTS: Record<string, any> = {};
+export const draftIntegrityContract = (opts: any) => {
+  if (!opts.meals) return { ok: false, violations: ["meals nunca pode ser null"] };
+  const ids = new Set();
+  for (const item of opts.items || []) {
+    if (ids.has(item.instanceId)) return { ok: false, violations: ["instanceId duplicado"] };
+    ids.add(item.instanceId);
+  }
+  return { ok: true, violations: [] };
+};
 
-const noopContract: any = Object.assign(
-  async (..._args: any[]) => ({ ok: true, errors: [] }),
-  { id: '', validate: async (..._args: any[]) => ({ ok: true, errors: [] }) },
-);
+export const clinicalValidityContract = (opts: any) => {
+  if (opts.isValid === false) return { ok: false, violations: ["Plano clínico inválido detectado"] };
+  return { ok: true, violations: [] };
+};
 
-export const draftIntegrityContract = noopContract;
-export const clinicalValidityContract = noopContract;
-export const engineDeterminismContract = noopContract;
-export const persistenceSafetyContract = noopContract;
-export const uiConsistencyContract = noopContract;
+export const engineDeterminismContract = (opts: any) => {
+  if (opts.mealCount === 0) return { ok: false, violations: ["0 refeições geradas"] };
+  if (opts.hasManualOverrides && !opts.overrideConfirmed) return { ok: false, violations: ["sobrescrever manual sem confirmação"] };
+  return { ok: true, violations: [] };
+};
+
+export const persistenceSafetyContract = (opts: any) => {
+  if (opts.isSaving && !opts.draftPersistedBeforeAction) return { ok: false, violations: ["draft deve ser persistido antes"] };
+  return { ok: true, violations: [] };
+};
+
+export const uiConsistencyContract = (opts: any) => {
+  if (opts.dbStatus !== opts.uiStatus && !opts.errorVisible) return { ok: false, violations: ["Erro NÃO está visível"] };
+  if (opts.hasInvisibleState) return { ok: false, violations: ["Nenhum estado invisível permitido"] };
+  return { ok: true, violations: [] };
+};

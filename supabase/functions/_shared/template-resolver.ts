@@ -165,7 +165,10 @@ export function resolveMealTemplates(
   const mealTypeKeys = MEAL_TYPE_DB_MAP[mealType] || [mealType];
   let candidates = templates.filter(t => {
     const normType = t.tipo_refeicao.toLowerCase().replace(/\s+/g, "_");
-    return mealTypeKeys.some(key => normType === key || normType.includes(key));
+    return mealTypeKeys.some(key => {
+      const normKey = key.toLowerCase().replace(/\s+/g, "_");
+      return normType === normKey || normType.includes(normKey);
+    });
   });
 
   // Step 2: Exclude already-used templates (anti-repetition)

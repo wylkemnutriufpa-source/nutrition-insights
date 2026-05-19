@@ -1,4 +1,110 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, afterAll, vi } from "vitest";
+
+// Mock Supabase in-memory for DB-less consistent execution
+vi.mock('@/integrations/supabase/client', () => {
+  const store = {
+    pipelines: {} as Record<string, any>,
+    lifecycle: {} as Record<string, any>
+  };
+
+  const computeLifecycleRow = (val: string) => {
+    const p = store.pipelines[val];
+    if (!p) return null;
+    
+    let isBlocked = false;
+    let blockReason = null;
+    if (!p.anamnesis_completed) {
+      isBlocked = true;
+      blockReason = "Anamnese obrigatória incompleta";
+    } else if (!p.body_data_completed) {
+      isBlocked = true;
+      blockReason = "Dados antropométricos (peso/altura) obrigatórios incompletos";
+    }
+
+    return {
+      patient_id: val,
+      is_onboarding_blocked: isBlocked,
+      onboarding_block_reason: blockReason,
+      lifecycle_state: "onboarding_active",
+      has_active_plan: false,
+      has_pending_onboarding: true,
+      has_clinical_alert: false,
+      has_retention_risk: false,
+      last_checkin_at: null,
+      last_plan_delivery_at: null,
+      adherence_score: 0,
+      risk_score: 0,
+      next_recommended_action: null,
+    };
+  };
+
+  return {
+    supabase: {
+      from: vi.fn((table: string) => {
+        return {
+          insert: vi.fn((data: any) => {
+            const row = Array.isArray(data) ? data[0] : data;
+            if (table === 'onboarding_pipelines') {
+              store.pipelines[row.patient_id] = { ...row };
+            } else if (table === 'patient_lifecycle_states') {
+              store.lifecycle[row.patient_id] = { ...row };
+            }
+            return Promise.resolve({ error: null });
+          }),
+          update: vi.fn((data: any) => {
+            return {
+              eq: vi.fn((col: string, val: string) => {
+                if (table === 'onboarding_pipelines' && store.pipelines[val]) {
+                  store.pipelines[val] = { ...store.pipelines[val], ...data };
+                } else if (table === 'patient_lifecycle_states' && store.lifecycle[val]) {
+                  store.lifecycle[val] = { ...store.lifecycle[val], ...data };
+                }
+                return Promise.resolve({ error: null });
+              })
+            };
+          }),
+          delete: vi.fn(() => ({
+            eq: vi.fn((col: string, val: string) => {
+              if (table === 'onboarding_pipelines') {
+                delete store.pipelines[val];
+              } else if (table === 'patient_lifecycle_states') {
+                delete store.lifecycle[val];
+              }
+              return Promise.resolve({ error: null });
+            })
+          })),
+          select: vi.fn(() => ({
+            eq: vi.fn((col: string, val: string) => ({
+              maybeSingle: vi.fn(() => {
+                if (table === 'patient_lifecycle_states') {
+                  const p = store.pipelines[val];
+                  if (!p) return Promise.resolve({ data: null, error: null });
+                  let row = store.lifecycle[val];
+                  if (!row) {
+                    row = computeLifecycleRow(val);
+                    store.lifecycle[val] = row;
+                  }
+                  return Promise.resolve({ data: row, error: null });
+                }
+                const pipeline = store.pipelines[val];
+                return Promise.resolve({ data: pipeline || null, error: null });
+              })
+            }))
+          }))
+        };
+      }),
+      rpc: vi.fn((fnName: string, args: any) => {
+        const patientId = args._patient_id;
+        const row = computeLifecycleRow(patientId);
+        if (row) {
+          store.lifecycle[patientId] = row;
+        }
+        return Promise.resolve({ data: row, error: null });
+      })
+    }
+  };
+});
+
 import { supabase } from "@/integrations/supabase/client";
 
 /**

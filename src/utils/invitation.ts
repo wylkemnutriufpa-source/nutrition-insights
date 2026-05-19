@@ -28,9 +28,7 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
   // Senão, usa o origin atual para permitir testes no preview.
   const origin = forceProduction ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
   
-  if (code && code.length <= 12) {
-    return `${origin}/convite/${code}`;
-  }
+
 
   const params = new URLSearchParams();
   if (code) params.set("code", code);

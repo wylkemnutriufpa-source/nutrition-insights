@@ -37,4 +37,58 @@ vi.mock("virtual:pwa-register/react", () => ({
   })),
 }));
 
+// Mock experience hooks globally to avoid context errors in tests
+vi.mock("@/hooks/useExperienceUI", () => ({
+  useExperienceUI: () => ({
+    mode: "pro",
+    isBasic: false,
+    isPro: true,
+    isAdvanced: false,
+    showMacros: true,
+    showPlanStructure: true,
+    showTechnicalDetails: false,
+    showClinicalIntelligence: true,
+    showTimeline: true,
+    dashboardTitle: "Dashboard Pro",
+    dashboardSubtitle: "Acompanhamento clínico e macros",
+  }),
+}));
+
+vi.mock("@/hooks/useExperienceMode", () => ({
+  useExperienceMode: () => ({
+    mode: "pro",
+    role: "patient",
+    setMode: async () => {},
+    isFeatureEnabled: () => true,
+    minMode: () => true,
+    isRouteAllowed: () => true,
+    isBasic: false,
+    isPro: true,
+    isAdvanced: false,
+    isLoading: false,
+  }),
+  checkFeaturePermission: () => true,
+}));
+
+vi.mock("@/providers/ExperienceProvider", () => ({
+  useExperienceContext: () => ({
+    mode: "pro",
+    role: "patient",
+    setMode: async () => {},
+    isFeatureEnabled: () => true,
+    minMode: () => true,
+    isRouteAllowed: () => true,
+    isBasic: false,
+    isPro: true,
+    isAdvanced: false,
+    isLoading: false,
+    failedMode: null,
+    retryLastMode: () => {},
+    lastError: null,
+    isOffline: false,
+    pendingQueueSize: 0,
+    queueStats: { processed: 0, failed: 0, isFull: false, hasExpired: false },
+  }),
+  ExperienceProvider: ({ children }: any) => children,
+}));
 

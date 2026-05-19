@@ -22,8 +22,14 @@ vi.mock('@/integrations/supabase/client', () => {
   };
   return { 
     supabase: { 
-      from: vi.fn(() => mockQuery), 
-      removeChannel: vi.fn() 
+      from: vi.fn(() => mockQuery),
+      channel: vi.fn(() => ({
+        on: vi.fn().mockReturnThis(),
+        subscribe: vi.fn().mockReturnThis(),
+        unsubscribe: vi.fn(),
+      })),
+      removeChannel: vi.fn(),
+      getChannels: vi.fn(() => []),
     } 
   };
 });
@@ -67,6 +73,8 @@ describe('Fluxo E2E Paciente: Onboarding -> Macros', () => {
       const chain: any = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        or: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn(async () => {
@@ -77,7 +85,7 @@ describe('Fluxo E2E Paciente: Onboarding -> Macros', () => {
         }),
         then: vi.fn((resolve: any) => {
           if (table === 'meal_plan_items') {
-            const dayOfWeek = (new Date().getDay() + 6) % 7;
+            const dayOfWeek = new Date().getDay();
             return Promise.resolve(resolve({ 
               data: [
                 { id: 'item-1', tipo_refeicao: 'Almoço', title: 'Frango com Arroz', meta_calorias: 600, meta_proteinas: 40, meta_carboidratos: 60, meta_gorduras: 15, day_of_week: dayOfWeek }
@@ -103,7 +111,9 @@ describe('Fluxo E2E Paciente: Onboarding -> Macros', () => {
     );
 
     fireEvent.click(screen.getByText(/Pular/i));
-    expect(localStorage.getItem('patient_onboarding_completed')).toBe('true');
+    await waitFor(() => {
+      expect(localStorage.getItem('patient_onboarding_completed')).toBe('true');
+    });
 
     // 2. DASHBOARD / MACROS
     render(

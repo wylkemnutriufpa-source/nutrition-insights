@@ -11,7 +11,7 @@
 import type { SlotRole } from "../weekly-composer/types.ts";
 import type { Sex } from "./mealAssembler.types.ts";
 
-export const FEMALE_PROTEIN_MAX_GRAMS = 250;
+export const FEMALE_PROTEIN_MAX_GRAMS = 150;
 
 export function isProteinRole(role: SlotRole): boolean {
   return role === "protein_lean" || role === "protein_fat";

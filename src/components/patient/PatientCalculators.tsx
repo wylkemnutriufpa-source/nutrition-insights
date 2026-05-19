@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { calculateTMB } from "@/lib/deterministicEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,9 +60,7 @@ export default function PatientCalculators({ anamnesis, physicalAssessment }: Pr
     const w = Number(enWeight), h = Number(enHeight), a = Number(enAge), af = Number(enActivity);
     if (!w || !h || !a) return;
     // Mifflin-St Jeor
-    let tmb = enGender === "male"
-      ? 10 * w + 6.25 * h - 5 * a + 5
-      : 10 * w + 6.25 * h - 5 * a - 161;
+    const tmb = calculateTMB(w, h, a, enGender as any);
     const get = tmb * af;
     let adjusted = get;
     if (enGoal === "lose") adjusted = get - 500;
