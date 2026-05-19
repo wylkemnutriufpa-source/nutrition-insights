@@ -45,11 +45,24 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
   const handleAction = async (mode: "link" | "email" | "whatsapp") => {
     setLoading(mode);
     try {
-      const url = shareUrl ?? (await generateAndUpload());
-      setShareUrl(url);
+      const publicUrl = shareUrl ?? (await generateAndUpload());
+      
+      // Personalização do link com domínio próprio se disponível
+      const isDev = window.location.hostname.includes("lovable.app") || window.location.hostname.includes("localhost");
+      const domain = isDev ? window.location.origin : "https://www.fitjourney.com.br";
+      
+      // Extrair o path do link do Supabase para reconstruir no domínio próprio
+      // Link original: https://.../storage/v1/object/public/shared-meal-plans/USER_ID/FILENAME.html
+      const urlParts = publicUrl.split("/shared-meal-plans/");
+      const relativePath = urlParts.length > 1 ? urlParts[1] : "";
+      
+      // O link final deve apontar para o proxy do domínio próprio
+      const finalUrl = relativePath ? `${domain}/view-plan/${relativePath}` : publicUrl;
+      
+      setShareUrl(finalUrl);
 
       const subject = `Seu Plano Alimentar - ${data?.patientName ?? ""}`.trim();
-      const message = `Olá${data?.patientName ? `, ${data.patientName}` : ""}! Aqui está seu plano alimentar: ${url}`;
+      const message = `Olá${data?.patientName ? `, ${data.patientName}` : ""}! ✨\n\nSeu novo plano alimentar já está disponível no FitJourney. Você pode visualizá-lo clicando no link abaixo:\n\n${finalUrl}\n\nBons resultados! 🚀`;
 
       // Registro de Auditoria (Opcional, mas garante o fechamento do ciclo)
       try {
