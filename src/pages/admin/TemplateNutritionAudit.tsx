@@ -388,6 +388,78 @@ export default function TemplateNutritionAudit() {
   const [revertingId, setRevertingId] = useState<string | null>(null);
   const [diffVersion, setDiffVersion] = useState<RuleVersion | null>(null);
   const [templateSource, setTemplateSource] = useState<"nutritionist" | "official">("official");
+  const [isRunningTests, setIsRunningTests] = useState(false);
+  const [testResults, setTestResults] = useState<any[]>([]);
+
+  const runAutomatedBatchTest = async () => {
+    const patientName = "Silvia Luz";
+    const patientId = "6699274a-af91-48e6-8163-36ca484b3c2b";
+    
+    // Find a nutritionist for this tenant
+    const { data: nutri } = await supabase
+      .from("profiles")
+      .select("user_id, tenant_id")
+      .eq("tenant_id", "20081963-8db9-4a6c-8181-6a820b86e12f")
+      .limit(1)
+      .maybeSingle();
+
+    if (!nutri) {
+      toast.error("Nenhum nutricionista encontrado para o teste");
+      return;
+    }
+
+    setIsRunningTests(true);
+    setTestResults([]);
+    
+    // Clean old tests
+    await supabase.from("template_application_tests").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
+    const templatesToTest = [...rows];
+    const results = [];
+
+    for (const t of templatesToTest) {
+      const result: any = { 
+        template_id: t.id, 
+        template_name: t.name || t.title, 
+        version: t.plan_snapshot ? "V3" : "V2",
+        status: "testing"
+      };
+      
+      setTestResults(prev => [result, ...prev]);
+
+      try {
+        if (t.plan_snapshot) {
+          await applyOfficialV3Template(t as any, patientId, nutri.user_id, nutri.tenant_id, patientName);
+        } else {
+          await applyOfficialV2Template(t as any, patientId, nutri.user_id, nutri.tenant_id, patientName);
+        }
+        result.status = "success";
+      } catch (e: any) {
+        result.status = "error";
+        result.error_message = e.message;
+      }
+
+      await supabase.from("template_application_tests").insert([result]);
+      results.push(result);
+      setTestResults(prev => [result, ...prev.filter(r => r.template_id !== t.id)]);
+    }
+
+    setIsRunningTests(false);
+    toast.success("Teste automatizado concluído!");
+  };
+
+  const fetchTestResults = async () => {
+    const { data } = await supabase
+      .from("template_application_tests")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setTestResults(data);
+  };
+
+  useEffect(() => {
+    fetchTestResults();
+  }, []);
+
 
   const exportChecklist = (auditedData: AuditedTemplate[]) => {
     const headers = ["ID", "Nome", "Status", "Itens", "Erros", "Mensagens de Erro"];
