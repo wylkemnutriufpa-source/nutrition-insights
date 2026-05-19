@@ -215,6 +215,7 @@ export const useEditorState = create<EditorState>()(
               clinical_mass_g: substituteQuantity,
               substitution_group_id: groupId,
               is_primary: false,
+              imageUrl: food.imageUrl || (food as any).image_url || null,
               ...subMacros
             };
 
