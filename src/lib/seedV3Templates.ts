@@ -7,7 +7,7 @@ const genId = () => crypto.randomUUID();
 const FOODS = {
   frango: { title: 'Frango Grelhado', qty: '1 filé grande', mass: 150, m: {kcal: 240, protein_g: 45, carbs_g: 0, fat_g: 6}, img: `${BASE_IMG}/frango-grelhado.jpg` },
   tilapia: { title: 'Filé de Tilápia', qty: '1 filé', mass: 150, m: {kcal: 200, protein_g: 40, carbs_g: 0, fat_g: 4}, img: `${BASE_IMG}/file-de-tilapia/file-de-tilapia.jpg` },
-  patinho: { title: 'Patinho Moído', qty: '4 colheres', mass: 150, m: {kcal: 300, protein_g: 40, carbs_g: 0, fat_g: 12}, img: `${BASE_IMG}/patinho-moido.jpg` },
+  patinho: { title: 'Patinho Moído', qty: '4 colheres', mass: 150, m: {kcal: 300, protein_g: 40, carbs_g: 0, fat_g: 12}, img: `${BASE_IMG}/carne-assada-de-panela/carne-assada-de-panela.jpg` },
   salmao: { title: 'Salmão Assado', qty: '1 posta', mass: 150, m: {kcal: 350, protein_g: 35, carbs_g: 0, fat_g: 22}, img: `${BASE_IMG}/peixe-com-legumes.jpg` },
   ovo: { title: 'Ovos Mexidos', qty: '3 ovos', mass: 150, m: {kcal: 220, protein_g: 18, carbs_g: 1, fat_g: 15}, img: `${BASE_IMG}/ovos-mexidos.jpg` },
   
@@ -21,7 +21,7 @@ const FOODS = {
   salada: { title: 'Salada Verde', qty: '1 prato', mass: 100, m: {kcal: 20, protein_g: 1, carbs_g: 4, fat_g: 0}, img: `${BASE_IMG}/salada-verde.jpg` },
   legumes: { title: 'Legumes no Vapor', qty: '1 escumadeira', mass: 100, m: {kcal: 40, protein_g: 2, carbs_g: 8, fat_g: 0}, img: `${BASE_IMG}/peixe-com-legumes.jpg` },
   
-  pao: { title: 'Pão Integral', qty: '2 fatias', mass: 50, m: {kcal: 120, protein_g: 4, carbs_g: 24, fat_g: 1}, img: `${BASE_IMG}/pao-integral.jpg` },
+  pao: { title: 'Pão Integral', qty: '2 fatias', mass: 50, m: {kcal: 120, protein_g: 4, carbs_g: 24, fat_g: 1}, img: `${BASE_IMG}/pao-frances.jpg` },
   tapioca: { title: 'Tapioca', qty: '3 colheres', mass: 60, m: {kcal: 150, protein_g: 0, carbs_g: 36, fat_g: 0}, img: `${BASE_IMG}/crepioca/crepioca.jpg` },
   
   iogurte: { title: 'Iogurte Natural', qty: '1 pote', mass: 170, m: {kcal: 100, protein_g: 7, carbs_g: 10, fat_g: 3}, img: `${BASE_IMG}/iogurte-natural/iogurte-natural.jpg` },
@@ -30,7 +30,10 @@ const FOODS = {
   banana: { title: 'Banana Prata', qty: '1 unidade', mass: 70, m: {kcal: 70, protein_g: 1, carbs_g: 18, fat_g: 0}, img: `${BASE_IMG}/banana-com-aveia.jpg` },
   maca: { title: 'Maçã', qty: '1 unidade', mass: 100, m: {kcal: 50, protein_g: 0, carbs_g: 13, fat_g: 0}, img: `${BASE_IMG}/maca/maca.jpg` },
   sopa: { title: 'Sopa de Legumes', qty: '1 prato', mass: 350, m: {kcal: 150, protein_g: 5, carbs_g: 25, fat_g: 3}, img: `${BASE_IMG}/sopa-de-legumes/sopa-de-legumes.jpg` },
-  castanha: { title: 'Mix de Castanhas', qty: '1 punhado', mass: 30, m: {kcal: 180, protein_g: 4, carbs_g: 6, fat_g: 16}, img: `${BASE_IMG}/mix-castanhas.jpg` }
+  castanha: { title: 'Mix de Castanhas', qty: '1 punhado', mass: 30, m: {kcal: 180, protein_g: 4, carbs_g: 6, fat_g: 16}, img: `${BASE_IMG}/castanhas.jpg` },
+  cuscuz: { title: 'Cuscuz com Ovo', qty: '2 fatias', mass: 150, m: {kcal: 250, protein_g: 12, carbs_g: 30, fat_g: 8}, img: `${BASE_IMG}/cuscuz-com-ovo.jpg` },
+  omelete: { title: 'Omelete de Legumes', qty: '2 ovos', mass: 180, m: {kcal: 210, protein_g: 14, carbs_g: 5, fat_g: 14}, img: `${BASE_IMG}/omelete.jpg` },
+  carne: { title: 'Carne Grelhada', qty: '1 bife', mass: 120, m: {kcal: 220, protein_g: 30, carbs_g: 0, fat_g: 10}, img: `${BASE_IMG}/carne-grelhada.jpg` }
 };
 
 const makeItem = (food: any, isPrimary = false, subs: any[] = []) => {
@@ -299,6 +302,16 @@ export const generatePremiumTemplates = () => {
 export const seedPremiumV3Templates = async () => {
   try {
     const templates = generatePremiumTemplates();
+    
+    // 1. Limpar templates "Premium" antigos ou corrompidos que não estão na lista atual
+    const validSlugs = templates.map(t => t.slug);
+    await supabase
+      .from('v3_diet_templates')
+      .delete()
+      .is('nutritionist_id', null)
+      .not('slug', 'in', `(${validSlugs.join(',')})`);
+
+    // 2. Inserir ou atualizar os novos templates
     for (const t of templates) {
       const { error } = await supabase.from('v3_diet_templates').upsert({
         ...t,
