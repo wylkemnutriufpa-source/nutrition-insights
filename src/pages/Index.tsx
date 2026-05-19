@@ -395,7 +395,7 @@ function NutritionistDashboardContent() {
     fetchCoreStats();
   }, [user?.id]);
 
-  if (authLoading && patientCount === 0) return <DashboardSkeleton />;
+  if (internalLoading && patientCount === 0) return <DashboardSkeleton />;
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
