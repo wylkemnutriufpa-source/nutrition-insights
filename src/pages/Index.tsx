@@ -63,11 +63,53 @@ const item = {
 
 // Legacy PatientDashboardContent removed — patients now use PatientGridDashboard exclusively
 
+// ──── Dashboard Skeleton ────
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {/* Welcome Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="h-9 w-64 bg-muted rounded-lg" />
+          <div className="h-4 w-48 bg-muted rounded-md" />
+        </div>
+        <div className="h-12 w-32 bg-muted rounded-2xl" />
+      </div>
+
+      {/* Quick Action Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-24 bg-muted/10 rounded-2xl border border-border/50" />
+        ))}
+      </div>
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-20 bg-muted/20 rounded-2xl border border-border/50" />
+        ))}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-8">
+          <div className="h-[400px] bg-muted/5 rounded-3xl border border-border/50" />
+        </div>
+        <div className="lg:col-span-4 space-y-8">
+          <div className="h-[200px] bg-muted/5 rounded-3xl border border-border/50" />
+          <div className="h-[300px] bg-muted/5 rounded-3xl border border-border/50" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ──── Nutritionist Dashboard 3.0 — Clinical Command Center ────
 function NutritionistDashboardContent() {
   const { user } = useAuth();
   const { minMode, isBasic } = useExperienceMode();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
   const [programCount, setProgramCount] = useState(0);
