@@ -37,11 +37,11 @@ interface DietTemplate {
   caloric_versions?: any;
   weekly_variation_strategy?: any;
   meal_distribution?: any;
-  conditions: string[];
+  conditions?: string[];
   base_calories: number;
   macro_ratio: { protein: number; carbs: number; fat: number };
   meals: TemplateMeal[];
-  tags: string[];
+  tags?: string[];
   template_generation?: string;
   is_v3?: boolean;
   plan_snapshot?: any;
@@ -355,9 +355,9 @@ export default function DietTemplates() {
     let result = templates.map(t => {
       const raw = t.macro_ratio && typeof t.macro_ratio === 'object' ? t.macro_ratio : { protein: 30, carbs: 45, fat: 25 };
       const macro_ratio = {
-        protein: raw.protein <= 1 ? Math.round(raw.protein * 100) : raw.protein,
-        carbs: raw.carbs <= 1 ? Math.round(raw.carbs * 100) : raw.carbs,
-        fat: raw.fat <= 1 ? Math.round(raw.fat * 100) : raw.fat,
+        protein: raw.protein <= 1 ? Math.round(raw.protein * 100) : (raw.protein || 30),
+        carbs: raw.carbs <= 1 ? Math.round(raw.carbs * 100) : (raw.carbs || 45),
+        fat: raw.fat <= 1 ? Math.round(raw.fat * 100) : (raw.fat || 25),
       };
       return {
         ...t,
@@ -365,7 +365,7 @@ export default function DietTemplates() {
         tags: Array.isArray(t.tags) ? t.tags : [],
         conditions: Array.isArray(t.conditions) ? t.conditions : [],
         macro_ratio,
-      };
+      } as DietTemplate;
     });
     if (categoryFilter) result = result.filter((t) => (t.goal_category || t.category) === categoryFilter);
     if (search.trim()) {
@@ -374,8 +374,8 @@ export default function DietTemplates() {
         (t) =>
           t.name.toLowerCase().includes(q) ||
           (t.description || "").toLowerCase().includes(q) ||
-          t.tags.some((tag: string) => tag.includes(q)) ||
-          t.conditions.some((c: string) => c.includes(q)) ||
+          (t.tags || []).some((tag: string) => tag.includes(q)) ||
+          (t.conditions || []).some((c: string) => c.includes(q)) ||
           (t.diet_style || "").toLowerCase().includes(q) ||
           (t.clinical_tags || []).some((ct: string) => ct.includes(q))
       );
