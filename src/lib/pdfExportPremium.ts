@@ -142,7 +142,17 @@ function normalizeMealTypeKey(type: unknown): string {
 
 function resolveCanonicalMealType(type: unknown): CanonicalMealType | string {
   const normalized = normalizeMealTypeKey(type);
-  return MEAL_TYPE_ALIASES[normalized] || normalized;
+  if (MEAL_TYPE_ALIASES[normalized]) return MEAL_TYPE_ALIASES[normalized];
+  
+  // 🛡️ SOBERANIA V3: Substring matching for slugs like "almoco_equilibrado" or "cafe_leve"
+  if (normalized.includes("cafe")) return "Café da Manhã";
+  if (normalized.includes("lanche_manha") || normalized.includes("snack_1")) return "Lanche da Manhã";
+  if (normalized.includes("almoco") || normalized.includes("lunch")) return "Almoço";
+  if (normalized.includes("lanche_tarde") || normalized.includes("snack_2") || (normalized.includes("lanche") && !normalized.includes("noite"))) return "Lanche da Tarde";
+  if (normalized.includes("jantar") || normalized.includes("dinner")) return "Jantar";
+  if (normalized.includes("ceia") || normalized.includes("supper") || normalized.includes("noite")) return "Ceia";
+
+  return normalized;
 }
 
 function getMealGroupKey(item: MealPlanPDFItem): string {
@@ -169,11 +179,12 @@ function formatPortionText(item: { display_quantity?: any; display_unit?: any; c
   if (dqStr) {
     // Se já contém unidade (ex.: "3 colheres", "100 g"), devolve direto
     if (/[a-zà-ú]/i.test(dqStr)) return dqStr;
+    if (isPlaceholder && !hasMass) return ""; // Clean up if it's just "1 g" and no mass info
     return dUnit ? `${dqStr} ${dUnit}`.trim() : dqStr;
   }
 
   if (hasMass) return `${Math.round(cMass)} g`;
-  return (item.description || "").toString();
+  return ""; // Avoid showing "undefined" or description as portion text if not intended
 }
 
 function formatSubstitutionDetail(sub: MealPlanPDFItem, _primary: MealPlanPDFItem): string {
