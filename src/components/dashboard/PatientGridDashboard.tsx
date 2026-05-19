@@ -79,6 +79,25 @@ const cardAnim = {
   show: { opacity: 1, y: 0, scale: 1 },
 };
 
+function GridSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-6 w-48 bg-muted rounded-md" />
+          <div className="h-3 w-32 bg-muted rounded-md" />
+        </div>
+        <div className="h-8 w-24 bg-muted rounded-lg" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-[110px] rounded-2xl bg-muted/20 border border-border/10" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PatientGridDashboard() {
   const navigate = useNavigate();
   const { patientView, setPatientView } = useLayoutPreference();
