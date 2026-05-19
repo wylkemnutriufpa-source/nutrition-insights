@@ -58,9 +58,16 @@ import {
   Equal,
   Sparkles,
   FileDown,
+  PlayCircle,
+  XCircle,
+  Terminal,
+  Loader2
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { seedPremiumV3Templates } from "@/lib/seedV3Templates";
+import { applyOfficialV2Template, applyOfficialV3Template } from "@/lib/templateApplication";
+
 
 type FoodItem = {
   name?: string | null;
@@ -383,6 +390,78 @@ export default function TemplateNutritionAudit() {
   const [revertingId, setRevertingId] = useState<string | null>(null);
   const [diffVersion, setDiffVersion] = useState<RuleVersion | null>(null);
   const [templateSource, setTemplateSource] = useState<"nutritionist" | "official">("official");
+  const [isRunningTests, setIsRunningTests] = useState(false);
+  const [testResults, setTestResults] = useState<any[]>([]);
+
+  const runAutomatedBatchTest = async () => {
+    const patientName = "Silvia Luz";
+    const patientId = "6699274a-af91-48e6-8163-36ca484b3c2b";
+    
+    // Find a nutritionist for this tenant
+    const { data: nutri } = await supabase
+      .from("profiles")
+      .select("user_id, tenant_id")
+      .eq("tenant_id", "20081963-8db9-4a6c-8181-6a820b86e12f")
+      .limit(1)
+      .maybeSingle();
+
+    if (!nutri) {
+      toast.error("Nenhum nutricionista encontrado para o teste");
+      return;
+    }
+
+    setIsRunningTests(true);
+    setTestResults([]);
+    
+    // Clean old tests
+    await supabase.from("template_application_tests").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
+    const templatesToTest = [...rows];
+    const results = [];
+
+    for (const t of templatesToTest) {
+      const result: any = { 
+        template_id: t.id, 
+        template_name: t.name || t.title, 
+        version: t.plan_snapshot ? "V3" : "V2",
+        status: "testing"
+      };
+      
+      setTestResults(prev => [result, ...prev]);
+
+      try {
+        if (t.plan_snapshot) {
+          await applyOfficialV3Template(t as any, patientId, nutri.user_id, nutri.tenant_id, patientName);
+        } else {
+          await applyOfficialV2Template(t as any, patientId, nutri.user_id, nutri.tenant_id, patientName);
+        }
+        result.status = "success";
+      } catch (e: any) {
+        result.status = "error";
+        result.error_message = e.message;
+      }
+
+      await supabase.from("template_application_tests").insert([result]);
+      results.push(result);
+      setTestResults(prev => [result, ...prev.filter(r => r.template_id !== t.id)]);
+    }
+
+    setIsRunningTests(false);
+    toast.success("Teste automatizado concluído!");
+  };
+
+  const fetchTestResults = async () => {
+    const { data } = await supabase
+      .from("template_application_tests")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setTestResults(data);
+  };
+
+  useEffect(() => {
+    fetchTestResults();
+  }, []);
+
 
   const exportChecklist = (auditedData: AuditedTemplate[]) => {
     const headers = ["ID", "Nome", "Status", "Itens", "Erros", "Mensagens de Erro"];
@@ -958,13 +1037,17 @@ export default function TemplateNutritionAudit() {
               </div>
             </div>
 
-            <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-              <TabsList>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+              <TabsList className="grid w-full grid-cols-5 h-auto">
                 <TabsTrigger value="critical">Críticos ({counts.critical})</TabsTrigger>
                 <TabsTrigger value="warning">Atenção ({counts.warning})</TabsTrigger>
                 <TabsTrigger value="ok">OK ({counts.ok})</TabsTrigger>
                 <TabsTrigger value="all">Todos ({counts.all})</TabsTrigger>
+                <TabsTrigger value="tests" className="gap-2">
+                  <Terminal className="w-4 h-4" /> Testes Automáticos
+                </TabsTrigger>
               </TabsList>
+
 
               <TabsContent value={tab} className="mt-4">
                 {loading ? (
@@ -1045,6 +1128,86 @@ export default function TemplateNutritionAudit() {
                   </div>
                 )}
               </TabsContent>
+
+              <TabsContent value="tests" className="mt-4">
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg border">
+                    <div>
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <PlayCircle className="w-4 h-4 text-primary" /> Teste de Aplicação Real
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Executa o motor de aplicação de templates para a paciente Silvia Luz.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={runAutomatedBatchTest} 
+                      disabled={isRunningTests || audited.length === 0}
+                      className="gap-2"
+                    >
+                      {isRunningTests ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+                      {isRunningTests ? "Executando..." : "Testar Todos na Silvia Luz"}
+                    </Button>
+                  </div>
+
+                  <div className="rounded-md border bg-card">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Template</TableHead>
+                          <TableHead>Versão</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Detalhes/Erro</TableHead>
+                          <TableHead className="text-right">Data</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {testResults.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                              Nenhum teste registrado. Clique no botão acima para iniciar a validação real.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          testResults.map((res, i) => (
+                            <TableRow key={res.id || i}>
+                              <TableCell className="font-medium">{res.template_name}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{res.version}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {res.status === "testing" && (
+                                  <Badge variant="secondary" className="gap-1 animate-pulse">
+                                    <RefreshCw className="w-3 h-3 animate-spin" /> Testando
+                                  </Badge>
+                                )}
+                                {res.status === "success" && (
+                                  <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> Passou
+                                  </Badge>
+                                )}
+                                {res.status === "error" && (
+                                  <Badge variant="destructive" className="gap-1">
+                                    <XCircle className="w-3 h-3" /> Falhou
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="max-w-md truncate text-[10px] text-muted-foreground">
+                                {res.error_message || "—"}
+                              </TableCell>
+                              <TableCell className="text-right text-[9px] text-muted-foreground">
+                                {res.created_at ? new Date(res.created_at).toLocaleString('pt-BR') : "Agora"}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </TabsContent>
+
             </Tabs>
           </CardContent>
         </Card>

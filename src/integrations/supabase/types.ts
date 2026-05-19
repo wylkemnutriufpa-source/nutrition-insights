@@ -19110,6 +19110,36 @@ export type Database = {
         }
         Relationships: []
       }
+      template_application_tests: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          status: string | null
+          template_id: string | null
+          template_name: string | null
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status?: string | null
+          template_id?: string | null
+          template_name?: string | null
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status?: string | null
+          template_id?: string | null
+          template_name?: string | null
+          version?: string | null
+        }
+        Relationships: []
+      }
       template_audit_rules_config: {
         Row: {
           rule_key: string
