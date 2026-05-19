@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useEditorState } from '../hooks/useEditorState';
@@ -526,7 +526,12 @@ export default function EditorV3Page() {
           } : null} 
         />
 
-        <SaveCustomTemplateModal isOpen={isSaveTemplateModalOpen} onClose={() => setIsSaveTemplateModalOpen(false)} currentPlanData={{ meals: store.meals }} />{/* Macros Dashboard */}
+        <SaveCustomTemplateModal 
+          isOpen={isSaveTemplateModalOpen} 
+          onClose={() => setIsSaveTemplateModalOpen(false)} 
+          onSaved={loadTemplates}
+          currentPlanData={{ meals: store.meals }} 
+        />{/* Macros Dashboard */}
         <div className="px-10 py-6 bg-neutral-900/50 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { label: 'Calorias', value: planTotals.kcal, unit: 'kcal', icon: <Flame className="w-3.5 h-3.5 text-orange-500" /> },
