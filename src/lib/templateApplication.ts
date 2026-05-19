@@ -92,6 +92,7 @@ export const applyOfficialV3Template = async (
         substitution_group_id: groupId,
         is_primary: true,
         visual_library_item_id: item.visual_library_item_id || null,
+        image_url: item.imageUrl || null,
       });
 
       if (Array.isArray(item.substitutions)) {
@@ -109,6 +110,7 @@ export const applyOfficialV3Template = async (
             substitution_group_id: groupId,
             is_primary: false,
             visual_library_item_id: sub.visual_library_item_id || null,
+            image_url: sub.imageUrl || null,
           });
         }
       }

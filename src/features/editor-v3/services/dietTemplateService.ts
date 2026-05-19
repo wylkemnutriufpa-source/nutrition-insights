@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { V3DietTemplate, KcalProfile, Meal } from "../types/types";
-import { generatePremiumTemplates } from "@/lib/seedV3Templates";
+// Removed legacy mock generation in favor of real database compiled templates
 
 const KCAL_PROFILES: KcalProfile[] = [
   { kcal: 1200, meal_intensity: 'low' },
@@ -13,7 +13,7 @@ const KCAL_PROFILES: KcalProfile[] = [
   { kcal: 2500, meal_intensity: 'high' }
 ];
 
-const MOCK_TEMPLATES: V3DietTemplate[] = generatePremiumTemplates();
+const MOCK_TEMPLATES: V3DietTemplate[] = [];
 
 export class DietTemplateService {
   static async listTemplates(): Promise<V3DietTemplate[]> {
