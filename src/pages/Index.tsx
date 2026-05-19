@@ -1048,7 +1048,7 @@ function generateLocalInsights(patients: any[]) {
 }
 
 export default function Index() {
-  const { user, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const { user, isNutritionist, isPersonal, isAdmin, loading: authLoading } = useAuth();
   const { isPatientContext, isHybridUser } = useWorkspaceContext();
   const { minMode } = useExperienceMode();
   const [showTour, setShowTour] = useState(false);
