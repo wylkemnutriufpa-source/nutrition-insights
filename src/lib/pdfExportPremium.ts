@@ -322,6 +322,7 @@ function buildPremiumCSS(): string {
         position: relative;
         overflow: hidden;
         border-bottom: 2px solid rgba(212, 168, 75, 0.3);
+        page-break-inside: avoid;
       }
 
       .premium-header::after {
