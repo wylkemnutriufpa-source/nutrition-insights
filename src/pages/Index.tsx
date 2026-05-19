@@ -370,7 +370,7 @@ function NutritionistDashboardContent() {
 
   // Secondary data load - Deferred to after first paint
   useEffect(() => {
-    if (authLoading || !user?.id) return;
+    if (internalLoading || !user?.id) return;
     const timer = setTimeout(() => {
       fetchDashboard();
     }, 1500); // Wait for core UI to settle
