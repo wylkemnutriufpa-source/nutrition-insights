@@ -1125,7 +1125,10 @@ export default function TemplateNutritionAudit() {
                     </Table>
                   </div>
                 )}
+              </TabsContent>
+
               <TabsContent value="tests" className="mt-4">
+
                 <div className="space-y-4">
                   <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg border">
                     <div>
