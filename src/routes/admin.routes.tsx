@@ -46,6 +46,7 @@ const SchemaMonitor = lazy(() => import("../pages/SchemaMonitor"));
 const OperationalAudit = lazy(() => import("../pages/admin/OperationalAudit"));
 
 export const adminRoutes = [
+  <Route key="admin-root" path="/admin" element={<Navigate to="/admin/dashboard" replace />} />,
   <Route key="admin-dashboard" path="/admin/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="admin-invitations" path="/admin/invitations" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InvitationAudit /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="admin-affiliates" path="/admin/affiliates" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminAffiliates /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
