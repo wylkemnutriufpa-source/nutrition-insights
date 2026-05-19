@@ -305,7 +305,7 @@ export default function PatientDetail() {
   };
 
   const handleSendWhatsApp = async (plan: any) => {
-    if (!plan?.id || !patientId) return;
+    if (!plan?.id || !patientId || !user?.id) return;
     
     setSendingWhatsAppId(plan.id);
     const toastId = toast.loading("Preparando Plano Alimentar para WhatsApp...");
