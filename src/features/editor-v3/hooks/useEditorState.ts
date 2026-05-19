@@ -31,6 +31,7 @@ interface EditorState {
   updateMealItemMacros: (mealId: string, itemInstanceId: string, targetValue: number, macroType: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   addSubstitutionToItem: (mealId: string, itemInstanceId: string, food: Food) => void;
   updateMealItemName: (mealId: string, itemInstanceId: string, name: string) => void;
+  removeSubstitutionFromItem: (mealId: string, itemInstanceId: string, subIndex: number) => void;
 }
 
 export const useEditorState = create<EditorState>()(
@@ -108,7 +109,11 @@ export const useEditorState = create<EditorState>()(
         const updatedMeals = meals.map(meal => {
           if (meal.id !== mealId) return meal;
           
-          const quantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+          let quantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+          // 🛡️ SANITIZAÇÃO V3: Evitar o bug do "1g" vindo de templates malformados
+          if (quantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
+            quantity = 100;
+          }
           const macros = calculateItemMacros(food, quantity);
           
           const newItem: MealItem = {
@@ -116,7 +121,8 @@ export const useEditorState = create<EditorState>()(
             instanceId: crypto.randomUUID(),
             quantity,
             clinical_mass_g: quantity,
-            substitutions: food.substitutions || food.ingredients || [],
+            substitutions: food.substitutions || [],
+            imageUrl: food.imageUrl || (food as any).image_url || null,
             ...macros
           };
 
@@ -201,7 +207,12 @@ export const useEditorState = create<EditorState>()(
 
             // SOBERANIA V3: Se o substituto já tem uma gramagem clínica, usamos ela. 
             // Caso contrário, usamos a gramagem padrão do alimento (100g ou porção).
-            const substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+            let substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+            
+            // 🛡️ SANITIZAÇÃO V3: Evitar o bug do "1g" em substitutos
+            if (substituteQuantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
+              substituteQuantity = 100;
+            }
             
             const subMacros = calculateItemMacros(food, substituteQuantity);
 
@@ -213,6 +224,7 @@ export const useEditorState = create<EditorState>()(
               clinical_mass_g: substituteQuantity,
               substitution_group_id: groupId,
               is_primary: false,
+              imageUrl: food.imageUrl || (food as any).image_url || null,
               ...subMacros
             };
 
@@ -237,6 +249,23 @@ export const useEditorState = create<EditorState>()(
             items: meal.items.map(item => 
               item.instanceId === itemInstanceId ? { ...item, name } : item
             )
+          };
+        });
+        set({ meals: updatedMeals });
+      },
+
+      removeSubstitutionFromItem: (mealId, itemInstanceId, subIndex) => {
+        const { meals } = get();
+        const updatedMeals = meals.map(meal => {
+          if (meal.id !== mealId) return meal;
+          return {
+            ...meal,
+            items: meal.items.map(item => {
+              if (item.instanceId !== itemInstanceId) return item;
+              const newSubs = [...(item.substitutions || [])];
+              newSubs.splice(subIndex, 1);
+              return { ...item, substitutions: newSubs };
+            })
           };
         });
         set({ meals: updatedMeals });

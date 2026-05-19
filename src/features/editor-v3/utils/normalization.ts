@@ -217,7 +217,14 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
       const prot = Number(it.protein ?? it.meta_proteinas ?? it.macros?.protein_g ?? 0);
       const carb = Number(it.carbs ?? it.meta_carboidratos ?? it.macros?.carbs_g ?? 0);
       const fat = Number(it.fat ?? it.meta_gorduras ?? it.macros?.fat_g ?? 0);
-      const qty = Number(it.quantity ?? it.display_quantity ?? it.clinical_mass_g ?? 0);
+      let qty = Number(it.quantity ?? it.display_quantity ?? it.clinical_mass_g ?? 0);
+      let clinical_mass_g = Number(it.clinical_mass_g || qty);
+
+      // 🛡️ SANITIZAÇÃO V3: Se a massa for 1 mas o item tem macros reais, recupera para 100g
+      if (clinical_mass_g <= 1 && kcal > 5) {
+        clinical_mass_g = 100;
+        qty = 100;
+      }
 
       return {
         id: it.id || it.instanceId || crypto.randomUUID(),
@@ -228,7 +235,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
         carbs: carb,
         fat: fat,
         quantity: qty,
-        clinical_mass_g: it.clinical_mass_g || qty,
+        clinical_mass_g: clinical_mass_g,
         imageUrl: img,
         substitution_group_id: it.substitution_group_id || it.blockId,
         substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => ({

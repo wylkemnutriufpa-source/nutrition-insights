@@ -305,7 +305,7 @@ export default function PatientDetail() {
   };
 
   const handleSendWhatsApp = async (plan: any) => {
-    if (!plan?.id || !patientId) return;
+    if (!plan?.id || !patientId || !user?.id) return;
     
     setSendingWhatsAppId(plan.id);
     const toastId = toast.loading("Preparando Plano Alimentar para WhatsApp...");
@@ -315,12 +315,15 @@ export default function PatientDetail() {
       const { buildPremiumMealPlanHTML } = await import("@/lib/pdfExportPremium");
 
       const html = buildPremiumMealPlanHTML(pdfData as any);
-      const fileName = `meal-plan-${plan.id}-${Date.now()}.html`;
+      const fileName = `${user.id}/meal-plan-${plan.id}-${Date.now()}.html`;
       const blob = new Blob([html], { type: "text/html" });
       
       const { error: uploadError } = await supabase.storage
         .from("shared-meal-plans")
-        .upload(fileName, blob);
+        .upload(fileName, blob, {
+          contentType: "text/html",
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 

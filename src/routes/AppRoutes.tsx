@@ -55,6 +55,7 @@ const PublicPlans = lazy(() => import("../pages/PublicPlans"));
 const PublicProfile = lazy(() => import("../pages/PublicProfile"));
 const PublicProgram = lazy(() => import("../pages/PublicProgram"));
 const QuickLink = lazy(() => import("../pages/QuickLink"));
+const ViewPlanProxy = lazy(() => import("../pages/ViewPlanProxy"));
 const BiquiniBrancoLanding = lazy(() => import("../pages/BiquiniBrancoLanding"));
 const BiquiniBrancoDetail = lazy(() => import("../pages/BiquiniBrancoDetail"));
 const MyReferrals = lazy(() => import("../pages/MyReferrals"));
@@ -118,6 +119,8 @@ export const AppRoutes = () => {
       <Route path="/profile/:slug" element={<Suspense fallback={<PageLoader />}><PublicProfile /></Suspense>} />
       <Route path="/program/:programId" element={<Suspense fallback={<PageLoader />}><PublicProgram /></Suspense>} />
       <Route path="/quick-link/:nutriId" element={<Suspense fallback={<PageLoader />}><QuickLink /></Suspense>} />
+      
+      <Route path="/view-plan/:userId/:fileName" element={<Suspense fallback={<PageLoader />}><ViewPlanProxy /></Suspense>} />
       
       {/* Miscellaneous / Intelligence */}
       <Route path="/curiosidades" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Curiosidades /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
