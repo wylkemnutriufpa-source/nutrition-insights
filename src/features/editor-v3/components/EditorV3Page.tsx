@@ -422,7 +422,7 @@ export default function EditorV3Page() {
                 <Button variant="outline" className="w-[220px] h-9 bg-white/5 border-white/10 text-[10px] font-black uppercase tracking-widest rounded-lg justify-between hover:border-emerald-500/30">
                   <div className="flex items-center gap-2">
                     <User className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="truncate">{effectivePatientId ? availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name : "Selecionar Paciente"}</span>
+                    <span className="truncate">{effectivePatientId ? (availablePatients.find((p) => p.user_id === effectivePatientId)?.full_name || patientData?.full_name || "Carregando...") : "Selecionar Paciente"}</span>
                   </div>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-30" />
                 </Button>
