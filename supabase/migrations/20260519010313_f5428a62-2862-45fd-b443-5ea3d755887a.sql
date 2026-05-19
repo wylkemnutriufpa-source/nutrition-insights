@@ -1,0 +1,1 @@
+ALTER TABLE public.v3_diet_templates ADD COLUMN receptionist_id UUID REFERENCES auth.users;

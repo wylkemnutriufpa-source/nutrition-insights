@@ -20177,6 +20177,7 @@ export type Database = {
           meal_distribution: Json
           objective: string
           plan_snapshot: Json | null
+          receptionist_id: string | null
           slug: string
           sovereign_validated: boolean | null
           substitutions_enabled: boolean | null
@@ -20196,6 +20197,7 @@ export type Database = {
           meal_distribution: Json
           objective: string
           plan_snapshot?: Json | null
+          receptionist_id?: string | null
           slug: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
@@ -20215,6 +20217,7 @@ export type Database = {
           meal_distribution?: Json
           objective?: string
           plan_snapshot?: Json | null
+          receptionist_id?: string | null
           slug?: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
