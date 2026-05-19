@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
   "lastMigration": "20260518224058_e510edf8-7d7b-491f-9fde-2f22524dcc67.sql",
-  "migrationsCount": 767,
+  "migrationsCount": 768,
   "tables": {
     "meal_plan_items": [
       "created_at",

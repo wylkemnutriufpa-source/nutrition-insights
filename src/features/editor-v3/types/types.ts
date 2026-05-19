@@ -179,6 +179,7 @@ export interface V3DietTemplate {
   meal_integrity_threshold?: number; 
   plan_snapshot?: Record<string, { meals?: Meal[]; days?: Array<{ day_of_week: number; meals: Meal[] }> }>; // Kcal-keyed snapshots
   sovereign_validated?: boolean;
+  nutritionist_id?: string;
 }
 
 export interface MealTemplate {

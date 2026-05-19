@@ -42,6 +42,8 @@ import { useDraftSync } from '../hooks/useDraftSync';
 import { planPersistenceService } from '../services/planPersistenceService';
 import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { normalizeSnapshotToV3 } from '../utils/normalization';
+import { BookMarked } from 'lucide-react';
+import { SaveCustomTemplateModal } from './SaveCustomTemplateModal';
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -59,6 +61,9 @@ export default function EditorV3Page() {
   const [selectedTemplate, setSelectedTemplate] = useState<V3DietTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
+
+
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [activeDay, setActiveDay] = useState<number>(1); // 1 = Segunda-feira (Padrão)
@@ -457,6 +462,10 @@ export default function EditorV3Page() {
               <Send className="w-4 h-4 mr-2" /> Enviar
             </Button>
 
+            <Button onClick={() => setIsSaveTemplateModalOpen(true)} variant="outline" className="text-[10px] font-black uppercase tracking-widest h-9 px-6 rounded-lg flex border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+              <BookMarked className="w-4 h-4 mr-2" /> Salvar como Modelo
+            </Button>
+
             <Button onClick={handleSave} disabled={saving} className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-9 px-8 rounded-lg shadow-lg shadow-emerald-500/10 text-[10px]">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar
             </Button>
@@ -509,7 +518,7 @@ export default function EditorV3Page() {
           } : null} 
         />
 
-        {/* Macros Dashboard */}
+        <SaveCustomTemplateModal isOpen={isSaveTemplateModalOpen} onClose={() => setIsSaveTemplateModalOpen(false)} currentPlanData={{ meals: store.meals }} />{/* Macros Dashboard */}
         <div className="px-10 py-6 bg-neutral-900/50 border-b border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { label: 'Calorias', value: planTotals.kcal, unit: 'kcal', icon: <Flame className="w-3.5 h-3.5 text-orange-500" /> },

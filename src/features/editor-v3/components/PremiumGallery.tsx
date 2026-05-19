@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { V3DietTemplate } from '../types/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 interface PremiumGalleryProps {
   templates: V3DietTemplate[];
@@ -18,10 +19,12 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
 
+  const { user } = useAuth();
+  
   const categories = useMemo(() => {
-    const cats = new Set<string>(['Todos']);
+    const cats = new Set<string>(['Todos', 'Meus Templates']);
     templates.forEach(t => {
-      if (t.objective) cats.add(t.objective);
+      if (t.objective && t.template_type !== 'custom') cats.add(t.objective);
     });
     return Array.from(cats);
   }, [templates]);
@@ -30,10 +33,18 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
     return templates.filter(t => {
       const matchesSearch = t.title.toLowerCase().includes(search.toLowerCase()) || 
                            t.description?.toLowerCase().includes(search.toLowerCase());
+                           
+      if (activeCategory === 'Meus Templates') {
+        return matchesSearch && t.nutritionist_id === user?.id;
+      }
+      
       const matchesCategory = activeCategory === 'Todos' || t.objective === activeCategory;
-      return matchesSearch && matchesCategory;
+      // Hide custom templates from "Todos" unless in "Meus Templates"
+      const isNotCustom = t.template_type !== 'custom';
+      
+      return matchesSearch && matchesCategory && isNotCustom;
     });
-  }, [templates, search, activeCategory]);
+  }, [templates, search, activeCategory, user?.id]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full overflow-hidden">
@@ -107,6 +118,12 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
                 <p className="text-[9px] text-white/30 line-clamp-2 uppercase font-bold leading-tight tracking-wide group-hover:text-white/50 transition-colors relative z-10 mb-4">
                   {template.description}
                 </p>
+                
+                {template.template_type === 'custom' && (
+                  <Badge variant="outline" className="mb-2 w-fit bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[8px]">
+                    CRIADO POR MIM
+                  </Badge>
+                )}
 
                 <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/5 relative z-10">
                   <div className="flex items-center gap-3">
