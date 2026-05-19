@@ -392,7 +392,7 @@ export default function PatientMealPlan() {
     return { followedCount: f, partialCount: p, notFollowedCount: nf, dailyAdherence: adh, allMarked: dayComps.length >= items.length && items.length > 0 };
   }, [completions, items]);
 
-  if (loading) return <DashboardLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div></DashboardLayout>;
+  if (loading) return <DashboardLayout><MealPlanSkeleton /></DashboardLayout>;
   if (!plan || allItems.length === 0) return <DashboardLayout><div className="max-w-2xl mx-auto py-12 px-4 text-center"><Utensils className="w-12 h-12 text-muted-foreground mx-auto mb-4" /><h3 className="font-bold text-lg">Nenhum plano ativo</h3><Button onClick={fetchData} variant="outline" className="mt-4">Atualizar</Button></div></DashboardLayout>;
 
   return (
