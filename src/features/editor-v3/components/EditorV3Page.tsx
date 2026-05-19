@@ -141,7 +141,11 @@ export default function EditorV3Page() {
     try {
       if (selectedTemplate.plan_snapshot) {
         const snapshotKey = kcal.toString();
-        const snapshot = selectedTemplate.plan_snapshot[snapshotKey] || Object.values(selectedTemplate.plan_snapshot)[0];
+        const profileKeys = Object.keys(selectedTemplate.plan_snapshot);
+        const snapshot = selectedTemplate.plan_snapshot[snapshotKey] || 
+                         selectedTemplate.plan_snapshot[kcal] || 
+                         selectedTemplate.plan_snapshot[profileKeys[0]];
+                         
         const snapshotMeals = snapshot?.meals || snapshot?.days?.[0]?.meals;
         
         if (snapshot && snapshotMeals) {
