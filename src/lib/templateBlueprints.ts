@@ -346,5 +346,118 @@ export const ALL_BLUEPRINTS = [
         sides: []
       }
     ]
+  },
+  {
+    slug: 'diabetes-premium-real',
+    title: 'Protocolo Controle Glicêmico Real',
+    description: 'Foco em fibras, proteínas e gorduras boas para estabilidade da insulina.',
+    template_type: 'visual_v3',
+    objective: 'clinico',
+    visual_style: 'premium',
+    kcal_profiles: [1400, 1600, 1800],
+    meals: [
+      { 
+        name: 'Café da Manhã Fibroso', 
+        time: '07:30', 
+        main: 'omelete', 
+        subs: ['ovos-cozidos'],
+        sides: [{ slug: 'mamao-com-aveia', subs: ['abacate'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'castanha', 
+        subs: ['abacate'],
+        sides: []
+      },
+      { 
+        name: 'Almoço Glicêmico Estável', 
+        time: '12:30', 
+        main: 'frango-grelhado', 
+        subs: ['file-de-tilapia'],
+        sides: [
+          { slug: 'arroz-integral', subs: ['batata-doce'] },
+          { slug: 'feijao-carioca' },
+          { slug: 'salada-completa' }
+        ]
+      },
+      { 
+        name: 'Lanche da Tarde', 
+        time: '16:00', 
+        main: 'iogurte-natural', 
+        subs: ['mix-nuts'],
+        sides: [{ slug: 'morango' }]
+      },
+      { 
+        name: 'Jantar Leve', 
+        time: '19:30', 
+        main: 'peixe-com-legumes', 
+        subs: ['sopa-de-legumes'],
+        sides: [{ slug: 'salada-verde' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '21:30', 
+        main: 'cha-com-torrada', 
+        subs: ['gelatina'],
+        sides: []
+      }
+    ]
+  },
+  {
+    slug: 'hipertrofia-feminina-premium',
+    title: 'Hipertrofia Feminina Estrutural',
+    description: 'Foco em volume muscular e energia para treinos intensos com alimentos reais.',
+    template_type: 'visual_v3',
+    objective: 'hipertrofia',
+    visual_style: 'premium',
+    kcal_profiles: [1800, 2000, 2200],
+    meals: [
+      { 
+        name: 'Café da Manhã de Força', 
+        time: '07:30', 
+        main: 'crepioca', 
+        subs: ['panqueca-proteica'],
+        sides: [{ slug: 'mamao-com-aveia', subs: ['banana-com-pasta-amendoim'] }]
+      },
+      { 
+        name: 'Lanche da Manhã', 
+        time: '10:00', 
+        main: 'iogurte-com-fruta', 
+        subs: ['fruta'],
+        sides: [{ slug: 'mix-nuts' }]
+      },
+      { 
+        name: 'Almoço de Performance', 
+        time: '12:30', 
+        main: 'maminha', 
+        subs: ['acem'],
+        sides: [
+          { slug: 'arroz-feijao-carne', subs: ['macarrao-integral'] },
+          { slug: 'salada-completa' }
+        ]
+      },
+      { 
+        name: 'Lanche Pré-Treino', 
+        time: '16:00', 
+        main: 'pao-com-frango-desfiado', 
+        subs: ['sanduiche-natural'],
+        sides: [{ slug: 'agua-de-coco' }]
+      },
+      { 
+        name: 'Jantar de Recuperação', 
+        time: '19:30', 
+        main: 'arroz-com-frango', 
+        subs: ['file-de-tilapia'],
+        sides: [{ slug: 'legumes-cozidos-jantar' }]
+      },
+      { 
+        name: 'Ceia', 
+        time: '22:00', 
+        main: 'banana-com-canela', 
+        subs: ['gelatina'],
+        sides: []
+      }
+    ]
   }
 ];
