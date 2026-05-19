@@ -731,6 +731,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   ${buildPremiumCSS()}
 </head>
 <body>
+  <div class="print-container">
   <div class="premium-header">
     <div class="logo-text">
       <span class="logo-fit">Fit</span><span class="logo-journey">Journey</span>
