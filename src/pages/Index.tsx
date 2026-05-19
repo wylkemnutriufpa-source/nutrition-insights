@@ -417,8 +417,8 @@ function NutritionistDashboardContent() {
     setAiLoading(false);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
+  // remove the original fetchDashboard call from here
+  // useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
 
   const quickActions = [
     { label: "Modo Consultório", icon: Stethoscope, to: "/in-office", color: "bg-primary/20 text-primary hover:bg-primary/30 shadow-md shadow-primary/5 border border-primary/20" },
