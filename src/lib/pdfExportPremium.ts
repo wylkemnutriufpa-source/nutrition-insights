@@ -191,6 +191,19 @@ function formatSubstitutionDetail(sub: MealPlanPDFItem, _primary: MealPlanPDFIte
   return formatPortionText(sub);
 }
 
+function cleanTitle(title: string): string {
+  if (!title) return "";
+  // Se parece um slug (sem espaços, com hífens ou underscores)
+  if (!title.includes(" ") && (title.includes("-") || title.includes("_"))) {
+    return title
+      .replace(/[_-]/g, " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+  return title;
+}
+
 function escapeHtml(str: string): string {
   return (str || "")
     .replace(/&/g, "&amp;")
