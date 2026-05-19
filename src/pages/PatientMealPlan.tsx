@@ -249,7 +249,14 @@ export default function PatientMealPlan() {
       ]);
       if (subsResponse.data) {
         const subsMap: Record<string, any> = {};
-        subsResponse.data.forEach((s: any) => { subsMap[s.meal_plan_item_id] = { foodName: s.substituted_food, originalTitle: s.original_food }; });
+        subsResponse.data.forEach((s: any) => { 
+          subsMap[s.meal_plan_item_id] = { 
+            foodName: s.substituted_food, 
+            originalTitle: s.original_food,
+            substituted_calories: s.substituted_calories,
+            substituted_protein: s.substituted_protein
+          }; 
+        });
         setActiveSubstitutions(subsMap);
       }
       setCompletions((completionsResponse.data || []) as any);
