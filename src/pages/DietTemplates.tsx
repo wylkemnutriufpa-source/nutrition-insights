@@ -34,9 +34,9 @@ interface DietTemplate {
   complexity_level?: string;
   food_access_level?: string;
   clinical_tags?: string[];
-  caloric_versions?: Record<string, any>;
-  weekly_variation_strategy?: Record<string, any>;
-  meal_distribution?: Record<string, any>;
+  caloric_versions?: any;
+  weekly_variation_strategy?: any;
+  meal_distribution?: any;
   conditions: string[];
   base_calories: number;
   macro_ratio: { protein: number; carbs: number; fat: number };
@@ -311,7 +311,7 @@ export default function DietTemplates() {
         is_v3: true
       }));
 
-      setTemplates([...v3Data, ...v2Data]);
+      setTemplates([...v3Data, ...v2Data] as DietTemplate[]);
     } catch (e) {
       console.error("[DietTemplates] unexpected error:", e);
     }
