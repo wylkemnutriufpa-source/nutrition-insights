@@ -220,35 +220,28 @@ export default function InvitePatient() {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("invite-patient", {
-        body: {
-          name,
-          email,
-          phone: formattedPhone,
-          method,
-          password: method === "password" ? tempPassword : undefined,
-          attendance_mode: attendanceMode,
-        },
+      const { data, error } = await supabase.rpc("create_patient_canonical", {
+        _name: name,
+        _email: email,
+        _phone: formattedPhone,
+        _nutritionist_id: user.id,
+        _auth_method: method,
+        _temp_password: method === "password" ? tempPassword : null,
+        _attendance_mode: attendanceMode
       });
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      // Update attendance_mode on the link
-      if (data?.patient_id) {
-        setCreatedPatientId(data.patient_id);
-        await supabase
-          .from("nutritionist_patients")
-          .update({ attendance_mode: attendanceMode } as any)
-          .eq("patient_id", data.patient_id)
-          .eq("nutritionist_id", user.id);
+      
+      const res = data as any;
+      if (res?.patient_id) {
+        setCreatedPatientId(res.patient_id);
       }
 
       setCreated(true);
-      toast.success("Paciente convidado com sucesso!");
+      toast.success("Paciente criado e vinculado via Rota Canônica!");
     } catch (err: any) {
-      console.error("Invite error:", err);
-      toast.error(err.message || "Erro ao convidar paciente");
+      console.error("Invite error (Canonical):", err);
+      toast.error(err.message || "Erro ao criar paciente");
     } finally {
       setLoading(false);
     }
