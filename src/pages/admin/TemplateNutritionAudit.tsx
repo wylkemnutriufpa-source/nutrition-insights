@@ -385,7 +385,7 @@ export default function TemplateNutritionAudit() {
 
   const [isSeeding, setIsSeeding] = useState(false);
   const handleSeedPremiumTemplates = async () => {
-    if (!window.confirm("Isso irá injetar os 5 templates Premium V3 no banco de dados. Deseja continuar?")) return;
+    if (!window.confirm("Isso irá injetar os 14 templates Premium V3 no banco de dados, substituindo modelos antigos. Deseja continuar?")) return;
     setIsSeeding(true);
     try {
       const success = await seedPremiumV3Templates();
