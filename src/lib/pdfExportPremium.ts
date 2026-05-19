@@ -663,7 +663,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <span class="food-bullet" style="background: ${mealInfo.color}; margin-top: 5px;"></span>
           `}
           <div style="display: flex; flex-direction: column; flex: 1;">
-            <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(item.title)}</span>
+            <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(cleanTitle(item.title))}</span>
             <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
           </div>
           <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
