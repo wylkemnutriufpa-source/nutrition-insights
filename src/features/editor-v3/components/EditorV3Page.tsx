@@ -142,8 +142,9 @@ export default function EditorV3Page() {
       if (selectedTemplate.plan_snapshot) {
         const snapshotKey = kcal.toString();
         const snapshot = selectedTemplate.plan_snapshot[snapshotKey] || Object.values(selectedTemplate.plan_snapshot)[0];
+        const snapshotMeals = snapshot?.meals || snapshot?.days?.[0]?.meals;
         
-        if (snapshot && snapshot.meals) {
+        if (snapshot && snapshotMeals) {
           const days = [1, 2, 3, 4, 5, 6, 0];
           const allNewMeals: any[] = [];
           
