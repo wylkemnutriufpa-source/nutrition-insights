@@ -1257,7 +1257,7 @@ export default function AdminDashboard() {
             <TabsContent value="audit" className="mt-4 space-y-4">
               <Card
                 className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-destructive/30"
-                onClick={() => navigate("/admin/template-nutrition-audit")}
+                onClick={() => navigate("/admin/nutrition-audit")}
               >
                 <CardContent className="flex items-center gap-4 py-5">
                   <Shield className="w-8 h-8 text-destructive" />
