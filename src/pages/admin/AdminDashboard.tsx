@@ -863,11 +863,7 @@ export default function AdminDashboard() {
     // Fetch patient roles
     const { data: patRoles } = await supabase.from("user_roles").select("user_id").eq("role", "patient");
 
-    // Fetch suspended users (currently using a placeholder logic since 'suspended' is not an enum value yet)
-    // We'll just set it to an empty set to avoid 400 errors until the enum is updated
-    const suspendedIds = new Set<string>();
-
-    // Fetch nutritionist profiles
+    // Fetch nutritionists' profiles
     const profs: ProfessionalInfo[] = [];
     for (const nutId of nutIds) {
       const { data: profile } = await supabase.from("profiles").select("full_name, created_at").eq("user_id", nutId).maybeSingle();
@@ -878,7 +874,7 @@ export default function AdminDashboard() {
         user_id: nutId,
         full_name: profile?.full_name || "Nutricionista",
         patientCount: count || 0,
-        status: suspendedIds.has(nutId) ? "suspended" : "active",
+        status: "active",
         created_at: profile?.created_at,
       });
     }
