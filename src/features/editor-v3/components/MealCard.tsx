@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Clock, Plus, Trash2, Utensils, Search } from 'lucide-react';
+import { useEditorState } from '../hooks/useEditorState';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Meal, Food, MealItem } from '../types/types';
@@ -26,7 +27,7 @@ interface MealCardProps {
 export const MealCard: React.FC<MealCardProps> = ({ 
   meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
 }) => {
-
+  const store = useEditorState();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeItemForSub, setActiveItemForSub] = useState<MealItem | null>(null);
 
@@ -152,6 +153,7 @@ export const MealCard: React.FC<MealCardProps> = ({
                   onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
                   onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
                   onRemove={() => onRemoveFood(item.instanceId)}
+                  onRemoveSubstitution={(subIdx) => store.removeSubstitutionFromItem(meal.id, item.instanceId, subIdx)}
                   onUpdateName={onUpdateFoodName ? (name) => onUpdateFoodName(item.instanceId, name) : undefined}
                   onRequestSubstitution={() => {
                     setActiveItemForSub(item);

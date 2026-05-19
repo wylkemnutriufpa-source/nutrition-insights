@@ -13,11 +13,12 @@ interface FoodItemRowProps {
   onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
   onRequestSubstitution: () => void;
+  onRemoveSubstitution?: (idx: number) => void;
   onUpdateName?: (name: string) => void;
 }
 
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
-  item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution, onUpdateName 
+  item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName 
 }) => {
   return (
     <div className="group relative flex flex-col p-3 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
@@ -110,8 +111,16 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
             {item.substitutions.map((sub, idx) => (
               <div 
                 key={idx}
-                className="flex flex-col p-3.5 rounded-2xl bg-white/[0.01] border border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/[0.02] transition-all group/sub shadow-sm"
+                className="flex flex-col p-3.5 rounded-2xl bg-white/[0.01] border border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/[0.02] transition-all group/sub shadow-sm relative"
               >
+                {onRemoveSubstitution && (
+                  <button 
+                    onClick={() => onRemoveSubstitution(idx)}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center opacity-0 group-hover/sub:opacity-100 hover:bg-red-500 hover:text-white transition-all z-10"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
                 <span className="text-[10px] font-bold text-white/60 truncate group-hover/sub:text-emerald-400 transition-colors">{sub.name}</span>
                 <span className="text-[11px] font-black text-white mt-1">
                   {Math.round((sub as any).clinical_mass_g || sub.portionValue || 100)}

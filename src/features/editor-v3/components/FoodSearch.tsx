@@ -69,8 +69,13 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onSelect, mealSlot }) =>
               <button
                 key={item.id}
                 onClick={() => onSelect(item)}
-                className="flex items-center justify-between p-4 rounded-[1.5rem] bg-white/[0.03] border border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/40 hover:scale-[1.01] transition-all duration-300 text-left group shadow-sm"
+                className="flex items-center justify-between p-4 rounded-[1.5rem] bg-white/[0.03] border border-white/5 hover:bg-emerald-500/[0.03] hover:border-emerald-500/40 hover:scale-[1.01] transition-all duration-300 text-left group shadow-sm gap-4"
               >
+                {item.imageUrl && (
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
                     <p className="text-base font-black uppercase italic tracking-tight text-white group-hover:text-emerald-400 transition-colors">
