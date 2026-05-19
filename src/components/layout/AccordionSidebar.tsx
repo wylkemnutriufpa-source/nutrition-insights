@@ -168,7 +168,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
   const hasRole = isPatient || isNutritionist || isPersonal || isAdmin;
 
-  if (loading || !hasRole) return null;
+  if (loading || !hasRole) return <SidebarSkeleton />;
 
   const visibleSections = sections
     .filter(s => s.is_visible)

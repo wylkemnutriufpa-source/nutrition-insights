@@ -100,6 +100,28 @@ function StreakBadge({ count }: { count: number }) {
   );
 }
 
+function MealPlanSkeleton() {
+  return (
+    <div className="max-w-2xl mx-auto space-y-6 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-muted rounded-lg" />
+          <div className="h-4 w-32 bg-muted rounded-md" />
+        </div>
+        <div className="h-10 w-10 rounded-full bg-muted" />
+      </div>
+      <div className="h-32 w-full bg-muted/20 rounded-3xl border border-border/10" />
+      <div className="h-12 w-full bg-muted/10 rounded-2xl" />
+      {[1, 2, 3].map(i => (
+        <div key={i} className="space-y-3">
+          <div className="h-6 w-24 bg-muted/30 rounded-md" />
+          <div className="h-24 w-full bg-muted/20 rounded-2xl border border-border/10" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function PatientMealPlan() {
   const { user, isAdmin, isNutritionist, isPersonal, isPatient } = useAuth();
   const navigate = useNavigate();
@@ -370,7 +392,7 @@ export default function PatientMealPlan() {
     return { followedCount: f, partialCount: p, notFollowedCount: nf, dailyAdherence: adh, allMarked: dayComps.length >= items.length && items.length > 0 };
   }, [completions, items]);
 
-  if (loading) return <DashboardLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div></DashboardLayout>;
+  if (loading) return <DashboardLayout><MealPlanSkeleton /></DashboardLayout>;
   if (!plan || allItems.length === 0) return <DashboardLayout><div className="max-w-2xl mx-auto py-12 px-4 text-center"><Utensils className="w-12 h-12 text-muted-foreground mx-auto mb-4" /><h3 className="font-bold text-lg">Nenhum plano ativo</h3><Button onClick={fetchData} variant="outline" className="mt-4">Atualizar</Button></div></DashboardLayout>;
 
   return (

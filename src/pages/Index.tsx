@@ -63,11 +63,53 @@ const item = {
 
 // Legacy PatientDashboardContent removed — patients now use PatientGridDashboard exclusively
 
+// ──── Dashboard Skeleton ────
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {/* Welcome Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="h-9 w-64 bg-muted rounded-lg" />
+          <div className="h-4 w-48 bg-muted rounded-md" />
+        </div>
+        <div className="h-12 w-32 bg-muted rounded-2xl" />
+      </div>
+
+      {/* Quick Action Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-24 bg-muted/10 rounded-2xl border border-border/50" />
+        ))}
+      </div>
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-20 bg-muted/20 rounded-2xl border border-border/50" />
+        ))}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-8">
+          <div className="h-[400px] bg-muted/5 rounded-3xl border border-border/50" />
+        </div>
+        <div className="lg:col-span-4 space-y-8">
+          <div className="h-[200px] bg-muted/5 rounded-3xl border border-border/50" />
+          <div className="h-[300px] bg-muted/5 rounded-3xl border border-border/50" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ──── Nutritionist Dashboard 3.0 — Clinical Command Center ────
 function NutritionistDashboardContent() {
   const { user } = useAuth();
   const { minMode, isBasic } = useExperienceMode();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
   const [programCount, setProgramCount] = useState(0);
@@ -132,22 +174,31 @@ function NutritionistDashboardContent() {
   const fetchDashboard = useCallback(async () => {
     const userId = userIdRef.current;
     if (!userId) return;
-    if (fetchingRef.current) return; // prevent concurrent/loop calls
+    if (fetchingRef.current) return;
     fetchingRef.current = true;
+    setLoading(true);
 
     try {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-      const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, programsListRes, sessionsRes] = await Promise.all([
+      const [
+        patientsRes, 
+        protocolsRes, 
+        programsRes, 
+        plansRes, 
+        aptsRes, 
+        chatsRes, 
+        pendingRes, 
+        sessionsRes
+      ] = await Promise.all([
         supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", userId).eq("status", "active"),
         supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", userId),
-        supabase.from("programs").select("id", { count: "exact" }).eq("created_by", userId).eq("is_active", true),
+        supabase.from("programs").select("id, title", { count: "exact" }).eq("created_by", userId).eq("is_active", true),
         supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", userId).eq("is_active", true),
         supabase.from("patient_appointments").select("id", { count: "exact" }).eq("nutritionist_id", userId).gte("appointment_date", todayStart.toISOString()).lte("appointment_date", todayEnd.toISOString()),
         supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
         supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", userId).eq("status", "pending"),
-        supabase.from("programs").select("id, title").eq("created_by", userId).eq("is_active", true).limit(5),
         supabase.from("in_office_sessions" as any).select("*").eq("nutritionist_id", userId).is("completed_at", null).order("created_at", { ascending: false }),
       ]);
 
@@ -187,9 +238,9 @@ function NutritionistDashboardContent() {
       }
 
       // Program performance
-      if (programsListRes.data && programsListRes.data.length > 0) {
+      if (programsRes.data && programsRes.data.length > 0) {
         const perfList: typeof programPerformance = [];
-        for (const prog of programsListRes.data) {
+        for (const prog of programsRes.data) {
           const { count } = await supabase.from("program_patients").select("id", { count: "exact", head: true }).eq("program_id", prog.id).eq("status", "active");
           const { data: progressData } = await supabase.from("program_patient_progress").select("adherence_score").eq("program_id", prog.id);
           const scores = (progressData || []).filter(p => p.adherence_score != null).map(p => p.adherence_score as number);
@@ -312,9 +363,12 @@ function NutritionistDashboardContent() {
         }
       }
     } finally {
+      setLoading(false);
       fetchingRef.current = false;
     }
-  }, [evolutionPeriod]); // stable — uses ref for userId
+  }, [evolutionPeriod]);
+
+  if (loading) return <DashboardSkeleton />;
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
