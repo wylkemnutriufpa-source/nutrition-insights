@@ -5,8 +5,6 @@ const uid = () => crypto.randomUUID();
 
 
 
-const IMG = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
-const uid = () => crypto.randomUUID();
 
 const F: any = {
   frango:  { n:'Frango Grelhado',     p:'150g', k:240, pr:45, c:0,  g:6,  img:`${IMG}/frango-grelhado.jpg` },
