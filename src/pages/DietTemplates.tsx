@@ -16,8 +16,10 @@ import { toast } from "sonner";
 import {
   BookOpen, Search, ArrowLeft, ChevronRight, Sparkles, Loader2,
   Coffee, Apple, Utensils, Cookie, Moon, Sun, ArrowRight,
-  Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw, ClipboardCheck
+  Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw, ClipboardCheck,
+  Pencil, Settings2, Image as ImageIcon, LayoutGrid
 } from "lucide-react";
+
 import { TemplateFoodVisual } from "@/components/meal/TemplateFoodVisual";
 import { safeNum, fmtMacro } from "@/lib/formatMacros";
 
@@ -121,7 +123,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   clinico_especifico: "Clínico Específico",
 };
 
-const TemplateCard = memo(({ template, getAdjustedCalories, anamnesis, physicalAssessment, CATEGORY_COLORS, CATEGORY_LABELS, onPreview, isLegacy }: {
+const TemplateCard = memo(({ template, getAdjustedCalories, anamnesis, physicalAssessment, CATEGORY_COLORS, CATEGORY_LABELS, onPreview, onEdit, isLegacy }: {
   template: DietTemplate;
   getAdjustedCalories: (t: DietTemplate) => number;
   anamnesis: AnamnesisData | null;
@@ -129,6 +131,8 @@ const TemplateCard = memo(({ template, getAdjustedCalories, anamnesis, physicalA
   CATEGORY_COLORS: Record<string, string>;
   CATEGORY_LABELS: Record<string, string>;
   onPreview: (t: DietTemplate) => void;
+  onEdit?: (t: DietTemplate) => void;
+
   isLegacy?: boolean;
 }) => {
   const adjustedCal = getAdjustedCalories(template);
@@ -137,9 +141,11 @@ const TemplateCard = memo(({ template, getAdjustedCalories, anamnesis, physicalA
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className="glass rounded-xl p-5 shadow-card cursor-pointer group relative"
+      className="glass rounded-xl p-5 shadow-card cursor-pointer group relative overflow-hidden"
       onClick={() => onPreview(template)}
     >
+      <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
       {isLegacy && (
         <Badge variant="outline" className="absolute top-2 right-2 text-[9px] text-muted-foreground">
           Legado
@@ -196,6 +202,29 @@ const TemplateCard = memo(({ template, getAdjustedCalories, anamnesis, physicalA
           </span>
         ))}
       </div>
+
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 text-[11px] font-bold text-primary hover:bg-primary/10"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.(template);
+          }}
+        >
+          <Pencil className="w-3.5 h-3.5 mr-1.5" />
+          EDITAR MATRIZ
+        </Button>
+        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1.5">
+          {template.is_v3 ? (
+            <><Sparkles className="w-3 h-3 text-primary" /> V3 PRO</>
+          ) : (
+            "V2 CLASSIC"
+          )}
+        </span>
+      </div>
+
     </motion.div>
   );
 });
@@ -304,7 +333,8 @@ export default function DietTemplates() {
         icon: t.visual_style === 'premium' ? "✨" : "🥗",
         category: t.objective || "lifestyle",
         base_calories: t.kcal_profiles?.[0] || 0,
-        macro_ratio: { protein: 30, carbs: 40, fat: 30 }, // Fallback macro ratio
+        macro_ratio: { protein: 30, carbs: 40, fat: 30 }, 
+
         meals: (() => {
           // 🛡️ SOBERANIA V3: Extração de refeições robusta para preview no catálogo
           if (!t.plan_snapshot) return [];
