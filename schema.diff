@@ -1,25 +1,13 @@
 {
   "summary": "Summary:",
   "details": {
-    "timestamp": "2026-05-20T19:07:56.953Z",
-    "duration": "0.0s",
-    "lastSnapshotMigration": "20260519212143_9f418f86-b6b0-4529-a14c-a08bcff433cc.sql",
-    "lastActualMigration": "20260520170519_e52c3df5-c642-4303-b29d-8ddf05531a4e.sql",
+    "timestamp": "2026-05-20T23:36:41.026Z",
+    "duration": "0.1s",
+    "lastSnapshotMigration": "20260520170519_e52c3df5-c642-4303-b29d-8ddf05531a4e.sql",
+    "lastActualMigration": "20260520233440_4dc5387b-993e-4af9-a931-e6aae0d67d99.sql",
     "missingMigrations": [
-      "20260520003118_07bd71d7-34e4-4668-8322-0b0a15ffdb3e.sql",
-      "20260520003239_822818e8-e483-4f45-a1b0-451014100a24.sql",
-      "20260520003314_6623aff5-5445-49b3-a369-a5d6d37bc8f6.sql",
-      "20260520004344_b4a11d98-e564-47b4-8a0c-0174ecabfa30.sql",
-      "20260520004559_ba4a5c6a-9dbf-4bee-bbc5-b73c1b8d8e4c.sql",
-      "20260520004619_a4209159-9556-41a8-bd68-880efb9c41de.sql",
-      "20260520004636_22c6fb31-633f-4fed-9af3-97895858f736.sql",
-      "20260520004704_eedb3b5d-02b3-4a9d-94a6-8ceb9c8be3dd.sql",
-      "20260520004726_54857f1b-26e9-47d5-9dc2-b154d25d42f3.sql",
-      "20260520155850_6ca7beca-4f3b-4ee9-86c0-162da8481331.sql",
-      "20260520155946_db886211-e93a-4729-96d1-3d03861da2df.sql",
-      "20260520160309_7863bb2d-f26c-4226-b702-cf4f19fb72b8.sql",
-      "20260520160336_74d2ba54-5ade-4225-a5be-78076e8fa790.sql",
-      "20260520170519_e52c3df5-c642-4303-b29d-8ddf05531a4e.sql"
+      "20260520230415_8f8c978e-82dc-4352-8ac4-cfce380cd7c2.sql",
+      "20260520233440_4dc5387b-993e-4af9-a931-e6aae0d67d99.sql"
     ],
     "diffResults": []
   }
