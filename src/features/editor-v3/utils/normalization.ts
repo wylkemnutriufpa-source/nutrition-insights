@@ -210,7 +210,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
     id: m.id || crypto.randomUUID(),
     name: m.name || translateSlot(m.meal_type || m.type || 'Refeição'),
     time: m.time || m.scheduled_time || "08:00",
-    day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 0,
+    day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 1,
     items: (m.items || []).map((it: any) => {
       const img = it.image_url || it.imageUrl || it.visual?.image_url;
       const kcal = Number(it.kcal ?? it.meta_calorias ?? it.macros?.kcal ?? 0);
