@@ -1,16 +1,12 @@
 
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import fs from 'fs';
 
 async function fixTemplates() {
-  // 1. Fetch visual library for mapping
-  const { data: visualLibrary } = await supabase
-    .from('meal_visual_library')
-    .select('name, image_url')
-    .not('image_url', 'is', null);
+  const data = fs.readFileSync('templates.json', 'utf8');
+  const templates = JSON.parse(data);
+  const visualData = fs.readFileSync('visual_library.json', 'utf8');
+  const visualLibrary = JSON.parse(visualData);
+
 
   const imageMap: Record<string, string> = {};
   visualLibrary?.forEach(item => {
