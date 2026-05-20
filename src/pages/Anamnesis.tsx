@@ -694,30 +694,11 @@ export default function Anamnesis() {
     })();
   }, [targetUserId, isNutritionistMode]);
 
-  // Load existing draft, local backup and version on mount
+  // Load existing draft and version on mount
   useEffect(() => {
     if (!targetUserId) return;
     (async () => {
-      // 1. Get local backup
-      const backupKey = `fj_anamnesis_backup_${targetUserId}`;
-      let localData: { answers: Record<string, any>, updated_at: string } | null = null;
-      try {
-        const stored = safeLocalStorage.getItem(backupKey);
-        if (stored) {
-          localData = JSON.parse(stored);
-          // Centralized TTL Check V4.6
-          const validity = getBackupValidity(localData!.updated_at);
-          if (validity === "expired") {
-            setBackupExpired(true);
-            localData = null; // Don't use expired data for auto-restore
-          } else if (validity === "invalid") {
-            localData = null;
-          }
-        }
-      } catch (e) {
-        console.warn("[FJ:Anamnesis] failed to read local backup:", e);
-      }
-      setLocalBackup(localData);
+
 
       // 2. Get server data
       const [{ data: anamnesisRows }, { data: pipelineData }] = await Promise.all([
