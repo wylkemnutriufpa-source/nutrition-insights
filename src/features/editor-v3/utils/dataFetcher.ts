@@ -474,7 +474,7 @@ export const seedBaseData = async (nutritionistId: string): Promise<boolean> => 
     const { count: marmitaCount } = await supabase.from('meal_recipes').select('*', { count: 'exact', head: true }).eq('nutritionist_id', nutritionistId);
     if (marmitaCount < 10) {
       console.log('[Seed] Inserindo marmitas base...');
-      await supabase.from('meal_recipes').insert(baseMarmitas);
+      await supabase.from('meal_recipes').insert(baseMarmitas as any);
     }
 
     // 3. Templates Base

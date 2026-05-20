@@ -140,7 +140,7 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
         therapeutic_effectiveness_status: interventionType,
         therapeutic_efficacy_score: metadata?.efficacy_score ?? null,
         updated_at: new Date().toISOString(),
-      } as Record<string, unknown>)
+      } as any)
       .eq("id", planId);
 
     if (planUpdateError) {

@@ -61,7 +61,8 @@ import {
   PlayCircle,
   XCircle,
   Terminal,
-  Loader2
+  Loader2,
+  Pencil
 } from "lucide-react";
 
 import { toast } from "sonner";
