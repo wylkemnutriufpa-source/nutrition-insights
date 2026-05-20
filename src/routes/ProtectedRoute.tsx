@@ -14,8 +14,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [authStatus, roles, location.pathname, user]);
 
   if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
-    return null;
+    return <PageLoader />;
   }
+
   
   if (authStatus !== "authenticated") {
     const next = encodeURIComponent(location.pathname + location.search);
