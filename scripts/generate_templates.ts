@@ -187,5 +187,7 @@ const sql = templates.map(t => {
   return `INSERT INTO public.v3_diet_templates (slug, title, description, template_type, objective, visual_style, kcal_profiles, meal_distribution, plan_snapshot, active, sovereign_validated) VALUES ('${t.slug}', '${t.title}', '${t.title} ${t.kcal} kcal', 'visual_v3', '${t.objective}', 'premium', '[${t.kcal}]'::jsonb, '${JSON.stringify(dist)}'::jsonb, '${JSON.stringify(snapshot)}'::jsonb, true, true);`;
 }).join('\n');
 
-console.log('DELETE FROM public.v3_diet_templates WHERE nutritionist_id IS NULL;');
-console.log(sql);
+import fs from 'fs';
+const finalSql = `DELETE FROM public.v3_diet_templates WHERE nutritionist_id IS NULL;\n${sql}`;
+fs.writeFileSync('generated_templates.sql', finalSql);
+console.log('SQL saved to generated_templates.sql');
