@@ -434,9 +434,9 @@ function ProfessionalDetailPanel({ professional, onClose, onRefresh }: { profess
   const toggleModule = async (field: "coach_bodybuilder_enabled" | "personal_trainer_enabled", current: boolean) => {
     setToggling(field);
     if (professional.profile_id) {
-      await supabase.from("professional_profiles").update({ [field]: !current }).eq("id", professional.profile_id);
+      await supabase.from("professional_profiles").update({ [field]: !current } as any).eq("id", professional.profile_id);
     } else {
-      await supabase.from("professional_profiles").insert({ user_id: professional.user_id, [field]: !current });
+      await supabase.from("professional_profiles").insert({ user_id: professional.user_id, [field]: !current } as any);
     }
     toast.success(`Módulo ${!current ? "liberado" : "bloqueado"} com sucesso`);
     onRefresh();

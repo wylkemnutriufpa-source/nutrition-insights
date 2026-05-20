@@ -60,7 +60,7 @@ export default function AdminBookingSettings() {
   async function updateProfile(id: string, updates: Partial<BookingProfile>) {
     const { error } = await supabase
       .from("public_profile_settings")
-      .update(updates)
+      .update(updates as any)
       .eq("id", id);
     if (error) toast.error(error.message);
     else toast.success("Configuração salva!");

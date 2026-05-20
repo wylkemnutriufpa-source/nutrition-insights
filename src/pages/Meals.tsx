@@ -74,7 +74,7 @@ export default function Meals() {
       carbs: form.carbs ? parseFloat(form.carbs) : null,
       fat: form.fat ? parseFloat(form.fat) : null,
       xp_earned: xpEarned,
-    });
+    } as any);
 
     if (error) {
       toast.error(t("meals.registerError") + error.message);
