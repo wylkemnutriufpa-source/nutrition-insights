@@ -1503,26 +1503,6 @@ export default function Anamnesis() {
             >
               <ChevronLeft className="w-4 h-4" /> Voltar
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (backupExpired) {
-                  toast.error("Este backup expirou (>30 dias) e não pode ser restaurado.");
-                  return;
-                }
-                if (!localBackup) {
-                  toast.error("Não há backup local disponível para restaurar.");
-                  return;
-                }
-                setShowManualRestoreModal(true);
-              }}
-              disabled={backupExpired || !localBackup}
-              className={`gap-1.5 transition-all duration-300 ${backupExpired ? 'opacity-50 grayscale' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              <RefreshCcw className={`w-4 h-4 ${backupExpired ? '' : 'group-hover:rotate-180 transition-transform duration-500'}`} /> 
-              {backupExpired ? "Backup expirado" : "Restaurar backup"}
-            </Button>
             
             <Button
               variant="outline"
