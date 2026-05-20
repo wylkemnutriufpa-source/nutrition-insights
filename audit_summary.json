@@ -1,0 +1,184 @@
+[
+  {
+    "id": "2307636f-6bf4-42dd-b9a0-b847fb95bb4f",
+    "title": "Bariátrica (Fase Sólida)",
+    "status": "QUEBRADO",
+    "failure_count": 56,
+    "first_failures": [
+      "Perfil 1200: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1200: Item Iogurte Natural com imagem inválida/placeholder: undefined",
+      "Perfil 1200: Item Frango Grelhado com imagem inválida/placeholder: undefined",
+      "Perfil 1200: Item Legumes no Vapor com imagem inválida/placeholder: undefined",
+      "Perfil 1200: Item Whey Protein com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "b18adede-60d0-40ab-a26e-0cb267597a14",
+    "title": "Emagrecimento Prático",
+    "status": "QUEBRADO",
+    "failure_count": 63,
+    "first_failures": [
+      "Perfil 1400: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Mamão com Aveia com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Frango Grelhado com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Arroz Integral com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Salada Verde com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "c6bde85e-fa56-4c70-ab8e-5faf2f0467f4",
+    "title": "Hipertrofia Prática",
+    "status": "QUEBRADO",
+    "failure_count": 112,
+    "first_failures": [
+      "Perfil 2500: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 2500: Item Pão Integral com imagem inválida/placeholder: undefined",
+      "Perfil 2500: Item Mamão com Aveia com imagem inválida/placeholder: undefined",
+      "Perfil 2500: Item Iogurte Natural com imagem inválida/placeholder: undefined",
+      "Perfil 2500: Item Aveia em Flocos com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "9324ada5-a7e9-4bc2-905d-8e4d6d7d698b",
+    "title": "Low Carb Acessível",
+    "status": "QUEBRADO",
+    "failure_count": 49,
+    "first_failures": [
+      "Perfil 1600: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Mix de Castanhas com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Maminha Grelhada com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Legumes no Vapor com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Iogurte Natural com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "80a6c46b-b76f-4e8d-ac02-2854b67c2e7d",
+    "title": "Controle de Colesterol",
+    "status": "QUEBRADO",
+    "failure_count": 63,
+    "first_failures": [
+      "Perfil 1700: Item Aveia em Flocos com imagem inválida/placeholder: undefined",
+      "Perfil 1700: Item Maçã com imagem inválida/placeholder: undefined",
+      "Perfil 1700: Item Filé de Tilápia com imagem inválida/placeholder: undefined",
+      "Perfil 1700: Item Arroz Integral com imagem inválida/placeholder: undefined",
+      "Perfil 1700: Item Salada Verde com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "70410810-11e9-4788-8537-e764317ba953",
+    "title": "Baixa em FODMAPs",
+    "status": "QUEBRADO",
+    "failure_count": 63,
+    "first_failures": [
+      "Perfil 1600: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Banana Prata com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Mix de Castanhas com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Frango Grelhado com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Arroz Branco com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "fbbb5487-973d-4883-8a8d-61db952bf7f5",
+    "title": "Anti-inflamatório Premium",
+    "status": "QUEBRADO",
+    "failure_count": 77,
+    "first_failures": [
+      "Perfil 1800: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Mamão com Aveia com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Mix de Castanhas com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Salmão Assado com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Arroz Integral com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "916e5f76-be03-4546-9537-60a4ffb6b9a6",
+    "title": "Ganho de Massa Limpa",
+    "status": "QUEBRADO",
+    "failure_count": 77,
+    "first_failures": [
+      "Perfil 2200: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Banana Prata com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Frango Grelhado com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Arroz Integral com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Salada Verde com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "e72b1ec8-7a7f-45eb-af94-01b8e2bedc98",
+    "title": "Detox e Vitalidade",
+    "status": "QUEBRADO",
+    "failure_count": 56,
+    "first_failures": [
+      "Perfil 1400: Item Mamão com Aveia com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Aveia em Flocos com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Chá com Torrada com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Filé de Tilápia com imagem inválida/placeholder: undefined",
+      "Perfil 1400: Item Salada Verde com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "c84b6526-8bc7-4b1e-b197-00e761472486",
+    "title": "Pré e Pós Operatório",
+    "status": "QUEBRADO",
+    "failure_count": 77,
+    "first_failures": [
+      "Perfil 1600: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Mamão com Aveia com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Maçã com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Filé de Tilápia com imagem inválida/placeholder: undefined",
+      "Perfil 1600: Item Arroz Integral com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "459e8367-a46f-4dc8-ae53-8051c149cf99",
+    "title": "Cetogênica Prática",
+    "status": "QUEBRADO",
+    "failure_count": 49,
+    "first_failures": [
+      "Perfil 1500: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1500: Item Mix de Castanhas com imagem inválida/placeholder: undefined",
+      "Perfil 1500: Item Maminha Grelhada com imagem inválida/placeholder: undefined",
+      "Perfil 1500: Item Salada Verde com imagem inválida/placeholder: undefined",
+      "Perfil 1500: Item Mix de Castanhas com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "fd0463c8-a24d-4d02-a245-a32755df5b8e",
+    "title": "Cardápio Fácil e Prático",
+    "status": "QUEBRADO",
+    "failure_count": 77,
+    "first_failures": [
+      "Perfil 2000: Item Pão Integral com imagem inválida/placeholder: undefined",
+      "Perfil 2000: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 2000: Item Patinho Moído com imagem inválida/placeholder: undefined",
+      "Perfil 2000: Item Arroz Branco com imagem inválida/placeholder: undefined",
+      "Perfil 2000: Item Feijão Carioca com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "39cb0880-bb59-47eb-b96c-0f84cc351a12",
+    "title": "Diabetes e Controle Glicêmico",
+    "status": "QUEBRADO",
+    "failure_count": 77,
+    "first_failures": [
+      "Perfil 1800: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Mamão com Aveia com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Mix de Castanhas com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Frango Grelhado com imagem inválida/placeholder: undefined",
+      "Perfil 1800: Item Arroz Integral com imagem inválida/placeholder: undefined"
+    ]
+  },
+  {
+    "id": "71c99d72-2c78-486a-ac70-8c8330871aff",
+    "title": "Gestantes e Lactantes",
+    "status": "QUEBRADO",
+    "failure_count": 91,
+    "first_failures": [
+      "Perfil 2200: Item Pão Integral com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Ovos Mexidos com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Mamão com Aveia com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Iogurte Natural com imagem inválida/placeholder: undefined",
+      "Perfil 2200: Item Maçã com imagem inválida/placeholder: undefined"
+    ]
+  }
+]
