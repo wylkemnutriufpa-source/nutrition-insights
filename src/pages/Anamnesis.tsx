@@ -753,73 +753,32 @@ export default function Anamnesis() {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V4.6/V4.7)
-      if (latestAnamnesis && localData && resolvedTenantId) {
-        const serverUpdatedAt = latestAnamnesis.updated_at || latestAnamnesis.created_at;
-        const localUpdatedAt = localData.updated_at;
+      // CONFLICT DETECTION (REMOVED V5.0 - SOBERANIA ÚNICA NO SERVIDOR)
+      // O paciente não deve ser interrompido por conflitos técnicos. 
+      // Se houver rascunho no servidor, ele é a verdade. Se não houver, tentamos o local.
+      
+      if (latestAnamnesis) {
+        setDraftId(latestAnamnesis.id);
+        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
+        if (savedAnswers) setAnswers(savedAnswers);
         
-        setLastServerUpdateAt(serverUpdatedAt);
-        
-        // Versioned Decision Key V4.6
-        const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverUpdatedAt, localUpdatedAt);
-        const resolution = safeLocalStorage.getItem(resolutionKey);
-
-        if (resolution) {
-          fjLog("SYNC", `Conflito já resolvido via versão: ${resolution}`);
-          if (resolution === "restaurar_servidor") {
-            setAnswers(latestAnamnesis.answers);
-          } else {
-            setAnswers(localData.answers);
+        if (latestAnamnesis.status === "completed") {
+          setCompleted(true);
+        } else if (latestAnamnesis.status === "draft") {
+          if (savedAnswers && Object.keys(savedAnswers).length > 0) {
+            const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
+            if (lastIdx > 0) setStep(lastIdx);
+            else if (lastIdx === -1) setStep(questions.length - 1);
+            toast.info("Rascunho restaurado do servidor! 📝");
           }
-          setDraftId(latestAnamnesis.id);
-          return;
         }
-
-        // Stage 2 - Concurrency Detection: If they differ significantly
-        const serverTS = new Date(serverUpdatedAt).getTime();
-        const localTS = new Date(localUpdatedAt).getTime();
-        if (Math.abs(serverTS - localTS) > 2000) {
-          fjLog("SYNC", "Conflito detectado no carregamento inicial.");
-          setServerVersion({ 
-            answers: latestAnamnesis.answers as Record<string, any>, 
-            updated_at: serverUpdatedAt,
-            id: latestAnamnesis.id
-          });
-          setShowConflictModal(true);
-          setAnswers(localData.answers);
-          setDraftId(latestAnamnesis.id);
-          return;
-        }
-      }
-
-
-      // No conflict or no data scenarios
-      if (!latestAnamnesis) {
-        if (localData) {
-          setAnswers(localData.answers);
-          const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
-          if (lastIdx > 0) setStep(lastIdx);
-          else if (lastIdx === -1) setStep(questions.length - 1);
-          toast.info("Dados restaurados do backup local! ⚡");
-        }
-        return;
-      }
-
-      // Use latestAnamnesis (standard behavior)
-      setDraftId(latestAnamnesis.id);
-      const savedAnswers = latestAnamnesis.answers as Record<string, any>;
-      if (savedAnswers) setAnswers(savedAnswers);
-
-      if (latestAnamnesis.status === "completed") {
-        setCompleted(true);
-        // SystemStateGuard observa patient_state e roteia automaticamente.
-      } else if (latestAnamnesis.status === "draft") {
-        if (savedAnswers && Object.keys(savedAnswers).length > 0) {
-          const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
-          if (lastIdx > 0) setStep(lastIdx);
-          else if (lastIdx === -1) setStep(questions.length - 1);
-          toast.info("Rascunho restaurado! Continue de onde parou 📝");
-        }
+      } else if (localData) {
+        // Fallback para local apenas se o servidor estiver vazio
+        setAnswers(localData.answers);
+        const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
+        if (lastIdx > 0) setStep(lastIdx);
+        else if (lastIdx === -1) setStep(questions.length - 1);
+        toast.info("Dados restaurados do backup local! ⚡");
       }
     })();
   }, [targetUserId]);
