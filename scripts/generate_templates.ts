@@ -3,7 +3,7 @@ import crypto from "crypto";
 const IMG = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
 const uid = () => crypto.randomUUID();
 
-const F = {
+const F: any = {
   frango:  { n:'Frango Grelhado',     p:'150g', k:240, pr:45, c:0,  g:6,  img:`${IMG}/frango-grelhado.jpg` },
   tilapia: { n:'Filé de Tilápia',     p:'150g', k:200, pr:40, c:0,  g:4,  img:`${IMG}/tilapia-grelhada.jpg` },
   patinho: { n:'Patinho Moído',       p:'150g',  k:300, pr:40, c:0,  g:12, img:`${IMG}/patinho-moido.jpg` },
@@ -13,10 +13,12 @@ const F = {
   arrozI:  { n:'Arroz Integral',      p:'100g', k:120, pr:3,  c:25, g:1,  img:`${IMG}/arroz-com-frango.png` },
   feijao:  { n:'Feijão Carioca',      p:'1 concha',     k:70,  pr:5,  c:13, g:0,  img:`${IMG}/feijao-carioca.jpg` },
   batata:  { n:'Batata Doce',         p:'120g',     k:90,  pr:1,  c:20, g:0,  img:`${IMG}/batata-doce.jpg` },
+  macarrao:{ n:'Macarrão',            p:'100g',     k:150, pr:5,  c:30, g:1,  img:`${IMG}/arroz-com-frango.png` },
   pao:     { n:'Pão Integral',        p:'2 fatias',     k:120, pr:4,  c:24, g:1,  img:`${IMG}/pao-integral.jpg` },
   iogurte: { n:'Iogurte Natural',     p:'170g',k:100, pr:7,  c:10, g:3,  img:`${IMG}/kefir.jpg` },
   banana:  { n:'Banana Prata',        p:'1 unidade',    k:70,  pr:1,  c:18, g:0,  img:`${IMG}/banana-com-aveia.jpg` },
   maca:    { n:'Maçã',               p:'1 unidade',    k:50,  pr:0,  c:13, g:0,  img:`${IMG}/maca.jpg` },
+  mamao:   { n:'Mamão',              p:'100g',         k:45,  pr:0,  c:11, g:0,  img:`${IMG}/mamao-com-aveia.jpg` },
   castanha:{ n:'Mix de Castanhas',    p:'30g',    k:180, pr:4,  c:6,  g:16, img:`${IMG}/mix-castanhas.jpg` },
   salada:  { n:'Salada Verde',        p:'1 prato',      k:15,  pr:1,  c:3,  g:0,  img:`${IMG}/salada-verde.jpg` },
   legumes: { n:'Legumes no Vapor',    p:'100g',     k:40,  pr:2,  c:8,  g:0,  img:`${IMG}/legumes-vapor.jpg` },
