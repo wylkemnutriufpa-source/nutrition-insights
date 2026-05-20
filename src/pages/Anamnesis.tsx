@@ -574,11 +574,10 @@ export default function Anamnesis() {
   const { status: autoSaveStatus, lastAction, updateStatus: setAutoSaveStatus } = useSyncStatus();
   const { status: submitSyncStatus, updateStatus: setSubmitSyncStatus } = useSyncStatus();
   const [showConflictModal, setShowConflictModal] = useState(false);
-
   const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
   const [backupExpired, setBackupExpired] = useState(false);
-  const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
-  const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
+  const [serverVersion, setServerVersion] = useState<any>(null);
+  const [localBackup, setLocalBackup] = useState<any>(null);
   const [lastServerUpdateAt, setLastServerUpdateAt] = useState<string | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
 
