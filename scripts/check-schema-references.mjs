@@ -63,7 +63,7 @@ function* walk(dir) {
  * intermediate awaits, and casts. The select string must be a string literal.
  */
 const CHAIN_RE =
-  /\.from\(\s*["'`]([a-zA-Z_][a-zA-Z0-9_]*)["'`]\s*\)[^;]*?\.select\(\s*(["'`])([^"'`]+)\2/g;
+  /\.from\(\s*["'`]([a-zA-Z_][a-zA-Z0-9_]*)["'`]\s*\)(?:(?!\.from\().)*?\.select\(\s*(["'`])([^"'`]+)\2/gs;
 
 /**
  * Parse a select string into top-level column tokens.
