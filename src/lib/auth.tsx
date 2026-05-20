@@ -59,7 +59,9 @@ interface AuthContextType {
   experienceRole: "nutritionist" | "patient";
   tenantId: string | null;
   tenant: any | null;
+  isLoaded: boolean; // Flag to indicate auth+roles have been checked at least once
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
