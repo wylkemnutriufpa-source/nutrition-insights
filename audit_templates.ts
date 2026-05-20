@@ -74,10 +74,18 @@ async function auditTemplates() {
       report.profiles[key] = profileReport;
     }
 
-    results.push(report);
+    const summary = {
+      id: t.id,
+      title: t.title,
+      status: report.status,
+      failure_count: report.failures.length,
+      first_failures: report.failures.slice(0, 5)
+    };
+    results.push(summary);
   }
 
   console.log(JSON.stringify(results, null, 2));
 }
+
 
 auditTemplates();
