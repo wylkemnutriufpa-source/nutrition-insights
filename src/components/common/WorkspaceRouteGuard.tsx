@@ -1,13 +1,27 @@
 
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { Navigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import PageLoader from "@/components/common/PageLoader";
+
+const ROLES_TIMEOUT_MS = 6000;
 
 export default function WorkspaceRouteGuard({ children }: { children: React.ReactNode }) {
   const { isPatientContext, isProfessionalContext } = useWorkspaceContext();
-  const { isPatient, isNutritionist, isPersonal, isAdmin, isAdminMaster, roles, authStatus, loading } = useAuth();
+  const { isPatient, isNutritionist, isPersonal, isAdmin, isAdminMaster, roles, authStatus, loading, isLoaded } = useAuth();
   const location = useLocation();
+  const [rolesTimedOut, setRolesTimedOut] = useState(false);
+
+  // Escape hatch: desbloqueia se roles não resolver
+  useEffect(() => {
+    if (authStatus !== "authenticated" || roles !== null || isLoaded) return;
+    const t = setTimeout(() => {
+      console.warn("[WorkspaceRouteGuard] Roles timeout — desbloqueando.");
+      setRolesTimedOut(true);
+    }, ROLES_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [authStatus, roles, isLoaded]);
 
   // [RASTREADOR]
   useEffect(() => {
@@ -28,8 +42,8 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     }
   }, [location.pathname, isNutritionist, isPersonal, isAdmin, loading, authStatus, roles]);
 
-  if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
-    return null;
+  if (authStatus === "loading" || (authStatus === "authenticated" && roles === null && !isLoaded && !rolesTimedOut)) {
+    return <PageLoader />;
   }
 
   const isAuthRoute = ["/auth", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
