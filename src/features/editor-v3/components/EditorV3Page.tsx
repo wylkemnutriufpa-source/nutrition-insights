@@ -80,10 +80,11 @@ export default function EditorV3Page() {
   //   setLocked 
   // } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
   const draftId = null;
-  const syncState = 'idle';
+  const syncState = 'idle' as any;
   const initialMeals = null;
-  const scheduleSave = () => {};
-  const setLocked = () => {};
+  const scheduleSave = (...args: any[]) => {};
+  const setLocked = (...args: any[]) => {};
+
 
 
   // Efeito para hidratar o rascunho quando carregado
