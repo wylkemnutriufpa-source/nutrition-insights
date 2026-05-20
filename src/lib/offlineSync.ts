@@ -68,7 +68,7 @@ class OfflineQueue {
         if (action.type === "checklist_toggle") {
           const { error } = await supabase
             .from("checklist_tasks")
-            .update(action.data)
+            .update(action.data as any)
             .eq("id", action.id);
           if (error) throw error;
         } else if (action.type === "meal_completion") {

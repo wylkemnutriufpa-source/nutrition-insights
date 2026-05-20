@@ -136,7 +136,7 @@ export default function AnalyzeMeal() {
       ai_feedback: result.feedback,
       image_url: imageUrl,
       xp_earned: xpEarned,
-    });
+    } as any);
 
     if (error) {
       toast.error("Erro ao salvar");

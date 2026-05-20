@@ -49,6 +49,22 @@ export const applyOfficialV3Template = async (
 
   if (!profile) throw new Error(`Nenhum perfil de calorias encontrado para ${finalTargetKcal} kcal`);
 
+  // 🛡️ SOBERANIA V3: Preparar Snapshot para o plano
+  const snapshot = {
+    publication_id: crypto.randomUUID(),
+    snapshot_version: 'v3',
+    generated_at: new Date().toISOString(),
+    targets: {
+      kcal: finalTargetKcal,
+      protein_g: 0, // Será preenchido ou ignorado pelo App V3
+      carbs_g: 0,
+      fat_g: 0
+    },
+    days: profile.days || [],
+    daily_totals: profile.daily_totals || {},
+    notes: `Modelo Premium V3 "${template.name}"`
+  };
+
   const { data: plan, error: planErr } = await supabase
     .from("meal_plans")
     .insert([{
@@ -63,55 +79,61 @@ export const applyOfficialV3Template = async (
       editor_version: "v3",
       generation_source: "v3",
       total_calories: finalTargetKcal,
+      snapshot: snapshot, // 🛡️ SOBERANIA: Snapshot incluído!
     }])
     .select("id")
     .single();
 
   if (planErr || !plan) throw new Error(planErr?.message || "Falha ao criar plano V3");
 
-  const dayData = profile.days?.[0];
-  if (!dayData) throw new Error("Template V3 sem dados de dia");
+  // 🛡️ SOBERANIA V3: Carregar TODOS os dias do snapshot
+  const daysInProfile = profile.days || [];
+  if (daysInProfile.length === 0) throw new Error("Template V3 sem dados de dias configurados");
 
   const items: any[] = [];
   const multiplier = bestProfile > 0 ? finalTargetKcal / bestProfile : 1;
 
-  for (const meal of dayData.meals) {
-    for (const item of meal.items) {
-      const groupId = crypto.randomUUID();
-      
-      items.push({
-        meal_plan_id: plan.id,
-        day_of_week: 0,
-        tipo_refeicao: meal.name || meal.tipo_refeicao,
-        title: item.title || item.name,
-        description: item.quantity_display,
-        meta_calorias: Math.round((item.kcal || 0) * multiplier),
-        meta_proteinas: Math.round((item.protein || 0) * multiplier),
-        meta_carboidratos: Math.round((item.carbs || 0) * multiplier),
-        meta_gorduras: Math.round((item.fat || 0) * multiplier),
-        substitution_group_id: groupId,
-        is_primary: true,
-        visual_library_item_id: item.visual_library_item_id || null,
-        image_url: item.imageUrl || null,
-      });
+  for (const dayData of daysInProfile) {
+    const dayNum = (dayData.day_of_week !== undefined && dayData.day_of_week !== null) ? Number(dayData.day_of_week) : 0;
+    
+    for (const meal of dayData.meals) {
+      for (const item of meal.items) {
+        const groupId = crypto.randomUUID();
+        
+        items.push({
+          meal_plan_id: plan.id,
+          day_of_week: dayNum,
+          tipo_refeicao: meal.name || meal.tipo_refeicao,
+          title: item.title || item.name,
+          description: item.quantity_display,
+          meta_calorias: Math.round((item.kcal || 0) * multiplier),
+          meta_proteinas: Math.round((item.protein || 0) * multiplier),
+          meta_carboidratos: Math.round((item.carbs || 0) * multiplier),
+          meta_gorduras: Math.round((item.fat || 0) * multiplier),
+          substitution_group_id: groupId,
+          is_primary: true,
+          visual_library_item_id: item.visual_library_item_id || null,
+          image_url: item.imageUrl || null,
+        });
 
-      if (Array.isArray(item.substitutions)) {
-        for (const sub of item.substitutions) {
-          items.push({
-            meal_plan_id: plan.id,
-            day_of_week: 0,
-            tipo_refeicao: meal.name || meal.tipo_refeicao,
-            title: sub.title || sub.name,
-            description: sub.quantity_display,
-            meta_calorias: Math.round((sub.kcal || 0) * multiplier),
-            meta_proteinas: Math.round((sub.protein || 0) * multiplier),
-            meta_carboidratos: Math.round((sub.carbs || 0) * multiplier),
-            meta_gorduras: Math.round((sub.fat || 0) * multiplier),
-            substitution_group_id: groupId,
-            is_primary: false,
-            visual_library_item_id: sub.visual_library_item_id || null,
-            image_url: sub.imageUrl || null,
-          });
+        if (Array.isArray(item.substitutions)) {
+          for (const sub of item.substitutions) {
+            items.push({
+              meal_plan_id: plan.id,
+              day_of_week: dayNum,
+              tipo_refeicao: meal.name || meal.tipo_refeicao,
+              title: sub.title || sub.name,
+              description: sub.quantity_display,
+              meta_calorias: Math.round((sub.kcal || 0) * multiplier),
+              meta_proteinas: Math.round((sub.protein || 0) * multiplier),
+              meta_carboidratos: Math.round((sub.carbs || 0) * multiplier),
+              meta_gorduras: Math.round((sub.fat || 0) * multiplier),
+              substitution_group_id: groupId,
+              is_primary: false,
+              visual_library_item_id: sub.visual_library_item_id || null,
+              image_url: sub.imageUrl || null,
+            });
+          }
         }
       }
     }

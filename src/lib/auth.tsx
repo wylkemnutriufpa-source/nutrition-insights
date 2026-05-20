@@ -59,7 +59,9 @@ interface AuthContextType {
   experienceRole: "nutritionist" | "patient";
   tenantId: string | null;
   tenant: any | null;
+  isLoaded: boolean; // Flag to indicate auth+roles have been checked at least once
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -79,38 +81,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenant, setTenant] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
   
   const subCheckRef = useRef(false);
+  const fetchInProgressRef = useRef<string | null>(null);
 
   const fetchData = async (userId: string) => {
+    if (fetchInProgressRef.current === userId) {
+      console.log(`[AUTH:CORE] Fetch already in progress for user ${userId}, skipping.`);
+      return;
+    }
+    
+    fetchInProgressRef.current = userId;
+    console.log(`[AUTH:CORE] Fetching profile/roles for user ${userId}...`);
+    
+    // Add a safety timeout to avoid infinite loading if Supabase hangs
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Timeout fetching auth data")), 15000)
+    );
+
     try {
-      const [profileRes, rolesRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userId),
-      ]);
+      const fetchPromise = (async () => {
+        // Optimization: select only needed columns to reduce row size/transfer
+        const profileColumns = "id, user_id, full_name, avatar_url, phone, whatsapp, marmita_mode, experience_mode, experience_mode_locked, unlock_date, is_orphan, patient_state, onboarding_completed, tenant_id";
+        
+        const [profileRes, rolesRes] = await Promise.all([
+          supabase.from("profiles").select(profileColumns).eq("user_id", userId).maybeSingle(),
+          supabase.from("user_roles").select("role").eq("user_id", userId),
+        ]);
+        
+        if (profileRes.error) {
+          console.error("[AUTH:CORE] Profile fetch error:", profileRes.error);
+          throw profileRes.error;
+        }
+        if (rolesRes.error) {
+          console.error("[AUTH:CORE] Roles fetch error:", rolesRes.error);
+          throw rolesRes.error;
+        }
+        
+        return { profile: profileRes.data, roles: rolesRes.data };
+      })();
+
+      const result: any = await Promise.race([fetchPromise, timeoutPromise]);
       
-      const profileData = profileRes.data as Profile | null;
+      const profileData = result.profile as Profile | null;
       setProfile(profileData);
       
-      const newRoles = ((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[];
+      const newRoles = ((result.roles ?? []).map((r: any) => r.role)) as AppRole[];
+      console.log(`[AUTH:CORE] Roles resolved: [${newRoles.join(", ")}]`);
       setRoles(newRoles);
 
       if (profileData?.tenant_id) {
         setTenantId(profileData.tenant_id);
         const { data: tenantData } = await supabase.from("tenants").select("*").eq("id", profileData.tenant_id).maybeSingle();
         setTenant(tenantData);
+      } else {
+        setTenantId(null);
+        setTenant(null);
       }
-    } catch (e) {
-      if (import.meta.env.DEV) {
-        console.error("[Auth] fetchData error (non-fatal):", e);
-      }
-      setRoles(prev => prev ?? []);
-      setTenantId(prev => prev);
-      setTenant(prev => prev);
+    } catch (e: any) {
+      console.error("[AUTH:CORE] fetchData failure (recovering with empty roles):", e);
+      // Recovery: Unblock the app even if data is missing
+      if (roles === null) setRoles([]);
+    } finally {
+      fetchInProgressRef.current = null;
+      setIsLoaded(true);
     }
   };
+
+
 
   const checkSubscription = async () => {
     if (subCheckRef.current) return;
@@ -153,59 +194,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ONE-TIME initialization + Auth Listener
   useEffect(() => {
     let mounted = true;
+
+    const syncSession = async (currentSession: Session | null) => {
+      if (!mounted) return;
+      
+      console.log(`[AUTH:CORE] Syncing session: ${currentSession ? "Authenticated" : "Unauthenticated"}`);
+      setSession(currentSession);
+      const currentUser = currentSession?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        try {
+          await fetchData(currentUser.id);
+        } catch (e) {
+          console.error("[AUTH:CORE] Error fetching data during sync:", e);
+        }
+      } else {
+        setProfile(null);
+        setRoles([]); // Empty roles for non-authenticated instead of null
+        setSubscription(defaultSubscription);
+      }
+      
+      setLoading(false);
+    };
+
+    // Initial check
     const initialize = async () => {
+      console.log("[AUTH:CORE] Initializing...");
       setLoading(true);
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (mounted) {
-          setSession(initialSession);
-          setUser(initialSession?.user ?? null);
-          if (initialSession?.user) {
-            await fetchData(initialSession.user.id);
-          }
-        }
+        await syncSession(initialSession);
       } catch (e) {
-        if (import.meta.env.DEV) console.error("Recovery init error", e);
-      } finally {
-        if (mounted) setLoading(false);
+        console.error("[AUTH:CORE] Initialization error:", e);
+        setLoading(false);
       }
     };
+
     initialize();
+
+    // Listener
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        if (import.meta.env.DEV) console.log(`[Auth] state change: ${event}`);
-        if (event === "INITIAL_SESSION") return;
-        setSession(currentSession);
-        const currentUser = currentSession?.user ?? null;
-        setUser(currentUser);
-        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
-          fetchData(currentUser.id).catch((e) => {
-            if (import.meta.env.DEV) console.error("[Auth] state fetch:", e);
-          });
-        } else if (event === "SIGNED_OUT") {
-          setProfile(null);
-          setRoles(null);
-          setSubscription(defaultSubscription);
-          setError(null);
+        console.log(`[AUTH:CORE] Auth Event: ${event}`);
+        
+        // Always sync on these major events
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+          await syncSession(currentSession);
         }
       }
     );
-    let profileChannel: any = null;
-    if (user?.id) {
-      profileChannel = supabase
-        .channel(`auth-profile-${user.id}`)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` }, (payload) => {
-          if (mounted) setProfile(payload.new as Profile);
-        }).subscribe();
-    }
+
     return () => {
       mounted = false;
       authSubscription.unsubscribe();
-      if (profileChannel) supabase.removeChannel(profileChannel);
+    };
+  }, []); // NO dependencies here to avoid loops
+
+  // Profile Realtime Listener (Separate effect)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const profileChannel = supabase
+      .channel(`auth-profile-${user.id}`)
+      .on("postgres_changes", { 
+        event: "UPDATE", 
+        schema: "public", 
+        table: "profiles", 
+        filter: `user_id=eq.${user.id}` 
+      }, (payload) => {
+        console.log("[AUTH:CORE] Profile realtime update received");
+        setProfile(payload.new as Profile);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
     };
   }, [user?.id]);
+
 
   const signOut = async () => {
     invalidateMenuCache();
@@ -250,7 +320,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         experienceRole,
         tenantId,
         tenant,
+        isLoaded,
       }}
+
     >
       {children}
     </AuthContext.Provider>
@@ -283,7 +355,9 @@ export function useAuth() {
       experienceRole: "nutritionist" as const,
       tenantId: null,
       tenant: null,
+      isLoaded: false,
     };
+
   }
   return context;
 }

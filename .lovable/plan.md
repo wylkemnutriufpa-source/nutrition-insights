@@ -1,32 +1,22 @@
-I will fix the Admin Panel to ensure it works correctly with the V3 system and provides the correct tools for template auditing.
+I will refactor the FitJourney 2.0 template engine to ensure that all Premium templates are delivered as fully structured, professional nutritional plans, avoiding the "closed block" issue reported.
 
-### Problem Analysis
-The user reports that the Admin Panel is not working as expected. My investigation found:
-1. The **Template Nutrition Audit** page is fetching data from the old `diet_templates` table instead of the new `v3_diet_templates` table used in the V3 system. This causes the audit to show critical errors for non-existent or legacy data.
-2. The route for the Template Audit in the code is `/admin/nutrition-audit`, but the user expects `/admin/template-nutrition-audit` based on their instructions.
-3. The Admin Dashboard links to the shorter route, which might be causing confusion or inconsistency.
+### 1. Database Reconstruction
+I will replace the existing placeholder templates in `v3_diet_templates` with real, clinical-grade data.
+- **Granular Items**: Instead of "Rice + Beans + Chicken", each meal will contain individual items with specific grammages (e.g., 150g Rice, 100g Beans, 120g Chicken).
+- **Real Metrics**: Each item will have its own calories, protein, carbs, and fat calculated based on its weight.
+- **Smart Substitutions**: Every item in the template will come with a pre-configured list of compatible equivalents (e.g., Rice can be substituted for Potato or Pasta with equivalent macros).
+- **High-Quality Visuals**: I will link each item to the actual images from the `meal_visual_library`.
 
-### Proposed Changes
+### 2. Template Catalog
+I will build three core "Sovereign" protocols:
+- **Emagrecimento Feminino (1500 kcal)**: Focused on satiety and volume.
+- **Hipertrofia Masculina (2800 kcal)**: Focused on high protein and energy density.
+- **Low Carb Performance (1800 kcal)**: Focused on metabolic flexibility.
 
-#### 1. Update Routing
-- Modify `src/routes/admin.routes.tsx` to add the `/admin/template-nutrition-audit` route (keeping the old one for compatibility if needed, or redirecting).
-- Update `src/pages/admin/AdminDashboard.tsx` to use the correct route name and labels.
-
-#### 2. Fix Template Audit Page
-- Update `src/pages/admin/TemplateNutritionAudit.tsx` to:
-    - Fetch from `v3_diet_templates` when the source is "official".
-    - Correctly handle the V3 schema (using `title` instead of `name` and parsing the `plan_snapshot` JSONB).
-    - Adapt the `auditTemplate` logic to validate the 7-day structure and images in the V3 snapshot.
-
-#### 3. Professional & Patient Counts
-- Verify if the metric cards in the Admin Dashboard are correctly counting V3-enabled professionals and patients.
+### 3. Engine Validation
+I will verify that the "plotter" in `EditorV3Page.tsx` correctly handles these multi-item snapshots, ensuring that when a nutritionist clicks "Plotar Template", the patient receives a perfectly structured plan with all weights and household measures visible.
 
 ### Technical Details
-- **Tables:** `v3_diet_templates` (V3) vs `diet_templates` (Legacy).
-- **Schema Mapping:** V3 templates store meals inside a `plan_snapshot` keyed by calorie profile, which requires recursive auditing to check for missing items or images across all days.
-- **Route Sync:** Ensure consistency between `admin.routes.tsx`, `DashboardLayout`, and `AdminDashboard`.
-
-```text
-/admin/nutrition-audit -> /admin/template-nutrition-audit
-diet_templates -> v3_diet_templates
-```
+- Table affected: `v3_diet_templates`.
+- Data format: `plan_snapshot` JSONB will be populated with a full `Meal[]` structure.
+- Logic: Ensuring `clinical_mass_g` is present in all template items to avoid the "1g fallback" bug.

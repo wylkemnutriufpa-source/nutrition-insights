@@ -65,28 +65,55 @@ async function run() {
   }
 
   // 3. Update v3_diet_templates
+  // v3 templates store snapshots keyed by calorie profiles: { "1800": { days: [...] }, "2500": { days: [...] } }
+  // Each profile contains days[] -> meals[] -> items[]
   const { data: v3Templates } = await supabase.from('v3_diet_templates').select('id, title, plan_snapshot');
   if (v3Templates) {
     for (const template of v3Templates) {
       let updated = false;
       const snapshot = template.plan_snapshot || {};
-      const meals = snapshot.meals || [];
-      
-      const newMeals = meals.map((meal: any) => {
-        const items = (meal.items || []).map((item: any) => {
-          const title = item.title || item.name;
-          const img = findImage(title);
-          if (img && (!item.image_url || item.image_url.includes('placeholder') || item.image_url.includes('unsplash'))) {
-            updated = true;
-            return { ...item, image_url: img, imageUrl: img };
+
+      // Iterate over each calorie profile key
+      for (const profileKey of Object.keys(snapshot)) {
+        const profile = snapshot[profileKey] || {};
+        const days = profile.days || [];
+
+        // Iterate over days in the profile
+        for (const day of days) {
+          const meals = day.meals || [];
+          
+          // Iterate over meals in each day
+          for (const meal of meals) {
+            const items = meal.items || [];
+            
+            // Update each item with image if found
+            for (const item of items) {
+              const title = item.title || item.name;
+              const img = findImage(title);
+              if (img && (!item.image_url || item.image_url.includes('placeholder') || item.image_url.includes('unsplash'))) {
+                item.image_url = img;
+                item.imageUrl = img;
+                updated = true;
+              }
+              
+              // Also update substitutions if they exist
+              if (Array.isArray(item.substitutions)) {
+                for (const sub of item.substitutions) {
+                  const subTitle = sub.title || sub.name;
+                  const subImg = findImage(subTitle);
+                  if (subImg && (!sub.image_url || sub.image_url.includes('placeholder') || sub.image_url.includes('unsplash'))) {
+                    sub.image_url = subImg;
+                    sub.imageUrl = subImg;
+                    updated = true;
+                  }
+                }
+              }
+            }
           }
-          return item;
-        });
-        return { ...meal, items };
-      });
+        }
+      }
 
       if (updated) {
-        snapshot.meals = newMeals;
         await supabase.from('v3_diet_templates').update({ plan_snapshot: snapshot }).eq('id', template.id);
         console.log(`Updated images for v3_diet_template: ${template.title}`);
       }
