@@ -857,7 +857,6 @@ export default function Anamnesis() {
   const setAnswer = (value: any) => {
     const newAnswers = { ...answers, [q.id]: value };
     setAnswers(newAnswers);
-    saveLocalBackup(newAnswers);
   };
 
   const toggleMulti = (value: string) => {
