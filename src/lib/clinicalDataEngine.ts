@@ -20,18 +20,19 @@ const F = {
   batata:  { n:'Batata Doce', p:'100g', k:90, pr:1, c:20, g:0, img:`${IMG}/carne-com-batata.jpg` },
   tapioca: { n:'Tapioca', p:'1 un', k:150, pr:0, c:37, g:0, img:`${IMG}/tapioca-com-queijo.jpg` },
   crepioca:{ n:'Crepioca', p:'1 un', k:180, pr:12, c:18, g:8, img:`${IMG}/crepioca/crepioca-1.jpg` },
-  castanha:{ n:'Mix de Castanhas', p:'20g', k:120, pr:3, c:4, g:11, img:`${IMG}/abacate.jpg` },
-  abacate: { n:'Abacate', p:'100g', k:160, pr:2, c:9, g:15, img:`${IMG}/abacate.jpg` },
+  aveia:   { n:'Aveia em Flocos', p:'30g',  k:110, pr:4,  c:17, g:2,  img:`${IMG}/banana-com-aveia.jpg` },
+  castanha:{ n:'Mix de Castanhas', p:'20g',  k:120, pr:3,  c:4,  g:11, img:`${IMG}/abacate.jpg` },
+  abacate: { n:'Abacate', p:'100g', k:160, pr:2,  c:9,  g:15, img:`${IMG}/abacate.jpg` },
   azeite:  { n:'Azeite de Oliva', p:'1 colher', k:90, pr:0, c:0, g:10, img:`${IMG}/peixe-com-legumes.jpg` },
-  salada:  { n:'Salada Verde', p:'1 prato', k:20, pr:1, c:4, g:0, img:`${IMG}/peixe-com-legumes-1.jpg` },
-  legumes: { n:'Legumes no Vapor', p:'100g', k:40, pr:2, c:8, g:0, img:`${IMG}/peixe-com-legumes.jpg` },
-  sopa:    { n:'Sopa de Legumes', p:'1 prato', k:150, pr:5, c:25, g:3, img:`${IMG}/sopa-de-legumes.jpg` },
-  mamao:   { n:'Mamão', p:'100g', k:45, pr:0, c:11, g:0, img:`${IMG}/banana-com-aveia.jpg` },
-  banana:  { n:'Banana', p:'1 un', k:90, pr:1, c:23, g:0, img:`${IMG}/banana-com-aveia-1.jpg` },
-  maca:    { n:'Maçã', p:'1 un', k:60, pr:0, c:15, g:0, img:`${IMG}/vitamina-de-fruta/vitamina-de-fruta.jpg` },
-  iogurte: { n:'Iogurte Natural', p:'170g', k:100, pr:7, c:10, g:3, img:`${IMG}/iogurte-com-granola.jpg` },
-  gelatina:{ n:'Gelatina Diet', p:'1 taça', k:10, pr:1, c:1, g:0, img:`${IMG}/sopa-de-legumes.jpg` },
-  cha:     { n:'Chá de Camomila', p:'1 xícara', k:0, pr:0, c:0, g:0, img:`${IMG}/peixe-com-legumes-1.jpg` },
+  salada:  { n:'Salada Verde', p:'1 prato', k:20,  pr:1,  c:4,  g:0,  img:`${IMG}/peixe-com-legumes-1.jpg` },
+  legumes: { n:'Legumes no Vapor', p:'100g', k:40,  pr:2,  c:8,  g:0,  img:`${IMG}/peixe-com-legumes.jpg` },
+  sopa:    { n:'Sopa de Legumes', p:'1 prato', k:150, pr:5,  c:25, g:3,  img:`${IMG}/sopa-de-legumes.jpg` },
+  mamao:   { n:'Mamão',              p:'100g', k:45,  pr:0,  c:11, g:0,  img:`${IMG}/banana-com-aveia.jpg` },
+  banana:  { n:'Banana',             p:'1 un',  k:90,  pr:1,  c:23, g:0,  img:`${IMG}/banana-com-aveia-1.jpg` },
+  maca:    { n:'Maçã',               p:'1 un',  k:60,  pr:0,  c:15, g:0,  img:`${IMG}/vitamina-de-fruta/vitamina-de-fruta.jpg` },
+  iogurte: { n:'Iogurte Natural',     p:'170g', k:100, pr:7,  c:10, g:3,  img:`${IMG}/iogurte-com-granola.jpg` },
+  gelatina:{ n:'Gelatina Diet',       p:'1 taça', k:10,  pr:1,  c:1,  g:0,  img:`${IMG}/sopa-de-legumes.jpg` },
+  cha:     { n:'Chá de Camomila',     p:'1 xícara', k:0, pr:0, c:0, g:0,  img:`${IMG}/peixe-com-legumes-1.jpg` },
 };
 
 type Food = typeof F[keyof typeof F];
@@ -84,7 +85,6 @@ export const generateClinicalLibrary = () => {
     kcalLevels.forEach(kcal => {
       const factor = kcal / 1600;
       const days = [1, 2, 3, 4, 5, 6, 0].map(day => {
-        // Diversify choices based on day index
         const p1 = bp.mainP[day % bp.mainP.length];
         const p2 = bp.mainP[(day + 1) % bp.mainP.length];
         const c1 = bp.mainC[day % bp.mainC.length];
@@ -120,7 +120,7 @@ export const runClinicalAudit = () => {
   templates.forEach(t => {
     const p1200 = JSON.stringify(t.plan_snapshot["1200"]);
     const p1800 = JSON.stringify(t.plan_snapshot["1800"]);
-    console.log(`Template: ${t.title} | Slug: ${t.slug} | Size: ${p1200.length} | Scale 1200/1800: ${p1200.length !== p1800.length ? 'OK' : 'FAIL'}`);
+    console.log(`Template: ${t.title} | Size1200: ${p1200.length} | Size1800: ${p1800.length} | Diff: ${p1200.length !== p1800.length ? 'YES' : 'NO'}`);
   });
 };
 
