@@ -573,11 +573,7 @@ export default function Anamnesis() {
   const [draftId, setDraftId] = useState<string | null>(null);
   const { status: autoSaveStatus, lastAction, updateStatus: setAutoSaveStatus } = useSyncStatus();
   const { status: submitSyncStatus, updateStatus: setSubmitSyncStatus } = useSyncStatus();
-  const [showConflictModal, setShowConflictModal] = useState(false);
   const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
-  const [backupExpired, setBackupExpired] = useState(false);
-  const [serverVersion, setServerVersion] = useState<any>(null);
-  const [localBackup, setLocalBackup] = useState<any>(null);
   const [lastServerUpdateAt, setLastServerUpdateAt] = useState<string | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
 
@@ -698,30 +694,11 @@ export default function Anamnesis() {
     })();
   }, [targetUserId, isNutritionistMode]);
 
-  // Load existing draft, local backup and version on mount
+  // Load existing draft and version on mount
   useEffect(() => {
     if (!targetUserId) return;
     (async () => {
-      // 1. Get local backup
-      const backupKey = `fj_anamnesis_backup_${targetUserId}`;
-      let localData: { answers: Record<string, any>, updated_at: string } | null = null;
-      try {
-        const stored = safeLocalStorage.getItem(backupKey);
-        if (stored) {
-          localData = JSON.parse(stored);
-          // Centralized TTL Check V4.6
-          const validity = getBackupValidity(localData!.updated_at);
-          if (validity === "expired") {
-            setBackupExpired(true);
-            localData = null; // Don't use expired data for auto-restore
-          } else if (validity === "invalid") {
-            localData = null;
-          }
-        }
-      } catch (e) {
-        console.warn("[FJ:Anamnesis] failed to read local backup:", e);
-      }
-      setLocalBackup(localData);
+
 
       // 2. Get server data
       const [{ data: anamnesisRows }, { data: pipelineData }] = await Promise.all([
@@ -771,13 +748,6 @@ export default function Anamnesis() {
             toast.info("Rascunho restaurado do servidor! 📝");
           }
         }
-      } else if (localData) {
-        // Fallback para local apenas se o servidor estiver vazio
-        setAnswers(localData.answers);
-        const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
-        if (lastIdx > 0) setStep(lastIdx);
-        else if (lastIdx === -1) setStep(questions.length - 1);
-        toast.info("Dados restaurados do backup local! ⚡");
       }
     })();
   }, [targetUserId]);
@@ -789,23 +759,11 @@ export default function Anamnesis() {
     toast.info("Modo edição ativado! Revise suas respostas ✏️");
   };
 
-  // Backup local automatico
-  const saveLocalBackup = useCallback((currentAnswers: Record<string, any>) => {
-    if (!targetUserId) return;
-    try {
-      safeLocalStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
-        answers: currentAnswers,
-        updated_at: new Date().toISOString()
-      }));
-    } catch (e) {
-      console.warn("[FJ:Anamnesis] backup fail:", e);
-    }
-  }, [targetUserId]);
-
   const logSafetyAction = useCallback((type: string) => {
     if (!targetUserId) return;
     setAutoSaveStatus("success", type);
   }, [targetUserId, setAutoSaveStatus]);
+
 
   // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
@@ -825,26 +783,9 @@ export default function Anamnesis() {
     setAutoSaveStatus("syncing", "autosave");
 
     try {
-      // Stage 2 - Concurrency Guard before Update
-      if (draftId && lastServerUpdateAt) {
-        const { data: currentServer } = await supabase
-          .from("patient_anamnesis")
-          .select("updated_at, answers")
-          .eq("id", draftId)
-          .maybeSingle();
-          
-        if (currentServer?.updated_at && currentServer.updated_at !== lastServerUpdateAt) {
-          fjLog("SYNC", "Conflito de concorrência detectado durante autosave.");
-          setServerVersion({
-            answers: currentServer.answers as Record<string, any>,
-            updated_at: currentServer.updated_at,
-            id: draftId
-          });
-          setShowConflictModal(true);
-          setAutoSaveStatus("error", "autosave_conflict");
-          return;
-        }
-      }
+      // Stage 2 - Concurrency Guard before Update (Simplified V5)
+      // O rascunho do servidor é a única verdade. LWW (Last Write Wins) para pacientes.
+
 
       let error;
       if (draftId) {
@@ -916,7 +857,6 @@ export default function Anamnesis() {
   const setAnswer = (value: any) => {
     const newAnswers = { ...answers, [q.id]: value };
     setAnswers(newAnswers);
-    saveLocalBackup(newAnswers);
   };
 
   const toggleMulti = (value: string) => {
@@ -933,7 +873,6 @@ export default function Anamnesis() {
       }
     }
     setAnswers(newAnswers);
-    saveLocalBackup(newAnswers);
   };
 
   const canNext = () => {
@@ -1564,26 +1503,6 @@ export default function Anamnesis() {
             >
               <ChevronLeft className="w-4 h-4" /> Voltar
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (backupExpired) {
-                  toast.error("Este backup expirou (>30 dias) e não pode ser restaurado.");
-                  return;
-                }
-                if (!localBackup) {
-                  toast.error("Não há backup local disponível para restaurar.");
-                  return;
-                }
-                setShowManualRestoreModal(true);
-              }}
-              disabled={backupExpired || !localBackup}
-              className={`gap-1.5 transition-all duration-300 ${backupExpired ? 'opacity-50 grayscale' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              <RefreshCcw className={`w-4 h-4 ${backupExpired ? '' : 'group-hover:rotate-180 transition-transform duration-500'}`} /> 
-              {backupExpired ? "Backup expirado" : "Restaurar backup"}
-            </Button>
             
             <Button
               variant="outline"
@@ -1786,39 +1705,6 @@ export default function Anamnesis() {
       </div>
 
 
-      <AlertDialog open={showManualRestoreModal} onOpenChange={setShowManualRestoreModal}>
-        <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">
-              <RefreshCcw className="w-5 h-5 text-primary" />
-              Restaurar Backup Local
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Isso irá sobrescrever suas respostas atuais com a versão salva localmente em:
-              <span className="block mt-2 font-medium text-foreground">
-                {localBackup ? new Date(localBackup.updated_at).toLocaleString('pt-BR') : "Data desconhecida"}
-              </span>
-              Tem certeza que deseja continuar?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (localBackup) {
-                  setAnswers(localBackup.answers);
-                  setShowManualRestoreModal(false);
-                  logSafetyAction("restaurar_manual_local");
-                  toast.success("Respostas restauradas do backup local! ⚡");
-                }
-              }}
-              className="gradient-primary shadow-glow"
-            >
-              Confirmar Restauração
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </DashboardLayout>
   );
 }
