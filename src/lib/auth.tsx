@@ -86,19 +86,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchData = async (userId: string) => {
     console.log(`[AUTH:CORE] Fetching profile/roles for user ${userId}...`);
-    try {
-      const [profileRes, rolesRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userId),
-      ]);
-      
-      if (profileRes.error) throw profileRes.error;
-      if (rolesRes.error) throw rolesRes.error;
+    
+    // Add a safety timeout to avoid infinite loading if Supabase hangs
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Timeout fetching auth data")), 8000)
+    );
 
-      const profileData = profileRes.data as Profile | null;
+    try {
+      const fetchPromise = (async () => {
+        const [profileRes, rolesRes] = await Promise.all([
+          supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+          supabase.from("user_roles").select("role").eq("user_id", userId),
+        ]);
+        
+        if (profileRes.error) {
+          console.error("[AUTH:CORE] Profile fetch error:", profileRes.error);
+          throw profileRes.error;
+        }
+        if (rolesRes.error) {
+          console.error("[AUTH:CORE] Roles fetch error:", rolesRes.error);
+          throw rolesRes.error;
+        }
+        
+        return { profile: profileRes.data, roles: rolesRes.data };
+      })();
+
+      const result: any = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      const profileData = result.profile as Profile | null;
       setProfile(profileData);
       
-      const newRoles = ((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[];
+      const newRoles = ((result.roles ?? []).map((r: any) => r.role)) as AppRole[];
       console.log(`[AUTH:CORE] Roles resolved: [${newRoles.join(", ")}]`);
       setRoles(newRoles);
 
@@ -111,12 +129,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTenant(null);
       }
     } catch (e: any) {
-      console.error("[AUTH:CORE] fetchData failure:", e);
-      // Ensure roles is not null to unblock router
-      setRoles([]);
+      console.error("[AUTH:CORE] fetchData failure (recovering with empty roles):", e);
+      // Recovery: Unblock the app even if data is missing
+      if (roles === null) setRoles([]);
       throw e;
     }
   };
+
 
   const checkSubscription = async () => {
     if (subCheckRef.current) return;
