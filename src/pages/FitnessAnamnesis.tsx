@@ -564,7 +564,13 @@ export default function FitnessAnamnesis() {
           setAutoSaveStatus("idle");
           return;
         }
-        const { data } = await supabase.from("patient_anamnesis").insert({ user_id: targetUserId, answers: currentAnswers, status: "draft", ...getTenantIdForInsert(tenantId) }).select("id").single();
+        const { data } = await supabase.from("patient_anamnesis").insert({ 
+          user_id: targetUserId, 
+          answers: currentAnswers as any, 
+          status: "draft", 
+          tenant_id: tenantId 
+        }).select("id").single();
+
         if (data) setDraftId(data.id);
       }
       setAutoSaveStatus("saved");
