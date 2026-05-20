@@ -355,7 +355,9 @@ export function useAuth() {
       experienceRole: "nutritionist" as const,
       tenantId: null,
       tenant: null,
+      isLoaded: false,
     };
+
   }
   return context;
 }
