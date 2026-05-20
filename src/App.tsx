@@ -1,9 +1,9 @@
 /**
- * ══════════════════════════════════════════════════════════════════
+ * ══════════════════════════════════════════════════════════════════════════
  * ARCHITECTURE PROTECTED — APP BOOTSTRAP
  * ESTABILIZAÇÃO SOBERANA LOCKDOWN
  * NÃO ALTERAR SEM APROVAÇÃO EXPLÍCITA DE GOVERNANÇA
- * ══════════════════════════════════════════════════════════════════
+ * ══════════════════════════════════════════════════════════════════════════
  */
 import React, { useState, useEffect, Suspense } from 'react';
 import { PrescriptionDashboard } from './modules/FitJourney2/components/PrescriptionDashboard';
@@ -11,6 +11,7 @@ import { AppRoutes } from './routes/AppRoutes';
 import PageLoader from './components/common/PageLoader';
 import { motion } from 'framer-motion';
 import { useAuth } from './lib/auth';
+import { TemplateSeederInitializer } from './lib/useAutoTemplateSeeder';
 
 const App = () => {
   const { isAdmin, isNutritionist, isPersonal, roles, loading } = useAuth();
@@ -75,6 +76,7 @@ const App = () => {
 
   return (
     <div className="relative min-h-screen">
+      <TemplateSeederInitializer />
       <Switcher />
       <Suspense fallback={<PageLoader />}>
         {mode === 'V1' ? (
