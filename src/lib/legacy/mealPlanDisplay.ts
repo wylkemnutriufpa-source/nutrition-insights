@@ -13,7 +13,12 @@ export function assertHierarchyIntegrity(item: any, context: string): void {
 }
 
 export function calculatePrimaryTotals(items: any[]) {
-  return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  return items.reduce((acc, item) => ({
+    calories: acc.calories + (Number(item.meta_calorias) || Number(item.kcal) || 0),
+    protein: acc.protein + (Number(item.meta_proteinas) || Number(item.protein) || 0),
+    carbs: acc.carbs + (Number(item.meta_carboidratos) || Number(item.carbs) || 0),
+    fat: acc.fat + (Number(item.meta_gorduras) || Number(item.fat) || 0)
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 }
 
 export function buildDailyDisplayItems(items: any[], requestedDay?: number) {
@@ -21,7 +26,10 @@ export function buildDailyDisplayItems(items: any[], requestedDay?: number) {
 }
 
 export function buildWeeklyDisplayDays(items: any[]) {
-  return [1, 2, 3, 4, 5, 6, 0].map(day => ({ day, items: [] }));
+  return [1, 2, 3, 4, 5, 6, 0].map(day => ({ 
+    day, 
+    items: items.filter(i => (i.day_of_week ?? 0) === day) 
+  }));
 }
 
 export function buildPdfItemsForDailyPlan(items: any[], requestedDay?: number) {
