@@ -24,12 +24,9 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
  * @returns A URL completa.
  */
 export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = false) => {
-  const isDev = typeof window !== 'undefined' && 
-    (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
-    
   // Se forceProduction for true (ex: envio real), usa PRODUCTION_URL.
-  // Mas se estivermos em DEV, priorizamos o origin local para testes.
-  const origin = (forceProduction && !isDev) ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
+  // Senão, usa o origin atual para permitir testes no preview.
+  const origin = forceProduction ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
   
 
 

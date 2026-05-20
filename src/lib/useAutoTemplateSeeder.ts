@@ -56,18 +56,8 @@ export function useAutoTemplateSeeder() {
 
           if (templateSize < 20000) {
             // Template is likely broken (should be ~158KB)
-            console.warn('⚠️ Broken templates detected, running recovery...');
-
-            // Dynamically import and run seeder if it exists
-            try {
-              // @ts-ignore - Dynamic import that might not exist yet
-              const seeder = await import('./clinicalTemplateSeeder');
-              if (seeder && seeder.seedTemplates) {
-                await seeder.seedTemplates();
-              }
-            } catch (e) {
-              console.warn('⚠️ Seeder module not found, skipping recovery');
-            }
+            console.warn('⚠️ Broken templates detected, but seeder module not available.');
+            // Seeder module './clinicalTemplateSeeder' was removed; skip recovery.
           }
         }
 

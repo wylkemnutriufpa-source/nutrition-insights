@@ -212,63 +212,22 @@ export default function PatientRegister() {
 
   // Pre-select professional from URL
   useEffect(() => {
-    if (!preselectedNutri && !refCode) return;
-    
+    if (!preselectedNutri) return;
     (async () => {
-      const identifier = preselectedNutri || refCode;
-      addLog(`Buscando dados do profissional (ID/Slug: ${identifier})...`);
+      addLog(`Buscando dados do profissional ${preselectedNutri}...`);
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url, phone")
+        .eq("user_id", preselectedNutri)
+        .maybeSingle();
       
-      let profileData = null;
-      let profData = null;
+      const { data: profData } = await supabase
+        .from("professional_profiles")
+        .select("clinic_name")
+        .eq("user_id", preselectedNutri)
+        .maybeSingle();
 
-      // 1. Tenta buscar por slug se for o parâmetro 'ref'
-      if (refCode) {
-        addLog(`Buscando profissional pelo slug: ${refCode}`);
-        const { data: pubProfile } = await supabase
-          .from("public_profile_settings")
-          .select("nutritionist_id")
-          .eq("slug", refCode)
-          .maybeSingle();
-          
-        if (pubProfile) {
-          addLog(`Slug resolvido para ID: ${pubProfile.nutritionist_id}`);
-          const { data } = await supabase
-            .from("profiles")
-            .select("user_id, full_name, avatar_url, phone")
-            .eq("user_id", pubProfile.nutritionist_id)
-            .maybeSingle();
-          profileData = data;
-        }
-      }
-
-      // 2. Se não encontrou por slug ou se temos preselectedNutri, tenta por user_id
-      if (!profileData && preselectedNutri) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, avatar_url, phone")
-          .eq("user_id", preselectedNutri)
-          .maybeSingle();
-        profileData = data;
-      }
-      
-      // 3. Fallback final por ID primário
-      if (!profileData && identifier) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, avatar_url, phone")
-          .eq("id", identifier)
-          .maybeSingle();
-        profileData = data;
-      }
-      
       if (profileData) {
-        const { data: ppData } = await supabase
-          .from("professional_profiles")
-          .select("clinic_name")
-          .eq("user_id", profileData.user_id)
-          .maybeSingle();
-        profData = ppData;
-
         addLog(`Profissional encontrado: ${profileData.full_name}`);
         setSelectedProfessional({
           user_id: profileData.user_id,
@@ -277,17 +236,16 @@ export default function PatientRegister() {
           clinic_name: (profData as any)?.clinic_name || null,
           phone: profileData.phone,
         });
-        setLinkSource(current => (current === "invitation" || current === "onboarding_token") ? current : "nutri");
-        
-        const wasConfirmed = searchParams.get("confirmed") === "true";
-        setIsProfConfirmed(wasConfirmed);
+        setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
+        // REMOVIDO: Confirmação automática removida para garantir que a foto do profissional apareça.
+        setIsProfConfirmed(false);
         setSigValid(true);
       } else {
-        addLog(`ERRO: Profissional ${identifier} não encontrado.`);
+        addLog(`AVISO: Profissional ${preselectedNutri} não encontrado no banco.`);
         setSigValid(false);
       }
     })();
-  }, [preselectedNutri, refCode, addLog, searchParams]);
+  }, [preselectedNutri, addLog]);
 
 
   // Robust invitation code validation
