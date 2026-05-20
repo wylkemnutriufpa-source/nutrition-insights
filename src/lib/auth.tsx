@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e: any) {
       console.error("[AUTH:CORE] fetchData failure (recovering with empty roles):", e);
       // Recovery: Unblock the app even if data is missing
-      if (roles === null) setRoles([]);
+      setRoles(prev => prev === null ? [] : prev);
     } finally {
       fetchInProgressRef.current = null;
       setIsLoaded(true);

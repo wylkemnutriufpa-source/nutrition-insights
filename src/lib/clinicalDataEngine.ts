@@ -74,20 +74,20 @@ const createMeal = (name: string, time: string, items: { f: Food; isPri: boolean
 
 export const generateClinicalLibrary = () => {
   const blueprints = [
-    { name: 'Anti-inflamatório Premium', slug: 'anti-inflamatorio', obj: 'clinico', mainP: [F.salmao, F.tilapia, F.ovo], mainC: [F.arrozI, F.lentilha], snacks: [F.abacate, F.castanha] },
-    { name: 'Pré e Pós Operatório', slug: 'pre-pos-op', obj: 'clinico', mainP: [F.frango, F.tilapia, F.whey], mainC: [F.arrozI, F.batata], snacks: [F.iogurte, F.gelatina] },
-    { name: 'Cetogênica Prática', slug: 'cetogenica', obj: 'clinico', mainP: [F.maminha, F.patinho, F.ovo], mainC: [F.salada], snacks: [F.abacate, F.castanha] },
-    { name: 'Controle de Colesterol', slug: 'colesterol', obj: 'clinico', mainP: [F.tilapia, F.frango, F.ovo], mainC: [F.aveia, F.lentilha, F.arrozI], snacks: [F.maca, F.iogurte] },
-    { name: 'Baixa em FODMAPs', slug: 'fodmap', obj: 'clinico', mainP: [F.frango, F.tilapia, F.ovo], mainC: [F.arrozI, F.batata], snacks: [F.banana, F.castanha] },
-    { name: 'Prático Rápido e Barato', slug: 'pratico', obj: 'saude', mainP: [F.ovo, F.frango, F.patinho], mainC: [F.arrozI, F.feijao], snacks: [F.banana, F.maca] },
-    { name: 'Diabetes e Controle Glicêmico', slug: 'diabetes', obj: 'clinico', mainP: [F.tilapia, F.frango, F.patinho], mainC: [F.lentilha, F.arrozI, F.feijao], snacks: [F.mamao, F.iogurte] },
-    { name: 'Gestantes e Lactantes', slug: 'gestantes', obj: 'saude', mainP: [F.patinho, F.frango, F.ovo], mainC: [F.arrozI, F.feijao, F.batata], snacks: [F.iogurte, F.mamao] },
-    { name: 'Bariátrica (Fase Sólida)', slug: 'bariatrica', obj: 'clinico', mainP: [F.whey, F.tilapia, F.frango], mainC: [F.legumes], snacks: [F.iogurte, F.gelatina] },
-    { name: 'Emagrecimento Prático', slug: 'emagrecimento', obj: 'emagrecimento', mainP: [F.frango, F.tilapia, F.ovo], mainC: [F.arrozI, F.feijao], snacks: [F.iogurte, F.maca] },
-    { name: 'Hipertrofia Prática', slug: 'hipertrofia', obj: 'hipertrofia', mainP: [F.patinho, F.frango, F.whey], mainC: [F.arrozI, F.batata, F.feijao], snacks: [F.banana, F.iogurte] },
-    { name: 'Low Carb Acessível', slug: 'low-carb', obj: 'low_carb', mainP: [F.maminha, F.ovo, F.frango], mainC: [F.legumes, F.arrozI], snacks: [F.abacate, F.castanha] },
-    { name: 'Ganho de Massa Limpa', slug: 'massa-limpa', obj: 'hipertrofia', mainP: [F.patinho, F.salmao, F.frango], mainC: [F.arrozI, F.batata, F.lentilha], snacks: [F.iogurte, F.banana] },
-    { name: 'Detox e Vitalidade', slug: 'detox', obj: 'saude', mainP: [F.tilapia, F.ovo, F.sopa], mainC: [F.legumes, F.arrozI], snacks: [F.mamao, F.cha] },
+    { name: 'Anti-inflamatório Premium', slug: 'anti-inflamatorio-premium', obj: 'clinico', mainP: [F.salmao, F.tilapia, F.ovo], mainC: [F.arrozI, F.lentilha], snacks: [F.abacate, F.castanha] },
+    { name: 'Pré e Pós Operatório', slug: 'pre-pos-operatorio', obj: 'clinico', mainP: [F.frango, F.tilapia, F.whey], mainC: [F.arrozI, F.batata], snacks: [F.iogurte, F.gelatina] },
+    { name: 'Cetogênica Prática', slug: 'cetogenica-pratica', obj: 'clinico', mainP: [F.maminha, F.patinho, F.ovo], mainC: [F.salada], snacks: [F.abacate, F.castanha] },
+    { name: 'Controle de Colesterol', slug: 'colesterol-alto', obj: 'clinico', mainP: [F.tilapia, F.frango, F.ovo], mainC: [F.aveia, F.lentilha, F.arrozI], snacks: [F.maca, F.iogurte] },
+    { name: 'Baixa em FODMAPs', slug: 'fodmaps-saude-intestinal', obj: 'clinico', mainP: [F.frango, F.tilapia, F.ovo], mainC: [F.arrozI, F.batata], snacks: [F.banana, F.castanha] },
+    { name: 'Cardápio Fácil e Prático', slug: 'pratico-rapido-barato', obj: 'saude', mainP: [F.ovo, F.frango, F.patinho], mainC: [F.arrozI, F.feijao], snacks: [F.banana, F.maca] },
+    { name: 'Diabetes e Controle Glicêmico', slug: 'diabetes-controle', obj: 'clinico', mainP: [F.tilapia, F.frango, F.patinho], mainC: [F.lentilha, F.arrozI, F.feijao], snacks: [F.mamao, F.iogurte] },
+    { name: 'Gestantes e Lactantes', slug: 'gestantes-saudavel', obj: 'saude', mainP: [F.patinho, F.frango, F.ovo], mainC: [F.arrozI, F.feijao, F.batata], snacks: [F.iogurte, F.mamao] },
+    { name: 'Bariátrica (Fase Sólida)', slug: 'bariatrica-solida', obj: 'clinico', mainP: [F.whey, F.tilapia, F.frango], mainC: [F.legumes], snacks: [F.iogurte, F.gelatina] },
+    { name: 'Emagrecimento Prático', slug: 'emagrecimento-pratico', obj: 'emagrecimento', mainP: [F.frango, F.tilapia, F.ovo], mainC: [F.arrozI, F.feijao], snacks: [F.iogurte, F.maca] },
+    { name: 'Hipertrofia Prática', slug: 'hipertrofia-pratica', obj: 'hipertrofia', mainP: [F.patinho, F.frango, F.whey], mainC: [F.arrozI, F.batata, F.feijao], snacks: [F.banana, F.iogurte] },
+    { name: 'Low Carb Acessível', slug: 'low-carb-acessivel', obj: 'low_carb', mainP: [F.maminha, F.ovo, F.frango], mainC: [F.legumes, F.arrozI], snacks: [F.abacate, F.castanha] },
+    { name: 'Ganho de Massa Limpa', slug: 'ganho-massa-limpa', obj: 'hipertrofia', mainP: [F.patinho, F.salmao, F.frango], mainC: [F.arrozI, F.batata, F.lentilha], snacks: [F.iogurte, F.banana] },
+    { name: 'Detox e Vitalidade', slug: 'detox-vitalidade', obj: 'saude', mainP: [F.tilapia, F.ovo, F.sopa], mainC: [F.legumes, F.arrozI], snacks: [F.mamao, F.cha] },
   ];
 
   const kcalLevels = [1200, 1400, 1600, 1800];
@@ -118,7 +118,7 @@ export const generateClinicalLibrary = () => {
     });
 
     return {
-      slug: `${bp.slug}-premium-v3`, title: `${bp.name} Premium`, description: `Protocolo de ${bp.name} com 7 dias variados.`,
+      slug: bp.slug, title: bp.name, description: `Protocolo de ${bp.name} com 7 dias variados.`,
       template_type: 'visual_v3', objective: bp.obj, visual_style: 'premium', kcal_profiles: kcalLevels,
       plan_snapshot: snapshots, cluster_map: {}, active: true, sovereign_validated: true,
       meal_distribution: [{ slot:'Café', time:'08:00' }, { slot:'Almoço', time:'12:30' }, { slot:'Jantar', time:'19:30' }]
