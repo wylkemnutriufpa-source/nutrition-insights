@@ -212,35 +212,63 @@ export default function PatientRegister() {
 
   // Pre-select professional from URL
   useEffect(() => {
-    if (!preselectedNutri) return;
+    if (!preselectedNutri && !refCode) return;
+    
     (async () => {
-      addLog(`Buscando dados do profissional ${preselectedNutri}...`);
+      const identifier = preselectedNutri || refCode;
+      addLog(`Buscando dados do profissional (ID/Slug: ${identifier})...`);
       
-      // Tenta buscar por user_id primeiro (comportamento padrão)
-      let { data: profileData } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url, phone")
-        .eq("user_id", preselectedNutri)
-        .maybeSingle();
-      
-      // Fallback: Tenta buscar por id se não encontrou por user_id
-      if (!profileData) {
-        addLog(`Tentando buscar profissional por ID primário...`);
-        const { data: fallbackData } = await supabase
+      let profileData = null;
+      let profData = null;
+
+      // 1. Tenta buscar por slug se for o parâmetro 'ref'
+      if (refCode) {
+        addLog(`Buscando profissional pelo slug: ${refCode}`);
+        const { data: pubProfile } = await supabase
+          .from("public_profile_settings")
+          .select("nutritionist_id")
+          .eq("slug", refCode)
+          .maybeSingle();
+          
+        if (pubProfile) {
+          addLog(`Slug resolvido para ID: ${pubProfile.nutritionist_id}`);
+          const { data } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, avatar_url, phone")
+            .eq("user_id", pubProfile.nutritionist_id)
+            .maybeSingle();
+          profileData = data;
+        }
+      }
+
+      // 2. Se não encontrou por slug ou se temos preselectedNutri, tenta por user_id
+      if (!profileData && preselectedNutri) {
+        const { data } = await supabase
           .from("profiles")
           .select("user_id, full_name, avatar_url, phone")
-          .eq("id", preselectedNutri)
+          .eq("user_id", preselectedNutri)
           .maybeSingle();
-        profileData = fallbackData;
+        profileData = data;
       }
       
-      const { data: profData } = await supabase
-        .from("professional_profiles")
-        .select("clinic_name")
-        .eq("user_id", preselectedNutri)
-        .maybeSingle();
-
+      // 3. Fallback final por ID primário
+      if (!profileData && identifier) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, avatar_url, phone")
+          .eq("id", identifier)
+          .maybeSingle();
+        profileData = data;
+      }
+      
       if (profileData) {
+        const { data: ppData } = await supabase
+          .from("professional_profiles")
+          .select("clinic_name")
+          .eq("user_id", profileData.user_id)
+          .maybeSingle();
+        profData = ppData;
+
         addLog(`Profissional encontrado: ${profileData.full_name}`);
         setSelectedProfessional({
           user_id: profileData.user_id,
@@ -249,17 +277,17 @@ export default function PatientRegister() {
           clinic_name: (profData as any)?.clinic_name || null,
           phone: profileData.phone,
         });
-        setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
-        // Se já vem confirmado do Invitation.tsx, mantemos true
+        setLinkSource(current => (current === "invitation" || current === "onboarding_token") ? current : "nutri");
+        
         const wasConfirmed = searchParams.get("confirmed") === "true";
         setIsProfConfirmed(wasConfirmed);
         setSigValid(true);
       } else {
-        addLog(`ERRO: Profissional ${preselectedNutri} não encontrado em nenhuma coluna.`);
+        addLog(`ERRO: Profissional ${identifier} não encontrado.`);
         setSigValid(false);
       }
     })();
-  }, [preselectedNutri, addLog, searchParams]);
+  }, [preselectedNutri, refCode, addLog, searchParams]);
 
 
   // Robust invitation code validation
