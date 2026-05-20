@@ -574,11 +574,10 @@ export default function Anamnesis() {
   const { status: autoSaveStatus, lastAction, updateStatus: setAutoSaveStatus } = useSyncStatus();
   const { status: submitSyncStatus, updateStatus: setSubmitSyncStatus } = useSyncStatus();
   const [showConflictModal, setShowConflictModal] = useState(false);
-
   const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
   const [backupExpired, setBackupExpired] = useState(false);
-  const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
-  const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
+  const [serverVersion, setServerVersion] = useState<any>(null);
+  const [localBackup, setLocalBackup] = useState<any>(null);
   const [lastServerUpdateAt, setLastServerUpdateAt] = useState<string | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
 
@@ -753,73 +752,32 @@ export default function Anamnesis() {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V4.6/V4.7)
-      if (latestAnamnesis && localData && resolvedTenantId) {
-        const serverUpdatedAt = latestAnamnesis.updated_at || latestAnamnesis.created_at;
-        const localUpdatedAt = localData.updated_at;
+      // CONFLICT DETECTION (REMOVED V5.0 - SOBERANIA ÚNICA NO SERVIDOR)
+      // O paciente não deve ser interrompido por conflitos técnicos. 
+      // Se houver rascunho no servidor, ele é a verdade. Se não houver, tentamos o local.
+      
+      if (latestAnamnesis) {
+        setDraftId(latestAnamnesis.id);
+        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
+        if (savedAnswers) setAnswers(savedAnswers);
         
-        setLastServerUpdateAt(serverUpdatedAt);
-        
-        // Versioned Decision Key V4.6
-        const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverUpdatedAt, localUpdatedAt);
-        const resolution = safeLocalStorage.getItem(resolutionKey);
-
-        if (resolution) {
-          fjLog("SYNC", `Conflito já resolvido via versão: ${resolution}`);
-          if (resolution === "restaurar_servidor") {
-            setAnswers(latestAnamnesis.answers);
-          } else {
-            setAnswers(localData.answers);
+        if (latestAnamnesis.status === "completed") {
+          setCompleted(true);
+        } else if (latestAnamnesis.status === "draft") {
+          if (savedAnswers && Object.keys(savedAnswers).length > 0) {
+            const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
+            if (lastIdx > 0) setStep(lastIdx);
+            else if (lastIdx === -1) setStep(questions.length - 1);
+            toast.info("Rascunho restaurado do servidor! 📝");
           }
-          setDraftId(latestAnamnesis.id);
-          return;
         }
-
-        // Stage 2 - Concurrency Detection: If they differ significantly
-        const serverTS = new Date(serverUpdatedAt).getTime();
-        const localTS = new Date(localUpdatedAt).getTime();
-        if (Math.abs(serverTS - localTS) > 2000) {
-          fjLog("SYNC", "Conflito detectado no carregamento inicial.");
-          setServerVersion({ 
-            answers: latestAnamnesis.answers as Record<string, any>, 
-            updated_at: serverUpdatedAt,
-            id: latestAnamnesis.id
-          });
-          setShowConflictModal(true);
-          setAnswers(localData.answers);
-          setDraftId(latestAnamnesis.id);
-          return;
-        }
-      }
-
-
-      // No conflict or no data scenarios
-      if (!latestAnamnesis) {
-        if (localData) {
-          setAnswers(localData.answers);
-          const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
-          if (lastIdx > 0) setStep(lastIdx);
-          else if (lastIdx === -1) setStep(questions.length - 1);
-          toast.info("Dados restaurados do backup local! ⚡");
-        }
-        return;
-      }
-
-      // Use latestAnamnesis (standard behavior)
-      setDraftId(latestAnamnesis.id);
-      const savedAnswers = latestAnamnesis.answers as Record<string, any>;
-      if (savedAnswers) setAnswers(savedAnswers);
-
-      if (latestAnamnesis.status === "completed") {
-        setCompleted(true);
-        // SystemStateGuard observa patient_state e roteia automaticamente.
-      } else if (latestAnamnesis.status === "draft") {
-        if (savedAnswers && Object.keys(savedAnswers).length > 0) {
-          const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
-          if (lastIdx > 0) setStep(lastIdx);
-          else if (lastIdx === -1) setStep(questions.length - 1);
-          toast.info("Rascunho restaurado! Continue de onde parou 📝");
-        }
+      } else if (localData) {
+        // Fallback para local apenas se o servidor estiver vazio
+        setAnswers(localData.answers);
+        const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
+        if (lastIdx > 0) setStep(lastIdx);
+        else if (lastIdx === -1) setStep(questions.length - 1);
+        toast.info("Dados restaurados do backup local! ⚡");
       }
     })();
   }, [targetUserId]);
@@ -1827,88 +1785,7 @@ export default function Anamnesis() {
         )}
       </div>
 
-      <AlertDialog 
-        open={showConflictModal} 
-        onOpenChange={(open) => {
-          // Stage 3 - Mobile Hardening: Ensure body scroll is managed by AlertDialog (default)
-          // and prevent accidental closing if not handled
-          setShowConflictModal(open);
-          if (!open) {
-            // Restore overflow just in case
-            document.body.style.overflow = "auto";
-          }
-        }}
-      >
 
-        <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">
-              <History className="w-5 h-5 text-primary" />
-              Conflito de Versão
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 pt-2">
-              <p>
-                Encontramos uma versão diferente das suas respostas no servidor. 
-                Qual versão você deseja manter?
-              </p>
-              
-              <div className="grid gap-3 pt-2">
-                <div className="p-3 rounded-xl border border-border bg-muted/30">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Versão Local (Atual)</p>
-                  <p className="text-sm font-medium">
-                    {localBackup ? new Date(localBackup.updated_at).toLocaleString('pt-BR') : "Sem data"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Dados salvos neste dispositivo.
-                  </p>
-                </div>
-                
-                <div className="p-3 rounded-xl border border-primary/20 bg-primary/5">
-                  <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Versão do Servidor</p>
-                  <p className="text-sm font-medium">
-                    {serverVersion ? new Date(serverVersion.updated_at).toLocaleString('pt-BR') : "Sem data"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Dados salvos na nuvem.
-                  </p>
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <AlertDialogCancel 
-              onClick={() => {
-                setShowConflictModal(false);
-                if (serverVersion && localBackup && resolvedTenantId) {
-                  const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
-                  safeLocalStorage.setItem(resolutionKey, "manter_local");
-                }
-                logSafetyAction("manter_local");
-                toast.success("Mantendo versão local! 🏠");
-              }}
-              className="sm:flex-1"
-            >
-              Manter Local
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (serverVersion && localBackup && resolvedTenantId) {
-                  setAnswers(serverVersion.answers);
-                  saveLocalBackup(serverVersion.answers);
-                  setShowConflictModal(false);
-                  const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
-                  safeLocalStorage.setItem(resolutionKey, "restaurar_servidor");
-                  logSafetyAction("restaurar_servidor");
-                  toast.success("Versão do servidor restaurada! ☁️");
-                }
-              }}
-              className="sm:flex-1 gradient-primary shadow-glow"
-            >
-              Restaurar Servidor
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       <AlertDialog open={showManualRestoreModal} onOpenChange={setShowManualRestoreModal}>
         <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
           <AlertDialogHeader>

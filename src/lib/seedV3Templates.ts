@@ -17,12 +17,12 @@ const F = {
   whey:    { n:'Whey Protein',        p:'1 scoop',      k:120, pr:24, c:3,  g:1,  img:`${IMG}/whey-protein.jpg` },
   
   // Carboidratos
-  arroz:   { n:'Arroz Branco',        p:'100g', k:130, pr:2,  c:28, g:0 },
-  arrozI:  { n:'Arroz Integral',      p:'100g', k:120, pr:3,  c:25, g:1 },
-  feijao:  { n:'Feijão Carioca',      p:'100g',     k:70,  pr:5,  c:13, g:0 },
-  lentilha:{ n:'Lentilha Cozida',     p:'100g',     k:80,  pr:6,  c:14, g:0 },
-  batata:  { n:'Batata Doce',         p:'100g',     k:90,  pr:1,  c:20, g:0 },
-  macarrao:{ n:'Macarrão Integral',   p:'100g',     k:140, pr:4,  c:28, g:1 },
+  arroz:   { n:'Arroz Branco',        p:'100g', k:130, pr:2,  c:28, g:0,  img:`${IMG}/arroz-branco.jpg` },
+  arrozI:  { n:'Arroz Integral',      p:'100g', k:120, pr:3,  c:25, g:1,  img:`${IMG}/arroz-integral.jpg` },
+  feijao:  { n:'Feijão Carioca',      p:'100g',     k:70,  pr:5,  c:13, g:0,  img:`${IMG}/feijao-carioca.jpg` },
+  lentilha:{ n:'Lentilha Cozida',     p:'100g',     k:80,  pr:6,  c:14, g:0,  img:`${IMG}/lentilha.jpg` },
+  batata:  { n:'Batata Doce',         p:'100g',     k:90,  pr:1,  c:20, g:0,  img:`${IMG}/batata-doce.jpg` },
+  macarrao:{ n:'Macarrão Integral',   p:'100g',     k:140, pr:4,  c:28, g:1,  img:`${IMG}/macarrao.jpg` },
   
   // Pães e bases
   pao:     { n:'Pão Integral',        p:'2 fatias',     k:120, pr:4,  c:24, g:1,  img:`${IMG}/pao-integral.jpg` },
@@ -31,19 +31,19 @@ const F = {
   cuscuz:  { n:'Cuscuz c/ Ovo',       p:'1 fatia',      k:180, pr:10, c:25, g:4,  img:`${IMG}/cuscuz-com-ovo.jpg` },
   
   // Vegetais e Frutas
-  salada:  { n:'Salada Verde',        p:'1 prato',      k:20,  pr:1,  c:4,  g:0 },
-  legumes: { n:'Legumes no Vapor',    p:'100g',     k:40,  pr:2,  c:8,  g:0 },
+  salada:  { n:'Salada Verde',        p:'1 prato',      k:20,  pr:1,  c:4,  g:0,  img:`${IMG}/salada-verde.jpg` },
+  legumes: { n:'Legumes no Vapor',    p:'100g',     k:40,  pr:2,  c:8,  g:0,  img:`${IMG}/legumes-vapor.jpg` },
   sopa:    { n:'Sopa de Legumes',     p:'1 prato',      k:150, pr:5,  c:25, g:3,  img:`${IMG}/sopa-de-legumes.jpg` },
   mamao:   { n:'Mamão com Aveia',     p:'1 fatia',      k:130,pr:3,  c:25, g:2,  img:`${IMG}/mamao-com-aveia.jpg` },
-  banana:  { n:'Banana Prata',        p:'1 unidade',    k:70,  pr:1,  c:18, g:0 },
-  maca:    { n:'Maçã',               p:'1 unidade',    k:50,  pr:0,  c:13, g:0 },
+  banana:  { n:'Banana Prata',        p:'1 unidade',    k:70,  pr:1,  c:18, g:0,  img:`${IMG}/banana.jpg` },
+  maca:    { n:'Maçã',               p:'1 unidade',    k:50,  pr:0,  c:13, g:0,  img:`${IMG}/maca.jpg` },
   
   // Lanches e snacks
   iogurte: { n:'Iogurte Natural',     p:'170g',k:100, pr:7,  c:10, g:3,  img:`${IMG}/iogurte-com-frutas.jpg` },
   castanha:{ n:'Mix de Castanhas',    p:'1 punhado',    k:180, pr:4,  c:6,  g:16, img:`${IMG}/mix-castanhas.jpg` },
-  gelatina:{ n:'Gelatina Diet',       p:'1 taça',       k:20,  pr:2,  c:3,  g:0 },
-  cha:     { n:'Chá com Torrada',     p:'1 xícara',k:80, pr:2,  c:16, g:1 },
-  aveia:   { n:'Aveia em Flocos',     p:'30g',  k:110, pr:4,  c:17, g:2 },
+  gelatina:{ n:'Gelatina Diet',       p:'1 taça',       k:20,  pr:2,  c:3,  g:0,  img:`${IMG}/gelatina.jpg` },
+  cha:     { n:'Chá com Torrada',     p:'1 xícara',k:80, pr:2,  c:16, g:1,  img:`${IMG}/cha-torrada.jpg` },
+  aveia:   { n:'Aveia em Flocos',     p:'30g',  k:110, pr:4,  c:17, g:2,  img:`${IMG}/aveia.jpg` },
 };
 
 type FD = typeof F[keyof typeof F];
