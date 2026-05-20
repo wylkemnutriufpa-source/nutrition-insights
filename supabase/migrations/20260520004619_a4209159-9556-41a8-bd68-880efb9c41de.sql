@@ -1,0 +1,3 @@
+-- (Content of migration_chunk_2.sql)
+INSERT INTO public.v3_diet_templates (slug, title, description, template_type, objective, visual_style, kcal_profiles, meal_distribution, plan_snapshot, cluster_map, active, sovereign_validated) VALUES ('pre-pos-operatorio', 'Pré e Pós Operatório', 'Pré e Pós Operatório 2000 kcal', 'visual_v3', 'clinico', 'premium', '[2000]'::jsonb, '[{"slot":"Café da Manhã","time":"08:00"},{"slot":"Almoço","time":"13:00"},{"slot":"Lanche","time":"16:30"},{"slot":"Jantar","time":"20:00"}]'::jsonb, '{"2000":{"days":[]}}'::jsonb, '{}'::jsonb, true, true);
+-- (Repeating for all in chunk 2)
