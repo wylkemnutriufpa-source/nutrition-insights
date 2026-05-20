@@ -155,15 +155,17 @@ export function normalizeV2ToV3(v2Data: any): Meal[] {
  * Normaliza um snapshot V3 diretamente para a estrutura do Editor V3.
  * Este é o caminho mais fiel, pois o snapshot V3 já segue a lógica do Editor.
  */
+/**
+ * Normaliza um snapshot V3 diretamente para a estrutura do Editor V3.
+ * 🛡️ SOBERANIA CLÍNICA V5: Snapshot é a verdade única. Sem inferência dinâmica.
+ */
 export function normalizeSnapshotToV3(snapshot: any): Meal[] {
   if (!snapshot) return [];
   
   const rawMeals: any[] = [];
   
-  // Estrutura complexa: snapshot.days -> meals
   if (Array.isArray(snapshot.days)) {
     snapshot.days.forEach((day: any, index: number) => {
-      // 🛡️ SOBERANIA V3: Se day_of_week não existir no objeto do dia, inferimos pelo índice do array.
       const daysOrder = [1, 2, 3, 4, 5, 6, 0];
       const fallbackDay = daysOrder[index % 7];
       const dayIdx = (day.day_of_week !== undefined && day.day_of_week !== null) ? Number(day.day_of_week) : fallbackDay;
@@ -178,63 +180,39 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
       }
     });
   } 
-  // Estrutura flat: snapshot.meals
   else if (Array.isArray(snapshot.meals)) {
     rawMeals.push(...snapshot.meals);
-  }
-  // Estrutura única (legado)
-  else if (snapshot.items) {
-    rawMeals.push({
-      ...snapshot,
-      day_of_week: snapshot.day_of_week !== undefined ? snapshot.day_of_week : 1,
-      items: snapshot.items
-    });
   }
 
   return rawMeals.map(m => ({
     id: m.id || crypto.randomUUID(),
-    name: m.name || translateSlot(m.meal_type || m.type || 'Refeição'),
-    time: m.time || m.scheduled_time || "08:00",
+    name: m.name || "Refeição",
+    time: m.time || "08:00",
     day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 1,
-    items: (m.items || []).map((it: any) => {
-      const img = it.image_url || it.imageUrl || it.visual?.image_url;
-      const kcal = Number(it.kcal ?? it.meta_calorias ?? it.macros?.kcal ?? 0);
-      const prot = Number(it.protein ?? it.meta_proteinas ?? it.macros?.protein_g ?? 0);
-      const carb = Number(it.carbs ?? it.meta_carboidratos ?? it.macros?.carbs_g ?? 0);
-      const fat = Number(it.fat ?? it.meta_gorduras ?? it.macros?.fat_g ?? 0);
-      let qty = Number(it.quantity ?? it.clinical_mass_g ?? 1);
-      let clinical_mass_g = Number(it.clinical_mass_g || (it.quantity && !isNaN(Number(it.quantity)) ? it.quantity : 100));
-
-      // 🛡️ SANITIZAÇÃO V3: Trust explicit display quantities instead of forced 100g fallback
-      // Unless it's clearly an error (qty is 0 but kcal is high)
-      if (qty === 0 && kcal > 5) {
-        qty = 100;
-        clinical_mass_g = 100;
-      }
-
-      return {
-        id: it.id || it.instanceId || crypto.randomUUID(),
-        instanceId: it.instanceId || it.id || crypto.randomUUID(),
-        name: it.name || it.title || "Refeição",
-        kcal,
-        protein: prot,
-        carbs: carb,
-        fat: fat,
-        quantity: qty,
-        clinical_mass_g: clinical_mass_g,
-        imageUrl: img,
-        substitution_group_id: it.substitution_group_id || it.blockId,
-        substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => ({
-          ...s,
-          name: s.name || s.title,
-          kcal: Number(s.kcal ?? s.meta_calorias ?? s.macros?.kcal ?? 0),
-          protein: Number(s.protein ?? s.meta_proteinas ?? s.macros?.protein_g ?? 0),
-          carbs: Number(s.carbs ?? s.meta_carboidratos ?? s.macros?.carbs_g ?? 0),
-          fat: Number(s.fat ?? s.meta_gorduras ?? s.macros?.fat_g ?? 0),
-          imageUrl: s.image_url || s.imageUrl || s.visual?.image_url
-        })) : []
-      };
-    })
+    items: (m.items || []).map((it: any) => ({
+      id: it.id || it.instanceId || crypto.randomUUID(),
+      instanceId: it.instanceId || it.id || crypto.randomUUID(),
+      name: it.name || "Item",
+      kcal: Number(it.kcal || 0),
+      protein: Number(it.protein || 0),
+      carbs: Number(it.carbs || 0),
+      fat: Number(it.fat || 0),
+      quantity: Number(it.quantity || it.clinical_mass_g || 0),
+      clinical_mass_g: Number(it.clinical_mass_g || it.quantity || 0),
+      quantity_display: it.quantity_display || (it.clinical_mass_g ? `${it.clinical_mass_g}g` : ''),
+      imageUrl: it.imageUrl || it.image_url || null,
+      substitution_group_id: it.substitution_group_id || it.blockId,
+      substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => ({
+        ...s,
+        name: s.name || s.title,
+        kcal: Number(s.kcal || 0),
+        protein: Number(s.protein || 0),
+        carbs: Number(s.carbs || 0),
+        fat: Number(s.fat || 0),
+        clinical_mass_g: Number(s.clinical_mass_g || s.amount || 0),
+        imageUrl: s.imageUrl || s.image_url || null
+      })) : []
+    }))
   }));
 }
 
