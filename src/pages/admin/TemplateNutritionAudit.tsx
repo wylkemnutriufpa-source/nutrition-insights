@@ -1075,9 +1075,12 @@ export default function TemplateNutritionAudit() {
                           <TableRow key={t.id}>
                             <TableCell>
                               <div className="font-medium">{t.name || (t as any).title}</div>
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
                                 {t.tipo_refeicao || (t as any).objective || "—"}
                                 {t.is_global ? " · global" : ""}
+                                <Badge variant="outline" className="text-[9px] h-3.5 px-1 py-0 border-primary/20 text-primary">
+                                  {t.plan_snapshot ? "V3" : "V2"}
+                                </Badge>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -1100,29 +1103,48 @@ export default function TemplateNutritionAudit() {
                               {t.carbs_base ?? "—"} · G{t.fat_base ?? "—"}
                             </TableCell>
                             <TableCell>
-                              {t.issues.length === 0 ? (
-                                <span className="text-xs text-muted-foreground">Nenhum</span>
-                              ) : (
-                                <ul className="text-xs space-y-1">
-                                  {t.issues.map((iss) => (
-                                    <li key={iss.key} className="flex items-start gap-1.5">
-                                      <span
-                                        className={
-                                          iss.severity === "critical"
-                                            ? "text-destructive"
-                                            : "text-amber-600"
-                                        }
-                                      >
-                                        •
-                                      </span>
-                                      <span>{iss.message}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
+                              <div className="flex flex-col gap-2">
+                                {t.issues.length === 0 ? (
+                                  <span className="text-xs text-muted-foreground">Nenhum</span>
+                                ) : (
+                                  <ul className="text-xs space-y-1">
+                                    {t.issues.map((iss) => (
+                                      <li key={iss.key} className="flex items-start gap-1.5">
+                                        <span
+                                          className={
+                                            iss.severity === "critical"
+                                              ? "text-destructive"
+                                              : "text-amber-600"
+                                          }
+                                        >
+                                          •
+                                        </span>
+                                        <span>{iss.message}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 text-[10px] px-2 text-primary hover:bg-primary/5"
+                                    onClick={() => {
+                                      if (t.plan_snapshot) {
+                                        window.open(`/admin/diet-templates?slug=${(t as any).slug}`, '_blank');
+                                      } else {
+                                        toast.info("Apenas templates V3 podem ser editados no editor de matriz.");
+                                      }
+                                    }}
+                                  >
+                                    <Pencil className="w-3 h-3 mr-1" /> Editar Matriz
+                                  </Button>
+                                </div>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
+
                       </TableBody>
                     </Table>
                   </div>
