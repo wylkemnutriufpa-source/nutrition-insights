@@ -215,11 +215,24 @@ export default function PatientRegister() {
     if (!preselectedNutri) return;
     (async () => {
       addLog(`Buscando dados do profissional ${preselectedNutri}...`);
-      const { data: profileData } = await supabase
+      
+      // Tenta buscar por user_id primeiro (comportamento padrão)
+      let { data: profileData } = await supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url, phone")
         .eq("user_id", preselectedNutri)
         .maybeSingle();
+      
+      // Fallback: Tenta buscar por id se não encontrou por user_id
+      if (!profileData) {
+        addLog(`Tentando buscar profissional por ID primário...`);
+        const { data: fallbackData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, avatar_url, phone")
+          .eq("id", preselectedNutri)
+          .maybeSingle();
+        profileData = fallbackData;
+      }
       
       const { data: profData } = await supabase
         .from("professional_profiles")
@@ -237,15 +250,16 @@ export default function PatientRegister() {
           phone: profileData.phone,
         });
         setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
-        // REMOVIDO: Confirmação automática removida para garantir que a foto do profissional apareça.
-        setIsProfConfirmed(false);
+        // Se já vem confirmado do Invitation.tsx, mantemos true
+        const wasConfirmed = searchParams.get("confirmed") === "true";
+        setIsProfConfirmed(wasConfirmed);
         setSigValid(true);
       } else {
-        addLog(`AVISO: Profissional ${preselectedNutri} não encontrado no banco.`);
+        addLog(`ERRO: Profissional ${preselectedNutri} não encontrado em nenhuma coluna.`);
         setSigValid(false);
       }
     })();
-  }, [preselectedNutri, addLog]);
+  }, [preselectedNutri, addLog, searchParams]);
 
 
   // Robust invitation code validation
