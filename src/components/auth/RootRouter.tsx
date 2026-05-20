@@ -76,11 +76,20 @@ export function RootRouter() {
     );
   }
 
-  // 3. Aguarda dados ficarem prontos (Auth Status + Roles + Invite Processing + Consent)
-  if (authStatus === "loading" || loading || (authStatus === "authenticated" && roles === null) || processingInvite || (authStatus === "authenticated" && consentLoading)) {
+  // 3. Aguarda dados ficarem prontos com safety timeout
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (authStatus === "authenticated") setTimedOut(true);
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [authStatus]);
+
+  if (!timedOut && (authStatus === "loading" || loading || (authStatus === "authenticated" && roles === null) || processingInvite || (authStatus === "authenticated" && consentLoading))) {
     const msgs = processingInvite ? ["Vinculando convite...", "Preparando seu espaço..."] : ["Verificando sua sessão...", "Carregando autenticação..."];
     return <BrainLoaderScreen messages={msgs} visible />;
   }
+
 
   // 4. Se não autenticado, login
   if (authStatus === "unauthenticated") {
