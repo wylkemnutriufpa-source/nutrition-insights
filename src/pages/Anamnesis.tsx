@@ -572,7 +572,6 @@ export default function Anamnesis() {
   const [draftId, setDraftId] = useState<string | null>(null);
   const { status: autoSaveStatus, lastAction, updateStatus: setAutoSaveStatus } = useSyncStatus();
   const { status: submitSyncStatus, updateStatus: setSubmitSyncStatus } = useSyncStatus();
-  const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
   const [lastServerUpdateAt, setLastServerUpdateAt] = useState<string | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
 
