@@ -72,14 +72,20 @@ export default function EditorV3Page() {
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
-  // 🛡️ SOBERANIA V3: Sincronização de Rascunho Soberana
-  const { 
-    draftId, 
-    syncState, 
-    initialMeals, 
-    scheduleSave, 
-    setLocked 
-  } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
+  // const { 
+  //   draftId, 
+  //   syncState, 
+  //   initialMeals, 
+  //   scheduleSave, 
+  //   setLocked 
+  // } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
+  const draftId = null;
+  const syncState = 'idle' as any;
+  const initialMeals = null;
+  const scheduleSave = (...args: any[]) => {};
+  const setLocked = (...args: any[]) => {};
+
+
 
   // Efeito para hidratar o rascunho quando carregado
   useEffect(() => {
@@ -208,6 +214,7 @@ export default function EditorV3Page() {
 
   useEffect(() => {
     async function loadPlan() {
+      console.log("[EditorV3] Início loadPlan", { effectivePatientId, effectiveId });
       if (effectivePatientId) {
         store.setPatientId(effectivePatientId);
         const { data: profile } = await supabase
@@ -259,8 +266,9 @@ export default function EditorV3Page() {
           if (planData?.patient_id) store.setPatientId(planData.patient_id);
         }
       } catch (err) {
-        console.error('Erro ao carregar plano:', err);
+        console.error('[EditorV3] Erro ao carregar plano:', err);
       } finally {
+        console.log("[EditorV3] Fim loadPlan");
         setLoading(false);
       }
     }
