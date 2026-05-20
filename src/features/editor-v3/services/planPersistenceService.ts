@@ -33,44 +33,32 @@ const OFFICIAL_PLACEHOLDER = "/placeholder.svg";
  * Evita o bug crônico do "1 g" no PDF e nas telas do paciente.
  */
 function buildQuantityDisplay(item: any, fallback: any): string {
-  const rawQty = item?.display_quantity ?? fallback?.display_quantity;
-  const dUnit = String(item?.display_unit ?? fallback?.display_unit ?? fallback?.portionUnitLabel ?? '').trim();
-  const cMass = Number(item?.clinical_mass_g ?? fallback?.clinical_mass_g);
-  const qty = Number(item?.quantity ?? fallback?.quantity);
+  const existingDisplay = item?.quantity_display || item?.display_quantity || fallback?.quantity_display || fallback?.display_quantity;
+  
+  // 🛡️ SOBERANIA V3: Se já temos um display pronto e ele não é "1 g" genérico, respeitamos.
+  if (existingDisplay && typeof existingDisplay === 'string' && existingDisplay.length > 0 && !/^1\s*g$/i.test(existingDisplay)) {
+    return existingDisplay;
+  }
+
+  const dUnit = String(item?.display_unit || fallback?.display_unit || fallback?.portionUnitLabel || '').trim();
+  const cMass = Number(item?.clinical_mass_g || fallback?.clinical_mass_g);
+  const qty = Number(item?.quantity || fallback?.quantity);
   const kcal = Number(item?.kcal || fallback?.kcal || 0);
 
-  const qStr = rawQty == null ? '' : String(rawQty).trim();
-  
-  // 🛡️ DEFINIÇÃO DE PLACEHOLDER: Vazio, "1", "1g", "1 g"
-  // Se o item tem calorias significativas (> 5) mas quantidade é 1, é um erro de snapshot.
-  const isPlaceholder = qStr === '' || /^1\s*g?$/i.test(qStr);
-
-  // Unidade não-grama com display_quantity válido → usa o display textual
-  if (dUnit && dUnit !== 'g' && qStr && !isPlaceholder) {
-    return `${qStr} ${dUnit}`.trim();
+  // Se for unidade não-grama (ex: colher, unidade) e tiver multiplicador > 0
+  if (dUnit && dUnit.toLowerCase() !== 'g' && qty > 0) {
+    return `${qty} ${dUnit}`;
   }
 
-  // Massa clínica é a verdade quando o display é placeholder ou unidade grama irrelevante
-  if (isPlaceholder && Number.isFinite(cMass) && cMass > 1) {
-    return `${Math.round(cMass)} g`;
+  // Fallback para Massa Clínica
+  if (Number.isFinite(cMass) && cMass > 1) {
+    return `${Math.round(cMass)}g`;
   }
 
-  // Display textual já tem unidade embutida (ex.: "3 colheres", "100 g")
-  // Mas se for "1 g", ignoramos e tentamos cMass.
-  if (qStr && /[a-zà-ú]/i.test(qStr) && !isPlaceholder) return qStr;
-
-  if (qStr && !isPlaceholder) {
-    return dUnit ? `${qStr} ${dUnit}`.trim() : `${qStr} g`;
-  }
-
-  // Fallbacks Soberanos
-  if (Number.isFinite(cMass) && cMass > 1) return `${Math.round(cMass)} g`;
-  if (Number.isFinite(qty) && qty > 1) return `${Math.round(qty)} g`;
+  // Fallback de segurança para 100g se tiver calorias mas nada definido
+  if (kcal > 5) return `100g`;
   
-  // Se chegamos aqui e temos kcal, provavelmente é uma porção padrão de 100g
-  if (kcal > 5) return `100 g`;
-  
-  return ``;
+  return existingDisplay || "";
 }
 
 /**
