@@ -1020,7 +1020,7 @@ export default function DietTemplates() {
                   </Badge>
                   <span className="text-sm text-muted-foreground">{officialTemplates.length} modelos com visual verificado</span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {officialTemplates.map((template) => (
                     <TemplateCard
                       key={template.id}
@@ -1031,9 +1031,17 @@ export default function DietTemplates() {
                       CATEGORY_COLORS={CATEGORY_COLORS}
                       CATEGORY_LABELS={CATEGORY_LABELS}
                       onPreview={(t) => { setPreviewTemplate(t); setPreviewOpen(true); setActiveSubstitutions({}); }}
+                      onEdit={(t) => {
+                        if (t.is_v3) {
+                          navigate(`/admin/diet-templates?slug=${t.slug}`);
+                        } else {
+                          toast.info("Templates V2 devem ser convertidos para V3 para edição avançada.");
+                        }
+                      }}
                     />
                   ))}
                 </div>
+
               </div>
             )}
 
@@ -1051,7 +1059,7 @@ export default function DietTemplates() {
                   <ChevronRight className={`w-4 h-4 transition-transform ${showLegacy ? 'rotate-90' : ''}`} />
                 </button>
                 {showLegacy && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-70">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-70">
                     {legacyTemplates.map((template) => (
                       <TemplateCard
                         key={template.id}
@@ -1062,10 +1070,12 @@ export default function DietTemplates() {
                         CATEGORY_COLORS={CATEGORY_COLORS}
                         CATEGORY_LABELS={CATEGORY_LABELS}
                         onPreview={(t) => { setPreviewTemplate(t); setPreviewOpen(true); setActiveSubstitutions({}); }}
+                        onEdit={(t) => toast.info("Edição disponível apenas para templates V3")}
                         isLegacy
                       />
                     ))}
                   </div>
+
                 )}
               </div>
             )}
