@@ -83,7 +83,7 @@ export default function EditorV3Page() {
 
   // Efeito para hidratar o rascunho quando carregado
   useEffect(() => {
-    if (initialMeals && initialMeals.length > 0 && store.meals.length === 0) {
+    if (initialMeals && initialMeals.length > 0) {
       store.hydrateMeals(initialMeals);
     }
   }, [initialMeals]);
@@ -154,14 +154,17 @@ export default function EditorV3Page() {
           
           // Detectar se o snapshot já tem múltiplos dias
           const snapshotDays = snapshot.days || (snapshot.meals ? [{ day_of_week: 1, meals: snapshot.meals }] : []);
-          const dayNumbersInSnapshot = snapshotDays.map((d: any) => d.day_of_week || 1);
+          const dayNumbersInSnapshot = snapshotDays.map((d: any) => (d.day_of_week !== undefined && d.day_of_week !== null) ? Number(d.day_of_week) : 1);
           const hasMultiDaySnapshot = snapshotDays.length > 1;
 
           for (const day of days) {
             let mealsToUse = snapshotMeals;
             if (hasMultiDaySnapshot) {
-              const targetDayInSnapshot = dayNumbersInSnapshot.includes(day) ? day : dayNumbersInSnapshot[day % dayNumbersInSnapshot.length];
-              const dayObj = snapshotDays.find((d: any) => (d.day_of_week || 1) === targetDayInSnapshot);
+              const targetDayInSnapshot = dayNumbersInSnapshot.includes(day) ? day : dayNumbersInSnapshot[0];
+              const dayObj = snapshotDays.find((d: any) => {
+                const dNum = (d.day_of_week !== undefined && d.day_of_week !== null) ? Number(d.day_of_week) : 1;
+                return dNum === targetDayInSnapshot;
+              });
               mealsToUse = dayObj?.meals || snapshotMeals;
             }
 
@@ -332,7 +335,7 @@ export default function EditorV3Page() {
   const planTotals = useMemo(() => {
     const totals = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
     store.meals
-      .filter(m => (m.day_of_week || 0) === activeDay)
+      .filter(m => (m.day_of_week !== undefined ? Number(m.day_of_week) : 1) === activeDay)
       .forEach((meal) => {
         meal.items.forEach((item) => {
           totals.kcal += item.kcal || 0;
@@ -567,7 +570,7 @@ export default function EditorV3Page() {
             <div className="max-w-4xl mx-auto space-y-6 pb-32">
               <AnimatePresence mode="popLayout">
                 {store.meals
-                  .filter(m => (m.day_of_week || 0) === activeDay)
+                  .filter(m => (m.day_of_week !== undefined ? Number(m.day_of_week) : 1) === activeDay)
                   .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
                   .map((meal, idx) => (
                     <motion.div key={meal.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.4, delay: idx * 0.05 }}>
