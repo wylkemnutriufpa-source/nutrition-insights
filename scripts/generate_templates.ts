@@ -186,36 +186,23 @@ const templates = [
   }
 ];
 
-async function run() {
-  console.log('Cleaning up existing official templates...');
-  await supabase.from('v3_diet_templates').delete().is('nutritionist_id', null);
+const output = templates.map(t => {
+  const snapshot = { [t.kcal.toString()]: buildPlan(t.meals) };
+  const dist = t.meals.map(m => ({ slot: m.name, time: m.time }));
+  return {
+    slug: t.slug,
+    title: t.title,
+    description: `${t.title} ${t.kcal} kcal`,
+    template_type: 'visual_v3',
+    objective: t.objective,
+    visual_style: 'premium',
+    kcal_profiles: [t.kcal],
+    meal_distribution: dist,
+    plan_snapshot: snapshot,
+    cluster_map: {},
+    active: true,
+    sovereign_validated: true
+  };
+});
 
-  for (const t of templates) {
-    const snapshot = { [t.kcal.toString()]: buildPlan(t.meals) };
-    const dist = t.meals.map(m => ({ slot: m.name, time: m.time }));
-    
-    console.log(`Inserting ${t.title}...`);
-    const { error } = await supabase.from('v3_diet_templates').insert({
-      slug: t.slug,
-      title: t.title,
-      description: `${t.title} ${t.kcal} kcal`,
-      template_type: 'visual_v3',
-      objective: t.objective,
-      visual_style: 'premium',
-      kcal_profiles: [t.kcal],
-      meal_distribution: dist,
-      plan_snapshot: snapshot,
-      cluster_map: {},
-      active: true,
-      sovereign_validated: true
-    });
-
-    if (error) {
-      console.error(`Error inserting ${t.title}:`, error);
-    } else {
-      console.log(`Successfully inserted ${t.title}`);
-    }
-  }
-}
-
-run();
+console.log(JSON.stringify(output));
