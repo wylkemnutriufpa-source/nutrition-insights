@@ -795,26 +795,9 @@ export default function Anamnesis() {
     setAutoSaveStatus("syncing", "autosave");
 
     try {
-      // Stage 2 - Concurrency Guard before Update
-      if (draftId && lastServerUpdateAt) {
-        const { data: currentServer } = await supabase
-          .from("patient_anamnesis")
-          .select("updated_at, answers")
-          .eq("id", draftId)
-          .maybeSingle();
-          
-        if (currentServer?.updated_at && currentServer.updated_at !== lastServerUpdateAt) {
-          fjLog("SYNC", "Conflito de concorrência detectado durante autosave.");
-          setServerVersion({
-            answers: currentServer.answers as Record<string, any>,
-            updated_at: currentServer.updated_at,
-            id: draftId
-          });
-          setShowConflictModal(true);
-          setAutoSaveStatus("error", "autosave_conflict");
-          return;
-        }
-      }
+      // Stage 2 - Concurrency Guard before Update (Simplified V5)
+      // O rascunho do servidor é a única verdade. LWW (Last Write Wins) para pacientes.
+
 
       let error;
       if (draftId) {
