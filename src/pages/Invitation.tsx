@@ -136,7 +136,7 @@ export default function Invitation() {
     }
 
     console.log(`[Invitation] Redirecting to canonical /cadastro for onboarding.`);
-    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
+    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}&confirmed=true`, { replace: true });
   }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
 
   // Redirecionamento automático REMOVIDO. 
