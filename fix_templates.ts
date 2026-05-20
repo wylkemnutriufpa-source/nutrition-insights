@@ -23,7 +23,7 @@ async function fixTemplates() {
   imageMap['whey protein'] = 'https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/whey-protein.jpg';
 
   // 2. Fetch all templates
-  const { data: templates } = await supabase
+  // Already loaded templates from file
     .from('v3_diet_templates')
     .select('*');
 
