@@ -139,12 +139,10 @@ export default function Invitation() {
     navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
   }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
 
-  // Redirecionamento INSTANTÂNEO quando o convite é válido
-  useEffect(() => {
-    if (invitation && !error && !isProcessingAction && invitation.patient_id === null) {
-      handleAccept();
-    }
-  }, [invitation, error, handleAccept, isProcessingAction]);
+  // Redirecionamento automático REMOVIDO. 
+  // O usuário agora precisa ver a mensagem de boas-vindas e clicar no botão.
+  // Isso resolve a reclamação "não mostra aquela msg bonita de convite".
+
 
 
   const handleSafeRegisterFallback = () => {
