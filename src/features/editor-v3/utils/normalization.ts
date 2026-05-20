@@ -202,7 +202,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
       const prot = Number(it.protein ?? it.meta_proteinas ?? it.macros?.protein_g ?? 0);
       const carb = Number(it.carbs ?? it.meta_carboidratos ?? it.macros?.carbs_g ?? 0);
       const fat = Number(it.fat ?? it.meta_gorduras ?? it.macros?.fat_g ?? 0);
-      let qty = Number(it.quantity ?? it.display_quantity ?? it.clinical_mass_g ?? 0);
+      let qty = Number(it.quantity ?? it.quantity_display ?? it.clinical_mass_g ?? 0);
       let clinical_mass_g = Number(it.clinical_mass_g || qty);
 
       // 🛡️ SANITIZAÇÃO V3: Trust explicit display quantities instead of forced 100g fallback
