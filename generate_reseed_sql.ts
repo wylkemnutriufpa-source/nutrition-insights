@@ -13,22 +13,24 @@ for (const t of templates) {
     updated_at: new Date().toISOString()
   };
   
-  // Format for psql
-  const columns = Object.keys(data).join(', ');
-  const values = Object.values(data).map(v => {
-    if (typeof v === 'object') return `'${JSON.stringify(v).replace(/'/g, "''")}'`;
-    if (typeof v === 'string') return `'${v.replace(/'/g, "''")}'`;
-    return v;
-  }).join(', ');
+  const columns = ['slug', 'title', 'description', 'template_type', 'objective', 'visual_style', 'kcal_profiles', 'meal_distribution', 'plan_snapshot', 'active', 'sovereign_validated', 'updated_at'];
   
-  const update = Object.keys(data).map(k => {
-    const v = (data as any)[k];
-    const val = typeof v === 'object' ? `'${JSON.stringify(v).replace(/'/g, "''")}'` : (typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v);
-    return `${k} = ${val}`;
-  }).join(', ');
+  const vals = [
+    `'${data.slug}'`,
+    `'${data.title.replace(/'/g, "''")}'`,
+    `'${data.description.replace(/'/g, "''")}'`,
+    `'${data.template_type}'`,
+    `'${data.objective}'`,
+    `'${data.visual_style}'`,
+    `'${JSON.stringify(data.kcal_profiles)}'::jsonb`,
+    `'${JSON.stringify(data.meal_distribution).replace(/'/g, "''")}'::jsonb`,
+    `'${JSON.stringify(data.plan_snapshot).replace(/'/g, "''")}'::jsonb`,
+    'true',
+    'true',
+    'now()'
+  ];
 
-  sql += `INSERT INTO v3_diet_templates (${columns}) VALUES (${values}) ON CONFLICT (slug) DO UPDATE SET ${update};\n`;
+  sql += `INSERT INTO v3_diet_templates (${columns.join(', ')}) VALUES (${vals.join(', ')}) ON CONFLICT (slug) DO UPDATE SET plan_snapshot = EXCLUDED.plan_snapshot, sovereign_validated = true, active = true, updated_at = now();\n`;
 }
 
 fs.writeFileSync('reseed_templates.sql', sql);
-console.log('SQL generated for 14 templates');
