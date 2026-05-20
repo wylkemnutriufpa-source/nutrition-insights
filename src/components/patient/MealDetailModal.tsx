@@ -317,7 +317,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       entity_id: meal.itemId,
       status: "success",
       payload_summary: { note, restoredFromId }
-    });
+    } as any);
 
     fetchDbHistory(0);
   };
