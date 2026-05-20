@@ -350,7 +350,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       entity_id: meal.itemId,
       status: "success",
       payload_summary: { from_version: version.id }
-    });
+    } as any);
     
     // Criamos a versão de rollback após a atualização para registrar a origem no histórico
     setTimeout(() => saveToHistory("restore_version", version.id), 500);
