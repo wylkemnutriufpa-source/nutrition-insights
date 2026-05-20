@@ -188,8 +188,52 @@ export default function PatientMealPlan() {
       const isV3 = snapshot && (snapshot.snapshot_version === 'v3' || Array.isArray(snapshot.days));
 
       if (!isV3) {
-        console.error("[CRITICAL] Plano Legado Detectado. O sistema V3 exige Soberania de Snapshot.");
-        toast.error("Este plano precisa ser re-publicado para compatibilidade V3.");
+        // Plano legado (V1/V2): tenta migrar automaticamente para exibição
+        console.warn("[PatientMealPlan] Plano legado detectado — tentando migração automática para exibição.");
+        const legacyItems: MealPlanItem[] = [];
+        const rawItems: any[] = planData.meal_plan_items || planData.items || [];
+        rawItems.forEach((item: any) => {
+          legacyItems.push({
+            id: item.id,
+            title: item.title || item.name || "Alimento",
+            description: item.display_quantity || item.quantity_display || `${item.clinical_mass_g || 100}g`,
+            tipo_refeicao: item.tipo_refeicao || item.meal_type || "Refeição",
+            day_of_week: item.day_of_week ?? 0,
+            meta_calorias: item.meta_calorias ?? item.kcal ?? 0,
+            meta_proteinas: item.meta_proteinas ?? item.protein ?? 0,
+            meta_carboidratos: item.meta_carboidratos ?? item.carbs ?? 0,
+            meta_gorduras: item.meta_gorduras ?? item.fat ?? 0,
+            image_url: item.image_url || item.imageUrl || null,
+            imageUrl: item.image_url || item.imageUrl || null,
+            is_primary: true,
+            display_quantity: item.display_quantity || item.quantity_display || `${item.clinical_mass_g || 100}g`,
+            clinical_mass_g: item.clinical_mass_g || 100,
+            metadata: { substitution_options: [], substitution_count: 0 }
+          } as any);
+        });
+
+        if (legacyItems.length === 0) {
+          toast.error("Este plano precisa ser re-publicado pelo nutricionista.");
+          setLoading(false);
+          return;
+        }
+
+        const legacyPlanMeta = {
+          id: planData.id,
+          title: planData.title || "Plano Alimentar",
+          start_date: planData.start_date,
+          totals_status: 'ok',
+          plan_mode: 'legacy',
+          editor_version: 'v2',
+          snapshot: null,
+          total_meta_calorias: legacyItems.reduce((s, i) => s + (i.meta_calorias || 0), 0),
+          total_meta_proteinas: legacyItems.reduce((s, i) => s + (i.meta_proteinas || 0), 0),
+          total_meta_carboidratos: legacyItems.reduce((s, i) => s + (i.meta_carboidratos || 0), 0),
+          total_meta_gorduras: legacyItems.reduce((s, i) => s + (i.meta_gorduras || 0), 0),
+        };
+        setPlan(legacyPlanMeta as any);
+        setAllItems(legacyItems);
+        setItems(legacyItems.filter(i => i.day_of_week === dayOfWeek));
         setLoading(false);
         return;
       }

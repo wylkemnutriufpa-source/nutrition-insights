@@ -189,30 +189,41 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
     name: m.name || "Refeição",
     time: m.time || "08:00",
     day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 1,
-    items: (m.items || []).map((it: any) => ({
-      id: it.id || it.instanceId || crypto.randomUUID(),
-      instanceId: it.instanceId || it.id || crypto.randomUUID(),
-      name: it.name || "Item",
-      kcal: Number(it.kcal || 0),
-      protein: Number(it.protein || 0),
-      carbs: Number(it.carbs || 0),
-      fat: Number(it.fat || 0),
-      quantity: Number(it.quantity || it.clinical_mass_g || 0),
-      clinical_mass_g: Number(it.clinical_mass_g || it.quantity || 0),
-      quantity_display: it.quantity_display || (it.clinical_mass_g ? `${it.clinical_mass_g}g` : ''),
-      imageUrl: it.imageUrl || it.image_url || null,
-      substitution_group_id: it.substitution_group_id || it.blockId,
-      substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => ({
-        ...s,
-        name: s.name || s.title,
-        kcal: Number(s.kcal || 0),
-        protein: Number(s.protein || 0),
-        carbs: Number(s.carbs || 0),
-        fat: Number(s.fat || 0),
-        clinical_mass_g: Number(s.clinical_mass_g || s.amount || 0),
-        imageUrl: s.imageUrl || s.image_url || null
-      })) : []
-    }))
+    items: (m.items || []).map((it: any) => {
+      // Resolve a massa clínica com validação mínima de 5g para evitar valores absurdos
+      // (ex: ovo com quantity=1 unidade não pode virar clinical_mass_g=1g)
+      const rawMass = Number(it.clinical_mass_g || it.quantity || 0);
+      const clinical_mass_g = rawMass >= 5 ? rawMass : (it.clinical_mass_g ? rawMass : 100);
+
+      return {
+        id: it.id || it.instanceId || crypto.randomUUID(),
+        instanceId: it.instanceId || it.id || crypto.randomUUID(),
+        name: it.name || "Item",
+        kcal: Number(it.kcal || 0),
+        protein: Number(it.protein || 0),
+        carbs: Number(it.carbs || 0),
+        fat: Number(it.fat || 0),
+        quantity: Number(it.quantity || clinical_mass_g || 0),
+        clinical_mass_g,
+        quantity_display: it.quantity_display || (clinical_mass_g ? `${clinical_mass_g}g` : ''),
+        imageUrl: it.imageUrl || it.image_url || null,
+        substitution_group_id: it.substitution_group_id || it.blockId,
+        substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => {
+          const subMass = Number(s.clinical_mass_g || s.amount || 0);
+          const sub_clinical_mass_g = subMass >= 5 ? subMass : 100;
+          return {
+            ...s,
+            name: s.name || s.title,
+            kcal: Number(s.kcal || 0),
+            protein: Number(s.protein || 0),
+            carbs: Number(s.carbs || 0),
+            fat: Number(s.fat || 0),
+            clinical_mass_g: sub_clinical_mass_g,
+            imageUrl: s.imageUrl || s.image_url || null
+          };
+        }) : []
+      };
+    })
   }));
 }
 

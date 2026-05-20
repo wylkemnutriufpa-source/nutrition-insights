@@ -654,8 +654,9 @@ export default function PatientRegister() {
       addLog("Registro concluído com sucesso. Iniciando validação de vínculo crítica...");
       
       // STAGE 1 - HARD FAIL VÍNCULO (CRÍTICO ABSOLUTO)
-      const validateLinkage = async (patientId: string) => {
-        addLog(`[FJ:LINKAGE] Validando vínculo para ${patientId}...`);
+      // Retry com backoff: o trigger do Supabase pode demorar até 3s para criar os registros
+      const validateLinkage = async (patientId: string, attempt = 1): Promise<{ success: boolean; reason?: string }> => {
+        addLog(`[FJ:LINKAGE] Validando vínculo para ${patientId} (tentativa ${attempt}/3)...`);
         
         // 1. Validar profiles.tenant_id
         const { data: profile, error: profErr } = await supabase
@@ -665,7 +666,12 @@ export default function PatientRegister() {
           .single();
           
         if (profErr || !profile?.tenant_id) {
-          addLog(`[FJ:CRITICAL] profiles.tenant_id null para ${patientId}`);
+          if (attempt < 3) {
+            addLog(`[FJ:LINKAGE] tenant_id ainda null, aguardando trigger... (${attempt}/3)`);
+            await new Promise(r => setTimeout(r, 1500 * attempt));
+            return validateLinkage(patientId, attempt + 1);
+          }
+          addLog(`[FJ:CRITICAL] profiles.tenant_id null para ${patientId} após 3 tentativas`);
           return { success: false, reason: "profile_tenant_null" };
         }
         
@@ -678,7 +684,12 @@ export default function PatientRegister() {
           .maybeSingle();
           
         if (utErr || !userTenant) {
-          addLog(`[FJ:CRITICAL] user_tenants não encontrado para ${patientId}`);
+          if (attempt < 3) {
+            addLog(`[FJ:LINKAGE] user_tenants ainda ausente, aguardando... (${attempt}/3)`);
+            await new Promise(r => setTimeout(r, 1500 * attempt));
+            return validateLinkage(patientId, attempt + 1);
+          }
+          addLog(`[FJ:CRITICAL] user_tenants não encontrado para ${patientId} após 3 tentativas`);
           return { success: false, reason: "user_tenant_missing" };
         }
         
@@ -691,7 +702,12 @@ export default function PatientRegister() {
           .maybeSingle();
           
         if (linkErr || !linkage) {
-          addLog(`[FJ:CRITICAL] nutritionist_patients não encontrado para ${patientId}`);
+          if (attempt < 3) {
+            addLog(`[FJ:LINKAGE] nutritionist_patients ainda ausente, aguardando... (${attempt}/3)`);
+            await new Promise(r => setTimeout(r, 1500 * attempt));
+            return validateLinkage(patientId, attempt + 1);
+          }
+          addLog(`[FJ:CRITICAL] nutritionist_patients não encontrado para ${patientId} após 3 tentativas`);
           return { success: false, reason: "linkage_missing" };
         }
         
