@@ -759,23 +759,11 @@ export default function Anamnesis() {
     toast.info("Modo edição ativado! Revise suas respostas ✏️");
   };
 
-  // Backup local automatico
-  const saveLocalBackup = useCallback((currentAnswers: Record<string, any>) => {
-    if (!targetUserId) return;
-    try {
-      safeLocalStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
-        answers: currentAnswers,
-        updated_at: new Date().toISOString()
-      }));
-    } catch (e) {
-      console.warn("[FJ:Anamnesis] backup fail:", e);
-    }
-  }, [targetUserId]);
-
   const logSafetyAction = useCallback((type: string) => {
     if (!targetUserId) return;
     setAutoSaveStatus("success", type);
   }, [targetUserId, setAutoSaveStatus]);
+
 
   // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
