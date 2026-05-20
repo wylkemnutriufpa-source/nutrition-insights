@@ -148,7 +148,7 @@ export default function Invitation() {
   const handleSafeRegisterFallback = () => {
     const professionalId = invitation?.professional_id;
     if (professionalId) {
-      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}`, { replace: true });
+      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}&confirmed=true`, { replace: true });
       return;
     }
     fetchInvitation();
