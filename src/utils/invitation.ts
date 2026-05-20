@@ -24,18 +24,20 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
  * @returns A URL completa.
  */
 export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = false) => {
-  // Se forceProduction for true (ex: envio real), usa PRODUCTION_URL.
-  // Senão, usa o origin atual para permitir testes no preview.
-  const origin = forceProduction ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
+  // Bugfix: Em ambientes de Preview, os links devem apontar para o domínio atual por padrão, 
+  // permitindo testes fim-a-fim sem quebrar o código do convite.
+  const isPreview = typeof window !== 'undefined' && 
+    (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
   
-
-
+  const origin = (forceProduction && !isPreview) ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
+  
   const params = new URLSearchParams();
   if (code) params.set("code", code);
   if (nutriId) params.set("nutri", nutriId);
   
   const query = params.toString();
   if (code) {
+    // Rota visual completa (msg bonita)
     return `${origin}/convite/${code}`;
   }
   

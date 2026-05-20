@@ -109,13 +109,13 @@ export default function Invitation() {
     if (code) {
       // Se o usuário já está logado e é um paciente, mandamos para o /welcome
       // que saberá lidar com o estado de onboarding ou dashboard.
+      // Removido redirecionamento automático para permitir que usuários logados
+      // também vejam a mensagem de boas-vindas e confirmem o vínculo.
       if (user && !isNutritionist) {
-        console.log("[Invitation] Usuário logado detectado. Redirecionando para onboarding direto...");
-        // Salvamos o código no localStorage caso o root router precise dele para algum vínculo tardio
+        console.log("[Invitation] Usuário logado detectado. Mantendo na página para confirmação visual.");
         if (code) localStorage.setItem("fitjourney_invite_code", code);
-        navigate("/onboarding?skip_slides=true", { replace: true });
-        return;
       }
+
       fetchInvitation();
     }
   }, [code, user, isNutritionist, navigate]);
