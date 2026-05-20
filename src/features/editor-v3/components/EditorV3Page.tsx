@@ -208,6 +208,7 @@ export default function EditorV3Page() {
 
   useEffect(() => {
     async function loadPlan() {
+      console.log("[EditorV3] Início loadPlan", { effectivePatientId, effectiveId });
       if (effectivePatientId) {
         store.setPatientId(effectivePatientId);
         const { data: profile } = await supabase
@@ -259,8 +260,9 @@ export default function EditorV3Page() {
           if (planData?.patient_id) store.setPatientId(planData.patient_id);
         }
       } catch (err) {
-        console.error('Erro ao carregar plano:', err);
+        console.error('[EditorV3] Erro ao carregar plano:', err);
       } finally {
+        console.log("[EditorV3] Fim loadPlan");
         setLoading(false);
       }
     }
