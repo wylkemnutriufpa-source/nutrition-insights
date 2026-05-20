@@ -38,11 +38,23 @@ const F = {
 type Food = typeof F[keyof typeof F];
 
 const scaleFood = (food: Food, factor: number): Food => {
-  const currentP = parseInt(food.p);
-  if (isNaN(currentP)) return food;
-  const newP = Math.round(currentP * factor);
-  return { ...food, p: `${newP}g`, k: Math.round(food.k * factor), pr: Math.round(food.pr * factor), c: Math.round(food.c * factor), g: Math.round(food.g * factor) };
+  const match = food.p.match(/^(\d+)(.*)$/);
+  if (!match) return food;
+  const num = parseInt(match[1]);
+  const unit = match[2];
+  const newNum = Math.round(num * factor);
+  const safeNum = newNum < 1 ? 1 : newNum;
+  
+  return {
+    ...food,
+    p: `${safeNum}${unit}`,
+    k: Math.round(food.k * factor),
+    pr: Math.round(food.pr * factor),
+    c: Math.round(food.c * factor),
+    g: Math.round(food.g * factor),
+  };
 };
+
 
 const createItem = (food: Food, isPrimary: boolean, substitutions: Food[] = []) => ({
   id: uid(), instanceId: uid(), name: food.n, title: food.n, kcal: food.k, protein: food.pr, carbs: food.c, fat: food.g,
