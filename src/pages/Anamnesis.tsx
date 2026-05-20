@@ -748,13 +748,6 @@ export default function Anamnesis() {
             toast.info("Rascunho restaurado do servidor! 📝");
           }
         }
-      } else if (localData) {
-        // Fallback para local apenas se o servidor estiver vazio
-        setAnswers(localData.answers);
-        const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
-        if (lastIdx > 0) setStep(lastIdx);
-        else if (lastIdx === -1) setStep(questions.length - 1);
-        toast.info("Dados restaurados do backup local! ⚡");
       }
     })();
   }, [targetUserId]);
