@@ -187,13 +187,36 @@ const templates = [
   }
 ];
 
-const sql = templates.map(t => {
-  const snapshot = { [t.kcal.toString()]: buildPlan(t.meals) };
-  const dist = t.meals.map(m => ({ slot: m.name, time: m.time }));
-  return `INSERT INTO public.v3_diet_templates (slug, title, description, template_type, objective, visual_style, kcal_profiles, meal_distribution, plan_snapshot, cluster_map, active, sovereign_validated) VALUES ('${t.slug}', '${t.title}', '${t.title} ${t.kcal} kcal', 'visual_v3', '${t.objective}', 'premium', '[${t.kcal}]'::jsonb, '${JSON.stringify(dist)}'::jsonb, '${JSON.stringify(snapshot)}'::jsonb, '{}'::jsonb, true, true);`;
-}).join('\n');
+async function run() {
+  console.log('Cleaning up existing official templates...');
+  await supabase.from('v3_diet_templates').delete().is('nutritionist_id', null);
 
-import fs from 'fs';
-const finalSql = `DELETE FROM public.v3_diet_templates WHERE nutritionist_id IS NULL;\n${sql}`;
-fs.writeFileSync('generated_templates.sql', finalSql);
-console.log('SQL saved to generated_templates.sql');
+  for (const t of templates) {
+    const snapshot = { [t.kcal.toString()]: buildPlan(t.meals) };
+    const dist = t.meals.map(m => ({ slot: m.name, time: m.time }));
+    
+    console.log(`Inserting ${t.title}...`);
+    const { error } = await supabase.from('v3_diet_templates').insert({
+      slug: t.slug,
+      title: t.title,
+      description: `${t.title} ${t.kcal} kcal`,
+      template_type: 'visual_v3',
+      objective: t.objective,
+      visual_style: 'premium',
+      kcal_profiles: [t.kcal],
+      meal_distribution: dist,
+      plan_snapshot: snapshot,
+      cluster_map: {},
+      active: true,
+      sovereign_validated: true
+    });
+
+    if (error) {
+      console.error(`Error inserting ${t.title}:`, error);
+    } else {
+      console.log(`Successfully inserted ${t.title}`);
+    }
+  }
+}
+
+run();
