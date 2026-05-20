@@ -56,11 +56,8 @@ export function useAutoTemplateSeeder() {
 
           if (templateSize < 20000) {
             // Template is likely broken (should be ~158KB)
-            console.warn('⚠️ Broken templates detected, running recovery...');
-
-            // Import and run seeder
-            const { seedTemplates } = await import('./clinicalTemplateSeeder');
-            await seedTemplates();
+            console.warn('⚠️ Broken templates detected, but seeder module not available.');
+            // Seeder module './clinicalTemplateSeeder' was removed; skip recovery.
           }
         }
 
