@@ -146,96 +146,41 @@ export default function EditorV3Page() {
                          selectedTemplate.plan_snapshot[kcal] || 
                          selectedTemplate.plan_snapshot[profileKeys[0]];
                          
-        const snapshotMeals = snapshot?.meals || snapshot?.days?.[0]?.meals;
-        
-        if (snapshot && snapshotMeals) {
-          const days = [1, 2, 3, 4, 5, 6, 0];
-          const allNewMeals: any[] = [];
+        if (snapshot) {
+          // 🛡️ SOBERANIA CLÍNICA V5: TEMPLATE NÃO É GERADO. TEMPLATE É CARREGADO.
+          // Usamos o normalizador soberano que respeita fielmente o snapshot do banco.
+          const snapshotMeals = normalizeSnapshotToV3(snapshot);
           
-          // Detectar se o snapshot já tem múltiplos dias
-          const snapshotDays = snapshot.days || (snapshot.meals ? [{ day_of_week: 1, meals: snapshot.meals }] : []);
-          const dayNumbersInSnapshot = snapshotDays.map((d: any) => (d.day_of_week !== undefined && d.day_of_week !== null) ? Number(d.day_of_week) : 1);
-          const hasMultiDaySnapshot = snapshotDays.length > 1;
-
-          for (const day of days) {
-            let mealsToUse = snapshotMeals;
-            if (hasMultiDaySnapshot) {
-              const targetDayInSnapshot = dayNumbersInSnapshot.includes(day) ? day : dayNumbersInSnapshot[0];
-              const dayObj = snapshotDays.find((d: any) => {
-                const dNum = (d.day_of_week !== undefined && d.day_of_week !== null) ? Number(d.day_of_week) : 1;
-                return dNum === targetDayInSnapshot;
-              });
-              mealsToUse = dayObj?.meals || snapshotMeals;
+          if (snapshotMeals && snapshotMeals.length > 0) {
+            // SOBERANIA DETERMINÍSTICA: Se o snapshot tem dias específicos, respeitamos.
+            // Se for aplicação semanal, substituímos tudo. Se for diária, apenas o dia ativo.
+            
+            if (isWeekly) {
+              // Substituir todo o plano pelas refeições do snapshot (os 7 dias)
+              store.hydrateMeals(snapshotMeals);
+            } else {
+              // Aplicar apenas ao dia ativo
+              // Tentamos encontrar as refeições do dia ativo no snapshot, ou pegamos o dia 1 como base
+              const mealsForActiveDay = snapshotMeals.filter(m => m.day_of_week === activeDay);
+              const sourceMeals = mealsForActiveDay.length > 0 
+                ? mealsForActiveDay 
+                : snapshotMeals.filter(m => m.day_of_week === (snapshotMeals[0]?.day_of_week ?? 1));
+              
+              const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
+              
+              // Garantimos que as refeições aplicadas tenham o day_of_week correto
+              const adjustedSourceMeals = sourceMeals.map(m => ({ ...m, day_of_week: activeDay }));
+              
+              store.hydrateMeals([...otherDayMeals, ...adjustedSourceMeals]);
             }
 
-            const freshMeals = mealsToUse.map((meal: any, mealIdx: number) => {
-              const mealId = crypto.randomUUID();
-              return {
-                ...meal,
-                id: mealId,
-                day_of_week: day,
-                items: meal.items.map((item: any, itemIdx: number) => {
-                  const instanceId = crypto.randomUUID();
-                  
-                  // LOGICA DE VARIAÇÃO SOBERANA V5:
-                  // 1. Garantir que existam substitutos (equivalentes)
-                  let subs = item.substitutions || [];
-                  
-                  // 2. Tentar rotacionar para gerar variedade real entre os dias
-                  let finalItem = { ...item, instanceId };
-                  
-                  // Se houver substitutos, rotacionamos baseado no dia para que a dieta mude todo dia
-                  if (subs.length > 0) {
-                    const rotationSeed = (day + mealIdx + itemIdx);
-                    // subIndex 0 = item original, subIndex > 0 = substituto
-                    const subIndex = rotationSeed % (subs.length + 1);
-                    
-                    if (subIndex > 0) {
-                      const sub = subs[subIndex - 1];
-                      const targetKcal = item.kcal;
-                      const subKcal100g = sub.kcal_100g || sub.kcal || 1;
-                      const neededQty = Math.round((targetKcal / subKcal100g) * 100);
-                      
-                      finalItem = {
-                        ...sub,
-                        instanceId,
-                        quantity: neededQty,
-                        clinical_mass_g: neededQty,
-                        kcal: targetKcal,
-                        protein: (sub.protein || 0) * (neededQty / 100),
-                        carbs: (sub.carbs || 0) * (neededQty / 100),
-                        fat: (sub.fat || 0) * (neededQty / 100),
-                        substitutions: subs,
-                        imageUrl: sub.imageUrl || (sub as any).image_url || null
-                      } as any;
-                    }
-                  }
-
-                  // 3. Garantia Visual SOBERANA: Usamos a imagem que já vem no template/item
-                  if (!finalItem.imageUrl || finalItem.imageUrl.includes('unsplash.com')) {
-                    finalItem.imageUrl = item.imageUrl || (item as any).image_url || null;
-                  }
-
-                  return finalItem;
-                })
-              };
-            });
-            allNewMeals.push(...freshMeals);
+            toast.success('Template Premium Aplicado com Sucesso!', { id: toastId });
+            return;
           }
-
-          if (isWeekly) {
-            store.hydrateMeals(allNewMeals);
-          } else {
-            const dailyMeals = allNewMeals.filter(m => m.day_of_week === activeDay);
-            const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
-            store.hydrateMeals([...otherDayMeals, ...dailyMeals]);
-          }
-
-          toast.success('Plano Semanal Soberano Gerado!', { id: toastId });
-          return;
         }
       }
 
+      // Fallback para estrutura básica se não houver snapshot (segurança extra)
       const distribution = (selectedTemplate.meal_distribution as any[]) || [];
       const days = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [activeDay];
       const newMeals: any[] = [];
@@ -254,10 +199,10 @@ export default function EditorV3Page() {
 
       const otherDayMeals = store.meals.filter(m => !days.includes(m.day_of_week || 0));
       store.hydrateMeals([...otherDayMeals, ...newMeals]);
-      toast.success('Estrutura carregada.', { id: toastId });
+      toast.success('Estrutura de template carregada.', { id: toastId });
     } catch (err) {
-      console.error(err);
-      toast.error('Erro ao carregar template', { id: toastId });
+      console.error('Erro ao carregar template:', err);
+      toast.error('Erro ao carregar template clínico', { id: toastId });
     }
   };
 
