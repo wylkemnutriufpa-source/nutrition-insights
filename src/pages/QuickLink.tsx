@@ -60,21 +60,40 @@ export default function QuickLink() {
         return;
       }
 
-      const { data: profile } = await supabase
+      let profile = null;
+      let profUserId = nutriId;
+
+      // Se não parece um UUID, tenta buscar como slug
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(nutriId || "");
+      
+      if (!isUuid && nutriId) {
+        const { data: pubProfile } = await supabase
+          .from("public_profile_settings")
+          .select("nutritionist_id")
+          .eq("slug", nutriId)
+          .maybeSingle();
+        
+        if (pubProfile) {
+          profUserId = pubProfile.nutritionist_id;
+          localStorage.setItem("fitjourney_nutri_id", profUserId);
+        }
+      }
+
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("full_name")
-        .eq("user_id", nutriId)
+        .eq("user_id", profUserId)
         .maybeSingle();
         
       const { data: profProfile } = await supabase
         .from("professional_profiles")
         .select("clinic_name")
-        .eq("user_id", nutriId)
+        .eq("user_id", profUserId)
         .maybeSingle();
         
-      if (profile) {
+      if (profileData) {
         setProfessional({
-          full_name: profile.full_name,
+          full_name: profileData.full_name,
           clinic_name: profProfile?.clinic_name || null
         });
       }
