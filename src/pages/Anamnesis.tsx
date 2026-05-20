@@ -1785,18 +1785,6 @@ export default function Anamnesis() {
         )}
       </div>
 
-      <AlertDialog 
-        open={showConflictModal} 
-        onOpenChange={(open) => {
-          // Stage 3 - Mobile Hardening: Ensure body scroll is managed by AlertDialog (default)
-          // and prevent accidental closing if not handled
-          setShowConflictModal(open);
-          if (!open) {
-            // Restore overflow just in case
-            document.body.style.overflow = "auto";
-          }
-        }}
-      >
 
         <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
           <AlertDialogHeader>
