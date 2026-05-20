@@ -17,18 +17,11 @@ export function RootRouter() {
     return !!localStorage.getItem("fitjourney_invite_code");
   });
 
-  // 1. Resolve stuck roles
+  // 1. Trace boot sequence
   useEffect(() => {
-    if (authStatus === "authenticated" && roles === null) {
-      const timer = setTimeout(() => {
-        console.warn("[NAV] RootRouter -> Roles still null after 5s, forcing refresh...");
-        refreshProfile().catch(() => {
-          setError("Falha ao carregar permissões. Tente novamente.");
-        });
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [authStatus, roles, refreshProfile]);
+    console.log(`[BOOT:RootRouter] authStatus: ${authStatus} | loading: ${loading} | roles: ${roles ? `[${roles.join(", ")}]` : "null"}`);
+  }, [authStatus, loading, roles]);
+
 
   useEffect(() => {
     async function processInvite() {
