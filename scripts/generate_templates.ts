@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import fs from 'fs';
+
 
 const IMG = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
 const uid = () => crypto.randomUUID();
