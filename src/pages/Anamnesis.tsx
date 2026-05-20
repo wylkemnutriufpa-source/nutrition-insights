@@ -873,7 +873,6 @@ export default function Anamnesis() {
       }
     }
     setAnswers(newAnswers);
-    saveLocalBackup(newAnswers);
   };
 
   const canNext = () => {
