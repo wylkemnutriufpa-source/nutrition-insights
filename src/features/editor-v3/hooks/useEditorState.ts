@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+// persist removed to avoid race conditions with server drafts
 import { Meal, MealItem, Food } from '../types/types';
 import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
 import { SovereignTelemetry } from '../utils/FakeUtils';
@@ -35,7 +35,6 @@ interface EditorState {
 }
 
 export const useEditorState = create<EditorState>()(
-  persist(
     (set, get) => ({
       meals: [],
       patientId: null,
