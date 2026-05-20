@@ -1,20 +1,11 @@
 
-import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
 import crypto from 'crypto';
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 async function auditTemplates() {
-  const { data: templates, error } = await supabase
-    .from('v3_diet_templates')
-    .select('id, title, plan_snapshot');
+  const data = fs.readFileSync('templates.json', 'utf8');
+  const templates = JSON.parse(data);
 
-  if (error) {
-    console.error('Error fetching templates:', error);
-    return;
-  }
 
   const results = [];
 
