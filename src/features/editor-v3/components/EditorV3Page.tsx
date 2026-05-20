@@ -72,14 +72,19 @@ export default function EditorV3Page() {
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
-  // 🛡️ SOBERANIA V3: Sincronização de Rascunho Soberana
-  const { 
-    draftId, 
-    syncState, 
-    initialMeals, 
-    scheduleSave, 
-    setLocked 
-  } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
+  // const { 
+  //   draftId, 
+  //   syncState, 
+  //   initialMeals, 
+  //   scheduleSave, 
+  //   setLocked 
+  // } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
+  const draftId = null;
+  const syncState = 'idle';
+  const initialMeals = null;
+  const scheduleSave = () => {};
+  const setLocked = () => {};
+
 
   // Efeito para hidratar o rascunho quando carregado
   useEffect(() => {
