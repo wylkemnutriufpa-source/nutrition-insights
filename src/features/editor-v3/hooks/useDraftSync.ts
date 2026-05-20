@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Meal, AuditLogEntry } from '../types';
 import { loadOrCreateDraft, saveDraft, discardDraft, type DraftRecord } from '../services/draftService';
@@ -6,7 +7,8 @@ import { SovereignMonitor } from '@/lib/sovereignMonitor';
 
 type SyncState = 'idle' | 'loading' | 'saving' | 'saved' | 'offline' | 'error' | 'conflict';
 
-const LOCAL_FALLBACK_KEY = (patientId: string | null) => `fitjourney-v3-fallback-${patientId || 'sandbox'}`;
+// 🛡️ SOBERANIA V5: REMOVIDA PERSISTÊNCIA LOCAL PARA EVITAR CONFLITOS DE VERSÃO
+// A verdade reside exclusivamente no servidor.
 
 interface UseDraftSyncReturn {
   draftId: string | null;
@@ -18,9 +20,9 @@ interface UseDraftSyncReturn {
 
   /** Chama após cada mutação local — debouncado internamente */
   scheduleSave: (meals: Meal[], auditLog: AuditLogEntry[]) => void;
-  /** Marca o draft atual como descartado e limpa fallback local */
+  /** Marca o draft atual como descartado */
   resetDraft: () => Promise<void>;
-  /** Recarrega do servidor forçadamente (resolve conflito) */
+  /** Recarrega do servidor forçadamente */
   reloadFromServer: () => Promise<void>;
   /** Reverte para o último estado salvo com sucesso */
   revertToLastSaved: () => void;
@@ -52,23 +54,8 @@ export function useDraftSync(
 
   const loadDraft = useCallback(async (isReload = false) => {
     if (!patientId) {
-      // Sandbox mode: try loading from local storage
-      const local = localStorage.getItem(LOCAL_FALLBACK_KEY(null));
-      if (local) {
-        try {
-          const parsed = JSON.parse(local) as { meals: Meal[], audit_log?: AuditLogEntry[] };
-          setInitialMeals(parsed.meals);
-          setInitialAuditLog(parsed.audit_log || []);
-          setSnapshot(parsed.meals);
-          setSnapshotAuditLog(parsed.audit_log || []);
-        } catch {
-          setInitialMeals(seedMeals);
-          setInitialAuditLog([]);
-        }
-      } else {
-        setInitialMeals(seedMeals);
-        setInitialAuditLog([]);
-      }
+      setInitialMeals(seedMeals);
+      setInitialAuditLog([]);
       setSyncState('idle');
       return;
     }
@@ -91,23 +78,11 @@ export function useDraftSync(
       setSyncState('saved');
       if (isReload) toast.success('Rascunho atualizado do servidor.');
     } else {
-      const local = localStorage.getItem(LOCAL_FALLBACK_KEY(patientId));
-      if (local) {
-        try {
-          const parsed = JSON.parse(local) as { meals: Meal[], audit_log?: AuditLogEntry[] };
-          setInitialMeals(parsed.meals);
-          setInitialAuditLog(parsed.audit_log || []);
-        } catch {
-          setInitialMeals(seedMeals);
-          setInitialAuditLog([]);
-        }
-      } else {
-        setInitialMeals(seedMeals);
-        setInitialAuditLog([]);
-      }
+      setInitialMeals(seedMeals);
+      setInitialAuditLog([]);
       setSyncState('offline');
     }
-  }, [patientId, planId]);
+  }, [patientId, planId, seedMeals]);
 
   useEffect(() => {
     loadDraft();
@@ -118,10 +93,6 @@ export function useDraftSync(
     
     pendingMealsRef.current = meals;
     pendingAuditLogRef.current = auditLog;
-
-    try {
-      localStorage.setItem(LOCAL_FALLBACK_KEY(patientId), JSON.stringify({ meals, audit_log: auditLog }));
-    } catch {}
 
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(async () => {
@@ -148,7 +119,6 @@ export function useDraftSync(
       const updatedRecord = await saveDraft(draftId, mealsToSave, auditLogToSave || []);
       
       if (updatedRecord) {
-        // 🛡️ Monitoramento Soberano
         SovereignMonitor.log({
           event_type: 'snapshot_render',
           component: 'useDraftSync_Save',
@@ -167,7 +137,6 @@ export function useDraftSync(
 
   const resetDraft = async () => {
     if (draftId) await discardDraft(draftId);
-    localStorage.removeItem(LOCAL_FALLBACK_KEY(patientId));
     setDraftId(null);
     setInitialMeals(null);
     setInitialAuditLog([]);
