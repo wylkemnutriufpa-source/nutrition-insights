@@ -61,7 +61,9 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         if (item.instanceId !== itemInstanceId) return item;
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
-        const safeNewQty = Math.round(newQuantity);
+        // SOBERANIA V3: Mínimo de 5g para evitar frações irrelevantes
+        const safeNewQty = Math.max(5, Math.round(newQuantity / 5) * 5);
+
         
         // SOBERANIA V3: Substitutos são IMUTÁVEIS. Não escalamos automaticamente.
         const updatedSubs = (item.substitutions || []).map(sub => {
@@ -109,7 +111,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
     const updatedMeals = meals.map(meal => {
       if (meal.id !== mealId) return meal;
       
-      let quantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+      let quantity = Math.max(5, Math.round((food.clinical_mass_g || food.quantity || food.portionValue || 100) / 5) * 5);
       if (quantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
         quantity = 100;
       }
@@ -201,7 +203,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
       const updatedItems = meal.items.map(item => {
         if (item.instanceId !== itemInstanceId) return item;
 
-        let substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+        let substituteQuantity = Math.max(5, Math.round((food.clinical_mass_g || food.quantity || food.portionValue || 100) / 5) * 5);
         if (substituteQuantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
           substituteQuantity = 100;
         }

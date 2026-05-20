@@ -71,8 +71,18 @@ export function standardProteinPortion(_mealType: string, _isGainGoal: boolean):
 /**
  * 🛑 STUB: Mantido para compatibilidade de assinatura.
  */
-export function roundScaledQuantity(value: number, _unit: string): number {
-  return value;
+export function roundScaledQuantity(value: number, unit: string): number {
+  const normalizedUnit = (unit || "").toLowerCase();
+  
+  if (normalizedUnit.includes('g') || normalizedUnit.includes('ml')) {
+    // SOBERANIA V3: Mínimo clínico de 5g/ml para evitar frações irrelevantes (ex: 3g)
+    const rounded = Math.round(value / 5) * 5;
+    return Math.max(5, rounded);
+  }
+
+  // Para unidades (ovos, fatias, colheres), arredondamos para 0.5
+  const rounded = Math.round(value * 2) / 2;
+  return Math.max(0.5, rounded);
 }
 
 /**

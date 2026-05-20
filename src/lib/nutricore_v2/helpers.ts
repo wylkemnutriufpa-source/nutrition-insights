@@ -31,7 +31,10 @@ export function scaleItemToTarget(item: any, targetValue: number, macroType: 'kc
   if (currentValue === 0) return item.quantity || 100;
   
   const ratio = targetValue / currentValue;
-  const newQuantity = Math.round((item.quantity || 100) * ratio);
+  const rawQuantity = (item.quantity || 100) * ratio;
+  // SOBERANIA V3: Mínimo de 5g para evitar frações irrelevantes (ex: 3g de ovo)
+  const newQuantity = Math.max(5, Math.round(rawQuantity / 5) * 5);
+
   
   return newQuantity;
 }
@@ -51,7 +54,9 @@ export function adjustSubstitutionsProportionally(
 
   return substitutions.map(sub => {
     const currentQty = (sub as any).clinical_mass_g || sub.portionValue || 100;
-    const newQty = Math.round(currentQty * ratio);
+    const rawQty = currentQty * ratio;
+    const newQty = Math.max(5, Math.round(rawQty / 5) * 5);
+
     
     return {
       ...sub,
