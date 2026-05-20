@@ -49,6 +49,22 @@ export const applyOfficialV3Template = async (
 
   if (!profile) throw new Error(`Nenhum perfil de calorias encontrado para ${finalTargetKcal} kcal`);
 
+  // 🛡️ SOBERANIA V3: Preparar Snapshot para o plano
+  const snapshot = {
+    publication_id: crypto.randomUUID(),
+    snapshot_version: 'v3',
+    generated_at: new Date().toISOString(),
+    targets: {
+      kcal: finalTargetKcal,
+      protein_g: 0, // Será preenchido ou ignorado pelo App V3
+      carbs_g: 0,
+      fat_g: 0
+    },
+    days: profile.days || [],
+    daily_totals: profile.daily_totals || {},
+    notes: `Modelo Premium V3 "${template.name}"`
+  };
+
   const { data: plan, error: planErr } = await supabase
     .from("meal_plans")
     .insert([{
@@ -63,6 +79,7 @@ export const applyOfficialV3Template = async (
       editor_version: "v3",
       generation_source: "v3",
       total_calories: finalTargetKcal,
+      snapshot: snapshot, // 🛡️ SOBERANIA: Snapshot incluído!
     }])
     .select("id")
     .single();
