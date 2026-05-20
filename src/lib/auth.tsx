@@ -85,12 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
+    console.log(`[Auth] fetchData starting for user: ${userId}`);
+    const timeout = setTimeout(() => {
+      console.warn(`[Auth] fetchData taking too long (>10s)... force-resolving`);
+      if (loading) setLoading(false);
+    }, 10000);
+
     try {
       const [profileRes, rolesRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       
+      console.log(`[Auth] fetchData results received. Profile: ${!!profileRes.data}, Roles: ${rolesRes.data?.length ?? 0}`);
+      clearTimeout(timeout);
+
       const profileData = profileRes.data as Profile | null;
       setProfile(profileData);
       
@@ -103,12 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTenant(tenantData);
       }
     } catch (e) {
+      clearTimeout(timeout);
       if (import.meta.env.DEV) {
         console.error("[Auth] fetchData error (non-fatal):", e);
       }
       setRoles(prev => prev ?? []);
-      setTenantId(prev => prev);
-      setTenant(prev => prev);
     }
   };
 
