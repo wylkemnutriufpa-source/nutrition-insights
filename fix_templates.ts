@@ -72,13 +72,12 @@ async function fixTemplates() {
     }
 
     if (modified) {
-      console.log(`Updating template: ${t.title}`);
-      await supabase
-        .from('v3_diet_templates')
-        .update({ plan_snapshot: snapshots, sovereign_validated: true })
-        .eq('id', t.id);
+      const sql = `UPDATE v3_diet_templates SET plan_snapshot = '${JSON.stringify(snapshots).replace(/'/g, "''")}', sovereign_validated = true WHERE id = '${t.id}';\n`;
+      fs.appendFileSync('fix_templates.sql', sql);
     }
   }
+  console.log('SQL generated in fix_templates.sql');
 }
 
 fixTemplates();
+
