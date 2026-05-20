@@ -35,6 +35,10 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
   if (nutriId) params.set("nutri", nutriId);
   
   const query = params.toString();
+  if (code) {
+    return `${origin}/convite/${code}`;
+  }
+  
   return `${origin}/cadastro${query ? `?${query}` : ""}`;
 };
 

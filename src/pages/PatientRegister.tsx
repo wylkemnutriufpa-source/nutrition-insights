@@ -165,7 +165,7 @@ export default function PatientRegister() {
   const [profResults, setProfResults] = useState<ProfessionalResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalResult | null>(null);
-  const [isProfConfirmed, setIsProfConfirmed] = useState(false);
+  const [isProfConfirmed, setIsProfConfirmed] = useState(searchParams.get("confirmed") === "true");
   const [linkSource, setLinkSource] = useState<RegistrationLinkSource>(preselectedNutri ? "nutri" : invitationCode ? "invitation" : "none");
   const [invitationIssue, setInvitationIssue] = useState<InvitationIssue>(null);
 
