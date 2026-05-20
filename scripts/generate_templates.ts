@@ -184,7 +184,7 @@ const templates = [
 const sql = templates.map(t => {
   const snapshot = { [t.kcal.toString()]: buildPlan(t.meals) };
   const dist = t.meals.map(m => ({ slot: m.name, time: m.time }));
-  return `INSERT INTO public.v3_diet_templates (slug, title, description, template_type, objective, visual_style, kcal_profiles, meal_distribution, plan_snapshot, active, sovereign_validated) VALUES ('${t.slug}', '${t.title}', '${t.title} ${t.kcal} kcal', 'visual_v3', '${t.objective}', 'premium', '[${t.kcal}]'::jsonb, '${JSON.stringify(dist)}'::jsonb, '${JSON.stringify(snapshot)}'::jsonb, true, true);`;
+  return `INSERT INTO public.v3_diet_templates (slug, title, description, template_type, objective, visual_style, kcal_profiles, meal_distribution, plan_snapshot, cluster_map, active, sovereign_validated) VALUES ('${t.slug}', '${t.title}', '${t.title} ${t.kcal} kcal', 'visual_v3', '${t.objective}', 'premium', '[${t.kcal}]'::jsonb, '${JSON.stringify(dist)}'::jsonb, '${JSON.stringify(snapshot)}'::jsonb, '{}'::jsonb, true, true);`;
 }).join('\n');
 
 import fs from 'fs';
