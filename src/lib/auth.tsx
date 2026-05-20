@@ -85,30 +85,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
+    console.log(`[AUTH:CORE] Fetching profile/roles for user ${userId}...`);
     try {
       const [profileRes, rolesRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       
+      if (profileRes.error) throw profileRes.error;
+      if (rolesRes.error) throw rolesRes.error;
+
       const profileData = profileRes.data as Profile | null;
       setProfile(profileData);
       
       const newRoles = ((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[];
+      console.log(`[AUTH:CORE] Roles resolved: [${newRoles.join(", ")}]`);
       setRoles(newRoles);
 
       if (profileData?.tenant_id) {
         setTenantId(profileData.tenant_id);
         const { data: tenantData } = await supabase.from("tenants").select("*").eq("id", profileData.tenant_id).maybeSingle();
         setTenant(tenantData);
+      } else {
+        setTenantId(null);
+        setTenant(null);
       }
-    } catch (e) {
-      if (import.meta.env.DEV) {
-        console.error("[Auth] fetchData error (non-fatal):", e);
-      }
-      setRoles(prev => prev ?? []);
-      setTenantId(prev => prev);
-      setTenant(prev => prev);
+    } catch (e: any) {
+      console.error("[AUTH:CORE] fetchData failure:", e);
+      // Ensure roles is not null to unblock router
+      setRoles([]);
+      throw e;
     }
   };
 
@@ -153,59 +159,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ONE-TIME initialization + Auth Listener
   useEffect(() => {
     let mounted = true;
+
+    const syncSession = async (currentSession: Session | null) => {
+      if (!mounted) return;
+      
+      console.log(`[AUTH:CORE] Syncing session: ${currentSession ? "Authenticated" : "Unauthenticated"}`);
+      setSession(currentSession);
+      const currentUser = currentSession?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        try {
+          await fetchData(currentUser.id);
+        } catch (e) {
+          console.error("[AUTH:CORE] Error fetching data during sync:", e);
+        }
+      } else {
+        setProfile(null);
+        setRoles([]); // Empty roles for non-authenticated instead of null
+        setSubscription(defaultSubscription);
+      }
+      
+      setLoading(false);
+    };
+
+    // Initial check
     const initialize = async () => {
+      console.log("[AUTH:CORE] Initializing...");
       setLoading(true);
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (mounted) {
-          setSession(initialSession);
-          setUser(initialSession?.user ?? null);
-          if (initialSession?.user) {
-            await fetchData(initialSession.user.id);
-          }
-        }
+        await syncSession(initialSession);
       } catch (e) {
-        if (import.meta.env.DEV) console.error("Recovery init error", e);
-      } finally {
-        if (mounted) setLoading(false);
+        console.error("[AUTH:CORE] Initialization error:", e);
+        setLoading(false);
       }
     };
+
     initialize();
+
+    // Listener
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        if (import.meta.env.DEV) console.log(`[Auth] state change: ${event}`);
-        if (event === "INITIAL_SESSION") return;
-        setSession(currentSession);
-        const currentUser = currentSession?.user ?? null;
-        setUser(currentUser);
-        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
-          fetchData(currentUser.id).catch((e) => {
-            if (import.meta.env.DEV) console.error("[Auth] state fetch:", e);
-          });
-        } else if (event === "SIGNED_OUT") {
-          setProfile(null);
-          setRoles(null);
-          setSubscription(defaultSubscription);
-          setError(null);
+        console.log(`[AUTH:CORE] Auth Event: ${event}`);
+        
+        // Always sync on these major events
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+          await syncSession(currentSession);
         }
       }
     );
-    let profileChannel: any = null;
-    if (user?.id) {
-      profileChannel = supabase
-        .channel(`auth-profile-${user.id}`)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` }, (payload) => {
-          if (mounted) setProfile(payload.new as Profile);
-        }).subscribe();
-    }
+
     return () => {
       mounted = false;
       authSubscription.unsubscribe();
-      if (profileChannel) supabase.removeChannel(profileChannel);
+    };
+  }, []); // NO dependencies here to avoid loops
+
+  // Profile Realtime Listener (Separate effect)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const profileChannel = supabase
+      .channel(`auth-profile-${user.id}`)
+      .on("postgres_changes", { 
+        event: "UPDATE", 
+        schema: "public", 
+        table: "profiles", 
+        filter: `user_id=eq.${user.id}` 
+      }, (payload) => {
+        console.log("[AUTH:CORE] Profile realtime update received");
+        setProfile(payload.new as Profile);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
     };
   }, [user?.id]);
+
 
   const signOut = async () => {
     invalidateMenuCache();
