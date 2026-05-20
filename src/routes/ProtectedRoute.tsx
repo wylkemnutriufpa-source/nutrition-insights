@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Navigate } from "react-router-dom";
+import PageLoader from "@/components/common/PageLoader";
+
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, roles, user } = useAuth();
@@ -14,8 +16,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [authStatus, roles, location.pathname, user]);
 
   if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
-    return null;
+    return <PageLoader />;
   }
+
   
   if (authStatus !== "authenticated") {
     const next = encodeURIComponent(location.pathname + location.search);

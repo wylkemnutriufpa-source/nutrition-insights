@@ -720,7 +720,7 @@ export function usePendingApprovals() {
     // Realtime: only listen for relevant updates, throttle re-checks
     let timeout: ReturnType<typeof setTimeout>;
     const ch = supabase
-      .channel("pending-count-v2")
+      .channel(`pending-count-v2-${Math.random().toString(36).substring(7)}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
