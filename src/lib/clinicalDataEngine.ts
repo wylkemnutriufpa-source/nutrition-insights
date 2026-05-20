@@ -199,6 +199,37 @@ export const generateClinicalLibrary = () => {
   });
 };
 
+export const runClinicalAudit = () => {
+  const templates = generateClinicalLibrary();
+  console.log("=== CLINICAL LIBRARY AUDIT ===");
+  templates.forEach(t => {
+    const profiles = Object.keys(t.plan_snapshot);
+    const firstProfile = t.plan_snapshot[profiles[0]];
+    const totalDays = firstProfile.days.length;
+    const totalMeals = firstProfile.days.reduce((acc: number, d: any) => acc + d.meals.length, 0);
+    const totalItems = firstProfile.days.reduce((acc: number, d: any) => 
+      acc + d.meals.reduce((macc: number, m: any) => macc + m.items.length, 0), 0);
+    
+    // Hash-like fingerprint (simplified)
+    const fingerprint = JSON.stringify(firstProfile).length;
+
+    console.log(`Template: ${t.title}`);
+    console.log(`- Profiles: ${profiles.join(", ")}`);
+    console.log(`- Days: ${totalDays}`);
+    console.log(`- Total Meals: ${totalMeals}`);
+    console.log(`- Total Items: ${totalItems}`);
+    console.log(`- Fingerprint (Size): ${fingerprint}`);
+    
+    // Compare 1200 vs 1800
+    if (t.plan_snapshot["1200"] && t.plan_snapshot["1800"]) {
+      const m1200 = t.plan_snapshot["1200"].days[0].meals[2].items[0].kcal;
+      const m1800 = t.plan_snapshot["1800"].days[0].meals[2].items[0].kcal;
+      console.log(`- Scaling Check (Lunch Item 1 Kcal): 1200kcal version=${m1200}, 1800kcal version=${m1800}`);
+    }
+    console.log("----------------------------");
+  });
+};
+
 export const deployClinicalLibrary = async () => {
   const templates = generateClinicalLibrary();
   console.log(`[Deploy] Preparando ${templates.length} templates com 4 perfis cada (${templates.length * 4} variações)...`);
@@ -209,3 +240,4 @@ export const deployClinicalLibrary = async () => {
     else console.log(`✓ Deployed: ${t.title}`);
   }
 };
+
