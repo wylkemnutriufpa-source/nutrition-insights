@@ -184,23 +184,18 @@ const templates = [
   }
 ];
 
-const output = templates.map(t => {
-  const snapshot = { [t.kcal.toString()]: buildPlan(t.meals) };
-  const dist = t.meals.map(m => ({ slot: m.name, time: m.time }));
-  return {
-    slug: t.slug,
-    title: t.title,
-    description: `${t.title} ${t.kcal} kcal`,
-    template_type: 'visual_v3',
-    objective: t.objective,
-    visual_style: 'premium',
-    kcal_profiles: [t.kcal],
-    meal_distribution: dist,
-    plan_snapshot: snapshot,
-    cluster_map: {},
-    active: true,
-    sovereign_validated: true
-  };
-});
+const chunks = [
+  templates.slice(0, 4),
+  templates.slice(4, 8),
+  templates.slice(8, 12)
+];
 
-console.log(JSON.stringify(output));
+chunks.forEach((chunk, i) => {
+  const sql = chunk.map(t => {
+    const snapshot = { [t.kcal.toString()]: buildPlan(t.meals) };
+    const dist = t.meals.map(m => ({ slot: m.name, time: m.time }));
+    return `INSERT INTO public.v3_diet_templates (slug, title, description, template_type, objective, visual_style, kcal_profiles, meal_distribution, plan_snapshot, cluster_map, active, sovereign_validated) VALUES ('${t.slug}', '${t.title}', '${t.title} ${t.kcal} kcal', 'visual_v3', '${t.objective}', 'premium', '[${t.kcal}]'::jsonb, '${JSON.stringify(dist)}'::jsonb, '${JSON.stringify(snapshot)}'::jsonb, '{}'::jsonb, true, true);`;
+  }).join('\n');
+  fs.writeFileSync(`migration_chunk_${i+1}.sql`, sql);
+});
+console.log('Split into 3 chunks.');
