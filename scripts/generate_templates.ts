@@ -151,9 +151,9 @@ const templates = [
     slug: 'gestantes-saudavel', title: 'Gestantes e Lactantes',
     objective: 'saude', kcal: 2200,
     meals: [
-      meal('Café da Manhã', '08:00', [item(F.pao, true, []), item(F.ovo, false, []), item(F.iogurte, false, []), item(F.fruta, false, [])]),
-      meal('Almoço', '13:00', [item(F.patinho, true, [F.frango]), item(F.arroz, false, []), item(F.feijao, false, []), item(F.salada, false, [])]),
-      meal('Jantar', '20:00', [item(F.frango, true, [F.tilapia]), item(F.batata, false, []), item(F.legumes, false, [])])
+      meal('Café da Manhã', '08:00', [item(F.pao, true, []), item(F.ovo, false, []), item(F.iogurte, false, []), item(F.banana, false, [F.maca])]),
+      meal('Almoço', '13:00', [item(F.patinho, true, [F.frango]), item(F.arroz, false, [F.batata]), item(F.feijao, false, []), item(F.salada, false, [])]),
+      meal('Jantar', '20:00', [item(F.frango, true, [F.tilapia]), item(F.batata, false, [F.arroz]), item(F.legumes, false, [])])
     ]
   },
   {
