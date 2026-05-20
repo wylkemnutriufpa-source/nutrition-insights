@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Navigate } from "react-router-dom";
+import PageLoader from "@/components/common/PageLoader";
+
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, roles, user } = useAuth();
