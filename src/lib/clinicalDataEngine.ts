@@ -29,6 +29,7 @@ const F = {
   tapioca: { n:'Tapioca',            p:'1 un',  k:150, pr:0,  c:37, g:0,  img:`${IMG}/tapioca-com-queijo.jpg` },
   cuscuz:  { n:'Cuscuz',             p:'100g', k:110, pr:4,  c:23, g:1,  img:`${IMG}/cuscuz-com-ovo.jpg` },
   pao:     { n:'Pão Integral',        p:'2 fatias', k:120, pr:4, c:24, g:1, img:`${IMG}/pao-com-queijo.jpg` },
+  crepioca:{ n:'Crepioca',            p:'1 un',  k:180, pr:12, c:18, g:8,  img:`${IMG}/crepioca/crepioca-1.jpg` },
 
   // Fats & Extras
   castanha:{ n:'Mix de Castanhas',    p:'20g',  k:120, pr:3,  c:4,  g:11, img:`${IMG}/abacate.jpg` },
@@ -42,6 +43,8 @@ const F = {
   mamao:   { n:'Mamão',              p:'100g', k:45,  pr:0,  c:11, g:0,  img:`${IMG}/banana-com-aveia.jpg` },
   banana:  { n:'Banana',             p:'1 un',  k:90,  pr:1,  c:23, g:0,  img:`${IMG}/banana-com-aveia-1.jpg` },
   maca:    { n:'Maçã',               p:'1 un',  k:60,  pr:0,  c:15, g:0,  img:`${IMG}/vitamina-de-fruta/vitamina-de-fruta.jpg` },
+  morango: { n:'Morangos',           p:'100g', k:35,  pr:1,  c:8,  g:0,  img:`${IMG}/vitamina-de-fruta/vitamina-de-fruta.jpg` },
+
   
   // Snacks
   iogurte: { n:'Iogurte Natural',     p:'170g', k:100, pr:7,  c:10, g:3,  img:`${IMG}/iogurte-com-granola.jpg` },
@@ -189,6 +192,7 @@ export const generateClinicalLibrary = () => {
         { slot:'Almoço', time:'12:30' }, { slot:'Lanche da Tarde', time:'16:00' },
         { slot:'Jantar', time:'19:30' }, { slot:'Ceia', time:'21:30' }
       ],
+      cluster_map: {},
       active: true,
       sovereign_validated: true
     };
