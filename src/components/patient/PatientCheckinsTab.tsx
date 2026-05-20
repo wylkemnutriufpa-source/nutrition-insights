@@ -121,7 +121,7 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
 
     const { error } = await supabase
       .from("patient_checkins")
-      .update(updatePayload)
+      .update(updatePayload as any)
       .eq("id", selectedCheckin.id);
 
     if (error) {
