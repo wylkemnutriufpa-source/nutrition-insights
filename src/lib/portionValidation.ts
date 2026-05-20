@@ -38,6 +38,17 @@ const PORTION_REGEX = new RegExp(
 export function validatePortion(portion: string): boolean {
   const value = portion.trim();
   if (!value) return true;
+  
+  // Bugfix Commit 95208c0fd: Validação mínima de 5g/5ml para evitar erros de gramagem
+  const numericMatch = value.match(/^(\d+(?:[.,]\d+)?)\s*(g|ml)$/i);
+  if (numericMatch) {
+    const num = parseFloat(numericMatch[1].replace(",", "."));
+    if (num < 5) {
+      console.warn(`[portionValidation] Bloqueando porção irreal: ${value} (mínimo 5)`);
+      return false;
+    }
+  }
+
   return PORTION_REGEX.test(value);
 }
 
