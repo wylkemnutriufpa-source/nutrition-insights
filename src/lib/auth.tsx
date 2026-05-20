@@ -320,7 +320,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         experienceRole,
         tenantId,
         tenant,
+        isLoaded,
       }}
+
     >
       {children}
     </AuthContext.Provider>
