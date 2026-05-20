@@ -81,23 +81,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenant, setTenant] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
   
   const subCheckRef = useRef(false);
+  const fetchInProgressRef = useRef<string | null>(null);
 
   const fetchData = async (userId: string) => {
+    if (fetchInProgressRef.current === userId) {
+      console.log(`[AUTH:CORE] Fetch already in progress for user ${userId}, skipping.`);
+      return;
+    }
+    
+    fetchInProgressRef.current = userId;
     console.log(`[AUTH:CORE] Fetching profile/roles for user ${userId}...`);
     
     // Add a safety timeout to avoid infinite loading if Supabase hangs
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Timeout fetching auth data")), 8000)
+      setTimeout(() => reject(new Error("Timeout fetching auth data")), 15000)
     );
 
     try {
       const fetchPromise = (async () => {
+        // Optimization: select only needed columns to reduce row size/transfer
+        const profileColumns = "id, user_id, full_name, avatar_url, phone, whatsapp, marmita_mode, experience_mode, experience_mode_locked, unlock_date, is_orphan, patient_state, onboarding_completed, tenant_id";
+        
         const [profileRes, rolesRes] = await Promise.all([
-          supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+          supabase.from("profiles").select(profileColumns).eq("user_id", userId).maybeSingle(),
           supabase.from("user_roles").select("role").eq("user_id", userId),
         ]);
         
@@ -134,9 +145,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("[AUTH:CORE] fetchData failure (recovering with empty roles):", e);
       // Recovery: Unblock the app even if data is missing
       if (roles === null) setRoles([]);
-      throw e;
+    } finally {
+      fetchInProgressRef.current = null;
+      setIsLoaded(true);
     }
   };
+
 
 
   const checkSubscription = async () => {
