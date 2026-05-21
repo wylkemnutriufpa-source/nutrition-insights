@@ -190,68 +190,51 @@ export default function PatientDetail() {
     let planItems = [];
     const isWeekly = plan.plan_mode === 'weekly';
     
-    if (plan.editor_version === 'v3' && plan.payload) {
-      const meals = Array.isArray(plan.payload) ? plan.payload : (plan.payload.meals || []);
-      const hasVaryingDays = meals.length >= 42;
-      
-      if (hasVaryingDays) {
-        planItems = meals.flatMap((m: any, idx) => {
-          const dayIdx = Math.floor(idx / (meals.length / 7));
-          const daysOrder = [1, 2, 3, 4, 5, 6, 0];
-          const dayNum = daysOrder[dayIdx];
-          const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_');
-          
-          return (m.items || []).flatMap((item: any) => ({
-            mealType: mType,
-            title: m.name,
-            description: `${item.name} — ${item.display_portion || (item.quantity + (item.unit || 'g'))}`,
-            meta_calorias: Math.round(Number(item.kcal) || 0),
-            meta_proteinas: Math.round(Number(item.protein) || 0),
-            meta_carboidratos: Math.round(Number(item.carbs) || 0),
-            meta_gorduras: Math.round(Number(item.fat) || 0),
-            is_primary: true,
-            substitution_group_id: item.id || item.instanceId,
-            day_of_week: dayNum
-          }));
-        });
-      } else {
-        const daysToGenerate = isWeekly ? [1, 2, 3, 4, 5, 6, 0] : [-1];
-        planItems = daysToGenerate.flatMap((dayNum) => {
-          return meals.flatMap((m: any) => {
-            const mType = m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ /g, '_');
-            
-            return (m.items || []).flatMap((item: any) => {
-              const main = {
-                mealType: mType,
-                title: m.name,
-                description: `${item.name} — ${item.display_portion || (item.quantity + (item.unit || 'g'))}`,
-                meta_calorias: Math.round(Number(item.kcal) || 0),
-                meta_proteinas: Math.round(Number(item.protein) || 0),
-                meta_carboidratos: Math.round(Number(item.carbs) || 0),
-                meta_gorduras: Math.round(Number(item.fat) || 0),
-                is_primary: true,
-              substitution_group_id: item.id || item.instanceId,
-                day_of_week: dayNum
-              };
-              
-              const subs = !isWeekly ? (item.substitutions || []).map((sub: any) => ({
-                mealType: mType,
-                title: sub.name,
-                description: sub.name,
-                meta_calorias: Math.round(Number(sub.kcal) || 0),
-                meta_proteinas: Math.round(Number(sub.protein) || 0),
-                meta_carboidratos: Math.round(Number(sub.carbs) || 0),
-                meta_gorduras: Math.round(Number(sub.fat) || 0),
-                is_primary: false,
-                substitution_group_id: item.id || item.instanceId,
-                day_of_week: dayNum
-              })) : [];
-              
-              return [main, ...subs];
-            });
-          });
-        });
-      }
+    if (plan.editor_version === 'v3' && plan.snapshot?.days) {
+      planItems = plan.snapshot.days.flatMap((day: any) =>
+        (day.meals || []).flatMap((meal: any) => {
+          const mealImage = (meal.items || []).find((item: any) => item.visual?.image_url)?.visual?.image_url || null;
+          return (meal.items || []).flatMap((item: any) => [
+            {
+              mealId: meal.id,
+              mealName: meal.name,
+              mealType: meal.name,
+              title: item.title,
+              description: item.quantity_display,
+              meta_calorias: Math.round(Number(item.macros?.kcal) || 0),
+              meta_proteinas: Math.round(Number(item.macros?.protein_g) || 0),
+              meta_carboidratos: Math.round(Number(item.macros?.carbs_g) || 0),
+              meta_gorduras: Math.round(Number(item.macros?.fat_g) || 0),
+              is_primary: true,
+              substitution_group_id: item.blockId || item.id,
+              day_of_week: day.day_of_week,
+              visual_image_url: item.visual?.image_url || null,
+              meal_image_url: mealImage,
+              clinical_mass_g: item.clinical_mass_g,
+              display_quantity: item.quantity_display,
+              editor_version: 'v3'
+            },
+            ...(item.substitutions || []).map((sub: any) => ({
+              mealId: meal.id,
+              mealName: meal.name,
+              mealType: meal.name,
+              title: sub.title,
+              description: sub.quantity_display,
+              meta_calorias: Math.round(Number(sub.macros?.kcal) || 0),
+              meta_proteinas: Math.round(Number(sub.macros?.protein_g) || 0),
+              meta_carboidratos: Math.round(Number(sub.macros?.carbs_g) || 0),
+              meta_gorduras: Math.round(Number(sub.macros?.fat_g) || 0),
+              is_primary: false,
+              substitution_group_id: item.blockId || item.id,
+              day_of_week: day.day_of_week,
+              visual_image_url: sub.visual?.image_url || null,
+              clinical_mass_g: undefined,
+              display_quantity: sub.quantity_display,
+              editor_version: 'v3'
+            }))
+          ]);
+        })
+      );
     } else {
       const { data: items, error: itemsError } = await supabase
         .from("meal_plan_items")

@@ -8,6 +8,8 @@ import { assertHierarchyIntegrity, DisplayMealPlanItem } from "./legacy/mealPlan
 
 interface MealPlanPDFItem {
   id?: string;
+  mealId?: string;
+  mealName?: string;
   mealType: string;
   title: string;
   description?: string;
@@ -17,6 +19,7 @@ interface MealPlanPDFItem {
   meta_gorduras?: number;
   day_of_week?: number;
   scheduled_time?: string;
+  meal_image_url?: string;
   visual_image_url?: string;
   is_primary?: boolean;
   substitution_group_id?: string | null;
