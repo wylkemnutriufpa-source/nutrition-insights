@@ -16,10 +16,7 @@ export const SLOT_TRANSLATIONS: Record<string, string> = {
   'post_workout': 'Pós-Treino',
   'cafe_da_manha': 'Café da Manhã',
   'lanche_da_manha': 'Lanche da Manhã',
-  'almoco': 'Almoço',
-  'lanche_da_tarde': 'Lanche da Tarde',
-  'jantar': 'Jantar',
-  'ceia': 'Ceia'
+  'almoco': 'Almoço'
 };
 
 export const translateSlot = (slot: string): string => {
