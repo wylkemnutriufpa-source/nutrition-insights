@@ -24,11 +24,10 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
  * @returns A URL completa.
  */
 export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = false) => {
-  // Bugfix: Em ambientes de Preview, os links devem apontar para o domínio atual por padrão, 
-  // permitindo testes fim-a-fim sem quebrar o código do convite.
   const isPreview = typeof window !== 'undefined' && 
     (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
   
+  // Bugfix: Respeita o origin atual se estiver em preview, a menos que forceProduction seja True E não estejamos em preview.
   const origin = (forceProduction && !isPreview) ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
   
   const params = new URLSearchParams();
@@ -48,14 +47,22 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
  * Gera a URL de vínculo rápido.
  */
 export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
-  return `${PRODUCTION_URL}/quick-link/${nutriId}`;
+  const isPreview = typeof window !== 'undefined' && 
+    (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
+  
+  const origin = (forceProduction && !isPreview) ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
+  return `${origin}/quick-link/${nutriId}`;
 };
 
 /**
  * Gera a URL de onboarding genérica para o paciente.
  */
 export const getOnboardingUrl = (forceProduction = false) => {
-  return `${PRODUCTION_URL}/onboarding`;
+  const isPreview = typeof window !== 'undefined' && 
+    (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
+  
+  const origin = (forceProduction && !isPreview) ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
+  return `${origin}/onboarding`;
 };
 
 
