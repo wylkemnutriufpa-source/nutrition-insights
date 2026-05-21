@@ -79,6 +79,7 @@ export async function createMealPlan(
           start_date: validated.start_date,
           plan_mode: validated.plan_mode as "single_day" | "weekly",
           plan_status: 'draft',
+          nutritionist_id: nutritionistId,
           generated_by: nutritionistId,
           tenant_id: patient.tenant_id,
         })
