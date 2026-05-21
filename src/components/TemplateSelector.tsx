@@ -58,7 +58,7 @@ export function TemplateSelector({ onSelectTemplate, patientId }: TemplateSelect
         .order('kcal_target', { ascending: true });
 
       if (error) throw error;
-      setTemplates(data || []);
+      setTemplates((data || []) as any);
     } catch (error: any) {
       toast({
         title: 'Erro ao carregar templates',

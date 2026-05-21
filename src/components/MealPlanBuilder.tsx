@@ -159,13 +159,14 @@ export function MealPlanBuilder() {
 
     setIsLoading(true);
 
-    const { data, error } = await supabase.rpc('add_food_to_meal', {
+    const { data: rawData, error } = await supabase.rpc('add_food_to_meal', {
       p_draft_id: draftId,
       p_day: selectedDay,
       p_meal_type: selectedMeal,
       p_food_name: foodName,
       p_mass_g: massG,
     });
+    const data = rawData as any;
 
     if (error) {
       console.error('Erro ao adicionar alimento:', error);
@@ -206,13 +207,14 @@ export function MealPlanBuilder() {
 
     setIsLoading(true);
 
-    const { data, error } = await supabase.rpc('update_food_mass', {
+    const { data: rawData, error } = await supabase.rpc('update_food_mass', {
       p_draft_id: draftId,
       p_day: selectedDay,
       p_meal_type: selectedMeal,
       p_food_index: foodIndex,
       p_new_mass_g: newMassG,
     });
+    const data = rawData as any;
 
     if (error) {
       console.error('Erro ao atualizar massa:', error);
@@ -248,7 +250,7 @@ export function MealPlanBuilder() {
       return;
     }
 
-    setDays(data.days || []);
+    setDays(((data as any).days || []) as any);
     setTotals({
       total_kcal: data.total_kcal_per_day || 0,
       total_protein_g: data.total_protein_g_per_day || 0,
