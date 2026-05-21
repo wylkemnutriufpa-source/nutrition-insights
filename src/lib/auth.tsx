@@ -89,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchInProgressRef = useRef<string | null>(null);
 
   const fetchData = async (userId: string) => {
+    setIsLoaded(false);
     if (fetchInProgressRef.current === userId) {
       console.log(`[AUTH:CORE] Fetch already in progress for user ${userId}, skipping.`);
       return;
