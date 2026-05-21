@@ -183,6 +183,7 @@ export function TemplateSelector({ onSelectTemplate, patientId }: TemplateSelect
                   <SelectItem value="saude">Saúde</SelectItem>
                   <SelectItem value="emagrecimento">Emagrecimento</SelectItem>
                   <SelectItem value="hipertrofia">Hipertrofia</SelectItem>
+                  <SelectItem value="low_carb">Low Carb</SelectItem>
                   <SelectItem value="clinico">Clínico</SelectItem>
                 </SelectContent>
               </Select>
@@ -216,7 +217,7 @@ export function TemplateSelector({ onSelectTemplate, patientId }: TemplateSelect
 
       {/* Lista de Templates */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="all">Todos ({filteredTemplates.length})</TabsTrigger>
           <TabsTrigger value="saude">Saúde ({groupedTemplates.saude?.length || 0})</TabsTrigger>
           <TabsTrigger value="emagrecimento">
@@ -224,6 +225,9 @@ export function TemplateSelector({ onSelectTemplate, patientId }: TemplateSelect
           </TabsTrigger>
           <TabsTrigger value="hipertrofia">
             Hipertrofia ({groupedTemplates.hipertrofia?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="low_carb">
+            Low Carb ({groupedTemplates.low_carb?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="clinico">Clínico ({groupedTemplates.clinico?.length || 0})</TabsTrigger>
         </TabsList>
@@ -249,7 +253,7 @@ export function TemplateSelector({ onSelectTemplate, patientId }: TemplateSelect
           ))}
         </TabsContent>
 
-        {['saude', 'emagrecimento', 'hipertrofia', 'clinico'].map((category) => (
+        {['saude', 'emagrecimento', 'hipertrofia', 'low_carb', 'clinico'].map((category) => (
           <TabsContent key={category} value={category} className="space-y-4 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {groupedTemplates[category]?.map((template) => (
