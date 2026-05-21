@@ -1,21 +1,24 @@
 
 import React from 'react';
-import { Trash2, ChevronRight, Flame, Target, Plus, Search } from 'lucide-react';
+import { Trash2, ChevronRight, Flame, Target, Plus, Search, RefreshCw } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MealItem, Food } from '../types/types';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FoodItemRowProps {
   item: MealItem;
   onUpdateQuantity: (newQty: number) => void;
+  onUpdateQuantityGlobal?: (newQty: number) => void;
   onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
   onRequestSubstitution: () => void;
   onRemoveSubstitution?: (idx: number) => void;
   onUpdateName?: (name: string) => void;
 }
+
 
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
   item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName 
