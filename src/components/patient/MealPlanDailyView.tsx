@@ -631,91 +631,117 @@ const MealSlotCard = memo(function MealSlotCard({
   const mealFollowedCount = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const isFullyFollowed = mealFollowedCount === items.length && items.length > 0;
 
+  // 🛡️ SOBERANIA V3: Imagem principal da refeição (prioriza o primeiro item com imagem)
+  const mealImage = useMemo(() => {
+    return items.find(i => i.image_url || (i as any).imageUrl || i.metadata?.image_url)?.image_url || null;
+  }, [items]);
+
   return (
     <motion.div
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className={`relative p-4 rounded-2xl border cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md ${
+      className={`relative rounded-[2.5rem] border cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden ${
         isFullyFollowed 
           ? "bg-emerald-500/5 border-emerald-500/20" 
           : isCurrent 
             ? "bg-primary/5 border-primary/30 ring-1 ring-primary/20" 
-            : "bg-card/40 border-border/50"
+            : "bg-neutral-900/60 border-white/5 backdrop-blur-xl"
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-            isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"
-          }`}>
-            {mealType.icon}
-          </div>
-          <div>
-            <h3 className="font-display font-bold text-sm leading-tight">{mealType.label}</h3>
-            <p className="text-[10px] font-medium text-muted-foreground">{mealType.time}</p>
-          </div>
-        </div>
-        
-        <div className="text-right">
-          <div className="flex items-center gap-1.5 justify-end">
-            <Flame className="w-3.5 h-3.5 text-orange-500" />
-            <span className="text-sm font-bold text-orange-600">{Math.round(totals.calories)} kcal</span>
-          </div>
-          <div className="flex gap-3 mt-1 text-[10px] text-muted-foreground font-medium">
-            <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Math.round(totals.protein)}g</span>
-            <span className="flex items-center gap-0.5"><Wheat className="w-2.5 h-2.5 text-amber-400" />{Math.round(totals.carbs)}g</span>
-            <span className="flex items-center gap-0.5"><Droplets className="w-2.5 h-2.5 text-yellow-400" />{Math.round(totals.fat)}g</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 items-center mt-2">
-        <div className="flex -space-x-2">
-          {items.map((item, idx) => (
-            <div 
-              key={item.id} 
-              className="w-8 h-8 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden shadow-sm"
-              title={item.title}
-            >
-              {item.image_url ? (
-                <img src={item.image_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-primary/5 flex items-center justify-center">
-                  <Utensils className="w-4 h-4 text-primary/40" />
+      {mealImage && (
+        <div className="relative w-full aspect-[16/9] overflow-hidden group" onClick={onClick}>
+          <img 
+            src={mealImage} 
+            alt={mealType.label} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+             <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isCurrent ? "bg-primary text-white" : "bg-primary/20 text-primary backdrop-blur-md"}`}>
+                  {mealType.icon}
                 </div>
-              )}
+                <div>
+                   <h3 className="text-white font-display font-bold text-sm leading-tight">{mealType.label}</h3>
+                   <p className="text-white/60 text-[9px] font-medium">{mealType.time}</p>
+                </div>
+             </div>
+             <div className="text-right">
+                <div className="flex items-center gap-1.5 justify-end">
+                   <Flame className="w-3.5 h-3.5 text-orange-400" />
+                   <span className="text-sm font-bold text-white">{Math.round(totals.calories)} kcal</span>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
+      <div className="p-5" onClick={onClick}>
+        {!mealImage && (
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"
+              }`}>
+                {mealType.icon}
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-sm leading-tight">{mealType.label}</h3>
+                <p className="text-[10px] font-medium text-muted-foreground">{mealType.time}</p>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <div className="flex items-center gap-1.5 justify-end">
+                <Flame className="w-3.5 h-3.5 text-orange-500" />
+                <span className="text-sm font-bold text-orange-600">{Math.round(totals.calories)} kcal</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-start justify-between gap-3 border-b border-white/5 pb-2 last:border-none last:pb-0">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-white truncate">{item.title}</p>
+                <p className="text-[10px] text-primary font-bold">{formatDisplayPortion(item)}</p>
+              </div>
+              <div className="text-right flex flex-col items-end">
+                <span className="text-[10px] font-bold text-white/60">{Math.round(item.meta_calorias || 0)} kcal</span>
+                <div className="flex gap-1.5 text-[8px] text-muted-foreground font-medium">
+                  <span>P: {Math.round(item.meta_proteinas || 0)}g</span>
+                  <span>C: {Math.round(item.meta_carboidratos || 0)}g</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[11px] text-muted-foreground font-semibold truncate">
-            {items.map(i => i.title).join(" + ")}
-          </p>
-          {items.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold uppercase tracking-tighter">
-                {items.length} {items.length === 1 ? "Item" : "Itens"}
-              </span>
-              <span className="text-[9px] text-muted-foreground font-medium">
-                Toque para ver substituições
-              </span>
+        
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[9px] border-primary/20 text-primary font-bold bg-primary/5">
+              {items.length} {items.length === 1 ? "ITEM" : "ITENS"}
+            </Badge>
+            <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">Toque para detalhes</span>
+          </div>
+          
+          {isFullyFollowed ? (
+            <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 px-2.5 py-1 rounded-full border border-emerald-500/20">
+               <CheckCircle2 className="w-3 h-3" />
+               <span className="text-[9px] font-bold uppercase tracking-wider">Concluída</span>
+            </div>
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+              <ArrowRightLeft className="w-3.5 h-3.5" />
             </div>
           )}
         </div>
-        
-        {isFullyFollowed ? (
-          <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 px-2 py-1 rounded-lg">
-             <CheckCircle2 className="w-3.5 h-3.5" />
-             <span className="text-[10px] font-bold uppercase">Concluída</span>
-          </div>
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <ArrowRightLeft className="w-4 h-4" />
-          </div>
-        )}
       </div>
     </motion.div>
+  );
+});
+
   );
 });
 
