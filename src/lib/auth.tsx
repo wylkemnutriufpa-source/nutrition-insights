@@ -216,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setRoles([]); // Empty roles for non-authenticated instead of null
         setSubscription(defaultSubscription);
+        setIsLoaded(true);
       }
       
       setLoading(false);
