@@ -20435,6 +20435,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           editable: boolean | null
+          family: string | null
           id: string
           kcal_profiles: Json | null
           meal_distribution: Json
@@ -20455,6 +20456,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           editable?: boolean | null
+          family?: string | null
           id?: string
           kcal_profiles?: Json | null
           meal_distribution: Json
@@ -20475,6 +20477,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           editable?: boolean | null
+          family?: string | null
           id?: string
           kcal_profiles?: Json | null
           meal_distribution?: Json
@@ -22161,6 +22164,14 @@ export type Database = {
         }
         Relationships: []
       }
+      v3_templates_by_family: {
+        Row: {
+          family: string | null
+          template_count: number | null
+          templates: Json | null
+        }
+        Relationships: []
+      }
       whatsapp_integrations_safe: {
         Row: {
           created_at: string | null
@@ -22470,6 +22481,7 @@ export type Database = {
             }
             Returns: string
           }
+      generate_slug: { Args: { name: string }; Returns: string }
       get_advanced_alerts: {
         Args: {
           p_alert_type?: string
@@ -22779,6 +22791,21 @@ export type Database = {
         | { Args: never; Returns: string }
         | { Args: { _user_id: string }; Returns: string }
       get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_v3_templates_by_family: {
+        Args: { p_family?: string }
+        Returns: {
+          active: boolean
+          description: string
+          family: string
+          id: string
+          kcal_profiles: Json
+          meal_distribution: Json
+          objective: string
+          plan_snapshot: Json
+          slug: string
+          title: string
+        }[]
+      }
       get_whatsapp_token: {
         Args: { _professional_id: string }
         Returns: string
