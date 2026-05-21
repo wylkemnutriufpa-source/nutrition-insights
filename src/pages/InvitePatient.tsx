@@ -115,7 +115,7 @@ export default function InvitePatient() {
     fetchData();
   }, [user?.id]);
 
-  // Links compartilháveis sempre usam o domínio oficial, mesmo no preview.
+  // Links compartilháveis sempre respeitam o ambiente (Preview vs Produção) via invitation utils.
   const onboardingLink = useMemo(() => getOnboardingUrl(), []);
   const publicRegisterLink = useMemo(() => getInvitationUrl(invitationCode || undefined, user?.id), [invitationCode, user?.id]);
   const quickLink = useMemo(() => {
