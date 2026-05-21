@@ -162,27 +162,53 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                 {/* Structure Preview */}
                 <section>
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 flex items-center gap-2">
-                    <Calendar className="w-3 h-3" /> Estrutura Alimentar
+                    <Calendar className="w-3 h-3" /> Estrutura Alimentar {selectedKcal ? `(${selectedKcal} kcal)` : ''}
                   </h3>
                   <div className="space-y-3">
-                    {template.meal_distribution.map((meal, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl group hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
-                            <span className="text-[10px] font-black">{meal.time}</span>
+                    {selectedKcal && template.plan_snapshot?.[selectedKcal]?.days?.[0]?.meals ? (
+                      // Preview real items from snapshot if kcal selected
+                      template.plan_snapshot[selectedKcal].days[0].meals.map((meal: any, idx: number) => (
+                        <div key={idx} className="p-4 bg-white/5 border border-white/10 rounded-xl group hover:bg-white/10 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">{meal.time}</span>
+                              <p className="text-xs font-black uppercase italic tracking-tight text-white/90">
+                                {translateSlot(meal.name || meal.slot)}
+                              </p>
+                            </div>
+                            <ArrowRight className="w-3 h-3 text-white/10 group-hover:text-emerald-500 transition-all" />
                           </div>
-                          <div>
-                            <p className="text-xs font-black uppercase italic tracking-tight text-white/90">
-                              {translateSlot(meal.slot)}
-                            </p>
-                            <p className="text-[9px] uppercase font-black tracking-widest text-white/30">
-                              {template.cluster_map?.[meal.slot] || 'Cluster Dinâmico'}
-                            </p>
+                          <div className="space-y-1 ml-12">
+                            {meal.items?.map((item: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-white/40">
+                                <span>{item.quantity_display || (item.clinical_mass_g + 'g')} {item.name}</span>
+                                <span>{Math.round(item.kcal)} kcal</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      // Fallback to basic distribution if no kcal selected
+                      template.meal_distribution.map((meal, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl group hover:bg-white/10 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
+                              <span className="text-[10px] font-black">{meal.time}</span>
+                            </div>
+                            <div>
+                              <p className="text-xs font-black uppercase italic tracking-tight text-white/90">
+                                {translateSlot(meal.slot)}
+                              </p>
+                              <p className="text-[9px] uppercase font-black tracking-widest text-white/30">
+                                {template.cluster_map?.[meal.slot] || 'Cluster Dinâmico'}
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                        </div>
+                      ))
+                    )}
                   </div>
                 </section>
 
