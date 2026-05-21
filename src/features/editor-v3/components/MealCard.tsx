@@ -27,8 +27,9 @@ interface MealCardProps {
 
 
 export const MealCard: React.FC<MealCardProps> = ({ 
-  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
+  meal, onUpdateQuantity, onUpdateQuantityGlobal, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
 }) => {
+
   const store = useEditorState();
   const [isMealDialogOpen, setIsMealDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
