@@ -71,14 +71,34 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative group/qty">
-            <Input
-              type="number"
-              value={item.clinical_mass_g || item.quantity || 0}
-              onChange={(e) => onUpdateQuantity(Number(e.target.value))}
-              className="bg-neutral-900/80 border-white/5 text-right pr-6 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
-            />
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
+          <div className="flex flex-col gap-1 items-end">
+            <div className="relative group/qty">
+              <Input
+                type="number"
+                value={item.clinical_mass_g || item.quantity || 0}
+                onChange={(e) => onUpdateQuantity(Number(e.target.value))}
+                className="bg-neutral-900/80 border-white/5 text-right pr-6 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
+            </div>
+            
+            {onUpdateQuantityGlobal && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button 
+                      onClick={() => onUpdateQuantityGlobal(item.clinical_mass_g || item.quantity || 100)}
+                      className="text-[7px] font-black uppercase tracking-[0.1em] text-emerald-500/40 hover:text-emerald-400 flex items-center gap-1 transition-colors pr-2"
+                    >
+                      <RefreshCw className="w-2 h-2" /> Replicar na semana
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-neutral-900 border-white/10 text-[10px] font-bold">
+                    Aplica esta gramagem em todas as ocorrências deste alimento no plano.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
           
           <Button
@@ -91,6 +111,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
           </Button>
         </div>
       </div>
+
 
       {/* Substituições Dinâmicas Soberanas */}
       <div className="mt-3 pt-4 border-t border-white/5">
