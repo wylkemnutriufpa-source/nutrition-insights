@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface MealCardProps {
   meal: Meal;
   onUpdateQuantity: (itemInstanceId: string, newQty: number) => void;
+  onUpdateQuantityGlobal?: (itemInstanceId: string, newQty: number) => void;
   onUpdateMacros: (itemInstanceId: string, val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemoveFood: (itemInstanceId: string) => void;
   onAddFood: (food: Food) => void;
@@ -23,6 +24,7 @@ interface MealCardProps {
   onUpdateMealHeader: (updates: Partial<Meal>) => void;
   onUpdateFoodName?: (itemInstanceId: string, name: string) => void;
 }
+
 
 export const MealCard: React.FC<MealCardProps> = ({ 
   meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
