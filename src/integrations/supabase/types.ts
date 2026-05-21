@@ -22355,10 +22355,14 @@ export type Database = {
         Args: { _nutritionist_id: string; _patient_id: string }
         Returns: Json
       }
+      convert_7_days_to_v3: { Args: { meals_array: Json }; Returns: Json }
+      convert_foods_to_items: { Args: { meal: Json }; Returns: Json }
       convert_lead_to_patient: {
         Args: { _lead_id: string; _password_set?: boolean; _patient_id: string }
         Returns: Json
       }
+      convert_meals_to_days: { Args: { meals_array: Json }; Returns: Json }
+      convert_to_v3_complete: { Args: { meals_array: Json }; Returns: Json }
       copy_template_to_patient: {
         Args: {
           p_nutritionist_id: string
@@ -22985,6 +22989,7 @@ export type Database = {
           pipeline_status: string
         }[]
       }
+      process_day_meals: { Args: { day_data: Json }; Returns: Json }
       promote_patient_to_professional: {
         Args: { _patient_email: string; _target_role?: string }
         Returns: Json
