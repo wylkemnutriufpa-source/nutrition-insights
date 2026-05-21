@@ -259,57 +259,56 @@ describe('Meal Plan Flow - E2E', () => {
       // TODO: Verificar que operações são serializadas
     });
   });
-});
+  /**
+   * Testes de Integration com Banco de Dados
+   * 
+   * Estes testes verificam que as constraints do banco funcionam
+   */
+  describe('Database Constraints', () => {
+    it('should enforce foreign key constraint', async () => {
+      // Tentar criar plano com patient_id inválido
+      // TODO: Verificar que banco rejeita
+    });
 
-/**
- * Testes de Integração com Banco de Dados
- * 
- * Estes testes verificam que as constraints do banco funcionam
- */
-describe('Database Constraints', () => {
-  it('should enforce foreign key constraint', async () => {
-    // Tentar criar plano com patient_id inválido
-    // TODO: Verificar que banco rejeita
+    it('should enforce unique constraint', async () => {
+      // Tentar criar 2 planos com mesmo (patient_id, version)
+      // TODO: Verificar que banco rejeita
+    });
+
+    it('should enforce check constraint', async () => {
+      // Tentar criar plano com status inválido
+      // TODO: Verificar que banco rejeita
+    });
+
+    it('should cascade delete on foreign key', async () => {
+      // Deletar plano
+      // Verificar que refeições foram deletadas automaticamente
+      // TODO: Implementar
+    });
   });
 
-  it('should enforce unique constraint', async () => {
-    // Tentar criar 2 planos com mesmo (patient_id, version)
-    // TODO: Verificar que banco rejeita
-  });
+  /**
+   * Testes de Performance
+   */
+  describe('Performance', () => {
+    it('should create meal plan in < 1s', async () => {
+      const start = Date.now();
 
-  it('should enforce check constraint', async () => {
-    // Tentar criar plano com status inválido
-    // TODO: Verificar que banco rejeita
-  });
+      await createMealPlan(
+        {
+          patient_id: patientId,
+          title: 'Perf Test',
+          start_date: '2024-01-01',
+        },
+        nutritionistId
+      );
 
-  it('should cascade delete on foreign key', async () => {
-    // Deletar plano
-    // Verificar que refeições foram deletadas automaticamente
-    // TODO: Implementar
-  });
-});
+      const duration = Date.now() - start;
+      expect(duration).toBeLessThan(1000);
+    });
 
-/**
- * Testes de Performance
- */
-describe('Performance', () => {
-  it('should create meal plan in < 1s', async () => {
-    const start = Date.now();
-
-    await createMealPlan(
-      {
-        patient_id: patientId,
-        title: 'Perf Test',
-        start_date: '2024-01-01',
-      },
-      nutritionistId
-    );
-
-    const duration = Date.now() - start;
-    expect(duration).toBeLessThan(1000);
-  });
-
-  it('should publish meal plan in < 2s', async () => {
-    // TODO: Implementar
+    it('should publish meal plan in < 2s', async () => {
+      // TODO: Implementar
+    });
   });
 });
