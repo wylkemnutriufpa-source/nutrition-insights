@@ -79,7 +79,7 @@ export function MealPlanEditor({ planId, onSave }: MealPlanEditorProps) {
         .single();
 
       if (error) throw error;
-      setPlan(data);
+      setPlan(data as any);
     } catch (error: any) {
       toast({
         title: 'Erro ao carregar plano',
@@ -101,7 +101,7 @@ export function MealPlanEditor({ planId, onSave }: MealPlanEditorProps) {
         .update({
           name: plan.name,
           description: plan.description,
-          meals: plan.meals,
+          meals: plan.meals as any,
           notes: plan.notes,
         })
         .eq('id', planId);
