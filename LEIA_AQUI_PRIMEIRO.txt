@@ -1,0 +1,60 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║   🎯 ARQUIVO SQL PRONTO PARA COPIAR E EXECUTAR NO SUPABASE               ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+📂 LOCALIZAÇÃO DO ARQUIVO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O arquivo SQL está NESTA MESMA PASTA com o nome:
+
+    👉 COPIAR_ESTE_SQL.sql 👈
+
+
+📋 COMO USAR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 1: Abra o arquivo "COPIAR_ESTE_SQL.sql" 
+         (clique duas vezes nele ou abra com Bloco de Notas)
+
+PASSO 2: Selecione TUDO (Ctrl+A)
+
+PASSO 3: Copie TUDO (Ctrl+C)
+
+PASSO 4: Vá para o Supabase SQL Editor
+         https://supabase.com/dashboard
+
+PASSO 5: Cole o SQL (Ctrl+V)
+
+PASSO 6: Clique em "Run"
+
+
+✅ VERIFICAR SE DEU CERTO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Depois de executar, rode este SQL:
+
+    SELECT COUNT(*) FROM meal_plan_templates;
+
+Resultado esperado: 62 templates
+
+
+🎉 PRONTO!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Você terá 50 TEMPLATES SOBERANOS completos no sistema!
+
+
+📁 CAMINHO COMPLETO DO ARQUIVO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+c:\Users\55919\Downloads\nutrition-insights-fitjourney2.0\nutrition-insights-fitjourney2.0\COPIAR_ESTE_SQL.sql
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+🔥 ESTAMOS NO FOGO MESMO! 🔥
+
+═══════════════════════════════════════════════════════════════════════════

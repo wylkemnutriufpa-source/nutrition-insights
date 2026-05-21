@@ -1,0 +1,68 @@
+═══════════════════════════════════════════════════════════════════════════
+COMO EXECUTAR O SQL 4 - 50 TEMPLATES SOBERANOS
+═══════════════════════════════════════════════════════════════════════════
+
+PASSO 1: ABRIR O ARQUIVO SQL
+─────────────────────────────────────────────────────────────────────────────
+Abra este arquivo no seu computador:
+
+c:\Users\55919\Downloads\nutrition-insights-fitjourney2.0\nutrition-insights-fitjourney2.0\supabase\migrations\20260521003300_templates_soberanos_50.sql
+
+OU
+
+c:\Users\55919\Downloads\nutrition-insights-fitjourney2.0\nutrition-insights-fitjourney2.0\SQL_4_COPIAR_AQUI.txt
+
+
+PASSO 2: COPIAR TODO O CONTEÚDO
+─────────────────────────────────────────────────────────────────────────────
+- Pressione Ctrl+A (selecionar tudo)
+- Pressione Ctrl+C (copiar)
+
+
+PASSO 3: ABRIR O SUPABASE SQL EDITOR
+─────────────────────────────────────────────────────────────────────────────
+1. Acesse: https://supabase.com/dashboard
+2. Selecione seu projeto
+3. Clique em "SQL Editor" no menu lateral
+4. Clique em "New Query"
+
+
+PASSO 4: COLAR E EXECUTAR
+─────────────────────────────────────────────────────────────────────────────
+1. Cole o SQL copiado (Ctrl+V)
+2. Clique no botão "Run" (ou pressione Ctrl+Enter)
+3. Aguarde a execução (pode levar alguns segundos)
+
+
+PASSO 5: VERIFICAR SE DEU CERTO
+─────────────────────────────────────────────────────────────────────────────
+Execute este SQL para verificar:
+
+SELECT COUNT(*) FROM meal_plan_templates;
+
+Resultado esperado: 62 templates
+(12 de restrições + 50 soberanos)
+
+
+Para ver todos os templates:
+
+SELECT name, category, description 
+FROM meal_plan_templates 
+ORDER BY category, name;
+
+
+═══════════════════════════════════════════════════════════════════════════
+PRONTO! SISTEMA COMPLETO COM 50 TEMPLATES SOBERANOS!
+═══════════════════════════════════════════════════════════════════════════
+
+Agora você tem:
+✅ SQL 1: Medidas caseiras e cálculo em tempo real
+✅ SQL 2: Montagem rápida de planos
+✅ SQL 3: 12 templates com restrições alimentares
+✅ SQL 4: 50 templates soberanos com imagens reais
+
+TOTAL: 62 TEMPLATES PRONTOS PARA USO!
+
+Sistema pronto para: CLASSIFICA → ESCOLHE → COPIA → RENDERIZA
+
+═══════════════════════════════════════════════════════════════════════════
