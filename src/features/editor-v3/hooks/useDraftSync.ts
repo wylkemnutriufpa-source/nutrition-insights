@@ -47,9 +47,6 @@ export function useDraftSync(
   const [snapshot, setSnapshot] = useState<Meal[] | null>(null);
   const [snapshotAuditLog, setSnapshotAuditLog] = useState<AuditLogEntry[]>([]);
   
-  const debounceRef = useRef<number | null>(null);
-  const pendingMealsRef = useRef<Meal[] | null>(null);
-  const pendingAuditLogRef = useRef<AuditLogEntry[] | null>(null);
   const lastUpdateRef = useRef<string | null>(null);
 
   const loadDraft = useCallback(async (isReload = false) => {
@@ -88,35 +85,28 @@ export function useDraftSync(
     loadDraft();
   }, [loadDraft]);
 
-  const scheduleSave = (meals: Meal[], auditLog: AuditLogEntry[]) => {
-    if (isLocked) return;
+  const scheduleSave = useCallback(async (meals: Meal[], auditLog: AuditLogEntry[]) => {
+    if (isLocked || !draftId) return;
     
-    pendingMealsRef.current = meals;
-    pendingAuditLogRef.current = auditLog;
+    // 🛡️ SOBERANIA FINAL: SAVE IMEDIATO - SEM DEBOUNCE
+    // Optimistic UI: Atualiza local imediatamente
+    setSnapshot(meals);
+    setSnapshotAuditLog(auditLog);
+    setSyncState('saving');
 
-    if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(async () => {
-      if (!draftId || isLocked) return;
-      const mealsToSave = pendingMealsRef.current;
-      const auditLogToSave = pendingAuditLogRef.current;
-      if (!mealsToSave) return;
-
-      if (snapshot && JSON.stringify(mealsToSave) === JSON.stringify(snapshot)) {
+    // Validação: Não sobrescrever rascunho saudável por zerado
+    const totalKcal = meals.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
+    if (totalKcal === 0 && snapshot && snapshot.length > 0) {
+      const snapshotKcal = snapshot.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
+      if (snapshotKcal > 0) {
+        console.error('[Sync-Guard] Tentativa de sobrescrever rascunho saudável por um rascunho ZERADO. Abortando save.');
+        setSyncState('error');
         return;
       }
+    }
 
-      const totalKcal = mealsToSave.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
-      if (totalKcal === 0 && snapshot && snapshot.length > 0) {
-        const snapshotKcal = snapshot.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
-        if (snapshotKcal > 0) {
-          console.error('[Sync-Guard] Tentativa de sobrescrever rascunho saudável por um rascunho ZERADO. Abortando save.');
-          setSyncState('error');
-          return;
-        }
-      }
-
-      setSyncState('saving');
-      const updatedRecord = await saveDraft(draftId, mealsToSave, auditLogToSave || []);
+    try {
+      const updatedRecord = await saveDraft(draftId, meals, auditLog || []);
       
       if (updatedRecord) {
         SovereignMonitor.log({
@@ -126,14 +116,19 @@ export function useDraftSync(
         });
         setLastSavedAt(updatedRecord.updated_at);
         lastUpdateRef.current = updatedRecord.updated_at;
-        setSnapshot(mealsToSave);
-        setSnapshotAuditLog(auditLogToSave || []);
         setSyncState('saved');
       } else {
         setSyncState('offline');
+        // Retry automático após 2s
+        setTimeout(() => scheduleSave(meals, auditLog), 2000);
       }
-    }, 1500);
-  };
+    } catch (error) {
+      console.error('[useDraftSync] Erro ao salvar:', error);
+      setSyncState('error');
+      // Retry automático após 3s
+      setTimeout(() => scheduleSave(meals, auditLog), 3000);
+    }
+  }, [draftId, isLocked, snapshot]);
 
   const resetDraft = async () => {
     if (draftId) await discardDraft(draftId);
