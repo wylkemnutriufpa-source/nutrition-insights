@@ -196,6 +196,8 @@ export const MealCard: React.FC<MealCardProps> = ({
                     key={item.instanceId} 
                     item={item} 
                     onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
+                    onUpdateQuantityGlobal={onUpdateQuantityGlobal ? (qty) => onUpdateQuantityGlobal(item.instanceId, qty) : undefined}
+
                     onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
                     onRemove={() => onRemoveFood(item.instanceId)}
                     onRemoveSubstitution={(subIdx) => store.removeSubstitutionFromItem(meal.id, item.instanceId, subIdx)}
