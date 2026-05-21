@@ -184,12 +184,36 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
     rawMeals.push(...snapshot.meals);
   }
 
-  return rawMeals.map(m => ({
-    id: m.id || crypto.randomUUID(),
-    name: m.name || "Refeição",
-    time: m.time || "08:00",
-    day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 1,
-    items: (m.items || []).map((it: any) => {
+  return rawMeals.map(m => {
+    // 🛡️ CORREÇÃO 21/05/2026: Converter foods → items
+    let items = m.items || [];
+    if (!items.length && Array.isArray(m.foods)) {
+      items = m.foods.map((food: any) => ({
+        id: crypto.randomUUID(),
+        instanceId: crypto.randomUUID(),
+        name: food.name || "Item",
+        kcal: Number(food.kcal || 0),
+        protein: Number(food.protein || 0),
+        carbs: Number(food.carbs || food.carbohydrates || 0),
+        fat: Number(food.fat || food.fats || 0),
+        quantity: parseFloat(String(food.qty || food.quantity || '100').match(/[\d.]+/)?.[0] || '100'),
+        clinical_mass_g: /\d+\s*(g|ml)/i.test(String(food.qty || '')) 
+          ? parseFloat(String(food.qty).match(/[\d.]+/)?.[0] || '100')
+          : 100,
+        quantity_display: String(food.qty || food.quantity || '100g'),
+        imageUrl: food.imageUrl || food.image_url || food.image || null,
+        substitution_group_id: crypto.randomUUID(),
+        substitutions: []
+      }));
+    }
+    
+    return {
+      id: m.id || crypto.randomUUID(),
+      name: m.name || "Refeição",
+      time: m.time || "08:00",
+      day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 1,
+      imageUrl: m.image || m.imageUrl || m.image_url || null,
+      items: items.map((it: any) => {
       // Resolve a massa clínica com validação mínima de 5g para evitar valores absurdos
       // (ex: ovo com quantity=1 unidade não pode virar clinical_mass_g=1g)
       const rawMass = Number(it.clinical_mass_g || it.quantity || 0);
@@ -224,8 +248,8 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
         }) : []
       };
     })
-  }));
-}
+  };
+  });
 
 export async function getBestMealImage(mealName: string, items: any[]): Promise<{ url: string; source: 'manual' | 'auto' | 'fallback' }> {
   try {
