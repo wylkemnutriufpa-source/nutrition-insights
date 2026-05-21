@@ -12389,13 +12389,6 @@ export type Database = {
             referencedRelation: "meal_plan_templates"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "patient_meal_plans_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "templates_enriched"
-            referencedColumns: ["id"]
-          },
         ]
       }
       patient_meal_substitutions: {
@@ -22069,38 +22062,6 @@ export type Database = {
           template_marmita: boolean | null
           total_days: number | null
           total_meals: number | null
-        }
-        Insert: {
-          all_meals_have_images?: never
-          category?: string | null
-          category_label?: never
-          created_at?: string | null
-          description?: string | null
-          dietary_restrictions?: Json | null
-          id?: string | null
-          is_premium?: boolean | null
-          kcal_target?: never
-          meals?: Json | null
-          name?: string | null
-          template_marmita?: boolean | null
-          total_days?: never
-          total_meals?: never
-        }
-        Update: {
-          all_meals_have_images?: never
-          category?: string | null
-          category_label?: never
-          created_at?: string | null
-          description?: string | null
-          dietary_restrictions?: Json | null
-          id?: string | null
-          is_premium?: boolean | null
-          kcal_target?: never
-          meals?: Json | null
-          name?: string | null
-          template_marmita?: boolean | null
-          total_days?: never
-          total_meals?: never
         }
         Relationships: []
       }

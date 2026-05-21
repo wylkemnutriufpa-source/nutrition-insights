@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { seedPremiumV3Templates } from "./seedV3Templates";
 
-const SEEDER_VERSION = '3.2.0';
+const SEEDER_VERSION = '3.5.0';
 const SEEDER_RUN_KEY = `template_seeder_run_${SEEDER_VERSION}`;
 
 export function useAutoTemplateSeeder() {

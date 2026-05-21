@@ -121,7 +121,14 @@ export const generateClinicalLibrary = () => {
       slug: bp.slug, title: bp.name, description: `Protocolo de ${bp.name} com 7 dias variados.`,
       template_type: 'visual_v3', objective: bp.obj, visual_style: 'premium', kcal_profiles: kcalLevels,
       plan_snapshot: snapshots, cluster_map: {}, active: true, sovereign_validated: true,
-      meal_distribution: [{ slot:'Café', time:'08:00' }, { slot:'Almoço', time:'12:30' }, { slot:'Jantar', time:'19:30' }]
+      meal_distribution: [
+        { slot:'Café da Manhã', time:'08:00' }, 
+        { slot:'Lanche da Manhã', time:'10:30' },
+        { slot:'Almoço', time:'12:30' }, 
+        { slot:'Lanche da Tarde', time:'16:00' },
+        { slot:'Jantar', time:'19:30' },
+        { slot:'Ceia', time:'21:30' }
+      ]
     };
   });
 };
