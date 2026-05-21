@@ -178,11 +178,20 @@ export const TemplateV3Modal: React.FC<TemplateV3ModalProps> = ({
                             </div>
                             <ArrowRight className="w-3 h-3 text-white/10 group-hover:text-emerald-500 transition-all" />
                           </div>
-                          <div className="space-y-1 ml-12">
+                          <div className="space-y-2 ml-12">
                             {meal.items?.map((item: any, i: number) => (
-                              <div key={i} className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-white/40">
-                                <span>{item.quantity_display || (item.clinical_mass_g + 'g')} {item.name}</span>
-                                <span>{Math.round(item.kcal)} kcal</span>
+                              <div key={i} className="flex items-center gap-3">
+                                {item.imageUrl && (
+                                  <img 
+                                    src={item.imageUrl} 
+                                    alt={item.name} 
+                                    className="w-8 h-8 rounded-lg object-cover border border-white/5 bg-white/5"
+                                  />
+                                )}
+                                <div className="flex-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
+                                  <span>{item.quantity_display || (item.clinical_mass_g + 'g')} {item.name}</span>
+                                  <span>{Math.round(item.kcal)} kcal</span>
+                                </div>
                               </div>
                             ))}
                           </div>

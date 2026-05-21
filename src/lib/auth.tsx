@@ -89,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchInProgressRef = useRef<string | null>(null);
 
   const fetchData = async (userId: string) => {
+    setIsLoaded(false);
     if (fetchInProgressRef.current === userId) {
       console.log(`[AUTH:CORE] Fetch already in progress for user ${userId}, skipping.`);
       return;
@@ -202,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       
       console.log(`[AUTH:CORE] Syncing session: ${currentSession ? "Authenticated" : "Unauthenticated"}`);
+      setLoading(true); // Garantir que entramos em estado de loading durante o sync
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
       setUser(currentUser);
@@ -216,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setRoles([]); // Empty roles for non-authenticated instead of null
         setSubscription(defaultSubscription);
+        setIsLoaded(true);
       }
       
       setLoading(false);

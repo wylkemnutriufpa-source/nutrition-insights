@@ -42,7 +42,8 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
     }
   }, [location.pathname, isNutritionist, isPersonal, isAdmin, loading, authStatus, roles]);
 
-  if (authStatus === "loading" || (authStatus === "authenticated" && roles === null && !isLoaded && !rolesTimedOut)) {
+  // Aguarda auth + roles resolverem completamente (isLoaded)
+  if (authStatus === "loading" || (authStatus === "authenticated" && !isLoaded && !rolesTimedOut)) {
     return <PageLoader />;
   }
 

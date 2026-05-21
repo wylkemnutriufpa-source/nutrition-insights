@@ -32,7 +32,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Aguarda auth + roles, mas com escape hatch por timeout ou isLoaded
   const waitingForRoles =
-    authStatus === "authenticated" && roles === null && !isLoaded && !rolesTimedOut;
+    authStatus === "authenticated" && !isLoaded && !rolesTimedOut;
 
   if (authStatus === "loading" || waitingForRoles) {
     return <PageLoader />;
