@@ -78,11 +78,11 @@ export async function createMealPlan(
           title: validated.title,
           start_date: validated.start_date,
           plan_mode: validated.plan_mode,
-          status: 'draft',
-          created_by: nutritionistId,
+          plan_status: 'draft',
+          generated_by: nutritionistId,
           tenant_id: patient.tenant_id,
         })
-        .select('id, title, status')
+        .select('id, title, plan_status')
         .single();
 
       if (planError || !plan) {
@@ -113,7 +113,7 @@ export async function updateMealPlan(
   planId: string,
   data: unknown,
   userId: string
-): Promise<{ id: string; title: string; status: string }> {
+): Promise<{ id: string; title: string; plan_status: string }> {
   // CAMADA 2: Validar entrada
   const validated = await validateRequest(
     MealPlanUpdateSchema,
@@ -127,7 +127,7 @@ export async function updateMealPlan(
       // Verificar permissão: apenas criador ou admin pode atualizar
       const { data: plan, error: planError } = await supabase
         .from('meal_plans')
-        .select('id, created_by, status')
+        .select('id, generated_by, plan_status')
         .eq('id', planId)
         .maybeSingle();
 
@@ -135,12 +135,12 @@ export async function updateMealPlan(
         throw new Error(`Meal plan not found: ${planId}`);
       }
 
-      if (plan.created_by !== userId) {
+      if (plan.generated_by !== userId) {
         throw new Error('Only the creator can update this meal plan');
       }
 
       // Não permitir atualizar planos publicados
-      if (plan.status === 'active' || plan.status === 'completed') {
+      if (plan.plan_status === 'active' || plan.plan_status === 'completed') {
         throw new Error('Cannot update published meal plans');
       }
 
@@ -152,7 +152,7 @@ export async function updateMealPlan(
           updated_at: new Date().toISOString(),
         })
         .eq('id', planId)
-        .select('id, title, status')
+        .select('id, title, plan_status')
         .single();
 
       if (updateError || !updated) {
@@ -177,7 +177,7 @@ export async function publishMealPlan(
   planId: string,
   snapshot: unknown,
   userId: string
-): Promise<{ id: string; status: string; publishedAt: string }> {
+): Promise<{ id: string; plan_status: string; updated_at: string }> {
   // CAMADA 2: Validar snapshot
   const validatedSnapshot = await validateRequest(
     MealPlanSnapshotV3Schema,
@@ -193,7 +193,7 @@ export async function publishMealPlan(
         fn: async () => {
           const { data: plan, error } = await supabase
             .from('meal_plans')
-            .select('id, status, created_by')
+            .select('id, plan_status, generated_by')
             .eq('id', planId)
             .maybeSingle();
 
@@ -201,12 +201,12 @@ export async function publishMealPlan(
             throw new Error(`Meal plan not found: ${planId}`);
           }
 
-          if (plan.created_by !== userId) {
+          if (plan.generated_by !== userId) {
             throw new Error('Only the creator can publish this meal plan');
           }
 
-          if (plan.status !== 'draft') {
-            throw new Error(`Cannot publish plan with status: ${plan.status}`);
+          if (plan.plan_status !== 'draft') {
+            throw new Error(`Cannot publish plan with status: ${plan.plan_status}`);
           }
 
           return plan;
@@ -219,12 +219,11 @@ export async function publishMealPlan(
             .from('meal_plans')
             .update({
               snapshot: validatedSnapshot,
-              status: 'active',
-              published_at: new Date().toISOString(),
+              plan_status: 'active',
               updated_at: new Date().toISOString(),
             })
             .eq('id', planId)
-            .select('id, status, published_at')
+            .select('id, plan_status, updated_at')
             .single();
 
           if (error || !updated) {
@@ -265,7 +264,7 @@ export async function deleteMealPlan(
       // Verificar permissão e status
       const { data: plan, error: planError } = await supabase
         .from('meal_plans')
-        .select('id, created_by, status')
+        .select('id, generated_by, plan_status')
         .eq('id', planId)
         .maybeSingle();
 
@@ -273,11 +272,11 @@ export async function deleteMealPlan(
         throw new Error(`Meal plan not found: ${planId}`);
       }
 
-      if (plan.created_by !== userId) {
+      if (plan.generated_by !== userId) {
         throw new Error('Only the creator can delete this meal plan');
       }
 
-      if (plan.status !== 'draft') {
+      if (plan.plan_status !== 'draft') {
         throw new Error('Can only delete draft meal plans');
       }
 
