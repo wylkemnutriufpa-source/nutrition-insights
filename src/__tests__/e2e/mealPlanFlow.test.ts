@@ -49,7 +49,7 @@ describe('Meal Plan Flow - E2E', () => {
 
       expect(result).toHaveProperty('id');
       expect(result.title).toBe('Plano Teste');
-      expect(result.status).toBe('draft');
+      expect(result.plan_status).toBe('draft');
 
       planId = result.id;
     });
@@ -136,8 +136,8 @@ describe('Meal Plan Flow - E2E', () => {
 
       const result = await publishMealPlan(planId, snapshot, nutritionistId);
 
-      expect(result.status).toBe('active');
-      expect(result).toHaveProperty('publishedAt');
+      expect(result.plan_status).toBe('active');
+      expect(result).toHaveProperty('updated_at');
     });
 
     it('should reject invalid snapshot', async () => {
@@ -180,14 +180,14 @@ describe('Meal Plan Flow - E2E', () => {
       const result = await getMealPlan(planId, nutritionistId);
 
       expect(result.id).toBe(planId);
-      expect(result.status).toBe('active');
+      expect(result.plan_status).toBe('active');
     });
 
     it('should retrieve meal plan for patient', async () => {
       const result = await getMealPlan(planId, patientId);
 
       expect(result.id).toBe(planId);
-      expect(result.status).toBe('active');
+      expect(result.plan_status).toBe('active');
     });
 
     it('should deny access for unauthorized user', async () => {
