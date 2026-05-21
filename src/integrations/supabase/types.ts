@@ -4885,6 +4885,45 @@ export type Database = {
           },
         ]
       }
+      food_restrictions: {
+        Row: {
+          created_at: string | null
+          food_name: string
+          gluten_free_alternatives: string[] | null
+          has_gluten: boolean | null
+          has_lactose: boolean | null
+          id: string
+          is_high_fodmap: boolean | null
+          lactose_free_alternatives: string[] | null
+          low_fodmap_alternatives: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          food_name: string
+          gluten_free_alternatives?: string[] | null
+          has_gluten?: boolean | null
+          has_lactose?: boolean | null
+          id?: string
+          is_high_fodmap?: boolean | null
+          lactose_free_alternatives?: string[] | null
+          low_fodmap_alternatives?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          food_name?: string
+          gluten_free_alternatives?: string[] | null
+          has_gluten?: boolean | null
+          has_lactose?: boolean | null
+          id?: string
+          is_high_fodmap?: boolean | null
+          lactose_free_alternatives?: string[] | null
+          low_fodmap_alternatives?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       food_substitution_groups: {
         Row: {
           avg_calories_per_100g: number | null
@@ -6802,6 +6841,54 @@ export type Database = {
           },
         ]
       }
+      meal_household_measures: {
+        Row: {
+          alternative_measures: Json | null
+          carbs_g_per_unit: number
+          category: string | null
+          created_at: string | null
+          fat_g_per_unit: number
+          food_name: string
+          id: string
+          image_url: string | null
+          kcal_per_unit: number
+          protein_g_per_unit: number
+          standard_mass_g: number
+          standard_unit: string
+          updated_at: string | null
+        }
+        Insert: {
+          alternative_measures?: Json | null
+          carbs_g_per_unit: number
+          category?: string | null
+          created_at?: string | null
+          fat_g_per_unit: number
+          food_name: string
+          id?: string
+          image_url?: string | null
+          kcal_per_unit: number
+          protein_g_per_unit: number
+          standard_mass_g: number
+          standard_unit: string
+          updated_at?: string | null
+        }
+        Update: {
+          alternative_measures?: Json | null
+          carbs_g_per_unit?: number
+          category?: string | null
+          created_at?: string | null
+          fat_g_per_unit?: number
+          food_name?: string
+          id?: string
+          image_url?: string | null
+          kcal_per_unit?: number
+          protein_g_per_unit?: number
+          standard_mass_g?: number
+          standard_unit?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       meal_item_completions: {
         Row: {
           adherence_status: string
@@ -6984,6 +7071,72 @@ export type Database = {
           suggestion_type?: string
         }
         Relationships: []
+      }
+      meal_plan_drafts: {
+        Row: {
+          created_at: string | null
+          days: Json | null
+          id: string
+          nutritionist_id: string
+          objective: string | null
+          patient_id: string | null
+          plan_name: string
+          status: string | null
+          target_kcal: number | null
+          total_carbs_g_per_day: number | null
+          total_fat_g_per_day: number | null
+          total_kcal_per_day: number | null
+          total_protein_g_per_day: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          days?: Json | null
+          id?: string
+          nutritionist_id: string
+          objective?: string | null
+          patient_id?: string | null
+          plan_name?: string
+          status?: string | null
+          target_kcal?: number | null
+          total_carbs_g_per_day?: number | null
+          total_fat_g_per_day?: number | null
+          total_kcal_per_day?: number | null
+          total_protein_g_per_day?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          days?: Json | null
+          id?: string
+          nutritionist_id?: string
+          objective?: string | null
+          patient_id?: string | null
+          plan_name?: string
+          status?: string | null
+          target_kcal?: number | null
+          total_carbs_g_per_day?: number | null
+          total_fat_g_per_day?: number | null
+          total_kcal_per_day?: number | null
+          total_protein_g_per_day?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_drafts_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_drafts_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meal_plan_favorites: {
         Row: {
@@ -7579,6 +7732,7 @@ export type Database = {
           clinical_condition: string | null
           created_at: string
           description: string | null
+          dietary_restrictions: Json | null
           id: string
           is_lunchbox: boolean | null
           is_premium: boolean | null
@@ -7592,6 +7746,7 @@ export type Database = {
           clinical_condition?: string | null
           created_at?: string
           description?: string | null
+          dietary_restrictions?: Json | null
           id?: string
           is_lunchbox?: boolean | null
           is_premium?: boolean | null
@@ -7605,6 +7760,7 @@ export type Database = {
           clinical_condition?: string | null
           created_at?: string
           description?: string | null
+          dietary_restrictions?: Json | null
           id?: string
           is_lunchbox?: boolean | null
           is_premium?: boolean | null
@@ -12162,6 +12318,83 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_plan_visibility_diagnostics"
             referencedColumns: ["plan_id"]
+          },
+        ]
+      }
+      patient_meal_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          meals: Json
+          name: string
+          notes: string | null
+          nutritionist_id: string
+          patient_id: string
+          start_date: string
+          status: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          meals: Json
+          name: string
+          notes?: string | null
+          nutritionist_id: string
+          patient_id: string
+          start_date?: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          meals?: Json
+          name?: string
+          notes?: string | null
+          nutritionist_id?: string
+          patient_id?: string
+          start_date?: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_meal_plans_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_plans_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_plans_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_plans_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates_enriched"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -21817,6 +22050,57 @@ export type Database = {
         }
         Relationships: []
       }
+      templates_enriched: {
+        Row: {
+          all_meals_have_images: boolean | null
+          category: string | null
+          category_label: string | null
+          created_at: string | null
+          description: string | null
+          dietary_restrictions: Json | null
+          id: string | null
+          is_premium: boolean | null
+          kcal_target: number | null
+          meals: Json | null
+          name: string | null
+          template_marmita: boolean | null
+          total_days: number | null
+          total_meals: number | null
+        }
+        Insert: {
+          all_meals_have_images?: never
+          category?: string | null
+          category_label?: never
+          created_at?: string | null
+          description?: string | null
+          dietary_restrictions?: Json | null
+          id?: string | null
+          is_premium?: boolean | null
+          kcal_target?: never
+          meals?: Json | null
+          name?: string | null
+          template_marmita?: boolean | null
+          total_days?: never
+          total_meals?: never
+        }
+        Update: {
+          all_meals_have_images?: never
+          category?: string | null
+          category_label?: never
+          created_at?: string | null
+          description?: string | null
+          dietary_restrictions?: Json | null
+          id?: string | null
+          is_premium?: boolean | null
+          kcal_target?: never
+          meals?: Json | null
+          name?: string | null
+          template_marmita?: boolean | null
+          total_days?: never
+          total_meals?: never
+        }
+        Relationships: []
+      }
       testimonials_public: {
         Row: {
           avatar_url: string | null
@@ -21931,6 +22215,16 @@ export type Database = {
         }
         Returns: string
       }
+      add_food_to_meal: {
+        Args: {
+          p_day: string
+          p_draft_id: string
+          p_food_name: string
+          p_mass_g: number
+          p_meal_type: string
+        }
+        Returns: Json
+      }
       anonymize_profile_data: {
         Args: { target_profile_id: string }
         Returns: undefined
@@ -21969,6 +22263,21 @@ export type Database = {
       calculate_actual_patient_state: {
         Args: { p_user_id: string }
         Returns: Database["public"]["Enums"]["patient_state_type"]
+      }
+      calculate_nutrition_proportional: {
+        Args: { p_food_name: string; p_target_mass_g: number }
+        Returns: {
+          carbs_g: number
+          fat_g: number
+          kcal: number
+          kcal_from_carbs: number
+          kcal_from_fat: number
+          kcal_from_protein: number
+          mass_g: number
+          protein_g: number
+          unit_name: string
+          units: number
+        }[]
       }
       calculate_plan_totals: { Args: { p_plan_id: string }; Returns: Json }
       check_ai_usage: {
@@ -22038,6 +22347,15 @@ export type Database = {
       convert_lead_to_patient: {
         Args: { _lead_id: string; _password_set?: boolean; _patient_id: string }
         Returns: Json
+      }
+      copy_template_to_patient: {
+        Args: {
+          p_nutritionist_id: string
+          p_patient_id: string
+          p_start_date?: string
+          p_template_id: string
+        }
+        Returns: string
       }
       create_nutritionist_account: {
         Args: { _email: string; _full_name: string; _password: string }
@@ -22434,6 +22752,15 @@ export type Database = {
           total_points: number
         }[]
       }
+      get_safe_alternatives: {
+        Args: {
+          p_avoid_gluten?: boolean
+          p_avoid_high_fodmap?: boolean
+          p_avoid_lactose?: boolean
+          p_food_name: string
+        }
+        Returns: string[]
+      }
       get_schema_info: {
         Args: { target_tables: string[] }
         Returns: {
@@ -22759,6 +23086,26 @@ export type Database = {
           user_id: string
         }[]
       }
+      search_templates: {
+        Args: {
+          p_category?: string
+          p_max_kcal?: number
+          p_min_kcal?: number
+          p_search_text?: string
+        }
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          dietary_restrictions: string
+          has_restrictions: boolean
+          id: string
+          is_marmita: boolean
+          kcal_range: string
+          meals: Json
+          name: string
+        }[]
+      }
       self_register_nutritionist: {
         Args: { _full_name: string; _user_id: string }
         Returns: Json
@@ -22795,6 +23142,16 @@ export type Database = {
       }
       transition_plan_to_review: {
         Args: { _nutritionist_id: string; _plan_id: string }
+        Returns: Json
+      }
+      update_food_mass: {
+        Args: {
+          p_day: string
+          p_draft_id: string
+          p_food_index: number
+          p_meal_type: string
+          p_new_mass_g: number
+        }
         Returns: Json
       }
       validate_clinical_quality: { Args: { p_plan_id: string }; Returns: Json }
