@@ -21,6 +21,7 @@ interface EditorState {
   
   // Real-time Editing Actions
   updateFoodQuantity: (mealId: string, itemInstanceId: string, newQuantity: number) => void;
+  updateFoodQuantityGlobal: (itemInstanceId: string, newQuantity: number) => void;
   removeFood: (mealId: string, itemInstanceId: string) => void;
   addFoodToMeal: (mealId: string, food: Food) => void;
   addMeal: (name: string, time?: string) => void;
@@ -31,6 +32,7 @@ interface EditorState {
   updateMealItemName: (mealId: string, itemInstanceId: string, name: string) => void;
   removeSubstitutionFromItem: (mealId: string, itemInstanceId: string, subIndex: number) => void;
 }
+
 
 /**
  * 🛡️ SOBERANIA V3: Editor State Store
