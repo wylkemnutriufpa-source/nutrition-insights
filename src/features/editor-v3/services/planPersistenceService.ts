@@ -91,16 +91,35 @@ export const planPersistenceService = {
 
     const foodName = (item.name || item.title || "").trim();
     if (foodName) {
+      // Busca case-insensitive: tenta match exato primeiro, depois ilike
       const { data: libMatch } = await supabase
         .from('meal_visual_library')
-        .select('image_url')
-        .eq('name', foodName)
+        .select('image_url, slug')
+        .ilike('name', foodName)
         .limit(1)
         .maybeSingle();
 
       if (libMatch?.image_url) {
         return {
           image_url: libMatch.image_url,
+          is_placeholder: false,
+          library_item_id: item.library_item_id || item.id
+        };
+      }
+
+      // Tenta também pela v3_library_items com join de imagens
+      const { data: v3Match } = await supabase
+        .from('v3_library_items')
+        .select('images:v3_library_images(image_asset, image_url)')
+        .ilike('title', foodName)
+        .eq('active', true)
+        .limit(1)
+        .maybeSingle();
+
+      const v3Img = (v3Match as any)?.images?.[0];
+      if (v3Img?.image_asset || v3Img?.image_url) {
+        return {
+          image_url: v3Img.image_asset || v3Img.image_url,
           is_placeholder: false,
           library_item_id: item.library_item_id || item.id
         };

@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { Meal, MealItem, Food } from '../types/types';
-import { calculateItemMacros, scaleItemToTarget } from '@/lib/nutricore_v2/helpers';
+import { calculateItemMacros, scaleItemToTarget, adjustSubstitutionsProportionally } from '@/lib/nutricore_v2/helpers';
 
 interface EditorState {
   meals: Meal[];
@@ -61,26 +61,22 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         if (item.instanceId !== itemInstanceId) return item;
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
-        const safeNewQty = Math.round(newQuantity);
-        
-        // SOBERANIA V3: Substitutos são IMUTÁVEIS. Não escalamos automaticamente.
-        const updatedSubs = (item.substitutions || []).map(sub => {
-          const subQty = sub.clinical_mass_g || sub.quantity || 100;
-          const subMacros = calculateItemMacros(sub, subQty);
-          return { 
-            ...sub, 
-            quantity: subQty, 
-            clinical_mass_g: subQty,
-            ...subMacros
-          };
-        });
-        
+        const safeNewQty = Math.max(1, Math.round(newQuantity));
+
+        // Escala substituições proporcionalmente ao item principal
+        const updatedSubs = adjustSubstitutionsProportionally(
+          (item.substitutions || []) as any,
+          oldQty,
+          safeNewQty
+        );
+
         const newMacros = calculateItemMacros(item, safeNewQty);
 
         return {
           ...item,
           quantity: safeNewQty,
           clinical_mass_g: safeNewQty,
+          quantity_display: `${safeNewQty}g`,
           substitutions: updatedSubs,
           ...newMacros
         };
@@ -164,17 +160,15 @@ export const useEditorState = create<EditorState>()((set, get) => ({
       const updatedItems = meal.items.map(item => {
         if (item.instanceId !== itemInstanceId) return item;
 
-        const newQuantity = Math.round(scaleItemToTarget(item, targetValue, macroType));
-        const updatedSubs = (item.substitutions || []).map(sub => {
-          const subQty = sub.clinical_mass_g || sub.quantity || 100;
-          const subMacros = calculateItemMacros(sub, subQty);
-          return { 
-            ...sub, 
-            quantity: subQty, 
-            clinical_mass_g: subQty,
-            ...subMacros
-          };
-        });
+        const oldQty = item.clinical_mass_g || item.quantity || 100;
+        const newQuantity = Math.max(1, Math.round(scaleItemToTarget(item, targetValue, macroType)));
+
+        // Escala substituições proporcionalmente ao item principal
+        const updatedSubs = adjustSubstitutionsProportionally(
+          (item.substitutions || []) as any,
+          oldQty,
+          newQuantity
+        );
 
         const newMacros = calculateItemMacros(item, newQuantity);
 
@@ -182,6 +176,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           ...item,
           quantity: newQuantity,
           clinical_mass_g: newQuantity,
+          quantity_display: `${newQuantity}g`,
           substitutions: updatedSubs,
           ...newMacros
         };
@@ -201,11 +196,35 @@ export const useEditorState = create<EditorState>()((set, get) => ({
       const updatedItems = meal.items.map(item => {
         if (item.instanceId !== itemInstanceId) return item;
 
-        let substituteQuantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
-        if (substituteQuantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
-          substituteQuantity = 100;
-        }
+        // Calcula gramagem equivalente em kcal ao item principal
+        // Ex: frango 150g = 250kcal → batata-doce precisa de Xg para 250kcal
+        const primaryKcal = item.kcal || 0;
+        const primaryQuantity = item.clinical_mass_g || item.quantity || 100;
         
+        // Garante que temos kcal por 100g do substituto
+        let subKcalPer100g = food.kcal_100g || 0;
+        if (!subKcalPer100g && food.kcal) {
+          // Se temos kcal total, calcula por 100g baseado na quantidade atual
+          const foodQuantity = food.clinical_mass_g || food.quantity || food.portionValue || 100;
+          subKcalPer100g = (food.kcal / foodQuantity) * 100;
+        }
+
+        let substituteQuantity: number;
+        if (primaryKcal > 0 && subKcalPer100g > 0) {
+          // Gramagem para equivalência calórica: (kcal_item_principal / kcal_por_100g_substituto) * 100
+          substituteQuantity = Math.max(10, Math.round((primaryKcal / subKcalPer100g) * 100));
+        } else {
+          // Fallback: mesma gramagem do item principal
+          substituteQuantity = Math.max(10, Math.round(
+            food.clinical_mass_g || food.quantity || food.portionValue || primaryQuantity || 100
+          ));
+        }
+
+        // Garante gramagem mínima realista (nunca menos que 10g)
+        if (substituteQuantity < 10 && (food.kcal || food.kcal_100g || 0) > 0) {
+          substituteQuantity = 100; // Fallback seguro
+        }
+
         const subMacros = calculateItemMacros(food, substituteQuantity);
 
         const groupId = item.substitution_group_id || crypto.randomUUID();
@@ -214,6 +233,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           instanceId: crypto.randomUUID(),
           quantity: substituteQuantity,
           clinical_mass_g: substituteQuantity,
+          quantity_display: `${substituteQuantity}g`,
           substitution_group_id: groupId,
           is_primary: false,
           imageUrl: food.imageUrl || (food as any).image_url || null,
