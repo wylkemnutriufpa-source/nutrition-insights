@@ -292,7 +292,8 @@ export function MealPlanBuilder() {
               </div>
               <div className="text-sm text-muted-foreground">Proteína</div>
             </div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
                 {totals.total_carbs_g.toFixed(1)}g
               </div>
               <div className="text-sm text-muted-foreground">Carboidrato</div>
