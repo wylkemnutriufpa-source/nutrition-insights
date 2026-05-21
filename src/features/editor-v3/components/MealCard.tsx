@@ -75,8 +75,16 @@ export const MealCard: React.FC<MealCardProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-105 transition-all shadow-inner">
-              <Utensils className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover/meal:scale-105 transition-all shadow-inner">
+              {meal.items[0]?.imageUrl ? (
+                <img 
+                  src={meal.items[0].imageUrl} 
+                  alt={meal.name} 
+                  className="w-full h-full object-cover opacity-80 group-hover/meal:opacity-100 transition-opacity"
+                />
+              ) : (
+                <Utensils className="w-6 h-6" />
+              )}
             </div>
             <div>
               <h3 className="text-lg font-black uppercase italic tracking-tighter text-white group-hover/meal:text-emerald-400 transition-colors duration-300">
@@ -104,16 +112,19 @@ export const MealCard: React.FC<MealCardProps> = ({
           </div>
         </div>
 
-        {/* Quick View Items */}
-        <div className="p-6 space-y-1">
-          {meal.items.slice(0, 4).map((item) => (
-            <div key={item.instanceId} className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-white/40">
-              <span className="truncate pr-4">{item.name}</span>
-              <span className="flex-shrink-0">{Math.round(item.kcal)} kcal</span>
+        {/* Detailed Items View */}
+        <div className="p-6 space-y-2">
+          {meal.items.slice(0, 6).map((item) => (
+            <div key={item.instanceId} className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
+              <div className="flex items-center gap-2 truncate pr-4">
+                <span className="text-emerald-400/80">{item.quantity_display || (item.clinical_mass_g + 'g')}</span>
+                <span className="text-white/60 truncate">{item.name}</span>
+              </div>
+              <span className="flex-shrink-0 text-white/30">{Math.round(item.kcal)} kcal</span>
             </div>
           ))}
-          {meal.items.length > 4 && (
-            <p className="text-[8px] font-black text-emerald-500/50 mt-1 uppercase tracking-widest">+{meal.items.length - 4} itens</p>
+          {meal.items.length > 6 && (
+            <p className="text-[8px] font-black text-emerald-500/50 mt-1 uppercase tracking-widest">+{meal.items.length - 6} itens adicionais</p>
           )}
           {meal.items.length === 0 && (
             <p className="text-[9px] font-black uppercase tracking-widest text-white/10 py-2 text-center">Refeição Vazia</p>
