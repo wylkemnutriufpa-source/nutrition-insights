@@ -61,9 +61,10 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         if (item.instanceId !== itemInstanceId) return item;
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
-        const safeNewQty = Math.max(1, Math.round(newQuantity));
+        // 🛡️ Defense in Depth: Mínimo de 5g para evitar frações irrelevantes
+        const safeNewQty = Math.max(5, Math.round(newQuantity / 5) * 5);
 
-        // Escala substituições proporcionalmente ao item principal
+        // 🛡️ Defense in Depth: Escala substituições proporcionalmente ao item principal
         const updatedSubs = adjustSubstitutionsProportionally(
           (item.substitutions || []) as any,
           oldQty,
@@ -105,7 +106,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
     const updatedMeals = meals.map(meal => {
       if (meal.id !== mealId) return meal;
       
-      let quantity = Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100);
+      let quantity = Math.max(5, Math.round((food.clinical_mass_g || food.quantity || food.portionValue || 100) / 5) * 5);
       if (quantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
         quantity = 100;
       }
@@ -196,7 +197,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
       const updatedItems = meal.items.map(item => {
         if (item.instanceId !== itemInstanceId) return item;
 
-        // Calcula gramagem equivalente em kcal ao item principal
+        // 🛡️ Defense in Depth: Calcula gramagem equivalente em kcal ao item principal
         // Ex: frango 150g = 250kcal → batata-doce precisa de Xg para 250kcal
         const primaryKcal = item.kcal || 0;
         const primaryQuantity = item.clinical_mass_g || item.quantity || 100;

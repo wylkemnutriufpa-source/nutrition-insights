@@ -109,13 +109,13 @@ export default function Invitation() {
     if (code) {
       // Se o usuário já está logado e é um paciente, mandamos para o /welcome
       // que saberá lidar com o estado de onboarding ou dashboard.
+      // Removido redirecionamento automático para permitir que usuários logados
+      // também vejam a mensagem de boas-vindas e confirmem o vínculo.
       if (user && !isNutritionist) {
-        console.log("[Invitation] Usuário logado detectado. Redirecionando para onboarding direto...");
-        // Salvamos o código no localStorage caso o root router precise dele para algum vínculo tardio
+        console.log("[Invitation] Usuário logado detectado. Mantendo na página para confirmação visual.");
         if (code) localStorage.setItem("fitjourney_invite_code", code);
-        navigate("/onboarding?skip_slides=true", { replace: true });
-        return;
       }
+
       fetchInvitation();
     }
   }, [code, user, isNutritionist, navigate]);
@@ -136,21 +136,19 @@ export default function Invitation() {
     }
 
     console.log(`[Invitation] Redirecting to canonical /cadastro for onboarding.`);
-    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
+    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}&confirmed=true`, { replace: true });
   }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
 
-  // Redirecionamento INSTANTÂNEO quando o convite é válido
-  useEffect(() => {
-    if (invitation && !error && !isProcessingAction && invitation.patient_id === null) {
-      handleAccept();
-    }
-  }, [invitation, error, handleAccept, isProcessingAction]);
+  // Redirecionamento automático REMOVIDO. 
+  // O usuário agora precisa ver a mensagem de boas-vindas e clicar no botão.
+  // Isso resolve a reclamação "não mostra aquela msg bonita de convite".
+
 
 
   const handleSafeRegisterFallback = () => {
     const professionalId = invitation?.professional_id;
     if (professionalId) {
-      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}`, { replace: true });
+      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}&confirmed=true`, { replace: true });
       return;
     }
     fetchInvitation();

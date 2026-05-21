@@ -4,5 +4,15 @@
 
 export function normalizeMealPlan(rawData: any): any {
   if (rawData?.snapshot?.snapshot_version === 'v3') return rawData;
-  return { id: rawData?.id || 'legacy', meals: [] };
+  
+  // 🛡️ REPARAÇÃO LEGADA: Se não é V3, extraímos os itens do formato antigo
+  // para garantir que pacientes com planos V1/V2 não vejam telas vazias.
+  const meals = rawData?.meal_plan_items || rawData?.items || [];
+  
+  return { 
+    ...rawData,
+    id: rawData?.id || 'legacy', 
+    editor_version: rawData?.editor_version || 'v2',
+    meals: meals 
+  };
 }
