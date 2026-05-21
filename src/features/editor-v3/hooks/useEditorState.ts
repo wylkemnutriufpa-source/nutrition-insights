@@ -91,7 +91,60 @@ export const useEditorState = create<EditorState>()((set, get) => ({
     set({ meals: updatedMeals });
   },
 
+  updateFoodQuantityGlobal: (itemInstanceId, newQuantity) => {
+    const { meals } = get();
+    // Encontrar o alimento base usando o itemInstanceId
+    let targetFoodId: string | null = null;
+    let targetFoodName: string | null = null;
+
+    for (const meal of meals) {
+      const item = meal.items.find(i => i.instanceId === itemInstanceId);
+      if (item) {
+        targetFoodId = (item as any).id || (item as any).food_id;
+        targetFoodName = item.name;
+        break;
+      }
+    }
+
+    if (!targetFoodId && !targetFoodName) return;
+
+    const updatedMeals = meals.map(meal => {
+      const updatedItems = meal.items.map(item => {
+        const itemFoodId = (item as any).id || (item as any).food_id;
+        const isMatch = (targetFoodId && itemFoodId === targetFoodId) || 
+                       (targetFoodName && item.name === targetFoodName);
+
+        if (!isMatch) return item;
+
+        const oldQty = item.clinical_mass_g || item.quantity || 100;
+        const safeNewQty = Math.max(5, Math.round(newQuantity / 5) * 5);
+
+        const updatedSubs = adjustSubstitutionsProportionally(
+          (item.substitutions || []) as any,
+          oldQty,
+          safeNewQty
+        );
+
+        const newMacros = calculateItemMacros(item, safeNewQty);
+
+        return {
+          ...item,
+          quantity: safeNewQty,
+          clinical_mass_g: safeNewQty,
+          quantity_display: `${safeNewQty}g`,
+          substitutions: updatedSubs,
+          ...newMacros
+        };
+      });
+
+      return { ...meal, items: updatedItems };
+    });
+
+    set({ meals: updatedMeals });
+  },
+
   removeFood: (mealId, itemInstanceId) => {
+
     const { meals } = get();
     const updatedMeals = meals.map(meal => {
       if (meal.id !== mealId) return meal;
