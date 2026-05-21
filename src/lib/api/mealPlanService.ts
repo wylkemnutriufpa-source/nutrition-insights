@@ -145,13 +145,17 @@ export async function updateMealPlan(
         throw new Error('Cannot update published meal plans');
       }
 
-      // Atualizar
+      // Atualizar - Map schema fields to database columns
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+      if (validated.title) updateData.title = validated.title;
+      if (validated.status) updateData.plan_status = validated.status;
+      if (validated.notes) updateData.description = validated.notes;
+
       const { data: updated, error: updateError } = await supabase
         .from('meal_plans')
-        .update({
-          ...validated,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', planId)
         .select('id, title, plan_status')
         .single();
