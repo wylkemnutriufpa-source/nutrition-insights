@@ -33,7 +33,7 @@ import { logAudit, logError } from '@/lib/monitoring';
 export async function createMealPlan(
   data: unknown,
   nutritionistId: string
-): Promise<{ id: string; title: string; status: string }> {
+): Promise<{ id: string; title: string; plan_status: string }> {
   // CAMADA 2: Validar entrada
   const validated = await validateRequest(
     MealPlanCreateSchema,
@@ -77,7 +77,7 @@ export async function createMealPlan(
           patient_id: validated.patient_id,
           title: validated.title,
           start_date: validated.start_date,
-          plan_mode: validated.plan_mode,
+          plan_mode: validated.plan_mode as "single_day" | "weekly",
           plan_status: 'draft',
           generated_by: nutritionistId,
           tenant_id: patient.tenant_id,
@@ -328,7 +328,7 @@ export async function getMealPlan(
     throw new Error('User not found');
   }
 
-  const isCreator = plan.created_by === userId;
+  const isCreator = plan.generated_by === userId;
   const isPatient = plan.patient_id === userId;
   const isAdmin = false; // TODO: verificar role
 

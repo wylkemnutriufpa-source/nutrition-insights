@@ -208,6 +208,15 @@ export function getRecentErrors(): readonly ErrorLog[] {
   return [...ERROR_BUFFER];
 }
 
+/** Log an audit event (shorthand for info-level log) */
+export function logAudit(event: string, metadata?: Record<string, unknown>) {
+  const entry = createLog("info", "logic_error", "audit", event, metadata);
+  ERROR_BUFFER.push(entry);
+  if (ERROR_BUFFER.length > MAX_BUFFER) ERROR_BUFFER.shift();
+  console.info(`[FJ:AUDIT] ${event}`, metadata ?? "");
+  scheduleFlush();
+}
+
 /** Install global unhandled error/rejection handlers */
 export function installGlobalErrorHandlers() {
   window.addEventListener("error", (event) => {
