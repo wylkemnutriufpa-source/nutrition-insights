@@ -11,7 +11,7 @@ import { logError } from '@/lib/monitoring';
 export class ValidationError extends Error {
   constructor(
     message: string,
-    public readonly details: z.ZodError['errors'] = []
+    public readonly details: z.ZodIssue[] = []
   ) {
     super(message);
     this.name = 'ValidationError';
@@ -37,16 +37,16 @@ export async function validateRequest<T>(
     return validated;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const message = `[VALIDATION] ✗ ${context} failed: ${error.errors
+      const message = `[VALIDATION] ✗ ${context} failed: ${error.issues
         .map(e => `${e.path.join('.')}: ${e.message}`)
         .join('; ')}`;
       
       console.error(message);
-      logError(new Error(message), { context, errors: error.errors });
+      logError("data_error", context, message, { errors: error.issues });
       
       throw new ValidationError(
         `${context} validation failed`,
-        error.errors
+        error.issues
       );
     }
     throw error;
@@ -67,16 +67,16 @@ export function validateRequestSync<T>(
     return validated;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const message = `[VALIDATION] ✗ ${context} failed: ${error.errors
+      const message = `[VALIDATION] ✗ ${context} failed: ${error.issues
         .map(e => `${e.path.join('.')}: ${e.message}`)
         .join('; ')}`;
       
       console.error(message);
-      logError(new Error(message), { context, errors: error.errors });
+      logError("data_error", context, message, { errors: error.issues });
       
       throw new ValidationError(
         `${context} validation failed`,
-        error.errors
+        error.issues
       );
     }
     throw error;

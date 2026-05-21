@@ -33,7 +33,7 @@ import { logAudit, logError } from '@/lib/monitoring';
 export async function createMealPlan(
   data: unknown,
   nutritionistId: string
-): Promise<{ id: string; title: string; status: string }> {
+): Promise<{ id: string; title: string; plan_status: string }> {
   // CAMADA 2: Validar entrada
   const validated = await validateRequest(
     MealPlanCreateSchema,
@@ -77,8 +77,9 @@ export async function createMealPlan(
           patient_id: validated.patient_id,
           title: validated.title,
           start_date: validated.start_date,
-          plan_mode: validated.plan_mode,
+          plan_mode: validated.plan_mode as "single_day" | "weekly",
           plan_status: 'draft',
+          nutritionist_id: nutritionistId,
           generated_by: nutritionistId,
           tenant_id: patient.tenant_id,
         })
@@ -144,13 +145,17 @@ export async function updateMealPlan(
         throw new Error('Cannot update published meal plans');
       }
 
-      // Atualizar
+      // Atualizar - Map schema fields to database columns
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+      if (validated.title) updateData.title = validated.title;
+      if (validated.status) updateData.plan_status = validated.status;
+      if (validated.notes) updateData.description = validated.notes;
+
       const { data: updated, error: updateError } = await supabase
         .from('meal_plans')
-        .update({
-          ...validated,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', planId)
         .select('id, title, plan_status')
         .single();
@@ -328,7 +333,7 @@ export async function getMealPlan(
     throw new Error('User not found');
   }
 
-  const isCreator = plan.created_by === userId;
+  const isCreator = plan.generated_by === userId;
   const isPatient = plan.patient_id === userId;
   const isAdmin = false; // TODO: verificar role
 

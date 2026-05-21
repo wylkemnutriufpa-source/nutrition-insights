@@ -107,7 +107,7 @@ export async function withTransaction<T>(
       return result;
     } catch (fallbackError) {
       console.error(`[TRANSACTION] ✗ Fallback also failed: ${operationName}`, fallbackError);
-      logError(fallbackError as Error, { operation: operationName, fallbackFailed: true });
+      logError("data_error", operationName, (fallbackError as Error).message, { fallbackFailed: true });
       throw new TransactionError(
         `Transaction and fallback both failed for ${operationName}`,
         fallbackError as Error,
@@ -117,7 +117,7 @@ export async function withTransaction<T>(
   }
   
   // Sem fallback ou fallback desabilitado
-  logError(lastError!, { operation: operationName, retriesExhausted: true });
+  logError("data_error", operationName, lastError!.message, { retriesExhausted: true });
   throw new TransactionError(
     `Transaction failed after ${retries} attempt(s): ${operationName}`,
     lastError!,
@@ -161,8 +161,7 @@ export async function withSequentialTransaction<T extends Record<string, any>>(
     return results;
   } catch (error) {
     console.error(`[TRANSACTION] ✗ Failed at step: ${completedSteps[completedSteps.length - 1]}`, error);
-    logError(error as Error, { 
-      operation: operationName,
+    logError("data_error", operationName, (error as Error).message, { 
       completedSteps,
       failedAt: completedSteps[completedSteps.length - 1]
     });
@@ -196,7 +195,7 @@ export async function withManualRollback<T>(
       console.log(`[TRANSACTION] ✓ Rollback completed: ${operationName}`);
     } catch (rollbackError) {
       console.error(`[TRANSACTION] ✗ Rollback also failed: ${operationName}`, rollbackError);
-      logError(rollbackError as Error, { operation: operationName, rollbackFailed: true });
+      logError("data_error", operationName, (rollbackError as Error).message, { rollbackFailed: true });
     }
     throw error;
   }
