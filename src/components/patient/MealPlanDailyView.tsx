@@ -742,8 +742,6 @@ const MealSlotCard = memo(function MealSlotCard({
   );
 });
 
-  );
-});
 
 // ── Meal Group (memoized) ──
 const MealGroup = memo(function MealGroup({
