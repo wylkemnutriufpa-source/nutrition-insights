@@ -530,6 +530,7 @@ export default function EditorV3Page() {
                       <MealCard 
                         meal={meal} 
                         onUpdateQuantity={(itemId, qty) => store.updateFoodQuantity(meal.id, itemId, qty)}
+                        onUpdateQuantityGlobal={(itemId, qty) => store.updateFoodQuantityGlobal(itemId, qty)}
                         onUpdateMacros={(itemId, val, type) => store.updateMealItemMacros(meal.id, itemId, val, type)}
                         onRemoveFood={(itemId) => store.removeFood(meal.id, itemId)}
                         onAddFood={(food) => store.addFoodToMeal(meal.id, food)}
@@ -538,6 +539,7 @@ export default function EditorV3Page() {
                         onUpdateMealHeader={(updates) => store.updateMealHeader(meal.id, updates)}
                         onUpdateFoodName={(itemId, name) => store.updateMealItemName(meal.id, itemId, name)}
                       />
+
                     </motion.div>
                   ))}
               </AnimatePresence>

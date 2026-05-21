@@ -655,14 +655,12 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   // Ele apenas organiza os itens recebidos por dia e refeição.
   const printItems = data.items || [];
 
-  const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
-    const canonicalType = resolveCanonicalMealType(mType);
-    const mealInfo = MEAL_LABELS[String(canonicalType)] || MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
+  const renderMealGroup = (mealItems: MealPlanPDFItem[], mealName: string, mealInfo: any) => {
+    const totalKcal = mealItems.filter(i => i.is_primary).reduce((sum, i) => sum + (i.meta_calorias || 0), 0);
+    const mealImage = mealItems.find(i => i.meal_image_url)?.meal_image_url || mealItems.find(i => i.visual_image_url)?.visual_image_url || null;
 
-    const primaries = typeItems.filter(i => i.is_primary);
-    const substitutions = typeItems.filter(i => !i.is_primary);
-    
-    const totalKcal = primaries.reduce((sum, i) => sum + (i.meta_calorias || 0), 0);
+    const primaries = mealItems.filter(i => i.is_primary);
+    const substitutions = mealItems.filter(i => !i.is_primary);
 
     const renderItemLine = (item: MealPlanPDFItem) => {
       const portionText = formatPortionText(item);
@@ -701,7 +699,6 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const renderSubstitutions = () => {
       if (substitutions.length === 0) return "";
       
-      // Agrupar substituições por grupo para saber "o que substitui o que"
       const subGroups: Record<string, MealPlanPDFItem[]> = {};
       substitutions.forEach(s => {
         const gId = s.substitution_group_id || 'orphan';
@@ -717,17 +714,11 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             const targetName = targetPrimary ? targetPrimary.title : "Itens acima";
             
             const subKcal = items.reduce((sum, item) => sum + (item.meta_calorias || 0), 0);
-            const subProt = items.reduce((sum, item) => sum + (item.meta_proteinas || 0), 0);
-            const subCarb = items.reduce((sum, item) => sum + (item.meta_carboidratos || 0), 0);
-            const subFat = items.reduce((sum, item) => sum + (item.meta_gorduras || 0), 0);
 
             return `
               <div style="margin-bottom: 8px; last-child: margin-bottom: 0;">
                 <div style="font-size: 9px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">
                   Substituindo ${escapeHtml(targetName)}:
-                  <span style="font-weight: normal; margin-left: 8px;">
-                    Macros não considerados: <span style="margin-left: 4px;">${Math.round(subKcal)} kcal · P ${Math.round(subProt)}g · C ${Math.round(subCarb)}g · G ${Math.round(subFat)}g</span>
-                  </span>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                   ${items.map(sub => {
@@ -751,11 +742,16 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       <div class="meal-row">
         <div class="meal-header-row">
           <div class="meal-title-group">
-            <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.label}</span>
+            <span class="meal-label-tag" style="background: ${mealInfo.color}">${escapeHtml(mealName)}</span>
           </div>
           <div class="meal-kcal-badge">${Math.round(totalKcal)} kcal</div>
         </div>
         <div class="meal-body">
+          ${mealImage ? `
+            <div style="width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; border: 1px solid #f1f5f9;">
+              <img src="${mealImage}" style="width: 100%; height: 100%; object-fit: cover;" alt="${escapeHtml(mealName)}" />
+            </div>
+          ` : ""}
           <div class="primary-items-list">
             ${primaries.map(renderItemLine).join("")}
           </div>
@@ -764,7 +760,6 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       </div>
     `;
   };
-
 
   const groupedByDay = printItems.reduce((acc, item) => {
     const dayKey = item.day_of_week ?? -1;
@@ -779,8 +774,6 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const order = [1, 2, 3, 4, 5, 6, 0];
     return order.indexOf(a) - order.indexOf(b);
   });
-
-  const mealOrder = [...FIXED_MEAL_TYPE_ORDER];
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -822,21 +815,11 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
        <div class="macro-value">${displayTotals.fat}g</div>
     </div>
   </div>
-  <div style="margin: -10px 0 14px; font-size: 9px; color: #64748b; text-align: right; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;">
-    <span>(Total Considerado) refeições principais</span><div style="display:none">${displayTotals.calories}</div>
-  </div>
 
   ${data.goal ? `
     <div style="margin-bottom: 20px; padding: 15px; background: #fdf6e3; border-radius: 12px; border-left: 4px solid #D4A84B;">
       <div style="font-size: 9px; text-transform: uppercase; font-weight: 700; color: #856404; margin-bottom: 4px;">Objetivo Principal</div>
       <div style="font-size: 13px; font-weight: 700; color: #1a1a2e;">${GOAL_LABELS[data.goal] || data.goal}</div>
-    </div>
-  ` : ""}
-
-  ${data.notes ? `
-    <div style="margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-      <div style="font-size: 9px; text-transform: uppercase; font-weight: 700; color: #6c757d; margin-bottom: 4px;">Observações do Nutricionista</div>
-      <div style="font-size: 11px; line-height: 1.5; color: #333;">${escapeHtml(cleanClinicalText(data.notes || ""))}</div>
     </div>
   ` : ""}
 
@@ -846,33 +829,42 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const isSingleDay = data.planMode === 'single_day';
     const showDayHeader = !isSingleDay && sortedDays.length > 1 && dayKey !== -1;
 
-    const processedCanonical = new Set(mealOrder);
-
-    const mealTypeGroups = mealOrder.map(mType => {
-      const typeItems = dayItems.filter(i => resolveCanonicalMealType(i.mealType) === mType);
-      if (typeItems.length === 0) return "";
-      return renderMealTypeItems(typeItems, mType);
+    // Group items by mealId (V3) or fallback to canonical mealType
+    const mealGroups: Record<string, MealPlanPDFItem[]> = {};
+    dayItems.forEach(item => {
+      const groupKey = item.mealId || resolveCanonicalMealType(item.mealType);
+      if (!mealGroups[groupKey]) mealGroups[groupKey] = [];
+      mealGroups[groupKey].push(item);
     });
 
-    const remainingItems = dayItems.filter(i => !processedCanonical.has(resolveCanonicalMealType(i.mealType) as CanonicalMealType));
-    const remainingTypes = [...new Set(remainingItems.map(i => resolveCanonicalMealType(i.mealType)))].sort();
-    const remainingGroups = remainingTypes.map(mType => {
-      const typeItems = remainingItems.filter(i => resolveCanonicalMealType(i.mealType) === mType);
-      return renderMealTypeItems(typeItems, mType);
+    // Order meal groups by standard order
+    const orderedGroupKeys = Object.keys(mealGroups).sort((a, b) => {
+      const typeA = resolveCanonicalMealType(mealGroups[a][0].mealType);
+      const typeB = resolveCanonicalMealType(mealGroups[b][0].mealType);
+      const order = [...FIXED_MEAL_TYPE_ORDER];
+      const indexA = order.indexOf(typeA as any);
+      const indexB = order.indexOf(typeB as any);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return 0;
     });
 
-    const filteredGroups = [...mealTypeGroups, ...remainingGroups].filter(g => g !== "");
     return `
       <div class="day-section">
         ${showDayHeader ? `<div class="day-header"><div class="day-name">${dayName}</div></div>` : ""}
-        ${filteredGroups.join("")}
+        ${orderedGroupKeys.map(key => {
+          const items = mealGroups[key];
+          const mType = items[0].mealName || items[0].mealType;
+          const canonical = resolveCanonicalMealType(items[0].mealType);
+          const mealInfo = MEAL_LABELS[String(canonical)] || MEAL_LABELS[items[0].mealType] || { label: mType, color: "#94a3b8" };
+          return renderMealGroup(items, mType, mealInfo);
+        }).join("")}
       </div>
     `;
   }).join("")}
 
   <div class="watermark">FITJOURNEY</div>
-
-
   </div>
     <div class="premium-footer">
       <div class="footer-brand">Fit<span style="color: #D4A84B">Journey</span></div>
@@ -885,6 +877,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
   return html;
 }
+
 
 export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
   // 🛡️ Monitoramento Soberano no PDF

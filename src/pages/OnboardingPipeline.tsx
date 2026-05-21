@@ -1060,7 +1060,7 @@ export default function OnboardingPipeline() {
                   ) : (
                     <>
                       <p className="text-muted-foreground">
-                        Com base nos seus dados, o Protocolo FitJourney vai calcular TMB, TDEE e gerar um plano alimentar 100% personalizado. Após a geração, o profissional revisará e aprovará.
+                        Com base nos seus dados, o Protocolo FitJourney calculará seu perfil metabólico. O profissional agora revisará suas informações e liberará seu plano alimentar personalizado.
                       </p>
                       <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                         <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
@@ -1068,10 +1068,12 @@ export default function OnboardingPipeline() {
                         <div className="flex justify-between text-sm"><span>Refeições/dia:</span><span className="font-medium">{pipeline.meal_count}</span></div>
                         <div className="flex justify-between text-sm"><span>Preparo:</span><span className="font-medium">{{ quick: "⚡ Prático", homemade: "🏠 Caseiro", gourmet: "👨‍🍳 Gourmet", any: "🤷 Tanto faz" }[pipeline.cooking_preference] || pipeline.cooking_preference}</span></div>
                       </div>
-                      <Button onClick={handleGeneratePlan} className="w-full" size="lg" disabled={generating}>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Gerar Meu Pré-Plano
-                      </Button>
+                      <div className="py-4 text-center">
+                        <Badge variant="outline" className="text-amber-500 border-amber-500/30 gap-1.5 py-1.5 px-4 bg-amber-500/5">
+                          <Clock className="w-3.5 h-3.5" /> Aguardando Profissional
+                        </Badge>
+                      </div>
+
                     </>
                   )}
                 </CardContent>

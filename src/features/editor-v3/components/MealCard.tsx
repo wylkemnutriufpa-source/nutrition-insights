@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface MealCardProps {
   meal: Meal;
   onUpdateQuantity: (itemInstanceId: string, newQty: number) => void;
+  onUpdateQuantityGlobal?: (itemInstanceId: string, newQty: number) => void;
   onUpdateMacros: (itemInstanceId: string, val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemoveFood: (itemInstanceId: string) => void;
   onAddFood: (food: Food) => void;
@@ -24,9 +25,11 @@ interface MealCardProps {
   onUpdateFoodName?: (itemInstanceId: string, name: string) => void;
 }
 
+
 export const MealCard: React.FC<MealCardProps> = ({ 
-  meal, onUpdateQuantity, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
+  meal, onUpdateQuantity, onUpdateQuantityGlobal, onUpdateMacros, onRemoveFood, onAddFood, onRemoveMeal, onAddSubstitution, onUpdateMealHeader, onUpdateFoodName 
 }) => {
+
   const store = useEditorState();
   const [isMealDialogOpen, setIsMealDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -193,6 +196,8 @@ export const MealCard: React.FC<MealCardProps> = ({
                     key={item.instanceId} 
                     item={item} 
                     onUpdateQuantity={(qty) => onUpdateQuantity(item.instanceId, qty)}
+                    onUpdateQuantityGlobal={onUpdateQuantityGlobal ? (qty) => onUpdateQuantityGlobal(item.instanceId, qty) : undefined}
+
                     onUpdateMacros={(val, type) => onUpdateMacros(item.instanceId, val, type)}
                     onRemove={() => onRemoveFood(item.instanceId)}
                     onRemoveSubstitution={(subIdx) => store.removeSubstitutionFromItem(meal.id, item.instanceId, subIdx)}

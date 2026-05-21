@@ -1,15 +1,17 @@
 
 import React from 'react';
-import { Trash2, ChevronRight, Flame, Target, Plus, Search } from 'lucide-react';
+import { Trash2, ChevronRight, Flame, Target, Plus, Search, RefreshCw } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MealItem, Food } from '../types/types';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FoodItemRowProps {
   item: MealItem;
   onUpdateQuantity: (newQty: number) => void;
+  onUpdateQuantityGlobal?: (newQty: number) => void;
   onUpdateMacros: (val: number, type: 'kcal' | 'protein' | 'carbs' | 'fat') => void;
   onRemove: () => void;
   onRequestSubstitution: () => void;
@@ -17,9 +19,11 @@ interface FoodItemRowProps {
   onUpdateName?: (name: string) => void;
 }
 
+
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
-  item, onUpdateQuantity, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName 
+  item, onUpdateQuantity, onUpdateQuantityGlobal, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName 
 }) => {
+
   return (
     <div className="group relative flex flex-col p-3 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px] -mr-12 -mt-12 rounded-full group-hover:bg-emerald-500/10 transition-all duration-300" />
@@ -68,14 +72,34 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative group/qty">
-            <Input
-              type="number"
-              value={item.clinical_mass_g || item.quantity || 0}
-              onChange={(e) => onUpdateQuantity(Number(e.target.value))}
-              className="bg-neutral-900/80 border-white/5 text-right pr-6 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
-            />
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
+          <div className="flex flex-col gap-1 items-end">
+            <div className="relative group/qty">
+              <Input
+                type="number"
+                value={item.clinical_mass_g || item.quantity || 0}
+                onChange={(e) => onUpdateQuantity(Number(e.target.value))}
+                className="bg-neutral-900/80 border-white/5 text-right pr-6 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
+            </div>
+            
+            {onUpdateQuantityGlobal && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button 
+                      onClick={() => onUpdateQuantityGlobal(item.clinical_mass_g || item.quantity || 100)}
+                      className="text-[7px] font-black uppercase tracking-[0.1em] text-emerald-500/40 hover:text-emerald-400 flex items-center gap-1 transition-colors pr-2"
+                    >
+                      <RefreshCw className="w-2 h-2" /> Replicar na semana
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-neutral-900 border-white/10 text-[10px] font-bold">
+                    Aplica esta gramagem em todas as ocorrências deste alimento no plano.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
           
           <Button
@@ -88,6 +112,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
           </Button>
         </div>
       </div>
+
 
       {/* Substituições Dinâmicas Soberanas */}
       <div className="mt-3 pt-4 border-t border-white/5">
