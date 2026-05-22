@@ -26,9 +26,10 @@ const formatDisplayPortion = (item: SovereignMealItem): string => {
 
 import { SovereignMealItem, SovereignMacros, SovereignSubstitution } from "@/lib/sovereign";
 
+export type AdherenceStatus = "followed" | "partial" | "not_followed";
 export type { SovereignMealItem as MealPlanItem, SovereignSubstitution, SovereignMacros };
 
-interface MealCompletion {
+export interface MealCompletion {
   id: string;
   meal_plan_item_id: string;
   completed: boolean;
@@ -37,7 +38,7 @@ interface MealCompletion {
   date?: string;
 }
 
-interface MealDetailData {
+export interface MealDetailData {
   id: string;
   itemId?: string;
   title: string;

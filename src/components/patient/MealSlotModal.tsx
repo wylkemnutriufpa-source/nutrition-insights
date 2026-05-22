@@ -39,10 +39,10 @@ export function MealSlotModal({
   const totals = useMemo(() => {
     return items.reduce((acc, item) => {
       return {
-        calories: acc.calories + (item.meta_calorias ?? 0),
-        protein: acc.protein + (item.meta_proteinas ?? 0),
-        carbs: acc.carbs + (item.meta_carboidratos ?? 0),
-        fat: acc.fat + (item.meta_gorduras ?? 0),
+        calories: acc.calories + (item.macros.kcal ?? 0),
+        protein: acc.protein + (item.macros.protein_g ?? 0),
+        carbs: acc.carbs + (item.macros.carbs_g ?? 0),
+        fat: acc.fat + (item.macros.fat_g ?? 0),
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   }, [items]);
