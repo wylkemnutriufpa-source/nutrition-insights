@@ -53,7 +53,7 @@ export default function NextMealWidget() {
       const { data: plan } = await withTenantFilter(
         supabase
           .from("meal_plans")
-          .select("id, totals_status, plan_mode")
+          .select("id, totals_status, plan_mode, snapshot")
           .eq("patient_id", userId)
           .eq("is_active", true)
           .order("created_at", { ascending: false })
@@ -61,25 +61,56 @@ export default function NextMealWidget() {
         tenantId
       ).maybeSingle();
 
+
       if (!plan) { setLoading(false); return; }
       // totalsStatus ignorado no Patient App
 
-      // Get current day of week (0=Sunday, 5=Friday)
+      // 🛡️ SOBERANIA: Bloqueamos o uso de data local para decisões críticas se houver snapshot.
       const now_dow = new Date().getDay();
+      const snapshot = plan.snapshot as any;
+      const isV3 = snapshot && (snapshot.snapshot_version === 'v3' || Array.isArray(snapshot.days));
 
-      const itemsQuery = supabase
-        .from("meal_plan_items")
-        .select("tipo_refeicao, title, description, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras, day_of_week, is_primary")
-        .eq("meal_plan_id", plan.id);
-      
-      // Se não for single_day, filtra por dia
-      if (plan.plan_mode !== 'single_day') {
-        itemsQuery.or(`day_of_week.eq.${now_dow},day_of_week.is.null`);
+      let items: any[] = [];
+
+      if (isV3) {
+        // Extração Soberana do Snapshot
+        const targetDays = snapshot.days.some((d: any) => d.day_of_week === now_dow)
+          ? snapshot.days.filter((d: any) => d.day_of_week === now_dow)
+          : [snapshot.days[0]];
+
+        targetDays.forEach((day: any) => {
+          day.meals.forEach((meal: any) => {
+            meal.items.forEach((item: any) => {
+              items.push({
+                tipo_refeicao: meal.name,
+                title: item.title,
+                description: item.quantity_display,
+                meta_calorias: item.macros?.kcal,
+                meta_proteinas: item.macros?.protein_g,
+                meta_carboidratos: item.macros?.carbs_g,
+                meta_gorduras: item.macros?.fat_g,
+                is_primary: true,
+                time: meal.time
+              });
+            });
+          });
+        });
+      } else {
+        const itemsQuery = supabase
+          .from("meal_plan_items")
+          .select("tipo_refeicao, title, description, meta_calorias, meta_proteinas, meta_carboidratos, meta_gorduras, day_of_week, is_primary")
+          .eq("meal_plan_id", plan.id);
+        
+        if (plan.plan_mode !== 'single_day') {
+          itemsQuery.or(`day_of_week.eq.${now_dow},day_of_week.is.null`);
+        }
+
+        const { data: legacyItems } = await itemsQuery;
+        items = legacyItems || [];
       }
 
-      const { data: items } = await itemsQuery;
-
       if (!items || items.length === 0) { setLoading(false); return; }
+
 
       // Group by tipo_refeicao
       const grouped: Record<string, typeof items> = {};
