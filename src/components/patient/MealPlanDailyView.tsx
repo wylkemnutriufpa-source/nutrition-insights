@@ -18,50 +18,15 @@ import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieCla
 import { safeAccess } from "@/lib/safeRender";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 /** Resolve a human-readable portion string from the item data hierarchy. */
-const formatDisplayPortion = (item: any): string => {
+const formatDisplayPortion = (item: SovereignMealItem): string => {
   if (!item) return '';
-  // 🛡️ SOBERANIA V3: Prioridade absoluta para campos pré-formatados pelo compiler.
-  const dQty = item.display_quantity || item.quantity_display;
-  const dUnit = item.display_unit;
-  
-  if (dQty) {
-    if (dUnit) return `${dQty} ${dUnit}`.trim();
-    return String(dQty);
-  }
-
-  // Fallback mínimo para itens legados que ainda não foram migrados
-  const mass = item.clinical_mass_g || item.grams;
-  if (mass) return `${mass}g`;
-  return item.description || '';
+  // 🛡️ SOBERANIA V3: Snapshot é o Destino.
+  return item.quantity_display || '';
 };
 
-import type { Database } from "@/integrations/supabase/types";
+import { SovereignMealItem, SovereignMacros, SovereignSubstitution } from "@/lib/sovereign";
 
-type MealType = Database["public"]["Enums"]["tipo_refeicao"];
-type AdherenceStatus = "followed" | "partial" | "not_followed";
-
-interface MealPlanItem {
-  id: string;
-  title: string;
-  description: string | null;
-  tipo_refeicao: MealType;
-  day_of_week: number | null;
-  meta_calorias: number | null;
-  meta_proteinas: number | null;
-  meta_carboidratos: number | null;
-  meta_gorduras: number | null;
-  metadata?: Record<string, any> | null;
-  image_url?: string | null;
-  visual_library_item_id?: string | null;
-  is_primary?: boolean;
-  is_substitution?: boolean;
-  substitution_group_id?: string | null;
-  // --- SOBERANIA V3 ---
-  editor_version?: string;
-  display_quantity?: string | number;
-  display_unit?: string;
-  clinical_mass_g?: number;
-}
+export type { SovereignMealItem as MealPlanItem, SovereignSubstitution, SovereignMacros };
 
 interface MealCompletion {
   id: string;
@@ -77,7 +42,7 @@ interface MealDetailData {
   itemId?: string;
   title: string;
   description: string | null;
-  tipo_refeicao: MealType;
+  tipo_refeicao?: string;
   meta_calorias: number | null;
   meta_proteinas: number | null;
   meta_carboidratos: number | null;
@@ -234,16 +199,7 @@ const MealItemCard = memo(function MealItemCard({
   const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
   // 🛡️ SOBERANIA V3: Imagem vem EXCLUSIVAMENTE do snapshot. ZERO inferência runtime.
-  const resolvedImage = useMemo(() => {
-    if (!item) return null;
-    // O snapshot compilado já traz a URL final.
-    const img = item.image_url || (item as any)?.imageUrl || item.metadata?.image_url;
-    
-    if (img && img.startsWith('http') && !img.includes('placeholder')) {
-      return img;
-    }
-    return null;
-  }, [item?.image_url, (item as any)?.imageUrl, item?.metadata?.image_url]);
+  const resolvedImage = item.imageUrl;
 
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
@@ -264,7 +220,19 @@ const MealItemCard = memo(function MealItemCard({
       {resolvedImage && (
         <div
           className="relative w-full aspect-[16/10] overflow-hidden cursor-pointer bg-neutral-900 group/image"
-          onClick={() => onOpenDetail({ ...item, itemId: item.id, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+          onClick={() => onOpenDetail({
+            id: item.id,
+            itemId: item.id,
+            title: item.title,
+            description: item.quantity_display,
+            tipo_refeicao: item.meal.name,
+            meta_calorias: item.macros.kcal,
+            meta_proteinas: item.macros.protein_g,
+            meta_carboidratos: item.macros.carbs_g,
+            meta_gorduras: item.macros.fat_g,
+            image_url: item.imageUrl,
+            metadata: (item as any).metadata
+          })}
         >
           <img 
             src={resolvedImage} 
@@ -285,7 +253,19 @@ const MealItemCard = memo(function MealItemCard({
       <div className="p-3 sm:p-4">
         <div
           className="flex items-start gap-2 sm:gap-3 cursor-pointer min-w-0"
-          onClick={() => onOpenDetail({ ...item, itemId: item.id, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
+          onClick={() => onOpenDetail({
+            id: item.id,
+            itemId: item.id,
+            title: item.title,
+            description: item.quantity_display,
+            tipo_refeicao: item.meal.name,
+            meta_calorias: item.macros.kcal,
+            meta_proteinas: item.macros.protein_g,
+            meta_carboidratos: item.macros.carbs_g,
+            meta_gorduras: item.macros.fat_g,
+            image_url: item.imageUrl,
+            metadata: (item as any).metadata
+          })}
         >
           {!resolvedImage && (
             <div className="mt-0.5">
@@ -307,33 +287,11 @@ const MealItemCard = memo(function MealItemCard({
               )}
             </div>
             <div className="mt-1">
-              {(() => {
-                const editMeta = (item as any).edit_metadata || item.metadata;
-                const isV3 = item.editor_version === "v3" || (item as any).editor_version === "V3";
-
-                // V3 prioritization: display_quantity > clinical_mass_g
-                const dQty = item.display_quantity || editMeta?.display_quantity || item.clinical_mass_g || (item as any).grams;
-                const dUnit = item.display_unit || editMeta?.display_unit || editMeta?.portionLabel || editMeta?.portionUnit || (item.clinical_mass_g || (item as any).grams ? "g" : "");
-                const cMass = item.clinical_mass_g || (item as any).clinical_mass_g || editMeta?.clinical_mass_g;
-
-                if (dQty) {
-                  return (
-                    <p className="text-xs font-bold text-primary mb-0.5">
-                      {dQty}{dUnit ? ` ${dUnit}` : ""}
-                    </p>
-                  );
-                }
-                
-                if (cMass) {
-                  return (
-                    <p className="text-xs font-bold text-primary mb-0.5">
-                      {cMass}g
-                    </p>
-                  );
-                }
-
-                return null;
-              })()}
+              {item.quantity_display && (
+                <p className="text-xs font-bold text-primary mb-0.5">
+                  {item.quantity_display}
+                </p>
+              )}
 
               {item.description && (
                 <p className="text-xs text-muted-foreground line-clamp-6 whitespace-pre-line">
