@@ -1,0 +1,229 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 ÍNDICE DE ARQUIVOS - NAVEGAÇÃO RÁPIDA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🚀 COMECE POR AQUI (ORDEM DE LEITURA)                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. ⭐ GUIA_VISUAL_RAPIDO.txt
+   → Guia visual com 3 passos para resolver
+   → Mostra exatamente o que você deve ver na tela
+   → Inclui troubleshooting visual
+
+2. ⭐ COMANDOS_COPIAR_COLAR.txt
+   → Todos os comandos prontos para copiar
+   → Não precisa digitar nada
+   → Inclui comandos de diagnóstico
+
+3. ⭐ RESOLVER_TEMPLATES_VAZIOS.txt
+   → Instruções detalhadas passo a passo
+   → Explica o problema e a solução
+   → Inclui verificação de sucesso
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 📊 DOCUMENTAÇÃO E CONTEXTO                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+4. 📖 RESUMO_SITUACAO_ATUAL.md
+   → Status completo do projeto
+   → O que está pronto e o que falta
+   → Checklist de verificação
+   → Próximos passos
+
+5. 📖 COMECE_AQUI.txt
+   → Visão geral do projeto
+   → Resultado esperado
+   → Arquivos importantes
+
+6. 📖 LEIA_ISTO_AGORA.txt (se existir)
+   → Instruções detalhadas
+   → Contexto histórico
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🔍 DIAGNÓSTICO E VERIFICAÇÃO                                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+7. 🔬 DIAGNOSTICO_DADOS_BANCO.sql
+   → 9 queries para verificar dados no Supabase
+   → Verifica estrutura dos templates
+   → Verifica alimentos e calorias
+   → Verifica imagens
+
+8. 🔬 VERIFICAR_3_PRIORITARIOS.sql
+   → Verifica os 3 templates prioritários
+   → Colesterol Alto 1600 kcal
+   → Emagrecimento 1500 kcal
+   → Emagrecimento 1200 kcal
+
+9. 🔬 DIAGNOSTICO_VAZIO.sql (se existir)
+   → Diagnóstico específico para templates vazios
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 💾 SQL PARA EXECUTAR NO SUPABASE                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+10. 💾 TEMPLATES_7_DIAS_URGENTE.sql
+    → SQL dos 3 templates prioritários
+    → 7 dias variados para cada template
+    → Estrutura completa com foods, imagens, macros
+    → JÁ FOI EXECUTADO (não precisa executar novamente)
+
+11. 💾 SQL_DEFINITIVO.sql (se existir)
+    → SQL de integração inicial
+    → JÁ FOI EXECUTADO
+
+12. 💾 SQL_COPIAR_E_COLAR.sql (se existir)
+    → SQL consolidado para copiar e colar
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🛠️ ARQUIVOS TÉCNICOS (PARA REFERÊNCIA)                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+13. 🔧 src/features/editor-v3/utils/normalization.ts
+    → Código de conversão foods → items
+    → Linhas 215-240 contêm a correção
+    → JÁ FOI CORRIGIDO
+
+14. 🔧 src/features/editor-v3/components/EditorV3Page.tsx
+    → Componente principal do Editor V3
+    → Função handleSelectProfile (linha ~150)
+    → Chama normalizeSnapshotToV3
+
+15. 🔧 package.json
+    → Scripts disponíveis (npm run dev, npm run build, etc)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 📋 ARQUIVOS DE PLANEJAMENTO (OPCIONAL)                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+16. 📋 PLANO_CIRURGICO_SOBERANIA.md (se existir)
+    → Plano para blindagem futura
+    → 5 cirurgias de refatoração
+    → Estimativa de tempo: 6h 45min
+
+17. 📋 INTEGRACAO_TEMPLATES_V3_COMPLETA.md (se existir)
+    → Documentação técnica completa
+    → Arquitetura do sistema
+    → Fluxo de dados
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🗑️ ARQUIVOS ANTIGOS (IGNORAR)                                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+- SQL_FINAL_CORRIGIDO.sql
+- SQL_CORRIGIDO_FINAL_V2.sql
+- VERIFICAR_TEMPLATES.sql
+- VERIFICAR_DIETARY.sql
+- DIAGNOSTICO_URGENTE.sql
+- VERIFICAR_DIAS.sql
+- CONVERTER_PARA_V3_URGENTE.sql
+- CORRIGIR_ESTRUTURA_COMPLETA.sql
+
+Estes arquivos são versões antigas ou intermediárias.
+Use apenas os arquivos listados acima.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🎯 FLUXO DE TRABALHO RECOMENDADO                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+HOJE (30 minutos):
+1. Ler: GUIA_VISUAL_RAPIDO.txt
+2. Executar: COMANDOS_COPIAR_COLAR.txt (comando 13)
+3. Testar: Seguir GUIA_VISUAL_RAPIDO.txt (Passo 3)
+4. Verificar: RESUMO_SITUACAO_ATUAL.md (Critérios de Sucesso)
+
+SE NÃO FUNCIONAR (15 minutos):
+5. Ler: RESOLVER_TEMPLATES_VAZIOS.txt
+6. Executar: DIAGNOSTICO_DADOS_BANCO.sql
+7. Tirar prints e me enviar
+
+SE FUNCIONAR (Opcional):
+8. Ler: PLANO_CIRURGICO_SOBERANIA.md
+9. Planejar próximas cirurgias
+10. Criar os 47 templates restantes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🔗 LINKS RÁPIDOS                                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Localhost:
+http://localhost:5173
+
+Supabase Dashboard:
+https://supabase.com/dashboard/project/vkrcobprntictsxqmjjl
+
+SQL Editor:
+https://supabase.com/dashboard/project/vkrcobprntictsxqmjjl/sql/new
+
+Storage (Imagens):
+https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 📞 SUPORTE RÁPIDO                                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Problema: Não sei por onde começar
+Solução: Leia GUIA_VISUAL_RAPIDO.txt
+
+Problema: Templates vazios
+Solução: Leia RESOLVER_TEMPLATES_VAZIOS.txt
+
+Problema: Servidor não inicia
+Solução: Leia COMANDOS_COPIAR_COLAR.txt (comandos 1-5)
+
+Problema: Dados errados no banco
+Solução: Execute DIAGNOSTICO_DADOS_BANCO.sql
+
+Problema: Preciso de contexto
+Solução: Leia RESUMO_SITUACAO_ATUAL.md
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ✅ ARQUIVOS CRIADOS NESTA SESSÃO                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+✅ GUIA_VISUAL_RAPIDO.txt (NOVO)
+✅ COMANDOS_COPIAR_COLAR.txt (NOVO)
+✅ RESOLVER_TEMPLATES_VAZIOS.txt (NOVO)
+✅ RESUMO_SITUACAO_ATUAL.md (NOVO)
+✅ DIAGNOSTICO_DADOS_BANCO.sql (NOVO)
+✅ INDICE_ARQUIVOS.txt (ESTE ARQUIVO)
+
+Todos os arquivos estão no diretório raiz do projeto.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRONTO! Agora você tem um mapa completo de todos os arquivos! 🗺️
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

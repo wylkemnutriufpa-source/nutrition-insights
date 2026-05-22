@@ -1,0 +1,75 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 INTEGRAÇÃO DOS 62 TEMPLATES NO EDITOR V3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 O QUE ESTE SQL FAZ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Adiciona coluna `plan_snapshot` na tabela v3_diet_templates
+✅ Adiciona coluna `family` para agrupar templates
+✅ Converte os 62 templates de meal_plan_templates para v3_diet_templates
+✅ Mantém os 10 templates originais do V3
+✅ Cria função get_v3_templates_by_family() para buscar por família
+✅ Cria view v3_templates_by_family para listar agrupados
+
+🎯 RESULTADO ESPERADO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Após executar, você terá:
+- 72+ templates ativos no Editor V3 (10 originais + 62 soberanos)
+- Templates agrupados por família:
+  • Emagrecimento (8 templates)
+  • Hipertrofia (13 templates)
+  • Saúde (21 templates)
+  • Clínico (8 templates)
+  • Restrições Alimentares (12 templates)
+
+📝 COMO EXECUTAR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra o Supabase Dashboard
+2. Vá em "SQL Editor"
+3. Clique em "New Query"
+4. Copie TODO o conteúdo do arquivo:
+   supabase/migrations/20260521010000_integrate_templates_to_v3.sql
+5. Cole no editor
+6. Clique em "Run" (ou pressione Ctrl+Enter)
+
+⚠️ IMPORTANTE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Este SQL é IDEMPOTENTE (pode executar várias vezes sem problemas)
+- Usa ON CONFLICT para atualizar templates existentes
+- NÃO deleta templates antigos, apenas marca como inativos
+- Mantém a SOBERANIA CLÍNICA dos snapshots
+
+🔍 VERIFICAÇÃO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Após executar, rode estas queries para verificar:
+
+-- Contar templates ativos
+SELECT COUNT(*) as total_templates 
+FROM v3_diet_templates 
+WHERE active = true;
+
+-- Ver templates por família
+SELECT * FROM v3_templates_by_family;
+
+-- Ver todos os templates
+SELECT id, slug, title, family, objective, 
+       jsonb_array_length(kcal_profiles) as kcal_count
+FROM v3_diet_templates 
+WHERE active = true
+ORDER BY family, title;
+
+-- Verificar se tem snapshots
+SELECT slug, title, 
+       jsonb_object_keys(plan_snapshot) as kcal_profile
+FROM v3_diet_templates 
+WHERE active = true 
+  AND plan_snapshot IS NOT NULL
+  AND plan_snapshot != '{}'::jsonb
+LIMIT 10;
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

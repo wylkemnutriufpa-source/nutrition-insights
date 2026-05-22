@@ -1,0 +1,74 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ FAZER AGORA - LOVABLE (3 PASSOS SIMPLES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PASSO 1: EXECUTAR SQL NO SUPABASE (2 minutos)                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Abra: https://supabase.com/dashboard
+2. Selecione seu projeto
+3. Clique em "SQL Editor" (menu lateral esquerdo)
+4. Clique em "New Query"
+5. Abra o arquivo: SQL_DIAGNOSTICO_RAPIDO.sql
+6. Copie TODO o conteúdo
+7. Cole no editor do Supabase
+8. Clique em "Run" (ou Ctrl+Enter)
+9. Copie os resultados e me envie
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PASSO 2: AGUARDAR DEPLOY DO LOVABLE (2 minutos)                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+O código que editei (normalization.ts) já foi salvo.
+
+1. Vá no Lovable
+2. Procure por "Deploy" ou "Building" no canto superior direito
+3. Aguarde a mensagem "Deploy successful" ou "Live"
+4. Aguarde mais 1 minuto (para o cache limpar)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PASSO 3: TESTAR NO NAVEGADOR (3 minutos)                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Abra seu app (URL do Lovable)
+2. Pressione Ctrl+Shift+R (recarregar sem cache)
+3. Abra o Console (F12) - aba "Console"
+4. Faça login
+5. Vá no Editor V3
+6. Clique em "Biblioteca"
+7. Selecione "Emagrecimento 1500 kcal"
+8. Clique em "Plotar Template"
+9. Copie TODOS os logs do console e me envie
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 ME ENVIE ESTAS 3 COISAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✅ Resultado do SQL (Query 1, 2 e 3)
+2. ✅ Logs do console (todos os logs que aparecem)
+3. ✅ Descrição do que você vê na tela (refeições vazias? nomes errados?)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❓ PERGUNTAS RÁPIDAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+P: O deploy do Lovable já terminou?
+R: Veja se aparece "Live" ou "Deploy successful"
+
+P: Os logs aparecem no console?
+R: Se NÃO, pressione Ctrl+Shift+R novamente
+
+P: As refeições aparecem vazias?
+R: Me envie os logs do console para eu ver o que está acontecendo
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AGUARDANDO SUAS RESPOSTAS! 🎯
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

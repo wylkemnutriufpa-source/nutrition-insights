@@ -1,0 +1,166 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 DEBUG URGENTE - DESCOBRIR POR QUE TEMPLATES ESTÃO VAZIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ADICIONEI LOGS DETALHADOS NO CÓDIGO!
+
+Agora vamos descobrir exatamente onde está o problema.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 1: VERIFICAR DADOS NO BANCO (5 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra o Supabase Dashboard
+2. Vá em SQL Editor
+3. Abra o arquivo: DEBUG_COMPLETO.sql
+4. Execute TODAS as 8 queries
+5. Me envie os resultados (tire print ou copie)
+
+IMPORTANTE: Precisamos saber se os dados estão corretos no banco!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 2: REINICIAR SERVIDOR COM LOGS (2 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Pare o servidor (Ctrl+C no terminal)
+
+2. Execute:
+
+npm run dev
+
+3. Aguarde a mensagem:
+   ✅ Local: http://localhost:5173/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 3: TESTAR COM CONSOLE ABERTO (3 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra aba anônima (Ctrl+Shift+N)
+
+2. Acesse: http://localhost:5173
+
+3. Abra o Console (F12) - aba "Console"
+
+4. Faça login
+
+5. Vá no Editor V3
+
+6. Clique em "Biblioteca"
+
+7. Selecione "Emagrecimento 1500 kcal"
+
+8. Escolha perfil "1500 kcal"
+
+9. Clique em "Plotar Template"
+
+10. OLHE O CONSOLE!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ LOGS QUE DEVEM APARECER NO CONSOLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Você DEVE ver estes logs (em ordem):
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ [normalizeSnapshotToV3] ========== INÍCIO ==========                    │
+│ [normalizeSnapshotToV3] Input snapshot: {...}                           │
+│ [normalizeSnapshotToV3] Tipo do snapshot: object                        │
+│ [normalizeSnapshotToV3] É array? false                                  │
+│ [normalizeSnapshotToV3] rawMeals extraídos: 42 refeições                │
+│ [normalizeSnapshotToV3] Primeira rawMeal: {...}                         │
+│ [normalizeSnapshotToV3] Processando meal: Cuscuz com Ovo                │
+│ [normalizeSnapshotToV3] m.items: undefined                              │
+│ [normalizeSnapshotToV3] m.foods: [{...}, {...}, {...}]                  │
+│ [normalizeSnapshotToV3] ✅ Convertendo 3 foods para items               │
+│ [normalizeSnapshotToV3] Convertendo food: Cuscuz 100g 112               │
+│ [normalizeSnapshotToV3] Item convertido: Cuscuz 100g 112kcal            │
+│ [normalizeSnapshotToV3] Convertendo food: Ovo 2 unidades 146            │
+│ [normalizeSnapshotToV3] Item convertido: Ovo 100g 146kcal               │
+│ [normalizeSnapshotToV3] Convertendo food: Mamão 1 fatia 43              │
+│ [normalizeSnapshotToV3] Item convertido: Mamão 100g 43kcal              │
+│ [normalizeSnapshotToV3] ========== RESULTADO ==========                 │
+│ [normalizeSnapshotToV3] Total de meals: 42                              │
+│ [normalizeSnapshotToV3] Primeira meal: {...}                            │
+│ [normalizeSnapshotToV3] Items da primeira meal: 3                       │
+│ [normalizeSnapshotToV3] ========== FIM ==========                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 ANÁLISE DOS LOGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CENÁRIO 1: Logs NÃO aparecem
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: Cache ainda está ativo                                        │
+│ SOLUÇÃO:                                                                │
+│   1. Feche TODAS as abas do navegador                                   │
+│   2. Abra nova aba anônima                                              │
+│   3. Tente novamente                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+CENÁRIO 2: Logs aparecem mas "m.foods: undefined"
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: Dados no banco estão errados                                  │
+│ SOLUÇÃO:                                                                │
+│   1. Execute DEBUG_COMPLETO.sql no Supabase                             │
+│   2. Verifique Query 5 (deve mostrar "TEM FOODS")                       │
+│   3. Se mostrar "VAZIO", execute TEMPLATES_7_DIAS_URGENTE.sql          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+CENÁRIO 3: Logs aparecem mas "Items da primeira meal: 0"
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: Conversão foods→items falhou                                  │
+│ SOLUÇÃO:                                                                │
+│   1. Verifique se aparece "✅ Convertendo X foods para items"           │
+│   2. Se NÃO aparecer, m.foods está vazio                                │
+│   3. Execute DEBUG_COMPLETO.sql Query 6                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+CENÁRIO 4: Logs aparecem, items > 0, mas tela vazia
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: MealCard não está renderizando os items                       │
+│ SOLUÇÃO:                                                                │
+│   1. Verifique se meal.items.length > 0 no console                      │
+│   2. Inspecione o elemento HTML (F12 → Elements)                        │
+│   3. Procure por "Refeição Vazia" no HTML                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📸 ME ENVIE ESTES PRINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 📸 Console completo (F12) com TODOS os logs
+2. 📸 Tela do Editor V3 mostrando as refeições
+3. 📸 Resultado da Query 5 do DEBUG_COMPLETO.sql
+4. 📸 Resultado da Query 6 do DEBUG_COMPLETO.sql
+
+Com esses prints vou saber EXATAMENTE onde está o problema!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ Executei DEBUG_COMPLETO.sql no Supabase
+☐ Reiniciei o servidor (npm run dev)
+☐ Abri aba anônima
+☐ Abri o Console (F12)
+☐ Testei o template
+☐ Vi os logs no console
+☐ Tirei prints
+☐ Enviei os prints
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRONTO! Agora vamos descobrir o problema! 🔍
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

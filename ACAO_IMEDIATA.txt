@@ -1,0 +1,126 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 AÇÃO IMEDIATA - RESOLVER TEMPLATES VAZIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TEMOS 2 PROBLEMAS SIMULTÂNEOS:
+
+1. ❌ Edge function `generate-meal-plan` foi deletada (JÁ CORRIGI)
+2. ❌ Templates aparecem vazios no Editor V3 (VAMOS CORRIGIR AGORA)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 1: EXECUTAR SQL DE DIAGNÓSTICO (2 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra o Supabase Dashboard
+2. Vá em SQL Editor
+3. Abra o arquivo: DIAGNOSTICO_SIMPLES.sql
+4. Copie TODO o conteúdo
+5. Cole no editor do Supabase
+6. Clique em "Run"
+7. ME ENVIE O RESULTADO DAS 3 QUERIES
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 2: AGUARDAR DEPLOY DO LOVABLE (2 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O Lovable precisa fazer deploy de 2 arquivos que criei:
+
+1. ✅ supabase/functions/generate-meal-plan/index.ts (função restaurada)
+2. ✅ src/features/editor-v3/utils/normalization.ts (logs de debug)
+
+Aguarde a mensagem "Deploy successful" no Lovable.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 3: TESTAR NO NAVEGADOR (3 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra seu app (URL do Lovable)
+2. Pressione Ctrl+Shift+R (recarregar sem cache)
+3. Abra o Console (F12) - aba "Console"
+4. Faça login
+5. Vá no Editor V3
+6. Clique em "Biblioteca"
+7. Selecione um template
+8. Clique em "Plotar Template"
+9. OLHE O CONSOLE e me diga o que aparece
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CENÁRIOS POSSÍVEIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CENÁRIO A: SQL retorna NULL ou vazio
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: Templates não têm dados no banco                              │
+│ SOLUÇÃO:                                                                │
+│   1. Executar TEMPLATES_7_DIAS_URGENTE.sql                              │
+│   2. Aguardar 1 minuto                                                  │
+│   3. Testar novamente                                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+CENÁRIO B: SQL retorna dados MAS console não mostra logs
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: Deploy do Lovable ainda não terminou                          │
+│ SOLUÇÃO:                                                                │
+│   1. Aguardar mais 1-2 minutos                                          │
+│   2. Pressionar Ctrl+Shift+R novamente                                  │
+│   3. Testar novamente                                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+CENÁRIO C: SQL retorna dados E console mostra logs MAS templates vazios
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: Conversão foods→items está falhando                           │
+│ SOLUÇÃO:                                                                │
+│   1. Me enviar os logs do console                                       │
+│   2. Me enviar resultado do SQL                                         │
+│   3. Vou corrigir o código de conversão                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+CENÁRIO D: Tudo funciona mas sem imagens
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEMA: URLs das imagens estão erradas                                │
+│ SOLUÇÃO:                                                                │
+│   1. Verificar se SQL tem campo "image" nas refeições                   │
+│   2. Corrigir SQL para adicionar URLs corretas                          │
+│   3. Re-executar SQL                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O QUE EU PRECISO DE VOCÊ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✅ Resultado do SQL (EXECUTAR_AGORA.sql)
+2. ✅ Status do deploy do Lovable ("Deploy successful"?)
+3. ✅ Logs do console do navegador (F12)
+4. ✅ Descrição do que você vê na tela
+
+Com essas 4 informações, vou saber EXATAMENTE qual é o problema!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESUMO DO QUE FIZ ATÉ AGORA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Identifiquei regressão crítica (generate-meal-plan deletada)
+✅ Restaurei a função generate-meal-plan (100% soberana)
+✅ Adicionei logs de debug no normalization.ts
+✅ Criei auditoria completa (AUDITORIA_REGRESSAO_URGENTE.md)
+✅ Criei SQL de diagnóstico (EXECUTAR_AGORA.sql)
+✅ Criei este guia de ação imediata
+
+⏳ Aguardando você executar SQL e me enviar resultados
+⏳ Aguardando deploy do Lovable terminar
+⏳ Aguardando você testar no navegador
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AGUARDANDO SUAS RESPOSTAS! 🎯
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

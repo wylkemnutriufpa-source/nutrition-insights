@@ -1,0 +1,52 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ LEIA PRIMEIRO - SOLUÇÃO EM 2 MINUTOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PROBLEMA:
+Templates aparecem vazios no Editor V3 (sem alimentos, sem calorias)
+
+🔧 CAUSA:
+Navegador está usando código ANTIGO (cache)
+
+✅ SOLUÇÃO:
+1. Abra o terminal no diretório do projeto
+2. Execute: npm run dev
+3. Abra aba anônima: Ctrl+Shift+N
+4. Acesse: http://localhost:5173
+5. Teste um template no Editor V3
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 PRÓXIMOS PASSOS:
+
+TEM PRESSA? (2 minutos)
+→ Leia: GUIA_VISUAL_RAPIDO.txt
+→ Execute: COMANDOS_COPIAR_COLAR.txt (comando 13)
+
+QUER DETALHES? (5 minutos)
+→ Leia: RESOLVER_TEMPLATES_VAZIOS.txt
+→ Leia: RESUMO_SITUACAO_ATUAL.md
+
+PRECISA DIAGNOSTICAR? (10 minutos)
+→ Execute: DIAGNOSTICO_DADOS_BANCO.sql
+→ Leia: INDICE_ARQUIVOS.txt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ RESULTADO ESPERADO:
+
+Console (F12):
+[normalizeSnapshotToV3] Input snapshot: {...}
+[normalizeSnapshotToV3] Output meals: [...]
+
+Editor V3:
+🍳 Cuscuz com Ovo
+   • Cuscuz 100g (112 kcal)
+   • Ovo 2 unidades (146 kcal)
+   • Mamão 1 fatia (43 kcal)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRONTO! Agora é só executar! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -1,0 +1,155 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    🚀 COMECE AQUI - SOLUÇÃO EM 2 MINUTOS                    ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📋 SITUAÇÃO ATUAL                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ✅ Código corrigido e salvo no Lovable
+  ⏳ Aguardando deploy terminar (2-5 minutos)
+  ⏳ Aguardando você testar em aba anônima
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⚡ AÇÃO IMEDIATA (FAÇA AGORA)                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  1️⃣  Abra aba anônima
+      → Pressione: Ctrl + Shift + N
+      → Acesse: https://seu-sistema.lovable.app
+      → Faça login
+
+  2️⃣  Abra o console
+      → Pressione: F12
+      → Clique na aba "Console"
+      → Clique no ícone 🚫 para limpar
+
+  3️⃣  Teste um template
+      → Clique: "Biblioteca"
+      → Selecione: "Emagrecimento 1500 kcal"
+      → Escolha: "1500 kcal"
+      → Clique: "Plotar Template"
+
+  4️⃣  OLHE O CONSOLE (F12)
+      → Procure logs que começam com: [normalizeSnapshotToV3]
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ✅ RESULTADO ESPERADO                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  NO CONSOLE (F12):
+  ─────────────────────────────────────────────────────────────────────────────
+  [normalizeSnapshotToV3] ========== INÍCIO ==========
+  [normalizeSnapshotToV3] ✅ Estrutura BANCO: snapshot.days (CORRETO)
+  [normalizeSnapshotToV3] ✅ Convertendo 3 foods para items
+  [normalizeSnapshotToV3] Convertendo food: Cuscuz 100g 112
+  [normalizeSnapshotToV3] Convertendo food: Ovo 2 unidades 146
+  [normalizeSnapshotToV3] ========== FIM ==========
+
+
+  NO EDITOR V3:
+  ─────────────────────────────────────────────────────────────────────────────
+  🍳 Café da Manhã (08:00) - 301 kcal
+     • Cuscuz 100g (112 kcal)
+     • Ovo 2 unidades (146 kcal)
+     • Mamão 1 fatia (43 kcal)
+
+  🥗 Lanche da Manhã (10:00) - 150 kcal
+     • Iogurte Natural 200ml (120 kcal)
+     • Granola 1 colher (30 kcal)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ❓ O QUE FAZER DEPOIS                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ✅ SE FUNCIONOU:
+     → PRONTO! Sistema corrigido!
+     → Teste outros templates
+     → Verifique se imagens aparecem
+
+
+  ❌ SE LOGS NÃO APARECEM:
+     → Deploy ainda não terminou
+     → Aguarde 2-3 minutos
+     → Repita os passos 1, 2, 3 e 4
+
+
+  ⚠️  SE LOGS APARECEM MAS TEMPLATES VAZIOS:
+     → Execute: DIAGNOSTICO_COMPLETO.sql no Supabase
+     → Tire print do console (F12)
+     → Tire print da tela do Editor V3
+     → Me envie os prints + resultado do SQL
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📚 ARQUIVOS ÚTEIS                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  📄 ACAO_IMEDIATA_AGORA.txt
+     → Guia rápido com instruções detalhadas (2 min)
+
+  📄 RESUMO_EXECUTIVO.md
+     → Resumo completo da situação e solução (3 min)
+
+  📄 SITUACAO_ATUAL_E_SOLUCAO.md
+     → Guia técnico completo com diagnóstico (10 min)
+
+  📄 DIAGNOSTICO_COMPLETO.sql
+     → SQL para verificar estrutura do banco (5 min)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 RESUMO DO PROBLEMA                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ANTES:
+  ─────────────────────────────────────────────────────────────────────────────
+  🍳 Café da Manhã (08:00) - 146 kcal
+     • Ovo (146 kcal)
+     ❌ SEM Cuscuz, SEM Mamão
+
+
+  DEPOIS (ESPERADO):
+  ─────────────────────────────────────────────────────────────────────────────
+  🍳 Café da Manhã (08:00) - 301 kcal
+     • Cuscuz 100g (112 kcal)
+     • Ovo 2 unidades (146 kcal)
+     • Mamão 1 fatia (43 kcal)
+     ✅ TODOS os itens aparecem
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔧 O QUE FOI CORRIGIDO                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  1. Código agora lê snapshot.days (estrutura correta do banco)
+  2. Converte foods → items automaticamente
+  3. Parseia qty corretamente ("100g" → 100, "2 unidades" → 2)
+  4. Mapeia image → imageUrl
+  5. Adiciona logs de debug detalhados
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⏱️  TEMPO ESTIMADO                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Testar: 2 minutos
+  Deploy do Lovable: 2-5 minutos
+  Total: 4-7 minutos
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    🚀 PRONTO! AGORA É SÓ EXECUTAR!                          ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+Última atualização: 21/05/2026 15:40
+Status: 🟡 AGUARDANDO VERIFICAÇÃO DO USUÁRIO

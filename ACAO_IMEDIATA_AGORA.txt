@@ -1,0 +1,142 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ AÇÃO IMEDIATA - FAÇA AGORA (2 MINUTOS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 OBJETIVO: Verificar se o código novo está sendo executado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 1: ABRIR ABA ANÔNIMA (30 segundos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Pressione: Ctrl + Shift + N (Chrome/Edge)
+2. Acesse: https://seu-sistema.lovable.app
+3. Faça login
+4. Vá no Editor V3
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 2: ABRIR CONSOLE (10 segundos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Pressione: F12
+2. Clique na aba "Console"
+3. Clique no ícone 🚫 para limpar o console
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 3: TESTAR TEMPLATE (1 minuto)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Clique no botão "Biblioteca" no Editor V3
+2. Selecione: "Emagrecimento 1500 kcal"
+3. Escolha: "1500 kcal"
+4. Clique: "Plotar Template"
+5. OLHE O CONSOLE (F12)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESULTADO ESPERADO NO CONSOLE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CÓDIGO NOVO FUNCIONANDO:
+
+[EditorV3] Snapshot recebido: {...}
+[normalizeSnapshotToV3] ========== INÍCIO ==========
+[normalizeSnapshotToV3] Input snapshot: {...}
+[normalizeSnapshotToV3] ✅ Estrutura BANCO: snapshot.days (CORRETO)
+[normalizeSnapshotToV3] rawMeals extraídos: 42 refeições
+[normalizeSnapshotToV3] ✅ Convertendo 3 foods para items
+[normalizeSnapshotToV3] Convertendo food: Cuscuz 100g 112
+[normalizeSnapshotToV3] Convertendo food: Ovo 2 unidades 146
+[normalizeSnapshotToV3] Item convertido: Cuscuz 100g 112kcal
+[normalizeSnapshotToV3] Item convertido: Ovo 100g 146kcal
+[normalizeSnapshotToV3] ========== FIM ==========
+
+
+❌ CÓDIGO ANTIGO (CACHE):
+
+[EditorV3] Início loadPlan
+[EditorV3] Fim loadPlan
+(SEM logs [normalizeSnapshotToV3])
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O QUE FAZER AGORA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CENÁRIO A: Logs [normalizeSnapshotToV3] APARECEM ✅
+→ ÓTIMO! Código novo está funcionando!
+→ Vá para: PASSO 4 (verificar se templates aparecem corretos)
+
+
+CENÁRIO B: Logs [normalizeSnapshotToV3] NÃO APARECEM ❌
+→ Deploy do Lovable ainda não terminou
+→ Aguarde 2-3 minutos
+→ Repita PASSO 1, 2 e 3
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 4: VERIFICAR TEMPLATES (30 segundos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Olhe o Editor V3 e verifique:
+
+✅ FUNCIONANDO CORRETAMENTE:
+
+🍳 Café da Manhã (08:00) - 301 kcal
+   • Cuscuz 100g (112 kcal)
+   • Ovo 2 unidades (146 kcal)
+   • Mamão 1 fatia (43 kcal)
+
+🥗 Lanche da Manhã (10:00) - 150 kcal
+   • Iogurte Natural 200ml (120 kcal)
+   • Granola 1 colher (30 kcal)
+
+
+❌ AINDA COM PROBLEMA:
+
+🍳 Café da Manhã (08:00) - 146 kcal
+   • Ovo (146 kcal)
+   (SEM Cuscuz, SEM Mamão)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O QUE FAZER DEPOIS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SE FUNCIONOU ✅:
+→ PRONTO! Sistema corrigido!
+→ Teste outros templates
+→ Verifique se imagens aparecem
+
+
+SE NÃO FUNCIONOU ❌:
+→ Tire print do console (F12)
+→ Tire print da tela do Editor V3
+→ Execute: DIAGNOSTICO_COMPLETO.sql no Supabase
+→ Me envie os 3 prints + resultado do SQL
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DICA PRO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se os logs aparecem MAS templates ainda vazios:
+→ Problema está na estrutura do banco
+→ Execute: DIAGNOSTICO_COMPLETO.sql
+→ Me envie o resultado
+
+
+Se os logs NÃO aparecem MESMO após 5 minutos:
+→ Problema no deploy do Lovable
+→ Verifique logs do Lovable
+→ Tente fazer uma mudança mínima no código e salvar
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRONTO! Agora é só executar! 🚀
+
+Tempo total: 2-3 minutos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

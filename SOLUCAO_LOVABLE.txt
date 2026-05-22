@@ -1,0 +1,113 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 SOLUÇÃO PARA LOVABLE - O QUE VOCÊ PODE FAZER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LIMITAÇÕES DO LOVABLE:
+❌ Não pode rodar npm run dev localmente
+❌ Não pode acessar terminal
+❌ Não pode fazer build manual
+✅ PODE editar código no editor do Lovable
+✅ PODE executar SQL no Supabase Dashboard
+✅ PODE ver console do navegador (F12)
+✅ PODE fazer deploy automático
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUÇÃO ADAPTADA PARA LOVABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 1: VERIFICAR DADOS NO SUPABASE (5 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra o Supabase Dashboard
+2. Vá em SQL Editor
+3. Execute esta query:
+
+SELECT 
+  title,
+  plan_snapshot->'1500'->0->'meals'->0 as primeira_refeicao
+FROM v3_diet_templates
+WHERE title = 'Emagrecimento 1500 kcal';
+
+4. Me diga o resultado (copie e cole aqui)
+
+
+PASSO 2: AGUARDAR DEPLOY AUTOMÁTICO DO LOVABLE (2 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O Lovable faz deploy automático quando você salva o código.
+
+1. Aguarde a mensagem "Deploy successful" no Lovable
+2. Aguarde 1-2 minutos para o cache limpar
+3. Recarregue a página do app (Ctrl+Shift+R)
+
+
+PASSO 3: TESTAR NO NAVEGADOR (3 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra o app do Lovable (URL do seu projeto)
+2. Abra o Console (F12) - aba "Console"
+3. Faça login
+4. Vá no Editor V3
+5. Clique em "Biblioteca"
+6. Selecione "Emagrecimento 1500 kcal"
+7. Escolha perfil "1500 kcal"
+8. Clique em "Plotar Template"
+9. OLHE O CONSOLE e me diga o que aparece
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O QUE ESPERAR NO CONSOLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Você DEVE ver:
+
+[normalizeSnapshotToV3] ========== INÍCIO ==========
+[normalizeSnapshotToV3] Input snapshot: {...}
+[normalizeSnapshotToV3] Tipo do snapshot: object
+[normalizeSnapshotToV3] É array? false
+[normalizeSnapshotToV3] rawMeals extraídos: 42 refeições
+[normalizeSnapshotToV3] Processando meal: Cuscuz com Ovo
+[normalizeSnapshotToV3] m.foods: [{...}, {...}, {...}]
+[normalizeSnapshotToV3] ✅ Convertendo 3 foods para items
+[normalizeSnapshotToV3] Item convertido: Cuscuz 100g 112kcal
+[normalizeSnapshotToV3] ========== FIM ==========
+
+
+SE NÃO VER ESSES LOGS:
+→ Deploy ainda não terminou, aguarde mais 1 minuto
+→ Cache ainda está ativo, pressione Ctrl+Shift+R
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PERGUNTAS PARA VOCÊ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. O código que editei (normalization.ts) já foi salvo no Lovable?
+   → Se SIM, o deploy já deve ter acontecido
+   → Se NÃO, preciso fazer o commit
+
+2. Você vê a mensagem "Deploy successful" no Lovable?
+   → Se SIM, aguarde 1-2 minutos
+   → Se NÃO, o deploy ainda está em andamento
+
+3. Qual é a URL do seu app no Lovable?
+   → Exemplo: https://seu-projeto.lovable.app
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRÓXIMOS PASSOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Depois que você me enviar:
+1. Resultado da query SQL
+2. Logs do console
+3. Print da tela do Editor V3
+
+Vou saber EXATAMENTE qual é o problema e como resolver!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AGUARDANDO SUAS RESPOSTAS! 🎯
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

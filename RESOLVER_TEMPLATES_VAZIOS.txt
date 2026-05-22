@@ -1,0 +1,134 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 RESOLVER TEMPLATES VAZIOS - AÇÃO IMEDIATA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROBLEMA IDENTIFICADO:
+✅ Código correto está no arquivo normalization.ts
+❌ Navegador ainda executa versão ANTIGA (cache)
+❌ Servidor de desenvolvimento não foi reiniciado após build
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUÇÃO EM 3 PASSOS (2 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 1: PARAR O SERVIDOR
+--------------------------
+1. Vá no terminal onde o servidor está rodando
+2. Pressione Ctrl+C para parar o servidor
+3. Aguarde a mensagem de confirmação
+
+
+PASSO 2: LIMPAR CACHE E REINICIAR
+----------------------------------
+Execute ESTES comandos no terminal:
+
+npm run dev
+
+(Aguarde a mensagem "Local: http://localhost:5173/")
+
+
+PASSO 3: LIMPAR CACHE DO NAVEGADOR
+-----------------------------------
+1. Abra o navegador
+2. Pressione Ctrl+Shift+Delete
+3. Marque:
+   ✅ Cookies e dados de sites
+   ✅ Imagens e arquivos em cache
+4. Clique em "Limpar dados"
+
+OU MAIS RÁPIDO:
+
+1. Abra uma aba ANÔNIMA (Ctrl+Shift+N no Chrome)
+2. Acesse http://localhost:5173
+3. Faça login
+4. Vá no Editor V3
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VERIFICAR SE FUNCIONOU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abra o Console do Navegador (F12)
+2. Vá na aba "Console"
+3. Clique no botão "Biblioteca" no Editor V3
+4. Selecione um template (ex: "Emagrecimento 1500 kcal")
+5. Escolha o perfil calórico
+6. Clique em "Plotar Template"
+
+VOCÊ DEVE VER ESTES LOGS NO CONSOLE:
+
+✅ [EditorV3] Snapshot recebido: {...}
+✅ [normalizeSnapshotToV3] Input snapshot: {...}
+✅ [normalizeSnapshotToV3] Estrutura 3: snapshot é array direto
+✅ [normalizeSnapshotToV3] Output meals: [...]
+
+E NO EDITOR V3:
+
+✅ Refeições aparecem com NOMES corretos (Cuscuz com Ovo, Tapioca, etc)
+✅ Alimentos aparecem MODULARES (Cuscuz 100g, Ovo 2 unidades, etc)
+✅ Calorias aparecem CORRETAS (112 kcal, 146 kcal, etc)
+✅ Gramagens aparecem CORRETAS (100g, 2 unidades, 1 fatia)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SE AINDA NÃO FUNCIONAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Verifique se os logs [normalizeSnapshotToV3] aparecem no console
+   - Se NÃO aparecem: cache ainda está ativo, tente aba anônima
+   - Se aparecem: problema está em outro lugar
+
+2. Execute este SQL no Supabase para verificar os dados:
+
+SELECT 
+  title,
+  jsonb_array_length(plan_snapshot->'1500') as dias,
+  plan_snapshot->'1500'->0->'meals'->0->'foods' as primeira_refeicao
+FROM v3_diet_templates
+WHERE title = 'Emagrecimento 1500 kcal';
+
+Resultado esperado:
+- dias: 7
+- primeira_refeicao: [{"name":"Cuscuz","qty":"100g","kcal":112}, ...]
+
+3. Se os dados estão corretos no banco mas não aparecem no frontend:
+   - Tire um print do console (F12)
+   - Tire um print da tela do Editor V3
+   - Me envie para análise
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPLICAÇÃO TÉCNICA (OPCIONAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O que foi corrigido no código:
+
+ANTES (ERRADO):
+```typescript
+const qtyNumber = parseFloat(food.qty); // "2 unidades" → 2 (errado)
+const clinical_mass = qtyNumber; // 2g (absurdo!)
+```
+
+DEPOIS (CORRETO):
+```typescript
+const qtyStr = food.qty || '100';
+const qtyMatch = String(qtyStr).match(/[\d.]+/); // Extrai número
+const qtyNumber = qtyMatch ? parseFloat(qtyMatch[0]) : 100;
+
+// Se qty tem "g" ou "ml", usar como massa clínica
+const hasMassUnit = /\d+\s*(g|ml)/i.test(String(qtyStr));
+const clinical_mass = hasMassUnit ? qtyNumber : 100;
+```
+
+Agora:
+- "100g" → clinical_mass = 100g ✅
+- "2 unidades" → clinical_mass = 100g (padrão) ✅
+- "1 fatia" → clinical_mass = 100g (padrão) ✅
+- "à vontade" → clinical_mass = 100g (padrão) ✅
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRONTO! Agora é só reiniciar o servidor e limpar o cache! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

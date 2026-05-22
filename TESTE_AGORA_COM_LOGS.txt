@@ -1,0 +1,145 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ TESTE AGORA - LOGS ADICIONADOS (1 MINUTO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 MUDANÇA: Adicionei MAIS logs para rastrear o problema
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 1: AGUARDAR DEPLOY DO LOVABLE (2-3 minutos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O Lovable está fazendo deploy do código novo com logs adicionais.
+Aguarde a mensagem "Deploy concluído" no painel do Lovable.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 2: TESTAR EM ABA ANÔNIMA (1 minuto)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Pressione: Ctrl + Shift + N (aba anônima)
+2. Acesse: https://seu-sistema.lovable.app
+3. Faça login
+4. Vá no Editor V3
+5. Pressione: F12 (abrir console)
+6. Clique na aba "Console"
+7. Clique no ícone 🚫 para limpar o console
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 3: TESTAR TEMPLATE (30 segundos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Clique: "Biblioteca"
+2. Selecione: "Emagrecimento 1500 kcal"
+3. Escolha: "1500 kcal"
+4. Clique: "Plotar Template"
+5. OLHE O CONSOLE (F12)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LOGS ESPERADOS NO CONSOLE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CÓDIGO NOVO DEPLOYADO:
+
+[EditorV3] ========== INÍCIO handleSelectProfile ==========
+[EditorV3] Template selecionado: Emagrecimento 1500 kcal
+[EditorV3] Kcal solicitado: 1500
+[EditorV3] plan_snapshot existe? true
+[EditorV3] plan_snapshot keys: ["1200", "1500", "1800", "2200"]
+[EditorV3] Snapshot key usado: 1500
+[EditorV3] Snapshot encontrado? true
+[EditorV3] Tipo do snapshot: object
+[EditorV3] É array? false
+[EditorV3] Tem chave "days"? true
+[EditorV3] Snapshot recebido (primeiros 500 chars): {"days":[{"day_of_week":1,"meals":[...
+[normalizeSnapshotToV3] ========== INÍCIO ==========
+[normalizeSnapshotToV3] Input snapshot: {...}
+[normalizeSnapshotToV3] ✅ Estrutura BANCO: snapshot.days (CORRETO)
+[normalizeSnapshotToV3] rawMeals extraídos: 42 refeições
+[normalizeSnapshotToV3] ✅ Convertendo 3 foods para items
+[normalizeSnapshotToV3] Convertendo food: Cuscuz 100g 112
+[normalizeSnapshotToV3] Convertendo food: Ovo 2 unidades 146
+[normalizeSnapshotToV3] ========== FIM ==========
+[EditorV3] ✅ Snapshot normalizado com sucesso!
+[EditorV3] Total de refeições: 42
+[EditorV3] Dias únicos: [1, 2, 3, 4, 5, 6, 0]
+[EditorV3] Items na primeira refeição: 3
+[EditorV3] Aplicando template SEMANAL (7 dias)
+[EditorV3] ========== FIM handleSelectProfile ==========
+
+
+❌ CÓDIGO ANTIGO (CACHE):
+
+[EditorV3] Início loadPlan
+[EditorV3] Fim loadPlan
+(SEM logs [EditorV3] ========== INÍCIO handleSelectProfile ==========)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 4: COPIAR LOGS E ME ENVIAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Clique com botão direito no console
+2. Selecione: "Save as..." ou "Salvar como..."
+3. Salve como: logs_console.txt
+4. ME ENVIE o arquivo logs_console.txt
+
+OU
+
+1. Selecione TODOS os logs no console (Ctrl+A)
+2. Copie (Ctrl+C)
+3. Cole aqui no chat
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O QUE OS LOGS VÃO REVELAR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Se o deploy terminou (logs [EditorV3] aparecem)
+2. Se plan_snapshot existe no template
+3. Qual é a estrutura REAL do snapshot
+4. Se tem chave "days" ou é array direto
+5. Quantas refeições foram extraídas
+6. Quantos items tem cada refeição
+7. Se a conversão foods → items funcionou
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CENÁRIOS POSSÍVEIS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CENÁRIO A: Logs aparecem + templates funcionam ✅
+→ PRONTO! Sistema corrigido!
+
+
+CENÁRIO B: Logs aparecem + templates ainda vazios ❌
+→ Problema na estrutura do banco
+→ Execute: DIAGNOSTICO_COMPLETO.sql
+→ Me envie os logs + resultado do SQL
+
+
+CENÁRIO C: Logs NÃO aparecem ❌
+→ Deploy ainda não terminou
+→ Aguarde mais 2-3 minutos
+→ Repita PASSO 2 e 3
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INFORMAÇÕES IMPORTANTES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Código corrigido e salvo no Lovable
+✅ Logs detalhados adicionados
+✅ Rastreamento completo do fluxo
+⏳ Aguardando deploy terminar
+⏳ Aguardando você testar
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRONTO! Aguarde o deploy e teste! 🚀
+
+Tempo estimado: 3-5 minutos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

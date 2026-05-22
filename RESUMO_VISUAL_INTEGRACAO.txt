@@ -1,0 +1,202 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 PROBLEMA IDENTIFICADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  ❌ ANTES: Templates em tabelas diferentes                             │
+│                                                                         │
+│  ┌──────────────────────┐         ┌──────────────────────┐            │
+│  │ meal_plan_templates  │         │  v3_diet_templates   │            │
+│  │                      │         │                      │            │
+│  │ • 62 templates       │    ✗    │ • 10 templates       │            │
+│  │ • Estrutura antiga   │         │ • Estrutura V3       │            │
+│  │ • Não aparece no V3  │         │ • Usado pelo Editor  │            │
+│  └──────────────────────┘         └──────────────────────┘            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ SOLUÇÃO IMPLEMENTADA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  ✅ DEPOIS: Todos os templates no Editor V3                            │
+│                                                                         │
+│  ┌──────────────────────┐                                              │
+│  │ meal_plan_templates  │                                              │
+│  │                      │                                              │
+│  │ • 62 templates       │                                              │
+│  │ • Estrutura antiga   │                                              │
+│  └──────────┬───────────┘                                              │
+│             │                                                           │
+│             │ MIGRATION                                                 │
+│             │ (converte)                                                │
+│             ▼                                                           │
+│  ┌──────────────────────┐                                              │
+│  │  v3_diet_templates   │                                              │
+│  │                      │                                              │
+│  │ • 72+ templates      │ ◄─── EDITOR V3 BUSCA AQUI                   │
+│  │ • Estrutura V3       │                                              │
+│  │ • Com snapshots      │                                              │
+│  │ • Agrupados por      │                                              │
+│  │   família            │                                              │
+│  └──────────────────────┘                                              │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 TEMPLATES POR FAMÍLIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  🔥 EMAGRECIMENTO (8 templates)                                        │
+│  ├─ Emagrecimento 1200 kcal                                            │
+│  ├─ Detox 1300 kcal                                                    │
+│  ├─ Emagrecimento Prático 1400 kcal                                    │
+│  ├─ Emagrecimento 1500 kcal                                            │
+│  ├─ Emagrecimento Low Carb 1500 kcal                                   │
+│  ├─ Ovos Cozidos 1500 kcal                                             │
+│  ├─ Cetogênica 1600 kcal                                               │
+│  └─ Jejum Intermitente 1600 kcal                                       │
+│                                                                         │
+│  💪 HIPERTROFIA (13 templates)                                         │
+│  ├─ Pré-Treino 1900 kcal                                               │
+│  ├─ Café da Manhã Reforçado 2200 kcal                                  │
+│  ├─ Hipertrofia Prática 2200 kcal                                      │
+│  ├─ Hipertrofia 2300 kcal                                              │
+│  ├─ Natação 2300 kcal                                                  │
+│  ├─ Crossfit 2400 kcal                                                 │
+│  ├─ Hipertrofia Alto Carbo 2500 kcal                                   │
+│  ├─ Hipertrofia 2600 kcal                                              │
+│  ├─ Ciclismo 2600 kcal                                                 │
+│  └─ Atleta Endurance 2800 kcal                                         │
+│                                                                         │
+│  🌿 SAÚDE (21 templates)                                               │
+│  ├─ Saúde 1500 kcal                                                    │
+│  ├─ Nordeste Cuscuz 1600 kcal                                          │
+│  ├─ Crepioca Fit 1600 kcal                                             │
+│  ├─ Vegetariano 1600 kcal                                              │
+│  ├─ Açaí Fit 1700 kcal                                                 │
+│  ├─ Filé de Tilápia 1700 kcal                                          │
+│  ├─ Vegano 1700 kcal                                                   │
+│  ├─ Marmita Fit 1700 kcal                                              │
+│  ├─ Bolo de Macaxeira 1800 kcal                                        │
+│  ├─ Coxa e Sobrecoxa 1800 kcal                                         │
+│  ├─ Mediterrânea 1800 kcal                                             │
+│  ├─ Norte Tradicional 1800 kcal                                        │
+│  ├─ Nordeste Tradicional 1800 kcal                                     │
+│  ├─ Saúde Equilibrado 1800 kcal                                        │
+│  ├─ Centro-Oeste Tradicional 1900 kcal                                 │
+│  ├─ Filé de Porco 1900 kcal                                            │
+│  ├─ Stroganoff Fit 1900 kcal                                           │
+│  ├─ Paleo 1900 kcal                                                    │
+│  ├─ Saúde 2000 kcal                                                    │
+│  ├─ Sul Tradicional 2000 kcal                                          │
+│  ├─ Camarão Fit 2000 kcal                                              │
+│  ├─ Sul Churrasco 2100 kcal                                            │
+│  ├─ Churrasco Fit 2100 kcal                                            │
+│  └─ Costela Fit 2200 kcal                                              │
+│                                                                         │
+│  🏥 CLÍNICO (8 templates)                                              │
+│  ├─ Canja Fit 1400 kcal                                                │
+│  ├─ Criança 1400 kcal                                                  │
+│  ├─ Renal 1500 kcal                                                    │
+│  ├─ Idoso 1500 kcal                                                    │
+│  ├─ Colesterol Alto 1600 kcal                                          │
+│  ├─ Hipertensão 1700 kcal                                              │
+│  ├─ Diabetes Controlado 1700 kcal                                      │
+│  └─ Gestante 2000 kcal                                                 │
+│                                                                         │
+│  🚫 RESTRIÇÕES ALIMENTARES (12 templates)                              │
+│  ├─ Zero Glúten 1400 kcal                                              │
+│  ├─ Zero Lactose 1400 kcal                                             │
+│  ├─ Zero Glúten e Lactose 1400 kcal                                    │
+│  ├─ Low FODMAP 1400 kcal                                               │
+│  ├─ Zero Glúten, Lactose e Low FODMAP 1400 kcal                        │
+│  └─ ... (mais 7 templates)                                             │
+│                                                                         │
+│  ═══════════════════════════════════════════════════════════════════   │
+│  TOTAL: 72+ TEMPLATES ATIVOS                                           │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 COMO EXECUTAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  1️⃣  Abra o Supabase Dashboard                                         │
+│                                                                         │
+│  2️⃣  Vá em "SQL Editor"                                                │
+│                                                                         │
+│  3️⃣  Clique em "New Query"                                             │
+│                                                                         │
+│  4️⃣  Copie o arquivo:                                                  │
+│      supabase/migrations/20260521010000_integrate_templates_to_v3.sql  │
+│                                                                         │
+│  5️⃣  Cole no editor                                                    │
+│                                                                         │
+│  6️⃣  Clique em "Run" (ou Ctrl+Enter)                                  │
+│                                                                         │
+│  7️⃣  Aguarde a mensagem de sucesso                                     │
+│                                                                         │
+│  8️⃣  Verifique com:                                                    │
+│      SELECT COUNT(*) FROM v3_diet_templates WHERE active = true;       │
+│      (deve retornar 72+)                                               │
+│                                                                         │
+│  9️⃣  Abra o Editor V3 no FitJourney                                    │
+│                                                                         │
+│  🔟 Clique em "Biblioteca" e veja os 72+ templates!                    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ CARACTERÍSTICAS DOS TEMPLATES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  ✅ Snapshot completo com 7 dias de refeições                          │
+│  ✅ Imagens reais de refeições completas                               │
+│  ✅ Componentes modulares (proteína, carbo, leguminosa, vegetais)      │
+│  ✅ Substituições automáticas                                          │
+│  ✅ Cálculos automáticos (proteína 4kcal/g, carbo 4kcal/g, lipídeo 9)  │
+│  ✅ Medidas caseiras (ovo em unidades, pão em fatias)                  │
+│  ✅ Tudo editável pelo nutricionista                                   │
+│  ✅ Sincronização total (mexer num alimento reflete em todos os dias)  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 RESULTADO FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│                    🏆 SISTEMA COMPLETO E SOBERANO 🏆                    │
+│                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────┐ │
+│  │                                                                   │ │
+│  │  📊 62 Templates Soberanos                                        │ │
+│  │  🔧 Sistema de Cálculo em Tempo Real                             │ │
+│  │  ⚡ Montagem Rápida de Planos (tipo Excel)                       │ │
+│  │  🚫 Templates com Restrições Alimentares                         │ │
+│  │  🖼️  Imagens Reais de Refeições Completas                        │ │
+│  │  🔍 Queries e Filtros Avançados                                  │ │
+│  │  📋 Sistema de Cópia para Paciente                               │ │
+│  │  ✏️  Interface de Edição Completa                                │ │
+│  │  🎯 Integração Total com Editor V3                               │ │
+│  │                                                                   │ │
+│  │  ═══════════════════════════════════════════════════════════════  │ │
+│  │                                                                   │ │
+│  │           ✨ PRONTO PARA USAR NO EDITOR V3! ✨                    │ │
+│  │                                                                   │ │
+│  └───────────────────────────────────────────────────────────────────┘ │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

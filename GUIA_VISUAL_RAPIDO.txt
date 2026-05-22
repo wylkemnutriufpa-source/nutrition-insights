@@ -1,0 +1,207 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 GUIA VISUAL RÁPIDO - 3 PASSOS PARA RESOLVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PASSO 1: INICIAR SERVIDOR (1 minuto)                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Abra o terminal no diretório do projeto:
+   📁 C:\Users\55919\Downloads\nutrition-insights-fitjourney2.0\nutrition-insights-fitjourney2.0
+
+2. Execute:
+   
+   npm run dev
+
+3. Aguarde esta mensagem:
+
+   ✅ VITE v7.x.x  ready in XXX ms
+   ➜  Local:   http://localhost:5173/
+   ➜  Network: use --host to expose
+
+4. NÃO FECHE O TERMINAL!
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PASSO 2: ABRIR EM ABA ANÔNIMA (30 segundos)                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Abra o navegador (Chrome, Edge, Firefox)
+
+2. Pressione:
+   🔹 Chrome/Edge: Ctrl+Shift+N
+   🔹 Firefox: Ctrl+Shift+P
+
+3. Digite na barra de endereço:
+   
+   http://localhost:5173
+
+4. Faça login com suas credenciais
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PASSO 3: TESTAR TEMPLATE (1 minuto)                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Abra o Console do Navegador:
+   Pressione F12
+
+2. Vá na aba "Console"
+
+3. No FitJourney, clique em:
+   📚 Biblioteca
+
+4. Selecione:
+   🎯 Emagrecimento 1500 kcal
+
+5. Escolha o perfil:
+   🔢 1500 kcal
+
+6. Clique em:
+   ✅ Plotar Template
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ RESULTADO ESPERADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NO CONSOLE (F12):
+┌─────────────────────────────────────────────────────────────────────────┐
+│ [EditorV3] Snapshot recebido: {...}                                    │
+│ [normalizeSnapshotToV3] Input snapshot: {...}                          │
+│ [normalizeSnapshotToV3] Estrutura 3: snapshot é array direto           │
+│ [normalizeSnapshotToV3] Output meals: [...]                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+NO EDITOR V3:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🍳 Cuscuz com Ovo                                    08:00              │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ 🖼️ [IMAGEM: cuscuz-com-ovo.jpg]                                    │ │
+│ ├─────────────────────────────────────────────────────────────────────┤ │
+│ │ • Cuscuz                                    100g        112 kcal    │ │
+│ │ • Ovo                                  2 unidades      146 kcal    │ │
+│ │ • Mamão                                   1 fatia       43 kcal    │ │
+│ ├─────────────────────────────────────────────────────────────────────┤ │
+│ │ TOTAL:                                                301 kcal    │ │
+│ │ Proteínas: 15g | Carbos: 45g | Gorduras: 8g                        │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🥤 Tapioca com Ovo                                   10:00              │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ 🖼️ [IMAGEM: tapioca-com-ovo.jpg]                                   │ │
+│ ├─────────────────────────────────────────────────────────────────────┤ │
+│ │ • Tapioca                                   50g         82 kcal    │ │
+│ │ • Ovo                                   1 unidade       73 kcal    │ │
+│ │ • Queijo Branco                             30g         75 kcal    │ │
+│ ├─────────────────────────────────────────────────────────────────────┤ │
+│ │ TOTAL:                                                230 kcal    │ │
+│ │ Proteínas: 12g | Carbos: 20g | Gorduras: 10g                       │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+
+... e mais 4 refeições (Almoço, Lanche, Jantar, Ceia)
+
+
+TOTAIS DO DIA:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🔥 Calorias: 1500 kcal                                                  │
+│ 🎯 Proteínas: 90g                                                       │
+│ 🎯 Carbos: 180g                                                         │
+│ 🎯 Gorduras: 50g                                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ SE NÃO FUNCIONAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROBLEMA 1: Logs não aparecem no console
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CAUSA: Cache ainda está ativo                                           │
+│ SOLUÇÃO:                                                                │
+│   1. Feche TODAS as abas do navegador                                   │
+│   2. Abra nova aba anônima (Ctrl+Shift+N)                               │
+│   3. Acesse http://localhost:5173                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+PROBLEMA 2: Templates aparecem vazios (sem alimentos)
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CAUSA: Dados errados no banco                                           │
+│ SOLUÇÃO:                                                                │
+│   1. Abra Supabase Dashboard                                            │
+│   2. Vá em SQL Editor                                                   │
+│   3. Abra: DIAGNOSTICO_DADOS_BANCO.sql                                  │
+│   4. Execute todas as queries                                           │
+│   5. Me envie os resultados                                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+PROBLEMA 3: Servidor não inicia
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CAUSA: Porta 5173 já está em uso                                        │
+│ SOLUÇÃO:                                                                │
+│   1. Feche outros terminais/processos                                   │
+│   2. Execute: npx kill-port 5173                                        │
+│   3. Execute: npm run dev                                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+PROBLEMA 4: Erro ao fazer login
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CAUSA: Supabase offline ou credenciais erradas                          │
+│ SOLUÇÃO:                                                                │
+│   1. Verifique conexão com internet                                     │
+│   2. Verifique credenciais no .env                                      │
+│   3. Teste login em aba normal (não anônima)                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📸 TIRE PRINTS SE PRECISAR DE AJUDA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se ainda não funcionar, tire prints de:
+
+1. 📸 Console do navegador (F12) - aba Console
+2. 📸 Tela do Editor V3 mostrando as refeições
+3. 📸 Terminal mostrando o servidor rodando
+4. 📸 Resultado do SQL DIAGNOSTICO_DADOS_BANCO.sql
+
+E me envie para análise!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 CHECKLIST RÁPIDO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Antes de testar:
+☐ Servidor rodando (npm run dev)
+☐ Aba anônima aberta
+☐ Console do navegador aberto (F12)
+☐ Logado no FitJourney
+
+Durante o teste:
+☐ Biblioteca aberta
+☐ Template selecionado
+☐ Perfil escolhido
+☐ Template plotado
+
+Verificar:
+☐ Logs aparecem no console
+☐ Refeições aparecem com nomes
+☐ Alimentos aparecem modulares
+☐ Quantidades aparecem corretas
+☐ Calorias aparecem corretas
+☐ Imagens aparecem
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRONTO! Agora é só seguir os 3 passos! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
