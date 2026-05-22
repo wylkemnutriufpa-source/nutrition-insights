@@ -39,7 +39,7 @@ describe("Marmita UI", () => {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <MealItemCard 
-            item={mockItem}
+            item={mockItem as any}
             status={null}
             completedAt={null}
             isJustDone={false}
@@ -62,7 +62,7 @@ describe("Marmita UI", () => {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <MealItemCard 
-            item={subItem}
+            item={subItem as any}
             status={null}
             completedAt={null}
             isJustDone={false}
