@@ -447,18 +447,6 @@ export default function OnboardingPipeline() {
       setGenerating(false);
     }
   }
-      
-      // Invalida o status para atualizar a UI do paciente
-      queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
-      fetchPipeline();
-
-    } catch (err: any) {
-      console.error("[OnboardingPipeline] Erro na geração local:", err);
-      toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
-    } finally {
-      setGenerating(false);
-    }
-  }
 
   /**
    * Executa a RPC de finalização do onboarding com tratamento robusto.
