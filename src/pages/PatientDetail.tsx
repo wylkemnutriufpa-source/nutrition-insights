@@ -193,7 +193,6 @@ export default function PatientDetail() {
     if (plan.editor_version === 'v3' && plan.snapshot?.days) {
       planItems = plan.snapshot.days.flatMap((day: any) =>
         (day.meals || []).flatMap((meal: any) => {
-          const mealImage = (meal.items || []).find((item: any) => item.visual?.image_url)?.visual?.image_url || null;
           return (meal.items || []).flatMap((item: any) => [
             {
               mealId: meal.id,
@@ -209,7 +208,7 @@ export default function PatientDetail() {
               substitution_group_id: item.blockId || item.id,
               day_of_week: day.day_of_week,
               visual_image_url: item.visual?.image_url || null,
-              meal_image_url: mealImage,
+              meal_image_url: meal.image_url || item.visual?.image_url,
               clinical_mass_g: item.clinical_mass_g,
               display_quantity: item.quantity_display,
               editor_version: 'v3'

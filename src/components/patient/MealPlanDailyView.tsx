@@ -633,8 +633,15 @@ const MealSlotCard = memo(function MealSlotCard({
 
   // 🛡️ SOBERANIA V3: Imagem principal da refeição (prioriza o primeiro item com imagem)
   const mealImage = useMemo(() => {
-    return items.find(i => i.image_url || (i as any).imageUrl || i.metadata?.image_url)?.image_url || null;
-  }, [items]);
+    // 🛡️ Prioridade 1: Imagem da própria refeição (se salva no snapshot)
+    if ((mealType as any).image_url) return (mealType as any).image_url;
+    // 🛡️ Prioridade 2: Imagem do primeiro item que tenha uma imagem válida
+    const itemWithImage = items.find(i => {
+      const img = i.image_url || (i as any).imageUrl || i.metadata?.image_url;
+      return img && img.startsWith('http') && !img.includes('placeholder');
+    });
+    return itemWithImage ? (itemWithImage.image_url || (itemWithImage as any).imageUrl || itemWithImage.metadata?.image_url) : null;
+  }, [items, mealType]);
 
   return (
     <motion.div
