@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChefHat, RefreshCw, Eye, FileDown, Calendar, AlertTriangle, CheckCircle2 } from "lucide-react";
-// clinicalHumanEngine removed
 import {
   MacroSummary, MealGroup, MealSlotCard,
   MEAL_TYPES, DAYS,
@@ -12,13 +11,10 @@ import {
 } from "@/components/patient/MealPlanDailyView";
 import { MealSlotModal } from "@/components/patient/MealSlotModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
-
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import { safeAccess } from "@/lib/safeRender";
 import { toast } from "sonner";
-
-// 🛡️ SOBERANIA V3: Hook único que extrai snapshot.
-import { useSovereignPlan, SovereignMealItem } from "@/lib/sovereign";
+import { useSovereignPlan } from "@/lib/sovereign";
 
 interface PatientProfileMealPlanProps {
   patientId: string;
@@ -36,34 +32,17 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
 
-  // 🛡️ SOBERANIA V3: Hook único. SEM remapeamento manual no componente.
   const {
     loading,
     plan,
-    allItems: sovereignAllItems,
-    itemsForDay: sovereignItemsForDay,
-    mealGroups: sovereignMealGroups,
+    allItems,
+    itemsForDay,
+    mealGroups,
     integrityWarnings,
     isValidV3,
     refetch,
   } = useSovereignPlan(activeMealPlanId, dayOfWeek);
 
-  // 🌉 Adapta para componentes legados (FASE 2 vai eliminar isso)
-  const allItems = useMemo(() => sovereignAllItems, [sovereignAllItems]);
-  const items = useMemo(() => sovereignItemsForDay, [sovereignItemsForDay]);
-
-  // Macros agregados por refeição (vêm do snapshot, sem recálculo)
-  const mealMacros = useMemo(() => {
-    const map: Record<string, any> = {};
-    sovereignMealGroups.forEach((group, key) => {
-      if (group.meal.macros) {
-        map[key] = group.meal.macros;
-      }
-    });
-    return map;
-  }, [sovereignMealGroups]);
-
-  // Carregar completions de adesão (independente do snapshot)
   const fetchCompletions = useCallback(async () => {
     if (!patientId || !activeMealPlanId) return;
     const { data: completionsData } = await supabase
@@ -88,34 +67,23 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     }
   }, [isValidV3, integrityWarnings, activeMealPlanId, loading]);
 
-  const fetchData = useCallback(async () => {
-    await refetch();
-    await fetchCompletions();
-  }, [refetch, fetchCompletions]);
-
   const groupedItems = useMemo(() => {
-    // 🛡️ ANTI-CRASH: Garantir que items seja um array antes de filtrar
-    const safeItems = Array.isArray(items) ? items : [];
+    const safeItems = Array.isArray(itemsForDay) ? itemsForDay : [];
     return MEAL_TYPES.map(mt => {
       const mealKey = `${dayOfWeek}_${mt.key.toLowerCase()}`;
+      const group = mealGroups.get(mealKey);
       return {
         ...mt,
-        macros: mealMacros[mealKey],
+        macros: group?.meal?.macros,
         items: safeItems.filter(i => {
           if (!i || !i.meal) return false;
           const type = String(i.meal.name).toLowerCase();
           const key = mt.key.toLowerCase();
-          // Match by key, label or common variations
-          return type === key || 
-                 type === mt.label.toLowerCase() || 
-                 (key === "lanche da tarde" && type === "afternoon_snack") ||
-                 (key === "café da manhã" && type === "breakfast") ||
-                 (key === "almoço" && type === "lunch") ||
-                 (key === "jantar" && type === "dinner");
+          return type === key || type === mt.label.toLowerCase();
         }),
       };
     }).filter(g => g.items.length > 0);
-  }, [items, mealMacros, dayOfWeek]);
+  }, [itemsForDay, mealGroups, dayOfWeek]);
 
   const weeklyDisplayDays = useMemo(() => {
     // 🛡️ SOBERANIA V3: Agrupar por day_of_week diretamente do snapshot
@@ -198,7 +166,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
 
       {/* Plan items view */}
 
-      <MacroSummary items={items} />
+      <MacroSummary items={itemsForDay} />
 
       <div className="grid grid-cols-1 gap-6">
         {viewMode === "daily" ? (
@@ -333,4 +301,3 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     </div>
   );
 }
-
