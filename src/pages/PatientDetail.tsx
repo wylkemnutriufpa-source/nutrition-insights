@@ -77,6 +77,9 @@ import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/o
 import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
 import { ClinicalConsentViewer } from "@/components/patient/ClinicalConsentViewer";
 import PatientProfileMealPlan from "@/components/patient/PatientProfileMealPlan";
+import { ForensicSnapshotViewer } from "@/components/admin/ForensicSnapshotViewer";
+import { validateSovereignSnapshot } from "@/lib/validation/sovereignValidator";
+
 
 
 
