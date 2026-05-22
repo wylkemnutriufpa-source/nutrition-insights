@@ -17,146 +17,81 @@ import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import { safeAccess } from "@/lib/safeRender";
 import { toast } from "sonner";
 
+// 🛡️ SOBERANIA V3: Hook único que extrai snapshot.
+import { useSovereignPlan, toLegacyShape } from "@/lib/sovereign";
+
 interface PatientProfileMealPlanProps {
   patientId: string;
   activeMealPlanId: string | null;
 }
 
 export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: PatientProfileMealPlanProps) {
-  const [items, setItems] = useState<MealPlanItem[]>([]);
-  const [allItems, setAllItems] = useState<MealPlanItem[]>([]);
-  const [mealMacros, setMealMacros] = useState<Record<string, any>>({});
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
-  const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ type: string; items: MealPlanItem[] } | null>(null);
   const [substitutingItem, setSubstitutingItem] = useState<MealPlanItem | null>(null);
 
-
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
 
-  const fetchData = useCallback(async () => {
-    if (!patientId || !activeMealPlanId) {
-      console.log("[PatientProfileMealPlan] Missing IDs:", { patientId, activeMealPlanId });
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+  // 🛡️ SOBERANIA V3: Hook único. SEM remapeamento manual no componente.
+  const {
+    loading,
+    plan,
+    allItems: sovereignAllItems,
+    itemsForDay: sovereignItemsForDay,
+    mealGroups: sovereignMealGroups,
+    integrityWarnings,
+    isValidV3,
+    refetch,
+  } = useSovereignPlan(activeMealPlanId, dayOfWeek);
 
-    try {
-      const { data: planData, error: planError } = await supabase
-        .from("meal_plans")
-        .select("id, snapshot, editor_version, title, meal_plan_items(*)")
-        .eq("id", activeMealPlanId)
-        .maybeSingle();
+  // 🌉 Adapta para componentes legados (FASE 2 vai eliminar isso)
+  const allItems = useMemo(() => sovereignAllItems.map(toLegacyShape), [sovereignAllItems]);
+  const items = useMemo(() => sovereignItemsForDay.map(toLegacyShape), [sovereignItemsForDay]);
 
-      if (planError) throw planError;
-      if (!planData) {
-        console.warn("[PatientProfileMealPlan] Plan not found for ID:", activeMealPlanId);
-        setLoading(false);
-        return;
+  // Macros agregados por refeição (vêm do snapshot, sem recálculo)
+  const mealMacros = useMemo(() => {
+    const map: Record<string, any> = {};
+    sovereignMealGroups.forEach((group, key) => {
+      if (group.meal.macros) {
+        map[key] = group.meal.macros;
       }
+    });
+    return map;
+  }, [sovereignMealGroups]);
 
-      const snapshot = (planData as any).snapshot;
-      const isV3 = snapshot && (snapshot.snapshot_version === 'v3' || Array.isArray(snapshot.days));
-
-      let allResolved: MealPlanItem[] = [];
-      let daily: MealPlanItem[] = [];
-
-      if (isV3 && Array.isArray(snapshot.days)) {
-        // 🛡️ SOBERANIA V3: Extração DIRETA do snapshot. ZERO normalization.
-        // 🔪 FASE 1 EXCISÃO: Corrigido mapeamento de campos.
-        // Snapshot real do banco usa: imageUrl, kcal/protein/carbs/fat (top-level)
-        // E também macros.{kcal,protein_g,carbs_g,fat_g} como fallback enriquecido
-        const macrosMap: Record<string, any> = {};
-
-        for (const day of snapshot.days) {
-          for (const meal of (day.meals || [])) {
-            // Chave única por dia e tipo de refeição
-            const mealKey = `${day.day_of_week}_${meal.name.toLowerCase()}`;
-            if (meal.macros) {
-              macrosMap[mealKey] = meal.macros;
-            }
-
-            // 🛡️ Suporte a ambas estruturas: meal.items (V3 enriquecido) e meal.foods (templates)
-            const mealFoods = (meal.items && meal.items.length > 0) ? meal.items : (meal.foods || []);
-
-            for (const item of mealFoods) {
-              // 🔪 LEITURA DIRETA: snapshot.imageUrl → image_url (sem visual.image_url inexistente)
-              const directImageUrl = item.imageUrl || item.image_url || item.image || null;
-
-              allResolved.push({
-                id: item.id || crypto.randomUUID(),
-                title: item.title || item.name || 'Item',
-                description: item.quantity_display || item.qty || '',
-                tipo_refeicao: meal.name as any,
-                day_of_week: day.day_of_week ?? 0,
-                meta_calorias: item.macros?.kcal ?? item.kcal ?? 0,
-                meta_proteinas: item.macros?.protein_g ?? item.protein ?? 0,
-                meta_carboidratos: item.macros?.carbs_g ?? item.carbs ?? 0,
-                meta_gorduras: item.macros?.fat_g ?? item.fat ?? 0,
-                image_url: directImageUrl,
-                is_primary: true,
-                display_quantity: item.quantity_display || item.qty,
-                clinical_mass_g: item.clinical_mass_g,
-                metadata: {
-                  image_url: directImageUrl,
-                  substitution_options: (item.substitutions || []).map((s: any) => ({
-                    id: s.id || crypto.randomUUID(),
-                    title: s.title || s.name,
-                    meta_calorias: s.macros?.kcal ?? s.kcal ?? 0,
-                    meta_proteinas: s.macros?.protein_g ?? s.protein ?? 0,
-                    meta_carboidratos: s.macros?.carbs_g ?? s.carbs ?? 0,
-                    meta_gorduras: s.macros?.fat_g ?? s.fat ?? 0,
-                    image_url: s.imageUrl || s.image_url || s.image || null
-                  })),
-                  substitution_count: (item.substitutions || []).length
-                }
-              } as any);
-            }
-          }
-        }
-        setMealMacros(macrosMap);
-        daily = allResolved.filter(i => i.day_of_week === dayOfWeek);
-        if (daily.length === 0 && allResolved.length > 0) {
-          const firstDay = allResolved[0].day_of_week;
-          daily = allResolved.filter(i => i.day_of_week === firstDay);
-        }
-      } else {
-        // 🛡️ SOBERANIA V3: Se não é V3, recusamos a renderização (Erro de Integridade).
-        // Não usamos mais normalizadores legados que mascaram problemas.
-        console.error("[FORENSIC] Plano não é V3. Sistema rejeita renderização legada.");
-        toast.error("Este plano precisa ser republicado no formato V3.");
-        allResolved = [];
-        daily = [];
-      }
-
-      setAllItems(allResolved);
-      setItems(daily);
-
-      // 3. Fetch Completions
-      const { data: completionsData } = await supabase
-        .from("meal_item_completions")
-        .select("*")
-        .eq("patient_id", patientId)
-        .eq("meal_plan_id", activeMealPlanId)
-        .eq("date", date);
-
-      setCompletions((completionsData || []) as unknown as MealCompletion[]);
-    } catch (err) {
-      console.error("[FORENSIC] Error fetching profile meal plan:", err);
-      toast.error("Erro ao carregar os dados do plano.");
-    } finally {
-      setLoading(false);
-    }
-  }, [patientId, activeMealPlanId, date, dayOfWeek]);
+  // Carregar completions de adesão (independente do snapshot)
+  const fetchCompletions = useCallback(async () => {
+    if (!patientId || !activeMealPlanId) return;
+    const { data: completionsData } = await supabase
+      .from("meal_item_completions")
+      .select("*")
+      .eq("patient_id", patientId)
+      .eq("meal_plan_id", activeMealPlanId)
+      .eq("date", date);
+    setCompletions((completionsData || []) as unknown as MealCompletion[]);
+  }, [patientId, activeMealPlanId, date]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchCompletions();
+  }, [fetchCompletions]);
+
+  // Mostrar erro de integridade ao nutri (não bloqueia render)
+  useEffect(() => {
+    if (!isValidV3 && activeMealPlanId && !loading) {
+      toast.error("Este plano não é V3. Republique para ver imagens e dados completos.");
+    } else if (integrityWarnings.length > 0) {
+      console.warn("[PatientProfileMealPlan] Snapshot incompleto:", integrityWarnings);
+    }
+  }, [isValidV3, integrityWarnings, activeMealPlanId, loading]);
+
+  const fetchData = useCallback(async () => {
+    await refetch();
+    await fetchCompletions();
+  }, [refetch, fetchCompletions]);
 
   const groupedItems = useMemo(() => {
     // 🛡️ ANTI-CRASH: Garantir que items seja um array antes de filtrar
