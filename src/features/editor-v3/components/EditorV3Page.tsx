@@ -212,38 +212,70 @@ export default function EditorV3Page() {
     }
   };
 
+  // Refs to track current loaded plan to avoid redundant loading
+  const lastLoadedPlanId = React.useRef<string | null>(null);
+  const lastLoadedPatientId = React.useRef<string | null>(null);
+
   useEffect(() => {
     async function loadPlan() {
+      // Avoid redundant loading if already on the same plan and store has data
+      if (effectiveId === lastLoadedPlanId.current && 
+          effectivePatientId === lastLoadedPatientId.current && 
+          store.meals.length > 0) {
+        console.log("[EditorV3] Skip redundant loadPlan");
+        return;
+      }
+
       console.log("[EditorV3] Início loadPlan", { effectivePatientId, effectiveId });
+      
       if (effectivePatientId) {
         store.setPatientId(effectivePatientId);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .or(`user_id.eq.${effectivePatientId},id.eq.${effectivePatientId}`)
-          .maybeSingle();
-        if (profile) setPatientData(profile);
       }
 
       if (!effectiveId) {
-        setLoading(false);
+        if (effectivePatientId && effectivePatientId !== lastLoadedPatientId.current) {
+          setLoading(true);
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .or(`user_id.eq.${effectivePatientId},id.eq.${effectivePatientId}`)
+              .maybeSingle();
+            if (profile) setPatientData(profile);
+            lastLoadedPatientId.current = effectivePatientId;
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          setLoading(false);
+        }
         return;
       }
 
       setLoading(true);
       try {
-        const { data: plan, error } = await (supabase.from('meal_plans') as any)
-          .select('*')
-          .eq('id', effectiveId)
-          .maybeSingle();
+        // Parallelized fetch for faster loading
+        const [planResult, profileResult] = await Promise.all([
+          (supabase.from('meal_plans') as any)
+            .select('*')
+            .eq('id', effectiveId)
+            .maybeSingle(),
+          effectivePatientId ? supabase
+            .from('profiles')
+            .select('*')
+            .or(`user_id.eq.${effectivePatientId},id.eq.${effectivePatientId}`)
+            .maybeSingle() : Promise.resolve({ data: null })
+        ]);
 
-        if (error) throw error;
+        if (planResult.error) throw planResult.error;
+        
+        const plan = planResult.data;
         if (plan) {
           const planData = plan as any;
           if (planData?.patient) setPatientData(planData.patient);
+          else if (profileResult.data) setPatientData(profileResult.data);
           
-          // 🛡️ SOBERANIA V3: Usar o normalizador mais fiel ao snapshot (o mesmo que o PDF usaria internamente)
-          // Se houver snapshot, usamos normalizeSnapshotToV3. Se não, usamos o normalizador universal.
+          // 🛡️ SOBERANIA V3
           let mealsToHydrate = [];
           if (planData.snapshot) {
             mealsToHydrate = normalizeSnapshotToV3(planData.snapshot);
@@ -255,8 +287,6 @@ export default function EditorV3Page() {
           if (mealsToHydrate.length > 0) {
             store.hydrateMeals(mealsToHydrate);
             
-            // 🛡️ SMART DAY SELECTOR: Se o dia atual (Segunda) está vazio, 
-            // muda para o primeiro dia que tem conteúdo no plano carregado.
             const daysWithContent = [...new Set(mealsToHydrate.map((m: any) => m.day_of_week ?? 0))];
             if (!daysWithContent.includes(activeDay) && daysWithContent.length > 0) {
               setActiveDay(daysWithContent[0]);
@@ -264,6 +294,10 @@ export default function EditorV3Page() {
           }
           
           if (planData?.patient_id) store.setPatientId(planData.patient_id);
+          
+          // Update refs
+          lastLoadedPlanId.current = effectiveId;
+          lastLoadedPatientId.current = effectivePatientId || planData.patient_id || null;
         }
       } catch (err) {
         console.error('[EditorV3] Erro ao carregar plano:', err);
@@ -273,7 +307,7 @@ export default function EditorV3Page() {
       }
     }
     loadPlan();
-  }, [effectiveId, effectivePatientId]);
+  }, [effectiveId, effectivePatientId, store.hydrateMeals, store.setPatientId]);
 
   // Efeito adicional para garantir que o activeDay mude se o store for hidratado via rascunho
   useEffect(() => {
