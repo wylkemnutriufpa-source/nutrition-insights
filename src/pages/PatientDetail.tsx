@@ -1197,7 +1197,13 @@ export default function PatientDetail() {
                     </div>
                   </div>
 
-                  <PlanScheduler patientId={patientId!} />
+                  {activeMealPlan && (
+                    <PlanScheduler 
+                      mealPlanId={activeMealPlan.id} 
+                      planTitle={activeMealPlan.title} 
+                    />
+                  )}
+
 
                   <div className="glass p-6 rounded-xl border-emerald-500/20">
                     <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
