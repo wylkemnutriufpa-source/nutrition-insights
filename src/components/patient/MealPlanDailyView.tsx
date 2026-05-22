@@ -17,17 +17,17 @@ import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 import { safeAccess } from "@/lib/safeRender";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { SovereignMealItem, SovereignMacros, SovereignSubstitution } from "@/lib/sovereign";
+
+export type AdherenceStatus = "followed" | "partial" | "not_followed";
+export type { SovereignMealItem as MealPlanItem, SovereignSubstitution, SovereignMacros };
+
 /** Resolve a human-readable portion string from the item data hierarchy. */
 const formatDisplayPortion = (item: SovereignMealItem): string => {
   if (!item) return '';
   // 🛡️ SOBERANIA V3: Snapshot é o Destino.
   return item.quantity_display || '';
 };
-
-import { SovereignMealItem, SovereignMacros, SovereignSubstitution } from "@/lib/sovereign";
-
-export type AdherenceStatus = "followed" | "partial" | "not_followed";
-export type { SovereignMealItem as MealPlanItem, SovereignSubstitution, SovereignMacros };
 
 export interface MealCompletion {
   id: string;
