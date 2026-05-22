@@ -84,7 +84,12 @@ export const FoodItemSchema = z.object({
   })).optional(),
 });
 
+/**
+ * 🛡️ SOBERANIA V3 FINAL - IMUTÁVEL
+ * Qualquer alteração estrutural exige criação do MealPlanSnapshotV4Schema.
+ */
 export const MealPlanSnapshotV3Schema = z.object({
+
   snapshot_version: z.literal('v3'),
   targets: MacroSchema,
   days: z.array(z.object({

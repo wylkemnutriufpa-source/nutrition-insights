@@ -77,6 +77,9 @@ import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/o
 import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
 import { ClinicalConsentViewer } from "@/components/patient/ClinicalConsentViewer";
 import PatientProfileMealPlan from "@/components/patient/PatientProfileMealPlan";
+import { ForensicSnapshotViewer } from "@/components/admin/ForensicSnapshotViewer";
+import { validateSovereignSnapshot } from "@/lib/validation/sovereignValidator";
+
 
 
 
@@ -193,7 +196,6 @@ export default function PatientDetail() {
     if (plan.editor_version === 'v3' && plan.snapshot?.days) {
       planItems = plan.snapshot.days.flatMap((day: any) =>
         (day.meals || []).flatMap((meal: any) => {
-          const mealImage = (meal.items || []).find((item: any) => item.visual?.image_url)?.visual?.image_url || null;
           return (meal.items || []).flatMap((item: any) => [
             {
               mealId: meal.id,
@@ -209,7 +211,7 @@ export default function PatientDetail() {
               substitution_group_id: item.blockId || item.id,
               day_of_week: day.day_of_week,
               visual_image_url: item.visual?.image_url || null,
-              meal_image_url: mealImage,
+              meal_image_url: meal.image_url || item.visual?.image_url,
               clinical_mass_g: item.clinical_mass_g,
               display_quantity: item.quantity_display,
               editor_version: 'v3'
@@ -1163,44 +1165,121 @@ export default function PatientDetail() {
                 </div>
               </TabsContent>
               <TabsContent value="plan">
-                <div className="glass p-6 rounded-xl border-emerald-500/20">
-                  <h3 className="font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5 text-emerald-500" /> Detalhes do Plano</h3>
-                  <div className="space-y-4">
-                    {patientSubscription ? (
-                      <>
-                        <div className="flex justify-between border-b border-white/5 pb-2">
-                          <span className="text-muted-foreground">Nome do Plano:</span>
-                          <span className="font-bold">{patientSubscription.plan_name}</span>
-                        </div>
-                        <div className="flex justify-between border-b border-white/5 pb-2">
-                          <span className="text-muted-foreground">Início:</span>
-                          <span>{new Date(patientSubscription.started_at).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex justify-between border-b border-white/5 pb-2">
-                          <span className="text-muted-foreground">Expiração:</span>
-                          <span>{patientSubscription.expires_at ? new Date(patientSubscription.expires_at).toLocaleDateString() : "Sem expiração"}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-muted-foreground italic">Nenhum plano ativo encontrado.</p>
-                    )}
-                    
-                    <div className="pt-6 border-t border-white/5">
-                       <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
-                         <UtensilsCrossed className="w-4 h-4 text-emerald-500" /> Plano Alimentar Ativo
-                       </h4>
-                       <PatientProfileMealPlan 
-                         patientId={resolvedPatientId} 
-                         activeMealPlanId={activeMealPlan?.id} 
-                       />
+                <div className="space-y-6">
+                  <div className="glass p-6 rounded-xl border-emerald-500/20">
+                    <h3 className="font-bold mb-4 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-emerald-500" /> 
+                      Assinatura e Protocolo
+                    </h3>
+                    <div className="space-y-4">
+                      {patientSubscription ? (
+                        <>
+                          <div className="flex justify-between border-b border-white/5 pb-2">
+                            <span className="text-muted-foreground">Nome do Plano:</span>
+                            <span className="font-bold">{patientSubscription.plan_name}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-2">
+                            <span className="text-muted-foreground">Início:</span>
+                            <span>{new Date(patientSubscription.started_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-2">
+                            <span className="text-muted-foreground">Expiração:</span>
+                            <span>{patientSubscription.expires_at ? new Date(patientSubscription.expires_at).toLocaleDateString() : "Sem expiração"}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground italic">Nenhum plano ativo encontrado.</p>
+                      )}
+                      
+                      <Button className="w-full bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => setPlanOpen(true)}>
+                        Configurar Assinatura
+                      </Button>
                     </div>
+                  </div>
 
-                    <Button className="w-full bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => setPlanOpen(true)}>
-                      Editar Plano / Assinatura
-                    </Button>
+                  {activeMealPlan && (
+                    <PlanScheduler 
+                      mealPlanId={activeMealPlan.id} 
+                      planTitle={activeMealPlan.title} 
+                    />
+                  )}
+
+
+                  <div className="glass p-6 rounded-xl border-emerald-500/20">
+                    <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-emerald-500" /> Protocolo Alimentar Ativo
+                    </h4>
+                    
+                    {activeMealPlan && (
+                      <div className="mb-6 p-4 rounded-xl bg-black/40 border border-white/5 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold">{activeMealPlan.title}</span>
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">V3_SOVEREIGN</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                          <Button variant="outline" size="sm" className="gap-2 text-[11px]" onClick={() => handlePreviewPDF(activeMealPlan)}>
+                            <FileText className="w-3.5 h-3.5" /> PDF
+                          </Button>
+                          <Button variant="outline" size="sm" className="gap-2 text-[11px]" onClick={() => handleSendWhatsApp(activeMealPlan)}>
+                            <Send className="w-3.5 h-3.5" /> WhatsApp
+                          </Button>
+                          <Button variant="outline" size="sm" className="gap-2 text-[11px]" onClick={() => window.open(`${PRODUCTION_URL}/view-plan/${activeMealPlan.id}`, '_blank')}>
+                            <Eye className="w-3.5 h-3.5" /> Visão Paciente
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm" className="gap-2 text-[11px]" disabled={markingWithoutDiet}>
+                                <Trash2 className="w-3.5 h-3.5" /> Remover
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-[#111] border-destructive/20 text-white">
+                              <AlertDialogTitle>Remover Plano Alimentar?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-zinc-400">
+                                O paciente ficará sem plano ativo e voltará ao estado de "Aguardando Profissional".
+                              </AlertDialogDescription>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-white/5 border-white/10 text-white">Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleMarkWithoutDiet} className="bg-destructive hover:bg-destructive/80 text-white">Confirmar Remoção</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    )}
+
+                    <PatientProfileMealPlan 
+                      patientId={resolvedPatientId} 
+                      activeMealPlanId={activeMealPlan?.id} 
+                    />
                   </div>
                 </div>
               </TabsContent>
+
+              <TabsContent value="forensic">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <ShieldAlert className="w-6 h-6 text-destructive" />
+                        Auditoria Forense Arquitetural
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Investigação profunda da integridade dos snapshots e violações da Constituição Soberana.
+                      </p>
+                    </div>
+                  </div>
+
+                  {activeMealPlan ? (
+                    <ForensicSnapshotViewer snapshot={activeMealPlan.snapshot} planId={activeMealPlan.id} />
+                  ) : (
+                    <div className="p-12 text-center border-2 border-dashed rounded-3xl opacity-50 border-white/10">
+                      <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <p>Nenhum plano ativo para auditoria forense.</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
             </div>
           </Tabs>
         </section>

@@ -164,6 +164,9 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
   
   const rawMeals: any[] = [];
   
+  // 🛡️ SOBERANIA CLÍNICA V5: Snapshot é a verdade única. 
+  // Proibido regenerar IDs (randomUUID) se o snapshot já possui IDs estáveis.
+  
   if (Array.isArray(snapshot.days)) {
     snapshot.days.forEach((day: any, index: number) => {
       const daysOrder = [1, 2, 3, 4, 5, 6, 0];
@@ -185,71 +188,61 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
   }
 
   return rawMeals.map(m => {
-    // 🛡️ CORREÇÃO 21/05/2026: Converter foods → items
-    let items = m.items || [];
-    if (!items.length && Array.isArray(m.foods)) {
-      items = m.foods.map((food: any) => ({
-        id: crypto.randomUUID(),
-        instanceId: crypto.randomUUID(),
-        name: food.name || "Item",
-        kcal: Number(food.kcal || 0),
-        protein: Number(food.protein || 0),
-        carbs: Number(food.carbs || food.carbohydrates || 0),
-        fat: Number(food.fat || food.fats || 0),
-        quantity: parseFloat(String(food.qty || food.quantity || '100').match(/[\d.]+/)?.[0] || '100'),
-        clinical_mass_g: /\d+\s*(g|ml)/i.test(String(food.qty || '')) 
-          ? parseFloat(String(food.qty).match(/[\d.]+/)?.[0] || '100')
-          : 100,
-        quantity_display: String(food.qty || food.quantity || '100g'),
-        imageUrl: food.imageUrl || food.image_url || food.image || null,
-        substitution_group_id: crypto.randomUUID(),
-        substitutions: []
-      }));
-    }
+    // 🛡️ CORREÇÃO SOBERANA: Se o snapshot já tem items, usamos os IDs do snapshot.
+    // Só geramos novos IDs se for um template bruto (vindo de uma fonte não-snapshotada).
+    const items = (m.items || m.foods || []).map((it: any) => {
+      // Resolve a massa clínica com validação mínima
+      const rawMass = Number(it.clinical_mass_g || it.quantity || it.qty || 0);
+      const clinical_mass_g = rawMass >= 5 ? rawMass : (it.clinical_mass_g ? rawMass : 100);
+
+      // Usar o ID do snapshot se disponível para manter a correlação profissional-paciente
+      const stableId = it.id || it.instanceId || crypto.randomUUID();
+
+      return {
+        ...it,
+        id: stableId,
+        instanceId: stableId,
+        name: it.name || it.title || "Item",
+        kcal: Number(it.kcal || it.macros?.kcal || 0),
+        protein: Number(it.protein || it.macros?.protein_g || 0),
+        carbs: Number(it.carbs || it.macros?.carbs_g || 0),
+        fat: Number(it.fat || it.macros?.fat_g || 0),
+        quantity: Number(it.quantity || clinical_mass_g || 0),
+        clinical_mass_g,
+        quantity_display: it.quantity_display || (it.macros ? `${clinical_mass_g}g` : it.qty || ''),
+        imageUrl: it.imageUrl || it.image_url || it.visual?.image_url || null,
+        substitution_group_id: it.substitution_group_id || it.blockId || it.id,
+        substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => {
+          const subMass = Number(s.clinical_mass_g || s.amount || 0);
+          const sub_clinical_mass_g = subMass >= 5 ? subMass : 100;
+          const subId = s.id || crypto.randomUUID();
+          return {
+            ...s,
+            id: subId,
+            instanceId: subId,
+            name: s.name || s.title || "Substituto",
+            kcal: Number(s.kcal || s.macros?.kcal || 0),
+            protein: Number(s.protein || s.macros?.protein_g || 0),
+            carbs: Number(s.carbs || s.macros?.carbs_g || 0),
+            fat: Number(s.fat || s.macros?.fat_g || 0),
+            clinical_mass_g: sub_clinical_mass_g,
+            imageUrl: s.imageUrl || s.image_url || s.visual?.image_url || null
+          };
+        }) : []
+      };
+    });
     
     return {
+      ...m,
       id: m.id || crypto.randomUUID(),
       name: m.name || "Refeição",
       time: m.time || "08:00",
       day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 1,
-      imageUrl: m.image || m.imageUrl || m.image_url || null,
-      items: items.map((it: any) => {
-      // Resolve a massa clínica com validação mínima de 5g para evitar valores absurdos
-      // (ex: ovo com quantity=1 unidade não pode virar clinical_mass_g=1g)
-      const rawMass = Number(it.clinical_mass_g || it.quantity || 0);
-      const clinical_mass_g = rawMass >= 5 ? rawMass : (it.clinical_mass_g ? rawMass : 100);
-
-      return {
-        id: it.id || it.instanceId || crypto.randomUUID(),
-        instanceId: it.instanceId || it.id || crypto.randomUUID(),
-        name: it.name || "Item",
-        kcal: Number(it.kcal || 0),
-        protein: Number(it.protein || 0),
-        carbs: Number(it.carbs || 0),
-        fat: Number(it.fat || 0),
-        quantity: Number(it.quantity || clinical_mass_g || 0),
-        clinical_mass_g,
-        quantity_display: it.quantity_display || (clinical_mass_g ? `${clinical_mass_g}g` : ''),
-        imageUrl: it.imageUrl || it.image_url || null,
-        substitution_group_id: it.substitution_group_id || it.blockId,
-        substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => {
-          const subMass = Number(s.clinical_mass_g || s.amount || 0);
-          const sub_clinical_mass_g = subMass >= 5 ? subMass : 100;
-          return {
-            ...s,
-            name: s.name || s.title,
-            kcal: Number(s.kcal || 0),
-            protein: Number(s.protein || 0),
-            carbs: Number(s.carbs || 0),
-            fat: Number(s.fat || 0),
-            clinical_mass_g: sub_clinical_mass_g,
-            imageUrl: s.imageUrl || s.image_url || null
-          };
-        }) : []
-      };
-    })
-  };
+      imageUrl: m.image || m.imageUrl || m.image_url || m.visual?.image_url || null,
+      items: items
+    };
   });
+}
 
 export async function getBestMealImage(mealName: string, items: any[]): Promise<{ url: string; source: 'manual' | 'auto' | 'fallback' }> {
   try {

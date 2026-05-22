@@ -72,7 +72,7 @@ export default function ExpandableMealPlanCard() {
 
     const { data: planData } = await supabase
       .from("meal_plans")
-      .select("id, title, start_date")
+      .select("id, title, start_date, snapshot")
       .eq("patient_id", user.id)
       .eq("is_active", true)
       .eq("plan_status", "published_to_patient")
@@ -80,16 +80,46 @@ export default function ExpandableMealPlanCard() {
       .limit(1)
       .maybeSingle();
 
+
     if (!planData) { setLoading(false); return; }
     setPlan(planData);
 
-    const { data: itemsData } = await supabase
-      .from("meal_plan_items")
-      .select("*")
-      .eq("meal_plan_id", planData.id)
-      .order("created_at");
+    const snapshot = planData.snapshot as any;
+    const isV3 = snapshot && (snapshot.snapshot_version === 'v3' || Array.isArray(snapshot.days));
 
-    setAllItems((itemsData || []) as any[]);
+    if (isV3) {
+      const snapshotItems: any[] = [];
+      snapshot.days.forEach((day: any) => {
+        day.meals.forEach((meal: any) => {
+          meal.items.forEach((item: any) => {
+            snapshotItems.push({
+              id: item.id,
+              title: item.title,
+              description: item.quantity_display,
+              tipo_refeicao: meal.name,
+              day_of_week: day.day_of_week,
+              meta_calorias: item.macros?.kcal,
+              meta_proteinas: item.macros?.protein_g,
+              meta_carboidratos: item.macros?.carbs_g,
+              meta_gorduras: item.macros?.fat_g,
+              image_url: item.visual?.image_url,
+              is_primary: true,
+              display_quantity: item.quantity_display
+            });
+          });
+        });
+      });
+      setAllItems(snapshotItems);
+    } else {
+      const { data: itemsData } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("meal_plan_id", planData.id)
+        .order("created_at");
+
+      setAllItems((itemsData || []) as any[]);
+    }
+
 
     const { data: comps } = await supabase
       .from("meal_item_completions")
