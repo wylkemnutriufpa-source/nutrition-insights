@@ -409,9 +409,11 @@ export default function OnboardingPipeline() {
   async function handleGeneratePlan() {
     if (!pipeline || !user) return;
     
-    // Hardening: Check if already generating
-    if (generating || (activeJob && (activeJob.status === "pending" || activeJob.status === "processing"))) {
-      toast.info("Já existe um processamento em andamento.");
+    // 🛡️ SOBERANIA DETERMINÍSTICA: O sistema não "gera" mais planos.
+    // Ele classifica o paciente e seleciona um snapshot soberano do banco de protocolos.
+    
+    if (generating) {
+      toast.info("Classificação em andamento...");
       return;
     }
 
@@ -419,40 +421,32 @@ export default function OnboardingPipeline() {
     setJobError(null);
     
     try {
-      console.log("[OnboardingPipeline] Iniciando geração LOCAL via NutriCore V2...");
+      console.log("[OnboardingPipeline] Iniciando CLASSIFICAÇÃO DETERMINÍSTICA...");
       
-      // NutriCore V2 Engine — Chamada LOCAL (TypeScript Puro)
-      // Substitui a chamada à Edge Function antiga para evitar timeouts e erros de infra
-      // NutriCore V2 Engine — Chamada LOCAL (TypeScript Puro)
-      const data = await localGenerateMealPlan({
-        patientId: user.id,
-        nutritionistId: pipeline.nutritionist_id,
-        weight: Number(pipeline.weight),
-        height: Number(pipeline.height),
-        mealCount: pipeline.meal_count,
-        cookingPreference: pipeline.cooking_preference,
-        isPipeline: true,
-        planCount: 1, 
+      const { data, error } = await supabase.rpc("classify_and_assign_sovereign_template", {
+        p_patient_id: user.id,
+        p_pipeline_id: pipeline.id
       });
 
-      if (!data?.success) throw new Error("O motor local não retornou sucesso.");
+      if (error) throw error;
+      const result = data as any;
 
-      const newPlanId = data.mealPlanId;
+      if (!result?.success) throw new Error(result?.error || "Falha na classificação soberana.");
 
-      // Atualiza o pipeline com o ID do plano gerado
-      const { error: updateError } = await supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          plan_generated: true,
-          generated_plan_id: newPlanId,
-          generated_plan_data: data,
-          status: "pending_approval",
-        } as any)
-        .eq("id", pipeline.id);
+      toast.success("Protocolo selecionado e validado! Aguarde a revisão do nutricionista.");
+      
+      // Forçar atualização do pipeline
+      fetchPipeline();
+      queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
 
-      if (updateError) throw updateError;
-
-      toast.success("Plano gerado com sucesso! Aguarde a revisão do seu nutricionista.");
+    } catch (err: any) {
+      console.error("[OnboardingPipeline] Error Assigning Template:", err);
+      setJobError(err.message || "Ocorreu um erro na classificação. O profissional fará a seleção manual.");
+      toast.error("Erro na classificação automática.");
+    } finally {
+      setGenerating(false);
+    }
+  }
       
       // Invalida o status para atualizar a UI do paciente
       queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
