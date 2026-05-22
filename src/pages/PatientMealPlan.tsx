@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { safeAccess } from "@/lib/safeRender";
-import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -37,12 +36,6 @@ import {
 import { MealSlotModal } from "@/components/patient/MealSlotModal";
 import { useEngagement } from "@/hooks/useEngagement";
 import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
-import {
-  buildDailyDisplayItems,
-  buildPdfItemsForDailyPlan,
-  buildWeeklyDisplayDays,
-  calculatePrimaryTotals,
-} from "@/lib/legacy/mealPlanDisplay";
 
 interface MealPlan {
   id: string;
@@ -429,17 +422,13 @@ export default function PatientMealPlan() {
   [overlayedItems, mealMacros, dayOfWeek]);
 
   const weeklyDisplayDays = useMemo(() => {
-    // 🛡️ SOBERANIA V3: Para planos V3, agrupar por day_of_week diretamente
-    if (plan?.editor_version === 'v3') {
-      const days = [1, 2, 3, 4, 5, 6, 0];
-      return days.map(day => ({
-        day,
-        items: allItems.filter(i => i.day_of_week === day)
-      }));
-    }
-    // Legado: usar o engine existente
-    return buildWeeklyDisplayDays(allItems as any);
-  }, [allItems, plan?.editor_version]);
+    // 🛡️ SOBERANIA V3: Agrupar por day_of_week diretamente do snapshot
+    const days = [1, 2, 3, 4, 5, 6, 0];
+    return days.map(day => ({
+      day,
+      items: allItems.filter(i => i.day_of_week === day)
+    }));
+  }, [allItems]);
 
   const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
     const visibleIds = new Set(items.map(i => i.id));
