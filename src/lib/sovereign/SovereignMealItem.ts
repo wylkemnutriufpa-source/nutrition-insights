@@ -55,6 +55,32 @@ export interface SovereignMealItem {
     /** Macros agregados da refeição (do snapshot, não recalculado) */
     macros: SovereignMacros | null;
   };
+
+  // --- PROXIES DE COMPATIBILIDADE (LEGACY) ---
+  // Estes campos são povoados PELO EXTRACTOR para evitar lógica nos componentes.
+  /** @deprecated Use meal.name */
+  tipo_refeicao: string;
+  /** @deprecated Use meal.day_of_week */
+  day_of_week: number;
+  /** @deprecated Use macros.kcal */
+  meta_calorias: number;
+  /** @deprecated Use macros.protein_g */
+  meta_proteinas: number;
+  /** @deprecated Use macros.carbs_g */
+  meta_carboidratos: number;
+  /** @deprecated Use macros.fat_g */
+  meta_gorduras: number;
+  /** @deprecated Use quantity_display */
+  description: string;
+  /** @deprecated Use quantity_display */
+  display_quantity: string;
+  /** @deprecated Use imageUrl */
+  image_url: string | null;
+  /** @deprecated Sempre true na V3 */
+  is_primary: boolean;
+  /** Metadados brutos (se necessário) */
+  metadata: Record<string, any>;
+
   /** Marca de origem para debug forense */
   __sovereign: true;
 }

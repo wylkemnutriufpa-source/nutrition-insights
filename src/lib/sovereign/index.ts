@@ -29,6 +29,3 @@ export {
 export { useSovereignPlan } from './useSovereignPlan';
 export type { UseSovereignPlanResult } from './useSovereignPlan';
 
-// 🌉 Ponte temporária (será removida na FASE 2)
-export { toLegacyShape } from './legacyBridge';
-export type { LegacyMealPlanItem } from './legacyBridge';

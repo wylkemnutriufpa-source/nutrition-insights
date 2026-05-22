@@ -129,15 +129,33 @@ export function extractMealsFromSnapshot(snapshot: any): SovereignExtractionResu
           });
         }
 
+        const itemMacros = readMacros(raw);
+        const itemImageUrl = readImageUrl(raw);
+        const itemQty = readQuantityDisplay(raw);
+
         items.push({
           id: String(raw.id || crypto.randomUUID()),
           title: String(raw.title || raw.name || 'Item'),
-          imageUrl: readImageUrl(raw),
-          quantity_display: readQuantityDisplay(raw),
+          imageUrl: itemImageUrl,
+          quantity_display: itemQty,
           clinical_mass_g: raw.clinical_mass_g != null ? Number(raw.clinical_mass_g) : null,
-          macros: readMacros(raw),
+          macros: itemMacros,
           substitutions: extractSubstitutions(raw),
           meal: mealMeta,
+          
+          // Proxies de compatibilidade
+          tipo_refeicao: mealMeta.name,
+          day_of_week: mealMeta.day_of_week,
+          meta_calorias: itemMacros.kcal,
+          meta_proteinas: itemMacros.protein_g,
+          meta_carboidratos: itemMacros.carbs_g,
+          meta_gorduras: itemMacros.fat_g,
+          description: itemQty,
+          display_quantity: itemQty,
+          image_url: itemImageUrl,
+          is_primary: true,
+          metadata: raw.metadata || raw.edit_metadata || {},
+
           __sovereign: true,
         });
       }
