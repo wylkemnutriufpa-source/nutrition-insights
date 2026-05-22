@@ -423,7 +423,7 @@ export default function OnboardingPipeline() {
     try {
       console.log("[OnboardingPipeline] Iniciando CLASSIFICAÇÃO DETERMINÍSTICA...");
       
-      const { data, error } = await supabase.rpc("classify_and_assign_sovereign_template", {
+      const { data, error } = await supabase.rpc("classify_and_assign_sovereign_template" as any, {
         p_patient_id: user.id,
         p_pipeline_id: pipeline.id
       });
