@@ -18,7 +18,7 @@ import { safeAccess } from "@/lib/safeRender";
 import { toast } from "sonner";
 
 // 🛡️ SOBERANIA V3: Hook único que extrai snapshot.
-import { useSovereignPlan, toLegacyShape } from "@/lib/sovereign";
+import { useSovereignPlan, SovereignMealItem } from "@/lib/sovereign";
 
 interface PatientProfileMealPlanProps {
   patientId: string;
@@ -49,8 +49,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
   } = useSovereignPlan(activeMealPlanId, dayOfWeek);
 
   // 🌉 Adapta para componentes legados (FASE 2 vai eliminar isso)
-  const allItems = useMemo(() => sovereignAllItems.map(toLegacyShape), [sovereignAllItems]);
-  const items = useMemo(() => sovereignItemsForDay.map(toLegacyShape), [sovereignItemsForDay]);
+  const allItems = useMemo(() => sovereignAllItems, [sovereignAllItems]);
+  const items = useMemo(() => sovereignItemsForDay, [sovereignItemsForDay]);
 
   // Macros agregados por refeição (vêm do snapshot, sem recálculo)
   const mealMacros = useMemo(() => {
