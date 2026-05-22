@@ -15,7 +15,6 @@ async function repairTemplates() {
     return;
   }
 
-  // Pre-fetch the visual library for faster lookup
   const { data: visualLibrary } = await supabase
     .from('meal_visual_library')
     .select('name, image_url')
@@ -39,34 +38,55 @@ async function repairTemplates() {
       if (!profile.days || !Array.isArray(profile.days)) continue;
 
       profile.days.forEach((day: any) => {
+        if (!day.meals || !Array.isArray(day.meals)) return;
+
         day.meals.forEach((meal: any) => {
+          // Normalize items from foods if necessary
+          if (!meal.items && Array.isArray(meal.foods)) {
+            meal.items = meal.foods;
+            delete meal.foods;
+            modified = true;
+          }
+
+          if (!meal.items || !Array.isArray(meal.items)) {
+            meal.items = [];
+            modified = true;
+          }
+
           meal.items.forEach((item: any) => {
             // Repair image_url
-            if (!item.imageUrl || item.imageUrl === "undefined" || item.imageUrl.includes("placeholder")) {
+            const existingImg = item.imageUrl || item.image_url || item.visual?.image_url;
+            if (!existingImg || existingImg === "undefined" || existingImg.includes("placeholder")) {
               const name = (item.name || item.title || "").toLowerCase().trim();
               const foundUrl = visualMap.get(name);
-              if (foundUrl) {
-                item.imageUrl = foundUrl;
-                if (!item.visual) item.visual = {};
-                item.visual.image_url = foundUrl;
-                modified = true;
-              } else {
-                item.imageUrl = FALLBACK_IMAGE;
-                if (!item.visual) item.visual = {};
-                item.visual.image_url = FALLBACK_IMAGE;
-                modified = true;
-              }
+              const finalUrl = foundUrl || FALLBACK_IMAGE;
+              
+              item.imageUrl = finalUrl;
+              if (!item.visual) item.visual = {};
+              item.visual.image_url = finalUrl;
+              item.visual.is_placeholder = !foundUrl;
+              modified = true;
             }
             
             // Repair macros structure
             if (!item.macros) {
               item.macros = {
-                kcal: item.kcal || 0,
-                protein_g: item.protein || 0,
-                carbs_g: item.carbs || 0,
-                fat_g: item.fat || 0
+                kcal: Math.round(item.kcal || item.calories || 0),
+                protein_g: Number((item.protein || item.protein_g || 0).toFixed(1)),
+                carbs_g: Number((item.carbs || item.carbs_g || 0).toFixed(1)),
+                fat_g: Number((item.fat || item.fat_g || 0).toFixed(1))
               };
               modified = true;
+            }
+
+            // Ensure stable IDs
+            if (!item.id) {
+               item.id = crypto.randomUUID();
+               modified = true;
+            }
+            if (!item.instanceId) {
+               item.instanceId = item.id;
+               modified = true;
             }
           });
         });
