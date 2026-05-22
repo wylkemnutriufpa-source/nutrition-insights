@@ -124,7 +124,7 @@ export default function DailyMealPlanInline() {
           .eq("meal_plan_id", planData.id)
           .order("created_at");
 
-        const currentItems = (itemsData || []) as MealPlanItem[];
+        const currentItems = (itemsData || []) as any as MealPlanItem[];
         const displayItems = buildDailyDisplayItems(currentItems as any, dayOfWeek);
         setItems(displayItems as MealPlanItem[]);
       }

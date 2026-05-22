@@ -104,7 +104,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
       toast.error("Erro ao atualizar item");
     } else {
       toast.success("Item atualizado");
-      fetchData();
+      refetch();
+      fetchCompletions();
     }
   };
 
@@ -158,7 +159,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
               SEMANAL
             </Button>
           </div>
-          <Button variant="outline" size="icon" className="h-9 w-9 border-white/10" onClick={() => fetchData()}>
+          <Button variant="outline" size="icon" className="h-9 w-9 border-white/10" onClick={() => { refetch(); fetchCompletions(); }}>
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
@@ -293,7 +294,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           mealSlot={(substitutingItem as any)?.tipo_refeicao}
           options={safeAccess(substitutingItem, 'metadata.substitution_options', [])}
           onSubstitute={() => {
-            fetchData();
+            refetch();
+            fetchCompletions();
             setSubstitutingItem(null);
           }}
         />
