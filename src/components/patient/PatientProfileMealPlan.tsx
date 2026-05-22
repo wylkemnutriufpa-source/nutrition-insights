@@ -159,7 +159,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
               SEMANAL
             </Button>
           </div>
-          <Button variant="outline" size="icon" className="h-9 w-9 border-white/10" onClick={() => fetchData()}>
+          <Button variant="outline" size="icon" className="h-9 w-9 border-white/10" onClick={() => { refetch(); fetchCompletions(); }}>
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
