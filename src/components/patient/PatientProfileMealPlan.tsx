@@ -104,7 +104,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
       toast.error("Erro ao atualizar item");
     } else {
       toast.success("Item atualizado");
-      fetchData();
+      refetch();
+      fetchCompletions();
     }
   };
 
