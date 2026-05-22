@@ -22280,6 +22280,10 @@ export type Database = {
         | { Args: never; Returns: boolean }
         | { Args: { _mode?: string }; Returns: boolean }
       check_workout_plan_expiry: { Args: never; Returns: Json }
+      classify_and_assign_sovereign_template: {
+        Args: { p_patient_id: string; p_pipeline_id: string }
+        Returns: Json
+      }
       cleanup_observability_logs: {
         Args: { retention_days?: number }
         Returns: Json
