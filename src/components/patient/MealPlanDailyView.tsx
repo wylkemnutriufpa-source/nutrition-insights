@@ -12,7 +12,6 @@ import {
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
   Info, Clock,
 } from "lucide-react";
-// useMealVisualItem removed as images are now hardcoded in the data
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 import { safeAccess } from "@/lib/safeRender";
@@ -20,14 +19,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { SovereignMealItem, SovereignMacros, SovereignSubstitution } from "@/lib/sovereign";
 
 export type AdherenceStatus = "followed" | "partial" | "not_followed";
-export type { SovereignMealItem as MealPlanItem, SovereignSubstitution, SovereignMacros };
-
-/** Resolve a human-readable portion string from the item data hierarchy. */
-const formatDisplayPortion = (item: SovereignMealItem): string => {
-  if (!item) return '';
-  // 🛡️ SOBERANIA V3: Snapshot é o Destino.
-  return item.quantity_display || '';
-};
+export interface MealPlanItem extends SovereignMealItem {}
+export type { SovereignSubstitution, SovereignMacros };
 
 export interface MealCompletion {
   id: string;
@@ -51,6 +44,11 @@ export interface MealDetailData {
   metadata?: Record<string, any> | null;
   image_url?: string | null;
 }
+
+const formatDisplayPortion = (item: SovereignMealItem): string => {
+  if (!item) return '';
+  return item.quantity_display || '';
+};
 
 const MEAL_TYPES: { key: any; label: string; icon: React.ReactNode; time: string }[] = [
   { key: "Café da Manhã", label: "Café da Manhã", icon: <Coffee className="w-5 h-5" />, time: "06:00 - 09:00" },
@@ -77,9 +75,6 @@ const IMPACT_TAGS: Record<string, { icon: React.ReactNode; label: string; color:
 };
 
 function getImpactTags(meal: MealPlanItem) {
-  // 🛡️ SOBERANIA V3: ZERO inferência runtime.
-  // As tags devem vir do snapshot se desejado. Por enquanto, retornamos vazio
-  // para garantir obediência sistêmica absoluta.
   return [];
 }
 
