@@ -102,8 +102,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
         ...mt,
         macros: mealMacros[mealKey],
         items: safeItems.filter(i => {
-          if (!i || !i.tipo_refeicao) return false;
-          const type = String(i.tipo_refeicao).toLowerCase();
+          if (!i || !i.meal) return false;
+          const type = String(i.meal.name).toLowerCase();
           const key = mt.key.toLowerCase();
           // Match by key, label or common variations
           return type === key || 
@@ -122,7 +122,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     const days = [1, 2, 3, 4, 5, 6, 0];
     return days.map(day => ({
       day,
-      items: (allItems || []).filter(i => i.day_of_week === day)
+      items: (allItems || []).filter(i => i.meal.day_of_week === day)
     }));
   }, [allItems]);
 
@@ -258,7 +258,7 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
             {weeklyDisplayDays.map(({ day, items: dayItems }) => {
               const groupedDayItems = MEAL_TYPES.map(mt => ({
                 ...mt,
-                items: dayItems.filter(i => i.tipo_refeicao === mt.key),
+                items: dayItems.filter(i => i.meal.name === mt.key),
               })).filter(g => g.items.length > 0);
 
               if (groupedDayItems.length === 0) return null;
