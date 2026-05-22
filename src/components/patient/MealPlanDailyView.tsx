@@ -50,7 +50,10 @@ const formatDisplayPortion = (item: SovereignMealItem): string => {
   return item.quantity_display || '';
 };
 
-const MEAL_TYPES: { key: any; label: string; icon: React.ReactNode; time: string }[] = [
+import type { Database } from "@/integrations/supabase/types";
+type MealType = Database["public"]["Enums"]["tipo_refeicao"];
+
+const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; time: string }[] = [
   { key: "Café da Manhã", label: "Café da Manhã", icon: <Coffee className="w-5 h-5" />, time: "06:00 - 09:00" },
   { key: "Lanche da Manhã", label: "Lanche da Manhã", icon: <Apple className="w-5 h-5" />, time: "10:00 - 11:00" },
   { key: "Almoço", label: "Almoço", icon: <Utensils className="w-5 h-5" />, time: "12:00 - 14:00" },
@@ -294,10 +297,10 @@ const MealItemCard = memo(function MealItemCard({
                   {(() => {
                     const desc = item.description || "";
                     // 🛡️ ANTI-DUPLICAÇÃO: Se a descrição for apenas a gramagem que já renderizamos, limpamos.
-                    const qty = String(item.display_quantity || (item as any).edit_metadata?.display_quantity || "");
-                    const mass = String(item.clinical_mass_g || (item as any).clinical_mass_g || "");
+                    const qty = String(item.display_quantity || "");
+                    const mass = String(item.clinical_mass_g || "");
                     
-                    if (qty && desc.trim() === `${qty} ${item.display_unit || ""}`.trim()) return null;
+                    if (qty && desc.trim() === `${qty}`.trim()) return null;
                     if (mass && desc.trim() === `${mass}g`.trim()) return null;
                     
                     if ((item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && !item.is_primary) {
