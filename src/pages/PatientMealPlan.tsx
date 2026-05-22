@@ -243,9 +243,16 @@ export default function PatientMealPlan() {
       const allSnapshotItems: MealPlanItem[] = [];
       const macrosMap: Record<string, any> = {};
 
-      snapshot.days.forEach((day: any) => {
+      const currentDayIndex = new Date(date + "T12:00:00").getDay();
+      
+      // Verificamos se o snapshot tem o dia atual ou se devemos usar o primeiro dia disponível (fallback para planos fixos)
+      const hasSpecificDay = snapshot.days.some((d: any) => d.day_of_week === currentDayIndex);
+      const targetDays = hasSpecificDay 
+        ? snapshot.days.filter((d: any) => d.day_of_week === currentDayIndex)
+        : [snapshot.days[0]]; // Fallback Soberano: Se não tem o dia, mostra o primeiro (Garante que nunca abra vazio)
+
+      targetDays.forEach((day: any) => {
         day.meals.forEach((meal: any) => {
-          // Chave única por dia e tipo de refeição
           const mKey = `${day.day_of_week}_${meal.name.toLowerCase()}`;
           if (meal.macros) {
             macrosMap[mKey] = meal.macros;
@@ -268,6 +275,10 @@ export default function PatientMealPlan() {
               display_quantity: item.quantity_display,
               clinical_mass_g: item.clinical_mass_g,
               metadata: {
+                meal_id: meal.id,
+                meal_name: meal.name,
+                meal_time: meal.time,
+                meal_image_url: meal.image_url || item.visual?.image_url,
                 image_url: item.visual?.image_url || null,
                 substitution_options: (item.substitutions || []).map((s: any) => ({
                   id: s.id,
@@ -288,7 +299,6 @@ export default function PatientMealPlan() {
       
       setMealMacros(macrosMap);
 
-
       const planMeta = {
         id: planData.id,
         title: planData.title,
@@ -297,16 +307,15 @@ export default function PatientMealPlan() {
         plan_mode: planData.plan_mode,
         editor_version: 'v3',
         snapshot: snapshot,
-        total_meta_calorias: snapshot.targets?.kcal ?? 0,
-        total_meta_proteinas: snapshot.targets?.protein_g ?? 0,
-        total_meta_carboidratos: snapshot.targets?.carbs_g ?? 0,
-        total_meta_gorduras: snapshot.targets?.fat_g ?? 0,
+        total_meta_calorias: snapshot.targets?.kcal ?? snapshot.daily_totals?.[currentDayIndex]?.kcal ?? 0,
+        total_meta_proteinas: snapshot.targets?.protein_g ?? snapshot.daily_totals?.[currentDayIndex]?.protein_g ?? 0,
+        total_meta_carboidratos: snapshot.targets?.carbs_g ?? snapshot.daily_totals?.[currentDayIndex]?.carbs_g ?? 0,
+        total_meta_gorduras: snapshot.targets?.fat_g ?? snapshot.daily_totals?.[currentDayIndex]?.fat_g ?? 0,
       };
 
       setPlan(planMeta as any);
       setAllItems(allSnapshotItems);
-      // Filtragem por dia é puramente visual
-      setItems(allSnapshotItems.filter(i => i.day_of_week === dayOfWeek));
+      setItems(allSnapshotItems); // Já filtrado pelo targetDays logicamente acima
 
       const [subsResponse, completionsResponse, weekResponse] = await Promise.all([
         supabase.from("patient_meal_substitutions" as any).select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id),
