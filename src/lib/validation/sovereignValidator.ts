@@ -56,7 +56,7 @@ export function validateSovereignSnapshot(snapshot: unknown): { success: boolean
   if (!result.success) {
     return {
       success: false,
-      errors: result.error.errors.map(err => `${err.path.join('.')}: ${err.message}`),
+      errors: result.error.issues.map(err => `${err.path.join('.')}: ${err.message}`),
     };
   }
   return { success: true };
