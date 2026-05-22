@@ -279,8 +279,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const resolvedImage = useMemo(() => {
     if (!meal) return null;
     const img = meal.image_url || (meal as any)?.imageUrl || meal.metadata?.image_url || meal.metadata?.imageUrl || null;
-    if (img && !img.includes('unsplash.com') && !img.includes('placeholder')) return img;
-    // Se não há imagem no snapshot, retornamos null.
+    
+    // Se temos uma imagem válida que não seja placeholder
+    if (img && img.startsWith('http') && !img.includes('placeholder')) return img;
+    
+    // Se não há imagem no snapshot, retornamos null para não quebrar o layout
     return null;
   }, [meal?.image_url, (meal as any)?.imageUrl, meal?.metadata?.image_url, meal?.metadata?.imageUrl]);
 

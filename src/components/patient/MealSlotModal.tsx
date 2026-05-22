@@ -36,8 +36,16 @@ export function MealSlotModal({
   const mealConfig = MEAL_TYPES.find(m => m.key === mealType);
   
   // SOBERANIA V3: Snapshot Soberano é a fonte única.
-  // Cálculo removido. Os totais de cada slot devem vir do snapshot.
-  const totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  const totals = useMemo(() => {
+    return items.reduce((acc, item) => {
+      return {
+        calories: acc.calories + (item.meta_calorias ?? 0),
+        protein: acc.protein + (item.meta_proteinas ?? 0),
+        carbs: acc.carbs + (item.meta_carboidratos ?? 0),
+        fat: acc.fat + (item.meta_gorduras ?? 0),
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  }, [items]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
