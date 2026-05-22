@@ -294,7 +294,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           mealSlot={(substitutingItem as any)?.tipo_refeicao}
           options={safeAccess(substitutingItem, 'metadata.substitution_options', [])}
           onSubstitute={() => {
-            fetchData();
+            refetch();
+            fetchCompletions();
             setSubstitutingItem(null);
           }}
         />
