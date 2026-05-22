@@ -811,4 +811,4 @@ export {
   getImpactTags, getMotivationalMessage,
 };
 
-export type { MealPlanItem, MealCompletion, AdherenceStatus, MealDetailData };
+// Types are exported at the top.
