@@ -1,91 +1,71 @@
 
-import fs from 'fs';
-import crypto from 'crypto';
+import { supabase } from './src/integrations/supabase/client';
 
 async function auditTemplates() {
-  const data = fs.readFileSync('templates.json', 'utf8');
-  const templates = JSON.parse(data);
+  const { data: templates, error } = await supabase
+    .from('v3_diet_templates')
+    .select('id, slug, title, plan_snapshot, kcal_profiles');
 
-
-  const results = [];
-
-  for (const t of templates) {
-    const report: any = {
-      id: t.id,
-      title: t.title,
-      profiles: {},
-      status: 'APROVADO',
-      failures: []
-    };
-
-    const snapshots = t.plan_snapshot || {};
-    const profileKeys = Object.keys(snapshots);
-
-    if (profileKeys.length === 0) {
-      report.status = 'QUEBRADO';
-      report.failures.push('Sem snapshots de perfil');
-    }
-
-    for (const key of profileKeys) {
-      const snapshot = snapshots[key];
-      const hash = crypto.createHash('md5').update(JSON.stringify(snapshot)).digest('hex');
-      
-      const profileReport: any = {
-        hash,
-        days_count: 0,
-        issues: []
-      };
-
-      const days = snapshot.days || [];
-      profileReport.days_count = days.length;
-
-      if (days.length !== 7) {
-        profileReport.issues.push(`Quantidade de dias inválida: ${days.length} (esperado 7)`);
-      }
-
-      days.forEach((day: any, dayIdx: number) => {
-        const meals = day.meals || [];
-        if (meals.length === 0) {
-          profileReport.issues.push(`Dia ${dayIdx + 1} está vazio`);
-        }
-
-        meals.forEach((meal: any) => {
-          if (!meal.name) profileReport.issues.push(`Refeição sem nome no dia ${dayIdx + 1}`);
-          
-          const items = meal.items || [];
-          items.forEach((item: any) => {
-            if (!item.name) profileReport.issues.push(`Item sem nome na refeição ${meal.name}, dia ${dayIdx + 1}`);
-            if (!item.kcal || item.kcal <= 0) profileReport.issues.push(`Item ${item.name} com kcal zero ou inválida`);
-            if (!item.clinical_mass_g || item.clinical_mass_g <= 1) profileReport.issues.push(`Item ${item.name} com gramagem inválida: ${item.clinical_mass_g}g`);
-            if (!item.quantity_display) profileReport.issues.push(`Item ${item.name} sem quantity_display`);
-            
-            if (!item.image_url || item.image_url.includes('placeholder') || item.image_url.includes('default')) {
-              profileReport.issues.push(`Item ${item.name} com imagem inválida/placeholder: ${item.image_url}`);
-            }
-          });
-        });
-      });
-
-      if (profileReport.issues.length > 0) {
-        report.status = 'QUEBRADO';
-        report.failures.push(...profileReport.issues.map((i: string) => `Perfil ${key}: ${i}`));
-      }
-
-      report.profiles[key] = profileReport;
-    }
-
-    const summary = {
-      id: t.id,
-      title: t.title,
-      status: report.status,
-      failure_count: report.failures.length,
-      first_failures: report.failures.slice(0, 5)
-    };
-    results.push(summary);
+  if (error) {
+    console.error('Error fetching templates:', error);
+    return;
   }
 
-  console.log(JSON.stringify(results, null, 2));
-}
+  const report = {
+    total: templates.length,
+    empty_snapshot: 0,
+    missing_profiles: 0,
+    broken_days: 0,
+    zero_macros: 0,
+    missing_images: 0,
+    details: [] as any[]
+  };
 
+  for (const t of templates) {
+    const snapshot = t.plan_snapshot as any;
+    const profiles = t.kcal_profiles as any[];
+    
+    let isBroken = false;
+    let missingImages = 0;
+    let zeroMacros = 0;
+
+    if (!snapshot || Object.keys(snapshot).length === 0) {
+      report.empty_snapshot++;
+      isBroken = true;
+    } else {
+      for (const kcal of Object.keys(snapshot)) {
+        const profile = snapshot[kcal];
+        if (!profile.days || !Array.isArray(profile.days)) {
+          report.broken_days++;
+          isBroken = true;
+          continue;
+        }
+
+        profile.days.forEach((day: any) => {
+          day.meals.forEach((meal: any) => {
+            meal.items.forEach((item: any) => {
+              if (!item.imageUrl && !item.visual?.image_url) missingImages++;
+              if ((item.kcal || item.macros?.kcal || 0) === 0) zeroMacros++;
+            });
+          });
+        });
+      }
+    }
+
+    if (missingImages > 0) report.missing_images++;
+    if (zeroMacros > 0) report.zero_macros++;
+
+    report.details.push({
+      slug: t.slug,
+      title: t.title,
+      is_broken: isBroken,
+      missing_images: missingImages,
+      zero_macros: zeroMacros
+    });
+  }
+
+  console.log('--- AUDIT REPORT ---');
+  console.log(JSON.stringify(report, null, 2));
+}
 
 auditTemplates();
