@@ -20,6 +20,8 @@ import {
   type MealPlanSnapshotV3,
 } from '@/lib/validation/schemas';
 import { logAudit, logError } from '@/lib/monitoring';
+import { validateSovereignSnapshot } from '@/lib/validation/sovereignValidator';
+
 
 /**
  * Cria um novo plano de refeição com validação e transação
@@ -183,12 +185,18 @@ export async function publishMealPlan(
   snapshot: unknown,
   userId: string
 ): Promise<{ id: string; plan_status: string; updated_at: string }> {
-  // CAMADA 2: Validar snapshot
+  // CAMADA 2: Validar snapshot soberano
+  const sovereignValidation = validateSovereignSnapshot(snapshot);
+  if (!sovereignValidation.success) {
+    throw new Error(`VIOLAÇÃO DE SOBERANIA: Snapshot incompleto. ${sovereignValidation.errors?.join(', ')}`);
+  }
+
   const validatedSnapshot = await validateRequest(
     MealPlanSnapshotV3Schema,
     snapshot,
     'PublishMealPlan - Snapshot'
   );
+
 
   // CAMADA 1: Executar em múltiplos passos com rollback
   return withSequentialTransaction(
