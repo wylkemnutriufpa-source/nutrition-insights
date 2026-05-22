@@ -27,33 +27,37 @@ export const patientService = {
     }
 
     // 🛡️ MAPEAMENTO PASSIVO: Apenas de-estruturamos o que o Compiler gerou.
-    const mappedMeals = dayData.meals.map((m: any) => ({
-      id: m.id,
-      name: m.name,
-      time: m.time || '',
-      items: m.items.map((it: any) => ({
-        id: it.id,
-        name: it.title,
-        description: '', // Descrição agora é responsabilidade do snapshot/instructions
-        kcal: it.macros?.kcal || 0,
-        protein: it.macros?.protein_g || 0,
-        carbs: it.macros?.carbs_g || 0,
-        fat: it.macros?.fat_g || 0,
-        display_quantity: it.quantity_display,
-        clinical_mass_g: it.clinical_mass_g,
-        imageUrl: it.visual?.image_url,
-        substitutions: (it.substitutions || []).map((sub: any) => ({
-          id: sub.id,
-          name: sub.title,
-          kcal: sub.macros?.kcal || 0,
-          protein: sub.macros?.protein_g || 0,
-          carbs: sub.macros?.carbs_g || 0,
-          fat: sub.macros?.fat_g || 0,
-          display_quantity: sub.quantity_display,
-          imageUrl: sub.visual?.image_url
+    // 🔪 FASE 1 EXCISÃO: Aceita meal.items E meal.foods (templates do banco)
+    const mappedMeals = dayData.meals.map((m: any) => {
+      const mealFoods = (m.items && m.items.length > 0) ? m.items : (m.foods || []);
+      return {
+        id: m.id,
+        name: m.name,
+        time: m.time || '',
+        items: mealFoods.map((it: any) => ({
+          id: it.id || crypto.randomUUID(),
+          name: it.title || it.name,
+          description: '', // Descrição agora é responsabilidade do snapshot/instructions
+          kcal: it.macros?.kcal ?? it.kcal ?? 0,
+          protein: it.macros?.protein_g ?? it.protein ?? 0,
+          carbs: it.macros?.carbs_g ?? it.carbs ?? 0,
+          fat: it.macros?.fat_g ?? it.fat ?? 0,
+          display_quantity: it.quantity_display || it.qty,
+          clinical_mass_g: it.clinical_mass_g,
+          imageUrl: it.imageUrl || it.image_url || it.image || null,
+          substitutions: (it.substitutions || []).map((sub: any) => ({
+            id: sub.id || crypto.randomUUID(),
+            name: sub.title || sub.name,
+            kcal: sub.macros?.kcal ?? sub.kcal ?? 0,
+            protein: sub.macros?.protein_g ?? sub.protein ?? 0,
+            carbs: sub.macros?.carbs_g ?? sub.carbs ?? 0,
+            fat: sub.macros?.fat_g ?? sub.fat ?? 0,
+            display_quantity: sub.quantity_display || sub.qty,
+            imageUrl: sub.imageUrl || sub.image_url || sub.image || null
+          }))
         }))
-      }))
-    }));
+      };
+    });
 
     return {
       id: data.id,

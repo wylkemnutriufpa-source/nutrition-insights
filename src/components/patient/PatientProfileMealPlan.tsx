@@ -13,14 +13,8 @@ import {
 import { MealSlotModal } from "@/components/patient/MealSlotModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
 
-import {
-  buildDailyDisplayItems,
-  buildWeeklyDisplayDays,
-  calculatePrimaryTotals,
-} from "@/lib/legacy/mealPlanDisplay";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import { safeAccess } from "@/lib/safeRender";
-import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { toast } from "sonner";
 
 interface PatientProfileMealPlanProps {
@@ -74,6 +68,9 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
 
       if (isV3 && Array.isArray(snapshot.days)) {
         // 🛡️ SOBERANIA V3: Extração DIRETA do snapshot. ZERO normalization.
+        // 🔪 FASE 1 EXCISÃO: Corrigido mapeamento de campos.
+        // Snapshot real do banco usa: imageUrl, kcal/protein/carbs/fat (top-level)
+        // E também macros.{kcal,protein_g,carbs_g,fat_g} como fallback enriquecido
         const macrosMap: Record<string, any> = {};
 
         for (const day of snapshot.days) {
@@ -84,31 +81,37 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
               macrosMap[mealKey] = meal.macros;
             }
 
-            for (const item of (meal.items || [])) {
+            // 🛡️ Suporte a ambas estruturas: meal.items (V3 enriquecido) e meal.foods (templates)
+            const mealFoods = (meal.items && meal.items.length > 0) ? meal.items : (meal.foods || []);
+
+            for (const item of mealFoods) {
+              // 🔪 LEITURA DIRETA: snapshot.imageUrl → image_url (sem visual.image_url inexistente)
+              const directImageUrl = item.imageUrl || item.image_url || item.image || null;
+
               allResolved.push({
-                id: item.id,
-                title: item.title,
-                description: item.quantity_display || '',
+                id: item.id || crypto.randomUUID(),
+                title: item.title || item.name || 'Item',
+                description: item.quantity_display || item.qty || '',
                 tipo_refeicao: meal.name as any,
                 day_of_week: day.day_of_week ?? 0,
-                meta_calorias: item.macros?.kcal ?? 0,
-                meta_proteinas: item.macros?.protein_g ?? 0,
-                meta_carboidratos: item.macros?.carbs_g ?? 0,
-                meta_gorduras: item.macros?.fat_g ?? 0,
-                image_url: item.visual?.image_url || null,
+                meta_calorias: item.macros?.kcal ?? item.kcal ?? 0,
+                meta_proteinas: item.macros?.protein_g ?? item.protein ?? 0,
+                meta_carboidratos: item.macros?.carbs_g ?? item.carbs ?? 0,
+                meta_gorduras: item.macros?.fat_g ?? item.fat ?? 0,
+                image_url: directImageUrl,
                 is_primary: true,
-                display_quantity: item.quantity_display,
+                display_quantity: item.quantity_display || item.qty,
                 clinical_mass_g: item.clinical_mass_g,
                 metadata: {
-                  image_url: item.visual?.image_url || null,
+                  image_url: directImageUrl,
                   substitution_options: (item.substitutions || []).map((s: any) => ({
-                    id: s.id,
-                    title: s.title,
-                    meta_calorias: s.macros?.kcal ?? 0,
-                    meta_proteinas: s.macros?.protein_g ?? 0,
-                    meta_carboidratos: s.macros?.carbs_g ?? 0,
-                    meta_gorduras: s.macros?.fat_g ?? 0,
-                    image_url: s.visual?.image_url || null
+                    id: s.id || crypto.randomUUID(),
+                    title: s.title || s.name,
+                    meta_calorias: s.macros?.kcal ?? s.kcal ?? 0,
+                    meta_proteinas: s.macros?.protein_g ?? s.protein ?? 0,
+                    meta_carboidratos: s.macros?.carbs_g ?? s.carbs ?? 0,
+                    meta_gorduras: s.macros?.fat_g ?? s.fat ?? 0,
+                    image_url: s.imageUrl || s.image_url || s.image || null
                   })),
                   substitution_count: (item.substitutions || []).length
                 }
@@ -123,22 +126,12 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
           daily = allResolved.filter(i => i.day_of_week === firstDay);
         }
       } else {
-        // Legado: usar normalizador
-        const normalized = normalizeMealPlan(planData);
-        allResolved = normalized.meals.flatMap(m =>
-          m.items.map(it => ({
-            ...it,
-            tipo_refeicao: m.name as any,
-            day_of_week: m.day_of_week ?? 0,
-            meta_calorias: it.kcal,
-            meta_proteinas: it.protein,
-            meta_carboidratos: it.carbs,
-            meta_gorduras: it.fat,
-            image_url: it.imageUrl,
-            metadata: it.metadata || {}
-          }))
-        ) as MealPlanItem[];
-        daily = buildDailyDisplayItems(allResolved as any, dayOfWeek) as MealPlanItem[];
+        // 🛡️ SOBERANIA V3: Se não é V3, recusamos a renderização (Erro de Integridade).
+        // Não usamos mais normalizadores legados que mascaram problemas.
+        console.error("[FORENSIC] Plano não é V3. Sistema rejeita renderização legada.");
+        toast.error("Este plano precisa ser republicado no formato V3.");
+        allResolved = [];
+        daily = [];
       }
 
       setAllItems(allResolved);
@@ -189,7 +182,14 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     }).filter(g => g.items.length > 0);
   }, [items, mealMacros, dayOfWeek]);
 
-  const weeklyDisplayDays = useMemo(() => buildWeeklyDisplayDays(allItems as any), [allItems]);
+  const weeklyDisplayDays = useMemo(() => {
+    // 🛡️ SOBERANIA V3: Agrupar por day_of_week diretamente do snapshot
+    const days = [1, 2, 3, 4, 5, 6, 0];
+    return days.map(day => ({
+      day,
+      items: (allItems || []).filter(i => i.day_of_week === day)
+    }));
+  }, [allItems]);
 
   const handleUpdateItem = async (itemId: string, patch: any) => {
     const { error } = await supabase

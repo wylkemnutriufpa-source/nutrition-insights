@@ -255,36 +255,43 @@ export default function PatientMealPlan() {
             macrosMap[mKey] = meal.macros;
           }
 
-          meal.items.forEach((item: any) => {
+          // 🛡️ Suporte a ambas estruturas: meal.items (V3 enriquecido) e meal.foods (templates)
+          const mealFoods = (meal.items && meal.items.length > 0) ? meal.items : (meal.foods || []);
+
+          mealFoods.forEach((item: any) => {
+            // 🔪 LEITURA DIRETA: snapshot.imageUrl (sem visual.image_url inexistente)
+            const directImageUrl = item.imageUrl || item.image_url || item.image || null;
+            const mealImageUrl = meal.image || meal.image_url || meal.imageUrl || null;
+
             const mapped: MealPlanItem = {
-              id: item.id,
-              title: item.title,
-              description: item.quantity_display || '',
+              id: item.id || crypto.randomUUID(),
+              title: item.title || item.name || 'Item',
+              description: item.quantity_display || item.qty || '',
               tipo_refeicao: meal.name as any,
               day_of_week: day.day_of_week ?? 0,
-              meta_calorias: item.macros?.kcal ?? 0,
-              meta_proteinas: item.macros?.protein_g ?? 0,
-              meta_carboidratos: item.macros?.carbs_g ?? 0,
-              meta_gorduras: item.macros?.fat_g ?? 0,
-              image_url: item.visual?.image_url || null,
-              imageUrl: item.visual?.image_url || null,
+              meta_calorias: item.macros?.kcal ?? item.kcal ?? 0,
+              meta_proteinas: item.macros?.protein_g ?? item.protein ?? 0,
+              meta_carboidratos: item.macros?.carbs_g ?? item.carbs ?? 0,
+              meta_gorduras: item.macros?.fat_g ?? item.fat ?? 0,
+              image_url: directImageUrl,
+              imageUrl: directImageUrl,
               is_primary: true,
-              display_quantity: item.quantity_display,
+              display_quantity: item.quantity_display || item.qty,
               clinical_mass_g: item.clinical_mass_g,
               metadata: {
                 meal_id: meal.id,
                 meal_name: meal.name,
                 meal_time: meal.time,
-                meal_image_url: meal.image_url || item.visual?.image_url,
-                image_url: item.visual?.image_url || null,
+                meal_image_url: mealImageUrl || directImageUrl,
+                image_url: directImageUrl,
                 substitution_options: (item.substitutions || []).map((s: any) => ({
-                  id: s.id,
-                  title: s.title,
-                  meta_calorias: s.macros?.kcal ?? 0,
-                  meta_proteinas: s.macros?.protein_g ?? 0,
-                  meta_carboidratos: s.macros?.carbs_g ?? 0,
-                  meta_gorduras: s.macros?.fat_g ?? 0,
-                  image_url: s.visual?.image_url || null
+                  id: s.id || crypto.randomUUID(),
+                  title: s.title || s.name,
+                  meta_calorias: s.macros?.kcal ?? s.kcal ?? 0,
+                  meta_proteinas: s.macros?.protein_g ?? s.protein ?? 0,
+                  meta_carboidratos: s.macros?.carbs_g ?? s.carbs ?? 0,
+                  meta_gorduras: s.macros?.fat_g ?? s.fat ?? 0,
+                  image_url: s.imageUrl || s.image_url || s.image || null
                 })),
                 substitution_count: (item.substitutions || []).length
               }

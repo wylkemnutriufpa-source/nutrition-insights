@@ -37,7 +37,9 @@ export function ForensicSnapshotViewer({ snapshot, planId }: ForensicSnapshotVie
             issues.push(`Dia ${day.day_of_week} / ${meal.name}: Sem itens`);
           } else {
             meal.items.forEach((item: any) => {
-              if (!item.visual?.image_url) checks.images = false;
+              // 🔪 LEITURA DIRETA: snapshot.imageUrl (sem visual.image_url)
+              const hasImage = item.imageUrl || item.image_url || item.image || item.visual?.image_url;
+              if (!hasImage) checks.images = false;
               if (!item.macros || item.macros.kcal === 0) checks.macros = false;
             });
           }
