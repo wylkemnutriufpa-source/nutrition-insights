@@ -29,34 +29,41 @@ async function repairTemplates() {
 
   for (const t of templates) {
     const snapshot = t.plan_snapshot as any;
-    if (!snapshot) continue;
+    if (!snapshot || typeof snapshot !== 'object') continue;
 
     let modified = false;
 
     for (const kcal of Object.keys(snapshot)) {
       const profile = snapshot[kcal];
-      if (!profile.days || !Array.isArray(profile.days)) continue;
+      if (!profile || !profile.days || !Array.isArray(profile.days)) continue;
 
-      profile.days.forEach((day: any) => {
-        if (!day.meals || !Array.isArray(day.meals)) return;
+      for (const day of profile.days) {
+        if (!day || !day.meals || !Array.isArray(day.meals)) continue;
 
-        day.meals.forEach((meal: any) => {
-          // Normalize items from foods if necessary
-          if (!meal.items && Array.isArray(meal.foods)) {
-            meal.items = meal.foods;
-            delete meal.foods;
-            modified = true;
+        for (const meal of day.meals) {
+          if (!meal) continue;
+          
+          // Force items existence
+          if (!meal.items) {
+             if (Array.isArray(meal.foods)) {
+               meal.items = meal.foods;
+             } else {
+               meal.items = [];
+             }
+             modified = true;
           }
 
-          if (!meal.items || !Array.isArray(meal.items)) {
+          if (!Array.isArray(meal.items)) {
             meal.items = [];
             modified = true;
           }
 
-          meal.items.forEach((item: any) => {
+          for (const item of meal.items) {
+            if (!item) continue;
+
             // Repair image_url
             const existingImg = item.imageUrl || item.image_url || item.visual?.image_url;
-            if (!existingImg || existingImg === "undefined" || existingImg.includes("placeholder")) {
+            if (!existingImg || existingImg === "undefined" || existingImg === "null" || String(existingImg).includes("placeholder")) {
               const name = (item.name || item.title || "").toLowerCase().trim();
               const foundUrl = visualMap.get(name);
               const finalUrl = foundUrl || FALLBACK_IMAGE;
@@ -88,9 +95,9 @@ async function repairTemplates() {
                item.instanceId = item.id;
                modified = true;
             }
-          });
-        });
-      });
+          }
+        }
+      }
     }
 
     if (modified) {
