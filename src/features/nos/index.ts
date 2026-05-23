@@ -28,3 +28,7 @@ export {
   useNOSFoodById,
   type NOSFoodResult,
 } from './hooks/useNOSFoodSearch';
+
+// Componente de busca para o Editor V3
+// NUNCA importar no Patient App
+export { NOSFoodSearch } from './components/NOSFoodSearch';

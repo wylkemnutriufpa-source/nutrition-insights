@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Meal, Food, MealItem } from '../types/types';
 import { FoodItemRow } from './FoodItemRow';
 import { FoodSearch } from './FoodSearch';
+import { NOSFoodSearch } from '@/features/nos/components/NOSFoodSearch';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
@@ -280,7 +281,7 @@ export const MealCard: React.FC<MealCardProps> = ({
               </div>
             )}
           </DialogHeader>
-          <FoodSearch 
+          <NOSFoodSearch 
             mealSlot={activeItemForSub ? (activeItemForSub.category || meal.name) : meal.name}
             onSelect={handleSearchSelect} 
           />
