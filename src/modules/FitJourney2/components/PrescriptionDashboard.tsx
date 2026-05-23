@@ -332,6 +332,7 @@ export const PrescriptionDashboard = () => {
           </div>
         </div>
       )}
+      </ScreenEntrance>
     </div>
   );
 };
