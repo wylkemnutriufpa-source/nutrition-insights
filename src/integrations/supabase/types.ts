@@ -6350,6 +6350,7 @@ export type Database = {
           id: string
           metadata: Json | null
           patient_email: string | null
+          patient_id: string | null
           patient_name: string | null
           professional_id: string
           status: string | null
@@ -6365,6 +6366,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           patient_email?: string | null
+          patient_id?: string | null
           patient_name?: string | null
           professional_id: string
           status?: string | null
@@ -6380,6 +6382,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           patient_email?: string | null
+          patient_id?: string | null
           patient_name?: string | null
           professional_id?: string
           status?: string | null
