@@ -18,7 +18,12 @@ export function useNutritionistRealtime() {
   const { addRealtimeEvent, addInvalidation, setConnection } = useTelemetryStore();
 
   useEffect(() => {
-    if (!user || (!isNutritionist && !isAdmin)) return;
+    // 🛡️ SOBERANIA: Bloqueio de Churn de Realtime
+    // Se o usuário não está autenticado ou não tem permissão, não abre canal.
+    if (!user?.id || (!isNutritionist && !isAdmin)) return;
+
+    console.log("[REALTIME:PROFESSIONAL] Estabelecendo conexão estável...");
+
 
     const channelName = `nutri-rt-${user.id}`;
     const channel = safeChannel(channelName);

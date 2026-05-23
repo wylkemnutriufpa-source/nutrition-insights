@@ -256,7 +256,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <motion.aside initial={false} animate={{ width: collapsed ? 72 : 260 }} transition={{ duration: 0.2 }} className={`fixed left-0 top-0 h-screen border-r flex flex-col z-50 ${mode === 'advanced' ? 'border-amber-500/20 bg-card' : mode === 'pro' ? 'border-blue-500/20 bg-card' : 'border-green-700/20 bg-card'}`}>
+      <motion.aside initial={false} animate={{ width: collapsed ? 72 : 260 }} transition={{ duration: 0.2 }} className={`fixed left-0 top-0 h-[100svh] border-r flex flex-col z-50 ${mode === 'advanced' ? 'border-amber-500/20 bg-card' : mode === 'pro' ? 'border-blue-500/20 bg-card' : 'border-green-700/20 bg-card'}`}>
         <ErrorBoundary section="Layout:DesktopSidebar" fallback={<SidebarFallback />}>
           <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={(v: boolean) => setCollapsed(v)} />
         </ErrorBoundary>

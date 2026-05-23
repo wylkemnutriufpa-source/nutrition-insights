@@ -126,5 +126,5 @@ export function usePatientRealtime() {
       supabase.removeChannel(channel);
       setConnection({ activeChannels: supabase.getChannels().length });
     };
-  }, [user, isPatient, queryClient]);
+  }, [user?.id, isPatient, queryClient]); // 🛡️ SOBERANIA: Dependência por ID para evitar churn de realtime
 }
