@@ -122,7 +122,13 @@ export function assertNotLegacyCode(symbolName: string, context: string): void {
     'normalizeMealPlan',
     'assertHierarchyIntegrity',
     'hydrationEngine',
-    'runtimeInference'
+    'runtimeInference',
+    'mealPlanNormalizer',
+    'mealPlanDisplay',
+    'calculateMacros',
+    'fixCorruptedData',
+    'inferMacrosFromName',
+    'rebuildSnapshot',
   ];
 
   if (DENYLIST.includes(symbolName)) {
@@ -132,8 +138,25 @@ export function assertNotLegacyCode(symbolName: string, context: string): void {
       { symbol: symbolName, message: 'Código legado proibido detectado.' }
     );
     if (IS_DEV) {
-      throw new Error(`[SOVEREIGN:LEGACY] "${symbolName}" é código legado proibido.`);
+      throw new Error(`[SOVEREIGN:LEGACY] "${symbolName}" é código legado proibido e foi bloqueado.`);
     }
   }
 }
+
+export function assertNoAntiPatterns(code: string, context: string): void {
+  const antiPatterns = [
+    { pattern: /kcal\s*[:=]\s*\w+\.reduce/i, name: 'FRONTEND_MACRO_RECALC' },
+    { pattern: /protein_g\s*[:=]\s*\w+\.reduce/i, name: 'FRONTEND_MACRO_RECALC' },
+    { pattern: /normalizeMealPlan\(/, name: 'LEGACY_NORMALIZATION' },
+    { pattern: /new\s+Date\(\)\.getTime\(\)/, name: 'NONDETERMINISTIC_TIMESTAMP' },
+    { pattern: /catch.*\{\s*\/\/.*healing/i, name: 'SILENT_HEALING' }
+  ];
+
+  for (const { pattern, name } of antiPatterns) {
+    if (pattern.test(code)) {
+      sovereignAssert(false, name, context, { pattern: pattern.toString() });
+    }
+  }
+}
+
 
