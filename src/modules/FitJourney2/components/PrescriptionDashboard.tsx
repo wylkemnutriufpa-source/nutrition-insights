@@ -200,12 +200,14 @@ export const PrescriptionDashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
+            <StaggerItem index={4} className="lg:col-span-2 space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-black uppercase tracking-tight">Pacientes Recentes</h2>
-                <button className="text-xs font-bold text-green-400 flex items-center gap-1 hover:text-green-300 transition-colors uppercase">
-                  Ver todos <ArrowRight size={14} />
-                </button>
+                <SelectionRipple>
+                  <button className="text-xs font-bold text-green-400 flex items-center gap-1 hover:text-green-300 transition-colors uppercase">
+                    Ver todos <ArrowRight size={14} />
+                  </button>
+                </SelectionRipple>
               </div>
 
               <div className="bg-slate-900/30 border border-slate-800 rounded-2xl overflow-hidden">
