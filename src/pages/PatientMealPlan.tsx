@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { ScreenEntrance, StaggerItem, ModalMaterialize } from "@/components/ui/neural-transitions";
+import { SelectionRipple, CognitiveHover } from "@/components/ui/micro-interactions";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer, RefreshCw,
@@ -419,38 +421,145 @@ export default function PatientMealPlan() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-5 pb-10">
-        {isToday && <PatientRetentionAlerts />}
+      <ScreenEntrance className="max-w-2xl mx-auto space-y-8 pb-10 px-4 pt-6">
+        {isToday && (
+          <StaggerItem index={0}>
+            <PatientRetentionAlerts />
+          </StaggerItem>
+        )}
+        
         <XPPopup show={xpPopup.show} points={xpPopup.points} />
-        <div className="text-center"><h1 className="font-display text-2xl font-bold">{isBasic ? "Sua dieta de hoje" : "Meu Plano Alimentar"}</h1><p className="text-muted-foreground text-sm">{plan.title}</p></div>
-        <div className="flex justify-center gap-2"><Button variant={viewMode === "daily" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("daily")}>Diário</Button><Button variant={viewMode === "weekly" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("weekly")}>Semanal</Button><Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exportingPDF}><FileDown className="w-4 h-4 mr-1" /> PDF</Button></div>
+        
+        <StaggerItem index={1} isHero>
+          <div className="flex items-center justify-between mb-2">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black tracking-tighter uppercase italic text-white leading-none">
+                {isBasic ? "Sua dieta de hoje" : "Meu Plano Alimentar"}
+              </h1>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] font-mono border-white/10 text-white/40 uppercase tracking-widest px-2 py-0">
+                  {plan.title}
+                </Badge>
+                {isToday && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />}
+              </div>
+            </div>
+            
+            <SelectionRipple>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowCalendar(true)}
+                className="rounded-full bg-white/5 border border-white/10 hover:bg-white/10 h-12 w-12"
+              >
+                <Calendar className="w-5 h-5 text-white/70" />
+              </Button>
+            </SelectionRipple>
+          </div>
+        </StaggerItem>
+
+        <StaggerItem index={2}>
+          <div className="flex justify-center gap-2 py-2">
+            <SelectionRipple className="rounded-xl">
+              <Button 
+                variant={viewMode === "daily" ? "default" : "ghost"} 
+                size="sm" 
+                onClick={() => setViewMode("daily")}
+                className="rounded-xl font-bold uppercase tracking-wider text-[10px]"
+              >
+                Diário
+              </Button>
+            </SelectionRipple>
+            <SelectionRipple className="rounded-xl">
+              <Button 
+                variant={viewMode === "weekly" ? "default" : "ghost"} 
+                size="sm" 
+                onClick={() => setViewMode("weekly")}
+                className="rounded-xl font-bold uppercase tracking-wider text-[10px]"
+              >
+                Semanal
+              </Button>
+            </SelectionRipple>
+            <SelectionRipple className="rounded-xl">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleExportPDF} 
+                disabled={exportingPDF}
+                className="rounded-xl font-bold uppercase tracking-wider text-[10px] border-white/5 bg-white/5"
+              >
+                <FileDown className="w-4 h-4 mr-1" /> PDF
+              </Button>
+            </SelectionRipple>
+          </div>
+        </StaggerItem>
 
         {viewMode === "daily" ? (
           <>
-            <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
-            <AdherenceCard dailyAdherence={dailyAdherence} followedCount={followedCount} partialCount={partialCount} notFollowedCount={notFollowedCount} completionsCount={completions.length} totalItems={items.length} allMarked={allMarked} />
-            <MacroSummary items={items} targets={{ calories: plan.total_meta_calorias, protein: plan.total_meta_proteinas, carbs: plan.total_meta_carboidratos, fat: plan.total_meta_gorduras }} />
-            <div className="space-y-6">
-              {groupedItems.map(({ key, label, icon, time, items: mealItems, macros }) => (
-                <MealGroup key={key} mealType={{ key, label, icon, time }} items={mealItems} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} onOpenSlot={(type, items) => setSelectedSlot({ type, items })} justCompleted={justCompleted} focusMode={focusMode} macros={macros} />
+            <StaggerItem index={3}>
+              <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+            </StaggerItem>
+            <StaggerItem index={4}>
+              <AdherenceCard dailyAdherence={dailyAdherence} followedCount={followedCount} partialCount={partialCount} notFollowedCount={notFollowedCount} completionsCount={completions.length} totalItems={items.length} allMarked={allMarked} />
+            </StaggerItem>
+            <StaggerItem index={5}>
+              <MacroSummary items={items} targets={{ calories: plan.total_meta_calorias, protein: plan.total_meta_proteinas, carbs: plan.total_meta_carboidratos, fat: plan.total_meta_gorduras }} />
+            </StaggerItem>
+            <div className="space-y-8 pt-4">
+              {groupedItems.map(({ key, label, icon, time, items: mealItems, macros }, idx) => (
+                <StaggerItem key={key} index={idx + 6}>
+                  <MealGroup 
+                    mealType={{ key, label, icon, time }} 
+                    items={mealItems} 
+                    completions={completions} 
+                    onSetAdherence={setAdherence} 
+                    onOpenDetail={setSelectedMeal} 
+                    onOpenSubstitution={setSubstitutionItem} 
+                    onOpenSlot={(type, items) => setSelectedSlot({ type, items })} 
+                    justCompleted={justCompleted} 
+                    focusMode={focusMode} 
+                    macros={macros} 
+                  />
+                </StaggerItem>
               ))}
             </div>
           </>
         ) : (
-          <div className="space-y-6">{weeklyDisplayDays.map(({ day, items: dayItems }) => {
-            const dayDate = weekDates[day === 0 ? 0 : day] || date;
-            const groupedDayItems = MEAL_TYPES.map(mt => ({ ...mt, items: (dayItems as MealPlanItem[]).filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) })).filter(g => g.items.length > 0);
-            if (groupedDayItems.length === 0) return null;
-            return (
-              <section key={day} className="rounded-2xl border p-4 space-y-4 bg-card/50">
-                <h3 className="font-bold">{DAYS[day]}</h3>
-                {groupedDayItems.map(({ key, label, icon, time, items: mealItems }) => (
-                  <MealGroup key={`${day}-${key}`} mealType={{ key, label, icon, time }} items={mealItems} completions={weekCompletions.filter(c => (c as any).date === dayDate)} onSetAdherence={(item, status) => setAdherence(item, status, dayDate)} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} justCompleted={justCompleted} focusMode={focusMode} />
-                ))}
-              </section>
-            );
-          })}</div>
+          <div className="space-y-6">
+            {weeklyDisplayDays.map(({ day, items: dayItems }, idx) => {
+              const dayDate = weekDates[day === 0 ? 0 : day] || date;
+              const groupedDayItems = MEAL_TYPES.map(mt => ({ 
+                ...mt, 
+                items: (dayItems as MealPlanItem[]).filter(i => String(i.tipo_refeicao).toLowerCase() === mt.key.toLowerCase()) 
+              })).filter(g => g.items.length > 0);
+              
+              if (groupedDayItems.length === 0) return null;
+              
+              return (
+                <StaggerItem key={day} index={idx + 3}>
+                  <section className="rounded-[2.5rem] border border-white/5 p-6 space-y-6 bg-neutral-900/40 backdrop-blur-xl">
+                    <h3 className="font-black uppercase italic tracking-tighter text-white/50 px-2">{DAYS[day]}</h3>
+                    <div className="space-y-10">
+                      {groupedDayItems.map(({ key, label, icon, time, items: mealItems }) => (
+                        <MealGroup 
+                          key={`${day}-${key}`} 
+                          mealType={{ key, label, icon, time }} 
+                          items={mealItems} 
+                          completions={weekCompletions.filter(c => (c as any).date === dayDate)} 
+                          onSetAdherence={(item, status) => setAdherence(item, status, dayDate)} 
+                          onOpenDetail={setSelectedMeal} 
+                          onOpenSubstitution={setSubstitutionItem} 
+                          justCompleted={justCompleted} 
+                          focusMode={focusMode} 
+                        />
+                      ))}
+                    </div>
+                  </section>
+                </StaggerItem>
+              );
+            })}
+          </div>
         )}
+
 
         {selectedMeal && (<MealDetailModal open={!!selectedMeal} onOpenChange={(open) => !open && setSelectedMeal(null)} meal={{ ...selectedMeal, itemId: selectedMeal.itemId || (selectedMeal as any).id, image_url: selectedMeal.image_url || (selectedMeal as any).imageUrl }} />)}
         {substitutionItem && (<MealSubstitutionModal open={!!substitutionItem} onOpenChange={(open) => !open && setSubstitutionItem(null)} mealTitle={substitutionItem.title} mealPlanItemId={substitutionItem.id} mealPlanId={plan.id} patientId={user.id} mealSlot={(substitutionItem as any).tipo_refeicao} options={
@@ -468,7 +577,7 @@ export default function PatientMealPlan() {
             : safeAccess(substitutionItem, 'metadata.substitution_options', []))
         } onSubstitute={(food, originalTitle) => { setActiveSubstitutions(prev => ({ ...prev, [substitutionItem.id]: { foodName: food.name, originalTitle } })); setSubstitutionItem(null); }} />)}
         <MealSlotModal open={!!selectedSlot} onOpenChange={(open) => !open && setSelectedSlot(null)} mealType={selectedSlot?.type || ""} items={selectedSlot?.items || []} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} />
-      </div>
+      </ScreenEntrance>
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50 border-none rounded-3xl">

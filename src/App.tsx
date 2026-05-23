@@ -9,7 +9,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { PrescriptionDashboard } from './modules/FitJourney2/components/PrescriptionDashboard';
 import { AppRoutes } from './routes/AppRoutes';
 import PageLoader from './components/common/PageLoader';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SelectionRipple } from '@/components/ui/micro-interactions';
 import { useAuth } from './lib/auth';
 import { TemplateSeederInitializer } from './lib/useAutoTemplateSeeder';
 
@@ -51,26 +52,28 @@ const App = () => {
     if (!isProfessional && mode === 'V1') return null;
 
     return (
-      <motion.button
-        drag
-        dragMomentum={false}
-        dragElastic={0}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setMode(mode === 'V1' ? 'V2' : 'V1');
-        }}
-        className={`fixed bottom-4 right-4 z-[9999] px-3 py-1.5 rounded-full text-[9px] font-bold uppercase transition-all shadow-lg border flex items-center gap-2 cursor-move select-none ${
-          mode === 'V1'
-            ? 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50'
-            : 'bg-green-600 text-white border-green-500 hover:bg-green-500 shadow-green-500/20'
-        }`}
-        style={{ touchAction: 'none' }}
-      >
-        <div className={`w-2 h-2 rounded-full ${mode === 'V1' ? 'bg-slate-400' : 'bg-white animate-pulse'}`} />
-        <span>{mode === 'V1' ? 'Ver Dashboard de Prescrição' : 'Voltar para o Sistema Principal'}</span>
-      </motion.button>
+      <SelectionRipple className="fixed bottom-6 right-6 z-[9999] rounded-full shadow-2xl">
+        <motion.button
+          drag
+          dragMomentum={false}
+          dragElastic={0}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setMode(mode === 'V1' ? 'V2' : 'V1');
+          }}
+          className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border flex items-center gap-3 cursor-move select-none backdrop-blur-md shadow-xl ${
+            mode === 'V1'
+              ? 'bg-white/80 text-slate-900 border-slate-200 hover:bg-white shadow-slate-200/50'
+              : 'bg-green-600/90 text-white border-green-500 hover:bg-green-600 shadow-green-500/40'
+          }`}
+          style={{ touchAction: 'none' }}
+        >
+          <div className={`w-2.5 h-2.5 rounded-full shadow-inner ${mode === 'V1' ? 'bg-slate-300' : 'bg-white animate-pulse shadow-[0_0_8px_white]'}`} />
+          <span>{mode === 'V1' ? 'Acessar Dashboard de Prescrição' : 'Retornar ao Sistema Principal'}</span>
+        </motion.button>
+      </SelectionRipple>
     );
   };
 
