@@ -2,9 +2,14 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { CoreProviders } from "./providers/CoreProviders";
+import { productionIntegrityCheck } from "./lib/guards/productionGuard";
+
+// 🛡️ Executar check de integridade no boot
+productionIntegrityCheck();
 
 // Hard Clear no Boot: Se a URL contiver ?clear, limpa tudo e recomeça
 if (window.location.search.includes('clear')) {
+
   console.log("[HARD CLEAR] Limpando estados locais...");
   localStorage.clear();
   sessionStorage.clear();

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { assertSnapshotIntegrity } from '../lib/sovereign/invariantAssertions';
+import { assertSnapshotIntegrity } from '../../lib/sovereign/invariantAssertions';
 
 describe('Forensic: Clinical Engine Integrity', () => {
   it('should preserve clinical_metadata across snapshots', () => {
@@ -18,3 +18,4 @@ describe('Forensic: Clinical Engine Integrity', () => {
     expect(nextRevision).toBeGreaterThan(currentRevision);
   });
 });
+
