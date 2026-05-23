@@ -880,10 +880,13 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
 function openPremiumPrintWindow(html: string, title: string) {
   if (typeof window === 'undefined') return;
 
-  
+  // 🛡️ SAFARI iOS FIX: window.open() deve ser chamado sincronamente.
+  // Se chamado após await/setTimeout, Safari iOS bloqueia como popup.
+  // Solução: abrir a janela imediatamente, preencher o conteúdo depois.
   const printWindow = window.open('', '_blank');
+  
   if (!printWindow) {
-    // Fallback if popup is blocked
+    // Fallback se popup bloqueado: download como .html
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -896,23 +899,46 @@ function openPremiumPrintWindow(html: string, title: string) {
     return;
   }
 
-  printWindow.document.write(html);
+  // 🛡️ SAFARI iOS FIX: inject um botão de "Salvar como PDF" no HTML
+  // porque window.print() automático é bloqueado no iOS Safari.
+  // O botão permite ao usuário acionar o print manualmente.
+  const iosSafari = /iP(ad|hone|od)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent);
+  
+  const printButtonHtml = iosSafari ? `
+    <div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#10b981;color:#fff;
+      padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+      font-family:sans-serif;font-size:14px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.2);">
+      <span>📄 Plano pronto para salvar</span>
+      <button onclick="window.print()" style="background:#fff;color:#10b981;border:none;
+        border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:13px;">
+        Salvar como PDF
+      </button>
+    </div>
+    <div style="height:52px"></div>
+  ` : '';
+
+  const htmlWithButton = html.replace('<body', `<body data-print-ready="true"`).replace(
+    /(<body[^>]*>)/,
+    `$1${printButtonHtml}`
+  );
+
+  printWindow.document.write(htmlWithButton);
   printWindow.document.title = title;
   printWindow.document.close();
-  
-  // Wait for fonts/resources to load before printing
-  printWindow.onload = () => {
-    setTimeout(() => {
-      printWindow.print();
-    }, 1000); // Increased delay for stability
-  };
 
-  // Fallback: If onload doesn't fire (some browsers/conditions)
-  setTimeout(() => {
-    if (printWindow.document.readyState === 'complete') {
-      // already printing or handled
-    } else {
-      printWindow.print();
-    }
-  }, 3000);
+  if (!iosSafari) {
+    // Desktop e Android: acionar print automaticamente
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 1000);
+    };
+
+    // Fallback se onload não disparar
+    setTimeout(() => {
+      if (printWindow && !printWindow.closed) {
+        printWindow.print();
+      }
+    }, 3000);
+  }
 }

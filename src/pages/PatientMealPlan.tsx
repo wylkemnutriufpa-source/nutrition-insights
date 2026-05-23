@@ -278,19 +278,26 @@ export default function PatientMealPlan() {
       setItems(allExtracted.filter(i => i.meal.day_of_week === dayOfWeek) as any);
 
       const [subsResponse, completionsResponse, weekResponse] = await Promise.all([
-        supabase.from("patient_meal_substitutions" as any).select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id),
+        supabase.from("patient_meal_substitutions" as any).select("*")
+          .eq("patient_id", user.id)
+          .eq("meal_plan_id", planData.id)
+          .order("created_at", { ascending: false }),
         supabase.from("meal_item_completions").select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id).eq("date", date),
         supabase.from("meal_item_completions").select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id).gte("date", weekDates[0]).lte("date", weekDates[6])
       ]);
       if (subsResponse.data) {
         const subsMap: Record<string, any> = {};
-        subsResponse.data.forEach((s: any) => { 
-          subsMap[s.meal_plan_item_id] = { 
-            foodName: s.substituted_food, 
-            originalTitle: s.original_food,
-            substituted_calories: s.substituted_calories,
-            substituted_protein: s.substituted_protein
-          }; 
+        // 🛡️ SOBERANIA V3: Manter apenas a substituição mais recente por item
+        // (query já vem ordenada por created_at desc, então primeiro encontrado vence)
+        subsResponse.data.forEach((s: any) => {
+          if (!subsMap[s.meal_plan_item_id]) {
+            subsMap[s.meal_plan_item_id] = { 
+              foodName: s.substituted_food, 
+              originalTitle: s.original_food,
+              substituted_calories: s.substituted_calories,
+              substituted_protein: s.substituted_protein
+            };
+          }
         });
         setActiveSubstitutions(subsMap);
       }

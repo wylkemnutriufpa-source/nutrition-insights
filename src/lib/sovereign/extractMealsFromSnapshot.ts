@@ -36,6 +36,7 @@ function readMacros(raw: any): SovereignMacros {
 /**
  * Lê URL da imagem direto do snapshot (SEM inferência, SEM busca externa)
  * Suporta ambas estruturas: item.imageUrl (templates) e item.visual.image_url (planos publicados)
+ * Rejeita URLs sem extensão de imagem conhecida (evita <img> quebrada no app)
  */
 function readImageUrl(raw: any): string | null {
   // 🛡️ Planos publicados (planPersistenceService) gravam visual.image_url
@@ -43,6 +44,22 @@ function readImageUrl(raw: any): string | null {
   const url = raw?.visual?.image_url || raw?.imageUrl || raw?.image_url || raw?.image || null;
   if (!url || typeof url !== 'string') return null;
   if (!url.startsWith('http')) return null;
+
+  // 🛡️ Rejeita URLs sem extensão de imagem reconhecida para evitar <img> quebrada
+  // Extrai o path sem query string para verificar a extensão
+  const path = url.split('?')[0].split('#')[0];
+  const knownExt = /\.(jpg|jpeg|png|webp|gif|avif|svg)$/i.test(path);
+  const isStoragePath = url.includes('/storage/v1/object/');
+
+  // Se é URL do Supabase Storage sem extensão, provavelmente o arquivo existe mas foi
+  // referenciado incorretamente — tenta adicionar .jpg como fallback soberano
+  if (isStoragePath && !knownExt) {
+    return url + '.jpg';
+  }
+
+  // Para outros domínios (Unsplash, CDN, etc.) sem extensão, rejeita para evitar 404
+  if (!knownExt) return null;
+
   return url;
 }
 
