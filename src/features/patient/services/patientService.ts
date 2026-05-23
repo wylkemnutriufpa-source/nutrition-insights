@@ -135,31 +135,21 @@ export const patientService = {
   },
 
   async getPlanByToken(token: string): Promise<PatientPlan | null> {
-    const { data: rawData, error } = await supabase
-      .from('meal_plans' as any)
-      .select(`
-        id,
-        patient_id,
-        created_at,
-        sharing_token,
-        editor_version,
-        snapshot,
-        total_meta_calorias,
-        total_meta_proteinas,
-        total_meta_carboidratos,
-        total_meta_gorduras,
-        nutritionist_patients (
-          id,
-          notes,
-          status
-        )
-      `)
-      .eq('sharing_token', token)
-      .maybeSingle();
+    const { data: rpcData, error } = await supabase
+      .rpc('get_shared_meal_plan' as any, { _token: token });
 
-    if (error || !rawData) return null;
-    const data = rawData as any;
-    const patientData = data.nutritionist_patients;
+    if (error || !rpcData || (Array.isArray(rpcData) && rpcData.length === 0)) return null;
+    const data: any = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+
+    let patientData: any = null;
+    if (data.patient_id) {
+      const { data: np } = await supabase
+        .from('nutritionist_patients' as any)
+        .select('id, notes, status')
+        .eq('patient_id', data.patient_id)
+        .maybeSingle();
+      patientData = np;
+    }
 
     if (data.snapshot && (data.snapshot.snapshot_version === 'v3' || data.snapshot.days)) {
       return this.mapSnapshotPlan(data, patientData, data.editor_version);
