@@ -136,7 +136,11 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
 
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      if (error.message.includes("25 seconds")) {
+        toast.error("Por segurança, aguarde 30 segundos antes de tentar novamente.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
       // Create tenant + profile + role atomically via RPC ONLY for nutritionist
       if (data.user && roleMetadata === "nutritionist") {

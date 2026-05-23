@@ -156,6 +156,14 @@ export default function PatientRegister() {
   const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
   const [isEmailAlreadyRegistered, setIsEmailAlreadyRegistered] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
 
 
@@ -465,7 +473,7 @@ export default function PatientRegister() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading || checkingEmail) return;
+    if (loading || checkingEmail || cooldown > 0) return;
 
     if (isEmailAlreadyRegistered) {
       toast.error("Este e-mail já está cadastrado.");
@@ -557,9 +565,16 @@ export default function PatientRegister() {
 
       if (signUpErr) {
         addLog(`Erro no Auth SignUp: ${signUpErr.message}`);
-        toast.error(signUpErr.message === "User already registered"
-          ? "Este e-mail já está cadastrado. Faça login."
-          : signUpErr.message);
+        
+        if (signUpErr.message.includes("25 seconds")) {
+          toast.error(`Aguarde ${cooldown || 25}s antes de tentar novamente.`);
+          setCooldown(30);
+        } else if (signUpErr.message === "User already registered") {
+          toast.error("Este e-mail já está cadastrado. Faça login.");
+        } else {
+          toast.error(signUpErr.message);
+        }
+        setSyncStatus("error", "PATIENT_REGISTER", signUpErr.message);
         return;
       }
 
@@ -1148,12 +1163,18 @@ export default function PatientRegister() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-11 text-base font-bold gradient-primary shadow-md" disabled={loading || !!whatsappError || ((preselectedNutri || invitationCode) && sigValid === null)}>
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-base font-bold gradient-primary shadow-md" 
+                disabled={loading || !!whatsappError || ((preselectedNutri || invitationCode) && sigValid === null) || cooldown > 0}
+              >
                 {loading || ((preselectedNutri || invitationCode) && sigValid === null) ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     {sigValid === null ? "Validando link..." : "Criando conta..."}
                   </span>
+                ) : cooldown > 0 ? (
+                  `Aguarde ${cooldown}s`
                 ) : "Concluir Cadastro"}
               </Button>
 
