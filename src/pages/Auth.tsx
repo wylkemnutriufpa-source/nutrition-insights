@@ -137,7 +137,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
     setLoading(false);
     if (error) {
       if (error.message.includes("25 seconds")) {
-        toast.error("Por segurança, aguarde 30 segundos antes de tentar novamente.");
+        toast.error("Processando sua solicitação. Aguarde alguns instantes.");
       } else {
         toast.error(error.message);
       }
@@ -150,7 +150,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
         });
       }
       setRegisterSuccess(true);
-      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+      toast.success("Conta criada com sucesso!");
     }
   };
 
@@ -278,7 +278,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
                       <Stethoscope className="w-7 h-7 text-primary" />
                     </div>
                     <h3 className="font-semibold text-foreground">Conta criada com sucesso! 🎉</h3>
-                    <p className="text-sm text-muted-foreground">Verifique seu e-mail para confirmar a conta. Depois, faça login para acessar sua plataforma.</p>
+                    <p className="text-sm text-muted-foreground">Sua conta foi criada com sucesso. Você já pode fazer login para acessar sua plataforma.</p>
                     <Button variant="outline" onClick={() => { setMode("login"); setRegisterSuccess(false); }} className="mt-2">
                       Ir para Login
                     </Button>
