@@ -5,6 +5,8 @@ import { Users, Utensils, ClipboardCheck, ArrowRight, Plus, Layout, Zap, Search 
 import { TemplateSelector } from './TemplateSelector';
 import { PlanResult } from './PlanResult';
 import { DailyPlan, UserProfile } from '../types';
+import { ScreenEntrance, StaggerItem } from '@/components/ui/neural-transitions';
+import { SelectionRipple, CognitiveHover } from '@/components/ui/micro-interactions';
 
 export const PrescriptionDashboard = () => {
   const { profile, loading: loadingProfile } = useNutritionistProfile();
