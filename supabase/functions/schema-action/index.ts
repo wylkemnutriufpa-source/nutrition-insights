@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireUser, requireRole } from "../_shared/auth-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // SECURITY: schema introspection is admin-only
+    const caller = await requireUser(req);
+    requireRole(caller, "admin");
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
@@ -22,28 +27,29 @@ Deno.serve(async (req) => {
       if (error) throw error;
 
       const tables: Record<string, string[]> = {};
-      data.forEach((row: any) => {
+      (data as any[]).forEach((row: any) => {
         if (!tables[row.table_name]) tables[row.table_name] = [];
         tables[row.table_name].push(row.column_name);
       });
 
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           generatedAt: new Date().toISOString(),
-          tables 
+          tables,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    return new Response(JSON.stringify({ error: "Invalid action" }), { 
-      status: 400, 
-      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    return new Response(JSON.stringify({ error: "Invalid action" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { 
-      status: 500, 
-      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+  } catch (error: any) {
+    if (error instanceof Response) return error;
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

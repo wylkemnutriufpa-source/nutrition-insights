@@ -11,7 +11,6 @@ interface PaymentRequest {
   plan_slug: string;
   gateway: "stripe" | "mercado_pago" | "pagseguro" | "pix";
   billing_cycle: "monthly" | "yearly";
-  amount: number;
 }
 
 serve(async (req) => {
@@ -37,13 +36,13 @@ serve(async (req) => {
     }
 
     const body: PaymentRequest = await req.json();
-    const { plan_id, plan_slug, gateway, billing_cycle, amount } = body;
+    const { plan_id, plan_slug, gateway, billing_cycle } = body;
 
     // Resolve tenant_id for this user
     const serviceSupabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: tenantId } = await serviceSupabase.rpc("get_user_tenant", { _user_id: user.id });
 
-    // Buscar plano
+    // Buscar plano (preço SOBERANO no servidor — nunca confiar no client)
     const { data: plan, error: planError } = await supabase
       .from("pricing_plans")
       .select("*")
@@ -52,6 +51,14 @@ serve(async (req) => {
 
     if (planError || !plan) {
       throw new Error("Plan not found");
+    }
+
+    // SECURITY: derive amount from the plan record, never from client input
+    const amount = billing_cycle === "yearly"
+      ? Number((plan as any).price_yearly)
+      : Number((plan as any).price_monthly);
+    if (!amount || amount <= 0) {
+      throw new Error("Plan price not configured");
     }
 
     // Criar registro de pagamento pendente

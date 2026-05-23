@@ -111,10 +111,15 @@ Deno.serve(async (req) => {
 
     let patientId: string;
 
-    // Try to create user first
+    // SECURITY: never use a hardcoded fallback password.
+    // Magic link / forgot-password flows handle access when no password is provided.
+    const randomStrongPassword = () => {
+      const raw = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, "");
+      return `Fj!${raw.slice(0, 20)}A9`;
+    };
     const finalPassword = method === "password" && password
       ? password
-      : "Fit@2026!";
+      : randomStrongPassword();
 
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email: normalizedEmail,

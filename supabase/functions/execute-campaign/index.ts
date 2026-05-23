@@ -32,15 +32,34 @@ Deno.serve(async (req) => {
     const { data: campaign, error: campErr } = await (supabase as any).from("campaigns").select("*").eq("id", campaign_id).single();
     if (campErr || !campaign) throw new Error("Campaign not found");
 
+    // SECURITY: enforce ownership / tenant scope
+    const isAdmin = caller.roles.includes("admin");
+    if (!isAdmin) {
+      const ownsCampaign = campaign.created_by === caller.id;
+      const sameTenant = tenantId && campaign.tenant_id && campaign.tenant_id === tenantId;
+      if (!ownsCampaign && !sameTenant) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const filters = campaign.filters_json || {};
     const channels = campaign.delivery_channels_json || ["notification"];
     const audienceType = campaign.audience_type || "patients";
 
-    // Resolve audience
+    // Resolve audience (SCOPED by tenant + ownership — never blast cross-tenant)
     let recipients: { id: string; type: string }[] = [];
 
     if (audienceType === "patients" || audienceType === "mixed") {
       let q = supabase.from("nutritionist_patients").select("patient_id");
+      // Only patients linked to this nutritionist (or to anyone in their tenant for admin)
+      if (!isAdmin) {
+        q = q.eq("nutritionist_id", caller.id);
+      } else if (tenantId) {
+        q = q.eq("tenant_id", tenantId);
+      }
       if (filters.status === "active") q = q.eq("status", "active");
       else if (filters.status === "inactive") q = q.eq("status", "inactive");
       else q = q.eq("status", "active");
@@ -49,8 +68,11 @@ Deno.serve(async (req) => {
     }
 
     if (audienceType === "professionals" || audienceType === "mixed") {
-      const { data } = await supabase.from("profiles").select("id").limit(500);
-      if (data) recipients.push(...data.map((d: any) => ({ id: d.id, type: "professional" })));
+      // Only admins may target professional audiences, and even then scoped to a tenant
+      if (isAdmin && tenantId) {
+        const { data } = await supabase.from("profiles").select("user_id").eq("tenant_id", tenantId).limit(500);
+        if (data) recipients.push(...data.map((d: any) => ({ id: d.user_id, type: "professional" })));
+      }
     }
 
     // PREVIEW MODE
