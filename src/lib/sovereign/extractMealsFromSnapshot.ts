@@ -102,13 +102,9 @@ export function extractMealsFromSnapshot(snapshot: any): SovereignExtractionResu
     const dayOfWeek = day.day_of_week ?? 0;
 
     for (const meal of day.meals || []) {
-      // Suporte a ambas estruturas: meal.items (V3) e meal.foods (templates)
-      const rawItems =
-        Array.isArray(meal.items) && meal.items.length > 0
-          ? meal.items
-          : Array.isArray(meal.foods)
-          ? meal.foods
-          : [];
+      // 🛡️ SOBERANIA V3: Todos os 65 templates já usam 'items' (confirmado 22/05/2026)
+      // Ponte foods → items REMOVIDA. Frontend não traduz mais. Apenas renderiza.
+      const rawItems = Array.isArray(meal.items) ? meal.items : [];
 
       const mealMeta = {
         id: String(meal.id || crypto.randomUUID()),
