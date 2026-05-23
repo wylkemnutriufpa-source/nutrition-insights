@@ -42,9 +42,10 @@ import { useDraftSync } from '../hooks/useDraftSync';
 import { planPersistenceService } from '../services/planPersistenceService';
 import { normalizeMealPlan } from "@/lib/legacy/mealPlanNormalizer";
 import { normalizeSnapshotToV3 } from '../utils/normalization';
-import { BookMarked } from 'lucide-react';
+import { BookMarked, ChefHat } from 'lucide-react';
 import { SaveCustomTemplateModal } from './SaveCustomTemplateModal';
 import { SectionalErrorBoundary } from '@/components/common/SectionalErrorBoundary';
+import { RecipeBuilder } from '@/features/nos/components/RecipeBuilder';
 
 
 export default function EditorV3Page() {
@@ -64,6 +65,7 @@ export default function EditorV3Page() {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
+  const [isRecipeBuilderOpen, setIsRecipeBuilderOpen] = useState(false);
 
   // 🛡️ COCKPIT: Abrir biblioteca automaticamente se veio do cockpit
   useEffect(() => {
@@ -514,6 +516,21 @@ export default function EditorV3Page() {
             <Button onClick={() => setIsSaveTemplateModalOpen(true)} variant="outline" className="text-[10px] font-black uppercase tracking-widest h-9 px-6 rounded-lg flex border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
               <BookMarked className="w-4 h-4 mr-2" /> Salvar como Modelo
             </Button>
+
+            {/* 🍳 Recipe Builder — NOS Sprint H */}
+            <Dialog open={isRecipeBuilderOpen} onOpenChange={setIsRecipeBuilderOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 text-[10px] font-black uppercase tracking-widest h-9 px-4 rounded-lg hidden xl:flex">
+                  <ChefHat className="w-4 h-4 mr-2" /> Receita
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl h-[90vh] bg-neutral-950 border-white/10 text-white p-0 rounded-[2rem] overflow-hidden flex flex-col">
+                <RecipeBuilder
+                  onSaved={(id) => { setIsRecipeBuilderOpen(false); toast.success('Receita salva! Disponível na biblioteca.'); }}
+                  onCancel={() => setIsRecipeBuilderOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
 
             <Button onClick={handleSave} disabled={saving} className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-9 px-8 rounded-lg shadow-lg shadow-emerald-500/10 text-[10px]">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar
