@@ -16,16 +16,19 @@ export function useRefetchOnFocus() {
 
   useEffect(() => {
     if (!user) return;
-    
-    // 🛡️ SOBERANIA DETERMINÍSTICA: Evitar refetch excessivo.
-    // Só re-validar se o usuário estiver inativo há mais de 2 minutos.
-    const INACTIVITY_THRESHOLD = 2 * 60 * 1000; 
-    const DEBOUNCE_MS = 30000; // Debounce aumentado para 30s
 
+    // 🛡️ SOBERANIA DETERMINÍSTICA: Evitar refetch excessivo.
+    // Só re-validar se passaram mais de 60s desde o último refetch por foco.
+    const REFRESH_THRESHOLD = 60000; 
 
     const handleFocus = () => {
       const now = Date.now();
-      if (now - lastRefetchRef.current < DEBOUNCE_MS) return;
+      
+      // Se o último refetch foi há menos de 60s, não faz nada
+      if (now - lastRefetchRef.current < REFRESH_THRESHOLD) {
+        return;
+      }
+
       lastRefetchRef.current = now;
       invalidateCriticalQueries(queryClient, user.id);
     };
