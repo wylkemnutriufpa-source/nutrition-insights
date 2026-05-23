@@ -203,7 +203,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       
       console.log(`[AUTH:CORE] Syncing session: ${currentSession ? "Authenticated" : "Unauthenticated"}`);
-      setLoading(true); // Garantir que entramos em estado de loading durante o sync
+      // Only set loading to true if we don't have a session yet or if it's the initial load
+      if (!session && !isLoaded) setLoading(true);
+
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
       setUser(currentUser);
