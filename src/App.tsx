@@ -9,7 +9,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { PrescriptionDashboard } from './modules/FitJourney2/components/PrescriptionDashboard';
 import { AppRoutes } from './routes/AppRoutes';
 import PageLoader from './components/common/PageLoader';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SelectionRipple } from '@/components/ui/micro-interactions';
 import { useAuth } from './lib/auth';
 import { TemplateSeederInitializer } from './lib/useAutoTemplateSeeder';
 
