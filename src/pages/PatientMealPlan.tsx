@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { ScreenEntrance, StaggerItem, ModalMaterialize } from "@/components/ui/neural-transitions";
+import { SelectionRipple, CognitiveHover } from "@/components/ui/micro-interactions";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer, RefreshCw,
