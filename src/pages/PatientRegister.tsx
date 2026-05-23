@@ -1163,12 +1163,18 @@ export default function PatientRegister() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-11 text-base font-bold gradient-primary shadow-md" disabled={loading || !!whatsappError || ((preselectedNutri || invitationCode) && sigValid === null)}>
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-base font-bold gradient-primary shadow-md" 
+                disabled={loading || !!whatsappError || ((preselectedNutri || invitationCode) && sigValid === null) || cooldown > 0}
+              >
                 {loading || ((preselectedNutri || invitationCode) && sigValid === null) ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     {sigValid === null ? "Validando link..." : "Criando conta..."}
                   </span>
+                ) : cooldown > 0 ? (
+                  `Aguarde ${cooldown}s`
                 ) : "Concluir Cadastro"}
               </Button>
 
