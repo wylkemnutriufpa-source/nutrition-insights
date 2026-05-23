@@ -89,7 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchInProgressRef = useRef<string | null>(null);
 
   const fetchData = async (userId: string) => {
-    setIsLoaded(false);
+    // 🛡️ SOBERANIA DETERMINÍSTICA: Só bloquear o app (isLoaded = false) se ainda não tivermos roles resolvidos.
+    // Refreshes de perfil em background não devem travar a UI.
+    if (roles === null) setIsLoaded(false);
+
     if (fetchInProgressRef.current === userId) {
       console.log(`[AUTH:CORE] Fetch already in progress for user ${userId}, skipping.`);
       return;
@@ -203,7 +206,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       
       console.log(`[AUTH:CORE] Syncing session: ${currentSession ? "Authenticated" : "Unauthenticated"}`);
-      setLoading(true); // Garantir que entramos em estado de loading durante o sync
+      // 🛡️ SOBERANIA DETERMINÍSTICA: Só bloquear a UI (loading=true) se ainda não tivermos roles resolvidos.
+      // Isso impede que a troca de abas ou exportação de PDF trave o sistema com loaders agressivos.
+      if (!isLoaded || roles === null) {
+        setLoading(true);
+      }
+
+
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
       setUser(currentUser);
