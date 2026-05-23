@@ -35,9 +35,12 @@ function readMacros(raw: any): SovereignMacros {
 
 /**
  * Lê URL da imagem direto do snapshot (SEM inferência, SEM busca externa)
+ * Suporta ambas estruturas: item.imageUrl (templates) e item.visual.image_url (planos publicados)
  */
 function readImageUrl(raw: any): string | null {
-  const url = raw?.imageUrl || raw?.image_url || raw?.image || null;
+  // 🛡️ Planos publicados (planPersistenceService) gravam visual.image_url
+  // Templates gravam imageUrl diretamente
+  const url = raw?.visual?.image_url || raw?.imageUrl || raw?.image_url || raw?.image || null;
   if (!url || typeof url !== 'string') return null;
   if (!url.startsWith('http')) return null;
   return url;
@@ -45,9 +48,12 @@ function readImageUrl(raw: any): string | null {
 
 /**
  * Lê quantity_display direto do snapshot
+ * Planos publicados usam quantity_display; templates usam qty
  */
 function readQuantityDisplay(raw: any): string {
-  return String(raw?.quantity_display || raw?.qty || raw?.quantity || '');
+  return String(
+    raw?.quantity_display || raw?.display_quantity || raw?.qty || raw?.quantity || ''
+  );
 }
 
 /**

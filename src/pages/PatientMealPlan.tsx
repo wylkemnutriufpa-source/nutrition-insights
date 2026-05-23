@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
+import { extractMealsFromSnapshot } from "@/lib/sovereign";
 
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
@@ -241,64 +242,19 @@ export default function PatientMealPlan() {
       const macrosMap: Record<string, any> = {};
 
       const currentDayIndex = new Date(date + "T12:00:00").getDay();
-      
-      // Verificamos se o snapshot tem o dia atual ou se devemos usar o primeiro dia disponível (fallback para planos fixos)
-      const hasSpecificDay = snapshot.days.some((d: any) => d.day_of_week === currentDayIndex);
-      const targetDays = hasSpecificDay 
-        ? snapshot.days.filter((d: any) => d.day_of_week === currentDayIndex)
-        : [snapshot.days[0]]; // Fallback Soberano: Se não tem o dia, mostra o primeiro (Garante que nunca abra vazio)
 
-      targetDays.forEach((day: any) => {
-        day.meals.forEach((meal: any) => {
-          const mKey = `${day.day_of_week}_${meal.name.toLowerCase()}`;
-          if (meal.macros) {
-            macrosMap[mKey] = meal.macros;
-          }
+      // 🛡️ SOBERANIA V3: Usar o extrator soberano — resolve imagens, medidas e campos aninhados
+      // Corrige: visual.image_url (planos publicados), quantity_display, item.macros aninhados
+      const extraction = extractMealsFromSnapshot(snapshot);
+      const allExtracted = extraction.items;
 
-          // 🛡️ Suporte a ambas estruturas: meal.items (V3 enriquecido) e meal.foods (templates)
-          const mealFoods = (meal.items && meal.items.length > 0) ? meal.items : (meal.foods || []);
-
-          mealFoods.forEach((item: any) => {
-            // 🔪 LEITURA DIRETA: snapshot.imageUrl (sem visual.image_url inexistente)
-            const directImageUrl = item.imageUrl || item.image_url || item.image || null;
-            const mealImageUrl = meal.image || meal.image_url || meal.imageUrl || null;
-
-            const mapped: MealPlanItem = {
-              id: item.id || crypto.randomUUID(),
-              title: item.title || item.name || 'Item',
-              description: item.quantity_display || item.qty || '',
-              tipo_refeicao: meal.name as any,
-              day_of_week: day.day_of_week ?? 0,
-              meta_calorias: item.macros?.kcal ?? item.kcal ?? 0,
-              meta_proteinas: item.macros?.protein_g ?? item.protein ?? 0,
-              meta_carboidratos: item.macros?.carbs_g ?? item.carbs ?? 0,
-              meta_gorduras: item.macros?.fat_g ?? item.fat ?? 0,
-              image_url: directImageUrl,
-              imageUrl: directImageUrl,
-              is_primary: true,
-              display_quantity: item.quantity_display || item.qty,
-              clinical_mass_g: item.clinical_mass_g,
-              metadata: {
-                meal_id: meal.id,
-                meal_name: meal.name,
-                meal_time: meal.time,
-                meal_image_url: mealImageUrl || directImageUrl,
-                image_url: directImageUrl,
-                substitution_options: (item.substitutions || []).map((s: any) => ({
-                  id: s.id || crypto.randomUUID(),
-                  title: s.title || s.name,
-                  meta_calorias: s.macros?.kcal ?? s.kcal ?? 0,
-                  meta_proteinas: s.macros?.protein_g ?? s.protein ?? 0,
-                  meta_carboidratos: s.macros?.carbs_g ?? s.carbs ?? 0,
-                  meta_gorduras: s.macros?.fat_g ?? s.fat ?? 0,
-                  image_url: s.imageUrl || s.image_url || s.image || null
-                })),
-                substitution_count: (item.substitutions || []).length
-              }
-            } as any;
-            allSnapshotItems.push(mapped);
-          });
-        });
+      // Construir macros map por refeição a partir dos dados extraídos
+      const macrosMap: Record<string, any> = {};
+      allExtracted.forEach(item => {
+        const mKey = `${item.meal.day_of_week}_${item.meal.name.toLowerCase()}`;
+        if (item.meal.macros && !macrosMap[mKey]) {
+          macrosMap[mKey] = item.meal.macros;
+        }
       });
       
       setMealMacros(macrosMap);
@@ -318,8 +274,8 @@ export default function PatientMealPlan() {
       };
 
       setPlan(planMeta as any);
-      setAllItems(allSnapshotItems);
-      setItems(allSnapshotItems); // Já filtrado pelo targetDays logicamente acima
+      setAllItems(allExtracted as any);
+      setItems(allExtracted.filter(i => i.meal.day_of_week === dayOfWeek) as any);
 
       const [subsResponse, completionsResponse, weekResponse] = await Promise.all([
         supabase.from("patient_meal_substitutions" as any).select("*").eq("patient_id", user.id).eq("meal_plan_id", planData.id),
