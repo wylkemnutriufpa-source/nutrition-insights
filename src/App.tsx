@@ -12,7 +12,7 @@ import PageLoader from './components/common/PageLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SelectionRipple } from '@/components/ui/micro-interactions';
 import { useAuth } from './lib/auth';
-import { TemplateSeederInitializer } from './lib/useAutoTemplateSeeder';
+
 
 const App = () => {
   const { isAdmin, isNutritionist, isPersonal, roles, loading } = useAuth();
@@ -79,8 +79,8 @@ const App = () => {
 
   return (
     <div className="relative min-h-screen">
-      <TemplateSeederInitializer />
       <Switcher />
+
       <Suspense fallback={<PageLoader />}>
         {mode === 'V1' ? (
           <AppRoutes />
