@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260520_defense_in_depth_constraints.sql",
-  "migrationsCount": 798,
+  "lastMigration": "20260525100000_nos_sprint_f_foundation.sql",
+  "migrationsCount": 825,
   "tables": {
     "meal_plan_items": [
       "created_at",
@@ -191,6 +191,7 @@
       "adherence_score_prev_7d",
       "avatar_url",
       "behavioral_consistency_score",
+      "clinical_assessment_completed",
       "clinical_risk_level",
       "clinical_risk_score",
       "compliance_mode",
