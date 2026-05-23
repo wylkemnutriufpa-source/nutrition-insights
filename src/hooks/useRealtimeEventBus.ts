@@ -110,30 +110,30 @@ export function useRealtimeEventBus() {
     const channel = supabase.channel(channelName);
 
     CRITICAL_TABLES.forEach((table) => {
-      // For notifications, filter by user_id
+      // 🛡️ PRODUÇÃO: filtros por user_id para evitar invalidação global de cache
+      let filter: string | undefined;
+
       if (table === "notifications") {
-        channel.on(
-          "postgres_changes",
-          { event: "*", schema: "public", table, filter: `user_id=eq.${user.id}` },
-          () => {
-            lastSyncRef.current = new Date().toISOString();
-            pollIntervalRef.current = 30_000;
-            connectionOkRef.current = true;
-            invalidateForTable(table);
-          },
-        );
-      } else {
-        channel.on(
-          "postgres_changes",
-          { event: "*", schema: "public", table },
-          () => {
-            lastSyncRef.current = new Date().toISOString();
-            pollIntervalRef.current = 30_000;
-            connectionOkRef.current = true;
-            invalidateForTable(table);
-          },
-        );
+        filter = `user_id=eq.${user.id}`;
+      } else if (table === "onboarding_pipelines") {
+        // Filtrar por nutritionist_id — sem filtro, qualquer mudança de qualquer paciente
+        // invalidaria cache de TODOS os nutricionistas online
+        filter = `nutritionist_id=eq.${user.id}`;
+      } else if (table === "nutritionist_patients") {
+        filter = `nutritionist_id=eq.${user.id}`;
       }
+      // meal_plans e profiles sem filtro — são tabelas que o user gerencia diretamente
+
+      channel.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table, ...(filter ? { filter } : {}) },
+        () => {
+          lastSyncRef.current = new Date().toISOString();
+          pollIntervalRef.current = 30_000;
+          connectionOkRef.current = true;
+          invalidateForTable(table);
+        },
+      );
     });
 
     channel.subscribe((status) => {

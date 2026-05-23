@@ -20,7 +20,7 @@ export function useNutritionistRealtime() {
   useEffect(() => {
     if (!user || (!isNutritionist && !isAdmin)) return;
 
-    const channelName = `nutri-rt-${user.id}-${Date.now()}`;
+    const channelName = `nutri-rt-${user.id}`;
     const channel = safeChannel(channelName);
     if (!channel) return;
 

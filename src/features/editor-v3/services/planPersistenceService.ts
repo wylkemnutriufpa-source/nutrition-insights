@@ -75,10 +75,51 @@ export const planPersistenceService = {
   },
 
    /**
-   * COMPILADOR DE VISUAIS SOBERANO
-   * Único ponto de verdade para imagens durante a compilação do snapshot.
-   * Proibido fallback dinâmico ou inferência semântica no Patient App.
+   * COMPILADOR DE VISUAIS SOBERANO — BATCH VERSION
+   * 🛡️ SPRINT PRODUÇÃO: Substitui resolveVisual individual por batch para eliminar N+1.
+   * Uma única query por tipo de nome busca todos os itens de uma vez.
    */
+  async resolveVisualBatch(items: any[]): Promise<Map<string, { image_url: string; is_placeholder: boolean }>> {
+    const result = new Map<string, { image_url: string; is_placeholder: boolean }>();
+    const needsLookup: { key: string; name: string }[] = [];
+
+    // Separar itens que já têm URL dos que precisam de lookup
+    for (const item of items) {
+      const existingUrl = item.imageUrl || item.image_url || item.visual?.image_url;
+      if (existingUrl && existingUrl.startsWith('http') && !existingUrl.includes('placeholder')) {
+        result.set(item.instanceId || item.id || item.name, {
+          image_url: existingUrl,
+          is_placeholder: false,
+        });
+      } else {
+        const foodName = (item.name || item.title || "").trim();
+        if (foodName) needsLookup.push({ key: item.instanceId || item.id || foodName, name: foodName });
+      }
+    }
+
+    // Batch lookup único
+    if (needsLookup.length > 0) {
+      const names = [...new Set(needsLookup.map(i => i.name))];
+      const [libRes, v3Res] = await Promise.all([
+        supabase.from('meal_visual_library').select('name, image_url').in('name', names).eq('is_active', true),
+        supabase.from('v3_library_items').select('title, images:v3_library_images(image_asset,image_url)').in('title', names).eq('active', true),
+      ]);
+
+      const libMap = new Map((libRes.data || []).map(r => [r.name?.toLowerCase(), r.image_url]));
+      const v3Map = new Map((v3Res.data || []).map(r => [r.title?.toLowerCase(), (r as any).images?.[0]]));
+
+      for (const { key, name } of needsLookup) {
+        const lname = name.toLowerCase();
+        const libUrl = libMap.get(lname);
+        const v3Img = v3Map.get(lname);
+        const url = libUrl || v3Img?.image_asset || v3Img?.image_url || OFFICIAL_PLACEHOLDER;
+        result.set(key, { image_url: url, is_placeholder: url === OFFICIAL_PLACEHOLDER });
+      }
+    }
+
+    return result;
+  },
+
   async resolveVisual(item: any): Promise<{ image_url: string; is_placeholder: boolean; library_item_id?: string }> {
     const existingUrl = item.imageUrl || item.image_url || item.visual?.image_url;
     if (existingUrl && existingUrl.startsWith('http') && !existingUrl.includes('placeholder')) {
@@ -180,6 +221,14 @@ export const planPersistenceService = {
     const snapshotDays: SovereignDay[] = [];
     const dailyTotals: Record<number, SovereignMacros> = {};
 
+    // 🛡️ PRODUÇÃO: Pre-fetch TODAS as imagens em batch (elimina N+1)
+    // Antes: 168+ queries sequenciais. Agora: 2 queries totais.
+    const allItems = meals.flatMap(m => [
+      ...m.items,
+      ...m.items.flatMap(it => it.substitutions || [])
+    ]);
+    const visualMap = await this.resolveVisualBatch(allItems);
+
     for (const dayNum of daysList) {
       const dayMeals = meals.filter(m => (m.day_of_week ?? 1) === dayNum);
       const sovereignMeals: SovereignMeal[] = [];
@@ -195,12 +244,15 @@ export const planPersistenceService = {
         let mealKcal = 0, mealProt = 0, mealCarb = 0, mealFat = 0;
 
         for (const it of m.items) {
-          const visual = await this.resolveVisual(it);
+          // 🛡️ PRODUÇÃO: usar visualMap pré-carregado (sem N+1)
+          const itemKey = it.instanceId || it.id || it.name || '';
+          const visual = visualMap.get(itemKey) || { image_url: OFFICIAL_PLACEHOLDER, is_placeholder: true };
           const subs: SovereignSubstitution[] = [];
           
           if (it.substitutions && Array.isArray(it.substitutions)) {
             for (const sub of it.substitutions) {
-              const subVisual = await this.resolveVisual(sub);
+              const subKey = (sub as any).instanceId || (sub as any).id || (sub as any).name || '';
+              const subVisual = visualMap.get(subKey) || { image_url: OFFICIAL_PLACEHOLDER, is_placeholder: true };
               const subItem = sub as any;
               
               // 🛡️ MACRO CALCULATION: PURIFICAÇÃO NO COMPILER

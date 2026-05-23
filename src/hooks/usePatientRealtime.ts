@@ -19,7 +19,9 @@ export function usePatientRealtime() {
   useEffect(() => {
     if (!user || !isPatient) return;
 
-    const channelName = `patient-rt-${user.id}-${Date.now()}`;
+    // 🛡️ PRODUÇÃO: nome estável sem Date.now() para permitir deduplicação pelo Supabase
+    // Nome com Date.now() cria novo canal a cada remount, sem reuso
+    const channelName = `patient-rt-${user.id}`;
     const channel = supabase.channel(channelName);
 
     const trackAndInvalidate = (table: string) => (payload: any) => {
