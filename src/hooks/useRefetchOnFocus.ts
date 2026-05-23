@@ -17,11 +17,18 @@ export function useRefetchOnFocus() {
   useEffect(() => {
     if (!user) return;
 
-    const DEBOUNCE_MS = 3000; // Don't refetch more than once per 3s
+    // 🛡️ SOBERANIA DETERMINÍSTICA: Evitar refetch excessivo.
+    // Só re-validar se passaram mais de 60s desde o último refetch por foco.
+    const REFRESH_THRESHOLD = 60000; 
 
     const handleFocus = () => {
       const now = Date.now();
-      if (now - lastRefetchRef.current < DEBOUNCE_MS) return;
+      
+      // Se o último refetch foi há menos de 60s, não faz nada
+      if (now - lastRefetchRef.current < REFRESH_THRESHOLD) {
+        return;
+      }
+
       lastRefetchRef.current = now;
       invalidateCriticalQueries(queryClient, user.id);
     };
