@@ -206,8 +206,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       
       console.log(`[AUTH:CORE] Syncing session: ${currentSession ? "Authenticated" : "Unauthenticated"}`);
-      // Only set loading to true if we don't have a session yet or if it's the initial load
-      if (!session && !isLoaded) setLoading(true);
+      // 🛡️ SOBERANIA DETERMINÍSTICA: Só bloquear a UI (loading=true) se ainda não tivermos roles resolvidos.
+      // Isso impede que a troca de abas ou exportação de PDF trave o sistema com loaders agressivos.
+      if (!isLoaded || roles === null) {
+        setLoading(true);
+      }
+
 
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
