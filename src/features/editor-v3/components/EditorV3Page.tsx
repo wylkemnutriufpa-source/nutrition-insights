@@ -218,11 +218,13 @@ export default function EditorV3Page() {
 
   useEffect(() => {
     async function loadPlan() {
-      // Avoid redundant loading if already on the same plan and store has data
+      // 🛡️ Guard #1: Plano já carregado e store tem dados → não recarrega
       if (effectiveId === lastLoadedPlanId.current && 
           effectivePatientId === lastLoadedPatientId.current && 
           store.meals.length > 0) {
-        console.log("[EditorV3] Skip redundant loadPlan");
+        console.log("[EditorV3] Skip redundant loadPlan (mesmo plano + dados em memoria)");
+        // 🛡️ Garantia de que o loader não fica travado se o componente remontar
+        if (loading) setLoading(false);
         return;
       }
 
@@ -254,6 +256,10 @@ export default function EditorV3Page() {
 
       setLoading(true);
       try {
+        // 🛡️ Se já temos dados em memória, NÃO mostra loader (refetch em background)
+        if (store.meals.length > 0) {
+          setLoading(false);
+        }
         // Parallelized fetch for faster loading
         const [planResult, profileResult] = await Promise.all([
           (supabase.from('meal_plans') as any)
@@ -307,7 +313,11 @@ export default function EditorV3Page() {
       }
     }
     loadPlan();
-  }, [effectiveId, effectivePatientId, store.hydrateMeals, store.setPatientId]);
+    // 🛡️ SOBERANIA: Não incluir store.* nas deps. Funções do Zustand são estáveis
+    // mas podem disparar re-render desnecessário ao voltar para a tela.
+    // O guard lastLoadedPlanId/lastLoadedPatientId já evita carregamento redundante.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveId, effectivePatientId]);
 
   // Efeito adicional para garantir que o activeDay mude se o store for hidratado via rascunho
   useEffect(() => {
@@ -383,7 +393,10 @@ export default function EditorV3Page() {
     }
   };
 
-  if (loading) {
+  // 🛡️ SOBERANIA: Loader só aparece se NÃO temos dados em memória.
+  // Se o usuário voltou de outra tela e o plano já está carregado, renderiza direto
+  // (sem flash de loader). Refetch acontece em background quando aplicável.
+  if (loading && store.meals.length === 0) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-neutral-950">
