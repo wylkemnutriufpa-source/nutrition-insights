@@ -7336,90 +7336,6 @@ export type Database = {
           },
         ]
       }
-      meal_plan_items_backup_20260514: {
-        Row: {
-          calories_target: number | null
-          carbs_target: number | null
-          created_at: string | null
-          day_of_week: number | null
-          description: string | null
-          edit_metadata: Json | null
-          fat_target: number | null
-          human_reasons: string[] | null
-          human_score: number | null
-          human_status: string | null
-          id: string | null
-          image_url: string | null
-          is_locked: boolean | null
-          is_manually_edited: boolean | null
-          is_primary: boolean | null
-          item_origin: string | null
-          meal_plan_id: string | null
-          meal_type: Database["public"]["Enums"]["tipo_refeicao"] | null
-          protein_target: number | null
-          substitution_group_id: string | null
-          target_percentage: number | null
-          tenant_id: string | null
-          title: string | null
-          visual_library_item_id: string | null
-          was_auto_corrected: boolean | null
-        }
-        Insert: {
-          calories_target?: number | null
-          carbs_target?: number | null
-          created_at?: string | null
-          day_of_week?: number | null
-          description?: string | null
-          edit_metadata?: Json | null
-          fat_target?: number | null
-          human_reasons?: string[] | null
-          human_score?: number | null
-          human_status?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_locked?: boolean | null
-          is_manually_edited?: boolean | null
-          is_primary?: boolean | null
-          item_origin?: string | null
-          meal_plan_id?: string | null
-          meal_type?: Database["public"]["Enums"]["tipo_refeicao"] | null
-          protein_target?: number | null
-          substitution_group_id?: string | null
-          target_percentage?: number | null
-          tenant_id?: string | null
-          title?: string | null
-          visual_library_item_id?: string | null
-          was_auto_corrected?: boolean | null
-        }
-        Update: {
-          calories_target?: number | null
-          carbs_target?: number | null
-          created_at?: string | null
-          day_of_week?: number | null
-          description?: string | null
-          edit_metadata?: Json | null
-          fat_target?: number | null
-          human_reasons?: string[] | null
-          human_score?: number | null
-          human_status?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_locked?: boolean | null
-          is_manually_edited?: boolean | null
-          is_primary?: boolean | null
-          item_origin?: string | null
-          meal_plan_id?: string | null
-          meal_type?: Database["public"]["Enums"]["tipo_refeicao"] | null
-          protein_target?: number | null
-          substitution_group_id?: string | null
-          target_percentage?: number | null
-          tenant_id?: string | null
-          title?: string | null
-          visual_library_item_id?: string | null
-          was_auto_corrected?: boolean | null
-        }
-        Relationships: []
-      }
       meal_plan_job_audit_logs: {
         Row: {
           created_at: string | null
@@ -8065,210 +7981,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      meal_plans_backup_20260514: {
-        Row: {
-          adherence_score: number | null
-          clinical_audit_status: string | null
-          clinical_score: number | null
-          clinical_status: string | null
-          correlation_id: string | null
-          created_at: string | null
-          description: string | null
-          editor_version: string | null
-          end_date: string | null
-          engine_version: string | null
-          generated_by: string | null
-          generation_metadata: Json | null
-          generation_source: string | null
-          global_calories_target: number | null
-          global_carbs_target: number | null
-          global_fat_target: number | null
-          global_protein_target: number | null
-          id: string | null
-          is_active: boolean | null
-          is_global_model: boolean | null
-          is_humanized: boolean | null
-          is_sharing_enabled: boolean | null
-          last_validated_at: string | null
-          nutritionist_id: string | null
-          overall_score: number | null
-          overall_validation_status: string | null
-          patient_id: string | null
-          personalization_applied: boolean | null
-          pipeline_completed_at: string | null
-          pipeline_version: string | null
-          plan_mode: Database["public"]["Enums"]["plan_mode_type"] | null
-          plan_status: string | null
-          plan_type: string | null
-          plan_version: string | null
-          previous_plan_id: string | null
-          protocol_used: string | null
-          quality_alerts: Json | null
-          requires_regeneration: boolean | null
-          sharing_expires_at: string | null
-          sharing_token: string | null
-          simplicity_score: number | null
-          snapshot: Json | null
-          snapshot_generated_at: string | null
-          snapshot_hash: string | null
-          snapshot_schema_version: string | null
-          start_date: string | null
-          template_id: string | null
-          template_slug: string | null
-          template_version: number | null
-          tenant_id: string | null
-          therapeutic_effectiveness_status: string | null
-          therapeutic_efficacy_score: number | null
-          title: string | null
-          total_calories: number | null
-          total_carbs: number | null
-          total_fat: number | null
-          total_protein: number | null
-          total_target_calories: number | null
-          total_target_carbs: number | null
-          total_target_fat: number | null
-          total_target_protein: number | null
-          totals_status: string | null
-          transition_origin_id: string | null
-          updated_at: string | null
-          validation_engine_version: string | null
-        }
-        Insert: {
-          adherence_score?: number | null
-          clinical_audit_status?: string | null
-          clinical_score?: number | null
-          clinical_status?: string | null
-          correlation_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          editor_version?: string | null
-          end_date?: string | null
-          engine_version?: string | null
-          generated_by?: string | null
-          generation_metadata?: Json | null
-          generation_source?: string | null
-          global_calories_target?: number | null
-          global_carbs_target?: number | null
-          global_fat_target?: number | null
-          global_protein_target?: number | null
-          id?: string | null
-          is_active?: boolean | null
-          is_global_model?: boolean | null
-          is_humanized?: boolean | null
-          is_sharing_enabled?: boolean | null
-          last_validated_at?: string | null
-          nutritionist_id?: string | null
-          overall_score?: number | null
-          overall_validation_status?: string | null
-          patient_id?: string | null
-          personalization_applied?: boolean | null
-          pipeline_completed_at?: string | null
-          pipeline_version?: string | null
-          plan_mode?: Database["public"]["Enums"]["plan_mode_type"] | null
-          plan_status?: string | null
-          plan_type?: string | null
-          plan_version?: string | null
-          previous_plan_id?: string | null
-          protocol_used?: string | null
-          quality_alerts?: Json | null
-          requires_regeneration?: boolean | null
-          sharing_expires_at?: string | null
-          sharing_token?: string | null
-          simplicity_score?: number | null
-          snapshot?: Json | null
-          snapshot_generated_at?: string | null
-          snapshot_hash?: string | null
-          snapshot_schema_version?: string | null
-          start_date?: string | null
-          template_id?: string | null
-          template_slug?: string | null
-          template_version?: number | null
-          tenant_id?: string | null
-          therapeutic_effectiveness_status?: string | null
-          therapeutic_efficacy_score?: number | null
-          title?: string | null
-          total_calories?: number | null
-          total_carbs?: number | null
-          total_fat?: number | null
-          total_protein?: number | null
-          total_target_calories?: number | null
-          total_target_carbs?: number | null
-          total_target_fat?: number | null
-          total_target_protein?: number | null
-          totals_status?: string | null
-          transition_origin_id?: string | null
-          updated_at?: string | null
-          validation_engine_version?: string | null
-        }
-        Update: {
-          adherence_score?: number | null
-          clinical_audit_status?: string | null
-          clinical_score?: number | null
-          clinical_status?: string | null
-          correlation_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          editor_version?: string | null
-          end_date?: string | null
-          engine_version?: string | null
-          generated_by?: string | null
-          generation_metadata?: Json | null
-          generation_source?: string | null
-          global_calories_target?: number | null
-          global_carbs_target?: number | null
-          global_fat_target?: number | null
-          global_protein_target?: number | null
-          id?: string | null
-          is_active?: boolean | null
-          is_global_model?: boolean | null
-          is_humanized?: boolean | null
-          is_sharing_enabled?: boolean | null
-          last_validated_at?: string | null
-          nutritionist_id?: string | null
-          overall_score?: number | null
-          overall_validation_status?: string | null
-          patient_id?: string | null
-          personalization_applied?: boolean | null
-          pipeline_completed_at?: string | null
-          pipeline_version?: string | null
-          plan_mode?: Database["public"]["Enums"]["plan_mode_type"] | null
-          plan_status?: string | null
-          plan_type?: string | null
-          plan_version?: string | null
-          previous_plan_id?: string | null
-          protocol_used?: string | null
-          quality_alerts?: Json | null
-          requires_regeneration?: boolean | null
-          sharing_expires_at?: string | null
-          sharing_token?: string | null
-          simplicity_score?: number | null
-          snapshot?: Json | null
-          snapshot_generated_at?: string | null
-          snapshot_hash?: string | null
-          snapshot_schema_version?: string | null
-          start_date?: string | null
-          template_id?: string | null
-          template_slug?: string | null
-          template_version?: number | null
-          tenant_id?: string | null
-          therapeutic_effectiveness_status?: string | null
-          therapeutic_efficacy_score?: number | null
-          title?: string | null
-          total_calories?: number | null
-          total_carbs?: number | null
-          total_fat?: number | null
-          total_protein?: number | null
-          total_target_calories?: number | null
-          total_target_carbs?: number | null
-          total_target_fat?: number | null
-          total_target_protein?: number | null
-          totals_status?: string | null
-          transition_origin_id?: string | null
-          updated_at?: string | null
-          validation_engine_version?: string | null
-        }
-        Relationships: []
       }
       meal_recipes: {
         Row: {
@@ -20427,17 +20139,24 @@ export type Database = {
       v3_diet_templates: {
         Row: {
           active: boolean | null
+          activity_profile: string | null
+          clinical_tags: Json | null
           cluster_map: Json
+          contraindications: string[] | null
           created_at: string | null
           description: string | null
+          dietary_restrictions: string[] | null
           editable: boolean | null
           family: string | null
           id: string
           kcal_profiles: Json | null
+          kcal_range_max: number | null
+          kcal_range_min: number | null
           meal_distribution: Json
           nutritionist_id: string | null
           objective: string
           plan_snapshot: Json | null
+          sex_preference: string | null
           slug: string
           sovereign_validated: boolean | null
           substitutions_enabled: boolean | null
@@ -20448,17 +20167,24 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          activity_profile?: string | null
+          clinical_tags?: Json | null
           cluster_map: Json
+          contraindications?: string[] | null
           created_at?: string | null
           description?: string | null
+          dietary_restrictions?: string[] | null
           editable?: boolean | null
           family?: string | null
           id?: string
           kcal_profiles?: Json | null
+          kcal_range_max?: number | null
+          kcal_range_min?: number | null
           meal_distribution: Json
           nutritionist_id?: string | null
           objective: string
           plan_snapshot?: Json | null
+          sex_preference?: string | null
           slug: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
@@ -20469,17 +20195,24 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          activity_profile?: string | null
+          clinical_tags?: Json | null
           cluster_map?: Json
+          contraindications?: string[] | null
           created_at?: string | null
           description?: string | null
+          dietary_restrictions?: string[] | null
           editable?: boolean | null
           family?: string | null
           id?: string
           kcal_profiles?: Json | null
+          kcal_range_max?: number | null
+          kcal_range_min?: number | null
           meal_distribution?: Json
           nutritionist_id?: string | null
           objective?: string
           plan_snapshot?: Json | null
+          sex_preference?: string | null
           slug?: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
@@ -22239,6 +21972,17 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Database["public"]["Enums"]["patient_state_type"]
       }
+      calculate_clinical_kcal_target: {
+        Args: {
+          p_activity: string
+          p_age: number
+          p_goal: string
+          p_height: number
+          p_sex: string
+          p_weight: number
+        }
+        Returns: Json
+      }
       calculate_nutrition_proportional: {
         Args: { p_food_name: string; p_target_mass_g: number }
         Returns: {
@@ -23104,6 +22848,21 @@ export type Database = {
           kcal_range: string
           meals: Json
           name: string
+        }[]
+      }
+      select_sovereign_template: {
+        Args: {
+          p_activity: string
+          p_dietary_restrictions: string[]
+          p_health_conditions: string[]
+          p_kcal_target: number
+          p_objective: string
+          p_sex: string
+        }
+        Returns: {
+          best_kcal_key: string
+          template_id: string
+          template_title: string
         }[]
       }
       self_register_nutritionist: {
