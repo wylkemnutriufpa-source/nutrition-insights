@@ -14,21 +14,23 @@ export function invalidateCriticalQueries(
   queryClient: QueryClient,
   patientId?: string
 ): void {
-  // Always invalidate broad keys
-  queryClient.invalidateQueries({ queryKey: ["patients"], refetchType: "all" });
-  queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
-  queryClient.invalidateQueries({ queryKey: ["payment-guard"], refetchType: "all" });
-  queryClient.invalidateQueries({ queryKey: ["notifications"], refetchType: "all" });
-  queryClient.invalidateQueries({ queryKey: ["meal-plans"], refetchType: "all" });
-  queryClient.invalidateQueries({ queryKey: ["engagement"], refetchType: "all" });
-
+  // 🛡️ SOBERANIA: Invalidação Direcionada (Anti-Storm)
+  // Nunca use invalidateQueries sem chaves específicas se puder evitar.
+  
   if (patientId) {
-    queryClient.invalidateQueries({ queryKey: ["lifecycle", patientId], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["patient-detail", patientId], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["checklist", patientId], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["meal-completions", patientId], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["protocols", patientId], refetchType: "all" });
+    // Invalida apenas o que é estritamente necessário para este paciente
+    queryClient.invalidateQueries({ queryKey: ["lifecycle", patientId] });
+    queryClient.invalidateQueries({ queryKey: ["patient-detail", patientId] });
+    queryClient.invalidateQueries({ queryKey: ["meal-plans", patientId] });
+    queryClient.invalidateQueries({ queryKey: ["meal-completions", patientId] });
+  } else {
+    // Se não há ID, invalida apenas o essencial do dashboard
+    queryClient.invalidateQueries({ queryKey: ["patients"], exact: false });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"], exact: false });
   }
+  
+  // Notificações são leves e globais
+  queryClient.invalidateQueries({ queryKey: ["notifications"] });
 }
 
 /**
