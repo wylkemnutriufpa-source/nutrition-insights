@@ -166,33 +166,18 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
 
 
 function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; description?: string | null; meta_calorias?: number }): string {
-  // SOBERANIA V3: prioriza clinical_mass_g (verdade clínica) sobre placeholders
-  // tipo "1 g" / "1" / "" que vinham de display_quantity = quantity (multiplicador).
+  // 🛡️ SPRINT C: snapshot V3 nasce com display_quantity correto (buildQuantityDisplay).
+  // Esta função agora é apenas passthrough com fallback mínimo para compatibilidade legada.
   const rawQty = item.display_quantity;
-  const dUnit = (item.display_unit ?? "").toString().trim();
-  const cMass = Number(item.clinical_mass_g);
-  const kcal = Number(item.meta_calorias || 0);
-  const hasMass = Number.isFinite(cMass) && cMass > 1;
-
   const dqStr = rawQty == null ? "" : String(rawQty).trim();
-  // Placeholders inúteis: vazio, "1", "1g", "1 g"
-  const isPlaceholder = dqStr === "" || /^1\s*g?$/i.test(dqStr);
 
-  if (isPlaceholder && hasMass) return `${Math.round(cMass)} g`;
+  if (dqStr && !/^1\s*g?$/i.test(dqStr)) return dqStr;
 
-  if (dqStr && !isPlaceholder) {
-    // Se já contém unidade (ex.: "3 colheres", "100 g"), devolve direto
-    if (/[a-zà-ú]/i.test(dqStr)) return dqStr;
-    return dUnit ? `${dqStr} ${dUnit}`.trim() : dqStr;
-  }
+  // Fallback único: clinical_mass_g (dados clínicos reais)
+  const cMass = Number(item.clinical_mass_g);
+  if (Number.isFinite(cMass) && cMass > 1) return `${Math.round(cMass)} g`;
 
-  if (hasMass) return `${Math.round(cMass)} g`;
-  
-  // Se for um placeholder "1 g" mas as calorias sugerem que é um item real (ex: > 10 kcal), 
-  // provavelmente é 100g ou uma porção padrão
-  if (isPlaceholder && kcal > 5) return "100 g";
-  
-  return ""; 
+  return "";
 }
 
 function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem | undefined): string {
@@ -210,11 +195,11 @@ function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem
 }
 
 function cleanTitle(title: string): string {
+  // 🛡️ SPRINT C: buildSovereignSnapshot já converte slugs em canonical_name.
+  // Esta função é agora passthrough para retrocompatibilidade com planos antigos.
   if (!title) return "";
-  // Se parece um slug (sem espaços, com hífens ou underscores)
   if (!title.includes(" ") && (title.includes("-") || title.includes("_"))) {
-    return title
-      .replace(/[_-]/g, " ")
+    return title.replace(/[_-]/g, " ")
       .split(" ")
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");

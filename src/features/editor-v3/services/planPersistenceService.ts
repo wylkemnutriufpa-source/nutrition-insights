@@ -136,10 +136,46 @@ export const planPersistenceService = {
   /**
    * COMPILADOR SOBERANO DE SNAPSHOT V3
    * Transforma o estado do editor em um artefato final e auto-suficiente.
+   * 🛡️ SPRINT C: Preserva clinical_metadata original e adiciona histórico de revisões.
    */
   async buildSovereignSnapshot(options: PlanSaveOptions): Promise<SovereignSnapshotV3> {
-    const { meals, targets, title } = options;
+    const { meals, targets, title, planId } = options;
     const daysList = Array.from(new Set(meals.map(m => m.day_of_week ?? 1))).sort((a, b) => a - b);
+    
+    // 🛡️ FASE 1 SPRINT C: Buscar clinical_metadata original para preservar
+    let originalClinicalMetadata: Record<string, any> | null = null;
+    let revisionNumber = 1;
+    let versionHistory: any[] = [];
+
+    if (planId) {
+      try {
+        const { data: existingPlan } = await supabase
+          .from('meal_plans')
+          .select('snapshot')
+          .eq('id', planId)
+          .maybeSingle();
+
+        if (existingPlan?.snapshot) {
+          const prev = existingPlan.snapshot as any;
+          // Preservar clinical_metadata original (nunca sobrescrever)
+          originalClinicalMetadata = prev.clinical_metadata || null;
+          // Incrementar revision_number
+          revisionNumber = (prev.revision_number || 1) + 1;
+          // Construir version_history
+          versionHistory = [
+            ...(prev.version_history || []),
+            {
+              revision: prev.revision_number || 1,
+              published_at: prev.published_at || prev.generated_at,
+              targets: prev.targets,
+              publication_id: prev.publication_id,
+            }
+          ].slice(-10); // Manter apenas as últimas 10 versões
+        }
+      } catch (e) {
+        console.warn('[buildSovereignSnapshot] Não foi possível buscar metadados anteriores:', e);
+      }
+    }
     
     const snapshotDays: SovereignDay[] = [];
     const dailyTotals: Record<number, SovereignMacros> = {};
@@ -189,7 +225,18 @@ export const planPersistenceService = {
           const sovereignItem: SovereignItem = {
             id: it.instanceId || it.id || crypto.randomUUID(),
             blockId: it.blockId || it.id || crypto.randomUUID(),
-            title: it.name || (it as any).title || "Alimento",
+            // 🛡️ SPRINT C: canonical_name — nunca slug, nunca vazio
+            title: (() => {
+              const raw = it.name || (it as any).title || "Alimento";
+              // Se parece slug (sem espaços, tem hífen ou underscore), converter
+              if (raw && !raw.includes(" ") && (raw.includes("-") || raw.includes("_"))) {
+                return raw.replace(/[_-]/g, " ")
+                  .split(" ")
+                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ");
+              }
+              return raw;
+            })(),
             quantity_display: buildQuantityDisplay(it as any, it),
             clinical_mass_g: Number((it as any).clinical_mass_g) > 1
               ? Math.round(Number((it as any).clinical_mass_g))
@@ -251,6 +298,25 @@ export const planPersistenceService = {
       publication_id: crypto.randomUUID(),
       snapshot_version: 'v3',
       generated_at: new Date().toISOString(),
+      published_at: new Date().toISOString(),
+      revision_number: revisionNumber,
+      version_history: versionHistory,
+      // 🛡️ SPRINT C: Preservar clinical_metadata original (engine, TMB, TDEE, rationale)
+      // Se havia metadata original (plano gerado pelo motor), preservar sem sobrescrever.
+      // Na republicação, adicionar apenas republished_at e republished_by.
+      clinical_metadata: originalClinicalMetadata
+        ? {
+            ...originalClinicalMetadata,
+            republished_at: new Date().toISOString(),
+            republished_by: options.nutritionistId,
+            revision_number: revisionNumber,
+          }
+        : {
+            generated_at: new Date().toISOString(),
+            engine_version: 'manual_v3',
+            published_by: options.nutritionistId,
+            revision_number: revisionNumber,
+          },
       targets: {
         kcal: Math.round(targets.kcal),
         protein_g: Number(targets.protein.toFixed(1)),

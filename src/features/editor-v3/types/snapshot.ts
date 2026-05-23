@@ -51,6 +51,43 @@ export interface SovereignSnapshotV3 {
   publication_id: string;
   snapshot_version: 'v3';
   generated_at: string;
+  /** 🛡️ SPRINT C: Data de publicação (pode diferir de generated_at em republicações) */
+  published_at?: string;
+  /** 🛡️ SPRINT C: Número da revisão (começa em 1, incrementa a cada republicação) */
+  revision_number?: number;
+  /** 🛡️ SPRINT C: Histórico das últimas 10 revisões (targets + publication_id) */
+  version_history?: Array<{
+    revision: number;
+    published_at?: string;
+    targets: SovereignMacros;
+    publication_id: string;
+  }>;
+  /** 🛡️ SPRINT C: Metadados clínicos auditáveis — NUNCA sobrescritos, apenas enriquecidos */
+  clinical_metadata?: {
+    generated_at?: string;
+    engine_version?: string;       // 'mifflin_v1' | 'manual_v3'
+    patient_id?: string;
+    tmb?: number;
+    tdee?: number;
+    kcal_target?: number;
+    sex?: string;
+    age?: number;
+    weight_kg?: number;
+    height_cm?: number;
+    activity_level?: string;
+    goal?: string;
+    template_id?: string;
+    template_title?: string;
+    kcal_profile_used?: string;
+    has_anamnesis?: boolean;
+    dietary_restrictions?: string[];
+    health_conditions?: string[];
+    published_by?: string;
+    republished_at?: string;
+    republished_by?: string;
+    revision_number?: number;
+    [key: string]: any;
+  };
   targets: SovereignMacros;
   days: SovereignDay[];
   daily_totals: Record<number, SovereignMacros>;
