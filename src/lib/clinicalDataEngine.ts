@@ -1,7 +1,19 @@
-
 import { supabase } from "@/integrations/supabase/client";
+import { sovereignAssert } from "./sovereign/invariantAssertions";
+
+// 🛡️ Guard: Esta engine é apenas para SEEDING/ADMIN. Proibido rodar no app do paciente.
+const checkEnvironment = () => {
+  if (typeof window !== 'undefined') {
+    sovereignAssert(
+      window.location.pathname.includes('/admin') || window.location.hostname === 'localhost',
+      'ADMIN_ONLY_ENGINE',
+      'clinicalDataEngine'
+    );
+  }
+};
 
 const IMG = "https://vkrcobprntictsxqmjjl.supabase.co/storage/v1/object/public/meal-visual-library";
+
 const uid = () => crypto.randomUUID();
 
 // ─── EXTENDED CLINICAL FOOD DATABASE ───
@@ -73,7 +85,9 @@ const createMeal = (name: string, time: string, items: { f: Food; isPri: boolean
 });
 
 export const generateClinicalLibrary = () => {
+  checkEnvironment();
   const blueprints = [
+
     { name: 'Anti-inflamatório Premium', slug: 'anti-inflamatorio-premium', obj: 'clinico', mainP: [F.salmao, F.tilapia, F.ovo], mainC: [F.arrozI, F.lentilha], snacks: [F.abacate, F.castanha] },
     { name: 'Pré e Pós Operatório', slug: 'pre-pos-operatorio', obj: 'clinico', mainP: [F.frango, F.tilapia, F.whey], mainC: [F.arrozI, F.batata], snacks: [F.iogurte, F.gelatina] },
     { name: 'Cetogênica Prática', slug: 'cetogenica-pratica', obj: 'clinico', mainP: [F.maminha, F.patinho, F.ovo], mainC: [F.salada], snacks: [F.abacate, F.castanha] },
