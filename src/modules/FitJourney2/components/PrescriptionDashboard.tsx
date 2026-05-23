@@ -155,36 +155,48 @@ export const PrescriptionDashboard = () => {
       ) : (
         <div className="animate-in fade-in duration-500">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm group hover:border-green-500/30 transition-all">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
-                  <Users size={20} />
+            <StaggerItem index={1}>
+              <CognitiveHover>
+                <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm group hover:border-green-500/30 transition-all h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
+                      <Users size={20} />
+                    </div>
+                    <span className="text-xs text-green-500 font-mono bg-green-500/10 px-2 py-0.5 rounded-full">+2 hoje</span>
+                  </div>
+                  <p className="text-3xl font-black mb-1">{patients.length}</p>
+                  <p className="text-slate-500 text-xs uppercase font-bold tracking-wider">Pacientes Ativos</p>
                 </div>
-                <span className="text-xs text-green-500 font-mono bg-green-500/10 px-2 py-0.5 rounded-full">+2 hoje</span>
-              </div>
-              <p className="text-3xl font-black mb-1">{patients.length}</p>
-              <p className="text-slate-500 text-xs uppercase font-bold tracking-wider">Pacientes Ativos</p>
-            </div>
+              </CognitiveHover>
+            </StaggerItem>
 
-            <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm group hover:border-blue-500/30 transition-all">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                  <ClipboardCheck size={20} />
+            <StaggerItem index={2}>
+              <CognitiveHover>
+                <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm group hover:border-blue-500/30 transition-all h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+                      <ClipboardCheck size={20} />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-black mb-1">12</p>
+                  <p className="text-slate-500 text-xs uppercase font-bold tracking-wider">Planos em Rascunho</p>
                 </div>
-              </div>
-              <p className="text-3xl font-black mb-1">12</p>
-              <p className="text-slate-500 text-xs uppercase font-bold tracking-wider">Planos em Rascunho</p>
-            </div>
+              </CognitiveHover>
+            </StaggerItem>
 
-            <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm group hover:border-purple-500/30 transition-all">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
-                  <Utensils size={20} />
+            <StaggerItem index={3}>
+              <CognitiveHover>
+                <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm group hover:border-purple-500/30 transition-all h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+                      <Utensils size={20} />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-black mb-1">19</p>
+                  <p className="text-slate-500 text-xs uppercase font-bold tracking-wider">Marmitas Validadas</p>
                 </div>
-              </div>
-              <p className="text-3xl font-black mb-1">19</p>
-              <p className="text-slate-500 text-xs uppercase font-bold tracking-wider">Marmitas Validadas</p>
-            </div>
+              </CognitiveHover>
+            </StaggerItem>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
