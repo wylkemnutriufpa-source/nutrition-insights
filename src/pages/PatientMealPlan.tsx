@@ -499,7 +499,20 @@ export default function PatientMealPlan() {
         )}
 
         {selectedMeal && (<MealDetailModal open={!!selectedMeal} onOpenChange={(open) => !open && setSelectedMeal(null)} meal={{ ...selectedMeal, itemId: selectedMeal.itemId || (selectedMeal as any).id, image_url: selectedMeal.image_url || (selectedMeal as any).imageUrl }} />)}
-        {substitutionItem && (<MealSubstitutionModal open={!!substitutionItem} onOpenChange={(open) => !open && setSubstitutionItem(null)} mealTitle={substitutionItem.title} mealPlanItemId={substitutionItem.id} mealPlanId={plan.id} patientId={user.id} mealSlot={(substitutionItem as any).tipo_refeicao} options={safeAccess(substitutionItem, 'metadata.substitution_options', [])} onSubstitute={(food, originalTitle) => { setActiveSubstitutions(prev => ({ ...prev, [substitutionItem.id]: { foodName: food.name, originalTitle } })); setSubstitutionItem(null); }} />)}
+        {substitutionItem && (<MealSubstitutionModal open={!!substitutionItem} onOpenChange={(open) => !open && setSubstitutionItem(null)} mealTitle={substitutionItem.title} mealPlanItemId={substitutionItem.id} mealPlanId={plan.id} patientId={user.id} mealSlot={(substitutionItem as any).tipo_refeicao} options={
+          // 🛡️ SOBERANIA V3: ler substituições direto do snapshot
+          ((substitutionItem as any).substitutions?.length > 0
+            ? (substitutionItem as any).substitutions.map((s: any) => ({
+                id: s.id,
+                title: s.title,
+                description: s.quantity_display,
+                meta_calorias: s.macros?.kcal,
+                meta_proteinas: s.macros?.protein_g,
+                meta_carboidratos: s.macros?.carbs_g,
+                meta_gorduras: s.macros?.fat_g,
+              }))
+            : safeAccess(substitutionItem, 'metadata.substitution_options', []))
+        } onSubstitute={(food, originalTitle) => { setActiveSubstitutions(prev => ({ ...prev, [substitutionItem.id]: { foodName: food.name, originalTitle } })); setSubstitutionItem(null); }} />)}
         <MealSlotModal open={!!selectedSlot} onOpenChange={(open) => !open && setSelectedSlot(null)} mealType={selectedSlot?.type || ""} items={selectedSlot?.items || []} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} />
       </div>
 

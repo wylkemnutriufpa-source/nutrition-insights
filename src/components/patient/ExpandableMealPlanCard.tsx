@@ -510,7 +510,20 @@ export default function ExpandableMealPlanCard() {
           mealPlanId={plan?.id || ""}
           patientId={user?.id || ""}
           mealSlot={(substitutingItem as any)?.tipo_refeicao}
-          options={substitutingItem.metadata?.substitution_options}
+          options={
+            // 🛡️ SOBERANIA V3: ler substituições direto do snapshot
+            (substitutingItem as any).substitutions?.length > 0
+              ? (substitutingItem as any).substitutions.map((s: any) => ({
+                  id: s.id,
+                  title: s.title,
+                  description: s.quantity_display,
+                  meta_calorias: s.macros?.kcal,
+                  meta_proteinas: s.macros?.protein_g,
+                  meta_carboidratos: s.macros?.carbs_g,
+                  meta_gorduras: s.macros?.fat_g,
+                }))
+              : substitutingItem.metadata?.substitution_options
+          }
           onSubstitute={() => {
             fetchData();
             setSubstitutingItem(null);

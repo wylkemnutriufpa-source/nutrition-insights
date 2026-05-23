@@ -423,14 +423,15 @@ const MealItemCard = memo(function MealItemCard({
                   ))}
                 </div>
               )}
-              {(safeAccess(item, 'metadata.substitution_count', 0) > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
+              {/* 🛡️ SOBERANIA V3: Ler substituições direto do snapshot (item.substitutions) */}
+              {(((item as any).substitutions?.length || 0) > 0 || safeAccess(item, 'metadata.substitution_count', 0) > 0 || (item as any).edit_metadata?.substitution_count > 0) && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}
                   className="flex items-center gap-1.5 mt-1 px-3 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary/10 transition-all w-full justify-center shadow-sm"
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5" />
-                  Trocar Opção ({safeAccess(item, 'metadata.substitution_count', 0) || (item as any).edit_metadata?.substitution_count || 0})
+                  Trocar Opção ({(item as any).substitutions?.length || safeAccess(item, 'metadata.substitution_count', 0) || (item as any).edit_metadata?.substitution_count || 0})
                 </button>
               )}
             </div>
