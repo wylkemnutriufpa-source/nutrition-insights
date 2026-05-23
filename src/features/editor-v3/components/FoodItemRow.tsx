@@ -24,6 +24,21 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
   item, onUpdateQuantity, onUpdateQuantityGlobal, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName 
 }) => {
 
+  // 🛡️ Detecta a unidade real do item (g, ml, unidades, fatias, colheres)
+  const detectUnit = (qDisplay: string | undefined, fallbackG = true): { label: string; isMass: boolean } => {
+    const display = String(qDisplay || '');
+    const m = display.match(/(unidade|fatia|colher|copo|x[íi]cara)/i);
+    if (m) {
+      const word = m[0].toLowerCase();
+      // Pluralizar baseado em quantidade (parser visual)
+      return { label: word, isMass: false };
+    }
+    if (/\bml\b/i.test(display)) return { label: 'ml', isMass: true };
+    return { label: 'g', isMass: true };
+  };
+
+  const itemUnit = detectUnit((item as any).quantity_display);
+
   return (
     <div className="group relative flex flex-col p-3 bg-neutral-800/20 border border-white/5 rounded-2xl hover:bg-neutral-800/40 hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px] -mr-12 -mt-12 rounded-full group-hover:bg-emerald-500/10 transition-all duration-300" />
@@ -78,11 +93,20 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
                 type="number"
                 value={item.clinical_mass_g || item.quantity || 0}
                 onChange={(e) => onUpdateQuantity(Number(e.target.value))}
-                className="bg-neutral-900/80 border-white/5 text-right pr-6 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
+                className="bg-neutral-900/80 border-white/5 text-right pr-7 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
               />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">g</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-white/20 group-hover/qty:text-emerald-500 transition-colors">
+                {itemUnit.isMass ? itemUnit.label : 'g'}
+              </span>
             </div>
-            
+
+            {/* Mostra display soberano (ex: "2 unidades") quando difere de gramas */}
+            {!itemUnit.isMass && (item as any).quantity_display && (
+              <span className="text-[8px] font-black uppercase tracking-wider text-emerald-400/60 pr-2">
+                {(item as any).quantity_display}
+              </span>
+            )}
+
             {onUpdateQuantityGlobal && (
               <TooltipProvider>
                 <Tooltip>
@@ -95,7 +119,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-neutral-900 border-white/10 text-[10px] font-bold">
-                    Aplica esta gramagem em todas as ocorrências deste alimento no plano.
+                    Aplica esta gramagem em todas as ocorrências deste alimento no plano (todos os dias).
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -148,8 +172,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
                 )}
                 <span className="text-[10px] font-bold text-white/60 truncate group-hover/sub:text-emerald-400 transition-colors">{sub.name}</span>
                 <span className="text-[11px] font-black text-white mt-1">
-                  {Math.round((sub as any).clinical_mass_g || sub.portionValue || 100)}
-                  <span className="text-[8px] uppercase ml-1 opacity-30">g</span>
+                  {(sub as any).quantity_display || `${Math.round((sub as any).clinical_mass_g || sub.portionValue || 100)}g`}
                 </span>
               </div>
             ))}

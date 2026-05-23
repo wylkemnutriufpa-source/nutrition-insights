@@ -3,6 +3,41 @@ import { create } from 'zustand';
 import { Meal, MealItem, Food } from '../types/types';
 import { calculateItemMacros, scaleItemToTarget, adjustSubstitutionsProportionally } from '@/lib/nutricore_v2/helpers';
 
+/**
+ * 🛡️ SOBERANIA V3: Calcula o quantity_display preservando a unidade original.
+ * 
+ * Se o item original era "2 unidades" e a quantidade dobrou, vira "4 unidades".
+ * Se era "100g" e dobrou, vira "200g".
+ * 
+ * Usa clinical_mass_g como base de proporcionalidade quando há unidade especial.
+ */
+function preservedQuantityDisplay(item: any, oldMassG: number, newMassG: number): string {
+  const original = String(item.quantity_display || item.qty || `${newMassG}g`);
+  
+  // Detectar se tem unidade especial: "2 unidades", "1 fatia", "3 colheres"
+  const unitMatch = original.match(/^([\d.,]+)\s*(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|x[íi]cara|xicaras|x[íi]caras)\b/i);
+  
+  if (unitMatch && oldMassG > 0) {
+    const oldUnits = parseFloat(unitMatch[1].replace(',', '.'));
+    const unitName = unitMatch[2];
+    const ratio = newMassG / oldMassG;
+    const newUnits = oldUnits * ratio;
+    
+    // Arredondar para meia unidade ou inteira
+    const rounded = Math.round(newUnits * 2) / 2;
+    const formatted = rounded % 1 === 0 ? String(rounded) : rounded.toFixed(1).replace('.', ',');
+    
+    return `${formatted} ${unitName}`;
+  }
+  
+  // Se não tem unidade especial OU é claramente em gramas/ml, usar gramas
+  if (/\b(ml|l|litro)\b/i.test(original)) {
+    return `${newMassG}ml`;
+  }
+  
+  return `${newMassG}g`;
+}
+
 interface EditorState {
   meals: Meal[];
   patientId: string | null;
@@ -71,7 +106,14 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           (item.substitutions || []) as any,
           oldQty,
           safeNewQty
-        );
+        ).map((sub: any) => {
+          // Preserva unidade da substituição (ex: "2 fatias" → "4 fatias")
+          const subOldQty = (sub as any).clinical_mass_g_before || oldQty;
+          return {
+            ...sub,
+            quantity_display: preservedQuantityDisplay(sub, subOldQty, sub.clinical_mass_g),
+          };
+        });
 
         const newMacros = calculateItemMacros(item, safeNewQty);
 
@@ -79,7 +121,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           ...item,
           quantity: safeNewQty,
           clinical_mass_g: safeNewQty,
-          quantity_display: `${safeNewQty}g`,
+          quantity_display: preservedQuantityDisplay(item, oldQty, safeNewQty),
           substitutions: updatedSubs,
           ...newMacros
         };
@@ -123,7 +165,10 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           (item.substitutions || []) as any,
           oldQty,
           safeNewQty
-        );
+        ).map((sub: any) => ({
+          ...sub,
+          quantity_display: preservedQuantityDisplay(sub, oldQty, sub.clinical_mass_g),
+        }));
 
         const newMacros = calculateItemMacros(item, safeNewQty);
 
@@ -131,7 +176,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           ...item,
           quantity: safeNewQty,
           clinical_mass_g: safeNewQty,
-          quantity_display: `${safeNewQty}g`,
+          quantity_display: preservedQuantityDisplay(item, oldQty, safeNewQty),
           substitutions: updatedSubs,
           ...newMacros
         };
@@ -224,7 +269,10 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           (item.substitutions || []) as any,
           oldQty,
           newQuantity
-        );
+        ).map((sub: any) => ({
+          ...sub,
+          quantity_display: preservedQuantityDisplay(sub, oldQty, sub.clinical_mass_g),
+        }));
 
         const newMacros = calculateItemMacros(item, newQuantity);
 
@@ -232,7 +280,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           ...item,
           quantity: newQuantity,
           clinical_mass_g: newQuantity,
-          quantity_display: `${newQuantity}g`,
+          quantity_display: preservedQuantityDisplay(item, oldQty, newQuantity),
           substitutions: updatedSubs,
           ...newMacros
         };
