@@ -85,49 +85,73 @@ export function useDraftSync(
     loadDraft();
   }, [loadDraft]);
 
+  const debounceSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 3;
+
   const scheduleSave = useCallback(async (meals: Meal[], auditLog: AuditLogEntry[]) => {
     if (isLocked || !draftId) return;
-    
-    // 🛡️ SOBERANIA FINAL: SAVE IMEDIATO - SEM DEBOUNCE
-    // Optimistic UI: Atualiza local imediatamente
-    setSnapshot(meals);
-    setSnapshotAuditLog(auditLog);
-    setSyncState('saving');
 
-    // Validação: Não sobrescrever rascunho saudável por zerado
-    const totalKcal = meals.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
-    if (totalKcal === 0 && snapshot && snapshot.length > 0) {
-      const snapshotKcal = snapshot.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
-      if (snapshotKcal > 0) {
-        console.error('[Sync-Guard] Tentativa de sobrescrever rascunho saudável por um rascunho ZERADO. Abortando save.');
+    // 🛡️ DEBOUNCE 2s: Evita salvar a cada keystroke, acumula mudanças
+    if (debounceSaveRef.current) {
+      clearTimeout(debounceSaveRef.current);
+    }
+
+    debounceSaveRef.current = setTimeout(async () => {
+      setSyncState('saving');
+
+      // 🛡️ Validação: Não sobrescrever rascunho saudável por zerado
+      const totalKcal = meals.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
+      if (totalKcal === 0 && snapshot && snapshot.length > 0) {
+        const snapshotKcal = snapshot.reduce((s, m) => s + m.items.reduce((sum, i) => sum + (i.kcal || 0), 0), 0);
+        if (snapshotKcal > 0) {
+          console.error('[Sync-Guard] Tentativa de sobrescrever rascunho saudável por um rascunho ZERADO. Abortando save.');
+          setSyncState('error');
+          return;
+        }
+      }
+
+      try {
+        const updatedRecord = await saveDraft(draftId, meals, auditLog || []);
+
+        if (updatedRecord) {
+          SovereignMonitor.log({
+            event_type: 'snapshot_render',
+            component: 'useDraftSync_Save',
+            message: 'Rascunho V3 persistido com sucesso no banco estruturado'
+          });
+          setSnapshot(meals);
+          setSnapshotAuditLog(auditLog);
+          setLastSavedAt(updatedRecord.updated_at);
+          lastUpdateRef.current = updatedRecord.updated_at;
+          setSyncState('saved');
+          retryCountRef.current = 0; // Reset contador de retries
+        } else {
+          setSyncState('offline');
+          // 🛡️ Retry limitado (máx 3 tentativas, com backoff)
+          if (retryCountRef.current < MAX_RETRIES) {
+            retryCountRef.current += 1;
+            const backoff = retryCountRef.current * 2000;
+            console.warn(`[useDraftSync] Offline. Retry ${retryCountRef.current}/${MAX_RETRIES} em ${backoff}ms`);
+            debounceSaveRef.current = setTimeout(() => scheduleSave(meals, auditLog), backoff);
+          } else {
+            console.error('[useDraftSync] Max retries atingido. Desistindo.');
+            retryCountRef.current = 0;
+          }
+        }
+      } catch (error) {
+        console.error('[useDraftSync] Erro ao salvar:', error);
         setSyncState('error');
-        return;
+        // 🛡️ Retry limitado em caso de erro
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current += 1;
+          const backoff = retryCountRef.current * 3000;
+          debounceSaveRef.current = setTimeout(() => scheduleSave(meals, auditLog), backoff);
+        } else {
+          retryCountRef.current = 0;
+        }
       }
-    }
-
-    try {
-      const updatedRecord = await saveDraft(draftId, meals, auditLog || []);
-      
-      if (updatedRecord) {
-        SovereignMonitor.log({
-          event_type: 'snapshot_render',
-          component: 'useDraftSync_Save',
-          message: 'Rascunho V3 persistido com sucesso no banco estruturado'
-        });
-        setLastSavedAt(updatedRecord.updated_at);
-        lastUpdateRef.current = updatedRecord.updated_at;
-        setSyncState('saved');
-      } else {
-        setSyncState('offline');
-        // Retry automático após 2s
-        setTimeout(() => scheduleSave(meals, auditLog), 2000);
-      }
-    } catch (error) {
-      console.error('[useDraftSync] Erro ao salvar:', error);
-      setSyncState('error');
-      // Retry automático após 3s
-      setTimeout(() => scheduleSave(meals, auditLog), 3000);
-    }
+    }, 2000); // Debounce de 2 segundos
   }, [draftId, isLocked, snapshot]);
 
   const resetDraft = async () => {
@@ -148,6 +172,15 @@ export function useDraftSync(
       toast.success('Alterações revertidas para o último save.');
     }
   };
+
+  // Cleanup: cancelar debounce pendente ao desmontar
+  useEffect(() => {
+    return () => {
+      if (debounceSaveRef.current) {
+        clearTimeout(debounceSaveRef.current);
+      }
+    };
+  }, []);
 
   return { 
     draftId, 
