@@ -123,28 +123,31 @@ export function RootRouter() {
   if (isPatientRole) {
     const pState = (profile as any)?.patient_state;
     const onboardingCompleted = (profile as any)?.onboarding_completed;
+    // 🛡️ FASE 3: Nova verdade única — camada de compatibilidade com legado (30 dias)
+    const clinicalAssessmentCompleted = (profile as any)?.clinical_assessment_completed;
     
-    console.log("[NAV] RootRouter -> Analyzing patient state", { pState, onboardingCompleted, hasConsent });
+    console.log("[NAV] RootRouter -> Analyzing patient state", { pState, onboardingCompleted, clinicalAssessmentCompleted, hasConsent });
 
     // 1. Consentimento é a primeira barreira absoluta
     if (!hasConsent) {
       return <Navigate to="/consent" replace />;
     }
 
-    // 2. NOVA GOVERNANÇA SOBERANA: Se onboarding está completo OU se existe pState avançado, DASHBOARD.
-    // Não bloqueamos mais o dashboard por flags se o pState indica que o paciente já passou das fases iniciais.
+    // 2. SOBERANIA: Se avaliação clínica completa OU onboarding completo (legado) OU estado avançado → DASHBOARD.
     const isAdvancedState = pState === "ready_for_plan" || pState === "plan_generated" || pState === "active_plan";
+    const isAssessmentDone = clinicalAssessmentCompleted === true || onboardingCompleted === true || isAdvancedState;
     
-    if (onboardingCompleted === true || isAdvancedState) {
+    if (isAssessmentDone) {
       const finalTarget = (nextPath && nextPath !== "/" && !nextPath.startsWith("/admin")) ? nextPath : "/client/dashboard";
       return <Navigate to={finalTarget} replace />;
     }
 
-    // 3. Estados intermediários do Onboarding (Apenas se pState for inicial)
+    // 3. Estados iniciais do Onboarding
     if (!pState || pState === "onboarding_slides") {
       return <Navigate to="/onboarding/paciente" replace />;
     }
     
+    // 4. FASE 2: pState 'anamnesis' vai direto para /anamnesis (sem passar pelo pipeline de 6 steps)
     if (pState === "anamnesis") {
       return <Navigate to="/anamnesis" replace />;
     }

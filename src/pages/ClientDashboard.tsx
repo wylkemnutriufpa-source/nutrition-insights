@@ -14,6 +14,7 @@ import {
   Dumbbell
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { ClinicalAssessmentBanner } from "@/components/patient/ClinicalAssessmentBanner";
 
 export default function ClientDashboard() {
   const { profile, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
@@ -29,6 +30,9 @@ export default function ClientDashboard() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+        {/* 🛡️ FASE 4: Banner leve de avaliação clínica (sem bloqueio, sem redirect forçado) */}
+        <ClinicalAssessmentBanner />
         {/* Header de Boas-vindas Premium */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">

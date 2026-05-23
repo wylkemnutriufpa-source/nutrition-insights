@@ -8,14 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import slide1 from "@/assets/onboarding-paciente/slide-1.png";
 import slide2 from "@/assets/onboarding-paciente/slide-2.png";
-import slide3 from "@/assets/onboarding-paciente/slide-3.png";
-import slide4 from "@/assets/onboarding-paciente/slide-4.png";
-import slide5 from "@/assets/onboarding-paciente/slide-5.png";
-import slide6 from "@/assets/onboarding-paciente/slide-6.png";
-import slide7 from "@/assets/onboarding-paciente/slide-7.png";
-import slide8 from "@/assets/onboarding-paciente/slide-8.png";
-import slide9 from "@/assets/onboarding-paciente/slide-9.png";
-import slide10 from "@/assets/onboarding-paciente/slide-10.png";
+// slides 3-10 removidos (fase 1 soberana: onboarding = 2 slides de intro)
 
 interface SlideData {
   image: string;
@@ -23,17 +16,19 @@ interface SlideData {
   detail: string;
 }
 
+// 🛡️ FASE 1 SOBERANA: Onboarding reduzido a 2 slides de introdução
+// O centro clínico é a Anamnese — não o slideshow.
 const SLIDES: SlideData[] = [
-  { image: slide1, caption: "Bem-vindo à sua nova jornada", detail: "Você não está sozinho. O FitJourney acompanha sua evolução todos os dias com inteligência e cuidado." },
-  { image: slide2, caption: "Seu plano alimentar inteligente", detail: "Toque em qualquer refeição para ver ingredientes, modo de preparo e macros. Tudo pensado para seu objetivo." },
-  { image: slide3, caption: "Acompanhe sua evolução", detail: "Registre peso, medidas e fotos. Visualize sua transformação com clareza semana após semana." },
-  { image: slide4, caption: "Missões e motivação diária", detail: "Complete tarefas, ganhe XP, mantenha sua sequência. Pequenas vitórias constroem grandes resultados." },
-  { image: slide5, caption: "Suporte sempre disponível", detail: "Fale com seu nutricionista em tempo real. Peça ajuda sempre que precisar — você nunca está sozinho." },
-  { image: slide6, caption: "Resultados reais", detail: "O sistema ajusta sua estratégia conforme sua resposta metabólica. Aqui a evolução é guiada por dados." },
-  { image: slide7, caption: "Checklist diário personalizado", detail: "Seu dia organizado com tarefas de nutrição, hidratação e hábitos saudáveis — tudo num só lugar." },
-  { image: slide8, caption: "Gamificação que transforma", detail: "Conquiste medalhas, suba de nível e desbloqueie fases da sua jornada. Evolução nunca foi tão motivante." },
-  { image: slide9, caption: "Relatórios de progresso", detail: "Acompanhe seus relatórios semanais e veja como cada escolha contribui para o seu resultado final." },
-  { image: slide10, caption: "Sua jornada começa agora", detail: "Tudo está pronto. Siga o plano, confie no processo e veja a transformação acontecer." },
+  { 
+    image: slide1, 
+    caption: "Bem-vindo ao FitJourney", 
+    detail: "Aqui seu plano alimentar é personalizado com base em dados clínicos reais. Não é dieta genérica — é protocolo clínico soberano." 
+  },
+  { 
+    image: slide2, 
+    caption: "Sua avaliação clínica é o ponto de partida", 
+    detail: "Para criar um plano 100% personalizado para você, precisamos conhecer sua saúde, objetivos e histórico clínico. São poucos minutos com impacto duradouro." 
+  },
 ];
 
 const ONBOARDING_KEY = "patient_onboarding_completed";
@@ -83,16 +78,17 @@ export default function OnboardingPaciente() {
   const { user } = useAuth();
 
   const complete = useCallback(async () => {
-    console.log("[FJ:Onboarding] Finalizing slides → updating patient_state and onboarding_completed.");
+    console.log("[FJ:Onboarding] Slides concluídos → indo direto para anamnese clínica.");
     
     if (user?.id) {
       try {
-        // Atomic update to ensure consistent state
+        // 🛡️ FASE 2: Fluxo soberano INTRO → ANAMNESE → DASHBOARD
+        // Não passa mais pelo pipeline de 6 steps — vai direto para anamnese
         const { error } = await supabase
           .from("profiles")
           .update({ 
             patient_state: 'anamnesis',
-            onboarding_completed: false // Slides finished, but anamnesis is next
+            onboarding_completed: false // Anamnese ainda pendente
           })
           .eq("user_id", user.id);
         
@@ -106,7 +102,8 @@ export default function OnboardingPaciente() {
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
 
-    navigate("/onboarding", { replace: true });
+    // 🛡️ Vai direto para anamnese — sem passar pelo /onboarding (pipeline)
+    navigate("/anamnesis", { replace: true });
   }, [user?.id, navigate]);
 
   const skip = useCallback(async () => {
@@ -235,11 +232,11 @@ function CTASlide({ dir, onComplete }: { dir: number; onComplete: () => void }) 
         <Rocket className="w-10 h-10 text-white" />
       </div>
       <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">Tudo pronto para sua<br />transformação começar</h2>
-        <p className="text-white/50 text-sm">Siga o plano, confie no processo e veja a evolução acontecer.</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">Pronto para começar<br />sua avaliação clínica?</h2>
+        <p className="text-white/50 text-sm">Em poucos minutos, seu nutricionista terá tudo que precisa para criar seu protocolo personalizado.</p>
       </div>
       <Button onClick={onComplete} className="bg-emerald-600 hover:bg-emerald-500 text-white h-14 px-8 text-base font-semibold shadow-lg shadow-emerald-900/30 border-0 rounded-xl">
-        <Sparkles className="w-5 h-5 mr-2" /> Começar minha jornada
+        <Sparkles className="w-5 h-5 mr-2" /> Começar avaliação clínica
       </Button>
     </motion.div>
   );
