@@ -224,11 +224,12 @@ const MealItemCard = memo(function MealItemCard({
             itemId: item.id,
             title: item.title,
             description: item.quantity_display,
-            tipo_refeicao: item.meal.name,
-            meta_calorias: item.macros.kcal,
-            meta_proteinas: item.macros.protein_g,
-            meta_carboidratos: item.macros.carbs_g,
-            meta_gorduras: item.macros.fat_g,
+            // 🛡️ Guard: item.meal pode ser undefined em planos legados
+            tipo_refeicao: (item as any).meal?.name || (item as any).tipo_refeicao || '',
+            meta_calorias: (item as any).macros?.kcal ?? (item as any).meta_calorias ?? 0,
+            meta_proteinas: (item as any).macros?.protein_g ?? (item as any).meta_proteinas ?? 0,
+            meta_carboidratos: (item as any).macros?.carbs_g ?? (item as any).meta_carboidratos ?? 0,
+            meta_gorduras: (item as any).macros?.fat_g ?? (item as any).meta_gorduras ?? 0,
             image_url: item.imageUrl,
             metadata: (item as any).metadata
           })}
@@ -257,11 +258,12 @@ const MealItemCard = memo(function MealItemCard({
             itemId: item.id,
             title: item.title,
             description: item.quantity_display,
-            tipo_refeicao: item.meal.name,
-            meta_calorias: item.macros.kcal,
-            meta_proteinas: item.macros.protein_g,
-            meta_carboidratos: item.macros.carbs_g,
-            meta_gorduras: item.macros.fat_g,
+            // 🛡️ Guard: item.meal pode ser undefined em planos legados
+            tipo_refeicao: (item as any).meal?.name || (item as any).tipo_refeicao || '',
+            meta_calorias: (item as any).macros?.kcal ?? (item as any).meta_calorias ?? 0,
+            meta_proteinas: (item as any).macros?.protein_g ?? (item as any).meta_proteinas ?? 0,
+            meta_carboidratos: (item as any).macros?.carbs_g ?? (item as any).meta_carboidratos ?? 0,
+            meta_gorduras: (item as any).macros?.fat_g ?? (item as any).meta_gorduras ?? 0,
             image_url: item.imageUrl,
             metadata: (item as any).metadata
           })}

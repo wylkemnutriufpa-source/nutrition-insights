@@ -90,7 +90,8 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
     const days = [1, 2, 3, 4, 5, 6, 0];
     return days.map(day => ({
       day,
-      items: (allItems || []).filter(i => i.meal.day_of_week === day)
+      // 🛡️ Guard: item.meal pode ser undefined em itens legados
+      items: (allItems || []).filter(i => (i as any).meal?.day_of_week === day || (i as any).day_of_week === day)
     }));
   }, [allItems]);
 
@@ -227,7 +228,11 @@ export default function PatientProfileMealPlan({ patientId, activeMealPlanId }: 
             {weeklyDisplayDays.map(({ day, items: dayItems }) => {
               const groupedDayItems = MEAL_TYPES.map(mt => ({
                 ...mt,
-                items: dayItems.filter(i => i.meal.name === mt.key),
+                // 🛡️ Guard: item.meal pode ser undefined em planos legados
+                items: dayItems.filter(i => 
+                  ((i as any).meal?.name === mt.key) || 
+                  ((i as any).tipo_refeicao === mt.key)
+                ),
               })).filter(g => g.items.length > 0);
 
               if (groupedDayItems.length === 0) return null;
