@@ -20427,17 +20427,24 @@ export type Database = {
       v3_diet_templates: {
         Row: {
           active: boolean | null
+          activity_profile: string | null
+          clinical_tags: Json | null
           cluster_map: Json
+          contraindications: string[] | null
           created_at: string | null
           description: string | null
+          dietary_restrictions: string[] | null
           editable: boolean | null
           family: string | null
           id: string
           kcal_profiles: Json | null
+          kcal_range_max: number | null
+          kcal_range_min: number | null
           meal_distribution: Json
           nutritionist_id: string | null
           objective: string
           plan_snapshot: Json | null
+          sex_preference: string | null
           slug: string
           sovereign_validated: boolean | null
           substitutions_enabled: boolean | null
@@ -20448,17 +20455,24 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          activity_profile?: string | null
+          clinical_tags?: Json | null
           cluster_map: Json
+          contraindications?: string[] | null
           created_at?: string | null
           description?: string | null
+          dietary_restrictions?: string[] | null
           editable?: boolean | null
           family?: string | null
           id?: string
           kcal_profiles?: Json | null
+          kcal_range_max?: number | null
+          kcal_range_min?: number | null
           meal_distribution: Json
           nutritionist_id?: string | null
           objective: string
           plan_snapshot?: Json | null
+          sex_preference?: string | null
           slug: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
@@ -20469,17 +20483,24 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          activity_profile?: string | null
+          clinical_tags?: Json | null
           cluster_map?: Json
+          contraindications?: string[] | null
           created_at?: string | null
           description?: string | null
+          dietary_restrictions?: string[] | null
           editable?: boolean | null
           family?: string | null
           id?: string
           kcal_profiles?: Json | null
+          kcal_range_max?: number | null
+          kcal_range_min?: number | null
           meal_distribution?: Json
           nutritionist_id?: string | null
           objective?: string
           plan_snapshot?: Json | null
+          sex_preference?: string | null
           slug?: string
           sovereign_validated?: boolean | null
           substitutions_enabled?: boolean | null
@@ -22239,6 +22260,17 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Database["public"]["Enums"]["patient_state_type"]
       }
+      calculate_clinical_kcal_target: {
+        Args: {
+          p_activity: string
+          p_age: number
+          p_goal: string
+          p_height: number
+          p_sex: string
+          p_weight: number
+        }
+        Returns: Json
+      }
       calculate_nutrition_proportional: {
         Args: { p_food_name: string; p_target_mass_g: number }
         Returns: {
@@ -23104,6 +23136,21 @@ export type Database = {
           kcal_range: string
           meals: Json
           name: string
+        }[]
+      }
+      select_sovereign_template: {
+        Args: {
+          p_activity: string
+          p_dietary_restrictions: string[]
+          p_health_conditions: string[]
+          p_kcal_target: number
+          p_objective: string
+          p_sex: string
+        }
+        Returns: {
+          best_kcal_key: string
+          template_id: string
+          template_title: string
         }[]
       }
       self_register_nutritionist: {
