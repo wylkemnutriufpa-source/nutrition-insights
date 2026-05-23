@@ -15743,6 +15743,7 @@ export type Database = {
           adherence_score_prev_7d: number | null
           avatar_url: string | null
           behavioral_consistency_score: number | null
+          clinical_assessment_completed: boolean | null
           clinical_risk_level: string | null
           clinical_risk_score: number | null
           compliance_mode: boolean | null
@@ -15808,6 +15809,7 @@ export type Database = {
           adherence_score_prev_7d?: number | null
           avatar_url?: string | null
           behavioral_consistency_score?: number | null
+          clinical_assessment_completed?: boolean | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           compliance_mode?: boolean | null
@@ -15873,6 +15875,7 @@ export type Database = {
           adherence_score_prev_7d?: number | null
           avatar_url?: string | null
           behavioral_consistency_score?: number | null
+          clinical_assessment_completed?: boolean | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           compliance_mode?: boolean | null

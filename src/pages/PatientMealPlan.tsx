@@ -239,7 +239,6 @@ export default function PatientMealPlan() {
       // 🛡️ SOBERANIA V3: O App é um RENDERIZADOR BURRO.
       // Extração direta do snapshot sem re-interpretação.
       const allSnapshotItems: MealPlanItem[] = [];
-      const macrosMap: Record<string, any> = {};
 
       const currentDayIndex = new Date(date + "T12:00:00").getDay();
 
