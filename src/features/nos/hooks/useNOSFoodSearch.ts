@@ -122,7 +122,7 @@ export function useNOSFoodById(foodId: string | null) {
       .eq('id', foodId)
       .maybeSingle()
       .then(({ data }) => {
-        setFood(data as NOSFoodResult | null);
+        setFood(data as unknown as NOSFoodResult | null);
         setLoading(false);
       });
   }, [foodId]);

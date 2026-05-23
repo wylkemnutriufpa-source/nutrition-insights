@@ -8735,6 +8735,310 @@ export type Database = {
         }
         Relationships: []
       }
+      nos_foods: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          canonical_food_id: string | null
+          canonical_hash: string | null
+          carbs_100g: number
+          category: string | null
+          created_at: string | null
+          fat_100g: number
+          fiber_100g: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_canonical: boolean | null
+          kcal_100g: number
+          name: string
+          name_normalized: string | null
+          nutritionist_id: string | null
+          portion_g: number | null
+          portion_label: string | null
+          protein_100g: number
+          sodium_100g: number | null
+          source: string
+          source_id: string | null
+          source_priority: number
+          subcategory: string | null
+          tags: string[] | null
+          tenant_id: string | null
+          updated_at: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          canonical_food_id?: string | null
+          canonical_hash?: string | null
+          carbs_100g?: number
+          category?: string | null
+          created_at?: string | null
+          fat_100g?: number
+          fiber_100g?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_canonical?: boolean | null
+          kcal_100g?: number
+          name: string
+          name_normalized?: string | null
+          nutritionist_id?: string | null
+          portion_g?: number | null
+          portion_label?: string | null
+          protein_100g?: number
+          sodium_100g?: number | null
+          source: string
+          source_id?: string | null
+          source_priority?: number
+          subcategory?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          canonical_food_id?: string | null
+          canonical_hash?: string | null
+          carbs_100g?: number
+          category?: string | null
+          created_at?: string | null
+          fat_100g?: number
+          fiber_100g?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_canonical?: boolean | null
+          kcal_100g?: number
+          name?: string
+          name_normalized?: string | null
+          nutritionist_id?: string | null
+          portion_g?: number | null
+          portion_label?: string | null
+          protein_100g?: number
+          sodium_100g?: number | null
+          source?: string
+          source_id?: string | null
+          source_priority?: number
+          subcategory?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nos_foods_canonical_food_id_fkey"
+            columns: ["canonical_food_id"]
+            isOneToOne: false
+            referencedRelation: "nos_foods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nos_meal_combos: {
+        Row: {
+          carbs_total: number
+          combo_type: string
+          created_at: string | null
+          fat_total: number
+          fiber_total: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          items: Json
+          kcal_total: number
+          meal_slot: string | null
+          name: string
+          nutritionist_id: string
+          protein_total: number
+          substitutions: Json | null
+          tags: string[] | null
+          tenant_id: string | null
+          updated_at: string | null
+          use_count: number | null
+        }
+        Insert: {
+          carbs_total?: number
+          combo_type: string
+          created_at?: string | null
+          fat_total?: number
+          fiber_total?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          items?: Json
+          kcal_total?: number
+          meal_slot?: string | null
+          name: string
+          nutritionist_id: string
+          protein_total?: number
+          substitutions?: Json | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          use_count?: number | null
+        }
+        Update: {
+          carbs_total?: number
+          combo_type?: string
+          created_at?: string | null
+          fat_total?: number
+          fiber_total?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          items?: Json
+          kcal_total?: number
+          meal_slot?: string | null
+          name?: string
+          nutritionist_id?: string
+          protein_total?: number
+          substitutions?: Json | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          use_count?: number | null
+        }
+        Relationships: []
+      }
+      nos_nutritionist_library: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_id: string
+          item_snapshot: Json
+          item_type: string
+          last_used_at: string | null
+          nickname: string | null
+          nutritionist_id: string
+          pinned: boolean | null
+          use_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_id: string
+          item_snapshot: Json
+          item_type: string
+          last_used_at?: string | null
+          nickname?: string | null
+          nutritionist_id: string
+          pinned?: boolean | null
+          use_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_id?: string
+          item_snapshot?: Json
+          item_type?: string
+          last_used_at?: string | null
+          nickname?: string | null
+          nutritionist_id?: string
+          pinned?: boolean | null
+          use_count?: number | null
+        }
+        Relationships: []
+      }
+      nos_recipes: {
+        Row: {
+          carbs_portion: number
+          cook_time_min: number | null
+          created_at: string | null
+          description: string | null
+          fat_portion: number
+          fiber_portion: number | null
+          id: string
+          image_url: string | null
+          ingredients: Json
+          instructions: string | null
+          is_active: boolean | null
+          is_public: boolean | null
+          kcal_portion: number
+          name: string
+          nutritionist_id: string
+          portion_g: number
+          portion_label: string | null
+          prep_time_min: number | null
+          previous_version_id: string | null
+          protein_portion: number
+          servings: number | null
+          sodium_portion: number | null
+          tags: string[] | null
+          tenant_id: string | null
+          version: number
+          yield_g: number
+        }
+        Insert: {
+          carbs_portion?: number
+          cook_time_min?: number | null
+          created_at?: string | null
+          description?: string | null
+          fat_portion?: number
+          fiber_portion?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: string | null
+          is_active?: boolean | null
+          is_public?: boolean | null
+          kcal_portion?: number
+          name: string
+          nutritionist_id: string
+          portion_g?: number
+          portion_label?: string | null
+          prep_time_min?: number | null
+          previous_version_id?: string | null
+          protein_portion?: number
+          servings?: number | null
+          sodium_portion?: number | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          version?: number
+          yield_g?: number
+        }
+        Update: {
+          carbs_portion?: number
+          cook_time_min?: number | null
+          created_at?: string | null
+          description?: string | null
+          fat_portion?: number
+          fiber_portion?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: string | null
+          is_active?: boolean | null
+          is_public?: boolean | null
+          kcal_portion?: number
+          name?: string
+          nutritionist_id?: string
+          portion_g?: number
+          portion_label?: string | null
+          prep_time_min?: number | null
+          previous_version_id?: string | null
+          protein_portion?: number
+          servings?: number | null
+          sodium_portion?: number | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          version?: number
+          yield_g?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nos_recipes_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "nos_recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -22758,6 +23062,36 @@ export type Database = {
       }
       migrate_to_single_source_of_truth: { Args: never; Returns: undefined }
       normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
+      nos_canonical_hash: {
+        Args: {
+          p_carbs: number
+          p_fat: number
+          p_kcal: number
+          p_name: string
+          p_protein: number
+        }
+        Returns: string
+      }
+      nos_search_foods: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          canonical_food_id: string
+          carbs_100g: number
+          category: string
+          fat_100g: number
+          fiber_100g: number
+          id: string
+          image_url: string
+          kcal_100g: number
+          name: string
+          portion_g: number
+          portion_label: string
+          protein_100g: number
+          source: string
+          source_priority: number
+          verified: boolean
+        }[]
+      }
       persist_meal_plan_snapshot: {
         Args: {
           _engine_version: string
@@ -22981,6 +23315,7 @@ export type Database = {
         Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json
       }
+      unaccent: { Args: { "": string }; Returns: string }
       update_food_mass: {
         Args: {
           p_day: string
