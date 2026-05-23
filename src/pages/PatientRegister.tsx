@@ -557,9 +557,14 @@ export default function PatientRegister() {
 
       if (signUpErr) {
         addLog(`Erro no Auth SignUp: ${signUpErr.message}`);
-        toast.error(signUpErr.message === "User already registered"
-          ? "Este e-mail já está cadastrado. Faça login."
-          : signUpErr.message);
+        
+        if (signUpErr.message.includes("25 seconds")) {
+          toast.error("Por segurança, aguarde 30 segundos antes de tentar novamente. Se você já tem conta, tente fazer login.", { duration: 6000 });
+        } else if (signUpErr.message === "User already registered") {
+          toast.error("Este e-mail já está cadastrado. Faça login.");
+        } else {
+          toast.error(signUpErr.message);
+        }
         return;
       }
 
