@@ -137,7 +137,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
     setLoading(false);
     if (error) {
       if (error.message.includes("25 seconds")) {
-        toast.error("Por segurança, aguarde 30 segundos antes de tentar novamente.");
+        toast.error("Processando sua solicitação. Aguarde alguns instantes.");
       } else {
         toast.error(error.message);
       }

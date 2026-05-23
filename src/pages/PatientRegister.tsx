@@ -567,12 +567,13 @@ export default function PatientRegister() {
         addLog(`Erro no Auth SignUp: ${signUpErr.message}`);
         
         if (signUpErr.message.includes("25 seconds")) {
-          toast.error(`Aguarde ${cooldown || 25}s antes de tentar novamente.`);
+          toast.error("Processando seu cadastro. Aguarde alguns instantes ou tente novamente em breve.");
           setCooldown(30);
         } else if (signUpErr.message === "User already registered") {
-          toast.error("Este e-mail já está cadastrado. Faça login.");
+          toast.error("Este e-mail já está cadastrado. Você será redirecionado para o login.");
+          setTimeout(() => navigate(`/auth?next=${encodeURIComponent(currentCadastroPath)}`), 2000);
         } else {
-          toast.error(signUpErr.message);
+          toast.error("Não foi possível concluir o cadastro. Verifique os dados e tente novamente.");
         }
         setSyncStatus("error", "PATIENT_REGISTER", signUpErr.message);
         return;
