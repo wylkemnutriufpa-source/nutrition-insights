@@ -65,6 +65,13 @@ export default function EditorV3Page() {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
 
+  // 🛡️ COCKPIT: Abrir biblioteca automaticamente se veio do cockpit
+  useEffect(() => {
+    if (searchParams.get("openLibrary") === "true") {
+      setIsGalleryOpen(true);
+    }
+  }, []);
+
 
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);

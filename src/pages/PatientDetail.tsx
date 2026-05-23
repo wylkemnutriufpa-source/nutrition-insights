@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { PRODUCTION_URL } from "@/lib/config";
 import { copyToClipboard } from "@/utils/clipboard";
+import { PlanGenerationCockpit } from "@/components/patient/PlanGenerationCockpit";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
 import PatientCalculators from "@/components/patient/PatientCalculators";
@@ -123,6 +124,7 @@ export default function PatientDetail() {
 
   // Local UI state
   const [activateOpen, setActivateOpen] = useState(false);
+  const [cockpitOpen, setCockpitOpen] = useState(false);
   const [activateForm, setActivateForm] = useState({
     protocol_id: "",
     start_date: new Date().toISOString().split("T")[0],
@@ -807,14 +809,14 @@ export default function PatientDetail() {
           <Button 
             variant="outline" 
             className="h-24 rounded-2xl border-emerald-500/20 bg-[#111] hover:bg-emerald-500/10 hover:border-emerald-500/40 text-white flex items-center justify-start px-6 gap-4 group transition-all"
-            onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
+            onClick={() => setCockpitOpen(true)}
           >
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
               <Sparkles className="w-6 h-6 text-emerald-500" />
             </div>
             <div className="text-left">
-              <span className="block text-lg font-bold">🧬 EDITOR V3</span>
-              <span className="text-xs text-muted-foreground">Prescrição Nutricional Premium</span>
+              <span className="block text-lg font-bold">🧬 GERAR PLANO</span>
+              <span className="text-xs text-muted-foreground">Automático, Template ou Manual</span>
             </div>
           </Button>
 
@@ -867,7 +869,7 @@ export default function PatientDetail() {
               <ChefHat className="w-5 h-5 text-emerald-500" /> PLANOS ALIMENTARES
             </h2>
             <Button 
-              onClick={() => navigate(`/editor-v3/${resolvedPatientId}`)}
+              onClick={() => setCockpitOpen(true)}
               className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold h-9"
             >
               <Plus className="w-4 h-4 mr-2" /> NOVO PLANO
@@ -1436,6 +1438,16 @@ export default function PatientDetail() {
           open={releaseOnboardingOpen}
           onOpenChange={setReleaseOnboardingOpen}
           onReleased={invalidate}
+        />
+
+        {/* 🛡️ COCKPIT DE GERAÇÃO DE PLANOS */}
+        <PlanGenerationCockpit
+          open={cockpitOpen}
+          onClose={() => setCockpitOpen(false)}
+          patientId={resolvedPatientId}
+          hasAnamnesis={!!anamnesis}
+          patientName={profile?.full_name}
+          pipelineId={null}
         />
       </div>
     </DashboardLayout>
