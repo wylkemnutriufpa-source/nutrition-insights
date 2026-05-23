@@ -1,7 +1,10 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState, lazy, Suspense } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import * as THREE from "three";
 import logoPng from "@/assets/logo.png";
+
+// 🛡️ SOBERANIA: Lazy load heavy 3D engine
+const NeuralParticleCanvas = lazy(() => import("./NeuralParticleCanvas"));
+
 
 export type NeuralAnimationMode = "idle" | "converge" | "diverge";
 
