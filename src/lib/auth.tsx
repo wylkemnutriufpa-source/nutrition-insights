@@ -89,7 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchInProgressRef = useRef<string | null>(null);
 
   const fetchData = async (userId: string) => {
-    setIsLoaded(false);
+    // 🛡️ SOBERANIA DETERMINÍSTICA: Só bloquear o app (isLoaded = false) se ainda não tivermos roles resolvidos.
+    // Refreshes de perfil em background não devem travar a UI.
+    if (roles === null) setIsLoaded(false);
+
     if (fetchInProgressRef.current === userId) {
       console.log(`[AUTH:CORE] Fetch already in progress for user ${userId}, skipping.`);
       return;
