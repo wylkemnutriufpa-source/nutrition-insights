@@ -757,7 +757,7 @@ export default function PatientRegister() {
 
 
       setCurrentUserId(signUpData.user.id);
-      toast.success("Conta criada! Verifique seu e-mail.");
+      toast.success("Conta criada com sucesso!");
       setSyncStatus("success", "PATIENT_REGISTER");
 
       if (nutriId) {
@@ -799,7 +799,7 @@ export default function PatientRegister() {
               <div>
                 <h2 className="text-xl font-bold text-foreground mb-2">Cadastro Realizado! 🎉</h2>
                 <p className="text-muted-foreground text-sm">
-                  Verifique seu e-mail para confirmar a conta. Depois, faça login para iniciar sua jornada.
+                  Sua conta está pronta. Você já pode acessar o sistema para iniciar sua jornada.
                 </p>
               </div>
               <Button onClick={() => navigate("/auth")} className="w-full">
