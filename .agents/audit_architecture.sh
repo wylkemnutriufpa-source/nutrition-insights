@@ -36,4 +36,3 @@ echo "--- Verificando Healing Silencioso ---"
 rg "catch.*healing" src/ -i -g '!src/lib/sovereign/*' -g '!.agents/*'
 
 echo "✅ Auditoria Concluída."
-
