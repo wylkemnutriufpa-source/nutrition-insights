@@ -2,6 +2,8 @@ import { useRef, useEffect, useCallback, useState, lazy, Suspense } from "react"
 import { motion, useReducedMotion } from "framer-motion";
 import logoPng from "@/assets/logo.png";
 import type { NeuralAnimationMode } from "./NeuralParticleCanvas";
+export type { NeuralAnimationMode };
+
 
 // 🛡️ SOBERANIA: Lazy load heavy 3D engine (Three.js)
 const NeuralParticleCanvas = lazy(() => import("./NeuralParticleCanvas"));
