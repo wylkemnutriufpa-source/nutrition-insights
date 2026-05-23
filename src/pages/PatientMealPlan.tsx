@@ -577,7 +577,7 @@ export default function PatientMealPlan() {
             : safeAccess(substitutionItem, 'metadata.substitution_options', []))
         } onSubstitute={(food, originalTitle) => { setActiveSubstitutions(prev => ({ ...prev, [substitutionItem.id]: { foodName: food.name, originalTitle } })); setSubstitutionItem(null); }} />)}
         <MealSlotModal open={!!selectedSlot} onOpenChange={(open) => !open && setSelectedSlot(null)} mealType={selectedSlot?.type || ""} items={selectedSlot?.items || []} completions={completions} onSetAdherence={setAdherence} onOpenDetail={setSelectedMeal} onOpenSubstitution={setSubstitutionItem} />
-      </div>
+      </ScreenEntrance>
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50 border-none rounded-3xl">
