@@ -156,6 +156,14 @@ export default function PatientRegister() {
   const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
   const [isEmailAlreadyRegistered, setIsEmailAlreadyRegistered] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
 
 
@@ -465,7 +473,7 @@ export default function PatientRegister() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading || checkingEmail) return;
+    if (loading || checkingEmail || cooldown > 0) return;
 
     if (isEmailAlreadyRegistered) {
       toast.error("Este e-mail já está cadastrado.");
@@ -559,12 +567,14 @@ export default function PatientRegister() {
         addLog(`Erro no Auth SignUp: ${signUpErr.message}`);
         
         if (signUpErr.message.includes("25 seconds")) {
-          toast.error("Por segurança, aguarde 30 segundos antes de tentar novamente. Se você já tem conta, tente fazer login.", { duration: 6000 });
+          toast.error(`Aguarde ${cooldown || 25}s antes de tentar novamente.`);
+          setCooldown(30);
         } else if (signUpErr.message === "User already registered") {
           toast.error("Este e-mail já está cadastrado. Faça login.");
         } else {
           toast.error(signUpErr.message);
         }
+        setSyncStatus("error", "PATIENT_REGISTER", signUpErr.message);
         return;
       }
 
