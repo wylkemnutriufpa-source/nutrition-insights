@@ -2,6 +2,8 @@ import React, { memo, useMemo } from "react";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import MealFeedbackButton from "@/components/patient/MealFeedbackButton";
 import { motion, AnimatePresence } from "framer-motion";
+import { ScreenEntrance, StaggerItem, NeuralStepTransition } from "@/components/ui/neural-transitions";
+import { SelectionRipple, CognitiveHover, ProgressPulse } from "@/components/ui/micro-interactions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -156,26 +158,34 @@ const MacroSummary = memo(function MacroSummary({
         </span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
-          <Flame className="w-5 h-5 mx-auto text-orange-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Kcal</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(displayKcal, "...")}</p>
-        </div>
-        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
-          <Beef className="w-5 h-5 mx-auto text-red-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Prot</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(displayProtein, "...")}g</p>
-        </div>
-        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
-          <Wheat className="w-5 h-5 mx-auto text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Carbs</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(displayCarbs, "...")}g</p>
-        </div>
-        <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl">
-          <Droplets className="w-5 h-5 mx-auto text-yellow-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Gord</p>
-          <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(displayFat, "...")}g</p>
-        </div>
+        <CognitiveHover>
+          <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl h-full">
+            <Flame className="w-5 h-5 mx-auto text-orange-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Kcal</p>
+            <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="kcal">{fmtMacro(displayKcal, "...")}</p>
+          </div>
+        </CognitiveHover>
+        <CognitiveHover>
+          <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl h-full">
+            <Beef className="w-5 h-5 mx-auto text-red-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Prot</p>
+            <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="protein">{fmtMacro(displayProtein, "...")}g</p>
+          </div>
+        </CognitiveHover>
+        <CognitiveHover>
+          <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl h-full">
+            <Wheat className="w-5 h-5 mx-auto text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Carbs</p>
+            <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="carbs">{fmtMacro(displayCarbs, "...")}g</p>
+          </div>
+        </CognitiveHover>
+        <CognitiveHover>
+          <div className="bg-neutral-900/60 border border-white/5 rounded-[2rem] p-6 text-center transition-all hover:bg-neutral-900/80 group shadow-xl backdrop-blur-xl h-full">
+            <Droplets className="w-5 h-5 mx-auto text-yellow-500 mb-2 group-hover:scale-110 transition-transform duration-500" />
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Gord</p>
+            <p className="font-display font-black text-2xl text-white tabular-nums" data-macro="fat">{fmtMacro(displayFat, "...")}g</p>
+          </div>
+        </CognitiveHover>
       </div>
     </div>
   );
