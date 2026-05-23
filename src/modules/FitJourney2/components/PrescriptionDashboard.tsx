@@ -47,19 +47,22 @@ export const PrescriptionDashboard = () => {
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <header className="flex justify-between items-center mb-10">
-        <div>
-          <h1 className="text-3xl font-black tracking-tighter uppercase italic text-white">Dashboard V2</h1>
-          <p className="text-slate-500 text-sm font-mono tracking-widest uppercase">Motor: Proteína Primeiro</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right mr-4 hidden md:block">
-            <p className="text-xs text-slate-500 uppercase font-bold">Nutricionista</p>
-            <p className="text-sm font-medium">{profile?.full_name || 'Usuário Beta'}</p>
-          </div>
-          <div className="h-10 w-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full border-2 border-white/10 shadow-lg shadow-green-500/20" />
-        </div>
-      </header>
+      <ScreenEntrance>
+        <StaggerItem index={0} isHero>
+          <header className="flex justify-between items-center mb-10">
+            <div>
+              <h1 className="text-3xl font-black tracking-tighter uppercase italic text-white">Dashboard V2</h1>
+              <p className="text-slate-500 text-sm font-mono tracking-widest uppercase">Motor: Proteína Primeiro</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right mr-4 hidden md:block">
+                <p className="text-xs text-slate-500 uppercase font-bold">Nutricionista</p>
+                <p className="text-sm font-medium">{profile?.full_name || 'Usuário Beta'}</p>
+              </div>
+              <div className="h-10 w-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full border-2 border-white/10 shadow-lg shadow-green-500/20" />
+            </div>
+          </header>
+        </StaggerItem>
 
       {showEditor ? (
         <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
