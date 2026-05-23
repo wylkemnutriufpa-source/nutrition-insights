@@ -289,12 +289,13 @@ export default function EditorV3Page() {
           else if (profileResult.data) setPatientData(profileResult.data);
           
           // 🛡️ SOBERANIA V3
-          let mealsToHydrate = [];
+          let mealsToHydrate: any[] = [];
           if (planData.snapshot) {
             mealsToHydrate = normalizeSnapshotToV3(planData.snapshot);
           } else {
             const normalized = normalizeMealPlan(planData);
-            mealsToHydrate = normalized.meals as any;
+            // 🛡️ Guard: normalizeMealPlan é passthrough — .meals pode ser undefined em planos V2
+            mealsToHydrate = (normalized as any).meals || [];
           }
           
           if (mealsToHydrate.length > 0) {

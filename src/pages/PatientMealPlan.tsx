@@ -152,10 +152,9 @@ export default function PatientMealPlan() {
   const [showPreview, setShowPreview] = useState(false);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
 
-  // 🛡️ SOBERANIA: Bloqueamos o uso de new Date().getDay() para decisão clínica.
-  // O sistema clínico não pode depender do relógio do usuário.
-  // Se não houver data selecionada, usamos a data do plano ou o primeiro dia do snapshot.
-  const dayOfWeek = plan?.editor_version === 'v3' ? (items[0]?.day_of_week ?? 0) : new Date(date + "T12:00:00").getDay();
+  // 🛡️ SOBERANIA V3: dayOfWeek sempre derivado da data selecionada pelo usuário.
+  // Remover dependência circular de items[0].day_of_week que causava dia errado ao navegar.
+  const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
 
 

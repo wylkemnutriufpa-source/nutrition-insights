@@ -213,6 +213,12 @@ export function PlanGenerationCockpit({
                     ? "Motor clínico seleciona o melhor template baseado na anamnese, calcula targets via Mifflin-St Jeor e gera o plano automaticamente."
                     : "Requer anamnese completa. O paciente precisa preencher a avaliação clínica primeiro."}
                 </p>
+                {hasAnamnesis && (
+                  <p className="text-[10px] text-amber-400/60 mt-1.5 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 inline-block" />
+                    Plano nasce em Draft — edite e publique para o paciente ver
+                  </p>
+                )}
               </div>
               <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-emerald-400 transition-colors flex-shrink-0 mt-1" />
             </div>
