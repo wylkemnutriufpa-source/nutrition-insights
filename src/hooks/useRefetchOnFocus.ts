@@ -16,8 +16,12 @@ export function useRefetchOnFocus() {
 
   useEffect(() => {
     if (!user) return;
+    
+    // 🛡️ SOBERANIA DETERMINÍSTICA: Evitar refetch excessivo.
+    // Só re-validar se o usuário estiver inativo há mais de 2 minutos.
+    const INACTIVITY_THRESHOLD = 2 * 60 * 1000; 
+    const DEBOUNCE_MS = 30000; // Debounce aumentado para 30s
 
-    const DEBOUNCE_MS = 3000; // Don't refetch more than once per 3s
 
     const handleFocus = () => {
       const now = Date.now();
