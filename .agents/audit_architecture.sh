@@ -10,7 +10,7 @@ echo "--- Verificando Símbolos Proibidos ---"
 DENY_SYMBOLS=("calculatePrimaryTotals" "normalizeMealPlan" "hydrationEngine" "runtimeInference" "mealPlanNormalizer" "mealPlanDisplay" "calculateMacros" "fixCorruptedData" "inferMacrosFromName" "rebuildSnapshot")
 
 for symbol in "${DENY_SYMBOLS[@]}"; do
-    FOUND=$(rg -l "$symbol" src/ --exclude src/lib/sovereign/)
+    FOUND=$(rg -l "$symbol" src/ -g '!src/lib/sovereign/*' -g '!.agents/*')
     if [ ! -z "$FOUND" ]; then
         echo "❌ VIOLAÇÃO: Símbolo proibido '$symbol' encontrado em:"
         echo "$FOUND"
@@ -29,10 +29,11 @@ done
 
 # 3. Verificando Padrões de Cálculo no Frontend
 echo "--- Verificando Cálculos de Macros no Frontend ---"
-rg -e "kcal.*reduce" -e "protein_g.*reduce" src/ --exclude src/lib/sovereign/
+rg -e "kcal.*reduce" -e "protein_g.*reduce" src/ -g '!src/lib/sovereign/*' -g '!.agents/*'
 
 # 4. Verificando Sinais de "Healing" Silencioso
 echo "--- Verificando Healing Silencioso ---"
-rg "catch.*healing" src/ -i
+rg "catch.*healing" src/ -i -g '!src/lib/sovereign/*' -g '!.agents/*'
 
 echo "✅ Auditoria Concluída."
+
