@@ -100,7 +100,11 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/patient-plan", "/patient/plan", "/checkin", "/meals", "/recipes", "/water-calculator", "/weight-calculator", "/patient-overview", "/checklist", "/appointments", "/anamnesis", "/achievements", "/challenges", "/shopping-list", "/body-analysis", "/body-projection", "/checkin-panel", "/weekly-goals", "/weekly-report", "/weight-trajectory"];
   
   // BLOQUEIO SOBERANO: Profissionais (Pro) NUNCA acessam caminhos de paciente
-  if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && isPro && !isPatient) {
+  // EXCEÇÃO: /anamnesis?patientId=XXX é acesso do nutricionista à anamnese do paciente (modo nutri)
+  const isNutriAnamnesis = location.pathname.startsWith("/anamnesis") && 
+    (location.search.includes("patientId=") || location.search.includes("patientid="));
+
+  if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && isPro && !isPatient && !isNutriAnamnesis) {
     console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acesso Pro -> Patient Path (${location.pathname}). Redirecionando para /dashboard.`);
     return <Navigate to="/dashboard" replace />;
   }
