@@ -49,11 +49,23 @@ function readImageUrl(raw: any): string | null {
 /**
  * Lê quantity_display direto do snapshot
  * Planos publicados usam quantity_display; templates usam qty
+ * Fallback final: clinical_mass_g + "g" para garantir que o paciente sempre vê a gramagem
  */
 function readQuantityDisplay(raw: any): string {
-  return String(
-    raw?.quantity_display || raw?.display_quantity || raw?.qty || raw?.quantity || ''
-  );
+  const explicit =
+    raw?.quantity_display ||
+    raw?.display_quantity ||
+    raw?.qty ||
+    raw?.quantity;
+
+  if (explicit) return String(explicit);
+
+  // Fallback soberano: se tem massa clínica, mostra como gramagem
+  if (raw?.clinical_mass_g != null && Number(raw.clinical_mass_g) > 0) {
+    return `${Number(raw.clinical_mass_g)}g`;
+  }
+
+  return '';
 }
 
 /**

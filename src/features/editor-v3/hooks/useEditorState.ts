@@ -102,16 +102,23 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         const safeNewQty = Math.max(5, Math.round(newQuantity / 5) * 5);
 
         // 🛡️ Defense in Depth: Escala substituições proporcionalmente ao item principal
+        // Captura gramagem original de cada sub ANTES de escalar
+        const subsWithOriginalQty = (item.substitutions || []).map((sub: any) => ({
+          ...sub,
+          _originalMassG: sub.clinical_mass_g || sub.portionValue || oldQty,
+        }));
+
         const updatedSubs = adjustSubstitutionsProportionally(
-          (item.substitutions || []) as any,
+          subsWithOriginalQty as any,
           oldQty,
           safeNewQty
         ).map((sub: any) => {
           // Preserva unidade da substituição (ex: "2 fatias" → "4 fatias")
-          const subOldQty = (sub as any).clinical_mass_g_before || oldQty;
+          const subOriginalMassG = sub._originalMassG || oldQty;
           return {
             ...sub,
-            quantity_display: preservedQuantityDisplay(sub, subOldQty, sub.clinical_mass_g),
+            _originalMassG: undefined,
+            quantity_display: preservedQuantityDisplay(sub, subOriginalMassG, sub.clinical_mass_g),
           };
         });
 
@@ -161,14 +168,23 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         const oldQty = item.clinical_mass_g || item.quantity || 100;
         const safeNewQty = Math.max(5, Math.round(newQuantity / 5) * 5);
 
+        const subsWithOriginalQtyG = (item.substitutions || []).map((sub: any) => ({
+          ...sub,
+          _originalMassG: sub.clinical_mass_g || sub.portionValue || oldQty,
+        }));
+
         const updatedSubs = adjustSubstitutionsProportionally(
-          (item.substitutions || []) as any,
+          subsWithOriginalQtyG as any,
           oldQty,
           safeNewQty
-        ).map((sub: any) => ({
-          ...sub,
-          quantity_display: preservedQuantityDisplay(sub, oldQty, sub.clinical_mass_g),
-        }));
+        ).map((sub: any) => {
+          const origMass = sub._originalMassG || oldQty;
+          return {
+            ...sub,
+            _originalMassG: undefined,
+            quantity_display: preservedQuantityDisplay(sub, origMass, sub.clinical_mass_g),
+          };
+        });
 
         const newMacros = calculateItemMacros(item, safeNewQty);
 

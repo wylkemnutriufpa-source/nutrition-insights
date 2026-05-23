@@ -1445,7 +1445,7 @@ export default function PatientDetail() {
           open={cockpitOpen}
           onClose={() => setCockpitOpen(false)}
           patientId={resolvedPatientId}
-          hasAnamnesis={!!anamnesis}
+          hasAnamnesis={!!anamnesis || !!activeMealPlan}
           patientName={profile?.full_name}
           pipelineId={null}
         />
