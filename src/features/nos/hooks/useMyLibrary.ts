@@ -50,7 +50,7 @@ export function useMyLibrary(filterType?: ComboType | 'all') {
 
       const { data, error } = await q;
       if (error) throw error;
-      setCombos((data as SavedCombo[]) || []);
+      setCombos((data as unknown as SavedCombo[]) || []);
     } catch (err) {
       console.error('[useMyLibrary] Erro:', err);
     } finally {
