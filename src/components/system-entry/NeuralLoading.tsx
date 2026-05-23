@@ -16,7 +16,7 @@ interface NeuralLoadingProps {
   onTransitionComplete?: () => void;
 }
 
-export function NeuralLoading({
+export default function NeuralLoading({
   active,
   durationMultiplier = 1,
   animationMode = "idle",
