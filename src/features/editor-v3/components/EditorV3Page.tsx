@@ -344,6 +344,34 @@ export default function EditorV3Page() {
     return totals;
   }, [store.meals, activeDay]);
 
+  // 🛡️ SOBERANIA V3: targets para publicação = média de TODOS os dias
+  // Evita a divergência entre o target do snapshot (1 dia) e os daily_totals (7 dias)
+  const publishTargets = useMemo(() => {
+    const days = [...new Set(store.meals.map(m => m.day_of_week ?? 1))];
+    if (days.length === 0) return planTotals;
+
+    const sum = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+    days.forEach(day => {
+      store.meals
+        .filter(m => (m.day_of_week ?? 1) === day)
+        .forEach(meal => {
+          meal.items.forEach(item => {
+            sum.kcal += item.kcal || 0;
+            sum.protein += item.protein || 0;
+            sum.carbs += item.carbs || 0;
+            sum.fat += item.fat || 0;
+          });
+        });
+    });
+
+    return {
+      kcal: Math.round(sum.kcal / days.length),
+      protein: Math.round(sum.protein / days.length),
+      carbs: Math.round(sum.carbs / days.length),
+      fat: Math.round(sum.fat / days.length),
+    };
+  }, [store.meals]);
+
   const handleSave = async () => {
     if (!effectivePatientId) {
       toast.error('Selecione um paciente para salvar o plano.');
@@ -360,10 +388,10 @@ export default function EditorV3Page() {
         nutritionistId: user?.id || '',
         meals: store.meals,
         targets: {
-          kcal: planTotals.kcal,
-          protein: planTotals.protein,
-          carbs: planTotals.carbs,
-          fat: planTotals.fat
+          kcal: publishTargets.kcal,
+          protein: publishTargets.protein,
+          carbs: publishTargets.carbs,
+          fat: publishTargets.fat
         },
         planId: effectiveId,
         draftId: draftId
