@@ -135,6 +135,8 @@ export function extractMealsFromSnapshot(snapshot: any): SovereignExtractionResu
         const itemImageUrl = readImageUrl(raw);
         const itemQty = readQuantityDisplay(raw);
 
+        const subs = extractSubstitutions(raw);
+
         items.push({
           id: String(raw.id || crypto.randomUUID()),
           title: String(raw.title || raw.name || 'Item'),
@@ -142,7 +144,7 @@ export function extractMealsFromSnapshot(snapshot: any): SovereignExtractionResu
           quantity_display: itemQty,
           clinical_mass_g: raw.clinical_mass_g != null ? Number(raw.clinical_mass_g) : null,
           macros: itemMacros,
-          substitutions: extractSubstitutions(raw),
+          substitutions: subs,
           meal: mealMeta,
           
           // Proxies de compatibilidade
@@ -156,7 +158,21 @@ export function extractMealsFromSnapshot(snapshot: any): SovereignExtractionResu
           display_quantity: itemQty,
           image_url: itemImageUrl,
           is_primary: true,
-          metadata: raw.metadata || raw.edit_metadata || {},
+          // 🛡️ metadata popula substitution_count e substitution_options para componentes legados
+          // que ainda lêem metadata.substitution_count para mostrar o botão "Trocar Opção"
+          metadata: {
+            ...(raw.metadata || raw.edit_metadata || {}),
+            substitution_count: subs.length,
+            substitution_options: subs.map(s => ({
+              id: s.id,
+              title: s.title,
+              meta_calorias: s.macros.kcal,
+              meta_proteinas: s.macros.protein_g,
+              meta_carboidratos: s.macros.carbs_g,
+              meta_gorduras: s.macros.fat_g,
+              image_url: s.imageUrl,
+            })),
+          },
 
           __sovereign: true,
         });
