@@ -41,6 +41,22 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "user_id e new_password obrigatórios" }), { status: 400, headers: corsHeaders });
     }
 
+    // SECURITY: only admins may reset arbitrary users. Nutritionists/personals
+    // must be linked to the target patient via nutritionist_patients.
+    const isAdmin = callerRoles?.some((row: any) => row.role === "admin");
+    if (!isAdmin) {
+      const { data: link } = await adminClient
+        .from("nutritionist_patients")
+        .select("id")
+        .eq("nutritionist_id", caller.id)
+        .eq("patient_id", user_id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!link) {
+        return new Response(JSON.stringify({ error: "Sem permissão para este paciente" }), { status: 403, headers: corsHeaders });
+      }
+    }
+
     const { error } = await adminClient.auth.admin.updateUserById(user_id, { password: new_password });
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: corsHeaders });

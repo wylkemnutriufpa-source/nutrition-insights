@@ -29,6 +29,17 @@ Deno.serve(async (req) => {
     const isIos = /iphone|ipad|ipod/i.test(ua);
     const isSafari = /safari/i.test(ua) && !/chrome|crios|fxios|edg/i.test(ua);
 
+    // SECURITY: cap metadata size to prevent storage inflation via large JSON payloads
+    let safeMetadata: Record<string, unknown> = {};
+    if (typeof body?.metadata === "object" && body.metadata !== null) {
+      const serialized = JSON.stringify(body.metadata);
+      if (serialized.length <= 2000) {
+        safeMetadata = body.metadata;
+      } else {
+        safeMetadata = { truncated: true, original_size: serialized.length };
+      }
+    }
+
     await admin.from("route_404_telemetry").insert({
       pathname,
       full_url: String(body?.full_url || "").slice(0, 1000) || null,
@@ -40,7 +51,7 @@ Deno.serve(async (req) => {
       has_service_worker: Boolean(body?.has_service_worker),
       build_hash: String(body?.build_hash || "").slice(0, 100) || null,
       session_id: String(body?.session_id || "").slice(0, 100) || null,
-      metadata: typeof body?.metadata === "object" && body.metadata !== null ? body.metadata : {},
+      metadata: safeMetadata,
     });
 
     return new Response(JSON.stringify({ ok: true }), {

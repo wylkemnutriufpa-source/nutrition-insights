@@ -50,7 +50,13 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const targetPatientIds: string[] | undefined = body.patient_ids;
     const mode: string = body.mode || "specific"; // "specific" or "all_my_patients"
-    const standardPassword = "Fit@2026!";
+
+    // SECURITY: generate a cryptographically random temporary password per patient
+    const randomStrongPassword = () => {
+      const raw = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, "");
+      // Mix-in to satisfy complexity policies
+      return `Fj!${raw.slice(0, 20)}A9`;
+    };
 
     let idsToReset: string[] = [];
 
@@ -59,8 +65,9 @@ Deno.serve(async (req) => {
       const { data: patients } = await supabase
         .from("nutritionist_patients")
         .select("patient_id")
-        .eq("nutritionist_id", user.id);
-      
+        .eq("nutritionist_id", user.id)
+        .eq("status", "active");
+
       idsToReset = (patients || []).map((p: any) => p.patient_id);
     } else {
       if (!targetPatientIds || !Array.isArray(targetPatientIds) || targetPatientIds.length === 0) {
@@ -69,35 +76,51 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      idsToReset = targetPatientIds;
+
+      // SECURITY: filter to only patients owned by this nutritionist (admins skip the check)
+      if (!isAdmin) {
+        const { data: owned } = await supabase
+          .from("nutritionist_patients")
+          .select("patient_id")
+          .eq("nutritionist_id", user.id)
+          .eq("status", "active")
+          .in("patient_id", targetPatientIds);
+        idsToReset = (owned || []).map((r: any) => r.patient_id);
+      } else {
+        idsToReset = targetPatientIds;
+      }
     }
 
     let updated = 0;
     let errors: string[] = [];
+    const generated: Array<{ patient_id: string; temp_password: string }> = [];
     const BATCH = 5;
 
     for (let i = 0; i < idsToReset.length; i += BATCH) {
       const chunk = idsToReset.slice(i, i + BATCH);
       const results = await Promise.all(chunk.map(async (patientId) => {
         try {
+          const tempPassword = randomStrongPassword();
           const { error } = await supabase.auth.admin.updateUserById(patientId, {
-            password: standardPassword,
+            password: tempPassword,
           });
           if (error) return { ok: false, err: `${patientId}: ${error.message}` };
-          return { ok: true };
+          return { ok: true, patient_id: patientId, temp_password: tempPassword };
         } catch (e: any) {
           return { ok: false, err: `${patientId}: ${e.message}` };
         }
       }));
 
       for (const r of results) {
-        if (r.ok) updated++;
-        else if (r.err) errors.push(r.err);
+        if (r.ok) {
+          updated++;
+          if ((r as any).patient_id) generated.push({ patient_id: (r as any).patient_id, temp_password: (r as any).temp_password });
+        } else if (r.err) errors.push(r.err);
       }
     }
 
     return new Response(
-      JSON.stringify({ message: `Senhas resetadas para ${updated} pacientes`, updated, errors }),
+      JSON.stringify({ message: `Senhas resetadas para ${updated} pacientes`, updated, errors, generated }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
