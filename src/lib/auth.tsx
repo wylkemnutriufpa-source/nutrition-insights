@@ -87,6 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const subCheckRef = useRef(false);
   const fetchInProgressRef = useRef<string | null>(null);
+  // 🛡️ Refs para o listener acessar valores atuais sem precisar das deps
+  const currentUserIdRef = useRef<string | null>(null);
+  const rolesResolvedRef = useRef(false);
+
+  // Sincronizar refs com state
+  useEffect(() => { currentUserIdRef.current = user?.id ?? null; }, [user?.id]);
+  useEffect(() => { rolesResolvedRef.current = roles !== null; }, [roles]);
 
   const fetchData = async (userId: string) => {
     // 🛡️ SOBERANIA DETERMINÍSTICA: Só bloquear o app (isLoaded = false) se ainda não tivermos roles resolvidos.
@@ -202,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const syncSession = async (currentSession: Session | null) => {
+    const syncSession = async (currentSession: Session | null, options?: { skipDataFetch?: boolean }) => {
       if (!mounted) return;
       
       console.log(`[AUTH:CORE] Syncing session: ${currentSession ? "Authenticated" : "Unauthenticated"}`);
@@ -219,7 +226,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (currentUser) {
         try {
-          await fetchData(currentUser.id);
+          // 🛡️ SOBERANIA: skipDataFetch=true quando o user.id não mudou e roles já foram resolvidos.
+          // Isso evita refetch do profile a cada SIGNED_IN ao voltar de outra aba (PDF preview, etc).
+          if (!options?.skipDataFetch) {
+            await fetchData(currentUser.id);
+          } else {
+            console.log("[AUTH:CORE] Skip refetch (mesmo user, roles ja resolvidos)");
+          }
         } catch (e) {
           console.error("[AUTH:CORE] Error fetching data during sync:", e);
         }
@@ -253,8 +266,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, currentSession) => {
         console.log(`[AUTH:CORE] Auth Event: ${event}`);
         
-        // Always sync on these major events
-        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        // 🛡️ SOBERANIA: Para SIGNED_IN/TOKEN_REFRESHED do MESMO user, NÃO refazemos fetch.
+        // Isso evita o flash de loader e reload do plano ao voltar de outra aba.
+        const sameUserAndResolved =
+          currentSession?.user?.id === currentUserIdRef.current && rolesResolvedRef.current;
+
+        if (event === "TOKEN_REFRESHED" || (event === "SIGNED_IN" && sameUserAndResolved)) {
+          // Apenas atualiza session/user em background, sem disparar loading nem refetch.
+          setSession(currentSession);
+          if (currentSession?.user) setUser(currentSession.user);
+          return;
+        }
+
+        // Always sync on these major events (com fetch completo)
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
           await syncSession(currentSession);
         }
       }
