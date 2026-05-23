@@ -22496,6 +22496,82 @@ export type Database = {
           table_name: string
         }[]
       }
+      get_shared_meal_plan: {
+        Args: { _token: string }
+        Returns: {
+          adherence_score: number | null
+          clinical_audit_status: string | null
+          clinical_score: number | null
+          clinical_status: string | null
+          correlation_id: string | null
+          created_at: string
+          description: string | null
+          editor_version: string | null
+          end_date: string | null
+          engine_version: string | null
+          generated_by: string | null
+          generation_metadata: Json | null
+          generation_source: string | null
+          global_meta_calorias: number | null
+          global_meta_carboidratos: number | null
+          global_meta_gorduras: number | null
+          global_meta_proteinas: number | null
+          id: string
+          is_active: boolean
+          is_global_model: boolean | null
+          is_humanized: boolean | null
+          is_sharing_enabled: boolean
+          last_validated_at: string | null
+          nutritionist_id: string
+          overall_score: number | null
+          overall_validation_status: string | null
+          patient_id: string
+          personalization_applied: boolean
+          pipeline_completed_at: string | null
+          pipeline_version: string | null
+          plan_mode: Database["public"]["Enums"]["plan_mode_type"]
+          plan_status: string
+          plan_type: string | null
+          plan_version: string | null
+          previous_plan_id: string | null
+          protocol_used: string | null
+          quality_alerts: Json | null
+          requires_regeneration: boolean | null
+          sharing_expires_at: string | null
+          sharing_token: string | null
+          simplicity_score: number | null
+          snapshot: Json | null
+          snapshot_generated_at: string | null
+          snapshot_hash: string | null
+          snapshot_schema_version: string | null
+          start_date: string
+          template_id: string | null
+          template_slug: string | null
+          template_version: number | null
+          tenant_id: string
+          therapeutic_effectiveness_status: string | null
+          therapeutic_efficacy_score: number | null
+          title: string
+          total_calories: number | null
+          total_carbs: number | null
+          total_fat: number | null
+          total_meta_calorias: number | null
+          total_meta_carboidratos: number | null
+          total_meta_gorduras: number | null
+          total_meta_proteinas: number | null
+          total_protein: number | null
+          totals_status: string
+          transition_origin_id: string | null
+          updated_at: string
+          validation_engine_version: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "meal_plans"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_system_health_score: { Args: never; Returns: Json }
       get_team_head_id: { Args: { _user_id: string }; Returns: string }
       get_team_permissions: { Args: { _user_id: string }; Returns: Json }
@@ -22526,13 +22602,15 @@ export type Database = {
         Args: { _professional_id: string }
         Returns: string
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      has_role:
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_tenant_role: {
         Args: {
           _role: Database["public"]["Enums"]["tenant_role"]
