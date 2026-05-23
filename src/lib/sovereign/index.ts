@@ -29,3 +29,7 @@ export {
 export { useSovereignPlan } from './useSovereignPlan';
 export type { UseSovereignPlanResult } from './useSovereignPlan';
 
+// 🛡️ SPRINT D: Assertions e regras de proteção arquitetural
+export { assertSnapshotIntegrity, assertClinicalMetadataPreserved, assertNotLegacyCode, productionIntegrityCheck } from './invariantAssertions';
+export { LEGACY_DENYLIST_FILES, LEGACY_DENYLIST_SYMBOLS, SNAPSHOT_REQUIRED_FIELDS, FRONTEND_PASSIVE_RULES, CLINICAL_ENGINE_RULES } from './sovereignRules';
+

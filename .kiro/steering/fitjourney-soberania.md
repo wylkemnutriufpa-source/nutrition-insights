@@ -2,7 +2,95 @@
 inclusion: always
 ---
 
-# 🛡️ FITJOURNEY 2.0 — REGRAS SOBERANAS ABSOLUTAS
+# 🛡️ FITJOURNEY 2.0 — REGRAS SOBERANAS ABSOLUTAS + SPRINT D BLINDAGEM
+
+## ⚠️ CONTEXTO CRÍTICO: DOIS AGENTES NA MESMA BRANCH
+
+O projeto usa **Lovable** (no-code) + **Kiro** (aqui) na mesma branch `fitjourney2.0`.
+O Lovable faz commits autônomos ("Changes", "Fast Visual Edit") que podem reverter nosso trabalho.
+O Lovable JÁ recriou arquivos deletados (`mealPlanDisplay.ts`, `mealPlanNormalizer.ts`) — sempre verificar.
+
+**Protocolo obrigatório**:
+1. SEMPRE `git pull --no-rebase --no-edit` antes de qualquer push
+2. SEMPRE `git push origin fitjourney2.0` depois de qualquer mudança
+3. NUNCA acumular mudanças sem commit
+4. Usar `--no-verify` em todos os commits
+
+---
+
+## 🚨 DENYLIST — ARQUIVOS QUE NUNCA DEVEM TER LÓGICA ATIVA
+
+Se o Lovable recriar estes arquivos com código real, **DELETAR IMEDIATAMENTE**:
+
+- `src/components/MealPlanBuilder.tsx` — deletado Sprint 1
+- `src/components/MealPlanEditor.tsx` — deletado Sprint 1
+
+Se o Lovable modificar estes arquivos e adicionar lógica, **REVERTER**:
+
+- `src/lib/legacy/mealPlanDisplay.ts` — DEVE ser passthrough/stub
+- `src/lib/legacy/mealPlanNormalizer.ts` — DEVE ser passthrough/stub
+
+---
+
+## 🎯 ARQUITETURA SOBERANA — REGRA ABSOLUTA
+
+### O sistema opera em:
+```
+SNAPSHOT → PERSISTE → RENDERIZA
+```
+
+### O frontend NUNCA:
+- ❌ calcula macros (`reduce`, `sum`, `weight * 22`)
+- ❌ infere imagens em runtime no Patient App
+- ❌ normaliza estrutura de snapshot
+- ❌ faz await dentro de loop para queries (N+1)
+- ❌ cria canais realtime com `Date.now()` no nome
+- ❌ escuta tabelas realtime sem filtro por `user_id`/`nutritionist_id`
+
+---
+
+## 🛡️ ARQUIVOS PROTEGIDOS (não modificar estrutura)
+
+- `src/lib/sovereign/extractMealsFromSnapshot.ts`
+- `src/lib/sovereign/SovereignMealItem.ts`
+- `src/lib/sovereign/invariantAssertions.ts`
+- `src/features/editor-v3/services/planPersistenceService.ts`
+- `src/features/editor-v3/types/snapshot.ts`
+
+---
+
+## 📋 CAMPOS OBRIGATÓRIOS NO SNAPSHOT PUBLICADO
+
+```json
+{
+  "snapshot_version": "v3",
+  "publication_id": "uuid",
+  "targets": { "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0 },
+  "daily_totals": { "1": { "kcal": 0 } },
+  "days": [...],
+  "clinical_metadata": { "engine_version": "mifflin_v1" }
+}
+```
+
+---
+
+## 🔑 GIT — REGRAS CRÍTICAS
+
+```powershell
+git pull origin fitjourney2.0 --no-rebase --no-edit
+git commit --no-verify -m "mensagem em portugues"
+git push origin fitjourney2.0  # NUNCA main/master
+```
+
+---
+
+## 🔍 CHECKLIST ANTES DE QUALQUER PUSH
+
+1. `src/lib/legacy/*.ts` são stubs (passthrough)?
+2. Nenhum `await` dentro de loop em `planPersistenceService`?
+3. Canais realtime sem `Date.now()` no nome?
+4. `onboarding_pipelines` tem filtro `nutritionist_id`?
+5. Arquivos da denylist não foram recriados?
 
 ## ⚠️ CONTEXTO CRÍTICO: DOIS AGENTES NA MESMA BRANCH
 
