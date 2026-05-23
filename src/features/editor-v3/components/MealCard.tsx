@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Clock, Plus, Trash2, Utensils, Search } from 'lucide-react';
+import { Clock, Plus, Trash2, Utensils, Search, Package } from 'lucide-react';
 import { useEditorState } from '../hooks/useEditorState';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Meal, Food, MealItem } from '../types/types';
 import { FoodItemRow } from './FoodItemRow';
 import { FoodSearch } from './FoodSearch';
 import { NOSFoodSearch } from '@/features/nos/components/NOSFoodSearch';
+import { ComboBuilder } from '@/features/nos/components/ComboBuilder';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
@@ -34,6 +35,7 @@ export const MealCard: React.FC<MealCardProps> = ({
   const store = useEditorState();
   const [isMealDialogOpen, setIsMealDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isComboOpen, setIsComboOpen] = useState(false);
   const [activeItemForSub, setActiveItemForSub] = useState<MealItem | null>(null);
 
   const mealTotals = meal.items.reduce((acc, item) => {
@@ -239,6 +241,15 @@ export const MealCard: React.FC<MealCardProps> = ({
                 <Plus className="w-5 h-5 mr-3" /> Adicionar Alimento
               </Button>
 
+              {/* 🥡 Combo Builder — NOS Sprint I */}
+              <Button
+                variant="outline"
+                onClick={() => { setIsMealDialogOpen(false); setTimeout(() => setIsComboOpen(true), 50); }}
+                className="bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20 font-black uppercase tracking-widest text-[10px] h-11 px-4 rounded-xl transition-all"
+              >
+                <Package className="w-4 h-4 mr-2" /> Marmita
+              </Button>
+
               <Button
                 variant="outline"
                 onClick={onRemoveMeal}
@@ -284,6 +295,20 @@ export const MealCard: React.FC<MealCardProps> = ({
           <NOSFoodSearch 
             mealSlot={activeItemForSub ? (activeItemForSub.category || meal.name) : meal.name}
             onSelect={handleSearchSelect} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Combo Builder Dialog — NOS Sprint I */}
+      <Dialog open={isComboOpen} onOpenChange={(open) => { setIsComboOpen(open); if (!open) setTimeout(() => setIsMealDialogOpen(true), 50); }}>
+        <DialogContent className="max-w-2xl h-[85vh] bg-neutral-950 border-white/10 text-white p-0 rounded-[2rem] overflow-hidden flex flex-col">
+          <ComboBuilder
+            onAddToMeal={(foods) => {
+              foods.forEach(food => onAddFood(food));
+              setIsComboOpen(false);
+              setTimeout(() => setIsMealDialogOpen(true), 50);
+            }}
+            onCancel={() => { setIsComboOpen(false); setTimeout(() => setIsMealDialogOpen(true), 50); }}
           />
         </DialogContent>
       </Dialog>
