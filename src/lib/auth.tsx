@@ -96,9 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => { rolesResolvedRef.current = roles !== null; }, [roles]);
 
   const fetchData = async (userId: string) => {
-    // 🛡️ SOBERANIA DETERMINÍSTICA: Só bloquear o app (isLoaded = false) se ainda não tivermos roles resolvidos.
-    // Refreshes de perfil em background não devem travar a UI.
-    if (roles === null) setIsLoaded(false);
+    // 🛡️ NÃO resetar isLoaded durante refresh de background
+    // Isso causava oscilação de loading e segundo loader desnecessário
 
     if (fetchInProgressRef.current === userId) {
       console.log(`[AUTH:CORE] Fetch already in progress for user ${userId}, skipping.`);

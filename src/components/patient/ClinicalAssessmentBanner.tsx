@@ -15,7 +15,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { ClipboardCheck, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,31 +29,19 @@ export function ClinicalAssessmentBanner() {
 
   useEffect(() => {
     if (!isPatient || !user) return;
-
-    // Se já dismissou nesta sessão, não mostra
     if (sessionStorage.getItem(DISMISS_KEY)) return;
 
-    // Verificar se já completou a avaliação clínica
-    const checkAssessment = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("clinical_assessment_completed, onboarding_completed")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!data) return;
-
-      // Camada de compatibilidade: verifica ambas as flags
-      const isComplete = data.clinical_assessment_completed || data.onboarding_completed;
-
+    // 🛡️ PERFORMANCE: Usar profile já em memória (useAuth) — sem query extra ao banco
+    // Profile já foi carregado no bootstrap, não precisamos buscar de novo
+    if (profile !== null) {
+      const isComplete = (profile as any).clinical_assessment_completed || (profile as any).onboarding_completed;
       if (!isComplete) {
-        // Delay para não aparecer imediatamente ao carregar
         setTimeout(() => setVisible(true), 2000);
       }
-    };
-
-    checkAssessment();
-  }, [user, isPatient]);
+      return;
+    }
+    // Fallback: se por algum motivo profile ainda não carregou, aguardar (sem query extra)
+  }, [user, isPatient, profile]);
 
   const handleDismiss = () => {
     setDismissed(true);

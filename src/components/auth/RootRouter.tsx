@@ -85,7 +85,7 @@ export function RootRouter() {
     return () => clearTimeout(t);
   }, [authStatus]);
 
-  if (!timedOut && (authStatus === "loading" || loading || (authStatus === "authenticated" && roles === null) || processingInvite || (authStatus === "authenticated" && consentLoading))) {
+  if (!timedOut && (authStatus === "loading" || loading || (authStatus === "authenticated" && roles === null) || processingInvite)) {
     const msgs = processingInvite ? ["Vinculando convite...", "Preparando seu espaço..."] : ["Verificando sua sessão...", "Carregando autenticação..."];
     return <BrainLoaderScreen messages={msgs} visible />;
   }
