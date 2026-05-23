@@ -22,6 +22,12 @@ export const LEGACY_DENYLIST_SYMBOLS = [
   'localGenerateMealPlan',
   'hydrationEngine',
   'runtimeInference',
+  'mealPlanNormalizer',
+  'mealPlanDisplay',
+  'calculateMacros',
+  'fixCorruptedData',
+  'inferMacrosFromName',
+  'rebuildSnapshot',
 ] as const;
 
 export const SNAPSHOT_REQUIRED_FIELDS = [
