@@ -1142,7 +1142,13 @@ export default function Anamnesis() {
 
     setAnalyzing(false);
 
-    // Trigger automatic plan generation if not already done
+    // 🛡️ FLUXO SOBERANO: Redirecionar para dashboard após análise
+    // Modo padrão não tem SystemStateGuard, então redirecionamos explicitamente
+    setTimeout(() => {
+      if (!isNutritionistMode) {
+        navigate("/client/dashboard", { replace: true });
+      }
+    }, 2000);
     void (async () => {
       try {
         console.log("[FJ:Anamnesis] Triggering automatic plan generation (Standard flow)...");

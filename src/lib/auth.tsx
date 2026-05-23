@@ -23,6 +23,7 @@ interface Profile {
   is_orphan?: boolean;
   patient_state?: string | null;
   onboarding_completed?: boolean;
+  clinical_assessment_completed?: boolean; // 🛡️ Verdade única (Fase 3 — 23/05/2026)
   tenant_id?: string | null;
 }
 
@@ -115,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const fetchPromise = (async () => {
         // Optimization: select only needed columns to reduce row size/transfer
-        const profileColumns = "id, user_id, full_name, avatar_url, phone, whatsapp, marmita_mode, experience_mode, experience_mode_locked, unlock_date, is_orphan, patient_state, onboarding_completed, tenant_id";
+      const profileColumns = "id, user_id, full_name, avatar_url, phone, whatsapp, marmita_mode, experience_mode, experience_mode_locked, unlock_date, is_orphan, patient_state, onboarding_completed, tenant_id, clinical_assessment_completed";
         
         const [profileRes, rolesRes] = await Promise.all([
           supabase.from("profiles").select(profileColumns).eq("user_id", userId).maybeSingle(),
