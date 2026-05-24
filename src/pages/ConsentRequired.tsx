@@ -61,8 +61,18 @@ export default function ConsentRequired() {
 
       if (error) throw error;
 
-      // Advance lifecycle: consent accepted → onboarding_active
+      // Advance lifecycle: consent accepted → anamnesis (skip slides for better UX)
       await supabase.rpc("accept_patient_consent" as any, { _patient_id: user.id });
+      
+      // 🛡️ SOBERANIA: Atualizamos o estado do paciente diretamente para 'anamnesis'
+      // Isso garante que mesmo sem localStorage, o servidor saiba que ele deve ir para a anamnese.
+      await supabase
+        .from("profiles")
+        .update({ 
+          patient_state: 'anamnesis',
+          onboarding_completed: false 
+        })
+        .eq("user_id", user.id);
 
       logAudit("consent_accepted", "clinical_consents", user.id, {
         version: TERMS_VERSION,
