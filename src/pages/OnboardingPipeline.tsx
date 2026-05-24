@@ -332,6 +332,15 @@ export default function OnboardingPipeline() {
 
       await supabase.rpc("accept_patient_consent" as any, { _patient_id: user.id });
 
+      // 🛡️ SOBERANIA: Atualizamos o estado do paciente diretamente para 'anamnesis'
+      await supabase
+        .from("profiles")
+        .update({ 
+          patient_state: 'anamnesis',
+          onboarding_completed: false 
+        })
+        .eq("user_id", user.id);
+
       logAudit("consent_accepted", "clinical_consents", user.id, { version: TERMS_VERSION });
 
       await queryClient.invalidateQueries({ queryKey: ["clinical-consent"] });
