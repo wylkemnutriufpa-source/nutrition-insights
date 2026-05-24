@@ -300,11 +300,14 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
         });
       }
 
-      const generatedBlockId = existingBlockId || crypto.randomUUID();
+      // 🛡️ IDENTITY LOCK V3: Proibir geração aleatória se já existir rastro de identidade
+      const generatedBlockId = existingBlockId || (
+        (item as any).id || (item as any).instanceId || crypto.randomUUID()
+      );
 
       return {
         ...normalized,
-        instanceId: (item as any).instanceId || crypto.randomUUID(),
+        instanceId: (item as any).instanceId || (item as any).id || generatedBlockId,
         quantity,
         blockId: (item as any).blockId || generatedBlockId,
         clinical_mass_g: (item as any).clinical_mass_g ?? (normalized as any).clinical_mass_g ?? (() => {
