@@ -2,7 +2,7 @@
  * FitJourney — Clinical Data Consent Page (LGPD)
  * Full-page trust-building experience for clinical consent.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Lock, Eye, FileText, Brain, CheckCircle2, ArrowRight } from "lucide-react";
