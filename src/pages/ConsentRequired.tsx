@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/auth";
 import { logAudit } from "@/lib/auditLog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { TERMS_VERSION } from "@/hooks/useConsentGuard";
+import { TERMS_VERSION, useConsentGuard } from "@/hooks/useConsentGuard";
 
 const CONSENT_SECTIONS = [
   {
