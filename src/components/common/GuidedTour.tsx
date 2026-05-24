@@ -43,7 +43,7 @@ export default function GuidedTour({ steps, storageKey, onComplete }: GuidedTour
   useEffect(() => {
     updateRect();
     window.addEventListener("resize", updateRect);
-    window.addEventListener("scroll", updateRect, true);
+    window.addEventListener("scroll", updateRect, { capture: true, passive: true });
 
     // Observe element size changes
     if (step) {

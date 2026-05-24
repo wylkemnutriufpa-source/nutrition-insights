@@ -130,7 +130,7 @@ export default function MobileQA() {
       checkScroll();
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize);
     const interval = setInterval(checkScroll, 1000);
     
