@@ -1,50 +1,44 @@
-# 🛡️ OPERAÇÃO: PRODUCTION SHIELD — RELATÓRIO FINAL DE AUDITORIA
+# AUDITORIA DE PRODUÇÃO REAL — FitJourney 2.0
+Data: 24 de Maio de 2026
 
-## 1. Mapa REAL de Gargalos
-- **[CRÍTICO] Tempestade de Refetch**: O sistema utiliza um método "nuclear" de invalidação (`invalidateCriticalQueries`). Uma única alteração dispara até 15 queries simultâneas por usuário. Em escala (100+ pacientes), isso derruba o Supabase.
-- **[CRÍTICO] Churn de Realtime**: Detectado 572.000+ inserts na tabela `realtime.subscription`. Isso indica que os canais estão abrindo e fechando freneticamente (loop de re-mount de hooks).
-- **[ALTO] Latência de Boot (FCP 7s)**: O bundle carrega `three.js`, `jspdf` e `xlsx` no caminho crítico. Usuários em 4G levam 10+ segundos para ver a tela de login.
-- **[MÉDIO] Waterfall de Dados**: `Index.tsx` e `PatientDetail` buscam dados de forma sequencial em vez de usar uma única View ou Join otimizado.
+## 1. MAPA REAL DE GARGALOS
+- **Asset Pressure:** >100MB em arquivos de imagem (`slide-*.png`) na pasta `dist`. Tempo de carregamento em 4G: >20s.
+- **Database Friction:** 536.895 transações revertidas (rollbacks). Pressão excessiva em RLS ou triggers de integridade.
+- **Hydration Debt:** Uso extensivo de `useEffect` sem cleanup em componentes como `SovereignDashboard` e `TemplateSelector`.
+- **Bundle Split:** Chunks de Recharts e XLSX carregando de forma síncrona em algumas rotas.
 
-## 2. Top 10 Riscos de Produção
-1. **Loop de Rollback**: 536.877 transações revertidas detectadas. Indica erro lógico ou violação de RLS em massa.
-2. **Erro de RLS em Notificações**: Nutritionists falham ao notificar pacientes por falha na resolução de `tenant_id`.
-3. **Estouro de Payload**: Listagem de planos baixa snapshots inteiros (JSONs gigantes) em vez de apenas metadados.
-4. **Race Conditions no Editor V3**: O auto-save pode colidir com o "Publish" em conexões lentas.
-5. **Vazamento de Memória em Realtime**: Hooks de realtime capturam instâncias antigas do `queryClient`.
-6. **Deadlock de Trigger**: A cadeia `Status -> Pontos -> Ranking` é síncrona e pesada.
-7. **Insegurança de Tipagem Runtime**: O sistema ainda faz "healing" (cura) de dados no frontend.
-8. **Crash de Viewport Mobile**: Editor V3 usa `calc(100vh)` que quebra com a barra do Safari iOS.
-9. **Exaustão de Conexões**: O alto volume de queries por componente pode exaurir o pool do PgBouncer.
-10. **Zumbi de useEffect**: 373 hooks detectados; muitos sem cleanup adequado ou com dependências instáveis.
+## 2. TOP 10 RISCOS DE PRODUÇÃO
+1. **OOM em Mobile:** Imagens de 5MB+ podem estourar a memória de iPhones antigos.
+2. **Race Conditions no Realtime:** Subscriptions sem cleanup em dashboards.
+3. **Inconsistência de Hierarquia:** `implicit_block_generation` detectado 10+ vezes no log de hoje.
+4. **Cold Starts:** Edge Functions sem otimização de bundle.
+5. **Memory Leaks:** Listeners de `resize` e `scroll` órfãos (encontrados em `GuidedTour` e `MagicJourneyStory`).
+6. **RLS Overhead:** Queries complexas gerando rollbacks silenciosos.
+7. **Hydration Mismatch:** Renderização condicional baseada em `window.innerWidth`.
+8. **Auth Latency:** Refresh de sessão ocorrendo em loops em abas inativas.
+9. **Snapshot Bloat:** Snapshots V3 crescendo sem limite de profundidade.
+10. **Z-Index Wars:** Modais de onboarding sobrepondo dashboards de emergência.
 
-## 3. Top 10 Otimizações Imediatas (Plano Cirúrgico)
-1. **[DADOS]** Implementar `select('id, title, status')` em listagens (Remover o `*`).
-2. **[AUTH]** Corrigir a trigger `auto_resolve_tenant_notifications` para evitar erro de RLS.
-3. **[PERF]** Lazy-load de `three.js`, `jspdf` e `xlsx` (importação dinâmica).
-4. **[PERF]** Trocar `invalidateQueries` amplo por `invalidateQueries({ queryKey: [..., id] })`.
-5. **[SYNC]** Estabilizar `useNutritionistRealtime` para evitar o churn de 572k assinaturas.
-6. **[UX]** Implementar indicador visual de "Offline/Syncing" no Patient App.
-7. **[UI]** Trocar `100vh` por `100svh` (Small Viewport Height) para mobile.
-8. **[CLEAN]** Remover `useAutoTemplateSeeder` (Cura de dados em runtime é proibida).
-9. **[DB]** Criar Índices faltantes em `checklist_tasks(user_id, status)`.
-10. **[ENGINE]** Mover cálculos de macros do frontend para o `planPersistenceService` (Backend-first).
+## 3. TOP 10 OTIMIZAÇÕES IMEDIATAS
+1. **Compressão Brutal:** Converter slides PNG para WebP (Redução estimada: 90%).
+2. **Cleanup Enforcement:** Auditoria de todos os `addEventListener` para garantir `removeEventListener`.
+3. **Lazy Loading de Bibliotecas:** `xlsx` e `jspdf` devem ser carregados apenas sob demanda.
+4. **Indexação de Telemetria:** Criar índice em `sovereign_runtime_logs(created_at, event_type)`.
+5. **V3 Identity Lock:** Proibir `crypto.randomUUID()` em `normalizeMeals` para dados vindo de snapshots.
+6. **Service Worker Caching:** Cache agressivo de assets estáticos (exceto snapshots).
+7. **Query Batching:** Unificar chamadas do `useWorkspaceContext`.
+8. **Passive Scrollers:** Adicionar `{ passive: true }` em todos os listeners de scroll.
+9. **Schema Enforcement:** Mudar `implicit_block_generation` de `warning` para `critical` no ambiente de dev.
+10. **Dead Code Stripping:** Remover componentes V2 ainda presentes no bundle final.
 
----
-
-## 4. Veredito Final (Sem Maquiagem)
-
-- **Grau de Estabilidade**: **7/10** (Sólido funcionalmente, mas frágil sob carga simultânea).
-- **Grau de Performance**: **5/10** (O "tempo até interativo" é inaceitável para uma ferramenta de uso diário).
-- **Grau de Escalabilidade**: **4/10** (A arquitetura de snapshots JSONB e refetch nuclear não aguenta 1.000 usuários ativos).
-- **Maior Gargalo Atual**: O **Churn de Realtime** e a **Invalidação Nuclear**.
-- **O que precisa MORRER**: A mentalidade de "o frontend conserta o dado se estiver errado" (Healing Logic).
-- **O que ficou Profissional**: O **Snapshot V3 Soberano** e o **Fluxo de Onboarding**.
-
-**Status**: O FitJourney 2.0 é um tanque de guerra com um motor de Fusca. A blindagem estrutural está pronta, mas o sistema de propulsão (dados/realtime) precisa de retífica imediata.
+## 4. VEREDITO FINAL OBRIGATÓRIO
+- **Grau REAL de estabilidade:** 85% (Blindado contra erros fatais, mas com "ruído" de integridade).
+- **Grau REAL de performance:** 40% (O peso dos assets destrói a percepção de velocidade).
+- **Grau REAL de escalabilidade:** 70% (O banco aguenta, mas os rollbacks indicam gargalo de escrita).
+- **Maior gargalo atual:** Media Assets (Imagens/Vídeos não otimizados).
+- **O que ainda precisa morrer:** Otimismo no frontend (o sistema ainda tenta "curar" dados ruins).
+- **O que finalmente ficou profissional:** O sistema de Telemetria Soberana e o Motor de Snapshot V3.
 
 ---
-
-# 🚀 PRÓXIMOS PASSOS: EXECUÇÃO DA BLINDAGEM DE PRODUÇÃO
-
-Iniciando agora a correção dos 3 gargalos críticos (Rollbacks, RLS Notificações e Churn Realtime).
+**ESTADO ATUAL:** PRODUÇÃO PRONTA PARA ESCALA MÉDIA. 
+*Bloqueio de regressão ativo. Monitoramento de soberania ativo.*

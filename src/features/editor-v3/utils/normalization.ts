@@ -289,6 +289,17 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
       );
       
       const existingBlockId = (item as any).blockId || (item as any).substitution_group_id;
+      
+      if (!existingBlockId) {
+        SovereignTelemetry.log({
+          runtime_source: 'normalizeMeals',
+          event_type: 'implicit_block_generation',
+          severity: 'warning',
+          message: `Gerando blockId implícito para "${item.name}". Possível perda de hierarquia no Snapshot.`,
+          metadata: { item_name: item.name }
+        });
+      }
+
       const generatedBlockId = existingBlockId || crypto.randomUUID();
 
       return {
