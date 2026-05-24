@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
-import slide1 from "@/assets/onboarding-paciente/slide-1.png";
-import slide2 from "@/assets/onboarding-paciente/slide-2.png";
+import slide1 from "@/assets/onboarding-paciente/slide-1.webp";
+import slide2 from "@/assets/onboarding-paciente/slide-2.webp";
 // slides 3-10 removidos (fase 1 soberana: onboarding = 2 slides de intro)
 
 interface SlideData {
