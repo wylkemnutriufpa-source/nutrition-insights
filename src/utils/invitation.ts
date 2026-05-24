@@ -36,10 +36,17 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
   
   const query = params.toString();
   if (code) {
+    // 🛡️ SOBERANIA: Adicionamos skip_slides=true para garantir que o paciente 
+    // vá direto para a anamnese após o cadastro, reduzindo a fricção inicial.
+    params.set("skip_slides", "true");
+    const query = params.toString();
+    
     // Rota visual completa (msg bonita)
-    return `${origin}/convite/${code}`;
+    return `${origin}/convite/${code}?${query}`;
   }
   
+  params.set("skip_slides", "true");
+  const query = params.toString();
   return `${origin}/cadastro${query ? `?${query}` : ""}`;
 };
 
