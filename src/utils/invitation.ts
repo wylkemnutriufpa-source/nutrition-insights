@@ -13,7 +13,7 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
   const message = `[invitation:guard] URL não-canônica detectada (${url}). Forçando /cadastro?code=...`;
   console.warn(message);
   
-  return `${PRODUCTION_URL}/cadastro?code=${encodeURIComponent(code)}`;
+  return `${PRODUCTION_URL}/cadastro?code=${encodeURIComponent(code)}&skip_slides=true`;
 };
 
 /**
@@ -33,20 +33,16 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
   const params = new URLSearchParams();
   if (code) params.set("code", code);
   if (nutriId) params.set("nutri", nutriId);
+  // 🛡️ SOBERANIA: Adicionamos skip_slides=true para garantir que o paciente 
+  // vá direto para a anamnese após o cadastro, reduzindo a fricção inicial.
+  params.set("skip_slides", "true");
   
   const query = params.toString();
   if (code) {
-    // 🛡️ SOBERANIA: Adicionamos skip_slides=true para garantir que o paciente 
-    // vá direto para a anamnese após o cadastro, reduzindo a fricção inicial.
-    params.set("skip_slides", "true");
-    const query = params.toString();
-    
     // Rota visual completa (msg bonita)
     return `${origin}/convite/${code}?${query}`;
   }
   
-  params.set("skip_slides", "true");
-  const query = params.toString();
   return `${origin}/cadastro${query ? `?${query}` : ""}`;
 };
 
@@ -58,7 +54,7 @@ export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
     (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
   
   const origin = (forceProduction && !isPreview) ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
-  return `${origin}/quick-link/${nutriId}`;
+  return `${origin}/quick-link/${nutriId}?skip_slides=true`;
 };
 
 /**
@@ -69,7 +65,7 @@ export const getOnboardingUrl = (forceProduction = false) => {
     (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
   
   const origin = (forceProduction && !isPreview) ? PRODUCTION_URL : (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL);
-  return `${origin}/onboarding`;
+  return `${origin}/onboarding?skip_slides=true`;
 };
 
 
