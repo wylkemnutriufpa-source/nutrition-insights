@@ -144,6 +144,8 @@ export function RootRouter() {
 
     // 3. Estados iniciais do Onboarding
     if (!pState || pState === "onboarding_slides") {
+      const skipSlides = localStorage.getItem("fitjourney_skip_slides") === "true" || searchParams.get("skip_slides") === "true";
+      if (skipSlides) return <Navigate to="/anamnesis" replace />;
       return <Navigate to="/onboarding/paciente" replace />;
     }
     
