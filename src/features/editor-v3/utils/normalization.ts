@@ -294,7 +294,7 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
         SovereignTelemetry.log({
           runtime_source: 'normalizeMeals',
           event_type: 'implicit_block_generation',
-          severity: 'warning',
+          severity: 'critical',
           message: `Gerando blockId implícito para "${item.name}". Possível perda de hierarquia no Snapshot.`,
           metadata: { item_name: item.name }
         });
