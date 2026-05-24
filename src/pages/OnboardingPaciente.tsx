@@ -50,6 +50,15 @@ export default function OnboardingPaciente() {
       navigate("/anamnesis", { replace: true });
     }
   }, [profile?.patient_state, navigate]);
+  
+  // 🛡️ SOBERANIA: Se skip_slides estiver ativo, movemos para anamnese imediatamente
+  useEffect(() => {
+    const skipSlides = localStorage.getItem("fitjourney_skip_slides") === "true" || new URLSearchParams(window.location.search).get('skip_slides') === 'true';
+    if (skipSlides && profile?.patient_state !== 'active_plan') {
+      console.log("[FJ:Onboarding] skip_slides detectado, pulando introdução...");
+      navigate("/anamnesis", { replace: true });
+    }
+  }, [profile?.patient_state, navigate]);
 
   // Hardening: Não decidimos rota aqui. Apenas limpamos a flag de teste.
   // SystemStateGuard observa journeyStatus e redireciona automaticamente
