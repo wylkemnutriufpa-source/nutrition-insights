@@ -71,8 +71,12 @@ export default function ConsentRequired() {
       await queryClient.invalidateQueries({ queryKey: ["clinical-consent"] });
       await queryClient.invalidateQueries({ queryKey: ["payment-guard"] });
       toast.success("Consentimento registrado com sucesso!");
-      // Não chamamos navigate(): SystemStateGuard observa hasConsent + journey_status
-      // e move o paciente para a próxima etapa automaticamente.
+      
+      // 🛡️ SOBERANIA: Forçamos o retorno ao RootRouter para re-orquestração imediata
+      // Isso evita que o paciente fique "preso" na tela de consentimento esperando o query invalidation.
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 500);
 
     } catch (err) {
       console.error("Consent error:", err);
