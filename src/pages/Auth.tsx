@@ -66,11 +66,15 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
       localStorage.setItem("fitjourney_ref", refCode);
       localStorage.setItem("fitjourney_ref_at", new Date().toISOString());
     }
+    const skipSlides = searchParams.get("skip_slides");
     if (invitationCode) {
       localStorage.setItem("fitjourney_invite_code", invitationCode);
     }
     if (nutriId) {
       localStorage.setItem("fitjourney_nutri_id", nutriId);
+    }
+    if (skipSlides === "true") {
+      localStorage.setItem("fitjourney_skip_slides", "true");
     }
   }, [searchParams]);
 
