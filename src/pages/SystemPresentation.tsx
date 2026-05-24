@@ -16,27 +16,27 @@ import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-import slide1 from "@/assets/onboarding/slide-1.png";
-import slide2 from "@/assets/onboarding/slide-2.png";
-import slide3 from "@/assets/onboarding/slide-3.png";
-import slide4 from "@/assets/onboarding/slide-4.png";
-import slide5 from "@/assets/onboarding/slide-5.png";
-import slide6 from "@/assets/onboarding/slide-6.png";
-import slide7 from "@/assets/onboarding/slide-7.png";
-import slide8 from "@/assets/onboarding/slide-8.png";
-import slide9 from "@/assets/onboarding/slide-9.png";
-import slide10 from "@/assets/onboarding/slide-10.png";
+import slide1 from "@/assets/onboarding/slide-1.webp";
+import slide2 from "@/assets/onboarding/slide-2.webp";
+import slide3 from "@/assets/onboarding/slide-3.webp";
+import slide4 from "@/assets/onboarding/slide-4.webp";
+import slide5 from "@/assets/onboarding/slide-5.webp";
+import slide6 from "@/assets/onboarding/slide-6.webp";
+import slide7 from "@/assets/onboarding/slide-7.webp";
+import slide8 from "@/assets/onboarding/slide-8.webp";
+import slide9 from "@/assets/onboarding/slide-9.webp";
+import slide10 from "@/assets/onboarding/slide-10.webp";
 
-import pSlide1 from "@/assets/onboarding-paciente/slide-1.png";
-import pSlide2 from "@/assets/onboarding-paciente/slide-2.png";
-import pSlide3 from "@/assets/onboarding-paciente/slide-3.png";
-import pSlide4 from "@/assets/onboarding-paciente/slide-4.png";
-import pSlide5 from "@/assets/onboarding-paciente/slide-5.png";
-import pSlide6 from "@/assets/onboarding-paciente/slide-6.png";
-import pSlide7 from "@/assets/onboarding-paciente/slide-7.png";
-import pSlide8 from "@/assets/onboarding-paciente/slide-8.png";
-import pSlide9 from "@/assets/onboarding-paciente/slide-9.png";
-import pSlide10 from "@/assets/onboarding-paciente/slide-10.png";
+import pSlide1 from "@/assets/onboarding-paciente/slide-1.webp";
+import pSlide2 from "@/assets/onboarding-paciente/slide-2.webp";
+import pSlide3 from "@/assets/onboarding-paciente/slide-3.webp";
+import pSlide4 from "@/assets/onboarding-paciente/slide-4.webp";
+import pSlide5 from "@/assets/onboarding-paciente/slide-5.webp";
+import pSlide6 from "@/assets/onboarding-paciente/slide-6.webp";
+import pSlide7 from "@/assets/onboarding-paciente/slide-7.webp";
+import pSlide8 from "@/assets/onboarding-paciente/slide-8.webp";
+import pSlide9 from "@/assets/onboarding-paciente/slide-9.webp";
+import pSlide10 from "@/assets/onboarding-paciente/slide-10.webp";
 
 const PRO_CINEMATIC_SLIDES: PresentationSlide[] = [
   { image_url: slide1, title: "A evolução da Nutrição Clínica Inteligente", subtitle: "Tecnologia que transforma consultórios", description: "O FitJourney une dados, metabolismo e estratégia em uma plataforma única — para que você tome decisões clínicas com confiança absoluta." },
