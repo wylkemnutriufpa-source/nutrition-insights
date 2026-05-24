@@ -335,7 +335,13 @@ export default function OnboardingPipeline() {
       logAudit("consent_accepted", "clinical_consents", user.id, { version: TERMS_VERSION });
 
       await queryClient.invalidateQueries({ queryKey: ["clinical-consent"] });
-      toast.success("Consentimento registrado! Vamos continuar.");
+      localStorage.setItem("fitjourney_skip_slides", "true");
+      toast.success("Consentimento registrado! Vamos para a avaliação.");
+      
+      // 🛡️ Redirecionamento obrigatório para Anamnese
+      setTimeout(() => {
+        navigate("/anamnesis", { replace: true });
+      }, 500);
     } catch (err) {
       console.error("Consent error:", err);
       toast.error("Erro ao registrar consentimento. Tente novamente.");
