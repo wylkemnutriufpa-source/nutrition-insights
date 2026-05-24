@@ -22954,6 +22954,7 @@ export type Database = {
         Returns: boolean
       }
       is_personal: { Args: { _user_id: string }; Returns: boolean }
+      is_professional_user: { Args: { _user_id: string }; Returns: boolean }
       is_program_owner: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
