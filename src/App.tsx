@@ -5,8 +5,8 @@
  * NÃO ALTERAR SEM APROVAÇÃO EXPLÍCITA DE GOVERNANÇA
  * ══════════════════════════════════════════════════════════════════════════
  */
-import React, { useState, useEffect, Suspense } from 'react';
-import { PrescriptionDashboard } from './modules/FitJourney2/components/PrescriptionDashboard';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+const PrescriptionDashboard = lazy(() => import('./modules/FitJourney2/components/PrescriptionDashboard').then(m => ({ default: m.PrescriptionDashboard })));
 import { AppRoutes } from './routes/AppRoutes';
 import PageLoader from './components/common/PageLoader';
 import { motion, AnimatePresence } from 'framer-motion';
