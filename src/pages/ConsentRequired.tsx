@@ -44,6 +44,16 @@ export default function ConsentRequired() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
+
+  // 🛡️ SOBERANIA: Se o paciente já deu consentimento, não deve estar nesta tela.
+  // Redirecionamos imediatamente para a anamnese.
+  useEffect(() => {
+    if (hasConsent && !consentLoading) {
+      console.log("[FJ:Consent] Consentimento já detectado, redirecionando para anamnese...");
+      navigate("/anamnesis", { replace: true });
+    }
+  }, [hasConsent, consentLoading, navigate]);
 
   const handleAccept = async () => {
     if (!accepted || !user) return;
