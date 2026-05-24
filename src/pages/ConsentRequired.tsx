@@ -2,7 +2,7 @@
  * FitJourney — Clinical Data Consent Page (LGPD)
  * Full-page trust-building experience for clinical consent.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Lock, Eye, FileText, Brain, CheckCircle2, ArrowRight } from "lucide-react";
@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/auth";
 import { logAudit } from "@/lib/auditLog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { TERMS_VERSION } from "@/hooks/useConsentGuard";
+import { TERMS_VERSION, useConsentGuard } from "@/hooks/useConsentGuard";
 
 const CONSENT_SECTIONS = [
   {
@@ -44,6 +44,16 @@ export default function ConsentRequired() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
+
+  // 🛡️ SOBERANIA: Se o paciente já deu consentimento, não deve estar nesta tela.
+  // Redirecionamos imediatamente para a anamnese.
+  useEffect(() => {
+    if (hasConsent && !consentLoading) {
+      console.log("[FJ:Consent] Consentimento já detectado, redirecionando para anamnese...");
+      navigate("/anamnesis", { replace: true });
+    }
+  }, [hasConsent, consentLoading, navigate]);
 
   const handleAccept = async () => {
     if (!accepted || !user) return;
@@ -61,8 +71,18 @@ export default function ConsentRequired() {
 
       if (error) throw error;
 
-      // Advance lifecycle: consent accepted → onboarding_active
+      // Advance lifecycle: consent accepted → anamnesis (skip slides for better UX)
       await supabase.rpc("accept_patient_consent" as any, { _patient_id: user.id });
+      
+      // 🛡️ SOBERANIA: Atualizamos o estado do paciente diretamente para 'anamnesis'
+      // Isso garante que mesmo sem localStorage, o servidor saiba que ele deve ir para a anamnese.
+      await supabase
+        .from("profiles")
+        .update({ 
+          patient_state: 'anamnesis',
+          onboarding_completed: false 
+        })
+        .eq("user_id", user.id);
 
       logAudit("consent_accepted", "clinical_consents", user.id, {
         version: TERMS_VERSION,
@@ -72,10 +92,12 @@ export default function ConsentRequired() {
       await queryClient.invalidateQueries({ queryKey: ["payment-guard"] });
       toast.success("Consentimento registrado com sucesso!");
       
-      // 🛡️ SOBERANIA: Forçamos o retorno ao RootRouter para re-orquestração imediata
-      // Isso evita que o paciente fique "preso" na tela de consentimento esperando o query invalidation.
+      // 🛡️ SOBERANIA: Forçamos o redirecionamento direto para a Anamnese
+      // Definimos o skip_slides para garantir que o paciente não veja a intro novamente
+      localStorage.setItem("fitjourney_skip_slides", "true");
+      
       setTimeout(() => {
-        navigate("/", { replace: true });
+        navigate("/anamnesis", { replace: true });
       }, 500);
 
     } catch (err) {
