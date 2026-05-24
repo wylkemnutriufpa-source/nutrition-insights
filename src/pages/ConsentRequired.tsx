@@ -72,10 +72,12 @@ export default function ConsentRequired() {
       await queryClient.invalidateQueries({ queryKey: ["payment-guard"] });
       toast.success("Consentimento registrado com sucesso!");
       
-      // 🛡️ SOBERANIA: Forçamos o retorno ao RootRouter para re-orquestração imediata
-      // Isso evita que o paciente fique "preso" na tela de consentimento esperando o query invalidation.
+      // 🛡️ SOBERANIA: Forçamos o redirecionamento direto para a Anamnese
+      // Definimos o skip_slides para garantir que o paciente não veja a intro novamente
+      localStorage.setItem("fitjourney_skip_slides", "true");
+      
       setTimeout(() => {
-        navigate("/", { replace: true });
+        navigate("/anamnesis", { replace: true });
       }, 500);
 
     } catch (err) {
