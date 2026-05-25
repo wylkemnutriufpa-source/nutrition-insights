@@ -1,40 +1,17 @@
-# Plano de Consolidação Soberana V3
+I identified that the linkage failure occurred because the `RootRouter` was only handling invitations with a code, ignoring direct professional links (e.g., `/cadastro?nutri=UUID`) when a user chooses to sign up or log in via Google/Social Login.
 
-Este plano estabelece a base para a transição definitiva para o motor V3, priorizando a estabilidade clínica e a segurança operacional conforme as "Regras Absolutas".
+### 1. Manual Fix for Maria Idayane
+I will manually link the patient **Maria Idayane Fonseca da Silva** (ID: `4d56ca07-30ad-4249-9c42-c0ac339254b3`) to the professional **Wylkem Kleyton Raiol de Oliveira** (ID: `67f47696-a778-4ada-9ff9-9615fb7a7c48`) to restore her access immediately.
 
-## 1. Matriz de Segurança Operacional
-Criação do arquivo `src/ENGINE_SECURITY_MATRIX.md` para mapear criticidade, riscos e dependências de todos os módulos do core clínico.
+### 2. Structural Fix in the Codebase
+- **Update `src/components/auth/RootRouter.tsx`**: Add logic to handle `fitjourney_nutri_id` from `localStorage`. If a patient logs in and has a pending nutritionist ID (and no current linkage), the system will automatically call `create_patient_canonical` to bind them.
+- **Update `src/pages/PatientRegister.tsx`**: Ensure that when a user is redirected to the login/auth page (common in social login flows), the `nutri` context is preserved in `localStorage` and correctly handled upon return.
+- **Audit `src/pages/Auth.tsx`**: Verify that social login doesn't clear the linkage context before the `RootRouter` can process it.
 
-## 2. Implementação do Modo Degradado Explícito
-Atualização das engines compartilhadas para eliminar fallbacks silenciosos.
-- **clinical-engine.ts**: Adição de metadados de `provenance` e `degraded_mode` quando heurísticas substituem cálculos determinísticos.
-- **weekly-composer**: Registro de logs de `provenance` na distribuição semanal.
+### 3. Verification
+- Test the new linkage logic by simulating a social login flow with a `nutri` parameter.
+- Ensure Maria Idayane's profile is no longer marked as `is_orphan`.
 
-## 3. Consolidação V3 - Fase 1 (App Bootstrap)
-Refatoração do `src/App.tsx` para remover o toggle manual de versões.
-- **Novo Fluxo**: Profissionais (Admin, Nutri, Personal) entram diretamente no `PrescriptionDashboard` (V2/V3).
-- **Compatibilidade**: Adição de um "Compatibility Adapter" que permite redirecionar para rotas do V1 (AppRoutes) apenas quando necessário, sem o switcher flutuante.
-- **Persistência**: Remoção do uso de `localStorage` para controle de versão, tornando o V3 a "verdade operacional" para profissionais.
-
-## 4. Auditoria e Logs
-Configuração de interceptores no `NutriCoreV3Adapter` para disparar alertas quando dados "contaminados" (V2 Legacy) forem consumidos.
-
----
-
-## Detalhes Técnicos
-
-### Modo Degradado (Exemplo de Implementação)
-```typescript
-if (fallbackUsed) {
-  result.metadata.provenance = "heuristic_fallback";
-  result.metadata.degraded = true;
-  console.warn(`[CLINICAL_DEGRADED] ${context}`);
-}
-```
-
-### Matriz de Segurança (Estrutura)
-| Módulo | Criticidade | Risco | Status |
-| :--- | :--- | :--- | :--- |
-| clinical-engine | CRÍTICA | ALTO | Operacional V3 |
-| WeeklyComposer | CRÍTICA | ALTO | Operacional V3 |
-| ... | ... | ... | ... |
+Technical Details:
+- The `create_patient_canonical` RPC will be used to ensure all related records (tenant, roles, nutritionist-patient link) are created correctly and atomically.
+- Added logs to `RootRouter` to track these automatic linkages in production.
