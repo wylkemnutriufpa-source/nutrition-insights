@@ -58,24 +58,44 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
 
   // Capture referral data from URL and persist to localStorage
   useEffect(() => {
+    // CAPTURA DETERMINÍSTICA: Verificamos parâmetros diretos E parâmetros dentro do 'next'
     const refCode = searchParams.get("ref");
     const invitationCode = searchParams.get("code");
     const nutriId = searchParams.get("nutri");
+    const skipSlides = searchParams.get("skip_slides");
+
+    // Se vier de um redirect com 'next', tentamos extrair os parâmetros de lá também
+    const nextPath = searchParams.get("next");
+    let nextParams: URLSearchParams | null = null;
+    if (nextPath && nextPath.includes("?")) {
+      try {
+        const queryPart = nextPath.split("?")[1];
+        nextParams = new URLSearchParams(queryPart);
+      } catch (e) {
+        console.error("[Auth] Erro ao parsear parâmetros do 'next':", e);
+      }
+    }
+
+    const finalRef = refCode || nextParams?.get("ref");
+    const finalCode = invitationCode || nextParams?.get("code");
+    const finalNutri = nutriId || nextParams?.get("nutri");
+    const finalSkip = skipSlides === "true" || nextParams?.get("skip_slides") === "true";
     
-    if (refCode) {
-      localStorage.setItem("fitjourney_ref", refCode);
+    if (finalRef) {
+      localStorage.setItem("fitjourney_ref", finalRef);
       localStorage.setItem("fitjourney_ref_at", new Date().toISOString());
     }
-    const skipSlides = searchParams.get("skip_slides");
-    if (invitationCode) {
-      localStorage.setItem("fitjourney_invite_code", invitationCode);
+    if (finalCode) {
+      localStorage.setItem("fitjourney_invite_code", finalCode);
     }
-    if (nutriId) {
-      localStorage.setItem("fitjourney_nutri_id", nutriId);
+    if (finalNutri) {
+      localStorage.setItem("fitjourney_nutri_id", finalNutri);
     }
-    if (skipSlides === "true") {
+    if (finalSkip) {
       localStorage.setItem("fitjourney_skip_slides", "true");
     }
+    
+    console.log(`[Auth] Contexto capturado: nutri=${finalNutri}, code=${finalCode}, ref=${finalRef}`);
   }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
