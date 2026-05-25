@@ -1,22 +1,40 @@
-I will refactor the FitJourney 2.0 template engine to ensure that all Premium templates are delivered as fully structured, professional nutritional plans, avoiding the "closed block" issue reported.
+# Plano de Consolidação Soberana V3
 
-### 1. Database Reconstruction
-I will replace the existing placeholder templates in `v3_diet_templates` with real, clinical-grade data.
-- **Granular Items**: Instead of "Rice + Beans + Chicken", each meal will contain individual items with specific grammages (e.g., 150g Rice, 100g Beans, 120g Chicken).
-- **Real Metrics**: Each item will have its own calories, protein, carbs, and fat calculated based on its weight.
-- **Smart Substitutions**: Every item in the template will come with a pre-configured list of compatible equivalents (e.g., Rice can be substituted for Potato or Pasta with equivalent macros).
-- **High-Quality Visuals**: I will link each item to the actual images from the `meal_visual_library`.
+Este plano estabelece a base para a transição definitiva para o motor V3, priorizando a estabilidade clínica e a segurança operacional conforme as "Regras Absolutas".
 
-### 2. Template Catalog
-I will build three core "Sovereign" protocols:
-- **Emagrecimento Feminino (1500 kcal)**: Focused on satiety and volume.
-- **Hipertrofia Masculina (2800 kcal)**: Focused on high protein and energy density.
-- **Low Carb Performance (1800 kcal)**: Focused on metabolic flexibility.
+## 1. Matriz de Segurança Operacional
+Criação do arquivo `src/ENGINE_SECURITY_MATRIX.md` para mapear criticidade, riscos e dependências de todos os módulos do core clínico.
 
-### 3. Engine Validation
-I will verify that the "plotter" in `EditorV3Page.tsx` correctly handles these multi-item snapshots, ensuring that when a nutritionist clicks "Plotar Template", the patient receives a perfectly structured plan with all weights and household measures visible.
+## 2. Implementação do Modo Degradado Explícito
+Atualização das engines compartilhadas para eliminar fallbacks silenciosos.
+- **clinical-engine.ts**: Adição de metadados de `provenance` e `degraded_mode` quando heurísticas substituem cálculos determinísticos.
+- **weekly-composer**: Registro de logs de `provenance` na distribuição semanal.
 
-### Technical Details
-- Table affected: `v3_diet_templates`.
-- Data format: `plan_snapshot` JSONB will be populated with a full `Meal[]` structure.
-- Logic: Ensuring `clinical_mass_g` is present in all template items to avoid the "1g fallback" bug.
+## 3. Consolidação V3 - Fase 1 (App Bootstrap)
+Refatoração do `src/App.tsx` para remover o toggle manual de versões.
+- **Novo Fluxo**: Profissionais (Admin, Nutri, Personal) entram diretamente no `PrescriptionDashboard` (V2/V3).
+- **Compatibilidade**: Adição de um "Compatibility Adapter" que permite redirecionar para rotas do V1 (AppRoutes) apenas quando necessário, sem o switcher flutuante.
+- **Persistência**: Remoção do uso de `localStorage` para controle de versão, tornando o V3 a "verdade operacional" para profissionais.
+
+## 4. Auditoria e Logs
+Configuração de interceptores no `NutriCoreV3Adapter` para disparar alertas quando dados "contaminados" (V2 Legacy) forem consumidos.
+
+---
+
+## Detalhes Técnicos
+
+### Modo Degradado (Exemplo de Implementação)
+```typescript
+if (fallbackUsed) {
+  result.metadata.provenance = "heuristic_fallback";
+  result.metadata.degraded = true;
+  console.warn(`[CLINICAL_DEGRADED] ${context}`);
+}
+```
+
+### Matriz de Segurança (Estrutura)
+| Módulo | Criticidade | Risco | Status |
+| :--- | :--- | :--- | :--- |
+| clinical-engine | CRÍTICA | ALTO | Operacional V3 |
+| WeeklyComposer | CRÍTICA | ALTO | Operacional V3 |
+| ... | ... | ... | ... |

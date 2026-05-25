@@ -29,6 +29,11 @@ export interface ClinicalPlan {
   engine_version: string;
   protocol_used: string;
   plan_version: string;
+  provenance: {
+    source: "clinical_engine_v3" | "heuristic_fallback" | "degraded_mode";
+    timestamp: string;
+    integrity_hash?: string;
+  };
   metrics: {
     tmb: number;
     tdee: number;
@@ -90,10 +95,16 @@ export class ClinicalEngine {
       throw new Error(`CLINICAL_ABORT: Macro distribution violation (Kcal: ${targetKcal}, P: ${macros.protein}g)`);
     }
 
+    const isDegraded = targetKcal < 1200 || macros.protein < 50;
+
     return {
       engine_version: this.VERSION,
       protocol_used: strategyId,
       plan_version: "1.0.0",
+      provenance: {
+        source: isDegraded ? "degraded_mode" : "clinical_engine_v3",
+        timestamp: new Date().toISOString(),
+      },
       metrics: {
         tmb,
         tdee,
