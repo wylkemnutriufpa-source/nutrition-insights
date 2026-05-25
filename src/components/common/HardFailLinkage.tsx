@@ -1,17 +1,20 @@
-import { AlertTriangle, LogOut, MessageCircle, Info, Copy, Check } from "lucide-react";
+import { AlertTriangle, LogOut, MessageCircle, Info, Copy, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { logAudit, getSessionCorrelationId } from "@/lib/auditLog";
 import { SupportModal } from "./SupportModal";
 import { useTenant } from "@/lib/tenantContext";
 
 export function HardFailLinkage() {
-  const { signOut, user } = useAuth();
+  const { signOut, user, refreshProfile } = useAuth();
   const { tenantId } = useTenant();
   const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const correlationId = getSessionCorrelationId();
+
+  const hasPendingContext = localStorage.getItem("fitjourney_invite_code") || localStorage.getItem("fitjourney_nutri_id");
 
   useEffect(() => {
     // Critical audit log for linkage failure
@@ -22,14 +25,32 @@ export function HardFailLinkage() {
       { 
         reason: tenantId ? "inconsistent_linkage" : "missing_tenant",
         path: window.location.pathname,
-        isOrphan: true
+        isOrphan: true,
+        hasPendingContext: !!hasPendingContext
       },
       "error",
       correlationId
     );
     
     console.error(`[FJ:CRITICAL] Access blocked: Linkage failure. ID: ${correlationId}`);
-  }, [user?.id, tenantId, correlationId]);
+  }, [user?.id, tenantId, correlationId, hasPendingContext]);
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      toast.info("Tentando sincronizar seu perfil...");
+      await refreshProfile();
+      // If the profile was healed by a background trigger or another tab, 
+      // refreshing it might be enough to satisfy the check.
+      // We also force a slight delay to allow RootRouter to catch up if it's still running.
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      window.location.reload();
+    } catch (error) {
+      toast.error("Ainda não conseguimos sincronizar. Fale com seu profissional.");
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[200] bg-background/98 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-500">
@@ -45,10 +66,12 @@ export function HardFailLinkage() {
           
           <div className="space-y-4">
             <h2 className="text-3xl font-black tracking-tight text-foreground">
-              Erro ao vincular sua conta ao profissional
+              {hasPendingContext ? "Vínculo em processamento" : "Erro ao vincular conta"}
             </h2>
             <p className="text-muted-foreground text-base leading-relaxed">
-              Detectamos uma inconsistência crítica no seu perfil. Por segurança, o acesso foi temporariamente bloqueado para evitar corrupção de dados.
+              {hasPendingContext 
+                ? "Estamos finalizando a conexão com seu profissional. Se demorar, tente o botão de sincronizar abaixo."
+                : "Detectamos uma inconsistência no seu perfil (Órfão). Por segurança, o acesso foi bloqueado até que você seja vinculado a um profissional."}
             </p>
           </div>
 
@@ -60,11 +83,11 @@ export function HardFailLinkage() {
             <ul className="space-y-3 text-sm text-foreground/80 font-medium">
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-xl bg-background border flex items-center justify-center text-[10px] font-bold shadow-sm">1</span>
-                <span>Fale com seu nutricionista para validar seu cadastro.</span>
+                <span>Tente o botão <strong>Sincronizar Perfil</strong> abaixo.</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-xl bg-background border flex items-center justify-center text-[10px] font-bold shadow-sm">2</span>
-                <span>Informe o ID do erro abaixo ao suporte se persistir.</span>
+                <span>Se persistir, clique no link de convite enviado pelo seu nutricionista novamente.</span>
               </li>
             </ul>
           </div>
@@ -72,10 +95,20 @@ export function HardFailLinkage() {
           <div className="mt-8 grid grid-cols-1 gap-3">
             <Button 
               className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-3 shadow-lg shadow-primary/20"
+              onClick={handleRetry}
+              disabled={isRetrying}
+            >
+              <RefreshCw className={`h-5 w-5 ${isRetrying ? "animate-spin" : ""}`} />
+              {isRetrying ? "Sincronizando..." : "Sincronizar Perfil"}
+            </Button>
+
+            <Button 
+              variant="outline"
+              className="h-12 rounded-2xl font-bold gap-3"
               onClick={() => setIsSupportOpen(true)}
             >
-              <MessageCircle className="h-5 h-5" />
-              Falar com suporte
+              <MessageCircle className="h-5 w-5" />
+              Suporte Técnico
             </Button>
             
             <Button 
