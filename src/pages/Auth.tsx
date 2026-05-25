@@ -173,11 +173,25 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const handleSocialLogin = async (provider: "google" | "apple") => {
     setSocialLoading(provider);
     try {
+      // 🛡️ SOBERANIA DE CONTEXTO: Antes de iniciar o OAuth, garantimos que qualquer parâmetro de 
+      // vínculo (nutri ou code) na URL seja persistido para que o RootRouter os recupere.
+      const nutriId = searchParams.get("nutri");
+      const invitationCode = searchParams.get("code");
+      const skipSlides = searchParams.get("skip_slides");
+
+      if (nutriId) localStorage.setItem("fitjourney_nutri_id", nutriId);
+      if (invitationCode) localStorage.setItem("fitjourney_invite_code", invitationCode);
+      if (skipSlides === "true") localStorage.setItem("fitjourney_skip_slides", "true");
+
       // Salvar intenção de role para o fluxo pós-login (Google/Apple)
       if (selectedRole) {
         localStorage.setItem("fj_selected_role", selectedRole);
         localStorage.setItem("fj_invited", "true");
         localStorage.setItem("fj_user_type", selectedRole);
+      } else if (nutriId || invitationCode) {
+        // Se temos parâmetros de vínculo, assumimos que é um paciente sendo convidado
+        localStorage.setItem("fj_selected_role", "patient");
+        localStorage.setItem("fj_user_type", "patient");
       }
 
       const result = await lovable.auth.signInWithOAuth(provider, {

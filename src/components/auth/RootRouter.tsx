@@ -12,9 +12,9 @@ export function RootRouter() {
   const nextPath = searchParams.get("next");
   const [error, setError] = useState<string | null>(null);
 
-  // Define if we should block navigation for invitation processing
+  // Define if we should block navigation for invitation/direct linkage processing
   const [processingInvite, setProcessingInvite] = useState(() => {
-    return !!localStorage.getItem("fitjourney_invite_code");
+    return !!localStorage.getItem("fitjourney_invite_code") || !!localStorage.getItem("fitjourney_nutri_id");
   });
 
   // 1. Trace boot sequence
@@ -24,42 +24,80 @@ export function RootRouter() {
 
 
   useEffect(() => {
-    async function processInvite() {
+    async function processContext() {
+      // Se não estamos processando convite, ou não temos usuário logado, ou já processamos roles e não é paciente
       if (!processingInvite || !user?.id || !roles || !roles.includes("patient")) {
-        if (!processingInvite || (roles && !roles.includes("patient")) || authStatus === "unauthenticated") {
+        // Safety switch: se roles existem e não é paciente, não temos o que vincular aqui
+        if (roles && !roles.includes("patient")) {
+          localStorage.removeItem("fitjourney_invite_code");
+          localStorage.removeItem("fitjourney_nutri_id");
           setProcessingInvite(false);
         }
         return;
       }
 
       const pendingCode = localStorage.getItem("fitjourney_invite_code");
-      if (!pendingCode) {
+      const pendingNutriId = localStorage.getItem("fitjourney_nutri_id");
+
+      if (!pendingCode && !pendingNutriId) {
         setProcessingInvite(false);
         return;
       }
 
-      console.log("[RootRouter] Processando convite pendente:", pendingCode);
       try {
-        const { data } = await supabase.rpc("complete_invitation" as any, {
-          _code: pendingCode,
-          _patient_user_id: user.id,
-        });
+        if (pendingCode) {
+          console.log("[RootRouter] Processando convite pendente:", pendingCode);
+          const { data } = await supabase.rpc("complete_invitation" as any, {
+            _code: pendingCode,
+            _patient_user_id: user.id,
+          });
 
-        if (data) {
-          console.log("[RootRouter] Convite vinculado com sucesso!");
-          localStorage.removeItem("fitjourney_invite_code");
-          await refreshProfile();
+          if (data) {
+            console.log("[RootRouter] Convite vinculado com sucesso!");
+            localStorage.removeItem("fitjourney_invite_code");
+          }
+        } else if (pendingNutriId) {
+          console.log("[RootRouter] Processando vínculo direto pendente:", pendingNutriId);
+          
+          // Verificamos se já existe vínculo para não duplicar chamadas
+          const { data: existingLink } = await supabase
+            .from("nutritionist_patients")
+            .select("id")
+            .eq("patient_id", user.id)
+            .eq("nutritionist_id", pendingNutriId)
+            .maybeSingle();
+
+          if (!existingLink) {
+            const { data: canonData, error: canonErr } = await supabase.rpc("create_patient_canonical" as any, {
+              _patient_id: user.id,
+              _full_name: profile?.full_name || user.email?.split("@")[0] || "Paciente",
+              _email: user.email,
+              _nutritionist_id: pendingNutriId,
+              _source: "social_login_recovery",
+              _metadata: { correlation_id: crypto.randomUUID() }
+            });
+
+            if (canonErr) throw canonErr;
+            console.log("[RootRouter] Vínculo direto realizado via create_patient_canonical!");
+          }
+          
+          localStorage.removeItem("fitjourney_nutri_id");
         }
+        
+        // Sempre atualiza o profile após um vínculo bem-sucedido
+        await refreshProfile();
       } catch (err) {
-        console.error("[RootRouter] Erro ao vincular convite pendente:", err);
+        console.error("[RootRouter] Erro ao vincular contexto pendente:", err);
+        // Em caso de erro persistente, limpamos para não travar o usuário no loader infinitamente
         localStorage.removeItem("fitjourney_invite_code");
+        localStorage.removeItem("fitjourney_nutri_id");
       } finally {
         setProcessingInvite(false);
       }
     }
     
-    processInvite();
-  }, [processingInvite, user?.id, roles, authStatus, refreshProfile]);
+    processContext();
+  }, [processingInvite, user?.id, roles, authStatus, refreshProfile, profile?.full_name, user?.email]);
 
   // Se tem erro, exibe o fallback
   if (error) {
