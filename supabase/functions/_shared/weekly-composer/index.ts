@@ -15,4 +15,14 @@ export {
   SlotPoolExhausted,
 } from "./composerErrors.ts";
 export { hashSeed, mulberry32, nextInt } from "./deterministicRng.ts";
+
+/**
+ * Weekly Composer Provenance Marker (Soberania V3)
+ */
+export const COMPOSER_PROVENANCE = {
+  engine: "weekly-composer-v3",
+  logic: "deterministic-rng-sequence",
+  clinical_guard: "macro-distribution-enforced"
+};
+
 export type * from "./types.ts";
