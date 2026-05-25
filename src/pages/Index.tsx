@@ -395,48 +395,10 @@ function NutritionistDashboardContent() {
     fetchCoreStats();
   }, [user?.id]);
 
-  if (internalLoading && patientCount === 0) return <DashboardSkeleton />;
-
-  const fetchAIInsights = async (patientData: any[]) => {
-    setAiLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("clinical-insights", {
-        body: { patients: patientData },
-      });
-      if (error) throw error;
-      if (data) {
-        setAiInsights(data.insights || []);
-        setAttentionPatients(data.attention_needed || []);
-        setAiSummary(data.summary || null);
-      }
-    } catch (err) {
-      const localInsights = generateLocalInsights(patientData);
-      setAiInsights(localInsights.insights);
-      setAttentionPatients(localInsights.attention);
-    }
-    setAiLoading(false);
-  };
-
-  // remove the original fetchDashboard call from here
-  // useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
-
-  const quickActions = [
-    { label: "Modo Consultório", icon: Stethoscope, to: "/in-office", color: "bg-primary/20 text-primary hover:bg-primary/30 shadow-md shadow-primary/5 border border-primary/20" },
-    { label: "Link Rápido", icon: Link2, to: "/settings", color: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20" },
-    { label: "Convidar Paciente", icon: UserPlus, to: "/invite-patient", color: "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20" },
-    { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary" },
-    { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-muted/50 text-muted-foreground hover:bg-info/10 hover:text-info" },
-  ];
-
-  const timelineEventIcons: Record<string, { icon: any; color: string }> = {
-    checkin: { icon: CheckCircle2, color: "text-success" },
-    program: { icon: Rocket, color: "text-accent" },
-    appointment: { icon: Calendar, color: "text-info" },
-    assessment: { icon: Activity, color: "text-primary" },
-    note: { icon: FileText, color: "text-muted-foreground" },
-  };
 
   const [activeTab, setActiveTab] = useState("clinical");
+
+  if (internalLoading && patientCount === 0) return <DashboardSkeleton />;
 
    return (
     <div className="space-y-6">
