@@ -25,36 +25,43 @@ export function RootRouter() {
 
   useEffect(() => {
     async function processContext() {
-      // Se não estamos processando convite, ou não temos usuário logado, ou já processamos roles e não é paciente
-      if (!processingInvite || !user?.id || !roles || !roles.includes("patient")) {
-        // Safety switch: se roles existem e não é paciente, não temos o que vincular aqui
-        if (roles && !roles.includes("patient")) {
-          localStorage.removeItem("fitjourney_invite_code");
-          localStorage.removeItem("fitjourney_nutri_id");
-          setProcessingInvite(false);
-        }
-        return;
-      }
+      // 🛡️ SOBERANIA: Se não temos usuário logado, não processamos nada.
+      if (!user?.id) return;
 
       const pendingCode = localStorage.getItem("fitjourney_invite_code");
       const pendingNutriId = localStorage.getItem("fitjourney_nutri_id");
+      const isOrphan = (profile as any)?.is_orphan;
 
-      if (!pendingCode && !pendingNutriId) {
+      // Se não temos nada pendente E não é órfão, podemos parar
+      if (!pendingCode && !pendingNutriId && !isOrphan) {
+        if (processingInvite) setProcessingInvite(false);
+        return;
+      }
+
+      // Se temos roles e NÃO é paciente, limpamos os pendentes (nutris não devem se auto-vincular aqui)
+      if (roles && !roles.includes("patient")) {
+        localStorage.removeItem("fitjourney_invite_code");
+        localStorage.removeItem("fitjourney_nutri_id");
         setProcessingInvite(false);
         return;
       }
 
       try {
+        let healed = false;
+
         if (pendingCode) {
           console.log("[RootRouter] Processando convite pendente:", pendingCode);
-          const { data } = await supabase.rpc("complete_invitation" as any, {
+          const { data, error: inviteErr } = await supabase.rpc("complete_invitation" as any, {
             _code: pendingCode,
             _patient_user_id: user.id,
           });
 
-          if (data) {
+          if (inviteErr) {
+            console.error("[RootRouter] Erro ao completar convite:", inviteErr);
+          } else if (data) {
             console.log("[RootRouter] Convite vinculado com sucesso!");
             localStorage.removeItem("fitjourney_invite_code");
+            healed = true;
           }
         } else if (pendingNutriId) {
           console.log("[RootRouter] Processando vínculo direto pendente:", pendingNutriId);
@@ -73,34 +80,41 @@ export function RootRouter() {
               _full_name: profile?.full_name || user.email?.split("@")[0] || "Paciente",
               _email: user.email,
               _nutritionist_id: pendingNutriId,
-              _source: "register",
+              _source: "social_login_auto_heal",
               _metadata: { 
                 correlation_id: crypto.randomUUID(),
-                link_type: "social_login_recovery"
+                link_type: "root_router_healing"
               }
             });
 
-            if (canonErr) throw canonErr;
-            console.log("[RootRouter] Vínculo direto realizado via create_patient_canonical!");
+            if (canonErr) {
+              console.error("[RootRouter] Erro no vínculo direto:", canonErr);
+            } else {
+              console.log("[RootRouter] Vínculo direto realizado com sucesso!");
+              healed = true;
+            }
           }
           
           localStorage.removeItem("fitjourney_nutri_id");
         }
         
-        // Sempre atualiza o profile após um vínculo bem-sucedido
-        await refreshProfile();
+        // Se houve cura ou se é órfão sem nada pendente (caso raro), forçamos refresh
+        if (healed || isOrphan) {
+          console.log("[RootRouter] Solicitando refresh de perfil pós-linkage...");
+          await refreshProfile();
+        }
       } catch (err) {
-        console.error("[RootRouter] Erro ao vincular contexto pendente:", err);
-        // Em caso de erro persistente, limpamos para não travar o usuário no loader infinitamente
-        localStorage.removeItem("fitjourney_invite_code");
-        localStorage.removeItem("fitjourney_nutri_id");
+        console.error("[RootRouter] Erro crítico no processamento de contexto:", err);
       } finally {
         setProcessingInvite(false);
       }
     }
     
-    processContext();
-  }, [processingInvite, user?.id, roles, authStatus, refreshProfile, profile?.full_name, user?.email]);
+    // Só processamos se o auth estiver resolvido
+    if (authStatus === "authenticated") {
+      processContext();
+    }
+  }, [authStatus, user?.id, roles, profile, refreshProfile]);
 
   // Se tem erro, exibe o fallback
   if (error) {
