@@ -22276,7 +22276,7 @@ export type Database = {
             Returns: Json
           }
       calculate_actual_patient_state: {
-        Args: { p_user_id: string }
+        Args: { p_profile_id: string }
         Returns: Database["public"]["Enums"]["patient_state_type"]
       }
       calculate_clinical_kcal_target: {

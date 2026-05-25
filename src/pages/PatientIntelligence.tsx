@@ -59,7 +59,7 @@ export default function PatientIntelligence() {
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const isEnabled = (profile as any)?.fit_intelligence_enabled === true;
-  const isOnboarded = (profile as any)?.fit_intelligence_onboarded === true;
+  const isOnboarded = (profile as any)?.onboarding_completed === true;
   const isPremiumPrestige = prestige.plan?.slug === "premium" || prestige.plan?.slug === "pro" || prestige.plan?.slug === "gold";
   const hasAccess = isEnabled || isPremiumPrestige; // Premium prestige = auto-access
 

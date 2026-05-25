@@ -102,7 +102,7 @@ export async function buildIntelligenceContext(
     patientId: userId,
     firstName: fullName?.split(" ")[0] || "você",
     enabled: profileData.fit_intelligence_enabled === true,
-    onboarded: profileData.fit_intelligence_onboarded === true,
+    onboarded: profileData.onboarding_completed === true,
     snoozedUntil: snoozedRaw ? new Date(snoozedRaw) : null,
     waterTarget,
     waterConsumed,
