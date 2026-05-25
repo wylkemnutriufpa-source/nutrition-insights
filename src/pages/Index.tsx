@@ -395,7 +395,6 @@ function NutritionistDashboardContent() {
     fetchCoreStats();
   }, [user?.id]);
 
-  if (internalLoading && patientCount === 0) return <DashboardSkeleton />;
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
@@ -417,9 +416,6 @@ function NutritionistDashboardContent() {
     setAiLoading(false);
   };
 
-  // remove the original fetchDashboard call from here
-  // useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
-
   const quickActions = [
     { label: "Modo Consultório", icon: Stethoscope, to: "/in-office", color: "bg-primary/20 text-primary hover:bg-primary/30 shadow-md shadow-primary/5 border border-primary/20" },
     { label: "Link Rápido", icon: Link2, to: "/settings", color: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20" },
@@ -437,6 +433,8 @@ function NutritionistDashboardContent() {
   };
 
   const [activeTab, setActiveTab] = useState("clinical");
+
+  if (internalLoading && patientCount === 0) return <DashboardSkeleton />;
 
    return (
     <div className="space-y-6">
