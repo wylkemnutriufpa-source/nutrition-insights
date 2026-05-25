@@ -74,15 +74,16 @@ test.describe("Comprehensive Patient Flow (Invite -> Signup -> Anamnesis)", () =
     // 4. Onboarding Pipeline & Anamnesis
     // Step 1: Consent
     await expect(page.getByText("Consentimento")).toBeVisible();
-    await page.locator('button:has-text("Aceito os termos e condições")').click();
+    // Click the checkbox or its label
+    await page.getByLabel(/Aceito os termos e condições/i).click();
     await page.click('button:has-text("Próximo")');
 
     // Step 2: Anamnesis (Interactive)
     await page.waitForURL(/\/anamnesis/);
     await expect(page.getByText("Qual é o seu objetivo principal?")).toBeVisible();
     
-    // Select "Emagrecer"
-    await page.click('text=Emagrecer');
+    // Select "Emagrecer" - using more specific selector for the orbital options
+    await page.getByText("Emagrecer", { exact: true }).first().click();
     await page.click('button:has-text("Próxima")');
 
     // Select "Feminino"
