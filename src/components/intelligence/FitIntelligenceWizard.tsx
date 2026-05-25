@@ -118,7 +118,7 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
       // Mark onboarded
       await supabase
         .from("profiles")
-        .update({ fit_intelligence_onboarded: true } as any)
+        .update({ onboarding_completed: true } as any)
         .eq("user_id", patientId);
 
       // Create initial hydration record for today
