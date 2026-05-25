@@ -33,16 +33,25 @@ export default function ClientDashboard() {
 
         {/* 🛡️ FASE 4: Banner leve de avaliação clínica (sem bloqueio, sem redirect forçado) */}
         <ClinicalAssessmentBanner />
+
         {/* Header de Boas-vindas Premium */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl font-display font-black tracking-tight bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
               Olá, {profile?.full_name?.split(' ')[0] || 'Campeão'}!
             </h1>
-            <p className="text-muted-foreground text-sm font-medium flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary fill-primary" />
-              Sua jornada soberana continua.
-            </p>
+            {!profile?.clinical_assessment_completed && (
+              <p className="text-amber-500 text-sm font-bold flex items-center gap-2 animate-pulse">
+                <ClipboardCheck className="w-4 h-4" />
+                Comece sua avaliação para personalizar seu plano.
+              </p>
+            )}
+            {profile?.clinical_assessment_completed && (
+              <p className="text-muted-foreground text-sm font-medium flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary fill-primary" />
+                Sua jornada soberana continua.
+              </p>
+            )}
           </div>
           
           <div className="flex items-center gap-3">
