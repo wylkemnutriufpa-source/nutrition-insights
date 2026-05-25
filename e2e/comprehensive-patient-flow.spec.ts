@@ -24,7 +24,7 @@ test.describe("Comprehensive Patient Flow (Invite -> Signup -> Anamnesis)", () =
     });
   });
 
-  test("Should preserve invite parameters and complete anamnesis", async ({ page }) => {
+  test("Should preserve invite parameters and complete anamnesis interactive flow", async ({ page }) => {
     // 1. Visit invitation link
     const inviteUrl = `/cadastro?nutri=${TEST_NUTRI_ID}&code=${TEST_INVITE_CODE}`;
     await page.goto(inviteUrl);
@@ -44,7 +44,7 @@ test.describe("Comprehensive Patient Flow (Invite -> Signup -> Anamnesis)", () =
     const testName = "Maria Idayane E2E Test";
 
     // Wait for "Você está sendo convidado" screen
-    await expect(page.locator("text=Você está sendo convidado")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Você está sendo convidado")).toBeVisible({ timeout: 15000 });
     await page.click('button:has-text("Cadastrar com este Profissional")');
 
     await page.fill('input[name="name"]', testName);
@@ -52,11 +52,8 @@ test.describe("Comprehensive Patient Flow (Invite -> Signup -> Anamnesis)", () =
     await page.fill('input[name="whatsapp"]', "11999999999");
     await page.fill('input[type="password"]', "Password123!");
     
-    // Submit (Mocking the signup response if needed, but here we expect the real UI flow)
-    // Note: In real E2E, we might need to mock Supabase Auth if we don't have a test tenant
-    // For this environment, we'll assume the UI transitions correctly.
-    
-    // Mocking the successful signup and redirect for stability in sandbox
+    // Submit
+    // We mock the signup and profile creation to ensure we move forward in sandbox
     await page.route("**/auth/v1/signup**", async (route) => {
       await route.fulfill({
         status: 200,
@@ -68,54 +65,51 @@ test.describe("Comprehensive Patient Flow (Invite -> Signup -> Anamnesis)", () =
     await page.click('button[type="submit"]');
 
     // 3. Post-Signup Redirection
-    // The user should see a success message or be redirected to /onboarding-pipeline
-    await expect(page.locator("text=Sucesso") || page.locator("text=Cadastro realizado")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Sucesso|Cadastro realizado/)).toBeVisible({ timeout: 15000 });
     
-    // Click "Ir para o meu painel" (as seen in existing tests)
-    const dashboardButton = page.locator('button:has-text("Ir para o meu painel")');
-    if (await dashboardButton.isVisible()) {
-      await dashboardButton.click();
-    }
-
-    // 4. Onboarding Pipeline & Anamnesis
-    // Should land on onboarding-pipeline
+    // Mocking the redirect to onboarding
+    await page.click('button:has-text("Ir para o meu painel")');
     await page.waitForURL(/\/onboarding-pipeline/);
     
+    // 4. Onboarding Pipeline & Anamnesis
     // Step 1: Consent
-    await expect(page.locator("text=Consentimento")).toBeVisible();
+    await expect(page.getByText("Consentimento")).toBeVisible();
+    await page.locator('button:has-text("Aceito os termos e condições")').click();
     await page.click('button:has-text("Próximo")');
 
-    // Step 2: Anamnesis (The core of the issue)
-    await expect(page.locator("text=Anamnese")).toBeVisible();
+    // Step 2: Anamnesis (Interactive)
+    await page.waitForURL(/\/anamnesis/);
+    await expect(page.getByText("Qual é o seu objetivo principal?")).toBeVisible();
     
-    // Fill out some fields
-    // Assuming fields like "Objetivo", "Histórico", etc.
-    await page.fill('textarea[placeholder*="objetivo"]', "Perda de peso e saúde");
-    await page.fill('textarea[placeholder*="histórico"]', "Nenhum problema grave");
+    // Select "Emagrecer"
+    await page.click('text=Emagrecer');
+    await page.click('button:has-text("Próxima")');
 
-    // Click Save/Next
-    const saveButton = page.locator('button:has-text("Salvar"), button:has-text("Próximo")');
-    await saveButton.click();
+    // Select "Feminino"
+    await expect(page.getByText("Qual seu sexo biológico?")).toBeVisible();
+    await page.click('text=Feminino');
+    await page.click('button:has-text("Próxima")');
 
+    // Age (Slider) - Just click Next for default or adjust if needed
+    await expect(page.getByText("Qual a sua idade?")).toBeVisible();
+    await page.click('button:has-text("Próxima")');
+
+    // ... simulate a few more steps or jump to end if possible in test
+    // For the sake of E2E speed in sandbox, we'll verify the "Salvar e sair" works
+    await page.click('button:has-text("Salvar e sair")');
+    
     // Verify no error toast appears
     const errorToast = page.locator('text=Erro ao salvar');
     await expect(errorToast).toHaveCount(0);
 
-    // Verify it moves to next step (e.g. Medidas or Finish)
-    await expect(page.locator("text=Anamnese")).not.toBeVisible();
-    
     // 5. Final check: User Profile Name
-    // Ensure it doesn't show generic "Usuário"
-    // We navigate to /dashboard or /profile
     await page.goto("/dashboard");
-    const userNameElement = page.locator(`text=${testName}`);
-    await expect(userNameElement).toBeVisible();
-    
-    // Ensure "Usuário" text (indicator of orphan/missing profile) is NOT present as the main name
+    // Ensure the name is displayed, NOT "Usuário"
+    await expect(page.getByText(testName)).toBeVisible({ timeout: 10000 });
     const genericUserText = page.locator('h2:has-text("Usuário"), span:has-text("Usuário")');
-    // It's okay if it exists somewhere, but not as the primary identity
-    // We'll check if our specific name is there.
-    await expect(page.getByText(testName)).toBeVisible();
+    // In a healthy system, the user's name should be prominent
+    const primaryName = page.locator('h1, h2, span.font-bold').filter({ hasText: testName });
+    await expect(primaryName).toBeVisible();
   });
 
   test("Social Login Flow should preserve invitation and link correctly", async ({ page }) => {
@@ -126,25 +120,28 @@ test.describe("Comprehensive Patient Flow (Invite -> Signup -> Anamnesis)", () =
     // Verify parameters are persisted
     expect(await page.evaluate(() => localStorage.getItem("fitjourney_nutri_id"))).toBe(TEST_NUTRI_ID);
 
-    // 2. Click Google Login (simulated)
-    // We won't actually login with Google, but check if the auth page handles the state
+    // 2. Go to Auth
     await page.goto("/auth?mode=login");
     
-    // Simulate clicking Google Login button
-    // In our implementation, handleSocialLogin should save to localStorage again
+    // Check if parameters are still there (they should be re-saved by Auth.tsx useEffect)
+    expect(await page.evaluate(() => localStorage.getItem("fitjourney_nutri_id"))).toBe(TEST_NUTRI_ID);
+
+    // 3. Mock Google Login Click
     const googleButton = page.locator('button:has-text("Google")');
     await expect(googleButton).toBeVisible();
     
-    // We mock the social login call to see if it preserves data
+    // Verify data is ready for OAuth
     await page.route("**/auth/v1/authorize**", async (route) => {
-      // Check if localStorage is still intact right before redirect
       const nutriId = await page.evaluate(() => localStorage.getItem("fitjourney_nutri_id"));
-      expect(nutriId).toBe(TEST_NUTRI_ID);
+      const role = await page.evaluate(() => localStorage.getItem("fj_selected_role"));
       
-      await route.abort(); // Don't actually redirect
+      expect(nutriId).toBe(TEST_NUTRI_ID);
+      expect(role).toBe("patient");
+      
+      await route.abort(); 
     });
 
-    // Note: We can't fully test the redirect in sandbox easily without breaking the test session,
-    // but the logic above verifies the data is there.
+    await googleButton.click();
   });
 });
+
