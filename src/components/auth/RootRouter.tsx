@@ -73,8 +73,11 @@ export function RootRouter() {
               _full_name: profile?.full_name || user.email?.split("@")[0] || "Paciente",
               _email: user.email,
               _nutritionist_id: pendingNutriId,
-              _source: "social_login_recovery",
-              _metadata: { correlation_id: crypto.randomUUID() }
+              _source: "register",
+              _metadata: { 
+                correlation_id: crypto.randomUUID(),
+                link_type: "social_login_recovery"
+              }
             });
 
             if (canonErr) throw canonErr;
