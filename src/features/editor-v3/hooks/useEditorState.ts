@@ -12,7 +12,7 @@ import { calculateItemMacros, scaleItemToTarget, adjustSubstitutionsProportional
  * Usa clinical_mass_g como base de proporcionalidade quando há unidade especial.
  */
 function preservedQuantityDisplay(item: any, oldMassG: number, newMassG: number): string {
-  const original = String(item.quantity_display || item.qty || `${newMassG}g`);
+  const original = String(item.quantity_display || (item as any).qty || `${newMassG}g`);
   
   // Detectar se tem unidade especial: "2 unidades", "1 fatia", "3 colheres"
   const unitMatch = original.match(/^([\d.,]+)\s*(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|x[íi]cara|xicaras|x[íi]caras)\b/i);
@@ -66,6 +66,7 @@ interface EditorState {
   addSubstitutionToItem: (mealId: string, itemInstanceId: string, food: Food) => void;
   updateMealItemName: (mealId: string, itemInstanceId: string, name: string) => void;
   removeSubstitutionFromItem: (mealId: string, itemInstanceId: string, subIndex: number) => void;
+  updateSubstitutionQuantity: (mealId: string, itemInstanceId: string, subIndex: number, newQuantity: number) => void;
 }
 
 
@@ -396,6 +397,39 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           if (item.instanceId !== itemInstanceId) return item;
           const newSubs = [...(item.substitutions || [])];
           newSubs.splice(subIndex, 1);
+          return { ...item, substitutions: newSubs };
+        })
+      };
+    });
+    set({ meals: updatedMeals });
+  },
+
+  updateSubstitutionQuantity: (mealId, itemInstanceId, subIndex, newQuantity) => {
+    const { meals } = get();
+    const updatedMeals = meals.map(meal => {
+      if (meal.id !== mealId) return meal;
+      return {
+        ...meal,
+        items: meal.items.map(item => {
+          if (item.instanceId !== itemInstanceId || !item.substitutions) return item;
+          
+          const newSubs = [...item.substitutions];
+          const sub = newSubs[subIndex];
+          if (!sub) return item;
+
+          const safeNewQty = Math.max(1, Math.round(newQuantity));
+          const oldQty = sub.clinical_mass_g || sub.quantity || sub.portionValue || 100;
+          
+          const newMacros = calculateItemMacros(sub, safeNewQty);
+          
+          newSubs[subIndex] = {
+            ...sub,
+            quantity: safeNewQty,
+            clinical_mass_g: safeNewQty,
+            quantity_display: preservedQuantityDisplay(sub, oldQty, safeNewQty),
+            ...newMacros
+          };
+
           return { ...item, substitutions: newSubs };
         })
       };

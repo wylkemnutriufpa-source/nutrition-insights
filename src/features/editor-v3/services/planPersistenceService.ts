@@ -290,9 +290,9 @@ export const planPersistenceService = {
               return raw;
             })(),
             quantity_display: buildQuantityDisplay(it as any, it),
-            clinical_mass_g: Number((it as any).clinical_mass_g) > 1
+            clinical_mass_g: Number((it as any).clinical_mass_g) > 0
               ? Math.round(Number((it as any).clinical_mass_g))
-              : (typeof it.quantity === 'number' && it.quantity > 1 ? Math.round(it.quantity) : 100),
+              : (typeof it.quantity === 'number' && it.quantity > 0 ? Math.round(it.quantity) : 100),
             macros: {
               kcal: Math.round(it.kcal || 0),
               protein_g: Number((it.protein || 0).toFixed(1)),
