@@ -12,7 +12,7 @@ import { calculateItemMacros, scaleItemToTarget, adjustSubstitutionsProportional
  * Usa clinical_mass_g como base de proporcionalidade quando há unidade especial.
  */
 function preservedQuantityDisplay(item: any, oldMassG: number, newMassG: number): string {
-  const original = String(item.quantity_display || item.qty || `${newMassG}g`);
+  const original = String(item.quantity_display || (item as any).qty || `${newMassG}g`);
   
   // Detectar se tem unidade especial: "2 unidades", "1 fatia", "3 colheres"
   const unitMatch = original.match(/^([\d.,]+)\s*(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|x[íi]cara|xicaras|x[íi]caras)\b/i);
