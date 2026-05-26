@@ -134,6 +134,7 @@ serve(async (req) => {
         title: `Plano ${selectedTemplate.title} (${kcalRounded} kcal)`,
         description: selectedTemplate.description,
         template_id: selectedTemplate.id,
+        start_date: new Date().toISOString(),
         total_calories: targetKcal,
         total_protein: clinicalPlan.metrics.macros.protein,
         total_carbs: clinicalPlan.metrics.macros.carbs,
