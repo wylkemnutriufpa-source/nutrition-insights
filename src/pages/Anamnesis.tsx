@@ -1060,9 +1060,9 @@ export default function Anamnesis() {
       void (async () => {
         try {
           console.log("[FJ:Anamnesis] Triggering automatic plan generation...");
-          const { data: planData, error: planError } = await supabase.functions.invoke("generate-meal-plan-v2", {
+          const { data: planData, error: planError } = await supabase.functions.invoke("generate-meal-plan", {
             body: { 
-              patient_id: targetUserId,
+              patientId: targetUserId,
               plan_title: "Plano Inicial (Gerado Automaticamente)"
             },
           });
