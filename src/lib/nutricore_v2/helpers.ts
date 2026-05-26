@@ -53,9 +53,11 @@ export function adjustSubstitutionsProportionally(
   const ratio = newQuantity / oldQuantity;
 
   return substitutions.map(sub => {
-    const currentQty = (sub as any).clinical_mass_g || sub.portionValue || 100;
+    // 🛡️ SOBERANIA V3: Usa a gramagem atual do substituto. Se ausente, assume a proporcionalidade do pai.
+    const currentQty = (sub as any).clinical_mass_g || sub.portionValue || (sub as any).quantity || oldQuantity;
     const rawQty = currentQty * ratio;
-    const newQty = Math.max(5, Math.round(rawQty / 5) * 5);
+    // Mantém arredondamento de 5g para legibilidade clínica, mas evita o salto para 100g
+    const newQty = Math.max(1, Math.round(rawQty / 5) * 5);
 
     
     return {
