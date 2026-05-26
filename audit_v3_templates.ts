@@ -1,19 +1,9 @@
 
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import fs from 'fs';
 
 async function auditTemplates() {
-  const { data: templates, error } = await supabase
-    .from('v3_diet_templates')
-    .select('id, title, plan_snapshot, kcal_profiles, template_type, objective');
-
-  if (error) {
-    console.error('Error fetching templates:', error);
-    return;
-  }
+  const data = fs.readFileSync('templates.json', 'utf-8');
+  const templates = JSON.parse(data);
 
   const report = [];
 
@@ -36,7 +26,6 @@ async function auditTemplates() {
         continue;
       }
 
-      // Summing Day 1 (assuming day 1 is the reference)
       const day1 = snapshot.days?.find((d: any) => d.day_of_week === 1);
       if (!day1) {
           report.push({
@@ -58,7 +47,6 @@ async function auditTemplates() {
 
       day1.meals?.forEach((meal: any) => {
         meal.items?.forEach((item: any) => {
-          // Some items might have macros in a 'macros' object, others might have them at top level
           const m = item.macros || item;
           totalKcal += Number(m.kcal || 0);
           totalProtein += Number(m.protein_g || m.protein || 0);
@@ -71,32 +59,49 @@ async function auditTemplates() {
       const divergencePct = (divergence / targetKcal) * 100;
 
       let status = 'Safe';
-      if (divergencePct > 10) status = 'Inviable';
-      else if (divergencePct > 5) status = 'Critical';
-      else if (divergencePct > 1) status = 'Warning';
+      let risk = 'Low';
+      if (divergencePct > 10) {
+          status = 'Inviable';
+          risk = 'High (Metabolic Mismatch)';
+      } else if (divergencePct > 5) {
+          status = 'Critical';
+          risk = 'Medium (Macro Imbalance)';
+      } else if (divergencePct > 1) {
+          status = 'Warning';
+          risk = 'Low (Minor Deviation)';
+      }
 
       report.push({
-        id: template.id,
         title: template.title,
-        template_type: template.template_type,
-        objective: template.objective,
         targetKcal,
-        realKcal: totalKcal,
-        realProtein: totalProtein,
-        realCarbs: totalCarbs,
-        realFat: totalFat,
-        divergence,
-        divergencePct,
+        realKcal: Math.round(totalKcal),
+        realProtein: Math.round(totalProtein),
+        realCarbs: Math.round(totalCarbs),
+        realFat: Math.round(totalFat),
+        divergence: divergence.toFixed(1),
+        divergencePct: divergencePct.toFixed(2),
         status,
-        issue: divergencePct > 1 ? `Divergence of ${divergence.toFixed(1)} kcal (${divergencePct.toFixed(1)}%)` : 'OK'
+        objective: template.objective,
+        risk
       });
     }
   }
 
-  // Sort by divergence % descending
-  report.sort((a, b) => b.divergencePct - a.divergencePct);
+  // Final statistics
+  const stats = {
+      total: report.length,
+      safe: report.filter(r => r.status === 'Safe').length,
+      warning: report.filter(r => r.status === 'Warning').length,
+      critical: report.filter(r => r.status === 'Critical').length,
+      inviable: report.filter(r => r.status === 'Inviable').length
+  };
 
-  console.log(JSON.stringify(report, null, 2));
+  console.log('--- CLINICAL AUDIT REPORT ---');
+  console.log('Stats:', stats);
+  console.log('\n--- TOP 20 CRITICAL TEMPLATES ---');
+  console.table(report.sort((a, b) => Number(b.divergencePct) - Number(a.divergencePct)).slice(0, 20));
+  
+  fs.writeFileSync('audit_report.json', JSON.stringify({ stats, report }, null, 2));
 }
 
 auditTemplates();
