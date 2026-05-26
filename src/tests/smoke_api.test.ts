@@ -82,7 +82,7 @@ describe("API Smoke Tests", () => {
     const mockPlan = { plan_id: "plan1", success: true, meals: [] };
     (supabase.functions.invoke as any).mockResolvedValue({ data: mockPlan, error: null });
 
-    const { data, error } = await (supabase.functions as any).invoke("generate-meal-plan-v2", { body: { patient_id: "p1" } });
+    const { data, error } = await (supabase.functions as any).invoke("generate-meal-plan", { body: { patient_id: "p1" } });
     
     expect(error).toBeNull();
     expect(data.success).toBe(true);
