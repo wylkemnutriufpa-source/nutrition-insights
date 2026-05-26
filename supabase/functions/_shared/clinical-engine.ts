@@ -200,22 +200,21 @@ export class ClinicalEngine {
           itemsToInsert.push({
             meal_plan_id: newPlan.id,
             day_of_week: dayOfWeek,
-            meal_name: meal.name,
-            meal_time: meal.time,
-            food_name: item.name || item.title,
-            quantity_display: item.quantity_display,
-            kcal: item.kcal,
-            protein_g: item.macros?.protein_g || item.protein || 0,
-            carbs_g: item.macros?.carbs_g || item.carbs || 0,
-            fat_g: item.macros?.fat_g || item.fat || 0,
+            tipo_refeicao: meal.name,
+            title: item.name || item.title,
+            meta_calorias: Math.round(item.kcal || 0),
+            meta_proteinas: item.macros?.protein_g || item.protein || 0,
+            meta_carboidratos: item.macros?.carbs_g || item.carbs || 0,
+            meta_gorduras: item.macros?.fat_g || item.fat || 0,
             image_url: item.imageUrl,
             is_primary: item.is_primary ?? true,
-            metadata: { 
+            edit_metadata: { 
               original_item_id: item.id,
               instanceId: item.instanceId,
               provenance: "clinical_engine_v3"
             }
           });
+
         }
       }
     }
