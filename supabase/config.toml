@@ -138,8 +138,6 @@ verify_jwt = false
 [functions.generate-bb-meal-plan]
 verify_jwt = false
 
-[functions.generate-meal-plan-v2]
-verify_jwt = false
 
 # ═══════════════════════════════════════════
 # PAGAMENTOS E WEBHOOKS
