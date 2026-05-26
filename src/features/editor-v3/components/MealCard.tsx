@@ -205,6 +205,7 @@ export const MealCard: React.FC<MealCardProps> = ({
                     onRemove={() => onRemoveFood(item.instanceId)}
                     onRemoveSubstitution={(subIdx) => store.removeSubstitutionFromItem(meal.id, item.instanceId, subIdx)}
                     onUpdateName={onUpdateFoodName ? (name) => onUpdateFoodName(item.instanceId, name) : undefined}
+                    onUpdateSubstitutionQuantity={(idx, qty) => store.updateSubstitutionQuantity(meal.id, item.instanceId, idx, qty)}
                     onRequestSubstitution={() => handleRequestSubstitution(item)}
                   />
                 ))
