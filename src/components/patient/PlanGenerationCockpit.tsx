@@ -60,16 +60,27 @@ export function PlanGenerationCockpit({
     setError(null);
 
     try {
-      // Se não tem pipeline, criar um temporário para a RPC
+      // 🛡️ Resolvemos o ID canônico (User ID) do perfil caso o patientId recebido seja o Profile ID
+      let effectivePatientId = patientId;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("id", patientId)
+        .maybeSingle();
+
+      if (profile?.user_id) {
+        effectivePatientId = profile.user_id;
+      }
+
+      // Se não tem pipeline, buscar um existente (mesmo completo) ou criar um novo
       let effectivePipelineId = pipelineId;
 
       if (!effectivePipelineId) {
-        // Buscar ou criar pipeline
+        // Buscar pipeline existente para o ID canônico
         const { data: existingPipeline } = await supabase
           .from("onboarding_pipelines" as any)
           .select("id")
-          .eq("patient_id", patientId)
-          .not("status", "in", '("completed","superseded_by_active_plan")')
+          .eq("patient_id", effectivePatientId)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -77,17 +88,11 @@ export function PlanGenerationCockpit({
         if (existingPipeline) {
           effectivePipelineId = (existingPipeline as any).id;
         } else {
-          // Criar pipeline mínimo para a RPC funcionar
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .eq("user_id", patientId)
-            .maybeSingle();
-
+          // Buscar vínculo com o profissional
           const { data: link } = await supabase
             .from("nutritionist_patients")
             .select("nutritionist_id")
-            .eq("patient_id", patientId)
+            .eq("patient_id", effectivePatientId)
             .eq("status", "active")
             .maybeSingle();
 
@@ -97,10 +102,11 @@ export function PlanGenerationCockpit({
             return;
           }
 
+          // Criar pipeline mínimo respeitando a unicidade
           const { data: newPipeline, error: pipeErr } = await supabase
             .from("onboarding_pipelines" as any)
             .insert({
-              patient_id: patientId,
+              patient_id: effectivePatientId,
               nutritionist_id: link.nutritionist_id,
               status: "pending_plan_generation",
               anamnesis_completed: true,
@@ -111,6 +117,7 @@ export function PlanGenerationCockpit({
             .single();
 
           if (pipeErr || !newPipeline) {
+            console.error("[Cockpit] Erro ao criar pipeline:", pipeErr);
             setError("Erro ao preparar pipeline.");
             setGenerating(false);
             return;
@@ -119,11 +126,11 @@ export function PlanGenerationCockpit({
         }
       }
 
-      // Chamar o motor determinístico
+      // Chamar o motor determinístico com o ID canônico
       const { data, error: rpcError } = await supabase.rpc(
         "classify_and_assign_sovereign_template" as any,
         {
-          p_patient_id: patientId,
+          p_patient_id: effectivePatientId,
           p_pipeline_id: effectivePipelineId,
         }
       );
