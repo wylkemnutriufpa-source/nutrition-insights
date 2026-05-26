@@ -24,17 +24,24 @@ serve(async (req) => {
       bb_phase
     } = body;
 
+    const resolvedPatientId = patientId || body.patient_id;
+    const resolvedNutritionistId = nutritionistId || body.nutritionist_id;
+
+    if (!resolvedPatientId) {
+      throw new Error("patientId is required");
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`[generate-meal-plan] Starting generation for patient ${patientId} (Mode: ${generationMode}, Strategy: ${strategy})`);
+    console.log(`[generate-meal-plan] Starting generation for patient ${resolvedPatientId} (Mode: ${generationMode}, Strategy: ${strategy})`);
 
     // 1. Fetch patient profile
     const { data: patient, error: patientError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("user_id", patientId)
+      .eq("user_id", resolvedPatientId)
       .maybeSingle();
 
     if (patientError) throw patientError;
