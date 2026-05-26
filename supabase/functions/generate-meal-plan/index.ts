@@ -208,7 +208,7 @@ serve(async (req) => {
         patient_state: 'active',
         last_editor_version_used: 'v3'
       })
-      .eq("user_id", patientId);
+      .eq("user_id", resolvedPatientId);
 
     // 8. Return success
     return new Response(
