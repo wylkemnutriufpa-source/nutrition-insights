@@ -157,6 +157,13 @@ export function RootRouter() {
   const isPatientRole = roles?.includes("patient");
   const savedContext = localStorage.getItem("fj_workspace_context");
 
+  // Bloqueio Absoluto: Nunca redirecionar para V2
+  const currentPath = window.location.pathname;
+  if (currentPath.includes("/v2") || currentPath.includes("dashboard-v2")) {
+    console.error("[SEGURANÇA] Tentativa de acesso a rota V2 bloqueada. Redirecionando para sistema principal.");
+    return <Navigate to="/dashboard" replace />;
+  }
+
   // Flow Profissional - Bloqueio de contaminação Patient
   if (isProRole && savedContext !== "patient") {
     // Se for admin, o target default deve ser /admin/dashboard se ele estiver tentando acessar algo admin
@@ -169,7 +176,7 @@ export function RootRouter() {
       defaultTarget = "/admin/dashboard";
     }
 
-    const target = (nextPath && !nextPath.startsWith("/client")) ? nextPath : defaultTarget;
+    const target = (nextPath && !nextPath.startsWith("/client") && !nextPath.includes("/v2")) ? nextPath : defaultTarget;
     console.warn(`[RASTREADOR] Redirect para ${target} disparado por: RootRouter (Pro Flow)`);
     return <Navigate to={target} replace />;
   }
