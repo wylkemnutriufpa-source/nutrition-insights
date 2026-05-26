@@ -135,6 +135,8 @@ export const AppRoutes = () => {
 
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
+      <Route path="/v2/*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard-v2/*" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

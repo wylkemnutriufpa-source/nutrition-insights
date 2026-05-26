@@ -54,9 +54,9 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
 
   const isPro = isNutritionist || isPersonal || isAdmin || isAdminMaster;
 
-  // 0. Bloqueio Absoluto V2
+  // 0. Bloqueio Absoluto V2 - Reforçado
   if (location.pathname.includes("/v2") || location.pathname.includes("dashboard-v2")) {
-    console.warn(`[RASTREADOR] Bloqueio WorkspaceRouteGuard: tentativa de acessar rota V2 (${location.pathname}). Redirecionando para sistema principal.`);
+    console.warn(`[SEGURANÇA] Bloqueio WorkspaceRouteGuard: tentativa de acessar rota V2 (${location.pathname}). Redirecionando para sistema principal.`);
     return <Navigate to="/dashboard" replace />;
   }
 
