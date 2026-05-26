@@ -100,7 +100,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
         // 🛡️ Defense in Depth: Mínimo de 5g para evitar frações irrelevantes
-        const safeNewQty = Math.max(5, Math.round(newQuantity / 5) * 5);
+        const safeNewQty = Math.max(1, Math.round(newQuantity / 5) * 5);
 
         // 🛡️ Defense in Depth: Escala substituições proporcionalmente ao item principal
         // Captura gramagem original de cada sub ANTES de escalar
@@ -223,10 +223,8 @@ export const useEditorState = create<EditorState>()((set, get) => ({
     const updatedMeals = meals.map(meal => {
       if (meal.id !== mealId) return meal;
       
-      let quantity = Math.max(5, Math.round((food.clinical_mass_g || food.quantity || food.portionValue || 100) / 5) * 5);
-      if (quantity <= 1 && (food.kcal > 10 || (food as any).kcal_100g > 10)) {
-        quantity = 100;
-      }
+      // 🛡️ SOBERANIA V3: Respeita a gramagem original do alimento sem forçar 100g arbitrário
+      const quantity = Math.max(1, Math.round((food.clinical_mass_g || food.quantity || food.portionValue || 100) / 5) * 5);
       const macros = calculateItemMacros(food, quantity);
       
       const newItem: MealItem = {
@@ -332,19 +330,15 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
         let substituteQuantity: number;
         if (primaryKcal > 0 && subKcalPer100g > 0) {
-          // Gramagem para equivalência calórica: (kcal_item_principal / kcal_por_100g_substituto) * 100
-          substituteQuantity = Math.max(10, Math.round((primaryKcal / subKcalPer100g) * 100));
+          // Gramagem para equivalência calórica exata
+          substituteQuantity = Math.max(1, Math.round((primaryKcal / subKcalPer100g) * 100));
         } else {
-          // Fallback: mesma gramagem do item principal
-          substituteQuantity = Math.max(10, Math.round(
-            food.clinical_mass_g || food.quantity || food.portionValue || primaryQuantity || 100
-          ));
+          // Fallback: mesma gramagem do item principal (preservando intenção volumétrica)
+          substituteQuantity = primaryQuantity;
         }
 
-        // Garante gramagem mínima realista (nunca menos que 10g)
-        if (substituteQuantity < 10 && (food.kcal || food.kcal_100g || 0) > 0) {
-          substituteQuantity = 100; // Fallback seguro
-        }
+        // Arredondamento clínico final
+        substituteQuantity = Math.max(1, Math.round(substituteQuantity / 5) * 5);
 
         const subMacros = calculateItemMacros(food, substituteQuantity);
 
