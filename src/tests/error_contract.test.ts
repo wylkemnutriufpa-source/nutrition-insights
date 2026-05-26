@@ -128,19 +128,19 @@ describe("API Error Contract Tests", () => {
   describe("POST /api/plan/generate", () => {
     it("should return 401 if user is not a professional", async () => {
       (supabase.functions.invoke as any).mockResolvedValue({ data: null, error: { status: 401, message: "Unauthenticated" } });
-      const { error } = await (supabase.functions as any).invoke("generate-meal-plan-v2", { body: { patient_id: "p1" } });
+      const { error } = await (supabase.functions as any).invoke("generate-meal-plan", { body: { patient_id: "p1" } });
       expect(error.status).toBe(401);
     });
 
     it("should return 400 if patient_id is missing from body", async () => {
       (supabase.functions.invoke as any).mockResolvedValue({ data: null, error: { status: 400, message: "patient_id required" } });
-      const { error } = await (supabase.functions as any).invoke("generate-meal-plan-v2", { body: {} });
+      const { error } = await (supabase.functions as any).invoke("generate-meal-plan", { body: {} });
       expect(error.status).toBe(400);
     });
 
     it("should return 422 if patient has incomplete clinical data", async () => {
       (supabase.functions.invoke as any).mockResolvedValue({ data: null, error: { status: 422, message: "Incomplete data" } });
-      const { error } = await (supabase.functions as any).invoke("generate-meal-plan-v2", { body: { patient_id: "p1" } });
+      const { error } = await (supabase.functions as any).invoke("generate-meal-plan", { body: { patient_id: "p1" } });
       expect(error.status).toBe(422);
     });
   });
