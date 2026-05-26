@@ -220,8 +220,13 @@ export class ClinicalEngine {
     }
 
     if (itemsToInsert.length > 0) {
-      await supabase.from("meal_plan_items").insert(itemsToInsert);
+      const { error: itemsError } = await supabase.from("meal_plan_items").insert(itemsToInsert);
+      if (itemsError) {
+        console.error("[ClinicalEngine] Error inserting items:", itemsError);
+        throw itemsError;
+      }
     }
+
 
     // 7. Update profile state
     await supabase
