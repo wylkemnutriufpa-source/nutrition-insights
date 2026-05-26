@@ -16,44 +16,35 @@ serve(async (req) => {
     const body = await req.json();
     const authHeader = req.headers.get("Authorization") || "";
 
-    console.warn("[generate-meal-plan-v2] REDIRECTING to unified generate-meal-plan");
+    console.log("[generate-meal-plan-v2] REDIRECTING to deterministic generate-meal-plan");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
       body: {
         ...body,
         _redirected_from: "generate-meal-plan-v2"
       },
+      headers: {
+        Authorization: authHeader
+      }
     });
 
-    if (error) {
-      console.error("[generate-meal-plan-v2] Redirect error:", error.message);
-      return new Response(
-        JSON.stringify({ success: false, error: error.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (error) throw error;
 
     return new Response(
       JSON.stringify(data),
       {
         status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-          "X-Redirected": "true"
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (err) {
     console.error("[generate-meal-plan-v2] Error:", err);
     return new Response(
-      JSON.stringify({ success: false, error: "Erro no redirecionamento V2" }),
+      JSON.stringify({ success: false, error: "Erro no redirecionamento" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
