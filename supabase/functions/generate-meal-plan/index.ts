@@ -55,7 +55,6 @@ serve(async (req) => {
     }
 
     // 2. Calculate clinical metrics
-    // We use the ClinicalEngine which is the source of truth for metabolic math
     const clinicalInput = {
       patientId: resolvedPatientId,
       weight: professionalOverride?.weight || patient?.current_weight_kg || 70,
@@ -76,12 +75,10 @@ serve(async (req) => {
     const { target_kcal: targetKcal } = clinicalPlan.metrics;
 
     // 3. Find suitable template from v3_diet_templates
-    // We look for a template that matches the strategy and has a profile for the target kcal
     const kcalRounded = Math.round(targetKcal / 100) * 100;
     
     console.log(`[generate-meal-plan] Target Kcal: ${targetKcal}, Rounded: ${kcalRounded}`);
 
-    // Query for templates. We prioritize nutritionist-specific ones, then global ones.
     const { data: templates, error: templateError } = await supabase
       .from("v3_diet_templates")
       .select("*")
@@ -94,7 +91,6 @@ serve(async (req) => {
     let selectedTemplate = templates?.find(t => t.objective === clinicalInput.goal) || templates?.[0];
 
     if (!selectedTemplate) {
-      // Fallback: search for ANY active template that has this kcal profile
       const { data: fallbackTemplates } = await supabase
         .from("v3_diet_templates")
         .select("*")
@@ -117,7 +113,6 @@ serve(async (req) => {
       );
     }
 
-    // 4. Extract snapshot (The Sovereign Truth)
     const snapshot = selectedTemplate.plan_snapshot?.[kcalRounded.toString()];
 
     if (!snapshot) {
@@ -125,9 +120,6 @@ serve(async (req) => {
     }
 
     // 5. Create the Meal Plan record
-    // We use a transaction-like approach: Create plan, then items.
-    
-    // Archive old active plans first to maintain idempotency if requested or standard
     await supabase
       .from("meal_plans")
       .update({ is_active: false })
@@ -142,11 +134,15 @@ serve(async (req) => {
         title: `Plano ${selectedTemplate.title} (${kcalRounded} kcal)`,
         description: selectedTemplate.description,
         template_id: selectedTemplate.id,
-        target_kcal: targetKcal,
-        target_protein: clinicalPlan.metrics.macros.protein,
-        target_carbs: clinicalPlan.metrics.macros.carbs,
-        target_fat: clinicalPlan.metrics.macros.fat,
-        plan_status: "published_to_patient", // Auto-publish for speed in this mode
+        total_calories: targetKcal,
+        total_protein: clinicalPlan.metrics.macros.protein,
+        total_carbs: clinicalPlan.metrics.macros.carbs,
+        total_fat: clinicalPlan.metrics.macros.fat,
+        total_meta_calorias: targetKcal,
+        total_meta_proteinas: clinicalPlan.metrics.macros.protein,
+        total_meta_carboidratos: clinicalPlan.metrics.macros.carbs,
+        total_meta_gorduras: clinicalPlan.metrics.macros.fat,
+        plan_status: "published_to_patient", 
         is_active: true,
         snapshot: snapshot,
         engine_version: clinicalPlan.engine_version,
@@ -157,10 +153,8 @@ serve(async (req) => {
 
     if (newPlanError) throw newPlanError;
 
-    // 6. Insert items into meal_plan_items for legacy/mobile compatibility
+    // 6. Insert items into meal_plan_items
     const itemsToInsert: any[] = [];
-    
-    // Snapshot structure: { days: [ { day_of_week: N, meals: [ { name: "", time: "", items: [] } ] } ] }
     const days = snapshot.days || [];
     
     for (const day of days) {
@@ -196,7 +190,6 @@ serve(async (req) => {
       
       if (itemsError) {
         console.error("[generate-meal-plan] Error inserting items:", itemsError);
-        // We don't fail the whole process if items fail, as we have the snapshot
       }
     }
 
@@ -210,7 +203,6 @@ serve(async (req) => {
       })
       .eq("user_id", resolvedPatientId);
 
-    // 8. Return success
     return new Response(
       JSON.stringify({
         success: true,
