@@ -199,7 +199,7 @@ serve(async (req) => {
       .from("profiles")
       .update({ 
         onboarding_completed: true,
-        patient_state: 'active',
+        patient_state: 'active_plan',
         last_editor_version_used: 'v3'
       })
       .eq("user_id", resolvedPatientId);
