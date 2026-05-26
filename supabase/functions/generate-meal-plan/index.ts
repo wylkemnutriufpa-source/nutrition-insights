@@ -1,6 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { ClinicalEngine } from "../_shared/clinical-engine.ts";
+import { 
+  calculateTMB, 
+  calculateTDEE, 
+  calculateTargetKcal, 
+  calculateMacros,
+  normalizeWeightKg,
+  normalizeHeightCm,
+  normalizeAge,
+  normalizeGoal,
+  normalizeActivityLevel
+} from "../_shared/clinical-macro-engine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,8 +30,7 @@ serve(async (req) => {
       nutritionistId, 
       generationMode = "smart", 
       professionalOverride,
-      strategy = "ifj_standard",
-      bb_phase
+      template_id
     } = body;
 
     const resolvedPatientId = patientId || body.patient_id;
@@ -35,91 +44,136 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`[generate-meal-plan] Starting generation for patient ${resolvedPatientId} (Mode: ${generationMode}, Strategy: ${strategy})`);
+    console.log(`[generate-meal-plan] Starting deterministic generation for patient ${resolvedPatientId}`);
 
-    // 1. Fetch patient profile
-    const { data: patient, error: patientError } = await supabase
-      .from("profiles")
+    // 1. Fetch patient anamnesis (Deterministic source of truth)
+    const { data: anamnesis, error: anamnesisError } = await supabase
+      .from("patient_anamnesis")
       .select("*")
       .eq("user_id", resolvedPatientId)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (patientError) throw patientError;
-    
-    // If patient not found and no override, we can't proceed
-    if (!patient && !professionalOverride) {
-      return new Response(
-        JSON.stringify({ success: false, code: "ANAMNESIS_MISSING", professional_override_supported: true }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (anamnesisError) throw anamnesisError;
+
+    let targetKcal: number;
+    let macros: { protein: number; carbs: number; fat: number };
+
+    // 2. Resolve Target Kcal and Macros
+    if (professionalOverride) {
+      console.log("[generate-meal-plan] Using professional override");
+      const weight = normalizeWeightKg(professionalOverride.weight) || 70;
+      const height = normalizeHeightCm(professionalOverride.height) || 170;
+      const age = normalizeAge(professionalOverride.age);
+      const sex = professionalOverride.sex || "female";
+      const goal = normalizeGoal(professionalOverride.goal) || "maintain";
+      const activityLevel = normalizeActivityLevel(professionalOverride.activityLevel);
+
+      const tmb = calculateTMB(weight, height, age, sex);
+      const tdee = calculateTDEE(tmb, activityLevel);
+      targetKcal = calculateTargetKcal(tdee, goal, sex);
+      macros = calculateMacros(targetKcal, goal, weight);
+    } else if (anamnesis?.computed_kcal_target) {
+      console.log("[generate-meal-plan] Using anamnesis computed values");
+      targetKcal = Number(anamnesis.computed_kcal_target);
+      macros = {
+        protein: Number(anamnesis.computed_protein),
+        carbs: Number(anamnesis.computed_carbs),
+        fat: Number(anamnesis.computed_fat)
+      };
+    } else {
+      // Fallback: If no anamnesis, check profile but warn
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", resolvedPatientId)
+        .single();
+      
+      if (!profile || !profile.current_weight_kg) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            code: "ANAMNESIS_MISSING", 
+            professional_override_supported: true,
+            error: "Anamnese incompleta ou não encontrada. Preencha os dados clínicos para gerar o plano."
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log("[generate-meal-plan] Falling back to profile calculations");
+      const weight = Number(profile.current_weight_kg);
+      const height = Number(profile.current_height_cm) || 170;
+      const age = 30; // Default
+      const sex = profile.sex || "female";
+      const goal = profile.goal || "maintain";
+      const activityLevel = profile.activity_level || "moderate";
+
+      const tmb = calculateTMB(weight, height, age, sex);
+      const tdee = calculateTDEE(tmb, activityLevel);
+      targetKcal = calculateTargetKcal(tdee, goal, sex);
+      macros = calculateMacros(targetKcal, goal, weight);
     }
-
-    // 2. Calculate clinical metrics
-    const clinicalInput = {
-      patientId: resolvedPatientId,
-      weight: professionalOverride?.weight || patient?.current_weight_kg || 70,
-      height: professionalOverride?.height || patient?.current_height_cm || 170,
-      age: professionalOverride?.age || (patient?.birth_date ? calculateAge(patient.birth_date) : 30),
-      sex: professionalOverride?.sex || patient?.sex || "female",
-      goal: professionalOverride?.goal || patient?.goal || "maintain",
-      activityLevel: professionalOverride?.activityLevel || patient?.activity_level || "moderate",
-      restrictions: patient?.restrictions || [],
-      dislikedFoods: patient?.disliked_foods || [],
-      strategyId: strategy as any,
-      bbPhase: bb_phase || body.bb_phase
-    };
-
-    console.log("[generate-meal-plan] Clinical Input:", JSON.stringify(clinicalInput));
-
-    const clinicalPlan = await ClinicalEngine.generateMealPlan(clinicalInput, supabase);
-    const { target_kcal: targetKcal } = clinicalPlan.metrics;
 
     // 3. Find suitable template from v3_diet_templates
     const kcalRounded = Math.round(targetKcal / 100) * 100;
-    
-    console.log(`[generate-meal-plan] Target Kcal: ${targetKcal}, Rounded: ${kcalRounded}`);
+    console.log(`[generate-meal-plan] Target: ${targetKcal} kcal. Searching template for ~${kcalRounded} kcal.`);
 
-    const { data: templates, error: templateError } = await supabase
+    let query = supabase
       .from("v3_diet_templates")
       .select("*")
-      .eq("active", true)
-      .filter("kcal_profiles", "cs", `[${kcalRounded}]`)
-      .order("nutritionist_id", { ascending: false, nullsFirst: false });
+      .eq("active", true);
+
+    if (template_id) {
+      query = query.eq("id", template_id);
+    } else {
+      // If no explicit template, filter by kcal profile
+      query = query.filter("kcal_profiles", "cs", `[${kcalRounded}]`);
+    }
+
+    const { data: templates, error: templateError } = await query.order("nutritionist_id", { ascending: false, nullsFirst: false });
 
     if (templateError) throw templateError;
 
-    let selectedTemplate = templates?.find(t => t.objective === clinicalInput.goal) || templates?.[0];
+    let selectedTemplate = templates?.[0];
 
-    if (!selectedTemplate) {
-      const { data: fallbackTemplates } = await supabase
+    // Fuzzy match if exact kcal profile not found and no specific template was requested
+    if (!selectedTemplate && !template_id) {
+      console.log("[generate-meal-plan] No exact kcal match. Trying fuzzy match.");
+      const { data: allTemplates } = await supabase
         .from("v3_diet_templates")
         .select("*")
         .eq("active", true)
-        .filter("kcal_profiles", "cs", `[${kcalRounded}]`)
-        .limit(1);
+        .limit(20);
       
-      selectedTemplate = fallbackTemplates?.[0];
+      // Find template with closest kcal profile
+      selectedTemplate = allTemplates?.sort((a, b) => {
+        const aProfiles = a.kcal_profiles || [];
+        const bProfiles = b.kcal_profiles || [];
+        const aDiff = Math.min(...aProfiles.map((k: number) => Math.abs(k - targetKcal)));
+        const bDiff = Math.min(...bProfiles.map((k: number) => Math.abs(k - targetKcal)));
+        return aDiff - bDiff;
+      })[0];
     }
 
     if (!selectedTemplate) {
-      console.error(`[generate-meal-plan] No template found for ${kcalRounded} kcal`);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Não encontramos um template adequado para sua meta de ${kcalRounded} kcal. Tente ajustar o objetivo ou nível de atividade.`,
-          code: "TEMPLATE_NOT_FOUND"
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      throw new Error(`Não encontramos nenhum template compatível para ${targetKcal} kcal.`);
     }
 
-    const snapshot = selectedTemplate.plan_snapshot?.[kcalRounded.toString()];
+    // 4. Extract snapshot for the target Kcal
+    // Find the key in plan_snapshot that is closest to our targetKcal
+    const snapshots = selectedTemplate.plan_snapshot || {};
+    const snapshotKeys = Object.keys(snapshots).map(Number).sort((a, b) => Math.abs(a - targetKcal) - Math.abs(b - targetKcal));
+    const bestSnapshotKey = snapshotKeys[0];
+    const snapshot = snapshots[bestSnapshotKey.toString()];
 
     if (!snapshot) {
-      throw new Error(`Snapshot for ${kcalRounded} kcal missing in template ${selectedTemplate.id}`);
+      throw new Error(`Snapshot para ${targetKcal} kcal não encontrado no template ${selectedTemplate.title}`);
     }
 
     // 5. Create the Meal Plan record
+    // Deactivate previous plans
     await supabase
       .from("meal_plans")
       .update({ is_active: false })
@@ -131,23 +185,23 @@ serve(async (req) => {
       .insert({
         patient_id: resolvedPatientId,
         nutritionist_id: resolvedNutritionistId,
-        title: `Plano ${selectedTemplate.title} (${kcalRounded} kcal)`,
+        title: `Plano ${selectedTemplate.title} (${bestSnapshotKey} kcal)`,
         description: selectedTemplate.description,
         template_id: selectedTemplate.id,
         start_date: new Date().toISOString(),
         total_calories: targetKcal,
-        total_protein: clinicalPlan.metrics.macros.protein,
-        total_carbs: clinicalPlan.metrics.macros.carbs,
-        total_fat: clinicalPlan.metrics.macros.fat,
+        total_protein: macros.protein,
+        total_carbs: macros.carbs,
+        total_fat: macros.fat,
         total_meta_calorias: targetKcal,
-        total_meta_proteinas: clinicalPlan.metrics.macros.protein,
-        total_meta_carboidratos: clinicalPlan.metrics.macros.carbs,
-        total_meta_gorduras: clinicalPlan.metrics.macros.fat,
+        total_meta_proteinas: macros.protein,
+        total_meta_carboidratos: macros.carbs,
+        total_meta_gorduras: macros.fat,
         plan_status: "published_to_patient", 
         is_active: true,
         snapshot: snapshot,
-        engine_version: clinicalPlan.engine_version,
-        protocol_used: strategy
+        engine_version: "v3-deterministic-direct",
+        protocol_used: selectedTemplate.objective || "custom"
       })
       .select()
       .single();
@@ -210,40 +264,17 @@ serve(async (req) => {
         mealPlanId: newPlan.id,
         items_count: itemsToInsert.length,
         template_used: selectedTemplate.title,
-        metrics: clinicalPlan.metrics,
-        explainability: {
-          bb_phase: bb_phase,
-          calculation: clinicalPlan.metrics,
-          macros: clinicalPlan.metrics.macros,
-          selected_template: {
-            name: selectedTemplate.title,
-            id: selectedTemplate.id
-          }
-        }
+        target_kcal: targetKcal,
+        macros: macros
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (err: any) {
-    console.error("[generate-meal-plan] Critical Error:", err);
+    console.error("[generate-meal-plan] Error:", err);
     return new Response(
       JSON.stringify({ success: false, error: err.message || "Erro interno no motor de planos" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
-
-function calculateAge(birthDate: string): number {
-  try {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return age;
-  } catch {
-    return 30;
-  }
-}
