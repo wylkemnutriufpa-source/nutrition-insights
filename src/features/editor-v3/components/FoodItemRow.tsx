@@ -17,11 +17,12 @@ interface FoodItemRowProps {
   onRequestSubstitution: () => void;
   onRemoveSubstitution?: (idx: number) => void;
   onUpdateName?: (name: string) => void;
+  onUpdateSubstitutionQuantity?: (idx: number, newQty: number) => void;
 }
 
 
 export const FoodItemRow: React.FC<FoodItemRowProps> = ({ 
-  item, onUpdateQuantity, onUpdateQuantityGlobal, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName 
+  item, onUpdateQuantity, onUpdateQuantityGlobal, onUpdateMacros, onRemove, onRequestSubstitution, onRemoveSubstitution, onUpdateName, onUpdateSubstitutionQuantity 
 }) => {
 
   // 🛡️ Detecta a unidade real do item (g, ml, unidades, fatias, colheres)
@@ -171,8 +172,14 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
                   </button>
                 )}
                 <span className="text-[10px] font-bold text-white/60 truncate group-hover/sub:text-emerald-400 transition-colors">{sub.name}</span>
-                <span className="text-[11px] font-black text-white mt-1">
-                  {(sub as any).quantity_display || `${Math.round((sub as any).clinical_mass_g || sub.portionValue || 100)}g`}
+                <input
+                  type="number"
+                  value={Math.round((sub as any).clinical_mass_g || sub.portionValue || 100)}
+                  onChange={(e) => onUpdateSubstitutionQuantity?.(idx, Number(e.target.value))}
+                  className="bg-transparent border-none p-0 text-[11px] font-black text-white focus:ring-0 focus:text-emerald-400 transition-colors w-full"
+                />
+                <span className="text-[8px] font-black uppercase text-white/20 mt-0.5">
+                  {(sub as any).quantity_display?.includes(' ') ? (sub as any).quantity_display.split(' ')[1] : 'g'}
                 </span>
               </div>
             ))}
