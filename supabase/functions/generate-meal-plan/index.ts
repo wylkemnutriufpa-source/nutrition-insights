@@ -57,7 +57,7 @@ serve(async (req) => {
     // 2. Calculate clinical metrics
     // We use the ClinicalEngine which is the source of truth for metabolic math
     const clinicalInput = {
-      patientId,
+      patientId: resolvedPatientId,
       weight: professionalOverride?.weight || patient?.current_weight_kg || 70,
       height: professionalOverride?.height || patient?.current_height_cm || 170,
       age: professionalOverride?.age || (patient?.birth_date ? calculateAge(patient.birth_date) : 30),
@@ -131,14 +131,14 @@ serve(async (req) => {
     await supabase
       .from("meal_plans")
       .update({ is_active: false })
-      .eq("patient_id", patientId)
+      .eq("patient_id", resolvedPatientId)
       .eq("is_active", true);
 
     const { data: newPlan, error: newPlanError } = await supabase
       .from("meal_plans")
       .insert({
-        patient_id: patientId,
-        nutritionist_id: nutritionistId,
+        patient_id: resolvedPatientId,
+        nutritionist_id: resolvedNutritionistId,
         title: `Plano ${selectedTemplate.title} (${kcalRounded} kcal)`,
         description: selectedTemplate.description,
         template_id: selectedTemplate.id,
