@@ -382,13 +382,14 @@ export const planPersistenceService = {
   },
 
   /**
-   * PUBLICAÇÃO SOBERANA V3
-   * Salva o plano oficial e seus itens, garantindo que o Patient App receba um snapshot pronto.
+   * PUBLICAÇÃO SOBERANA V3 (ATÔMICA)
+   * 🛡️ BUG #2 FIXED: Unifica persistência em uma única RPC para garantir integridade.
+   * Salva o plano oficial, sincroniza itens e promove o rascunho em uma transação única.
    */
   async publishPlan(options: PlanSaveOptions): Promise<SaveResult> {
     const { patientId, nutritionistId, meals, targets, title, planId, draftId } = options;
 
-    console.log(`[Persistence-V3] Iniciando publicação para paciente ${patientId}. Editor: V3.`);
+    console.log(`[Persistence-V3] Iniciando publicação ATÔMICA para paciente ${patientId}.`);
 
     // 🛡️ REGRAS INVIOLÁVEIS: Macros devem ser saudáveis para publicar
     const hasMacros = targets.kcal > 0 && targets.protein > 0;
@@ -405,130 +406,89 @@ export const planPersistenceService = {
         .single();
       const tenantId = profile?.tenant_id || '20081963-8db9-4a6c-8181-6a820b86e12f';
 
-      // 2. Construir Snapshot Soberano V3 (RESOLVE IMAGENS E MACROS AQUI)
+      // 2. Construir Snapshot Soberano V3
       const snapshot = await this.buildSovereignSnapshot(options);
 
+      // 3. Preparar Payload do Plano
       const payload: any = {
-        patient_id: patientId,
-        nutritionist_id: nutritionistId,
-        tenant_id: tenantId,
         title: title || "Plano Alimentar Soberano V3",
         snapshot,
         total_meta_calorias: Math.round(targets.kcal),
         total_meta_proteinas: Math.round(targets.protein),
         total_meta_carboidratos: Math.round(targets.carbs),
         total_meta_gorduras: Math.round(targets.fat),
-        plan_status: 'published_to_patient',
-        is_active: true,
         plan_mode: 'weekly',
-        editor_version: 'v3', // 🛡️ FORÇAR V3 SEMPRE
         start_date: new Date().toISOString().split('T')[0],
       };
 
-      // 🛡️ SNAPSHOT VALIDATOR (Anti-Traição)
-      const snapshotKcal = payload.snapshot.targets.kcal;
-      const payloadKcal = payload.total_meta_calorias;
-      
-      if (Math.abs(snapshotKcal - payloadKcal) > 1) {
-         console.error(`[CRITICAL] Divergência de Snapshot detectada: Snapshot(${snapshotKcal}) != Payload(${payloadKcal}). Bloqueando publicação.`);
-         return { ok: false, error: 'SNAPSHOT VALIDATION FAILED: Divergência de integridade detectada.' };
-      }
+      // 4. Preparar Lista de Itens para Sincronismo (Compatibilidade Legado)
+      const itemsRows: any[] = [];
+      snapshot.days.forEach(day => {
+        day.meals.forEach(meal => {
+          meal.items.forEach(item => {
+            const groupId = item.blockId;
+            
+            itemsRows.push({
+              tipo_refeicao: meal.name,
+              day_of_week: day.day_of_week,
+              title: item.title,
+              description: item.quantity_display,
+              meta_calorias: item.macros.kcal,
+              meta_proteinas: item.macros.protein_g,
+              meta_carboidratos: item.macros.carbs_g,
+              meta_gorduras: item.macros.fat_g,
+              image_url: item.visual.image_url,
+              is_primary: true,
+              substitution_group_id: groupId
+            });
 
-      let finalPlanId = planId;
-
-      // 3. Persistência Principal
-      if (planId) {
-        console.log(`[Persistence-V3] Atualizando plano existente ${planId}.`);
-        const { error } = await supabase
-          .from('meal_plans')
-          .update(payload)
-          .eq('id', planId);
-        if (error) throw error;
-      } else {
-        console.log(`[Persistence-V3] Criando novo plano para o paciente.`);
-        await supabase
-          .from('meal_plans')
-          .update({ is_active: false } as any)
-          .eq('patient_id', patientId);
-
-        const { data: newPlan, error } = await supabase
-          .from('meal_plans')
-          .insert([payload])
-          .select()
-          .single();
-        if (error) throw error;
-        finalPlanId = newPlan.id;
-      }
-
-      // 4. Persistência Relacional (Somente para compatibilidade de lista legado, App V3 usa Snapshot)
-      if (finalPlanId) {
-        await supabase.from('meal_plan_items').delete().eq('meal_plan_id', finalPlanId);
-        
-        const itemsRows: any[] = [];
-        snapshot.days.forEach(day => {
-          day.meals.forEach(meal => {
-            meal.items.forEach(item => {
-              const groupId = item.blockId;
-              
+            item.substitutions.forEach(sub => {
               itemsRows.push({
-                meal_plan_id: finalPlanId,
-                tenant_id: tenantId,
                 tipo_refeicao: meal.name,
                 day_of_week: day.day_of_week,
-                title: item.title,
-                description: item.quantity_display,
-                meta_calorias: item.macros.kcal,
-                meta_proteinas: item.macros.protein_g,
-                meta_carboidratos: item.macros.carbs_g,
-                meta_gorduras: item.macros.fat_g,
-                image_url: item.visual.image_url,
-                is_primary: true,
-                substitution_group_id: groupId,
-                editor_version: 'v3'
-              });
-
-              item.substitutions.forEach(sub => {
-                itemsRows.push({
-                  meal_plan_id: finalPlanId,
-                  tenant_id: tenantId,
-                  tipo_refeicao: meal.name,
-                  day_of_week: day.day_of_week,
-                  title: sub.title,
-                  description: sub.quantity_display,
-                  meta_calorias: sub.macros.kcal,
-                  meta_proteinas: sub.macros.protein_g,
-                  meta_carboidratos: sub.macros.carbs_g,
-                  meta_gorduras: sub.macros.fat_g,
-                  image_url: sub.visual.image_url,
-                  is_primary: false,
-                  substitution_group_id: groupId,
-                  editor_version: 'v3'
-                });
+                title: sub.title,
+                description: sub.quantity_display,
+                meta_calorias: sub.macros.kcal,
+                meta_proteinas: sub.macros.protein_g,
+                meta_carboidratos: sub.macros.carbs_g,
+                meta_gorduras: sub.macros.fat_g,
+                image_url: sub.visual.image_url,
+                is_primary: false,
+                substitution_group_id: groupId
               });
             });
           });
         });
+      });
 
-        if (itemsRows.length > 0) {
-          await supabase.from('meal_plan_items').insert(itemsRows);
-        }
+      // 🛡️ RE-VALIDAÇÃO: Impedir envio de plano sem itens
+      if (itemsRows.length === 0) {
+        return { ok: false, error: 'BLOQUEIO DE SEGURANÇA: Não é permitido publicar um plano sem itens.' };
       }
 
-      if (draftId) {
-        await supabase
-          .from('v3_drafts')
-          .update({
-            draft_status: 'promoted',
-            promoted_meal_plan_id: finalPlanId,
-            promoted_at: new Date().toISOString(),
-          } as any)
-          .eq('id', draftId);
+      // 5. CHAMADA ATÔMICA VIA RPC
+      // Unifica update(meal_plans) + delete/insert(meal_plan_items) + update(v3_drafts)
+      const { data, error } = await supabase.rpc('publish_meal_plan_v3', {
+        p_plan_id: planId || null,
+        p_patient_id: patientId,
+        p_nutritionist_id: nutritionistId,
+        p_tenant_id: tenantId,
+        p_payload: payload,
+        p_items: itemsRows,
+        p_draft_id: draftId || null
+      });
+
+      if (error) {
+        console.error('[Persistence-V3] Erro na RPC de publicação:', error);
+        throw error;
       }
 
-      console.log(`[Persistence-V3] Publicação concluída com sucesso. PlanID: ${finalPlanId}`);
-      return { ok: true, planId: finalPlanId };
+      const result = data as { ok: boolean; plan_id: string };
+      console.log(`[Persistence-V3] Publicação ATÔMICA concluída. PlanID: ${result.plan_id}`);
+      
+      return { ok: true, planId: result.plan_id };
     } catch (err: any) {
-      console.error('[Persistence-V3] Erro fatal:', err);
+      console.error('[Persistence-V3] Erro fatal na publicação:', err);
       return { ok: false, error: err.message };
     }
   }
