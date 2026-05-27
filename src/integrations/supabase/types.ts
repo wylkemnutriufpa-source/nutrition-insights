@@ -23219,6 +23219,18 @@ export type Database = {
         Args: { p_correlation_id?: string; p_plan_id: string }
         Returns: Json
       }
+      publish_meal_plan_v3: {
+        Args: {
+          p_draft_id?: string
+          p_items: Json
+          p_nutritionist_id: string
+          p_patient_id: string
+          p_payload: Json
+          p_plan_id: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       rebuild_patient_projection: {
         Args: { _patient_id: string }
         Returns: undefined
