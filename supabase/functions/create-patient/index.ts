@@ -1,5 +1,5 @@
-// Edge Function CANÔNICA — única autorizada a criar pacientes
-// Substitui chamadas diretas a auth.users e RPCs legadas
+// Edge Function ZMS (Zero Mutation System) — Única porta de entrada para criação de pacientes
+// Implementa Event Sourcing + CQRS: Grava evento e projeta estado atômico.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
@@ -21,11 +21,12 @@ interface CreatePatientInput {
   email: string;
   full_name: string;
   phone?: string | null;
-  password?: string | null;        // se ausente, gera senha aleatória forte
-  nutritionist_id?: string | null; // opcional; obrigatório quando source != 'admin'
+  password?: string | null;
+  nutritionist_id?: string | null;
   source: Source;
   metadata?: Record<string, unknown>;
   send_magic_link?: boolean;
+  request_id?: string; // Idempotência via cliente
 }
 
 const randomStrongPassword = () => {
@@ -50,39 +51,21 @@ Deno.serve(async (req) => {
     const { data: { user: caller } } = await callerClient.auth.getUser();
     if (!caller) return json({ error: "Invalid session" }, 401);
 
-    const rl = await checkRateLimit("create-patient", caller.id, 30, 15);
-    if (!rl.allowed) return rateLimitResponse();
-
     const body = (await req.json()) as CreatePatientInput;
     const email = String(body.email || "").trim().toLowerCase();
     const fullName = String(body.full_name || "").trim();
     const source = body.source;
 
     if (!email || !fullName) return json({ error: "email e full_name obrigatórios" }, 400);
-    if (!["invite", "import", "register", "lead_convert", "admin"].includes(source)) {
-      return json({ error: "source inválido" }, 400);
-    }
 
-    // Autorização por source
-    const { data: callerRoles } = await callerClient
-      .from("user_roles").select("role").eq("user_id", caller.id);
-    const roles = (callerRoles || []).map((r: any) => r.role);
-    const isPro = roles.some((r: string) => ["nutritionist", "personal", "admin"].includes(r));
-
-    if (source === "register") {
-      // Auto-cadastro: nutricionista é OPCIONAL — sem nutri o front cria lead, não chama esta função
-      if (!body.nutritionist_id) {
-        return json({ error: "Auto-cadastro sem nutricionista deve gerar lead, não paciente" }, 400);
-      }
-    } else if (!isPro) {
-      return json({ error: "Apenas profissionais podem criar pacientes" }, 403);
-    }
+    const rl = await checkRateLimit("create-patient", caller.id, 30, 15);
+    if (!rl.allowed) return rateLimitResponse();
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1. Criar / localizar usuário em auth.users (via GoTrue admin API)
+    // 1. Identidade Canônica Absoluta (Auth)
     let patientId: string | null = null;
     const password = body.password || randomStrongPassword();
 
@@ -99,49 +82,41 @@ Deno.serve(async (req) => {
       if (!exists) return json({ error: msg }, 400);
 
       // Localizar existente
-      const { data: foundId } = await admin.rpc("find_patient_by_email" as any, { _email: email });
-      if (foundId) {
-        patientId = foundId as string;
-      } else {
-        const { data: list } = await admin.auth.admin.listUsers();
-        const existing = list?.users?.find((u: any) => u.email?.toLowerCase() === email);
-        if (!existing) return json({ error: "Usuário existe mas não foi possível localizar" }, 400);
-        patientId = existing.id;
-      }
+      const { data: list } = await admin.auth.admin.listUsers();
+      const existing = list?.users?.find((u: any) => u.email?.toLowerCase() === email);
+      if (!existing) return json({ error: "Usuário existe mas não foi possível localizar" }, 400);
+      patientId = existing.id;
     } else {
       patientId = created.user.id;
     }
 
     if (!patientId) return json({ error: "Falha ao resolver patient_id" }, 500);
 
-    // 2. RPC canônica (cria profile + role + tenant + vínculo + pipeline + lifecycle + log)
-    const { data: result, error: rpcErr } = await admin.rpc("create_patient_canonical" as any, {
+    // 2. COMANDO ZMS: append_patient_event (Single Writer)
+    // Usamos um request_id único para garantir idempotência atômica no banco
+    const requestId = body.request_id || crypto.randomUUID();
+
+    const { data: eventResult, error: eventErr } = await admin.rpc("append_patient_event", {
       _patient_id: patientId,
-      _full_name: fullName,
-      _email: email,
-      _phone: body.phone || null,
-      _nutritionist_id: body.nutritionist_id || null,
-      _source: source,
-      _metadata: body.metadata || {},
+      _request_id: requestId,
+      _event_type: "PATIENT_CREATED",
+      _payload: {
+        email,
+        full_name: fullName,
+        phone: body.phone || null,
+        nutritionist_id: body.nutritionist_id || null,
+        source: source,
+        metadata: body.metadata || {},
+      },
+      _metadata: { caller_id: caller.id, source: "edge_function_zms" }
     });
 
-    if (rpcErr) {
-      console.error("[create-patient] RPC canonical error:", rpcErr);
-      return json({ error: `Falha na canônica: ${rpcErr.message}` }, 500);
+    if (eventErr) {
+      console.error("[ZMS] append_patient_event error:", eventErr);
+      return json({ error: `Falha no Single Writer: ${eventErr.message}` }, 500);
     }
 
-    // 3. Notificação de boas-vindas
-    try {
-      await admin.from("notifications").insert({
-        user_id: patientId,
-        title: "Bem-vindo ao FitJourney! 🎉",
-        message: "Seu acesso foi criado. Aguarde a liberação do acompanhamento.",
-        type: "info",
-        target_route: "/patient-dashboard",
-      });
-    } catch (_) {}
-
-    // 4. Magic link opcional
+    // 3. Side Effects (Assíncronos no conceito, mas síncronos aqui para feedback)
     if (body.send_magic_link) {
       try {
         await admin.auth.admin.generateLink({
@@ -150,13 +125,18 @@ Deno.serve(async (req) => {
           options: { redirectTo: `https://www.fitjourney.com.br/` },
         });
       } catch (e) {
-        console.log("[create-patient] magic link falhou:", e);
+        console.log("[ZMS] magic link falhou:", e);
       }
     }
 
-    return json({ success: true, patient_id: patientId, canonical: result });
+    return json({ 
+      success: true, 
+      patient_id: patientId, 
+      zms: eventResult,
+      message: eventResult.status === "idempotent" ? "Comando já processado" : "Paciente criado com sucesso"
+    });
   } catch (err: any) {
-    console.error("create-patient error:", err);
+    console.error("create-patient zms error:", err);
     return json({ error: err.message }, 500);
   }
 });
