@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
-import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
+import { completeOnboardingApprovalAtomic, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
 import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import { localGenerateMealPlan } from "@/lib/localMealPlanGenerator";
@@ -180,60 +180,28 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
     setProcessing(true);
 
-    // Update pipeline as approved
-    await supabase
-      .from("onboarding_pipelines" as any)
-      .update({
-        plan_approved: true,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-        status: "completed",
-        use_scheduling_criteria: useScheduling,
-        scheduling_criteria: criteria,
-      } as any)
-      .eq("id", pipeline.id);
+    // Bug #3 Fix: Single atomic RPC instead of 5 separate calls
+    // This prevents state divergence where pipeline is "completed" but schedule/notification weren't saved
+    const otherPlanIds = planOptions.length > 1
+      ? planOptions
+          .filter((p: any) => p.mealPlanId !== planId)
+          .map((p: any) => p.mealPlanId)
+      : [];
 
-      // Use server-authoritative RPC to approve + publish atomically
-      if (planId) {
-        const result = await approveAndPublishPlan(planId, user.id);
-        if (!result.success) {
-          toast.error("Erro ao aprovar plano: " + (result.error || ""));
-          setProcessing(false);
-          return;
-        }
+    const result = await completeOnboardingApprovalAtomic(
+      pipeline.id,
+      planId,
+      user.id,
+      patientId,
+      useScheduling,
+      criteria,
+      otherPlanIds
+    );
 
-      // Schedule criteria if enabled
-      if (useScheduling) {
-        const activateDate = new Date();
-        activateDate.setDate(activateDate.getDate() + (criteria.checklist_days || 14));
-        await supabase
-          .from("plan_schedules" as any)
-          .insert({
-            meal_plan_id: planId,
-            activate_at: activateDate.toISOString().split("T")[0],
-            criteria: criteria,
-            status: "scheduled",
-          } as any);
-      }
-    }
-
-    // Notify patient
-    await supabase.from("notifications").insert({
-      user_id: patientId,
-      title: "Plano Alimentar Aprovado! 🎉",
-      message: "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
-      type: "success",
-      action_url: "/my-diet",
-    } as any);
-
-    // Clean up non-selected plan options
-    if (planOptions.length > 1) {
-      const otherPlanIds = planOptions
-        .filter((p: any) => p.mealPlanId !== planId)
-        .map((p: any) => p.mealPlanId);
-      for (const otherId of otherPlanIds) {
-        await rejectMealPlan(otherId, user.id, "Opção não selecionada");
-      }
+    if (!result.success) {
+      toast.error("Erro ao aprovar plano: " + (result.error || ""));
+      setProcessing(false);
+      return;
     }
 
     toast.success("Plano aprovado e publicado com sucesso!");

@@ -204,6 +204,55 @@ export async function approveAndPublishPlan(
 }
 
 /**
+ * Complete onboarding approval atomically (Bug #3 Fix).
+ * Single transaction that:
+ * - Marks pipeline as completed
+ * - Publishes the meal plan
+ * - Inserts plan schedule if enabled
+ * - Sends notification to patient
+ * - Rejects alternative plans
+ * 
+ * This prevents state divergence where pipeline is "completed" but schedule/notification weren't saved.
+ */
+export async function completeOnboardingApprovalAtomic(
+  pipelineId: string,
+  planId: string,
+  nutritionistId: string,
+  patientId: string,
+  useScheduling: boolean = false,
+  schedulingCriteria?: Record<string, unknown>,
+  otherPlanIds?: string[]
+): Promise<TransitionResult> {
+  const { data, error } = await supabase.rpc(
+    "complete_onboarding_approval_atomic" as any,
+    {
+      _pipeline_id: pipelineId,
+      _plan_id: planId,
+      _nutritionist_id: nutritionistId,
+      _patient_id: patientId,
+      _use_scheduling: useScheduling,
+      _scheduling_criteria: schedulingCriteria || null,
+      _other_plan_ids: otherPlanIds || [],
+    }
+  );
+
+  if (error) {
+    console.error("[ServerTransition] completeOnboardingApprovalAtomic failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  const result = data as Record<string, unknown>;
+  if (result && result.success === false) {
+    return { success: false, error: (result.error as string) || "Erro ao completar aprovação", data: result };
+  }
+
+  // Onda 1: snapshot determinístico (não-bloqueante)
+  await persistSnapshotAfterPublish(planId);
+
+  return { success: true, data: result };
+}
+
+/**
  * Reject a meal plan (server-authoritative).
  * Replaces direct .update({ plan_status: 'rejected', is_active: false }).
  */
