@@ -68,14 +68,83 @@ const scaleFood = (food: Food, factor: number): Food => {
 };
 
 
+const getGramageFromPortion = (name: string, portion: string): number => {
+  const cleanPortion = portion.toLowerCase();
+  
+  const gMatch = cleanPortion.match(/^(\d+)\s*g$/);
+  if (gMatch) return parseInt(gMatch[1]);
+  
+  if (name.includes('Ovos Mexidos') || name.includes('Ovo')) {
+    const num = parseInt(portion) || 1;
+    return num * 50; 
+  }
+  if (name.includes('Omelete')) {
+    const num = parseInt(portion) || 1;
+    return num * 50;
+  }
+  if (name.includes('Whey')) {
+    return 30; 
+  }
+  if (name.includes('Maçã')) {
+    return 150; 
+  }
+  if (name.includes('Banana')) {
+    return 100; 
+  }
+  if (name.includes('Mamão')) {
+    return 150; 
+  }
+  if (name.includes('Tapioca')) {
+    return 80;
+  }
+  if (name.includes('Crepioca')) {
+    return 120;
+  }
+  if (name.includes('Azeite')) {
+    return 10; 
+  }
+  if (name.includes('Salada Verde')) {
+    return 100; 
+  }
+  if (name.includes('Legumes')) {
+    return 100;
+  }
+  if (name.includes('Chá')) {
+    return 200; 
+  }
+  if (name.includes('Gelatina')) {
+    return 120; 
+  }
+  if (name.includes('Sopa')) {
+    return 300; 
+  }
+  if (name.includes('Iogurte')) {
+    return 170; 
+  }
+  if (name.includes('Castanhas')) {
+    return 20;
+  }
+  if (name.includes('Abacate')) {
+    return 100;
+  }
+
+  const anyNum = parseInt(portion);
+  if (!isNaN(anyNum) && anyNum > 0) {
+    if (anyNum < 10) return anyNum * 100;
+    return anyNum;
+  }
+
+  return 100; 
+};
+
 const createItem = (food: Food, isPrimary: boolean, substitutions: Food[] = []) => ({
   id: uid(), instanceId: uid(), name: food.n, title: food.n, kcal: food.k, protein: food.pr, carbs: food.c, fat: food.g,
-  quantity: 1, quantity_display: food.p, clinical_mass_g: parseInt(food.p) || 100,
+  quantity: 1, quantity_display: food.p, clinical_mass_g: getGramageFromPortion(food.n, food.p),
   macros: { kcal: food.k, protein_g: food.pr, carbs_g: food.c, fat_g: food.g },
   imageUrl: food.img, is_primary: isPrimary,
   substitutions: substitutions.map(s => ({
     id: uid(), instanceId: uid(), name: s.n, title: s.n, kcal: s.k, protein: s.pr, carbs: s.c, fat: s.g,
-    quantity: 1, quantity_display: s.p, clinical_mass_g: parseInt(s.p) || 100,
+    quantity: 1, quantity_display: s.p, clinical_mass_g: getGramageFromPortion(s.n, s.p),
     macros: { kcal: s.k, protein_g: s.pr, carbs_g: s.c, fat_g: s.g }, imageUrl: s.img,
   }))
 });

@@ -2,8 +2,29 @@
 import { describe, it, expect } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY!;
+import fs from 'fs';
+import path from 'path';
+
+// Load .env robustly
+const envConfig: any = {};
+try {
+  const envPath = path.resolve('.env');
+  const envText = fs.readFileSync(envPath, 'utf8');
+  envText.split('\n').forEach(line => {
+    const parts = line.split('=');
+    if (parts.length >= 2) {
+      const key = parts[0].trim();
+      let val = parts.slice(1).join('=').trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      envConfig[key] = val;
+    }
+  });
+} catch (e) {}
+
+const supabaseUrl = envConfig.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL!;
+const supabaseKey = envConfig.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 describe('Auditoria Forense de Templates V3', () => {
@@ -38,7 +59,8 @@ describe('Auditoria Forense de Templates V3', () => {
         days.forEach((day, dIdx) => {
           (day.meals || []).forEach(meal => {
             (meal.items || []).forEach(item => {
-              if (!item.image_url || item.image_url.includes('undefined') || item.image_url.includes('placeholder')) {
+              const imgUrl = item.image_url || item.imageUrl;
+              if (!imgUrl || imgUrl.includes('undefined') || imgUrl.includes('placeholder')) {
                 result.issues.push(`Dia ${dIdx+1}: Item ${item.name} sem imagem real`);
               }
               if (!item.clinical_mass_g || item.clinical_mass_g <= 1) {

@@ -2,8 +2,29 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import fs from 'fs';
+import path from 'path';
+
+// Load .env robustly
+const envConfig: any = {};
+try {
+  const envPath = path.resolve('.env');
+  const envText = fs.readFileSync(envPath, 'utf8');
+  envText.split('\n').forEach(line => {
+    const parts = line.split('=');
+    if (parts.length >= 2) {
+      const key = parts[0].trim();
+      let val = parts.slice(1).join('=').trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      envConfig[key] = val;
+    }
+  });
+} catch (e) {}
+
+const supabaseUrl = envConfig.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL!;
+const supabaseKey = envConfig.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 describe('Auditoria Forense dos 14 Templates Soberanos', () => {
