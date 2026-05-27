@@ -11896,6 +11896,39 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_type: string
+          metadata: Json | null
+          patient_id: string
+          payload: Json
+          request_id: string
+          sequence: number
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string
+          event_type: string
+          metadata?: Json | null
+          patient_id: string
+          payload: Json
+          request_id: string
+          sequence?: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_type?: string
+          metadata?: Json | null
+          patient_id?: string
+          payload?: Json
+          request_id?: string
+          sequence?: number
+        }
+        Relationships: []
+      }
       patient_favorite_recipes: {
         Row: {
           created_at: string
@@ -16385,6 +16418,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      projection_versions: {
+        Row: {
+          last_sequence: number
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_sequence: number
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_sequence?: number
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       protocol_autonomy_settings: {
         Row: {
@@ -22176,6 +22227,33 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_patient_history: {
+        Row: {
+          created_at: string | null
+          event_type: string | null
+          patient_id: string | null
+          payload: Json | null
+          request_id: string | null
+          sequence: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type?: string | null
+          patient_id?: string | null
+          payload?: Json | null
+          request_id?: string | null
+          sequence?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string | null
+          patient_id?: string | null
+          payload?: Json | null
+          request_id?: string | null
+          sequence?: number | null
+        }
+        Relationships: []
+      }
       whatsapp_integrations_safe: {
         Row: {
           created_at: string | null
@@ -22243,6 +22321,16 @@ export type Database = {
       anonymize_profile_data: {
         Args: { target_profile_id: string }
         Returns: undefined
+      }
+      append_patient_event: {
+        Args: {
+          _event_type: string
+          _metadata?: Json
+          _patient_id: string
+          _payload: Json
+          _request_id: string
+        }
+        Returns: Json
       }
       approve_and_publish_plan: {
         Args: {
