@@ -383,8 +383,6 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
             p_meal_plan_id: mealPlanId,
             p_day_of_week: 0,
             p_items: itemsPayload,
-            p_tenant_id: tenantId,
-            p_nutritionist_id: user?.id || null,
           }
         );
 
