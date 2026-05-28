@@ -50,7 +50,7 @@ import { RecipeBuilder } from '@/features/nos/components/RecipeBuilder';
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryPlanId = searchParams.get('planId');
   const effectiveId = planId || queryPlanId || id;
   const effectivePatientId = patientId;
