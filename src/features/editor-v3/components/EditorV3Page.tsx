@@ -112,8 +112,9 @@ export default function EditorV3Page() {
     if (initialMeals && initialMeals.length > 0) {
       // 🛡️ Guard: Só hidrata se o store estiver vazio ou se for um load forçado
       // Isso evita o "revert" cíclico
-      if (store.meals.length === 0 || initialMeals.length !== store.meals.length) {
+      if (!isHydrated.current || store.meals.length === 0) {
         store.hydrateMeals(initialMeals);
+        isHydrated.current = true;
       }
     }
   }, [initialMeals]);
