@@ -384,7 +384,7 @@ export const planPersistenceService = {
   /**
    * 🛡️ DELETAR PLANO V3
    */
-  async function deletePlan(planId: string): Promise<boolean> {
+  async deletePlan(planId: string): Promise<boolean> {
     const { error } = await supabase
       .from('meal_plans')
       .delete()
@@ -400,7 +400,7 @@ export const planPersistenceService = {
   /**
    * 🛡️ DESATIVAR/ARQUIVAR PLANO V3
    */
-  async function deactivatePlan(planId: string): Promise<boolean> {
+  async deactivatePlan(planId: string): Promise<boolean> {
     const { error } = await supabase
       .from('meal_plans')
       .update({ is_active: false, plan_status: 'inactive' })
