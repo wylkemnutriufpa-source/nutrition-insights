@@ -267,8 +267,7 @@ export default function EditorV3Page() {
       // 🛡️ Guard #1: Plano já carregado e store tem dados → não recarrega
       if (effectiveId === lastLoadedPlanId.current && 
           effectivePatientId === lastLoadedPatientId.current && 
-          store.meals.length > 0) {
-        // 🛡️ Garantia de que o loader não fica travado se o componente remontar
+          isHydrated.current) {
         if (loading) setLoading(false);
         return;
       }
