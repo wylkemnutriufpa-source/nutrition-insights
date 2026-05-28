@@ -390,16 +390,12 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           throw new Error(`RPC failed: ${error.message}`);
         }
 
-        if (!data?.ok) {
-          throw new Error(data?.error || 'Falha ao aplicar template');
-        }
-
         // Refresh data after successful application
         await fetchData(true);
 
         setShowTemplateLoad(false);
         setPreviewTemplate(null);
-        toast.success(`Template "${template.template_name}" aplicado! (${data.items_inserted} itens)`);
+        toast.success(`Template "${template.template_name}" aplicado com sucesso!`);
       } finally {
         setSaving(false);
       }
