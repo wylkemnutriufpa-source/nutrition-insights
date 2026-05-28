@@ -13,7 +13,9 @@ const CRITICAL_COLUMNS = [
   { table: "profiles", column: "patient_state" },
   { table: "whatsapp_logs", column: "id" },
   { table: "sovereign_runtime_logs", column: "id" },
-  { table: "system_error_logs", column: "id" }
+  { table: "system_error_logs", column: "id" },
+  { table: "system_diagnostic_logs", column: "test_type" },
+  { table: "v3_substitutions", column: "id" }
 ];
 
 

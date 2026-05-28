@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RUNBOOKS, type Runbook } from "@/lib/runbooks";
+import { DailyChecklistPanel } from "@/components/admin/DailyChecklistPanel";
 import { toast } from "sonner";
 
 // ========== Alerts Panel ==========
@@ -653,14 +654,19 @@ export default function OperationalDashboard() {
 
       <MetricsPanel />
 
-      <Tabs defaultValue="alerts" className="w-full">
-        <TabsList className="w-full grid grid-cols-5">
+      <Tabs defaultValue="checklist" className="w-full">
+        <TabsList className="w-full grid grid-cols-6">
+          <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="alerts">Alertas</TabsTrigger>
           <TabsTrigger value="monitor">Monitor</TabsTrigger>
           <TabsTrigger value="dr">DR Test</TabsTrigger>
           <TabsTrigger value="killswitch">Kill Switch</TabsTrigger>
           <TabsTrigger value="runbooks">Runbooks</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="checklist" className="mt-4">
+          <DailyChecklistPanel />
+        </TabsContent>
 
         <TabsContent value="alerts" className="mt-4">
           <AlertsPanel />
