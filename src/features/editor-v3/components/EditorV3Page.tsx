@@ -337,10 +337,12 @@ export default function EditorV3Page() {
           
           if (mealsToHydrate.length > 0) {
             store.hydrateMeals(mealsToHydrate);
+            isHydrated.current = true;
             
             const daysWithContent = [...new Set(mealsToHydrate.map((m: any) => m.day_of_week ?? 0))];
             if (!daysWithContent.includes(activeDay) && daysWithContent.length > 0) {
-              setActiveDay(daysWithContent[0]);
+              const targetDay = daysWithContent.includes(1) ? 1 : daysWithContent[0];
+              setActiveDay(targetDay);
             }
           }
           
