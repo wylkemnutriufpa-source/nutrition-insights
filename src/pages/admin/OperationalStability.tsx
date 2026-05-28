@@ -28,7 +28,7 @@ export default function OperationalStability() {
 
     // 1. Audit Schema: Meal Plan Items
     try {
-      const { data, error } = await supabase.rpc('get_column_exists', { 
+      const { data, error } = await (supabase.rpc as any)('get_column_exists', { 
         p_table: 'meal_plan_items', 
         p_column: 'clinical_mass_g' 
       });
@@ -54,7 +54,7 @@ export default function OperationalStability() {
 
     // 2. Audit RPC: publish_meal_plan_v3
     try {
-      const { data: rpcExists } = await supabase.rpc('check_function_exists', { p_name: 'publish_meal_plan_v3' });
+      const { data: rpcExists } = await (supabase.rpc as any)('check_function_exists', { p_name: 'publish_meal_plan_v3' });
       results.push({
         name: "RPC: publish_meal_plan_v3",
         status: rpcExists ? "OK" : "ERROR",
@@ -87,7 +87,7 @@ export default function OperationalStability() {
 
     // 5. Flow Audit: Active Plan Constraint
     try {
-      const { data: duplicates } = await supabase.rpc('check_active_plan_duplicates');
+      const { data: duplicates } = await (supabase.rpc as any)('check_active_plan_duplicates');
       const hasDuplicates = duplicates && (duplicates as any).length > 0;
       results.push({
         name: "Integridade: Plano Ativo Único",
