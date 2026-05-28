@@ -41,9 +41,17 @@ export function DailyChecklistPanel() {
       icon: UserPlus,
       status: "pending",
       runTest: async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Usuário não autenticado");
+        
+        const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("user_id", user.id).single();
+        if (!prof) throw new Error("Perfil profissional não encontrado");
+
         const { data, error } = await supabase.from("profiles").insert({
           full_name: "Teste Operacional " + new Date().toISOString(),
-          patient_state: "ready_for_plan"
+          patient_state: "ready_for_plan",
+          tenant_id: prof.tenant_id,
+          user_id: user.id
         }).select("id").single();
         if (error) throw error;
         localStorage.setItem("last_test_patient_id", data.id);
