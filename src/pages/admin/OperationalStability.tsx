@@ -5,11 +5,13 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Database, Zap, Share2, Activity, Bug, TrendingDown, ClipboardCheck, Lock, Search } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Database, Zap, Share2, Activity, Bug, TrendingDown, ClipboardCheck, Lock, Search, FileText, History, ShieldAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 interface FlowStatus {
