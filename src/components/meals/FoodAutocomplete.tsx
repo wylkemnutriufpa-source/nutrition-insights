@@ -183,7 +183,6 @@ export const FOOD_DATABASE: FoodItem[] = [
   { name: "Leite sem lactose", portion: "200ml", calories: 96, protein: 6.4, carbs: 10, fat: 3, category: "laticinio" },
 
   // ── Preparações comuns ──
-  { name: "Arroz com feijão", portion: "4 col arroz + 1 concha", calories: 271, protein: 8.8, carbs: 57, fat: 0.9, category: "preparacao" },
   { name: "Salada verde mista", portion: "1 prato (100g)", calories: 20, protein: 1.5, carbs: 3, fat: 0.3, category: "preparacao" },
   { name: "Sopa de legumes", portion: "1 prato (300ml)", calories: 80, protein: 2.5, carbs: 15, fat: 1, category: "preparacao" },
   { name: "Vitamina de banana c/ aveia", portion: "300ml", calories: 220, protein: 8, carbs: 40, fat: 4, category: "preparacao" },
