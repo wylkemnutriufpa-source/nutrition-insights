@@ -67,6 +67,11 @@ export default function EditorV3Page() {
   const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
   const [isRecipeBuilderOpen, setIsRecipeBuilderOpen] = useState(false);
 
+  // Refs to track current loaded plan to avoid redundant loading
+  const lastLoadedPlanId = React.useRef<string | null>(null);
+  const lastLoadedPatientId = React.useRef<string | null>(null);
+  const isHydrated = React.useRef(false);
+
   const EMPTY_ARRAY = useMemo(() => [], []);
   const { 
     draftId, 
