@@ -113,7 +113,7 @@ export async function loadOrCreateDraft(
     .select('*')
     .eq('nutritionist_id', nutritionistId)
     .in('patient_id', patientIds)
-    .in('draft_status', ['editing', 'promoted'])
+    .eq('draft_status', 'editing')
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle();
