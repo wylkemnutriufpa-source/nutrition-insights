@@ -64,7 +64,15 @@ export default function OperationalStability() {
     contractBlocks: 0,
     totalErrors: 0,
     stabilityScore: 100,
-    stabilityStreakDays: 0
+    stabilityStreakDays: 0,
+    publishSuccessRate: 100,
+    onboardingCompletionRate: 100,
+    rollbackCount: 0
+  });
+  const [incidents, setIncidents] = useState<IncidentLog[]>([]);
+  const [newIncident, setNewIncident] = useState<Partial<IncidentLog>>({
+    severity: "MEDIUM",
+    module: "Geral"
   });
   const [loading, setLoading] = useState(true);
   const [checklist, setChecklist] = useState<Record<string, boolean>>(
