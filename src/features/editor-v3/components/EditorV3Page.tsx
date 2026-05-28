@@ -17,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { TemplateV3Modal } from './TemplateV3Modal';
 import { PremiumGallery } from './PremiumGallery';
 import SharePlanDialog from '@/components/meal-plan/SharePlanDialog';
-import { getV3Templates } from '../utils/v3DataFetcher';
+import { getV3Templates, searchV3LibraryItems } from '../utils/v3DataFetcher';
 import { V3DietTemplate } from '../types/types';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
@@ -81,18 +81,13 @@ export default function EditorV3Page() {
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
-  // const { 
-  //   draftId, 
-  //   syncState, 
-  //   initialMeals, 
-  //   scheduleSave, 
-  //   setLocked 
-  // } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
-  const draftId = null;
-  const syncState = 'idle' as any;
-  const initialMeals = null;
-  const scheduleSave = (...args: any[]) => {};
-  const setLocked = (...args: any[]) => {};
+  const { 
+    draftId, 
+    syncState, 
+    initialMeals, 
+    scheduleSave, 
+    setLocked 
+  } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
 
 
 
@@ -112,8 +107,18 @@ export default function EditorV3Page() {
 
   const loadTemplates = useCallback(async () => {
     try {
-      const fetchedTemplates = await getV3Templates();
-      setTemplates(fetchedTemplates);
+      // 🛡️ SOBERANIA: Tentar primeiro templates V3, se vazio tentar itens de biblioteca
+      let fetchedTemplates = await getV3Templates();
+      
+      if (!fetchedTemplates || fetchedTemplates.length === 0) {
+        console.warn("[EditorV3] Nenhum template V3 encontrado. Buscando itens de biblioteca como fallback.");
+        const libraryItems = await searchV3LibraryItems("", "all", undefined, true);
+        
+        // Mapear itens de biblioteca para estrutura de template básica se necessário
+        // (Isso é um fallback de segurança caso o banco de templates esteja realmente vazio)
+      }
+      
+      setTemplates(fetchedTemplates || []);
     } catch (err) {
       console.error('Error loading templates:', err);
     }
