@@ -186,6 +186,15 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
   else if (Array.isArray(snapshot.meals)) {
     rawMeals.push(...snapshot.meals);
   }
+  // 🛡️ NOVO FALLBACK: Alguns snapshots do banco podem vir como Record de dias/kcal
+  else if (typeof snapshot === 'object' && snapshot !== null) {
+    // Se for o snapshot bruto de um template (Record<kcal, Snapshot>)
+    const firstKey = Object.keys(snapshot)[0];
+    const subSnapshot = snapshot[firstKey];
+    if (subSnapshot && (subSnapshot.days || subSnapshot.meals)) {
+      return normalizeSnapshotToV3(subSnapshot);
+    }
+  }
 
   return rawMeals.map(m => {
     // 🛡️ CORREÇÃO SOBERANA: Se o snapshot já tem items, usamos os IDs do snapshot.
@@ -193,7 +202,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
     const items = (m.items || m.foods || []).map((it: any) => {
       // Resolve a massa clínica com validação mínima
       const rawMass = Number(it.clinical_mass_g || it.quantity || it.qty || 0);
-      const clinical_mass_g = rawMass >= 5 ? rawMass : (it.clinical_mass_g ? rawMass : 100);
+      const clinical_mass_g = rawMass >= 1 ? rawMass : (it.clinical_mass_g ? rawMass : 100);
 
       // Usar o ID do snapshot se disponível para manter a correlação profissional-paciente
       const stableId = it.id || it.instanceId || crypto.randomUUID();
@@ -214,7 +223,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
         substitution_group_id: it.substitution_group_id || it.blockId || it.id,
         substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => {
           const subMass = Number(s.clinical_mass_g || s.amount || 0);
-          const sub_clinical_mass_g = subMass >= 5 ? subMass : 100;
+          const sub_clinical_mass_g = subMass >= 1 ? subMass : 100;
           const subId = s.id || crypto.randomUUID();
           return {
             ...s,
@@ -235,7 +244,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
     return {
       ...m,
       id: m.id || crypto.randomUUID(),
-      name: m.name || "Refeição",
+      name: translateSlot(m.name || m.slot || "Refeição"),
       time: m.time || "08:00",
       day_of_week: m.day_of_week !== undefined ? Number(m.day_of_week) : 1,
       imageUrl: m.image || m.imageUrl || m.image_url || m.visual?.image_url || null,
