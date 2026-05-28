@@ -23396,6 +23396,14 @@ export type Database = {
           template_title: string
         }[]
       }
+      select_sovereign_template_by_kcal: {
+        Args: { p_kcal_target: number }
+        Returns: {
+          best_kcal_key: string
+          template_id: string
+          template_title: string
+        }[]
+      }
       self_register_nutritionist: {
         Args: { _full_name: string; _user_id: string }
         Returns: Json
