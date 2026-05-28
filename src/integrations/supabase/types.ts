@@ -19038,6 +19038,42 @@ export type Database = {
         }
         Relationships: []
       }
+      system_incident_logs: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          module: string
+          prevention: string | null
+          root_cause: string | null
+          severity: string | null
+          title: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          module: string
+          prevention?: string | null
+          root_cause?: string | null
+          severity?: string | null
+          title: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          module?: string
+          prevention?: string | null
+          root_cause?: string | null
+          severity?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       system_logs: {
         Row: {
           category: string
