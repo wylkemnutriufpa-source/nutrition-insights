@@ -108,13 +108,18 @@ export default function QuickLink() {
     try {
       const formattedWhatsapp = formatInternationalWhatsApp(whatsapp);
       
-      // 1. Create Auth User
+      // 1. Create Auth User with Atomic Metadata
+      // O trigger on_auth_user_created agora assume a responsabilidade total
+      // Se qualquer vínculo falhar, o Auth fará rollback automático.
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: name,
+            nutritionist_id: nutriId,
+            role: 'patient',
+            whatsapp: formattedWhatsapp
           }
         }
       });
@@ -122,35 +127,19 @@ export default function QuickLink() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Falha ao criar usuário.");
 
-      // 2. Link to professional using RPC
-      const { error: rpcError } = await supabase.rpc("create_patient_canonical", {
-        _patient_id: authData.user.id,
-        _full_name: name,
-        _email: email.trim().toLowerCase(),
-        _whatsapp: formattedWhatsapp,
-        _nutritionist_id: nutriId,
-        _source: "register",
-        _metadata: { quick_link: true }
-      } as any);
-
-      if (rpcError) {
-        // Silent RPC Error fallback handled below
-        // Fallback for profile creation if RPC fails (though it shouldn't)
-        await supabase.from("profiles").update({ 
-          full_name: name,
-          whatsapp: formattedWhatsapp
-        } as any).eq("id", authData.user.id);
+      // 2. Notificação (Opcional, não-bloqueante para o domínio)
+      try {
+        await supabase.from("notifications").insert({
+          user_id: nutriId,
+          title: "Novo paciente via Link Rápido",
+          message: `${name} acabou de se cadastrar.`,
+          type: "patient_registered",
+          entity_type: "patient",
+          entity_id: authData.user.id,
+        } as any);
+      } catch (notifyErr) {
+        console.warn("Falha ao enviar notificação ao profissional:", notifyErr);
       }
-
-      // 3. Notify professional
-      await supabase.from("notifications").insert({
-        user_id: nutriId,
-        title: "Novo paciente via Link Rápido",
-        message: `${name} acabou de se cadastrar.`,
-        type: "patient_registered",
-        entity_type: "patient",
-        entity_id: authData.user.id,
-      } as any);
 
       toast.success("Cadastro realizado com sucesso!");
       

@@ -543,224 +543,55 @@ export default function PatientRegister() {
       }
 
       // ─── FLUXO B: COM NUTRICIONISTA ───
-      addLog("Criando usuário no Auth...");
-      
-      // CRITICAL: Ensure both nutritionist_id and invitation_code are in metadata for trigger handle_new_user
-      const signUpOptions = { 
-        data: { 
-          full_name: name,
-          nutritionist_id: nutriId,
-          invitation_code: invitationCode || null,
-          role: 'patient'
-        } 
-      };
-      
-      addLog(`Metadata para SignUp: ${JSON.stringify(signUpOptions.data)}`);
-
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
+      // 1. Supabase Auth SignUp com Metadados Atômicos
+      // O trigger handle_new_user agora garante: Linkage -> Profile -> Pipeline
+      // Se falhar, o signUp retorna erro e nada é criado.
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: email.toLowerCase().trim(),
         password,
-        options: signUpOptions,
+        options: {
+          data: {
+            full_name: name,
+            whatsapp: formattedWhatsapp,
+            nutritionist_id: nutriId,
+            invitation_code: invitationCode,
+            role: "patient",
+            correlation_id: correlationId
+          },
+        },
       });
 
-      if (signUpErr) {
-        addLog(`Erro no Auth SignUp: ${signUpErr.message}`);
-        
-        if (signUpErr.message.includes("25 seconds")) {
-          toast.error("Processando seu cadastro. Aguarde alguns instantes ou tente novamente em breve.");
-          setCooldown(30);
-        } else if (signUpErr.message === "User already registered") {
-          toast.error("Este e-mail já está cadastrado. Você será redirecionado para o login.");
-          setTimeout(() => navigate(`/auth?next=${encodeURIComponent(currentCadastroPath)}`), 2000);
-        } else {
-          toast.error("Não foi possível concluir o cadastro. Verifique os dados e tente novamente.");
-        }
-        setSyncStatus("error", "PATIENT_REGISTER", signUpErr.message);
+      if (signUpError) {
+        addLog(`Erro no Auth: ${signUpError.message}`);
+        toast.error(signUpError.message);
+        setSyncStatus("error", "PATIENT_REGISTER", signUpError.message);
         return;
       }
 
       if (!signUpData.user) {
-        addLog("Auth SignUp retornou sucesso mas sem usuário.");
-        toast.error("Falha ao criar conta.");
-        return;
+        throw new Error("Erro na criação do usuário.");
       }
 
-      addLog(`Usuário Auth criado: ${signUpData.user.id}. Vinculando paciente...`);
+      addLog(`Auth bem-sucedido. ID: ${signUpData.user.id}. Domínio clínico garantido pelo banco.`);
 
-      // 4.5. Garante que o usuário autenticado tenha o token de acesso pronto
-      const { data: { session } } = await supabase.auth.getSession();
-      addLog(`Sessão ativa: ${!!session}`);
-
-      // 5. Vincular paciente via RPC canônica — AGUARDA COMPLETAMENTE antes de prosseguir
-      addLog(`Chamando create_patient_canonical com nutriId: ${nutriId}`);
-      const { data: canonData, error: canonErr } = await supabase.rpc("create_patient_canonical" as any, {
-        _patient_id: signUpData.user.id,
-        _full_name: name,
-        _email: email.trim().toLowerCase(),
-        _phone: formattedWhatsapp,
-        _whatsapp: formattedWhatsapp,
-        _nutritionist_id: nutriId,
-        _source: invitationCode ? "invite" : "register",
-        _metadata: { 
-          referral_code: refCode || null,
-          invitation_code: invitationCode || null,
-          registration_url: window.location.href,
-          correlation_id: correlationId
-        },
-      });
-
-      if (canonErr) {
-        addLog(`ERRO CRÍTICO na RPC create_patient_canonical: ${canonErr.message}`);
-        // Se a RPC falhou, registramos o erro para auditoria mas tentamos um fallback mínimo 
-        // para que o paciente não fique totalmente perdido, embora o vínculo possa falhar.
-        try {
-          await supabase.from("onboarding_runtime_errors" as any).insert({
-            patient_id: signUpData.user.id,
-            context: "registration_rpc_failure",
-            error_message: canonErr.message,
-            error_payload: { nutriId, invitationCode, email, correlationId }
-          } as any);
-        } catch (e) {
-          addLog("Falha ao logar erro de runtime.");
-        }
-        
-        toast.error("Ocorreu um erro ao vincular seu perfil. Nossa equipe foi notificada.");
-      } else {
-        addLog("RPC create_patient_canonical executada com sucesso.");
-      }
-
-      // Notifica o profissional e atualiza status do convite
-      try {
-        if (invitationCode) {
-          addLog("Atualizando status do convite para 'completed'...");
-          const { data: inviteRows } = await supabase.rpc("complete_invitation" as any, {
-            _code: invitationCode,
-            _patient_user_id: signUpData.user.id,
-          });
-          const inviteData = Array.isArray(inviteRows) ? inviteRows[0] : inviteRows;
-          if (inviteData) {
-            await supabase.from("invitation_logs").insert({
-              invitation_id: inviteData.id,
-              professional_id: inviteData.professional_id,
-              patient_email: inviteData.patient_email || email,
-              event_type: "completed",
-              details: { 
-                patient_id: signUpData.user.id,
-                domain: window.location.hostname
-              },
-              user_agent: navigator.userAgent
-            });
-          }
-        }
-
-        addLog("Enviando notificação ao profissional...");
-        await supabase.from("notifications").insert({
-          user_id: nutriId,
-          title: "Novo paciente cadastrado",
-          message: `${name} se cadastrou via convite.`,
-          type: "patient_registered",
-          entity_type: "patient",
-          entity_id: signUpData.user.id,
-          target_route: `/patients/${signUpData.user.id}`,
-        } as any);
-      } catch (err: any) {
-        addLog(`Erro secundário (notificação/convite): ${err.message}`);
-      }
-
-      addLog("Registro concluído com sucesso. Iniciando validação de vínculo crítica...");
-      
-      // STAGE 1 - HARD FAIL VÍNCULO (CRÍTICO ABSOLUTO)
-      // Retry com backoff: o trigger do Supabase pode demorar até 3s para criar os registros
-      const validateLinkage = async (patientId: string, attempt = 1): Promise<{ success: boolean; reason?: string }> => {
-        addLog(`[FJ:LINKAGE] Validando vínculo para ${patientId} (tentativa ${attempt}/3)...`);
-        
-        // 1. Validar profiles.tenant_id
-        const { data: profile, error: profErr } = await supabase
-          .from("profiles")
-          .select("tenant_id")
-          .eq("user_id", patientId)
-          .single();
-          
-        if (profErr || !profile?.tenant_id) {
-          if (attempt < 3) {
-            addLog(`[FJ:LINKAGE] tenant_id ainda null, aguardando trigger... (${attempt}/3)`);
-            await new Promise(r => setTimeout(r, 1500 * attempt));
-            return validateLinkage(patientId, attempt + 1);
-          }
-          addLog(`[FJ:CRITICAL] profiles.tenant_id null para ${patientId} após 3 tentativas`);
-          return { success: false, reason: "profile_tenant_null" };
-        }
-        
-        // 2. Validar user_tenants EXISTS
-        const { data: userTenant, error: utErr } = await supabase
-          .from("user_tenants")
-          .select("id")
-          .eq("user_id", patientId)
-          .eq("tenant_id", profile.tenant_id)
-          .maybeSingle();
-          
-        if (utErr || !userTenant) {
-          if (attempt < 3) {
-            addLog(`[FJ:LINKAGE] user_tenants ainda ausente, aguardando... (${attempt}/3)`);
-            await new Promise(r => setTimeout(r, 1500 * attempt));
-            return validateLinkage(patientId, attempt + 1);
-          }
-          addLog(`[FJ:CRITICAL] user_tenants não encontrado para ${patientId} após 3 tentativas`);
-          return { success: false, reason: "user_tenant_missing" };
-        }
-        
-        // 3. Validar nutritionist_patients EXISTS
-        const { data: linkage, error: linkErr } = await supabase
-          .from("nutritionist_patients")
-          .select("id")
-          .eq("patient_id", patientId)
-          .eq("nutritionist_id", nutriId)
-          .maybeSingle();
-          
-        if (linkErr || !linkage) {
-          if (attempt < 3) {
-            addLog(`[FJ:LINKAGE] nutritionist_patients ainda ausente, aguardando... (${attempt}/3)`);
-            await new Promise(r => setTimeout(r, 1500 * attempt));
-            return validateLinkage(patientId, attempt + 1);
-          }
-          addLog(`[FJ:CRITICAL] nutritionist_patients não encontrado para ${patientId} após 3 tentativas`);
-          return { success: false, reason: "linkage_missing" };
-        }
-        
-        addLog("[FJ:LINKAGE] Vínculo validado com sucesso total.");
-        return { success: true };
-      };
-
-      const linkageResult = await validateLinkage(signUpData.user.id);
-      
-      if (!linkageResult.success) {
-        setLinkageError({
-          type: linkageResult.reason || "unknown",
-          message: "Ocorreu uma falha crítica ao vincular sua conta ao profissional nutricionista. Por favor, tente novamente ou fale com o suporte."
-        });
-        setSyncStatus("error", "LINKAGE_VALIDATION", linkageResult.reason);
-        return;
-      }
-
-      // Se tiver sessão, redireciona explicitamente limpando estados de loading
+      // Se tiver sessão, redireciona explicitamente
       if (signUpData.session) {
         setCurrentUserId(signUpData.user.id);
-        addLog("Sessão detectada e vínculo garantido. Redirecionando...");
         toast.success("Conta criada e vinculada com sucesso!");
         
         setTimeout(() => {
           setSyncStatus("success", "PATIENT_REGISTER");
           navigate("/client/dashboard", { replace: true });
-        }, 1000);
+        }, 500);
         return;
       }
 
-
       setCurrentUserId(signUpData.user.id);
-      toast.success("Conta criada com sucesso!");
+      toast.success("Conta criada com sucesso! Verifique seu e-mail se necessário.");
       setSyncStatus("success", "PATIENT_REGISTER");
 
-      if (nutriId) {
+      // Notificação (Opcional, não-bloqueante)
+      try {
         promptWhatsAppNotification({
           patientId: signUpData.user.id,
           patientName: name,
@@ -770,10 +601,12 @@ export default function PatientRegister() {
           clinicName: selectedProfessional?.clinic_name || undefined,
           phone: formattedWhatsapp
         });
+      } catch (notifyErr) {
+        console.warn("Falha na notificação WhatsApp:", notifyErr);
       }
     } catch (err: any) {
-      addLog(`Erro inesperado: ${err.message}`);
-      toast.error("Erro ao criar conta. Tente novamente.");
+      addLog(`Erro no registro: ${err.message}`);
+      toast.error(err.message || "Erro ao criar conta. Tente novamente.");
       setSyncStatus("error", "PATIENT_REGISTER", err.message);
     }
   };
