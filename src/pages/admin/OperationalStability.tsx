@@ -5,8 +5,12 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Database, Zap, Share2, Activity, Bug, TrendingDown } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Database, Zap, Share2, Activity, Bug, TrendingDown, ClipboardCheck, Lock, Search } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface FlowStatus {
   name: string;
@@ -23,6 +27,18 @@ interface RegressionMetrics {
   stabilityScore: number;
 }
 
+const CHECKLIST_ITEMS = [
+  { id: "cadastro", label: "Cadastro funcionando" },
+  { id: "onboarding", label: "Onboarding funcionando" },
+  { id: "vinculo", label: "Vínculo correto" },
+  { id: "geracao", label: "Geração de plano" },
+  { id: "publicacao", label: "Publicação" },
+  { id: "whatsapp", label: "WhatsApp" },
+  { id: "pdf", label: "PDF" },
+  { id: "substituicoes", label: "Substituições" },
+  { id: "app_paciente", label: "App Paciente" }
+];
+
 export default function OperationalStability() {
   const [statuses, setStatuses] = useState<FlowStatus[]>([]);
   const [metrics, setMetrics] = useState<RegressionMetrics>({
@@ -33,6 +49,10 @@ export default function OperationalStability() {
     stabilityScore: 100
   });
   const [loading, setLoading] = useState(true);
+  const [checklist, setChecklist] = useState<Record<string, boolean>>(
+    Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.id, false]))
+  );
+  const [savingChecklist, setSavingChecklist] = useState(false);
 
   useEffect(() => {
     auditSystem();
@@ -41,27 +61,22 @@ export default function OperationalStability() {
 
   const fetchMetrics = async () => {
     try {
-      // 1. Publish Failures (from system_error_logs where module is publish)
       const { count: pubErrors } = await supabase
         .from("system_error_logs")
         .select("*", { count: 'exact', head: true })
         .ilike("module", "%publish%");
 
-      // 2. Onboarding Aborts (from system_error_logs where module is onboarding)
       const { count: onbErrors } = await supabase
         .from("system_error_logs")
         .select("*", { count: 'exact', head: true })
         .ilike("module", "%onboarding%");
 
-      // 3. Contract Blocks (from sovereign_runtime_logs where severity is WARNING/CRITICAL)
       const { count: contractErrors } = await supabase
         .from("sovereign_runtime_logs")
         .select("*", { count: 'exact', head: true })
         .in("severity", ["WARNING", "CRITICAL"]);
 
       const total = (pubErrors || 0) + (onbErrors || 0) + (contractErrors || 0);
-      
-      // Basic Stability Score calculation (inverted penalty)
       const score = Math.max(0, 100 - (total * 2));
 
       setMetrics({
@@ -80,32 +95,23 @@ export default function OperationalStability() {
     setLoading(true);
     const results: FlowStatus[] = [];
 
-    // 1. Audit Schema: Meal Plan Items
+    // 1. Audit Schema
     try {
-      const { data, error } = await (supabase.rpc as any)('get_column_exists', { 
+      const { data } = await supabase.rpc('get_column_exists', { 
         p_table: 'meal_plan_items', 
         p_column: 'clinical_mass_g' 
       });
-      if (error) {
-         results.push({
-           name: "Schema: clinical_mass_g",
-           status: "WARNING",
-           details: "Necessário verificar manualmente a existência da coluna clinical_mass_g.",
-           category: "INFRA"
-         });
-      } else {
-        results.push({
-          name: "Schema: Contrato V3 (meal_plan_items)",
-          status: data ? "OK" : "ERROR",
-          details: data ? "Coluna clinical_mass_g presente." : "Coluna clinical_mass_g AUSENTE.",
-          category: "INFRA"
-        });
-      }
+      results.push({
+        name: "Schema: Contrato V3 (meal_plan_items)",
+        status: data ? "OK" : "ERROR",
+        details: data ? "Coluna clinical_mass_g presente." : "Coluna clinical_mass_g AUSENTE.",
+        category: "INFRA"
+      });
     } catch (e) {}
 
-    // 2. Audit RPC: publish_meal_plan_v3
+    // 2. Audit RPC
     try {
-      const { data: rpcExists } = await (supabase.rpc as any)('check_function_exists', { p_name: 'publish_meal_plan_v3' });
+      const { data: rpcExists } = await supabase.rpc('check_function_exists', { p_name: 'publish_meal_plan_v3' });
       results.push({
         name: "RPC: publish_meal_plan_v3",
         status: rpcExists ? "OK" : "ERROR",
@@ -114,32 +120,10 @@ export default function OperationalStability() {
       });
     } catch (e) {}
 
-    // 3. Audit Policies: Shared Meal Plans
+    // 3. Flow Audit: Active Plan Constraint
     try {
-      const { data: bucket, error: bucketErr } = await supabase.storage.getBucket('shared-meal-plans');
-      results.push({
-        name: "Storage: shared-meal-plans",
-        status: bucket ? "OK" : "ERROR",
-        details: bucket ? "Bucket de compartilhamento configurado." : "Erro ao acessar bucket: " + bucketErr?.message,
-        category: "INFRA"
-      });
-    } catch (e) {}
-
-    // 4. Flow Audit: WhatsApp Logging
-    try {
-      const { error: logErr } = await supabase.from('whatsapp_logs').select('id').limit(1);
-      results.push({
-        name: "Policy: whatsapp_logs (RLS)",
-        status: logErr ? "ERROR" : "OK",
-        details: logErr ? `Erro de política: ${logErr.message}` : "RLS configurado corretamente para logs.",
-        category: "POLICY"
-      });
-    } catch (e) {}
-
-    // 5. Flow Audit: Active Plan Constraint
-    try {
-      const { data: duplicates } = await (supabase.rpc as any)('check_active_plan_duplicates');
-      const hasDuplicates = duplicates && (duplicates as any).length > 0;
+      const { data: duplicates } = await supabase.rpc('check_active_plan_duplicates');
+      const hasDuplicates = Array.isArray(duplicates) && duplicates.length > 0;
       results.push({
         name: "Integridade: Plano Ativo Único",
         status: hasDuplicates ? "ERROR" : "OK",
@@ -150,6 +134,26 @@ export default function OperationalStability() {
 
     setStatuses(results);
     setLoading(false);
+  };
+
+  const saveChecklist = async () => {
+    setSavingChecklist(true);
+    try {
+      const { error } = await supabase.from("qa_checklist_runs").insert({
+        checklist_key: "daily_operational",
+        steps: checklist,
+        passed: Object.values(checklist).every(v => v),
+        notes: "Checklist diário executado via Stability Dashboard."
+      });
+
+      if (error) throw error;
+      toast.success("Checklist salvo com sucesso!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao salvar checklist.");
+    } finally {
+      setSavingChecklist(false);
+    }
   };
 
   const renderStatusIcon = (status: string) => {
@@ -167,10 +171,10 @@ export default function OperationalStability() {
           <div>
             <h1 className="text-3xl font-black tracking-tighter uppercase flex items-center gap-3">
               <ShieldCheck className="w-8 h-8 text-primary" />
-              Matriz de Estabilidade Operacional
+              Estabilização Operacional
             </h1>
             <p className="text-muted-foreground mt-2">
-              Monitoramento de contratos, esquemas e políticas críticas em tempo real.
+              Arquitetura congelada. Foco total em uso clínico real e previsibilidade.
             </p>
           </div>
           <Card className="bg-slate-900 text-white border-none p-4 min-w-[200px]">
@@ -182,122 +186,173 @@ export default function OperationalStability() {
           </Card>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-red-500/5 border-red-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <Bug className="w-4 h-4" /> Falhas de Publicação
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-red-500">{metrics.publishFailures}</div>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="checklist" className="space-y-6">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="checklist" className="gap-2">
+              <ClipboardCheck className="w-4 h-4" /> Checklist Diário
+            </TabsTrigger>
+            <TabsTrigger value="matrix" className="gap-2">
+              <Activity className="w-4 h-4" /> Matriz de Estabilidade
+            </TabsTrigger>
+            <TabsTrigger value="protocol" className="gap-2">
+              <Lock className="w-4 h-4" /> Protocolo de Intervenção
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="bg-amber-500/5 border-amber-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <Activity className="w-4 h-4" /> Abandonos Onboarding
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-amber-500">{metrics.onboardingAborts}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-blue-500/5 border-blue-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4" /> Bloqueios Contrato
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-blue-500">{metrics.contractBlocks}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-purple-500/5 border-purple-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <TrendingDown className="w-4 h-4" /> Total Regressões
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-purple-500">{metrics.totalErrors}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-sm font-bold uppercase tracking-widest">Auditoria de Infraestrutura e Fluxos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Recurso / Fluxo</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Detalhes Operacionais</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {statuses.map((s, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-bold">{s.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-[10px] uppercase">
-                          {s.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{renderStatusIcon(s.status)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{s.details}</TableCell>
-                    </TableRow>
+          <TabsContent value="checklist">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center justify-between">
+                  Validar Fluxo Humano Real
+                  <Badge variant="secondary">Sem SQL Manual</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {CHECKLIST_ITEMS.map((item) => (
+                    <div key={item.id} className="flex items-center space-x-3 p-4 bg-muted/30 rounded-xl border border-border/50">
+                      <Checkbox 
+                        id={item.id} 
+                        checked={checklist[item.id]} 
+                        onCheckedChange={(checked) => setChecklist(prev => ({ ...prev, [item.id]: !!checked }))}
+                      />
+                      <label htmlFor={item.id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {item.label}
+                      </label>
+                    </div>
                   ))}
-                  {loading && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8">
-                        Auditando sistema...
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                </div>
+                <div className="flex justify-end pt-4 border-t">
+                  <Button onClick={saveChecklist} disabled={savingChecklist} className="font-bold">
+                    {savingChecklist ? "Salvando..." : "Registrar Validação Diária"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Caminho Soberano
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                <h4 className="text-xs font-black uppercase mb-2">Editor V3 Ativo</h4>
-                <p className="text-[10px] text-muted-foreground italic">
-                  Garante que todas as edições usam o contrato clinical_mass_g.
-                </p>
-              </div>
-              <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                <h4 className="text-xs font-black uppercase mb-2">RPC Atômica (Publish)</h4>
-                <p className="text-[10px] text-muted-foreground italic">
-                  Bloqueia estados inválidos durante a persistência.
-                </p>
-              </div>
-              <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                <h4 className="text-xs font-black uppercase mb-2">Build Guard (Contract)</h4>
-                <p className="text-[10px] text-muted-foreground italic">
-                  Falha o deploy se o banco divergir do contrato local.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          <TabsContent value="matrix" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="bg-red-500/5 border-red-500/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Bug className="w-4 h-4" /> Falhas Publicação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-black text-red-500">{metrics.publishFailures}</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-amber-500/5 border-amber-500/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Activity className="w-4 h-4" /> Abandono Onboarding
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-black text-amber-500">{metrics.onboardingAborts}</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-blue-500/5 border-blue-500/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4" /> Bloqueios Contrato
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-black text-blue-500">{metrics.contractBlocks}</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-purple-500/5 border-purple-500/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <TrendingDown className="w-4 h-4" /> Total Regressões
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-black text-purple-500">{metrics.totalErrors}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-bold uppercase tracking-widest">Auditoria de Infraestrutura</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Recurso / Fluxo</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Detalhes Operacionais</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {statuses.map((s, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-bold">{s.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px] uppercase">
+                            {s.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{renderStatusIcon(s.status)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{s.details}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="protocol">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                  <Lock className="w-4 h-4" /> Protocolo de Intervenção Cirúrgica
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-lg">Regras de Ouro</h3>
+                    <ul className="space-y-3">
+                      {[
+                        "Só corrigir bugs reproduzíveis",
+                        "Um bug por vez, um fluxo por vez",
+                        "Alteração mínima possível (Súrgica)",
+                        "Sem melhorias 'oportunistas'",
+                        "Sem mexer fora da fronteira do bug",
+                        "Sem soluções de 'auto-cura' mágicas"
+                      ].map((rule, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="space-y-4 p-4 bg-background/50 rounded-xl border">
+                    <h3 className="font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                      <Search className="w-4 h-4" /> Requisitos Pré-Mudança
+                    </h3>
+                    <div className="space-y-2 text-xs text-muted-foreground">
+                      <p><strong>Causa Raiz:</strong> Onde o estado inválido nasce?</p>
+                      <p><strong>Localização:</strong> Arquivo e linha exatos.</p>
+                      <p><strong>Impacto:</strong> O que mais pode quebrar?</p>
+                      <p><strong>Risco:</strong> Qual a chance de regressão?</p>
+                      <p><strong>Contratos:</strong> Quais RPCs ou colunas são afetados?</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
 }
-
