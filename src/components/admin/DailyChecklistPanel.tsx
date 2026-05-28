@@ -43,7 +43,7 @@ export function DailyChecklistPanel() {
       runTest: async () => {
         const { data, error } = await supabase.from("profiles").insert({
           full_name: "Teste Operacional " + new Date().toISOString(),
-          patient_state: "active"
+          patient_state: "ready_for_plan"
         }).select("id").single();
         if (error) throw error;
         localStorage.setItem("last_test_patient_id", data.id);
@@ -60,7 +60,7 @@ export function DailyChecklistPanel() {
         if (!id) throw new Error("Execute 'Cadastro' primeiro");
         const { data, error } = await supabase.from("profiles").select("patient_state").eq("id", id).single();
         if (error) throw error;
-        if (data.patient_state !== "active") throw new Error("Estado inválido pós-cadastro");
+        if (data.patient_state !== "ready_for_plan") throw new Error("Estado inválido pós-cadastro");
       }
     },
     {
