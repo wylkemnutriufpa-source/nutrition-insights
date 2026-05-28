@@ -51,13 +51,13 @@ interface SavedTemplate {
   created_at: string;
 }
 
-const MEAL_TYPES: any[] = [
-  { type: "Café da Manhã", label: "Café da Manhã", emoji: "☕", items: [] },
-  { type: "Lanche da Manhã", label: "Lanche da Manhã", emoji: "🍎", items: [] },
-  { type: "Almoço", label: "Almoço", emoji: "🍽️", items: [] },
-  { type: "Lanche da Tarde", label: "Lanche da Tarde", emoji: "🥤", items: [] },
-  { type: "Jantar", label: "Jantar", emoji: "🌙", items: [] },
-  { type: "Ceia", label: "Ceia", emoji: "🥛", items: [] },
+const MEAL_TYPES: MealBlock[] = [
+  { type: "breakfast", label: "Café da Manhã", emoji: "☕", items: [] },
+  { type: "morning_snack", label: "Lanche da Manhã", emoji: "🍎", items: [] },
+  { type: "lunch", label: "Almoço", emoji: "🍽️", items: [] },
+  { type: "afternoon_snack", label: "Lanche da Tarde", emoji: "🥤", items: [] },
+  { type: "dinner", label: "Jantar", emoji: "🌙", items: [] },
+  { type: "evening_snack", label: "Ceia", emoji: "🥛", items: [] },
 ];
 
 interface Props {
@@ -339,24 +339,23 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     setSaving(true);
     const items = (template.items || []) as MealItem[];
     const totalItems = items.length;
-    const inserts = items.map(item => {
+    
+    // Build payload for RPC with atomic validation
+    const itemsPayload = items.map(item => {
       const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
       const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
       const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
       const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
 
       return {
-        id: crypto.randomUUID(),
-        meal_plan_id: mealPlanId,
         tipo_refeicao: item.tipo_refeicao,
         title: item.name,
-        meta_calorias: cal > 0 ? cal : null,
-        meta_proteinas: prot > 0 ? prot : null,
-        meta_carboidratos: carb > 0 ? carb : null,
-        meta_gorduras: fat > 0 ? fat : null,
-        day_of_week: 0,
-        item_origin: "in_office_template" as const,
-        tenant_id: tenantId,
+        description: `${cal > 0 ? Math.round(cal) : 0} kcal`,
+        meta_calorias: Math.round(cal),
+        meta_proteinas: Math.round(prot),
+        meta_carboidratos: Math.round(carb),
+        meta_gorduras: Math.round(fat),
+        image_url: null,
         is_primary: item.is_primary ?? true,
         substitution_group_id: item.substitution_group_id || (item.is_primary ? crypto.randomUUID() : null),
       };
@@ -364,26 +363,45 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
     enqueuePersistence(async () => {
       try {
-        // Delete existing items
+        // Validate input before calling RPC
         if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId)
-          .eq("day_of_week", 0);
-
-        if (inserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
-          if (insErr) throw insErr;
+          throw new Error("mealPlanId inválido");
         }
 
+        if (!tenantId) {
+          throw new Error("tenantId não encontrado");
+        }
+
+        if (itemsPayload.length === 0) {
+          throw new Error("Nenhum item para aplicar");
+        }
+
+        // Call atomic RPC
+        const { data, error } = await supabase.rpc(
+          'apply_quick_meal_template_atomic',
+          {
+            p_meal_plan_id: mealPlanId,
+            p_day_of_week: 0,
+            p_items: itemsPayload,
+            p_tenant_id: tenantId,
+            p_nutritionist_id: user?.id || null,
+          }
+        );
+
+        if (error) {
+          throw new Error(`RPC failed: ${error.message}`);
+        }
+
+        if (!data?.ok) {
+          throw new Error(data?.error || 'Falha ao aplicar template');
+        }
+
+        // Refresh data after successful application
+        await fetchData(true);
 
         setShowTemplateLoad(false);
         setPreviewTemplate(null);
-        toast.success(`Template "${template.template_name}" aplicado!`);
+        toast.success(`Template "${template.template_name}" aplicado! (${data.items_inserted} itens)`);
       } finally {
         setSaving(false);
       }
