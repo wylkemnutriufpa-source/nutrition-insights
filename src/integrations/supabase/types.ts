@@ -7232,6 +7232,7 @@ export type Database = {
           day_of_week: number
           description: string | null
           edit_metadata: Json | null
+          editor_version: string | null
           human_reasons: string[] | null
           human_score: number | null
           human_status: string | null
@@ -7259,6 +7260,7 @@ export type Database = {
           day_of_week: number
           description?: string | null
           edit_metadata?: Json | null
+          editor_version?: string | null
           human_reasons?: string[] | null
           human_score?: number | null
           human_status?: string | null
@@ -7286,6 +7288,7 @@ export type Database = {
           day_of_week?: number
           description?: string | null
           edit_metadata?: Json | null
+          editor_version?: string | null
           human_reasons?: string[] | null
           human_score?: number | null
           human_status?: string | null
