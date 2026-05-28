@@ -159,6 +159,11 @@ export default function EditorV3Page() {
     const toastId = toast.loading(`Aplicando template: ${selectedTemplate.title}...`);
     
     try {
+      // 🛡️ SOBERANIA V6: Limpar rascunho ANTES de aplicar novo template
+      // Isso impede que o autosave do rascunho antigo sobrescreva o novo template
+      setLocked(true);
+      await resetDraft();
+
       if (selectedTemplate.plan_snapshot) {
         const snapshotKey = kcal.toString();
         const profileKeys = Object.keys(selectedTemplate.plan_snapshot);
@@ -167,34 +172,24 @@ export default function EditorV3Page() {
                          selectedTemplate.plan_snapshot[profileKeys[0]];
                          
         if (snapshot) {
-          // 🛡️ SOBERANIA CLÍNICA V5: TEMPLATE NÃO É GERADO. TEMPLATE É CARREGADO.
-          // Usamos o normalizador soberano que respeita fielmente o snapshot do banco.
           const snapshotMeals = normalizeSnapshotToV3(snapshot);
           
           if (snapshotMeals && snapshotMeals.length > 0) {
-            // SOBERANIA DETERMINÍSTICA: Se o snapshot tem dias específicos, respeitamos.
-            // Se for aplicação semanal, substituímos tudo. Se for diária, apenas o dia ativo.
-            
             if (isWeekly) {
-              // Substituir todo o plano pelas refeições do snapshot (os 7 dias)
               store.hydrateMeals(snapshotMeals);
             } else {
-              // Aplicar apenas ao dia ativo
-              // Tentamos encontrar as refeições do dia ativo no snapshot, ou pegamos o dia 1 como base
               const mealsForActiveDay = snapshotMeals.filter(m => m.day_of_week === activeDay);
               const sourceMeals = mealsForActiveDay.length > 0 
                 ? mealsForActiveDay 
                 : snapshotMeals.filter(m => m.day_of_week === (snapshotMeals[0]?.day_of_week ?? 1));
               
               const otherDayMeals = store.meals.filter(m => m.day_of_week !== activeDay);
-              
-              // Garantimos que as refeições aplicadas tenham o day_of_week correto
               const adjustedSourceMeals = sourceMeals.map(m => ({ ...m, day_of_week: activeDay }));
               
               store.hydrateMeals([...otherDayMeals, ...adjustedSourceMeals]);
             }
 
-            toast.success('Template Premium Aplicado com Sucesso!', { id: toastId });
+            toast.success('Template Premium Aplicado!', { id: toastId });
             return;
           }
         }
@@ -223,6 +218,8 @@ export default function EditorV3Page() {
     } catch (err) {
       console.error('Erro ao carregar template:', err);
       toast.error('Erro ao carregar template clínico', { id: toastId });
+    } finally {
+      setLocked(false);
     }
   };
 
