@@ -50,7 +50,7 @@ import { RecipeBuilder } from '@/features/nos/components/RecipeBuilder';
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryPlanId = searchParams.get('planId');
   const effectiveId = planId || queryPlanId || id;
   const effectivePatientId = patientId;
@@ -88,7 +88,22 @@ export default function EditorV3Page() {
 
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [activeDay, setActiveDay] = useState<number>(1); // 1 = Segunda-feira (Padrão)
+  const [activeDay, setActiveDay] = useState<number>(() => {
+    const day = searchParams.get('day');
+    return day ? parseInt(day, 10) : 1;
+  });
+
+  // Sync activeDay with searchParams
+  useEffect(() => {
+    const currentDay = searchParams.get('day');
+    if (currentDay !== String(activeDay)) {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('day', String(activeDay));
+        return next;
+      }, { replace: true });
+    }
+  }, [activeDay, searchParams, setSearchParams]);
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
