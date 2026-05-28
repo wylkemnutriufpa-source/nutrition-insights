@@ -24,9 +24,7 @@ const generatePracticalTemplate = () => {
   const snapshot = {};
 
   kcalLevels.forEach(kcal => {
-    // Basic scaling factor relative to 1500
     const scale = kcal / 1500;
-    
     const isHypertrophy = kcal >= 2200;
 
     const meals = [
@@ -124,6 +122,14 @@ const template = {
   dietary_restrictions: ['contains_dairy', 'contains_egg'],
   active: true,
   editable: true,
+  meal_distribution: [
+    { slot: 'Café', time: '08:00' },
+    { slot: 'Lanche', time: '10:30' },
+    { slot: 'Almoço', time: '12:30' },
+    { slot: 'Lanche', time: '16:00' },
+    { slot: 'Jantar', time: '19:30' }
+  ],
+  cluster_map: {},
   plan_snapshot: generatePracticalTemplate()
 };
 
