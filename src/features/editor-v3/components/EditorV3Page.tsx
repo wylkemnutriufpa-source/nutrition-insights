@@ -71,6 +71,7 @@ export default function EditorV3Page() {
   const lastLoadedPlanId = React.useRef<string | null>(null);
   const lastLoadedPatientId = React.useRef<string | null>(null);
   const isHydratedRef = React.useRef(false);
+  const hydrationAlreadyComplete = isHydratedRef.current;
 
   const EMPTY_ARRAY = useMemo(() => [], []);
   const { 
@@ -81,7 +82,7 @@ export default function EditorV3Page() {
     resetDraft,
     reloadFromServer,
     setLocked 
-  } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId, isHydratedRef.current);
+  } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId, hydrationAlreadyComplete);
 
   // 🛡️ COCKPIT: Abrir biblioteca automaticamente se veio do cockpit
   useEffect(() => {
