@@ -10,12 +10,12 @@ const CRITICAL_COLUMNS = [
   { table: "meal_plan_items", column: "clinical_mass_g" },
   { table: "meal_plans", column: "is_active" },
   { table: "meal_plans", column: "plan_mode" },
-  { table: "profiles", column: "role" }
+  { table: "profiles", column: "patient_state" }
 ];
 
 const CRITICAL_FUNCTIONS = [
   "publish_meal_plan_v3",
-  "get_active_meal_plan"
+  "check_active_plan_duplicates"
 ];
 
 async function validate() {
