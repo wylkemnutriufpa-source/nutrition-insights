@@ -28,6 +28,20 @@ interface RegressionMetrics {
   totalErrors: number;
   stabilityScore: number;
   stabilityStreakDays: number;
+  publishSuccessRate: number;
+  onboardingCompletionRate: number;
+  rollbackCount: number;
+}
+
+interface IncidentLog {
+  id: string;
+  created_at: string;
+  title: string;
+  module: string;
+  description: string;
+  root_cause: string;
+  prevention: string;
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 }
 
 const CHECKLIST_ITEMS = [
