@@ -156,7 +156,10 @@ export function useDraftSync(
   }, [draftId, isLocked, snapshot]);
 
   const resetDraft = async () => {
-    if (draftId) await discardDraft(draftId);
+    if (draftId) {
+      console.log("[DraftSync] Discarding draft:", draftId);
+      await discardDraft(draftId);
+    }
     setDraftId(null);
     setInitialMeals(null);
     setInitialAuditLog([]);
