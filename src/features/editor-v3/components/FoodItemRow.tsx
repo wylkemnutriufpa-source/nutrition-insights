@@ -62,6 +62,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
               <input 
                 type="number"
                 value={Math.round(item.kcal || 0)}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => onUpdateMacros(Number(e.target.value), 'kcal')}
                 className="bg-transparent border-none p-0 w-12 text-[10px] font-black text-white/60 focus:ring-0 focus:text-white transition-colors"
               />
@@ -72,6 +73,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
               <input 
                 type="number"
                 value={Math.round(item.protein || 0)}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => onUpdateMacros(Number(e.target.value), 'protein')}
                 className="bg-transparent border-none p-0 w-8 text-[10px] font-black text-white/60 focus:ring-0 focus:text-white transition-colors"
               />
@@ -93,6 +95,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
               <Input
                 type="number"
                 value={item.clinical_mass_g || item.quantity || 0}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => onUpdateQuantity(Number(e.target.value))}
                 className="bg-neutral-900/80 border-white/5 text-right pr-7 h-9 w-24 font-black text-sm rounded-xl focus:ring-emerald-500/30 transition-all"
               />
@@ -175,6 +178,7 @@ export const FoodItemRow: React.FC<FoodItemRowProps> = ({
                 <input
                   type="number"
                   value={Math.round((sub as any).clinical_mass_g || sub.portionValue || 100)}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => onUpdateSubstitutionQuantity?.(idx, Number(e.target.value))}
                   className="bg-transparent border-none p-0 text-[11px] font-black text-white focus:ring-0 focus:text-emerald-400 transition-colors w-full"
                 />
