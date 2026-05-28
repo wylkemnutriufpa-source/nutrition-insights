@@ -74,6 +74,7 @@ export default function EditorV3Page() {
     initialMeals, 
     scheduleSave, 
     resetDraft,
+    reloadFromServer,
     setLocked 
   } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId);
 
@@ -167,6 +168,7 @@ export default function EditorV3Page() {
       // Isso impede que o autosave do rascunho antigo sobrescreva o novo template
       setLocked(true);
       await resetDraft();
+      await reloadFromServer();
 
       if (selectedTemplate.plan_snapshot) {
         const snapshotKey = kcal.toString();
