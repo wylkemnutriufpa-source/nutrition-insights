@@ -25,6 +25,7 @@ interface RegressionMetrics {
   contractBlocks: number;
   totalErrors: number;
   stabilityScore: number;
+  stabilityStreakDays: number;
 }
 
 const CHECKLIST_ITEMS = [
@@ -46,7 +47,8 @@ export default function OperationalStability() {
     onboardingAborts: 0,
     contractBlocks: 0,
     totalErrors: 0,
-    stabilityScore: 100
+    stabilityScore: 100,
+    stabilityStreakDays: 0
   });
   const [loading, setLoading] = useState(true);
   const [checklist, setChecklist] = useState<Record<string, boolean>>(
@@ -76,6 +78,16 @@ export default function OperationalStability() {
         .select("*", { count: 'exact', head: true })
         .in("severity", ["WARNING", "CRITICAL"]);
 
+      const { data: lastError } = await supabase
+        .from("system_error_logs")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const lastErrorDate = lastError ? new Date(lastError.created_at) : new Date("2026-05-28");
+      const streak = Math.floor((new Date().getTime() - lastErrorDate.getTime()) / (1000 * 3600 * 24));
+
       const total = (pubErrors || 0) + (onbErrors || 0) + (contractErrors || 0);
       const score = Math.max(0, 100 - (total * 2));
 
@@ -84,7 +96,8 @@ export default function OperationalStability() {
         onboardingAborts: onbErrors || 0,
         contractBlocks: contractErrors || 0,
         totalErrors: total,
-        stabilityScore: score
+        stabilityScore: score,
+        stabilityStreakDays: Math.max(0, streak)
       });
     } catch (e) {
       console.error("Erro ao buscar métricas de regressão:", e);
@@ -177,13 +190,22 @@ export default function OperationalStability() {
               Arquitetura congelada. Foco total em uso clínico real e previsibilidade.
             </p>
           </div>
-          <Card className="bg-slate-900 text-white border-none p-4 min-w-[200px]">
-            <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Score de Estabilidade</div>
-            <div className="flex items-center gap-3">
-              <div className="text-3xl font-black">{metrics.stabilityScore}%</div>
-              <Progress value={metrics.stabilityScore} className="h-2 flex-1 bg-slate-800" />
-            </div>
-          </Card>
+          <div className="flex gap-4 min-w-[300px]">
+            <Card className="bg-slate-900 text-white border-none p-4 flex-1">
+              <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Streak de Estabilidade</div>
+              <div className="flex items-center gap-3">
+                <div className="text-3xl font-black">{metrics.stabilityStreakDays}d</div>
+                <div className="text-[10px] text-slate-500 uppercase leading-tight">Meta: 7 dias <br /> sem regressão</div>
+              </div>
+            </Card>
+            <Card className="bg-slate-900 text-white border-none p-4 flex-1">
+              <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Score Geral</div>
+              <div className="flex items-center gap-3">
+                <div className="text-3xl font-black">{metrics.stabilityScore}%</div>
+                <Progress value={metrics.stabilityScore} className="h-2 flex-1 bg-slate-800" />
+              </div>
+            </Card>
+          </div>
         </header>
 
         <Tabs defaultValue="checklist" className="space-y-6">
