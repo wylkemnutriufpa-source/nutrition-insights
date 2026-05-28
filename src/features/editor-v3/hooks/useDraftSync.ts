@@ -5,6 +5,7 @@ import { loadOrCreateDraft, saveDraft, discardDraft, type DraftRecord } from '..
 import { normalizeMeals } from '../utils/normalization';
 import { toast } from 'sonner';
 import { SovereignMonitor } from '@/lib/sovereignMonitor';
+import { supabase } from '@/integrations/supabase/client';
 
 type SyncState = 'idle' | 'loading' | 'saving' | 'saved' | 'offline' | 'error' | 'conflict';
 
