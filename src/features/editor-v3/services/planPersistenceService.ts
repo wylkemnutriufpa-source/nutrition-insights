@@ -420,12 +420,14 @@ export const planPersistenceService = {
    */
   async publishPlan(options: PlanSaveOptions): Promise<SaveResult> {
     const { patientId, nutritionistId, meals, targets, title, planId, draftId } = options;
+    const { OperationalAuditService } = await import('@/services/OperationalAuditService');
 
     console.log(`[Persistence-V3] Iniciando publicação ATÔMICA para paciente ${patientId}.`);
 
     // 🛡️ REGRAS INVIOLÁVEIS: Macros devem ser saudáveis para publicar
     const hasMacros = targets.kcal > 0 && targets.protein > 0;
     if (!hasMacros) {
+      await OperationalAuditService.logCriticalError("publish", "SNAPSHOT INCOMPLETO: Macros não podem ser zero.", { targets });
       return { ok: false, error: 'SNAPSHOT INCOMPLETO: Macros não podem ser zero.' };
     }
 
@@ -495,11 +497,11 @@ export const planPersistenceService = {
 
       // 🛡️ RE-VALIDAÇÃO: Impedir envio de plano sem itens
       if (itemsRows.length === 0) {
+        await OperationalAuditService.logCriticalError("publish", "BLOQUEIO DE SEGURANÇA: Não é permitido publicar um plano sem itens.");
         return { ok: false, error: 'BLOQUEIO DE SEGURANÇA: Não é permitido publicar um plano sem itens.' };
       }
 
       // 5. CHAMADA ATÔMICA VIA RPC
-      // Unifica update(meal_plans) + delete/insert(meal_plan_items) + update(v3_drafts)
       const { data, error } = await supabase.rpc('publish_meal_plan_v3', {
         p_plan_id: planId || null,
         p_patient_id: patientId,
@@ -512,16 +514,20 @@ export const planPersistenceService = {
 
       if (error) {
         console.error('[Persistence-V3] Erro na RPC de publicação:', error);
+        await OperationalAuditService.logCriticalError("publish", error, { rpc: 'publish_meal_plan_v3', payload });
         throw error;
       }
 
       const result = data as { ok: boolean; plan_id: string };
       console.log(`[Persistence-V3] Publicação ATÔMICA concluída. PlanID: ${result.plan_id}`);
       
+      await OperationalAuditService.logSuccess("publish", "publish_meal_plan_v3", { planId: result.plan_id });
       return { ok: true, planId: result.plan_id };
     } catch (err: any) {
       console.error('[Persistence-V3] Erro fatal na publicação:', err);
+      await OperationalAuditService.logCriticalError("publish", err, { patientId });
       return { ok: false, error: err.message };
     }
   }
 };
+

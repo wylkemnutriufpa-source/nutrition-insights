@@ -10,8 +10,12 @@ const CRITICAL_COLUMNS = [
   { table: "meal_plan_items", column: "clinical_mass_g" },
   { table: "meal_plans", column: "is_active" },
   { table: "meal_plans", column: "plan_mode" },
-  { table: "profiles", column: "patient_state" }
+  { table: "profiles", column: "patient_state" },
+  { table: "whatsapp_logs", column: "id" },
+  { table: "sovereign_runtime_logs", column: "id" },
+  { table: "system_error_logs", column: "id" }
 ];
+
 
 const CRITICAL_FUNCTIONS = [
   "publish_meal_plan_v3",

@@ -208,17 +208,28 @@ export default function OnboardingWizard() {
 
   const handleFinish = async () => {
     markStepComplete(steps[step].id);
-    if (isProfessional) {
-      await supabase.from("professional_profiles").update({ onboarding_completed: true }).eq("user_id", user!.id);
+    const { OperationalAuditService } = await import('@/services/OperationalAuditService');
+    
+    try {
+      if (isProfessional) {
+        await supabase.from("professional_profiles").update({ onboarding_completed: true }).eq("user_id", user!.id);
+      }
+      const dismissedRaw = localStorage.getItem(ONBOARDING_DISMISSED_KEY);
+      const dismissed = dismissedRaw ? JSON.parse(dismissedRaw) : {};
+      dismissed[user!.id] = "completed";
+      localStorage.setItem(ONBOARDING_DISMISSED_KEY, JSON.stringify(dismissed));
+      setOpen(false);
+      toast.success("Onboarding concluído! Explore o sistema 🚀");
+      
+      await OperationalAuditService.logSuccess("onboarding", "finish", { userId: user?.id, role: isProfessional ? 'professional' : 'patient' });
+      
+      if (isProfessional) await refreshProfile();
+    } catch (e: any) {
+      await OperationalAuditService.logCriticalError("onboarding", e, { userId: user?.id });
+      toast.error("Erro ao finalizar onboarding. Tente novamente.");
     }
-    const dismissedRaw = localStorage.getItem(ONBOARDING_DISMISSED_KEY);
-    const dismissed = dismissedRaw ? JSON.parse(dismissedRaw) : {};
-    dismissed[user!.id] = "completed";
-    localStorage.setItem(ONBOARDING_DISMISSED_KEY, JSON.stringify(dismissed));
-    setOpen(false);
-    toast.success("Onboarding concluído! Explore o sistema 🚀");
-    if (isProfessional) await refreshProfile();
   };
+
 
   const currentStep = steps[step];
   const StepIcon = currentStep.icon;
