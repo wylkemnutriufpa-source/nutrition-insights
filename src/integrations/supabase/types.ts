@@ -6396,6 +6396,13 @@ export type Database = {
             foreignKeyName: "invitations_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_profiles_public"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "invitations_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
@@ -22086,6 +22093,27 @@ export type Database = {
           tasks_total_today: number | null
           total_patients: number | null
           unread_messages: number | null
+        }
+        Relationships: []
+      }
+      professional_profiles_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
