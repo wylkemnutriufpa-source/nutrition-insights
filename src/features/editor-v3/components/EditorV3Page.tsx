@@ -167,6 +167,10 @@ export default function EditorV3Page() {
       // 🛡️ SOBERANIA V6: Limpar rascunho ANTES de aplicar novo template
       // Isso impede que o autosave do rascunho antigo sobrescreva o novo template
       setLocked(true);
+      
+      // 🔥 SPRINT PRODUÇÃO: Forçar limpeza do store ANTES de qualquer operação
+      store.setMeals([]); 
+      
       await resetDraft();
       await reloadFromServer();
 
@@ -239,7 +243,6 @@ export default function EditorV3Page() {
       if (effectiveId === lastLoadedPlanId.current && 
           effectivePatientId === lastLoadedPatientId.current && 
           store.meals.length > 0) {
-        console.log("[EditorV3] Skip redundant loadPlan (mesmo plano + dados em memoria)");
         // 🛡️ Garantia de que o loader não fica travado se o componente remontar
         if (loading) setLoading(false);
         return;

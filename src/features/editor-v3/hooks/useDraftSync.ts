@@ -158,7 +158,13 @@ export function useDraftSync(
   const resetDraft = async () => {
     if (draftId) {
       console.log("[DraftSync] Discarding draft:", draftId);
-      await discardDraft(draftId);
+      // 🔥 SPRINT PRODUÇÃO: Limpeza física total para evitar ressurgimento de dados fantasmas (ovos do Igor)
+      // O draft_status 'discarded' ainda permitia recuperação em alguns fluxos de busca
+      const { error } = await supabase.from('v3_drafts').delete().eq('id', draftId);
+      if (error) {
+        console.warn("[DraftSync] Soft delete fallback for discarded draft status");
+        await discardDraft(draftId);
+      }
     }
     setDraftId(null);
     setInitialMeals(null);
