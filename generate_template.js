@@ -101,7 +101,7 @@ const generatePracticalTemplate = () => {
       }
     ];
 
-    snapshot[kcal] = {
+    snapshot[kcal.toString()] = {
       days: [{
         day_of_week: 1,
         meals: meals
