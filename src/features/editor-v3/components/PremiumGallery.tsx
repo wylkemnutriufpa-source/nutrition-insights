@@ -30,9 +30,14 @@ export const PremiumGallery: React.FC<PremiumGalleryProps> = ({ templates, onSel
   }, [templates]);
 
   const filteredTemplates = useMemo(() => {
+    // 🛡️ SOBERANIA: Se não houver templates, retornar array vazio imediatamente
+    if (!templates || !Array.isArray(templates)) return [];
+
     return templates.filter(t => {
+      if (!t || !t.title) return false;
+
       const matchesSearch = t.title.toLowerCase().includes(search.toLowerCase()) || 
-                           t.description?.toLowerCase().includes(search.toLowerCase());
+                           (t.description?.toLowerCase().includes(search.toLowerCase()) || false);
                            
       if (activeCategory === 'Meus Templates') {
         return matchesSearch && t.nutritionist_id === user?.id;

@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { Meal, MealItem, Food } from '../types/types';
 import { calculateItemMacros, scaleItemToTarget, adjustSubstitutionsProportionally } from '@/lib/nutricore_v2/helpers';
+import { normalizeMeals } from '../utils/normalization';
 
 /**
  * 🛡️ SOBERANIA V3: Calcula o quantity_display preservando a unidade original.
@@ -85,9 +86,9 @@ export const useEditorState = create<EditorState>()((set, get) => ({
   goalMetadata: {},
   patientContext: null,
 
-  setMeals: (meals) => set({ meals }),
+  setMeals: (meals) => set({ meals: normalizeMeals(meals) }),
   setPatientId: (id) => set({ patientId: id }),
-  hydrateMeals: (meals) => set({ meals }),
+  hydrateMeals: (meals) => set({ meals: normalizeMeals(meals) }),
   resetEditor: () => set({ meals: [], patientId: null, nutritionalScore: null, validationIssues: [] }),
 
   updateFoodQuantity: (mealId, itemInstanceId, newQuantity) => {

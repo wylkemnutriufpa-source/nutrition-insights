@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Meal, AuditLogEntry } from '../types';
 import { loadOrCreateDraft, saveDraft, discardDraft, type DraftRecord } from '../services/draftService';
+import { normalizeMeals } from '../utils/normalization';
 import { toast } from 'sonner';
 import { SovereignMonitor } from '@/lib/sovereignMonitor';
 
@@ -62,7 +63,7 @@ export function useDraftSync(
 
     if (draft) {
       setDraftId(draft.id);
-      const remoteMeals = draft.payload?.meals ?? seedMeals;
+      const remoteMeals = normalizeMeals(draft.payload?.meals ?? seedMeals);
       const remoteAuditLog = draft.payload?.audit_log ?? [];
       setInitialMeals(remoteMeals);
       setInitialAuditLog(remoteAuditLog);
