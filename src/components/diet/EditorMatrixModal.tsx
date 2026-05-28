@@ -147,8 +147,12 @@ export function EditorMatrixModal({ isOpen, onClose, onSelect, patientId }: Edit
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="text-3xl font-display font-bold text-white tracking-tight">Editor Clássico (V2)</h3>
-                  <p className="text-blue-200/60 max-w-[280px]">Fluxo manual tradicional para nutricionistas que buscam controle total em cada detalhe.</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <h3 className="text-3xl font-display font-bold text-white tracking-tight">Editor Clássico (V2)</h3>
+                    <div className="bg-slate-700 text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">LEGADO</div>
+                  </div>
+                  <p className="text-blue-200/60 max-w-[280px]">Caminho legatário mantido para visualização de planos antigos. Novos planos devem usar o V3.</p>
+
                 </div>
 
                 <ul className="text-left space-y-2 text-sm text-blue-200/40">
