@@ -23326,6 +23326,17 @@ export type Database = {
       run_patient_data_audit: { Args: { _dry_run?: boolean }; Returns: Json }
       run_patient_realtime_fix: { Args: { _patient_id: string }; Returns: Json }
       run_security_audit: { Args: never; Returns: Json }
+      save_onboarding_data_atomic: {
+        Args: {
+          p_anamnesis_data: Json
+          p_journey_status: string
+          p_patient_id: string
+          p_pipeline_data: Json
+          p_profile_data: Json
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       save_plan_as_approved: {
         Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json

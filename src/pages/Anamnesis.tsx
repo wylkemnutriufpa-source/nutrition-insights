@@ -970,82 +970,49 @@ export default function Anamnesis() {
       status: "completed",
     };
 
-    let anamData: any;
-    if (draftId) {
-      const { data, error } = await supabase
-        .from("patient_anamnesis")
-        .update(payload)
-        .eq("id", draftId)
-        .select()
-        .maybeSingle();
-      if (error || !data) {
-        console.error("[FJ:Anamnesis] submit UPDATE failed:", error);
-        toast.error("Erro ao salvar: " + (error?.message || "registro não encontrado"));
-        setSubmitting(false);
-        return;
-      }
-      anamData = data;
-    } else {
-      const { data, error } = await supabase
-        .from("patient_anamnesis")
-        .insert(payload)
-        .select()
-        .maybeSingle();
-      if (error || !data) {
-        console.error("[FJ:Anamnesis] submit INSERT failed:", error);
-        toast.error("Erro ao salvar: " + (error?.message || "falha ao criar anamnese"));
-        setSubmitting(false);
-        return;
-      }
-      anamData = data;
-      setSubmitSyncStatus("success", "anamnesis_submit");
-    }
-
     setSubmitting(true);
     if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(true);
-    console.log("[FJ:Anamnesis] Starting transition to collecting_profile...");
+    console.log("[FJ:Anamnesis] Starting ATOMIC transition...");
 
-    // Sync onboarding pipeline and journey status FIRST so the patient leaves step 1 immediately,
-    // even if AI/secondary automations are slow or temporarily failing.
-    const [pipelineRes, journeyRes, profileRes] = await Promise.all([
-      supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          anamnesis_completed: true,
-          status: "completed", // Fechamos o pipeline aqui
-          weight: weight,
-          height: height,
-        } as any)
-        .eq("patient_id", targetUserId)
-        .select("id")
-        .maybeSingle(),
-      supabase
-        .from("nutritionist_patients")
-        .update({ journey_status: "onboarding_completed" })
-        .eq("patient_id", targetUserId)
-        .eq("status", "active"),
-      supabase
-        .from("profiles")
-        .update({ 
-          patient_state: 'active_plan' as any,
-          onboarding_completed: true,
-          current_weight_kg: weight,
-          current_height_cm: height,
-          goal: answers.goal === "lose_weight" ? "Emagrecimento" : (answers.goal === "gain_muscle" ? "Ganho de massa" : "Manutenção"),
-          activity_level: answers.activity_level,
-          restrictions: answers.restrictions || [],
-          preferences: answers.food_preferences ? [answers.food_preferences] : [],
-        })
-        .eq("user_id", targetUserId)
-    ]);
+    // 🛡️ ATOMICITY V4: Use RPC to ensure all tables are updated or none are.
+    const { data: rawAtomicData, error: atomicError } = await supabase.rpc("save_onboarding_data_atomic", {
+      p_patient_id: targetUserId,
+      p_tenant_id: resolvedTenantId,
+      p_anamnesis_data: payload,
+      p_pipeline_data: {
+        anamnesis_completed: true,
+        status: "completed",
+        weight: weight,
+        height: height,
+      },
+      p_profile_data: {
+        patient_state: 'active_plan',
+        onboarding_completed: true,
+        current_weight_kg: weight,
+        current_height_cm: height,
+        goal: answers.goal === "lose_weight" ? "Emagrecimento" : (answers.goal === "gain_muscle" ? "Ganho de massa" : "Manutenção"),
+        activity_level: answers.activity_level,
+        restrictions: answers.restrictions || [],
+        preferences: answers.food_preferences ? [answers.food_preferences] : [],
+      },
+      p_journey_status: "onboarding_completed"
+    });
 
-    if (profileRes.error) {
-      console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
-    } else {
-      console.log("[FJ:Anamnesis] patient_state updated to active_plan (canonical)");
+    const atomicData = rawAtomicData as any;
+
+    if (atomicError || !atomicData?.success) {
+      console.error("[FJ:Anamnesis] atomic submit failed:", atomicError || atomicData?.error);
+      toast.error("Erro ao salvar: " + (atomicError?.message || atomicData?.error || "falha na transação"));
+      setSubmitting(false);
+      if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
+      return;
     }
 
-    if (pipelineRes.data && !isPipelineMode) {
+    const anamData = { id: atomicData.anamnesis_id };
+    console.log("[FJ:Anamnesis] Atomic sync successful:", atomicData);
+    setSubmitSyncStatus("success", "anamnesis_submit");
+
+    if (atomicData && !isPipelineMode) {
       setHasActivePipeline(true);
     }
 
