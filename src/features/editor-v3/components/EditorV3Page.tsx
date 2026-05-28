@@ -186,7 +186,16 @@ export default function EditorV3Page() {
       // 🔥 SPRINT PRODUÇÃO: Forçar limpeza do store ANTES de qualquer operação
       store.setMeals([]); 
       
-      await resetDraft();
+      // 🔥 SOBERANIA V7: Deletar rascunhos 'editing' e 'promoted' do paciente para este nutricionista
+      // Garante que o loadOrCreateDraft crie um novo do zero sem resíduos
+      const { data: userRes } = await supabase.auth.getUser();
+      if (userRes?.user?.id && effectivePatientId) {
+        await supabase.from('v3_drafts').delete()
+          .eq('patient_id', effectivePatientId)
+          .eq('nutritionist_id', userRes.user.id)
+          .in('draft_status', ['editing', 'promoted']);
+      }
+
       await reloadFromServer();
 
       if (selectedTemplate.plan_snapshot) {
