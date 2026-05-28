@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,18 @@ import { ClinicalAssessmentBanner } from "@/components/patient/ClinicalAssessmen
 export default function ClientDashboard() {
   const { profile, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const isPro = isNutritionist || isPersonal || isAdmin;
     if (isPro && !isPatient) {
+      // 🛡️ SOBERANIA: Se for PRO mas estiver forçando contexto paciente na URL, não redireciona
+      const params = new URLSearchParams(location.search);
+      if (params.get("context") === "patient") return;
+
       navigate("/dashboard", { replace: true });
     }
-  }, [isPatient, isNutritionist, isPersonal, isAdmin, navigate]);
+  }, [isPatient, isNutritionist, isPersonal, isAdmin, navigate, location.search]);
 
   return (
     <DashboardLayout>

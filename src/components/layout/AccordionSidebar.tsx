@@ -183,7 +183,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
           if (!item.is_visible) return false;
           
           // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
-          const isDietRoute = item.route === "/patient-meal-plan";
+          const isDietRoute = item.route === "/patient-meal-plan" || item.route?.startsWith("/client");
           if (isBasic && isPatient && isDietRoute) return true;
 
           // Priority 1: Specific feature check
@@ -384,7 +384,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
     const featureKey = item.feature || item.route.replace(/^\//, '');
     
     // CRITICAL: Basic mode patients must see the diet menu regardless of premium/feature checks
-    const isDietRoute = item.route === "/patient-meal-plan";
+    const isDietRoute = item.route === "/patient-meal-plan" || item.route?.startsWith("/client");
     if (isBasic && isPatient && isDietRoute) return true;
 
     if (!isFeatureEnabled(featureKey)) return false;

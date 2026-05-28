@@ -45,6 +45,11 @@ export function useWorkspaceContextState(isProRole: boolean, isPatient: boolean,
 
   // Read saved context from localStorage ONCE on mount — never let loading states overwrite it
   const [activeContext, setActiveContextState] = useState<WorkspaceContextType>(() => {
+    // 🛡️ SOBERANIA: Priorizar o contexto da URL se presente para evitar redirect forçado em refresh
+    const urlParams = new URLSearchParams(window.location.search);
+    const contextParam = urlParams.get("context") as WorkspaceContextType;
+    if (contextParam === "patient" || contextParam === "professional") return contextParam;
+
     const saved = localStorage.getItem(STORAGE_KEY) as WorkspaceContextType;
     if (saved === "patient" || saved === "professional") return saved;
     // No saved preference — default to professional
