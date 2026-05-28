@@ -188,7 +188,7 @@ export default function OperationalStability() {
   const saveChecklist = async () => {
     setSavingChecklist(true);
     try {
-      const { error } = await supabase.from("qa_checklist_runs").insert({
+      const { error } = await supabase.from("qa_checklist_runs" as any).insert({
         checklist_key: "daily_operational",
         steps: checklist,
         passed: Object.values(checklist).every(v => v),
@@ -202,6 +202,23 @@ export default function OperationalStability() {
       toast.error("Erro ao salvar checklist.");
     } finally {
       setSavingChecklist(false);
+    }
+  };
+
+  const saveIncident = async () => {
+    if (!newIncident.title || !newIncident.description) {
+      toast.error("Título e descrição são obrigatórios.");
+      return;
+    }
+    try {
+      const { error } = await supabase.from("system_incident_logs" as any).insert(newIncident);
+      if (error) throw error;
+      toast.success("Incidente registrado com sucesso!");
+      setNewIncident({ severity: "MEDIUM", module: "Geral" });
+      fetchIncidents();
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao salvar incidente.");
     }
   };
 
