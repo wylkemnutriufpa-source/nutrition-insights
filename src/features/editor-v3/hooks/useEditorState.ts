@@ -88,7 +88,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
         // 🛡️ Defense in Depth: Limitar quantidade entre MIN e MAX
-        const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity / 5) * 5));
+        const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity)));
 
         const subsWithOriginalQty = (item.substitutions || []).map((sub: any) => ({
           ...sub,
@@ -152,7 +152,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
         // 🛡️ Defense in Depth: Limitar quantidade entre MIN e MAX
-        const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity / 5) * 5));
+        const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity)));
 
         const subsWithOriginalQtyG = (item.substitutions || []).map((sub: any) => ({
           ...sub,
@@ -207,7 +207,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
     const updatedMeals = meals.map(meal => {
       if (meal.id !== mealId) return meal;
       
-      const quantity = Math.max(1, Math.round((food.clinical_mass_g || food.quantity || food.portionValue || 100) / 5) * 5);
+      const quantity = Math.max(1, Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100));
       const macros = calculateItemMacros(food, quantity);
       
       const newItem: MealItem = {
@@ -313,7 +313,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           substituteQuantity = primaryQuantity;
         }
 
-        substituteQuantity = Math.min(MAX_QUANTITY, Math.max(1, Math.round(substituteQuantity / 5) * 5));
+        substituteQuantity = Math.min(MAX_QUANTITY, Math.max(1, Math.round(substituteQuantity)));
 
         const subMacros = calculateItemMacros(food, substituteQuantity);
 
