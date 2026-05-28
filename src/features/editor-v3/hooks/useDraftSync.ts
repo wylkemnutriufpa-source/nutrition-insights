@@ -85,8 +85,10 @@ export function useDraftSync(
   }, [patientId, planId, JSON.stringify(seedMeals)]);
 
   useEffect(() => {
-    loadDraft();
-  }, [loadDraft]);
+    if (!isHydrated) {
+      loadDraft();
+    }
+  }, [loadDraft, isHydrated]);
 
   const debounceSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
