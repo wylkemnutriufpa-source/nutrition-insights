@@ -1140,6 +1140,21 @@ export default function AdminDashboard() {
             {/* ─── Admin Tools ─── */}
             <TabsContent value="admin" className="mt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all border-emerald-500/30" onClick={() => navigate("/admin/stability")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                      Estabilidade Operacional (V3)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Monitoramento em tempo real de contratos, schema e integridade do Fluxo Soberano.
+                    </p>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-emerald-500 font-bold">Acessar Matriz →</Button>
+                  </CardContent>
+                </Card>
+
                 <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/image-fallback")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="font-display text-lg flex items-center gap-2">

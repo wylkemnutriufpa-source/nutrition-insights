@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run schema:verify && npm run schema:check-refs && vite build",
+    "build": "npm run schema:validate && npm run schema:verify && npm run schema:check-refs && vite build",
     "build:dev": "vite build --mode development",
     "schema:update": "node scripts/generate-schema-snapshot.mjs",
     "schema:verify": "node scripts/verify-snapshot.mjs",
+    "schema:validate": "bun scripts/validate-schema-contract.ts",
     "schema:missing": "node scripts/list-missing-migrations.mjs",
     "schema:status": "node scripts/schema-status.mjs",
     "schema:test": "node scripts/test-determinism.mjs",
@@ -22,6 +23,7 @@
     "test:watch": "vitest",
     "test:e2e": "npx playwright test --reporter=list",
     "test:e2e:ui": "npx playwright test --ui",
+    "test:stability": "vitest run src/tests/RealFlowE2E.test.ts",
     "prepare": "husky"
   },
   "dependencies": {
