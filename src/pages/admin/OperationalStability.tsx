@@ -92,7 +92,7 @@ export default function OperationalStability() {
         .from("system_incident_logs" as any)
         .select("*")
         .order("created_at", { ascending: false });
-      if (data) setIncidents(data as IncidentLog[]);
+      if (data) setIncidents(data as unknown as IncidentLog[]);
     } catch (e) {
       console.error("Erro ao buscar incidentes:", e);
     }
