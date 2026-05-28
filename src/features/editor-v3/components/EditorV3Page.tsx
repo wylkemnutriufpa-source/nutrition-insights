@@ -86,6 +86,7 @@ export default function EditorV3Page() {
     syncState, 
     initialMeals, 
     scheduleSave, 
+    resetDraft,
     setLocked 
   } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
 
