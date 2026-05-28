@@ -4,18 +4,15 @@ import { Meal, MealItem, Food } from '../types/types';
 import { calculateItemMacros, scaleItemToTarget, adjustSubstitutionsProportionally } from '@/lib/nutricore_v2/helpers';
 import { normalizeMeals } from '../utils/normalization';
 
+const MAX_QUANTITY = 5000;
+const MIN_QUANTITY = 1;
+
 /**
  * 🛡️ SOBERANIA V3: Calcula o quantity_display preservando a unidade original.
- * 
- * Se o item original era "2 unidades" e a quantidade dobrou, vira "4 unidades".
- * Se era "100g" e dobrou, vira "200g".
- * 
- * Usa clinical_mass_g como base de proporcionalidade quando há unidade especial.
  */
-function preservedQuantityDisplay(item: any, oldMassG: number, newMassG: number): string {
+export function preservedQuantityDisplay(item: any, oldMassG: number, newMassG: number): string {
   const original = String(item.quantity_display || (item as any).qty || `${newMassG}g`);
   
-  // Detectar se tem unidade especial: "2 unidades", "1 fatia", "3 colheres"
   const unitMatch = original.match(/^([\d.,]+)\s*(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|x[íi]cara|xicaras|x[íi]caras)\b/i);
   
   if (unitMatch && oldMassG > 0) {
@@ -24,23 +21,18 @@ function preservedQuantityDisplay(item: any, oldMassG: number, newMassG: number)
     const ratio = newMassG / oldMassG;
     const newUnits = oldUnits * ratio;
     
-    // Arredondar para meia unidade ou inteira
     const rounded = Math.round(newUnits * 2) / 2;
     const formatted = rounded % 1 === 0 ? String(rounded) : rounded.toFixed(1).replace('.', ',');
     
     return `${formatted} ${unitName}`;
   }
   
-  // Se não tem unidade especial OU é claramente em gramas/ml, usar gramas
   if (/\b(ml|l|litro)\b/i.test(original)) {
     return `${newMassG}ml`;
   }
   
   return `${newMassG}g`;
-const MAX_QUANTITY = 5000;
-const MIN_QUANTITY = 1;
-
-export preservedQuantityDisplay; // already there
+}
 
 interface EditorState {
   meals: Meal[];
@@ -52,13 +44,11 @@ interface EditorState {
   goalMetadata: any;
   patientContext: any;
   
-  // Actions
   setMeals: (meals: Meal[]) => void;
   setPatientId: (id: string) => void;
   hydrateMeals: (meals: Meal[]) => void;
   resetEditor: () => void;
   
-  // Real-time Editing Actions
   updateFoodQuantity: (mealId: string, itemInstanceId: string, newQuantity: number) => void;
   updateFoodQuantityGlobal: (itemInstanceId: string, newQuantity: number) => void;
   removeFood: (mealId: string, itemInstanceId: string) => void;
@@ -73,12 +63,6 @@ interface EditorState {
   updateSubstitutionQuantity: (mealId: string, itemInstanceId: string, subIndex: number, newQuantity: number) => void;
 }
 
-
-/**
- * 🛡️ SOBERANIA V3: Editor State Store
- * Persistência local (localStorage) removida para evitar conflitos com rascunhos do servidor.
- * A soberania agora reside no Draft System (v3_drafts).
- */
 export const useEditorState = create<EditorState>()((set, get) => ({
   meals: [],
   patientId: null,
@@ -103,11 +87,9 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         if (item.instanceId !== itemInstanceId) return item;
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
-        // 🛡️ Defense in Depth: Mínimo de 5g para evitar frações irrelevantes
-        const safeNewQty = Math.max(1, Math.round(newQuantity / 5) * 5);
+        // 🛡️ Defense in Depth: Limitar quantidade entre MIN e MAX
+        const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity / 5) * 5));
 
-        // 🛡️ Defense in Depth: Escala substituições proporcionalmente ao item principal
-        // Captura gramagem original de cada sub ANTES de escalar
         const subsWithOriginalQty = (item.substitutions || []).map((sub: any) => ({
           ...sub,
           _originalMassG: sub.clinical_mass_g || sub.portionValue || oldQty,
@@ -118,7 +100,6 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           oldQty,
           safeNewQty
         ).map((sub: any) => {
-          // Preserva unidade da substituição (ex: "2 fatias" → "4 fatias")
           const subOriginalMassG = sub._originalMassG || oldQty;
           return {
             ...sub,
@@ -147,7 +128,6 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
   updateFoodQuantityGlobal: (itemInstanceId, newQuantity) => {
     const { meals } = get();
-    // Encontrar o alimento base usando o itemInstanceId
     let targetFoodId: string | null = null;
     let targetFoodName: string | null = null;
 
@@ -171,7 +151,8 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         if (!isMatch) return item;
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
-        const safeNewQty = Math.max(5, Math.round(newQuantity / 5) * 5);
+        // 🛡️ Defense in Depth: Limitar quantidade entre MIN e MAX
+        const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity / 5) * 5));
 
         const subsWithOriginalQtyG = (item.substitutions || []).map((sub: any) => ({
           ...sub,
@@ -210,7 +191,6 @@ export const useEditorState = create<EditorState>()((set, get) => ({
   },
 
   removeFood: (mealId, itemInstanceId) => {
-
     const { meals } = get();
     const updatedMeals = meals.map(meal => {
       if (meal.id !== mealId) return meal;
@@ -227,7 +207,6 @@ export const useEditorState = create<EditorState>()((set, get) => ({
     const updatedMeals = meals.map(meal => {
       if (meal.id !== mealId) return meal;
       
-      // 🛡️ SOBERANIA V3: Respeita a gramagem original do alimento sem forçar 100g arbitrário
       const quantity = Math.max(1, Math.round((food.clinical_mass_g || food.quantity || food.portionValue || 100) / 5) * 5);
       const macros = calculateItemMacros(food, quantity);
       
@@ -281,9 +260,8 @@ export const useEditorState = create<EditorState>()((set, get) => ({
         if (item.instanceId !== itemInstanceId) return item;
 
         const oldQty = item.clinical_mass_g || item.quantity || 100;
-        const newQuantity = Math.max(1, Math.round(scaleItemToTarget(item, targetValue, macroType)));
+        const newQuantity = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(scaleItemToTarget(item, targetValue, macroType))));
 
-        // Escala substituições proporcionalmente ao item principal
         const updatedSubs = adjustSubstitutionsProportionally(
           (item.substitutions || []) as any,
           oldQty,
@@ -319,30 +297,23 @@ export const useEditorState = create<EditorState>()((set, get) => ({
       const updatedItems = meal.items.map(item => {
         if (item.instanceId !== itemInstanceId) return item;
 
-        // 🛡️ Defense in Depth: Calcula gramagem equivalente em kcal ao item principal
-        // Ex: frango 150g = 250kcal → batata-doce precisa de Xg para 250kcal
         const primaryKcal = item.kcal || 0;
         const primaryQuantity = item.clinical_mass_g || item.quantity || 100;
         
-        // Garante que temos kcal por 100g do substituto
         let subKcalPer100g = food.kcal_100g || 0;
         if (!subKcalPer100g && food.kcal) {
-          // Se temos kcal total, calcula por 100g baseado na quantidade atual
           const foodQuantity = food.clinical_mass_g || food.quantity || food.portionValue || 100;
           subKcalPer100g = (food.kcal / foodQuantity) * 100;
         }
 
         let substituteQuantity: number;
         if (primaryKcal > 0 && subKcalPer100g > 0) {
-          // Gramagem para equivalência calórica exata
           substituteQuantity = Math.max(1, Math.round((primaryKcal / subKcalPer100g) * 100));
         } else {
-          // Fallback: mesma gramagem do item principal (preservando intenção volumétrica)
           substituteQuantity = primaryQuantity;
         }
 
-        // Arredondamento clínico final
-        substituteQuantity = Math.max(1, Math.round(substituteQuantity / 5) * 5);
+        substituteQuantity = Math.min(MAX_QUANTITY, Math.max(1, Math.round(substituteQuantity / 5) * 5));
 
         const subMacros = calculateItemMacros(food, substituteQuantity);
 
@@ -415,7 +386,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
           const sub = newSubs[subIndex];
           if (!sub) return item;
 
-          const safeNewQty = Math.max(1, Math.round(newQuantity));
+          const safeNewQty = Math.min(MAX_QUANTITY, Math.max(1, Math.round(newQuantity)));
           const oldQty = sub.clinical_mass_g || sub.quantity || sub.portionValue || 100;
           
           const newMacros = calculateItemMacros(sub, safeNewQty);
