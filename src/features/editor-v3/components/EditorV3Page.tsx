@@ -67,6 +67,16 @@ export default function EditorV3Page() {
   const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
   const [isRecipeBuilderOpen, setIsRecipeBuilderOpen] = useState(false);
 
+  const EMPTY_ARRAY = useMemo(() => [], []);
+  const { 
+    draftId, 
+    syncState, 
+    initialMeals, 
+    scheduleSave, 
+    resetDraft,
+    setLocked 
+  } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId);
+
   // 🛡️ COCKPIT: Abrir biblioteca automaticamente se veio do cockpit
   useEffect(() => {
     if (searchParams.get("openLibrary") === "true") {
@@ -81,21 +91,14 @@ export default function EditorV3Page() {
   const [patientData, setPatientData] = useState<any>(null);
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
 
-  const { 
-    draftId, 
-    syncState, 
-    initialMeals, 
-    scheduleSave, 
-    resetDraft,
-    setLocked 
-  } = useDraftSync(effectivePatientId || null, [], store.meals, effectiveId);
-
-
-
   // Efeito para hidratar o rascunho quando carregado
   useEffect(() => {
     if (initialMeals && initialMeals.length > 0) {
-      store.hydrateMeals(initialMeals);
+      // 🛡️ Guard: Só hidrata se o store estiver vazio ou se for um load forçado
+      // Isso evita o "revert" cíclico
+      if (store.meals.length === 0 || initialMeals.length !== store.meals.length) {
+        store.hydrateMeals(initialMeals);
+      }
     }
   }, [initialMeals]);
 
@@ -508,9 +511,64 @@ export default function EditorV3Page() {
 
             <TemplateV3Modal isOpen={isTemplateModalOpen} onClose={() => setIsTemplateModalOpen(false)} template={selectedTemplate} onSelectProfile={handleSelectProfile} />
 
-            <Button variant="outline" onClick={handleClearAll} className="bg-white/5 border-white/10 text-white/30 text-[9px] font-black uppercase tracking-widest h-9 px-4 rounded-lg hidden xl:flex">
-              <Trash2 className="w-4 h-4 mr-2" /> Limpar
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="bg-white/5 border-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest h-9 px-4 rounded-lg flex hover:border-red-500/30 hover:text-red-400">
+                  <Trash2 className="w-4 h-4 mr-2" /> Gerenciar
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 bg-neutral-900 border-white/10 p-2 shadow-2xl">
+                <div className="flex flex-col gap-1">
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleClearAll}
+                    className="justify-start text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 h-9"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-2 rotate-45" /> Limpar Refeições
+                  </Button>
+                  
+                  {effectiveId && (
+                    <>
+                      <Button 
+                        variant="ghost" 
+                        onClick={async () => {
+                          if (confirm("Deseja desativar este plano? Ele não aparecerá mais para o paciente.")) {
+                            const ok = await planPersistenceService.deactivatePlan(effectiveId);
+                            if (ok) {
+                              toast.success("Plano desativado!");
+                              navigate(`/editor-v3/${effectivePatientId}`);
+                            } else {
+                              toast.error("Erro ao desativar.");
+                            }
+                          }
+                        }}
+                        className="justify-start text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-amber-400 hover:bg-amber-500/10 h-9"
+                      >
+                        <Calendar className="w-3.5 h-3.5 mr-2" /> Desativar Plano
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        onClick={async () => {
+                          if (confirm("⚠️ ATENÇÃO: Esta ação é irreversível. Deseja DELETAR este plano permanentemente?")) {
+                            const ok = await planPersistenceService.deletePlan(effectiveId);
+                            if (ok) {
+                              toast.success("Plano deletado permanentemente!");
+                              navigate(`/editor-v3/${effectivePatientId}`);
+                            } else {
+                              toast.error("Erro ao deletar.");
+                            }
+                          }
+                        }}
+                        className="justify-start text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 hover:bg-red-500/10 h-9"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Deletar Plano
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <Button onClick={() => setIsShareDialogOpen(true)} className="bg-neutral-800 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest h-9 px-6 rounded-lg flex">
               <Send className="w-4 h-4 mr-2" /> Enviar
