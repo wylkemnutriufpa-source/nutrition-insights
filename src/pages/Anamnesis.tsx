@@ -975,7 +975,7 @@ export default function Anamnesis() {
     console.log("[FJ:Anamnesis] Starting ATOMIC transition...");
 
     // 🛡️ ATOMICITY V4: Use RPC to ensure all tables are updated or none are.
-    const { data: atomicData, error: atomicError } = await supabase.rpc("save_onboarding_data_atomic", {
+    const { data: rawAtomicData, error: atomicError } = await supabase.rpc("save_onboarding_data_atomic", {
       p_patient_id: targetUserId,
       p_tenant_id: resolvedTenantId,
       p_anamnesis_data: payload,
@@ -998,6 +998,8 @@ export default function Anamnesis() {
       p_journey_status: "onboarding_completed"
     });
 
+    const atomicData = rawAtomicData as any;
+
     if (atomicError || !atomicData?.success) {
       console.error("[FJ:Anamnesis] atomic submit failed:", atomicError || atomicData?.error);
       toast.error("Erro ao salvar: " + (atomicError?.message || atomicData?.error || "falha na transação"));
@@ -1010,7 +1012,7 @@ export default function Anamnesis() {
     console.log("[FJ:Anamnesis] Atomic sync successful:", atomicData);
     setSubmitSyncStatus("success", "anamnesis_submit");
 
-    if (pipelineRes.data && !isPipelineMode) {
+    if (atomicData && !isPipelineMode) {
       setHasActivePipeline(true);
     }
 
