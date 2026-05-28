@@ -22402,6 +22402,10 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_quick_meal_template_v1: {
+        Args: { p_day_of_week: number; p_items: Json; p_meal_plan_id: string }
+        Returns: undefined
+      }
       approve_and_publish_plan: {
         Args: {
           _duration_days?: number

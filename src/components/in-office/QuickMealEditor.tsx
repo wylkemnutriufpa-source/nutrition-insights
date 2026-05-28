@@ -339,7 +339,9 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     setSaving(true);
     const items = (template.items || []) as MealItem[];
     const totalItems = items.length;
-    const inserts = items.map(item => {
+    
+    // Prepare payload for RPC
+    const itemsPayload = items.map(item => {
       const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
       const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
       const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
@@ -347,16 +349,13 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
       return {
         id: crypto.randomUUID(),
-        meal_plan_id: mealPlanId,
         tipo_refeicao: item.tipo_refeicao,
         title: item.name,
-        meta_calorias: cal > 0 ? cal : null,
-        meta_proteinas: prot > 0 ? prot : null,
-        meta_carboidratos: carb > 0 ? carb : null,
-        meta_gorduras: fat > 0 ? fat : null,
-        day_of_week: 0,
-        item_origin: "in_office_template" as const,
-        tenant_id: tenantId,
+        meta_calorias: cal > 0 ? Math.round(cal) : null,
+        meta_proteinas: prot > 0 ? parseFloat(prot.toFixed(1)) : null,
+        meta_carboidratos: carb > 0 ? parseFloat(carb.toFixed(1)) : null,
+        meta_gorduras: fat > 0 ? parseFloat(fat.toFixed(1)) : null,
+        item_origin: "in_office_template",
         is_primary: item.is_primary ?? true,
         substitution_group_id: item.substitution_group_id || (item.is_primary ? crypto.randomUUID() : null),
       };
@@ -364,22 +363,16 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
     enqueuePersistence(async () => {
       try {
-        // Delete existing items
-        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId)
-          .eq("day_of_week", 0);
+        if (!mealPlanId) throw new Error("mealPlanId is required");
 
-        if (inserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
-          if (insErr) throw insErr;
-        }
+        // Surgical fix: atomic replacement via RPC
+        const { error: rpcErr } = await supabase.rpc('apply_quick_meal_template_v1', {
+          p_meal_plan_id: mealPlanId,
+          p_day_of_week: 0, // QuickMealEditor only handles day 0
+          p_items: itemsPayload
+        });
 
+        if (rpcErr) throw rpcErr;
 
         setShowTemplateLoad(false);
         setPreviewTemplate(null);
