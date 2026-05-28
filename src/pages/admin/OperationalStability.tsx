@@ -83,7 +83,16 @@ export default function OperationalStability() {
   useEffect(() => {
     auditSystem();
     fetchMetrics();
+    fetchIncidents();
   }, []);
+
+  const fetchIncidents = async () => {
+    const { data } = await supabase
+      .from("system_incident_logs")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setIncidents(data as IncidentLog[]);
+  };
 
   const fetchMetrics = async () => {
     try {
@@ -121,7 +130,10 @@ export default function OperationalStability() {
         contractBlocks: contractErrors || 0,
         totalErrors: total,
         stabilityScore: score,
-        stabilityStreakDays: Math.max(0, streak)
+        stabilityStreakDays: Math.max(0, streak),
+        publishSuccessRate: 98.5, // Mock value until real telemetry is connected
+        onboardingCompletionRate: 94.2, // Mock value
+        rollbackCount: 0
       });
     } catch (e) {
       console.error("Erro ao buscar métricas de regressão:", e);
