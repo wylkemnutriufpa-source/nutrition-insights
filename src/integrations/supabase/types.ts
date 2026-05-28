@@ -7228,6 +7228,7 @@ export type Database = {
       }
       meal_plan_items: {
         Row: {
+          clinical_mass_g: number | null
           created_at: string
           day_of_week: number
           description: string | null
@@ -7256,6 +7257,7 @@ export type Database = {
           was_auto_corrected: boolean
         }
         Insert: {
+          clinical_mass_g?: number | null
           created_at?: string
           day_of_week: number
           description?: string | null
@@ -7284,6 +7286,7 @@ export type Database = {
           was_auto_corrected?: boolean
         }
         Update: {
+          clinical_mass_g?: number | null
           created_at?: string
           day_of_week?: number
           description?: string | null
