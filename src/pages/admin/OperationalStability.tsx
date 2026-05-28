@@ -318,15 +318,15 @@ export default function OperationalStability() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="font-bold text-lg">Regras de Ouro</h3>
+                    <h3 className="font-bold text-lg">Regras de Ouro (Governança)</h3>
                     <ul className="space-y-3">
                       {[
-                        "Só corrigir bugs reproduzíveis",
-                        "Um bug por vez, um fluxo por vez",
-                        "Alteração mínima possível (Súrgica)",
-                        "Sem melhorias 'oportunistas'",
-                        "Sem mexer fora da fronteira do bug",
-                        "Sem soluções de 'auto-cura' mágicas"
+                        "Postura Conservadora: Nenhuma mudança sem justificativa operacional",
+                        "Bug Real vs. Melhoria: Proibido disfarçar refatores como correção",
+                        "Só corrigir bugs reproduzíveis: Prova de falha + Prova de cura",
+                        "Atomicidade: Um bug por vez, um fluxo por vez",
+                        "Sem Auto-Cura: Descobrir ONDE o estado inválido nasce",
+                        "Determinismo: Sem fallbacks silenciosos ou sincronizações invisíveis"
                       ].map((rule, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
                           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -337,14 +337,15 @@ export default function OperationalStability() {
                   </div>
                   <div className="space-y-4 p-4 bg-background/50 rounded-xl border">
                     <h3 className="font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                      <Search className="w-4 h-4" /> Requisitos Pré-Mudança
+                      <Search className="w-4 h-4" /> Checklist Pré-Mudança (Mandatório)
                     </h3>
-                    <div className="space-y-2 text-xs text-muted-foreground">
-                      <p><strong>Causa Raiz:</strong> Onde o estado inválido nasce?</p>
-                      <p><strong>Localização:</strong> Arquivo e linha exatos.</p>
-                      <p><strong>Impacto:</strong> O que mais pode quebrar?</p>
-                      <p><strong>Risco:</strong> Qual a chance de regressão?</p>
-                      <p><strong>Contratos:</strong> Quais RPCs ou colunas são afetados?</p>
+                    <div className="space-y-3 text-xs text-muted-foreground">
+                      <p><strong>1. Qual bug real resolve?</strong> (Descrever falha operacional)</p>
+                      <p><strong>2. Qual fluxo clínico toca?</strong> (Ex: Geração de plano, WhatsApp)</p>
+                      <p><strong>3. Qual contrato altera?</strong> (Banco, RPC, Interface)</p>
+                      <p><strong>4. Qual risco de regressão cria?</strong> (Baixo/Médio/Alto)</p>
+                      <p><strong>5. Qual teste protege?</strong> (Prevenção de regressão)</p>
+                      <p><strong>6. Como o rollback funciona?</strong> (Plano de emergência)</p>
                     </div>
                   </div>
                 </div>
