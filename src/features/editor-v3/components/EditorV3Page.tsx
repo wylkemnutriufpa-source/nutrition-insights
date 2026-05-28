@@ -67,6 +67,11 @@ export default function EditorV3Page() {
   const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
   const [isRecipeBuilderOpen, setIsRecipeBuilderOpen] = useState(false);
 
+  // Refs to track current loaded plan to avoid redundant loading
+  const lastLoadedPlanId = React.useRef<string | null>(null);
+  const lastLoadedPatientId = React.useRef<string | null>(null);
+  const isHydratedRef = React.useRef(false);
+
   const EMPTY_ARRAY = useMemo(() => [], []);
   const { 
     draftId, 
@@ -76,7 +81,7 @@ export default function EditorV3Page() {
     resetDraft,
     reloadFromServer,
     setLocked 
-  } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId);
+  } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId, isHydratedRef.current);
 
   // 🛡️ COCKPIT: Abrir biblioteca automaticamente se veio do cockpit
   useEffect(() => {
@@ -112,8 +117,9 @@ export default function EditorV3Page() {
     if (initialMeals && initialMeals.length > 0) {
       // 🛡️ Guard: Só hidrata se o store estiver vazio ou se for um load forçado
       // Isso evita o "revert" cíclico
-      if (store.meals.length === 0 || initialMeals.length !== store.meals.length) {
+      if (!isHydratedRef.current || store.meals.length === 0) {
         store.hydrateMeals(initialMeals);
+        isHydratedRef.current = true;
       }
     }
   }, [initialMeals]);
@@ -257,17 +263,13 @@ export default function EditorV3Page() {
     }
   };
 
-  // Refs to track current loaded plan to avoid redundant loading
-  const lastLoadedPlanId = React.useRef<string | null>(null);
-  const lastLoadedPatientId = React.useRef<string | null>(null);
 
   useEffect(() => {
     async function loadPlan() {
       // 🛡️ Guard #1: Plano já carregado e store tem dados → não recarrega
       if (effectiveId === lastLoadedPlanId.current && 
           effectivePatientId === lastLoadedPatientId.current && 
-          store.meals.length > 0) {
-        // 🛡️ Garantia de que o loader não fica travado se o componente remontar
+          isHydratedRef.current) {
         if (loading) setLoading(false);
         return;
       }
@@ -337,10 +339,12 @@ export default function EditorV3Page() {
           
           if (mealsToHydrate.length > 0) {
             store.hydrateMeals(mealsToHydrate);
+            isHydratedRef.current = true;
             
             const daysWithContent = [...new Set(mealsToHydrate.map((m: any) => m.day_of_week ?? 0))];
             if (!daysWithContent.includes(activeDay) && daysWithContent.length > 0) {
-              setActiveDay(daysWithContent[0]);
+              const targetDay = daysWithContent.includes(1) ? 1 : daysWithContent[0];
+              setActiveDay(targetDay);
             }
           }
           
@@ -349,6 +353,7 @@ export default function EditorV3Page() {
           // Update refs
           lastLoadedPlanId.current = effectiveId;
           lastLoadedPatientId.current = effectivePatientId || planData.patient_id || null;
+          isHydratedRef.current = true;
         }
       } catch (err) {
         console.error('[EditorV3] Erro ao carregar plano:', err);

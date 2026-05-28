@@ -36,7 +36,8 @@ export function useDraftSync(
   patientId: string | null, 
   seedMeals: Meal[], 
   currentMeals: Meal[],
-  planId?: string | null
+  planId?: string | null,
+  isHydrated?: boolean
 ): UseDraftSyncReturn {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('idle');
@@ -84,8 +85,10 @@ export function useDraftSync(
   }, [patientId, planId, JSON.stringify(seedMeals)]);
 
   useEffect(() => {
-    loadDraft();
-  }, [loadDraft]);
+    if (!isHydrated) {
+      loadDraft();
+    }
+  }, [loadDraft, isHydrated]);
 
   const debounceSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
