@@ -350,7 +350,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       return {
         tipo_refeicao: item.tipo_refeicao,
         title: item.name,
-        description: `${cal > 0 ? Math.round(cal) : 0} kcal`,
+        description: `${Math.round(cal)} kcal`,
         meta_calorias: Math.round(cal),
         meta_proteinas: Math.round(prot),
         meta_carboidratos: Math.round(carb),
