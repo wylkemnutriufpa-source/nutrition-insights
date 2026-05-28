@@ -37,7 +37,10 @@ function preservedQuantityDisplay(item: any, oldMassG: number, newMassG: number)
   }
   
   return `${newMassG}g`;
-}
+const MAX_QUANTITY = 5000;
+const MIN_QUANTITY = 1;
+
+export preservedQuantityDisplay; // already there
 
 interface EditorState {
   meals: Meal[];
