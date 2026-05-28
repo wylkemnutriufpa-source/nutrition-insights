@@ -76,7 +76,7 @@ export default function EditorV3Page() {
     resetDraft,
     reloadFromServer,
     setLocked 
-  } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId);
+  } = useDraftSync(effectivePatientId || null, EMPTY_ARRAY, store.meals, effectiveId, isHydrated.current);
 
   // 🛡️ COCKPIT: Abrir biblioteca automaticamente se veio do cockpit
   useEffect(() => {
