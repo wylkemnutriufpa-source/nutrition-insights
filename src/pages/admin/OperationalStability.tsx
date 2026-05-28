@@ -269,8 +269,11 @@ export default function OperationalStability() {
             <TabsTrigger value="matrix" className="gap-2">
               <Activity className="w-4 h-4" /> Matriz de Estabilidade
             </TabsTrigger>
+            <TabsTrigger value="incidents" className="gap-2">
+              <ShieldAlert className="w-4 h-4" /> Registro de Incidentes
+            </TabsTrigger>
             <TabsTrigger value="protocol" className="gap-2">
-              <Lock className="w-4 h-4" /> Protocolo de Intervenção
+              <Lock className="w-4 h-4" /> Disciplina de Produção
             </TabsTrigger>
           </TabsList>
 
