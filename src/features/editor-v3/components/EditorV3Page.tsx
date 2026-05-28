@@ -269,7 +269,7 @@ export default function EditorV3Page() {
       // 🛡️ Guard #1: Plano já carregado e store tem dados → não recarrega
       if (effectiveId === lastLoadedPlanId.current && 
           effectivePatientId === lastLoadedPatientId.current && 
-          isHydrated.current) {
+          isHydratedRef.current) {
         if (loading) setLoading(false);
         return;
       }
@@ -339,7 +339,7 @@ export default function EditorV3Page() {
           
           if (mealsToHydrate.length > 0) {
             store.hydrateMeals(mealsToHydrate);
-            isHydrated.current = true;
+            isHydratedRef.current = true;
             
             const daysWithContent = [...new Set(mealsToHydrate.map((m: any) => m.day_of_week ?? 0))];
             if (!daysWithContent.includes(activeDay) && daysWithContent.length > 0) {
@@ -353,7 +353,7 @@ export default function EditorV3Page() {
           // Update refs
           lastLoadedPlanId.current = effectiveId;
           lastLoadedPatientId.current = effectivePatientId || planData.patient_id || null;
-          isHydrated.current = true;
+          isHydratedRef.current = true;
         }
       } catch (err) {
         console.error('[EditorV3] Erro ao carregar plano:', err);
