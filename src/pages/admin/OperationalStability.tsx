@@ -25,6 +25,7 @@ interface RegressionMetrics {
   contractBlocks: number;
   totalErrors: number;
   stabilityScore: number;
+  stabilityStreakDays: number;
 }
 
 const CHECKLIST_ITEMS = [
@@ -46,7 +47,8 @@ export default function OperationalStability() {
     onboardingAborts: 0,
     contractBlocks: 0,
     totalErrors: 0,
-    stabilityScore: 100
+    stabilityScore: 100,
+    stabilityStreakDays: 0
   });
   const [loading, setLoading] = useState(true);
   const [checklist, setChecklist] = useState<Record<string, boolean>>(
@@ -76,6 +78,16 @@ export default function OperationalStability() {
         .select("*", { count: 'exact', head: true })
         .in("severity", ["WARNING", "CRITICAL"]);
 
+      const { data: lastError } = await supabase
+        .from("system_error_logs")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const lastErrorDate = lastError ? new Date(lastError.created_at) : new Date("2026-05-28");
+      const streak = Math.floor((new Date().getTime() - lastErrorDate.getTime()) / (1000 * 3600 * 24));
+
       const total = (pubErrors || 0) + (onbErrors || 0) + (contractErrors || 0);
       const score = Math.max(0, 100 - (total * 2));
 
@@ -84,7 +96,8 @@ export default function OperationalStability() {
         onboardingAborts: onbErrors || 0,
         contractBlocks: contractErrors || 0,
         totalErrors: total,
-        stabilityScore: score
+        stabilityScore: score,
+        stabilityStreakDays: Math.max(0, streak)
       });
     } catch (e) {
       console.error("Erro ao buscar métricas de regressão:", e);
@@ -177,13 +190,22 @@ export default function OperationalStability() {
               Arquitetura congelada. Foco total em uso clínico real e previsibilidade.
             </p>
           </div>
-          <Card className="bg-slate-900 text-white border-none p-4 min-w-[200px]">
-            <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Score de Estabilidade</div>
-            <div className="flex items-center gap-3">
-              <div className="text-3xl font-black">{metrics.stabilityScore}%</div>
-              <Progress value={metrics.stabilityScore} className="h-2 flex-1 bg-slate-800" />
-            </div>
-          </Card>
+          <div className="flex gap-4 min-w-[300px]">
+            <Card className="bg-slate-900 text-white border-none p-4 flex-1">
+              <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Streak de Estabilidade</div>
+              <div className="flex items-center gap-3">
+                <div className="text-3xl font-black">{metrics.stabilityStreakDays}d</div>
+                <div className="text-[10px] text-slate-500 uppercase leading-tight">Meta: 7 dias <br /> sem regressão</div>
+              </div>
+            </Card>
+            <Card className="bg-slate-900 text-white border-none p-4 flex-1">
+              <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Score Geral</div>
+              <div className="flex items-center gap-3">
+                <div className="text-3xl font-black">{metrics.stabilityScore}%</div>
+                <Progress value={metrics.stabilityScore} className="h-2 flex-1 bg-slate-800" />
+              </div>
+            </Card>
+          </div>
         </header>
 
         <Tabs defaultValue="checklist" className="space-y-6">
@@ -318,15 +340,15 @@ export default function OperationalStability() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="font-bold text-lg">Regras de Ouro</h3>
+                    <h3 className="font-bold text-lg">Regras de Ouro (Governança)</h3>
                     <ul className="space-y-3">
                       {[
-                        "Só corrigir bugs reproduzíveis",
-                        "Um bug por vez, um fluxo por vez",
-                        "Alteração mínima possível (Súrgica)",
-                        "Sem melhorias 'oportunistas'",
-                        "Sem mexer fora da fronteira do bug",
-                        "Sem soluções de 'auto-cura' mágicas"
+                        "Postura Conservadora: Nenhuma mudança sem justificativa operacional",
+                        "Bug Real vs. Melhoria: Proibido disfarçar refatores como correção",
+                        "Só corrigir bugs reproduzíveis: Prova de falha + Prova de cura",
+                        "Atomicidade: Um bug por vez, um fluxo por vez",
+                        "Sem Auto-Cura: Descobrir ONDE o estado inválido nasce",
+                        "Determinismo: Sem fallbacks silenciosos ou sincronizações invisíveis"
                       ].map((rule, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
                           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -337,14 +359,15 @@ export default function OperationalStability() {
                   </div>
                   <div className="space-y-4 p-4 bg-background/50 rounded-xl border">
                     <h3 className="font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                      <Search className="w-4 h-4" /> Requisitos Pré-Mudança
+                      <Search className="w-4 h-4" /> Checklist Pré-Mudança (Mandatório)
                     </h3>
-                    <div className="space-y-2 text-xs text-muted-foreground">
-                      <p><strong>Causa Raiz:</strong> Onde o estado inválido nasce?</p>
-                      <p><strong>Localização:</strong> Arquivo e linha exatos.</p>
-                      <p><strong>Impacto:</strong> O que mais pode quebrar?</p>
-                      <p><strong>Risco:</strong> Qual a chance de regressão?</p>
-                      <p><strong>Contratos:</strong> Quais RPCs ou colunas são afetados?</p>
+                    <div className="space-y-3 text-xs text-muted-foreground">
+                      <p><strong>1. Qual bug real resolve?</strong> (Descrever falha operacional)</p>
+                      <p><strong>2. Qual fluxo clínico toca?</strong> (Ex: Geração de plano, WhatsApp)</p>
+                      <p><strong>3. Qual contrato altera?</strong> (Banco, RPC, Interface)</p>
+                      <p><strong>4. Qual risco de regressão cria?</strong> (Baixo/Médio/Alto)</p>
+                      <p><strong>5. Qual teste protege?</strong> (Prevenção de regressão)</p>
+                      <p><strong>6. Como o rollback funciona?</strong> (Plano de emergência)</p>
                     </div>
                   </div>
                 </div>
