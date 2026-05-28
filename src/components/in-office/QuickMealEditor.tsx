@@ -366,7 +366,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         if (!mealPlanId) throw new Error("mealPlanId is required");
 
         // Surgical fix: atomic replacement via RPC
-        const { error: rpcErr } = await supabase.rpc('apply_quick_meal_template_v1', {
+        const { error: rpcErr } = await supabase.rpc('apply_quick_meal_template_atomic', {
           p_meal_plan_id: mealPlanId,
           p_day_of_week: 0, // QuickMealEditor only handles day 0
           p_items: itemsPayload
