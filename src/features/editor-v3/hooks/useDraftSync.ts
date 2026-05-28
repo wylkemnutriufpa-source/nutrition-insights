@@ -36,7 +36,8 @@ export function useDraftSync(
   patientId: string | null, 
   seedMeals: Meal[], 
   currentMeals: Meal[],
-  planId?: string | null
+  planId?: string | null,
+  isHydrated?: boolean
 ): UseDraftSyncReturn {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('idle');
