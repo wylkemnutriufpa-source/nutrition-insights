@@ -201,7 +201,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
     // Só geramos novos IDs se for um template bruto (vindo de uma fonte não-snapshotada).
     const items = (m.items || m.foods || []).map((it: any) => {
       // Resolve a massa clínica com validação mínima
-      const rawMass = Number(it.clinical_mass_g || it.quantity || it.qty || 0);
+      const rawMass = Number(it.clinical_mass_g || it.quantity || it.qty || it.kcal || 0);
       const clinical_mass_g = rawMass >= 1 ? rawMass : (it.clinical_mass_g ? rawMass : 100);
 
       // Usar o ID do snapshot se disponível para manter a correlação profissional-paciente
