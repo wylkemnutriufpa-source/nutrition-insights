@@ -351,6 +351,7 @@ export default function EditorV3Page() {
           // Update refs
           lastLoadedPlanId.current = effectiveId;
           lastLoadedPatientId.current = effectivePatientId || planData.patient_id || null;
+          isHydrated.current = true;
         }
       } catch (err) {
         console.error('[EditorV3] Erro ao carregar plano:', err);
