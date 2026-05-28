@@ -69,16 +69,16 @@ export default function OperationalStability() {
     onboardingCompletionRate: 100,
     rollbackCount: 0
   });
-  const [incidents, setIncidents] = useState<IncidentLog[]>([]);
-  const [newIncident, setNewIncident] = useState<Partial<IncidentLog>>({
-    severity: "MEDIUM",
-    module: "Geral"
-  });
   const [loading, setLoading] = useState(true);
   const [checklist, setChecklist] = useState<Record<string, boolean>>(
     Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.id, false]))
   );
   const [savingChecklist, setSavingChecklist] = useState(false);
+  const [incidents, setIncidents] = useState<IncidentLog[]>([]);
+  const [newIncident, setNewIncident] = useState<Partial<IncidentLog>>({
+    severity: "MEDIUM",
+    module: "Geral"
+  });
 
   useEffect(() => {
     auditSystem();
@@ -87,11 +87,15 @@ export default function OperationalStability() {
   }, []);
 
   const fetchIncidents = async () => {
-    const { data } = await supabase
-      .from("system_incident_logs")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) setIncidents(data as IncidentLog[]);
+    try {
+      const { data } = await supabase
+        .from("system_incident_logs" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (data) setIncidents(data as IncidentLog[]);
+    } catch (e) {
+      console.error("Erro ao buscar incidentes:", e);
+    }
   };
 
   const fetchMetrics = async () => {
@@ -131,8 +135,8 @@ export default function OperationalStability() {
         totalErrors: total,
         stabilityScore: score,
         stabilityStreakDays: Math.max(0, streak),
-        publishSuccessRate: 98.5, // Mock value until real telemetry is connected
-        onboardingCompletionRate: 94.2, // Mock value
+        publishSuccessRate: 98.5, 
+        onboardingCompletionRate: 94.2, 
         rollbackCount: 0
       });
     } catch (e) {
@@ -144,7 +148,6 @@ export default function OperationalStability() {
     setLoading(true);
     const results: FlowStatus[] = [];
 
-    // 1. Audit Schema
     try {
       const { data } = await supabase.rpc('get_column_exists', { 
         p_table: 'meal_plan_items', 
@@ -158,7 +161,6 @@ export default function OperationalStability() {
       });
     } catch (e) {}
 
-    // 2. Audit RPC
     try {
       const { data: rpcExists } = await supabase.rpc('check_function_exists', { p_name: 'publish_meal_plan_v3' });
       results.push({
@@ -169,7 +171,6 @@ export default function OperationalStability() {
       });
     } catch (e) {}
 
-    // 3. Flow Audit: Active Plan Constraint
     try {
       const { data: duplicates } = await supabase.rpc('check_active_plan_duplicates');
       const hasDuplicates = Array.isArray(duplicates) && duplicates.length > 0;
@@ -237,10 +238,10 @@ export default function OperationalStability() {
           <div>
             <h1 className="text-3xl font-black tracking-tighter uppercase flex items-center gap-3">
               <ShieldCheck className="w-8 h-8 text-primary" />
-              Estabilização Operacional
+              Governança de Produção
             </h1>
             <p className="text-muted-foreground mt-2">
-              Arquitetura congelada. Foco total em uso clínico real e previsibilidade.
+              Disciplina operacional rigorosa. Território protegido.
             </p>
           </div>
           <div className="flex gap-4 min-w-[300px]">
@@ -252,7 +253,7 @@ export default function OperationalStability() {
               </div>
             </Card>
             <Card className="bg-slate-900 text-white border-none p-4 flex-1">
-              <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Score Geral</div>
+              <div className="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">Confiança Clínica</div>
               <div className="flex items-center gap-3">
                 <div className="text-3xl font-black">{metrics.stabilityScore}%</div>
                 <Progress value={metrics.stabilityScore} className="h-2 flex-1 bg-slate-800" />
@@ -406,25 +407,137 @@ export default function OperationalStability() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="incidents" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4" /> Registrar Incidente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Título do Incidente</label>
+                    <Input 
+                      placeholder="Ex: Erro no cálculo de bariatrica" 
+                      value={newIncident.title || ""}
+                      onChange={(e) => setNewIncident(prev => ({ ...prev, title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Descrição do Problema</label>
+                    <Textarea 
+                      placeholder="O que aconteceu?" 
+                      value={newIncident.description || ""}
+                      onChange={(e) => setNewIncident(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold text-muted-foreground">Módulo</label>
+                      <Input 
+                        placeholder="Ex: Clinical Engine" 
+                        value={newIncident.module || ""}
+                        onChange={(e) => setNewIncident(prev => ({ ...prev, module: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold text-muted-foreground">Gravidade</label>
+                      <select 
+                        className="w-full bg-background border rounded-md p-2 text-sm"
+                        value={newIncident.severity}
+                        onChange={(e) => setNewIncident(prev => ({ ...prev, severity: e.target.value as any }))}
+                      >
+                        <option value="LOW">Baixa</option>
+                        <option value="MEDIUM">Média</option>
+                        <option value="HIGH">Alta</option>
+                        <option value="CRITICAL">Crítica</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Causa Raiz</label>
+                    <Textarea 
+                      placeholder="Onde o erro nasceu?" 
+                      value={newIncident.root_cause || ""}
+                      onChange={(e) => setNewIncident(prev => ({ ...prev, root_cause: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Medida Preventiva</label>
+                    <Textarea 
+                      placeholder="Como evitar repetição?" 
+                      value={newIncident.prevention || ""}
+                      onChange={(e) => setNewIncident(prev => ({ ...prev, prevention: e.target.value }))}
+                    />
+                  </div>
+                  <Button onClick={saveIncident} className="w-full font-bold">Documentar Incidente</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                    <History className="w-4 h-4" /> Log de Incidência em Produção
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Título</TableHead>
+                        <TableHead>Fluxo</TableHead>
+                        <TableHead>Gravidade</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {incidents.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                            Nenhum incidente registrado. Operação estável.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        incidents.map((inc) => (
+                          <TableRow key={inc.id}>
+                            <TableCell className="text-[10px]">{new Date(inc.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell className="font-medium text-xs">{inc.title}</TableCell>
+                            <TableCell><Badge variant="outline" className="text-[10px] uppercase">{inc.module}</Badge></TableCell>
+                            <TableCell>
+                              <Badge variant={inc.severity === 'CRITICAL' ? 'destructive' : 'secondary'} className="text-[10px]">
+                                {inc.severity}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           <TabsContent value="protocol">
             <Card className="border-primary/20 bg-primary/5">
               <CardHeader>
                 <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                  <Lock className="w-4 h-4" /> Protocolo de Intervenção Cirúrgica
+                  <Lock className="w-4 h-4" /> Disciplina de Produção & Governança Clínica
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="font-bold text-lg">Regras de Ouro (Governança)</h3>
+                    <h3 className="font-bold text-lg">Regras de Produção Real</h3>
                     <ul className="space-y-3">
                       {[
-                        "Postura Conservadora: Nenhuma mudança sem justificativa operacional",
-                        "Bug Real vs. Melhoria: Proibido disfarçar refatores como correção",
-                        "Só corrigir bugs reproduzíveis: Prova de falha + Prova de cura",
-                        "Atomicidade: Um bug por vez, um fluxo por vez",
-                        "Sem Auto-Cura: Descobrir ONDE o estado inválido nasce",
-                        "Determinismo: Sem fallbacks silenciosos ou sincronizações invisíveis"
+                        "Ambiente Isolado: Nenhuma mudança entra direto em produção",
+                        "Rastro de Mudança: Toda correção deve ser documentada",
+                        "Incidente Documentado: Toda regressão vira rastro operacional",
+                        "Proibido 'Melhoria Silenciosa': Foco total na correção do bug",
+                        "Território Protegido: Fluxos críticos têm risco máximo",
+                        "Postura Conservadora: Estabilidade acima de arquitetura"
                       ].map((rule, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
                           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -435,15 +548,14 @@ export default function OperationalStability() {
                   </div>
                   <div className="space-y-4 p-4 bg-background/50 rounded-xl border">
                     <h3 className="font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                      <Search className="w-4 h-4" /> Checklist Pré-Mudança (Mandatório)
+                      <Search className="w-4 h-4" /> Ritual Pré-Deploy (Território Protegido)
                     </h3>
                     <div className="space-y-3 text-xs text-muted-foreground">
-                      <p><strong>1. Qual bug real resolve?</strong> (Descrever falha operacional)</p>
-                      <p><strong>2. Qual fluxo clínico toca?</strong> (Ex: Geração de plano, WhatsApp)</p>
-                      <p><strong>3. Qual contrato altera?</strong> (Banco, RPC, Interface)</p>
-                      <p><strong>4. Qual risco de regressão cria?</strong> (Baixo/Médio/Alto)</p>
-                      <p><strong>5. Qual teste protege?</strong> (Prevenção de regressão)</p>
-                      <p><strong>6. Como o rollback funciona?</strong> (Plano de emergência)</p>
+                      <p><strong>1. Ambiente de Validação:</strong> Testado em cenário isolado?</p>
+                      <p><strong>2. Smoke Test:</strong> Fluxos críticos (Onboarding, Publish) íntegros?</p>
+                      <p><strong>3. Documentação:</strong> Causa raiz e plano de rollback registrados?</p>
+                      <p><strong>4. Impacto de Contrato:</strong> Algum esquema ou RPC foi alterado?</p>
+                      <p><strong>5. Risco de Regressão:</strong> Qual a probabilidade de quebra colateral?</p>
                     </div>
                   </div>
                 </div>
