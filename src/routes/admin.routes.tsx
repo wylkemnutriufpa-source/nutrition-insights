@@ -44,6 +44,8 @@ const SystemAudit = lazy(() => import("../pages/SystemAudit"));
 const SystemDiagnostics = lazy(() => import("../pages/SystemDiagnostics"));
 const SchemaMonitor = lazy(() => import("../pages/SchemaMonitor"));
 const OperationalAudit = lazy(() => import("../pages/admin/OperationalAudit"));
+const OperationalStability = lazy(() => import("../pages/admin/OperationalStability"));
+
 
 export const adminRoutes = [
   <Route key="admin-root" path="/admin" element={<Navigate to="/admin/dashboard" replace />} />,
@@ -77,7 +79,9 @@ export const adminRoutes = [
   <Route key="admin-diagnostics" path="/admin/diagnostics" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AdminPlanLoadingDiagnostics /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="admin-visual-library" path="/admin/visual-library" element={<StabilityZone name="VisualLibraryAdmin"><SectionalErrorBoundary name="VisualLibrary"><Suspense fallback={<PageLoader />}><MealVisualLibraryAdmin /></Suspense></SectionalErrorBoundary></StabilityZone>} />,
   <Route key="admin-operational-audit" path="/admin/operational-audit" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><OperationalAudit /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
+  <Route key="admin-stability" path="/admin/stability" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><OperationalStability /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="clinical-risk" path="/clinical-risk" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalRiskDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
+
   <Route key="therapeutic-intelligence" path="/therapeutic-intelligence" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><TherapeuticIntelligence /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="clinical-orchestration" path="/clinical-orchestration" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalOrchestration /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
   <Route key="clinical-predictions" path="/clinical-predictions" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalPredictions /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />,
