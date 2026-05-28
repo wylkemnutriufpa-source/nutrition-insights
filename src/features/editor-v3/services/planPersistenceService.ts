@@ -382,6 +382,38 @@ export const planPersistenceService = {
   },
 
   /**
+   * 🛡️ DELETAR PLANO V3
+   */
+  async deletePlan(planId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('meal_plans')
+      .delete()
+      .eq('id', planId);
+    
+    if (error) {
+      console.error('[Persistence-V3] Erro ao deletar plano:', error);
+      return false;
+    }
+    return true;
+  },
+
+  /**
+   * 🛡️ DESATIVAR/ARQUIVAR PLANO V3
+   */
+  async deactivatePlan(planId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('meal_plans')
+      .update({ is_active: false, plan_status: 'inactive' })
+      .eq('id', planId);
+
+    if (error) {
+      console.error('[Persistence-V3] Erro ao desativar plano:', error);
+      return false;
+    }
+    return true;
+  },
+
+  /**
    * PUBLICAÇÃO SOBERANA V3 (ATÔMICA)
    * 🛡️ BUG #2 FIXED: Unifica persistência em uma única RPC para garantir integridade.
    * Salva o plano oficial, sincroniza itens e promove o rascunho em uma transação única.

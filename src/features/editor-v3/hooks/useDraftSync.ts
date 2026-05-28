@@ -80,7 +80,7 @@ export function useDraftSync(
       setInitialAuditLog([]);
       setSyncState('offline');
     }
-  }, [patientId, planId, seedMeals]);
+  }, [patientId, planId, JSON.stringify(seedMeals)]);
 
   useEffect(() => {
     loadDraft();
