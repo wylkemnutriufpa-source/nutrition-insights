@@ -310,45 +310,65 @@ export default function OperationalStability() {
           </TabsContent>
 
           <TabsContent value="matrix" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Card className="bg-red-500/5 border-red-500/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                    <Bug className="w-4 h-4" /> Falhas Publicação
+                <CardHeader className="pb-2 p-3">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Bug className="w-3 h-3" /> Falhas Pub.
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-black text-red-500">{metrics.publishFailures}</div>
+                <CardContent className="p-3 pt-0">
+                  <div className="text-xl font-black text-red-500">{metrics.publishFailures}</div>
                 </CardContent>
               </Card>
               <Card className="bg-amber-500/5 border-amber-500/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                    <Activity className="w-4 h-4" /> Abandono Onboarding
+                <CardHeader className="pb-2 p-3">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Activity className="w-3 h-3" /> Onboarding
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-black text-amber-500">{metrics.onboardingAborts}</div>
+                <CardContent className="p-3 pt-0">
+                  <div className="text-xl font-black text-amber-500">{metrics.onboardingAborts}</div>
                 </CardContent>
               </Card>
               <Card className="bg-blue-500/5 border-blue-500/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4" /> Bloqueios Contrato
+                <CardHeader className="pb-2 p-3">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <ShieldCheck className="w-3 h-3" /> Contrato
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-black text-blue-500">{metrics.contractBlocks}</div>
+                <CardContent className="p-3 pt-0">
+                  <div className="text-xl font-black text-blue-500">{metrics.contractBlocks}</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-emerald-500/5 border-emerald-500/20">
+                <CardHeader className="pb-2 p-3">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Zap className="w-3 h-3" /> Publish SR
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0">
+                  <div className="text-xl font-black text-emerald-500">{metrics.publishSuccessRate}%</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-indigo-500/5 border-indigo-500/20">
+                <CardHeader className="pb-2 p-3">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Share2 className="w-3 h-3" /> Onboarding %
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0">
+                  <div className="text-xl font-black text-indigo-500">{metrics.onboardingCompletionRate}%</div>
                 </CardContent>
               </Card>
               <Card className="bg-purple-500/5 border-purple-500/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                    <TrendingDown className="w-4 h-4" /> Total Regressões
+                <CardHeader className="pb-2 p-3">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <TrendingDown className="w-3 h-3" /> Total
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-black text-purple-500">{metrics.totalErrors}</div>
+                <CardContent className="p-3 pt-0">
+                  <div className="text-xl font-black text-purple-500">{metrics.totalErrors}</div>
                 </CardContent>
               </Card>
             </div>
