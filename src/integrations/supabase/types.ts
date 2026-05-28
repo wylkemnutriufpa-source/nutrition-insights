@@ -7228,6 +7228,7 @@ export type Database = {
       }
       meal_plan_items: {
         Row: {
+          clinical_mass_g: number | null
           created_at: string
           day_of_week: number
           description: string | null
@@ -7256,6 +7257,7 @@ export type Database = {
           was_auto_corrected: boolean
         }
         Insert: {
+          clinical_mass_g?: number | null
           created_at?: string
           day_of_week: number
           description?: string | null
@@ -7284,6 +7286,7 @@ export type Database = {
           was_auto_corrected?: boolean
         }
         Update: {
+          clinical_mass_g?: number | null
           created_at?: string
           day_of_week?: number
           description?: string | null
@@ -22425,11 +22428,13 @@ export type Database = {
         }[]
       }
       calculate_plan_totals: { Args: { p_plan_id: string }; Returns: Json }
+      check_active_plan_duplicates: { Args: never; Returns: Json }
       check_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
       }
       check_and_update_session: { Args: never; Returns: Json }
+      check_function_exists: { Args: { p_name: string }; Returns: boolean }
       check_job_anomalies: {
         Args: never
         Returns: {
@@ -22764,6 +22769,10 @@ export type Database = {
       get_calculated_patient_state: {
         Args: { p_user_id: string }
         Returns: Database["public"]["Enums"]["patient_state_type"]
+      }
+      get_column_exists: {
+        Args: { p_column: string; p_table: string }
+        Returns: boolean
       }
       get_detailed_plan_diagnostics: {
         Args: { p_patient_id: string }
