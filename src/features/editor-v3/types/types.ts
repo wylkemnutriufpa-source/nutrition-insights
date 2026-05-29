@@ -42,6 +42,7 @@ export interface Food {
   quantity?: number; // V3: Born-ready quantity
   clinical_mass_g?: number; // V3: Born-ready mass
   quantity_display?: string; 
+  description?: string;
 }
 
 export interface MealItem extends Food {

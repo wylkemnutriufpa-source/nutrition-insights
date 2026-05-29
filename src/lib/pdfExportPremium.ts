@@ -166,15 +166,24 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
 
 
 function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; title?: string; description?: string | null; meta_calorias?: number }): string {
-  // 🛡️ SOBERANIA V3: Se for um item de porção livre (saladas), priorizamos o texto descritivo
   const title = (item.title || "").toLowerCase();
-  const isFree = title.includes("salada") || title.includes("alface") || title.includes("folhas verdes") || title.includes("vegetais crus");
   
+  // 🛡️ SOBERANIA V3: Se for um item de porção livre (saladas), priorizamos o texto descritivo
+  const isFree = title.includes("salada") || title.includes("alface") || title.includes("folhas verdes") || title.includes("vegetais crus") || title.includes("à vontade");
   if (isFree) return "Livre / À vontade";
 
   const rawQty = item.display_quantity;
   const rawUnit = item.display_unit;
   const dqStr = rawQty == null ? "" : String(rawQty).trim();
+
+  // 🛡️ FIX BUG: Ovos e Frango "1g"
+  if (title.includes("ovo") && !title.includes("clara") && !title.includes("gema")) {
+    if (!dqStr || /^1\s*g?$/i.test(dqStr)) {
+      const cMass = Number(item.clinical_mass_g);
+      const units = cMass > 10 ? Math.round(cMass / 50) : 1;
+      return `${units < 1 ? 1 : units} un`;
+    }
+  }
 
   // Se já temos quantidade e unidade formatada no V3, usamos
   if (dqStr && rawUnit) {
@@ -184,6 +193,7 @@ function formatPortionText(item: { display_quantity?: any; display_unit?: any; c
     return `${dqStr} ${unit}`;
   }
 
+  // Evitar o "1g" bug - se for "1" ou "1g", tentamos buscar da massa clínica ou ignoramos
   if (dqStr && !/^1\s*g?$/i.test(dqStr)) {
     // Se for apenas um número, adicionamos 'g' por padrão se for acima de 5 (provavelmente gramas)
     if (/^\d+$/.test(dqStr) && Number(dqStr) > 5) return `${dqStr} g`;
@@ -192,9 +202,11 @@ function formatPortionText(item: { display_quantity?: any; display_unit?: any; c
 
   // Fallback único: clinical_mass_g (dados clínicos reais)
   const cMass = Number(item.clinical_mass_g);
-  if (Number.isFinite(cMass) && cMass > 1) return `${Math.round(cMass)} g`;
+  if (Number.isFinite(cMass) && cMass > 1) {
+    return `${Math.round(cMass)} g`;
+  }
 
-  return "";
+  return dqStr || "";
 }
 
 function formatSubstitutionDetail(sub: MealPlanPDFItem, primary: MealPlanPDFItem | undefined): string {
@@ -674,12 +686,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
       // Build quantity + unit display
       let quantityDisplay = "";
-      if (item.display_quantity && item.display_unit) {
+      
+      if (item.display_quantity && item.display_unit && !/^1\s*g?$/i.test(String(item.display_quantity))) {
         quantityDisplay = `${item.display_quantity} ${item.display_unit}`;
-      } else if (item.clinical_mass_g) {
-        quantityDisplay = `${Math.round(item.clinical_mass_g)}g`;
       } else if (portionText) {
         quantityDisplay = portionText;
+      } else if (item.clinical_mass_g && Number(item.clinical_mass_g) > 1) {
+        quantityDisplay = `${Math.round(item.clinical_mass_g)}g`;
       }
 
       // Build description/ingredients display
