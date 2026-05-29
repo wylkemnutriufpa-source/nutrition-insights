@@ -429,11 +429,13 @@ export default function PatientMealPlan() {
   return (
     <DashboardLayout>
       <ScreenEntrance className="max-w-2xl mx-auto space-y-8 pb-10 px-4 pt-6">
+        <PushNotificationBanner />
         {isToday && (
           <StaggerItem index={0}>
             <PatientRetentionAlerts />
           </StaggerItem>
         )}
+
         
         <XPPopup show={xpPopup.show} points={xpPopup.points} />
         
