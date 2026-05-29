@@ -165,13 +165,30 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
 }
 
 
-function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; description?: string | null; meta_calorias?: number }): string {
-  // 🛡️ SPRINT C: snapshot V3 nasce com display_quantity correto (buildQuantityDisplay).
-  // Esta função agora é apenas passthrough com fallback mínimo para compatibilidade legada.
+function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; title?: string; description?: string | null; meta_calorias?: number }): string {
+  // 🛡️ SOBERANIA V3: Se for um item de porção livre (saladas), priorizamos o texto descritivo
+  const title = (item.title || "").toLowerCase();
+  const isFree = title.includes("salada") || title.includes("alface") || title.includes("folhas verdes") || title.includes("vegetais crus");
+  
+  if (isFree) return "Livre / À vontade";
+
   const rawQty = item.display_quantity;
+  const rawUnit = item.display_unit;
   const dqStr = rawQty == null ? "" : String(rawQty).trim();
 
-  if (dqStr && !/^1\s*g?$/i.test(dqStr)) return dqStr;
+  // Se já temos quantidade e unidade formatada no V3, usamos
+  if (dqStr && rawUnit) {
+    const unit = String(rawUnit).trim();
+    // Se a unidade já estiver contida na string de quantidade, não duplicamos
+    if (dqStr.toLowerCase().includes(unit.toLowerCase())) return dqStr;
+    return `${dqStr} ${unit}`;
+  }
+
+  if (dqStr && !/^1\s*g?$/i.test(dqStr)) {
+    // Se for apenas um número, adicionamos 'g' por padrão se for acima de 5 (provavelmente gramas)
+    if (/^\d+$/.test(dqStr) && Number(dqStr) > 5) return `${dqStr} g`;
+    return dqStr;
+  }
 
   // Fallback único: clinical_mass_g (dados clínicos reais)
   const cMass = Number(item.clinical_mass_g);
@@ -653,6 +670,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const prot = Math.round(item.meta_proteinas || 0);
       const carb = Math.round(item.meta_carboidratos || 0);
       const fat = Math.round(item.meta_gorduras || 0);
+      const descriptionHtml = item.description ? formatDescription(item.description) : "";
 
       // Build quantity + unit display
       let quantityDisplay = "";
@@ -681,8 +699,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           `}
           <div style="display: flex; flex-direction: column; flex: 1;">
             <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(cleanTitle(item.title))}</span>
-            ${quantityDisplay ? `<span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(quantityDisplay)}</span>` : ""}
-            ${descriptionDisplay}
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(quantityDisplay || portionText)}</span>
+            </div>
+            ${descriptionHtml ? `<div style="margin-top: 4px; font-size: 9.5px; color: #64748b; line-height: 1.3;">${descriptionHtml}</div>` : ""}
           </div>
           <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
             <div style="text-align: right; min-width: 45px;">
@@ -726,9 +746,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
                   ${items.map(sub => {
                     const subPortion = formatSubstitutionDetail(sub, targetPrimary);
                     return `
-                      <div style="background: #fff; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 10px;">
+                      <div style="background: #fff; border: 1px solid #e2e8f0; padding: 6px 10px; border-radius: 6px; font-size: 10px; flex: 1; min-width: 140px;">
                         <span style="font-weight: 600; color: #334155;">${escapeHtml(cleanTitle(sub.title))}</span>
-                        ${subPortion ? `<span style="color: #94a3b8; font-size: 9px;"> (${escapeHtml(subPortion)})</span>` : ""}
+                        ${subPortion ? `<span style="color: #6366f1; font-size: 9px; font-weight: 600;"> — ${escapeHtml(subPortion)}</span>` : ""}
+                        ${sub.description ? `<div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">${formatDescription(sub.description)}</div>` : ""}
                       </div>
                     `;
                   }).join("")}
@@ -881,9 +902,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 }
 
 
-export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
+export async function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
   // 🛡️ Monitoramento Soberano no PDF
   console.log('[Sovereignty] Iniciando Exportação PDF Soberana...');
+  
+  // Pequeno delay para permitir que o UI mostre o toast de "preparando"
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   const isV3 = data.items.every(i => i.editor_version === 'v3' || (i as any).clinical_mass_g);
   
   if (!isV3) {
@@ -898,13 +923,12 @@ function openPremiumPrintWindow(html: string, title: string) {
   if (typeof window === 'undefined') return;
 
   // 🛡️ SAFARI iOS FIX: window.open() deve ser chamado sincronamente.
-  // Se chamado após await/setTimeout, Safari iOS bloqueia como popup.
-  // Solução: abrir a janela imediatamente, preencher o conteúdo depois.
-  const printWindow = window.open('', '_blank');
+  // Abrimos sem conteúdo inicialmente para garantir que o navegador não bloqueie.
+  const printWindow = window.open('about:blank', '_blank');
   
   if (!printWindow) {
-    // Fallback se popup bloqueado: download como .html
-    const blob = new Blob([html], { type: 'text/html' });
+    // Fallback se popup bloqueado
+    const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -916,9 +940,6 @@ function openPremiumPrintWindow(html: string, title: string) {
     return;
   }
 
-  // 🛡️ SAFARI iOS FIX: inject um botão de "Salvar como PDF" no HTML
-  // porque window.print() automático é bloqueado no iOS Safari.
-  // O botão permite ao usuário acionar o print manualmente.
   const iosSafari = /iP(ad|hone|od)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent);
   
   const printButtonHtml = iosSafari ? `
@@ -939,23 +960,39 @@ function openPremiumPrintWindow(html: string, title: string) {
     `$1${printButtonHtml}`
   );
 
+  // Inserindo o conteúdo
+  printWindow.document.open();
   printWindow.document.write(htmlWithButton);
-  printWindow.document.title = title;
   printWindow.document.close();
+  printWindow.document.title = title;
 
   if (!iosSafari) {
-    // Desktop e Android: acionar print automaticamente
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-      }, 1000);
+    // 🛡️ ANTI-FREEZE CRITICAL:
+    // Em alguns navegadores, disparar o print() imediatamente após o document.close()
+    // pode travar a thread principal se o documento for muito complexo.
+    // Usamos um intervalo maior e verificamos o estado do documento.
+    
+    const checkReadyAndPrint = () => {
+      if (printWindow.document.readyState === 'complete') {
+        setTimeout(() => {
+          if (printWindow && !printWindow.closed) {
+            try {
+              printWindow.focus();
+              printWindow.print();
+              
+              // 🛡️ AUTO-CLOSE: Tenta fechar a janela após o print (opcional)
+              // printWindow.close(); 
+            } catch (e) {
+              console.error("Erro ao disparar impressão:", e);
+            }
+          }
+        }, 800);
+      } else {
+        // Tenta novamente em 200ms se não estiver pronto
+        setTimeout(checkReadyAndPrint, 200);
+      }
     };
 
-    // Fallback se onload não disparar
-    setTimeout(() => {
-      if (printWindow && !printWindow.closed) {
-        printWindow.print();
-      }
-    }, 3000);
+    checkReadyAndPrint();
   }
 }

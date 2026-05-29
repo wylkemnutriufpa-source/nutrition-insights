@@ -105,10 +105,11 @@ export default function FoodSubstitutions({ currentFood, onSelect }: FoodSubstit
             const adjustedFat = +(food.fat * ratio).toFixed(1);
             
             // Parse portion to adjust quantity
+            const isSalad = food.name.toLowerCase().includes("salada") || food.name.toLowerCase().includes("folhas");
             const portionMatch = food.portion.match(/^([\d,.]+)/);
-            const adjustedPortion = portionMatch
+            const adjustedPortion = isSalad ? "Livre / À vontade" : (portionMatch
               ? food.portion.replace(portionMatch[1], String(Math.round(parseFloat(portionMatch[1].replace(",", ".")) * ratio)))
-              : food.portion;
+              : food.portion);
 
             const calDiff = adjustedCal - currentMatch.calories;
             return (

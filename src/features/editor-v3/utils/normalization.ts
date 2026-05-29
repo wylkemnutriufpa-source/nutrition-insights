@@ -199,10 +199,12 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
   return rawMeals.map(m => {
     // 🛡️ CORREÇÃO SOBERANA: Se o snapshot já tem items, usamos os IDs do snapshot.
     // Só geramos novos IDs se for um template bruto (vindo de uma fonte não-snapshotada).
-    const items = (m.items || m.foods || []).map((it: any) => {
-      // Resolve a massa clínica com validação mínima
-      const rawMass = Number(it.clinical_mass_g || it.quantity || it.qty || it.kcal || 0);
-      const clinical_mass_g = rawMass >= 1 ? rawMass : (it.clinical_mass_g ? rawMass : 100);
+      const items = (m.items || m.foods || []).map((it: any) => {
+        // Resolve a massa clínica com validação mínima
+        const itTitle = (it.name || it.title || "").toLowerCase();
+        const isSalad = itTitle.includes("salada") || itTitle.includes("folhas");
+        const rawMass = Number(it.clinical_mass_g || it.quantity || it.qty || it.kcal || 0);
+        const clinical_mass_g = isSalad ? 100 : (rawMass >= 1 ? rawMass : (it.clinical_mass_g ? rawMass : 100));
 
       // Usar o ID do snapshot se disponível para manter a correlação profissional-paciente
       const stableId = it.id || it.instanceId || crypto.randomUUID();
@@ -218,7 +220,7 @@ export function normalizeSnapshotToV3(snapshot: any): Meal[] {
         fat: Number(it.fat || it.macros?.fat_g || 0),
         quantity: Number(it.quantity || clinical_mass_g || 0),
         clinical_mass_g,
-        quantity_display: it.quantity_display || (it.macros ? `${clinical_mass_g}g` : it.qty || ''),
+        quantity_display: isSalad ? "Livre / À vontade" : (it.quantity_display || (it.macros ? `${clinical_mass_g}g` : it.qty || '')),
         imageUrl: it.imageUrl || it.image_url || it.visual?.image_url || null,
         substitution_group_id: it.substitution_group_id || it.blockId || it.id,
         substitutions: Array.isArray(it.substitutions) ? it.substitutions.map((s: any) => {
