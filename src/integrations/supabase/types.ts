@@ -20630,6 +20630,93 @@ export type Database = {
         }
         Relationships: []
       }
+      v3_diet_templates_backup_20260528: {
+        Row: {
+          active: boolean | null
+          activity_profile: string | null
+          clinical_tags: Json | null
+          cluster_map: Json | null
+          contraindications: string[] | null
+          created_at: string | null
+          description: string | null
+          dietary_restrictions: string[] | null
+          editable: boolean | null
+          family: string | null
+          id: string | null
+          kcal_profiles: Json | null
+          kcal_range_max: number | null
+          kcal_range_min: number | null
+          meal_distribution: Json | null
+          nutritionist_id: string | null
+          objective: string | null
+          plan_snapshot: Json | null
+          sex_preference: string | null
+          slug: string | null
+          sovereign_validated: boolean | null
+          substitutions_enabled: boolean | null
+          template_type: string | null
+          title: string | null
+          updated_at: string | null
+          visual_style: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          activity_profile?: string | null
+          clinical_tags?: Json | null
+          cluster_map?: Json | null
+          contraindications?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          dietary_restrictions?: string[] | null
+          editable?: boolean | null
+          family?: string | null
+          id?: string | null
+          kcal_profiles?: Json | null
+          kcal_range_max?: number | null
+          kcal_range_min?: number | null
+          meal_distribution?: Json | null
+          nutritionist_id?: string | null
+          objective?: string | null
+          plan_snapshot?: Json | null
+          sex_preference?: string | null
+          slug?: string | null
+          sovereign_validated?: boolean | null
+          substitutions_enabled?: boolean | null
+          template_type?: string | null
+          title?: string | null
+          updated_at?: string | null
+          visual_style?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          activity_profile?: string | null
+          clinical_tags?: Json | null
+          cluster_map?: Json | null
+          contraindications?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          dietary_restrictions?: string[] | null
+          editable?: boolean | null
+          family?: string | null
+          id?: string | null
+          kcal_profiles?: Json | null
+          kcal_range_max?: number | null
+          kcal_range_min?: number | null
+          meal_distribution?: Json | null
+          nutritionist_id?: string | null
+          objective?: string | null
+          plan_snapshot?: Json | null
+          sex_preference?: string | null
+          slug?: string | null
+          sovereign_validated?: boolean | null
+          substitutions_enabled?: boolean | null
+          template_type?: string | null
+          title?: string | null
+          updated_at?: string | null
+          visual_style?: string | null
+        }
+        Relationships: []
+      }
       v3_drafts: {
         Row: {
           created_at: string
