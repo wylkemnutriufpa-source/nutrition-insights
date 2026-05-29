@@ -164,6 +164,15 @@ export class ClinicalEngine {
       const dayOfWeek = day.day_of_week;
       for (const meal of day.meals || []) {
         for (const item of meal.items || []) {
+          // 🛡️ CONTRATO V3: quantity_display é fonte canônica de quantidade humana.
+          // Bloqueia persistência se snapshot vier sem essa informação.
+          const qd = item.quantity_display ?? item.display_quantity ?? null;
+          if (!qd || String(qd).trim() === "") {
+            throw new Error(
+              `MISSING_QUANTITY_DISPLAY: item "${item.name || item.title || item.id}" (dia ${dayOfWeek}, refeição ${meal.name}) sem quantity_display`
+            );
+          }
+
           itemsToInsert.push({
             meal_plan_id: newPlan.id,
             day_of_week: dayOfWeek,
@@ -175,11 +184,10 @@ export class ClinicalEngine {
             meta_gorduras: item.macros?.fat_g || item.fat || 0,
             image_url: item.imageUrl,
             is_primary: item.is_primary ?? true,
-            display_quantity: item.display_quantity || item.quantity,
-            display_unit: item.display_unit || item.unit,
+            quantity_display: String(qd),
             clinical_mass_g: item.clinical_mass_g,
             description: item.description,
-            edit_metadata: { 
+            edit_metadata: {
               original_item_id: item.id,
               instanceId: item.instanceId,
               provenance: "clinical_engine_v3"
