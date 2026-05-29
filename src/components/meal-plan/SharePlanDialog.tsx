@@ -111,12 +111,18 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
 
   const handleDownloadPDF = async () => {
     if (!data) return;
-    toast.info("Preparando documento soberano...");
+    setLoading("link"); // Reusing link loading state for PDF to show feedback
+    toast.info("Preparando seu documento... Isso pode levar alguns segundos.");
     
     try {
       const { generatePremiumMealPlanPDF } = await import("@/lib/pdfExportPremium");
-      generatePremiumMealPlanPDF(data);
+      await generatePremiumMealPlanPDF(data);
       toast.success("Plano pronto para impressão/PDF!");
+      
+      // Close dialog after successful generation to show it finished
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 2000);
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
       toast.error("Erro ao gerar PDF. Usando fallback...");
@@ -132,6 +138,8 @@ export default function SharePlanDialog({ open, onOpenChange, data }: Props) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    } finally {
+      setLoading(null);
     }
   };
 

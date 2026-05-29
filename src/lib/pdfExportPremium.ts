@@ -864,9 +864,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 }
 
 
-export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
+export async function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
   // 🛡️ Monitoramento Soberano no PDF
   console.log('[Sovereignty] Iniciando Exportação PDF Soberana...');
+  
+  // Pequeno delay para permitir que o UI mostre o toast de "preparando"
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   const isV3 = data.items.every(i => i.editor_version === 'v3' || (i as any).clinical_mass_g);
   
   if (!isV3) {
@@ -881,13 +885,11 @@ function openPremiumPrintWindow(html: string, title: string) {
   if (typeof window === 'undefined') return;
 
   // 🛡️ SAFARI iOS FIX: window.open() deve ser chamado sincronamente.
-  // Se chamado após await/setTimeout, Safari iOS bloqueia como popup.
-  // Solução: abrir a janela imediatamente, preencher o conteúdo depois.
   const printWindow = window.open('', '_blank');
   
   if (!printWindow) {
-    // Fallback se popup bloqueado: download como .html
-    const blob = new Blob([html], { type: 'text/html' });
+    // Fallback se popup bloqueado
+    const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -899,9 +901,6 @@ function openPremiumPrintWindow(html: string, title: string) {
     return;
   }
 
-  // 🛡️ SAFARI iOS FIX: inject um botão de "Salvar como PDF" no HTML
-  // porque window.print() automático é bloqueado no iOS Safari.
-  // O botão permite ao usuário acionar o print manualmente.
   const iosSafari = /iP(ad|hone|od)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent);
   
   const printButtonHtml = iosSafari ? `
@@ -927,18 +926,28 @@ function openPremiumPrintWindow(html: string, title: string) {
   printWindow.document.close();
 
   if (!iosSafari) {
-    // Desktop e Android: acionar print automaticamente
+    // 🛡️ ANTI-FREEZE: Usar requestAnimationFrame para garantir que o render 
+    // do document.write() foi processado antes de disparar o print() que é bloqueante.
     printWindow.onload = () => {
       setTimeout(() => {
-        printWindow.print();
-      }, 1000);
+        if (printWindow && !printWindow.closed) {
+          try {
+            printWindow.focus();
+            printWindow.print();
+          } catch (e) {
+            console.error("Erro ao disparar impressão:", e);
+          }
+        }
+      }, 500);
     };
 
-    // Fallback se onload não disparar
+    // Fallback secundário
     setTimeout(() => {
       if (printWindow && !printWindow.closed) {
-        printWindow.print();
+        try {
+          printWindow.print();
+        } catch (e) {}
       }
-    }, 3000);
+    }, 2000);
   }
 }
