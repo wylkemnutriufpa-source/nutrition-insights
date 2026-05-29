@@ -467,30 +467,32 @@ export const planPersistenceService = {
         start_date: new Date().toISOString().split('T')[0],
       };
 
-      // 🛡️ Helper: Extrai unidade de quantity_display
-      const extractUnit = (quantityDisplay: string | null | undefined): string => {
-        if (!quantityDisplay) return 'g';
-        const displayStr = String(quantityDisplay).toLowerCase();
-        const unitMatch = displayStr.match(/\b(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|xícaras|porção|porções|ml|l|litro|litros)\b/i);
-        if (unitMatch) return unitMatch[1];
-        if (displayStr.endsWith('g')) return 'g';
-        return 'g';
+      // 🛡️ CONTRATO V3: quantity_display é a fonte canônica.
+      // Validamos ANTES de chamar a RPC para falhar com erro explícito.
+      const assertQD = (qd: any, ctx: string): string => {
+        const v = qd == null ? '' : String(qd).trim();
+        if (!v) {
+          throw new Error(`MISSING_QUANTITY_DISPLAY: ${ctx}`);
+        }
+        return v;
       };
 
-      // 4. Preparar Lista de Itens para Sincronismo (Compatibilidade Legado)
+      // 4. Preparar Lista de Itens para Sincronismo
       const itemsRows: any[] = [];
       snapshot.days.forEach(day => {
         day.meals.forEach(meal => {
           meal.items.forEach(item => {
             const groupId = item.blockId;
-            
+
             itemsRows.push({
               tipo_refeicao: meal.name,
               day_of_week: day.day_of_week,
               title: item.title,
               description: item.description,
-              display_quantity: item.quantity,
-              display_unit: extractUnit(item.quantity_display),
+              quantity_display: assertQD(
+                (item as any).quantity_display,
+                `item primário "${item.title}" (dia ${day.day_of_week}, ${meal.name})`
+              ),
               meta_calorias: item.macros.kcal,
               meta_proteinas: item.macros.protein_g,
               meta_carboidratos: item.macros.carbs_g,
@@ -506,8 +508,10 @@ export const planPersistenceService = {
                 day_of_week: day.day_of_week,
                 title: sub.title,
                 description: sub.description,
-                display_quantity: sub.quantity,
-                display_unit: extractUnit(sub.quantity_display),
+                quantity_display: assertQD(
+                  (sub as any).quantity_display,
+                  `substituição "${sub.title}" (dia ${day.day_of_week}, ${meal.name})`
+                ),
                 meta_calorias: sub.macros.kcal,
                 meta_proteinas: sub.macros.protein_g,
                 meta_carboidratos: sub.macros.carbs_g,
