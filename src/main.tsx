@@ -7,6 +7,16 @@ import { productionIntegrityCheck } from "./lib/guards/productionGuard";
 // 🛡️ Executar check de integridade no boot
 productionIntegrityCheck();
 
+// Register push/notification service worker (FitJourney Intelligence)
+// Non-blocking; failures are silent so they never affect app boot.
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw-push.js")
+      .catch((err) => console.warn("[FJ] sw-push registration failed:", err?.message || err));
+  });
+}
+
 // Hard Clear no Boot: Se a URL contiver ?clear, limpa tudo e recomeça
 if (window.location.search.includes('clear')) {
 
