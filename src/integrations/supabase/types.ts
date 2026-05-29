@@ -7329,6 +7329,7 @@ export type Database = {
           meta_carboidratos: number | null
           meta_gorduras: number | null
           meta_proteinas: number | null
+          quantity_display: string | null
           substitution_group_id: string | null
           target_percentage: number | null
           tenant_id: string | null
@@ -7358,6 +7359,7 @@ export type Database = {
           meta_carboidratos?: number | null
           meta_gorduras?: number | null
           meta_proteinas?: number | null
+          quantity_display?: string | null
           substitution_group_id?: string | null
           target_percentage?: number | null
           tenant_id?: string | null
@@ -7387,6 +7389,7 @@ export type Database = {
           meta_carboidratos?: number | null
           meta_gorduras?: number | null
           meta_proteinas?: number | null
+          quantity_display?: string | null
           substitution_group_id?: string | null
           target_percentage?: number | null
           tenant_id?: string | null
