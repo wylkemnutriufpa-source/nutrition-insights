@@ -730,9 +730,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
                   ${items.map(sub => {
                     const subPortion = formatSubstitutionDetail(sub, targetPrimary);
                     return `
-                      <div style="background: #fff; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 10px;">
+                      <div style="background: #fff; border: 1px solid #e2e8f0; padding: 6px 10px; border-radius: 6px; font-size: 10px; flex: 1; min-width: 140px;">
                         <span style="font-weight: 600; color: #334155;">${escapeHtml(cleanTitle(sub.title))}</span>
-                        ${subPortion ? `<span style="color: #94a3b8; font-size: 9px;"> (${escapeHtml(subPortion)})</span>` : ""}
+                        ${subPortion ? `<span style="color: #6366f1; font-size: 9px; font-weight: 600;"> — ${escapeHtml(subPortion)}</span>` : ""}
+                        ${sub.description ? `<div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">${formatDescription(sub.description)}</div>` : ""}
                       </div>
                     `;
                   }).join("")}
