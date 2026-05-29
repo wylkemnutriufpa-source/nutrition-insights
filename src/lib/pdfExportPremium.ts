@@ -654,6 +654,22 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const carb = Math.round(item.meta_carboidratos || 0);
       const fat = Math.round(item.meta_gorduras || 0);
 
+      // Build quantity + unit display
+      let quantityDisplay = "";
+      if (item.display_quantity && item.display_unit) {
+        quantityDisplay = `${item.display_quantity} ${item.display_unit}`;
+      } else if (item.clinical_mass_g) {
+        quantityDisplay = `${Math.round(item.clinical_mass_g)}g`;
+      } else if (portionText) {
+        quantityDisplay = portionText;
+      }
+
+      // Build description/ingredients display
+      let descriptionDisplay = "";
+      if (item.description) {
+        descriptionDisplay = `<div style="font-size: 9px; color: #64748b; margin-top: 4px; font-style: italic;">${escapeHtml(item.description)}</div>`;
+      }
+
       return `
         <div class="food-line" style="margin-bottom: 12px; border-bottom: 1px solid #f8fafc; padding-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;">
           ${item.visual_image_url ? `
@@ -665,7 +681,8 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           `}
           <div style="display: flex; flex-direction: column; flex: 1;">
             <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(cleanTitle(item.title))}</span>
-            <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
+            ${quantityDisplay ? `<span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(quantityDisplay)}</span>` : ""}
+            ${descriptionDisplay}
           </div>
           <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
             <div style="text-align: right; min-width: 45px;">

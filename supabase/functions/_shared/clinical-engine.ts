@@ -133,7 +133,7 @@ export class ClinicalEngine {
       .insert({
         patient_id: patientId,
         nutritionist_id: nutritionistId,
-        title: `Plano ${selectedTemplate.title} (${bestSnapshotKey} kcal)`,
+        title: `Plano ${selectedTemplate.title} (${targetKcal} kcal)`,
         description: selectedTemplate.description,
         template_id: selectedTemplate.id,
         start_date: new Date().toISOString(),
@@ -175,6 +175,10 @@ export class ClinicalEngine {
             meta_gorduras: item.macros?.fat_g || item.fat || 0,
             image_url: item.imageUrl,
             is_primary: item.is_primary ?? true,
+            display_quantity: item.display_quantity || item.quantity,
+            display_unit: item.display_unit || item.unit,
+            clinical_mass_g: item.clinical_mass_g,
+            description: item.description,
             edit_metadata: { 
               original_item_id: item.id,
               instanceId: item.instanceId,
