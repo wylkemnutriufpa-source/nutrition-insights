@@ -885,7 +885,8 @@ function openPremiumPrintWindow(html: string, title: string) {
   if (typeof window === 'undefined') return;
 
   // 🛡️ SAFARI iOS FIX: window.open() deve ser chamado sincronamente.
-  const printWindow = window.open('', '_blank');
+  // Abrimos sem conteúdo inicialmente para garantir que o navegador não bloqueie.
+  const printWindow = window.open('about:blank', '_blank');
   
   if (!printWindow) {
     // Fallback se popup bloqueado
@@ -921,33 +922,39 @@ function openPremiumPrintWindow(html: string, title: string) {
     `$1${printButtonHtml}`
   );
 
+  // Inserindo o conteúdo
+  printWindow.document.open();
   printWindow.document.write(htmlWithButton);
-  printWindow.document.title = title;
   printWindow.document.close();
+  printWindow.document.title = title;
 
   if (!iosSafari) {
-    // 🛡️ ANTI-FREEZE: Usar requestAnimationFrame para garantir que o render 
-    // do document.write() foi processado antes de disparar o print() que é bloqueante.
-    printWindow.onload = () => {
-      setTimeout(() => {
-        if (printWindow && !printWindow.closed) {
-          try {
-            printWindow.focus();
-            printWindow.print();
-          } catch (e) {
-            console.error("Erro ao disparar impressão:", e);
+    // 🛡️ ANTI-FREEZE CRITICAL:
+    // Em alguns navegadores, disparar o print() imediatamente após o document.close()
+    // pode travar a thread principal se o documento for muito complexo.
+    // Usamos um intervalo maior e verificamos o estado do documento.
+    
+    const checkReadyAndPrint = () => {
+      if (printWindow.document.readyState === 'complete') {
+        setTimeout(() => {
+          if (printWindow && !printWindow.closed) {
+            try {
+              printWindow.focus();
+              printWindow.print();
+              
+              // 🛡️ AUTO-CLOSE: Tenta fechar a janela após o print (opcional)
+              // printWindow.close(); 
+            } catch (e) {
+              console.error("Erro ao disparar impressão:", e);
+            }
           }
-        }
-      }, 500);
+        }, 800);
+      } else {
+        // Tenta novamente em 200ms se não estiver pronto
+        setTimeout(checkReadyAndPrint, 200);
+      }
     };
 
-    // Fallback secundário
-    setTimeout(() => {
-      if (printWindow && !printWindow.closed) {
-        try {
-          printWindow.print();
-        } catch (e) {}
-      }
-    }, 2000);
+    checkReadyAndPrint();
   }
 }
