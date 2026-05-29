@@ -224,33 +224,40 @@ export const applyOfficialV2Template = async (
     } else if (foods.length > 0) {
       for (const f of foods) {
         const groupId = f.substitutions?.length > 0 ? crypto.randomUUID() : undefined;
+        const isSalad = f.name.toLowerCase().includes("salada") || f.name.toLowerCase().includes("folhas");
+        
         items.push({
           meal_plan_id: plan.id,
           day_of_week: 0,
           tipo_refeicao: meal.tipo_refeicao,
           title: f.name,
-          description: f.portion,
+          description: isSalad ? "À vontade" : f.portion,
           meta_calorias: Math.round((f.calories || 0) * multiplier),
           meta_proteinas: Math.round((f.protein || 0) * multiplier),
           meta_carboidratos: Math.round((f.carbs || 0) * multiplier),
           meta_gorduras: Math.round((f.fat || 0) * multiplier),
           substitution_group_id: groupId,
           is_primary: true,
+          clinical_mass_g: isSalad ? 100 : Math.round((f.clinical_mass_g || 100) * multiplier),
+          editor_version: 'v2'
         });
         if (f.substitutions) {
           f.substitutions.forEach((subName: string) => {
+            const subIsSalad = subName.toLowerCase().includes("salada") || subName.toLowerCase().includes("folhas");
             items.push({
               meal_plan_id: plan.id,
               day_of_week: 0,
               tipo_refeicao: meal.tipo_refeicao,
               title: subName,
-              description: "Substituição",
+              description: subIsSalad ? "À vontade" : "Substituição",
               meta_calorias: Math.round((f.calories || 0) * multiplier),
               meta_proteinas: Math.round((f.protein || 0) * multiplier),
               meta_carboidratos: Math.round((f.carbs || 0) * multiplier),
               meta_gorduras: Math.round((f.fat || 0) * multiplier),
               substitution_group_id: groupId,
               is_primary: false,
+              clinical_mass_g: subIsSalad ? 100 : Math.round((f.clinical_mass_g || 100) * multiplier),
+              editor_version: 'v2'
             });
           });
         }
