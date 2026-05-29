@@ -686,7 +686,6 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
       // Build quantity + unit display
       let quantityDisplay = "";
-      const portionText = formatPortionText(item);
       
       if (item.display_quantity && item.display_unit && !/^1\s*g?$/i.test(String(item.display_quantity))) {
         quantityDisplay = `${item.display_quantity} ${item.display_unit}`;
