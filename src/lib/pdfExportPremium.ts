@@ -165,13 +165,30 @@ function getMealGroupKey(item: MealPlanPDFItem): string {
 }
 
 
-function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; description?: string | null; meta_calorias?: number }): string {
-  // 🛡️ SPRINT C: snapshot V3 nasce com display_quantity correto (buildQuantityDisplay).
-  // Esta função agora é apenas passthrough com fallback mínimo para compatibilidade legada.
+function formatPortionText(item: { display_quantity?: any; display_unit?: any; clinical_mass_g?: any; title?: string; description?: string | null; meta_calorias?: number }): string {
+  // 🛡️ SOBERANIA V3: Se for um item de porção livre (saladas), priorizamos o texto descritivo
+  const title = (item.title || "").toLowerCase();
+  const isFree = title.includes("salada") || title.includes("alface") || title.includes("folhas verdes") || title.includes("vegetais crus");
+  
+  if (isFree) return "Livre / À vontade";
+
   const rawQty = item.display_quantity;
+  const rawUnit = item.display_unit;
   const dqStr = rawQty == null ? "" : String(rawQty).trim();
 
-  if (dqStr && !/^1\s*g?$/i.test(dqStr)) return dqStr;
+  // Se já temos quantidade e unidade formatada no V3, usamos
+  if (dqStr && rawUnit) {
+    const unit = String(rawUnit).trim();
+    // Se a unidade já estiver contida na string de quantidade, não duplicamos
+    if (dqStr.toLowerCase().includes(unit.toLowerCase())) return dqStr;
+    return `${dqStr} ${unit}`;
+  }
+
+  if (dqStr && !/^1\s*g?$/i.test(dqStr)) {
+    // Se for apenas um número, adicionamos 'g' por padrão se for acima de 5 (provavelmente gramas)
+    if (/^\d+$/.test(dqStr) && Number(dqStr) > 5) return `${dqStr} g`;
+    return dqStr;
+  }
 
   // Fallback único: clinical_mass_g (dados clínicos reais)
   const cMass = Number(item.clinical_mass_g);
@@ -653,6 +670,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const prot = Math.round(item.meta_proteinas || 0);
       const carb = Math.round(item.meta_carboidratos || 0);
       const fat = Math.round(item.meta_gorduras || 0);
+      const descriptionHtml = item.description ? formatDescription(item.description) : "";
 
       return `
         <div class="food-line" style="margin-bottom: 12px; border-bottom: 1px solid #f8fafc; padding-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;">
@@ -665,7 +683,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
           `}
           <div style="display: flex; flex-direction: column; flex: 1;">
             <span style="font-weight: 700; color: #1e293b; font-size: 11px;">${escapeHtml(cleanTitle(item.title))}</span>
-            <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <span style="font-size: 10px; font-weight: 600; color: #6366f1;">${escapeHtml(portionText)}</span>
+            </div>
+            ${descriptionHtml ? `<div style="margin-top: 4px; font-size: 9.5px; color: #64748b; line-height: 1.3;">${descriptionHtml}</div>` : ""}
           </div>
           <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
             <div style="text-align: right; min-width: 45px;">
@@ -709,9 +730,10 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
                   ${items.map(sub => {
                     const subPortion = formatSubstitutionDetail(sub, targetPrimary);
                     return `
-                      <div style="background: #fff; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 10px;">
+                      <div style="background: #fff; border: 1px solid #e2e8f0; padding: 6px 10px; border-radius: 6px; font-size: 10px; flex: 1; min-width: 140px;">
                         <span style="font-weight: 600; color: #334155;">${escapeHtml(cleanTitle(sub.title))}</span>
-                        ${subPortion ? `<span style="color: #94a3b8; font-size: 9px;"> (${escapeHtml(subPortion)})</span>` : ""}
+                        ${subPortion ? `<span style="color: #6366f1; font-size: 9px; font-weight: 600;"> — ${escapeHtml(subPortion)}</span>` : ""}
+                        ${sub.description ? `<div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">${formatDescription(sub.description)}</div>` : ""}
                       </div>
                     `;
                   }).join("")}

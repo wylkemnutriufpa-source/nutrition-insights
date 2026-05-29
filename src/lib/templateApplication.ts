@@ -99,13 +99,15 @@ export const applyOfficialV3Template = async (
     for (const meal of dayData.meals) {
       for (const item of meal.items) {
         const groupId = crypto.randomUUID();
+        const title = item.title || item.name;
+        const isSalad = title.toLowerCase().includes("salada") || title.toLowerCase().includes("folhas");
         
         items.push({
           meal_plan_id: plan.id,
           day_of_week: dayNum,
           tipo_refeicao: meal.name || meal.tipo_refeicao,
-          title: item.title || item.name,
-          description: item.quantity_display,
+          title: title,
+          description: isSalad ? "À vontade" : item.quantity_display,
           meta_calorias: Math.round((item.kcal || 0) * multiplier),
           meta_proteinas: Math.round((item.protein || 0) * multiplier),
           meta_carboidratos: Math.round((item.carbs || 0) * multiplier),
@@ -114,16 +116,21 @@ export const applyOfficialV3Template = async (
           is_primary: true,
           visual_library_item_id: item.visual_library_item_id || null,
           image_url: item.imageUrl || null,
+          clinical_mass_g: isSalad ? 100 : Math.round((item.clinical_mass_g || 100) * multiplier),
+          editor_version: 'v3'
         });
 
         if (Array.isArray(item.substitutions)) {
           for (const sub of item.substitutions) {
+            const subTitle = sub.title || sub.name;
+            const subIsSalad = subTitle.toLowerCase().includes("salada") || subTitle.toLowerCase().includes("folhas");
+            
             items.push({
               meal_plan_id: plan.id,
               day_of_week: dayNum,
               tipo_refeicao: meal.name || meal.tipo_refeicao,
-              title: sub.title || sub.name,
-              description: sub.quantity_display,
+              title: subTitle,
+              description: subIsSalad ? "À vontade" : sub.quantity_display,
               meta_calorias: Math.round((sub.kcal || 0) * multiplier),
               meta_proteinas: Math.round((sub.protein || 0) * multiplier),
               meta_carboidratos: Math.round((sub.carbs || 0) * multiplier),
@@ -132,6 +139,8 @@ export const applyOfficialV3Template = async (
               is_primary: false,
               visual_library_item_id: sub.visual_library_item_id || null,
               image_url: sub.imageUrl || null,
+              clinical_mass_g: subIsSalad ? 100 : Math.round((sub.clinical_mass_g || 100) * multiplier),
+              editor_version: 'v3'
             });
           }
         }
@@ -191,12 +200,15 @@ export const applyOfficialV2Template = async (
         const groupId = crypto.randomUUID();
         const opts = b.options || [];
         opts.forEach((opt: any, idx: number) => {
+          const optTitle = opt.name || b.label;
+          const isSalad = optTitle.toLowerCase().includes("salada") || optTitle.toLowerCase().includes("folhas");
+          
           items.push({
             meal_plan_id: plan.id,
             day_of_week: 0,
             tipo_refeicao: meal.tipo_refeicao,
-            title: opt.name || b.label,
-            description: opt.portion || b.base_quantity,
+            title: optTitle,
+            description: isSalad ? "À vontade" : (opt.portion || b.base_quantity),
             meta_calorias: Math.round((opt.calories || 0) * multiplier),
             meta_proteinas: Math.round((opt.protein || 0) * multiplier),
             meta_carboidratos: Math.round((opt.carbs || 0) * multiplier),
@@ -204,39 +216,48 @@ export const applyOfficialV2Template = async (
             substitution_group_id: groupId,
             is_primary: idx === 0,
             visual_library_item_id: opt.visual_library_item_id || null,
+            clinical_mass_g: isSalad ? 100 : Math.round((opt.clinical_mass_g || 100) * multiplier),
+            editor_version: 'v2'
           });
         });
       }
     } else if (foods.length > 0) {
       for (const f of foods) {
         const groupId = f.substitutions?.length > 0 ? crypto.randomUUID() : undefined;
+        const isSalad = f.name.toLowerCase().includes("salada") || f.name.toLowerCase().includes("folhas");
+        
         items.push({
           meal_plan_id: plan.id,
           day_of_week: 0,
           tipo_refeicao: meal.tipo_refeicao,
           title: f.name,
-          description: f.portion,
+          description: isSalad ? "À vontade" : f.portion,
           meta_calorias: Math.round((f.calories || 0) * multiplier),
           meta_proteinas: Math.round((f.protein || 0) * multiplier),
           meta_carboidratos: Math.round((f.carbs || 0) * multiplier),
           meta_gorduras: Math.round((f.fat || 0) * multiplier),
           substitution_group_id: groupId,
           is_primary: true,
+          clinical_mass_g: isSalad ? 100 : Math.round((f.clinical_mass_g || 100) * multiplier),
+          editor_version: 'v2'
         });
         if (f.substitutions) {
           f.substitutions.forEach((subName: string) => {
+            const subIsSalad = subName.toLowerCase().includes("salada") || subName.toLowerCase().includes("folhas");
             items.push({
               meal_plan_id: plan.id,
               day_of_week: 0,
               tipo_refeicao: meal.tipo_refeicao,
               title: subName,
-              description: "Substituição",
+              description: subIsSalad ? "À vontade" : "Substituição",
               meta_calorias: Math.round((f.calories || 0) * multiplier),
               meta_proteinas: Math.round((f.protein || 0) * multiplier),
               meta_carboidratos: Math.round((f.carbs || 0) * multiplier),
               meta_gorduras: Math.round((f.fat || 0) * multiplier),
               substitution_group_id: groupId,
               is_primary: false,
+              clinical_mass_g: subIsSalad ? 100 : Math.round((f.clinical_mass_g || 100) * multiplier),
+              editor_version: 'v2'
             });
           });
         }
