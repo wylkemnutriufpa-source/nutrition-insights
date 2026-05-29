@@ -864,9 +864,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 }
 
 
-export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
+export async function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
   // 🛡️ Monitoramento Soberano no PDF
   console.log('[Sovereignty] Iniciando Exportação PDF Soberana...');
+  
+  // Pequeno delay para permitir que o UI mostre o toast de "preparando"
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   const isV3 = data.items.every(i => i.editor_version === 'v3' || (i as any).clinical_mass_g);
   
   if (!isV3) {
