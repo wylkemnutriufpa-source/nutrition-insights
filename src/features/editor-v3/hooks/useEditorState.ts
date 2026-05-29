@@ -219,7 +219,7 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
     const quantity = Math.max(1, Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100));
     const macros = calculateItemMacros(food, quantity);
-    const blockId = food.blockId || crypto.randomUUID();
+    const blockId = (food as any).blockId || crypto.randomUUID();
     
     const updatedMeals = meals.map(meal => {
       // Adiciona o alimento em todas as refeições com o mesmo nome (slot) em todos os dias
