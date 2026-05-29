@@ -455,6 +455,16 @@ export const planPersistenceService = {
         start_date: new Date().toISOString().split('T')[0],
       };
 
+      // 🛡️ Helper: Extrai unidade de quantity_display
+      const extractUnit = (quantityDisplay: string | null | undefined): string => {
+        if (!quantityDisplay) return 'g';
+        const displayStr = String(quantityDisplay).toLowerCase();
+        const unitMatch = displayStr.match(/\b(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|xícaras|porção|porções|ml|l|litro|litros)\b/i);
+        if (unitMatch) return unitMatch[1];
+        if (displayStr.endsWith('g')) return 'g';
+        return 'g';
+      };
+
       // 4. Preparar Lista de Itens para Sincronismo (Compatibilidade Legado)
       const itemsRows: any[] = [];
       snapshot.days.forEach(day => {
@@ -466,7 +476,9 @@ export const planPersistenceService = {
               tipo_refeicao: meal.name,
               day_of_week: day.day_of_week,
               title: item.title,
-              description: item.quantity_display,
+              description: item.description,
+              display_quantity: item.quantity,
+              display_unit: extractUnit(item.quantity_display),
               meta_calorias: item.macros.kcal,
               meta_proteinas: item.macros.protein_g,
               meta_carboidratos: item.macros.carbs_g,
@@ -481,7 +493,9 @@ export const planPersistenceService = {
                 tipo_refeicao: meal.name,
                 day_of_week: day.day_of_week,
                 title: sub.title,
-                description: sub.quantity_display,
+                description: sub.description,
+                display_quantity: sub.quantity,
+                display_unit: extractUnit(sub.quantity_display),
                 meta_calorias: sub.macros.kcal,
                 meta_proteinas: sub.macros.protein_g,
                 meta_carboidratos: sub.macros.carbs_g,

@@ -47,6 +47,25 @@ import { SaveCustomTemplateModal } from './SaveCustomTemplateModal';
 import { SectionalErrorBoundary } from '@/components/common/SectionalErrorBoundary';
 import { RecipeBuilder } from '@/features/nos/components/RecipeBuilder';
 
+/**
+ * 🛡️ SOBERANIA V3: Extrai a unidade de um quantity_display
+ * Exemplo: "2 unidades" → "unidades", "150g" → "g"
+ */
+function extractUnitFromQuantityDisplay(quantityDisplay: string | null | undefined): string {
+  if (!quantityDisplay) return 'g';
+  
+  const displayStr = String(quantityDisplay).toLowerCase();
+  
+  // Procura por unidades naturais
+  const unitMatch = displayStr.match(/\b(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|xícaras|porção|porções|ml|l|litro|litros)\b/i);
+  if (unitMatch) return unitMatch[1];
+  
+  // Se termina com "g", é gramas
+  if (displayStr.endsWith('g')) return 'g';
+  
+  // Fallback
+  return 'g';
+}
 
 export default function EditorV3Page() {
   const { patientId, planId, id } = useParams<{ patientId: string; planId: string; id: string }>();
@@ -657,7 +676,8 @@ export default function EditorV3Page() {
                 substitution_group_id: item.substitution_group_id,
                 clinical_mass_g: item.clinical_mass_g,
                 display_quantity: item.quantity,
-                display_unit: item.portionUnitLabel || 'g'
+                display_unit: extractUnitFromQuantityDisplay(item.quantity_display),
+                description: item.description
               },
               ...(item.substitutions || []).map(s => ({ 
                 id: (s as any).instanceId || s.id, 
@@ -673,7 +693,8 @@ export default function EditorV3Page() {
                 substitution_group_id: (s as any).substitution_group_id || item.substitution_group_id,
                 clinical_mass_g: s.clinical_mass_g,
                 display_quantity: s.quantity,
-                display_unit: s.portionUnitLabel || 'g'
+                display_unit: extractUnitFromQuantityDisplay(s.quantity_display),
+                description: s.description
               }))
             ])),
             targetCalories: planTotals.kcal, targetProtein: planTotals.protein, targetCarbs: planTotals.carbs, targetFat: planTotals.fat
