@@ -33,20 +33,29 @@ const OFFICIAL_PLACEHOLDER = "/placeholder.svg";
  * Evita o bug crônico do "1 g" no PDF e nas telas do paciente.
  */
 function buildQuantityDisplay(item: any, fallback: any): string {
+  const name = (item?.name || item?.title || fallback?.name || fallback?.title || "").toLowerCase();
   const existingDisplay = item?.quantity_display || item?.display_quantity || fallback?.quantity_display || fallback?.display_quantity;
   
   // 🛡️ SOBERANIA V3: Se já temos um display pronto e ele não é "1 g" genérico, respeitamos.
-  if (existingDisplay && typeof existingDisplay === 'string' && existingDisplay.length > 0 && !/^1\s*g$/i.test(existingDisplay)) {
+  // Ajuste na regex para ser mais rigorosa com o erro do "1g"
+  if (existingDisplay && typeof existingDisplay === 'string' && existingDisplay.length > 0 && !/^1\s*g$/i.test(existingDisplay.trim())) {
     return existingDisplay;
   }
 
   const dUnit = String(item?.display_unit || fallback?.display_unit || fallback?.portionUnitLabel || '').trim();
   const cMass = Number(item?.clinical_mass_g || fallback?.clinical_mass_g);
-  const qty = Number(item?.quantity || fallback?.quantity);
+  const qty = Number(item?.quantity || fallback?.quantity || 1);
   const kcal = Number(item?.kcal || fallback?.kcal || 0);
 
+  // 🛡️ REGRA ESPECIAL: Ovos (Sempre unidades, nunca gramas por padrão)
+  if (name.includes('ovo') && !name.includes('clara') && !name.includes('gema')) {
+    const eggQty = qty > 0 ? qty : (cMass > 0 ? Math.round(cMass / 50) : 1);
+    const finalQty = eggQty < 1 ? 1 : eggQty;
+    return `${finalQty} un`;
+  }
+
   // Se for unidade não-grama (ex: colher, unidade) e tiver multiplicador > 0
-  if (dUnit && dUnit.toLowerCase() !== 'g' && qty > 0) {
+  if (dUnit && dUnit.toLowerCase() !== 'g' && dUnit.toLowerCase() !== 'gramas' && qty > 0) {
     return `${qty} ${dUnit}`;
   }
 
@@ -56,7 +65,10 @@ function buildQuantityDisplay(item: any, fallback: any): string {
   }
 
   // Fallback de segurança para 100g se tiver calorias mas nada definido
-  if (kcal > 5) return `100g`;
+  // Mas para Frango, se for 1g, forçamos um valor mais real (provavelmente 100g ou 150g)
+  if (name.includes('frango') || name.includes('carne') || name.includes('peixe') || kcal > 5) {
+    return `100g`;
+  }
   
   return existingDisplay || "";
 }

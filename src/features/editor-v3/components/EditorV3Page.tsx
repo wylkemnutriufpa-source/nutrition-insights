@@ -56,12 +56,12 @@ function extractUnitFromQuantityDisplay(quantityDisplay: string | null | undefin
   
   const displayStr = String(quantityDisplay).toLowerCase();
   
-  // Procura por unidades naturais
-  const unitMatch = displayStr.match(/\b(unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|xícaras|porção|porções|ml|l|litro|litros)\b/i);
+  // Procura por unidades naturais (incluindo 'un' e 'g')
+  const unitMatch = displayStr.match(/\b(un|unid|unidade|unidades|fatia|fatias|colher|colheres|copo|copos|xicara|xícaras|porção|porções|ml|l|litro|litros|g|gramas)\b/i);
   if (unitMatch) return unitMatch[1];
   
-  // Se termina com "g", é gramas
-  if (displayStr.endsWith('g')) return 'g';
+  // Se termina com "g" ou contém " g", é gramas
+  if (displayStr.endsWith('g') || displayStr.includes(' g')) return 'g';
   
   // Fallback
   return 'g';
