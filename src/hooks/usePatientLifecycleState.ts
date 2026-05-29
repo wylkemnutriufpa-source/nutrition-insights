@@ -235,16 +235,11 @@ export function usePatientLifecycleState(): PatientLifecycle {
       safeSubscribe(channel);
     }
 
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        queryClient.invalidateQueries({ queryKey: ["lifecycle", user.id] });
-      }
-    };
-    document.addEventListener("visibilitychange", onVisible);
+    // visibilitychange listener removido — duplicava useRefetchOnFocus e causava storm de invalidações.
+    // Atualização do lifecycle vem exclusivamente via realtime (postgres_changes) acima.
 
     return () => {
       if (channel) safeRemoveChannel(channel);
-      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [user, queryClient]);
 
