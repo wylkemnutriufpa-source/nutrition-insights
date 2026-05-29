@@ -99,13 +99,15 @@ export const applyOfficialV3Template = async (
     for (const meal of dayData.meals) {
       for (const item of meal.items) {
         const groupId = crypto.randomUUID();
+        const title = item.title || item.name;
+        const isSalad = title.toLowerCase().includes("salada") || title.toLowerCase().includes("folhas");
         
         items.push({
           meal_plan_id: plan.id,
           day_of_week: dayNum,
           tipo_refeicao: meal.name || meal.tipo_refeicao,
-          title: item.title || item.name,
-          description: item.quantity_display,
+          title: title,
+          description: isSalad ? "À vontade" : item.quantity_display,
           meta_calorias: Math.round((item.kcal || 0) * multiplier),
           meta_proteinas: Math.round((item.protein || 0) * multiplier),
           meta_carboidratos: Math.round((item.carbs || 0) * multiplier),
@@ -114,16 +116,21 @@ export const applyOfficialV3Template = async (
           is_primary: true,
           visual_library_item_id: item.visual_library_item_id || null,
           image_url: item.imageUrl || null,
+          clinical_mass_g: isSalad ? 100 : Math.round((item.clinical_mass_g || 100) * multiplier),
+          editor_version: 'v3'
         });
 
         if (Array.isArray(item.substitutions)) {
           for (const sub of item.substitutions) {
+            const subTitle = sub.title || sub.name;
+            const subIsSalad = subTitle.toLowerCase().includes("salada") || subTitle.toLowerCase().includes("folhas");
+            
             items.push({
               meal_plan_id: plan.id,
               day_of_week: dayNum,
               tipo_refeicao: meal.name || meal.tipo_refeicao,
-              title: sub.title || sub.name,
-              description: sub.quantity_display,
+              title: subTitle,
+              description: subIsSalad ? "À vontade" : sub.quantity_display,
               meta_calorias: Math.round((sub.kcal || 0) * multiplier),
               meta_proteinas: Math.round((sub.protein || 0) * multiplier),
               meta_carboidratos: Math.round((sub.carbs || 0) * multiplier),
@@ -132,6 +139,8 @@ export const applyOfficialV3Template = async (
               is_primary: false,
               visual_library_item_id: sub.visual_library_item_id || null,
               image_url: sub.imageUrl || null,
+              clinical_mass_g: subIsSalad ? 100 : Math.round((sub.clinical_mass_g || 100) * multiplier),
+              editor_version: 'v3'
             });
           }
         }
