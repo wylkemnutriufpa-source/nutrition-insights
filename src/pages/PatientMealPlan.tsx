@@ -39,6 +39,7 @@ import {
 import { MealSlotModal } from "@/components/patient/MealSlotModal";
 import { useEngagement } from "@/hooks/useEngagement";
 import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
+import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
 
 interface MealPlan {
   id: string;
