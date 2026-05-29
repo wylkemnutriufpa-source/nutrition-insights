@@ -196,9 +196,9 @@ export function usePatientLifecycleState(): PatientLifecycle {
   const { data, refetch } = useQuery({
     queryKey: ["lifecycle", user?.id],
     enabled: !!user && isPatient,
-    staleTime: 5 * 1000, // 5s — fast refresh for instant lifecycle sync
-    refetchInterval: 2 * 60 * 1000, // auto-refresh every 2min
-    refetchOnWindowFocus: true, // re-evaluate on tab focus (override may have expired)
+    staleTime: 30 * 1000,
+    // refetchInterval removido — atualização vem via realtime (postgres_changes) abaixo
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     queryFn: () => fetchLifecycleState(user!.id),
   });
