@@ -133,7 +133,7 @@ export class ClinicalEngine {
       .insert({
         patient_id: patientId,
         nutritionist_id: nutritionistId,
-        title: `Plano ${selectedTemplate.title} (${bestSnapshotKey} kcal)`,
+        title: `Plano ${selectedTemplate.title} (${snapshotKey} kcal)`,
         description: selectedTemplate.description,
         template_id: selectedTemplate.id,
         start_date: new Date().toISOString(),
