@@ -77,29 +77,9 @@ export class ClinicalEngine {
         fat: Number(anamnesis.computed_fat)
       };
     } else {
-      // Fallback: If no anamnesis, check profile but warn
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", patientId)
-        .single();
-      
-      if (!profile || !profile.current_weight_kg) {
-        throw new Error("ANAMNESIS_MISSING: Anamnese incompleta ou não encontrada.");
-      }
-
-      console.log("[ClinicalEngine] Falling back to profile calculations");
-      const weight = Number(profile.current_weight_kg);
-      const height = Number(profile.current_height_cm) || 170;
-      const age = 30; // Default
-      const sex = profile.sex || "female";
-      const goal = profile.goal || "maintain";
-      const activityLevel = profile.activity_level || "moderate";
-
-      const tmb = calculateTMB(weight, height, age, sex);
-      const tdee = calculateTDEE(tmb, activityLevel);
-      targetKcal = calculateTargetKcal(tdee, goal, sex);
-      macros = calculateMacros(targetKcal, goal, weight);
+      // CRITICAL: No fallback to profiles. Anamnesis is the ONLY source of truth.
+      // If anamnesis is missing, the patient must complete onboarding.
+      throw new Error("ANAMNESIS_MISSING: Anamnese incompleta ou não encontrada. Paciente deve completar o onboarding antes de gerar plano.");
     }
 
     // 3. Find suitable template from v3_diet_templates
@@ -124,34 +104,21 @@ export class ClinicalEngine {
     let selectedTemplate = templates?.[0];
 
     if (!selectedTemplate && !template_id) {
-      console.log("[ClinicalEngine] No exact kcal match. Trying fuzzy match.");
-      const { data: allTemplates } = await supabase
-        .from("v3_diet_templates")
-        .select("*")
-        .eq("active", true)
-        .limit(20);
-      
-      selectedTemplate = allTemplates?.sort((a, b) => {
-        const aProfiles = a.kcal_profiles || [];
-        const bProfiles = b.kcal_profiles || [];
-        const aDiff = Math.min(...aProfiles.map((k: number) => Math.abs(k - targetKcal)));
-        const bDiff = Math.min(...bProfiles.map((k: number) => Math.abs(k - targetKcal)));
-        return aDiff - bDiff;
-      })[0];
+      // CRITICAL: No fuzzy match. Template selection must be deterministic and explicit.
+      // If no exact match, the nutritionist must select a template explicitly.
+      throw new Error(`Nenhum template exato encontrado para ${targetKcal} kcal. Solicite ao nutricionista um template específico ou use template_id.`);
     }
 
     if (!selectedTemplate) {
       throw new Error(`Não encontramos nenhum template compatível para ${targetKcal} kcal.`);
     }
 
-    // 4. Extract snapshot for the target Kcal
-    const snapshots = selectedTemplate.plan_snapshot || {};
-    const snapshotKeys = Object.keys(snapshots).map(Number).sort((a, b) => Math.abs(a - targetKcal) - Math.abs(b - targetKcal));
-    const bestSnapshotKey = snapshotKeys[0];
-    const snapshot = snapshots[bestSnapshotKey.toString()];
+    // 4. Extract snapshot for the target Kcal (DETERMINISTIC: exact match only)
+    const snapshotKey = targetKcal.toString();
+    const snapshot = (selectedTemplate.plan_snapshot || {})[snapshotKey];
 
     if (!snapshot) {
-      throw new Error(`Snapshot para ${targetKcal} kcal não encontrado no template ${selectedTemplate.title}`);
+      throw new Error(`Snapshot exato para ${targetKcal} kcal não encontrado no template "${selectedTemplate.title}". Template não suporta essa caloria.`);
     }
 
     // 5. Create the Meal Plan record
