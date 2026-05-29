@@ -200,12 +200,15 @@ export const applyOfficialV2Template = async (
         const groupId = crypto.randomUUID();
         const opts = b.options || [];
         opts.forEach((opt: any, idx: number) => {
+          const optTitle = opt.name || b.label;
+          const isSalad = optTitle.toLowerCase().includes("salada") || optTitle.toLowerCase().includes("folhas");
+          
           items.push({
             meal_plan_id: plan.id,
             day_of_week: 0,
             tipo_refeicao: meal.tipo_refeicao,
-            title: opt.name || b.label,
-            description: opt.portion || b.base_quantity,
+            title: optTitle,
+            description: isSalad ? "À vontade" : (opt.portion || b.base_quantity),
             meta_calorias: Math.round((opt.calories || 0) * multiplier),
             meta_proteinas: Math.round((opt.protein || 0) * multiplier),
             meta_carboidratos: Math.round((opt.carbs || 0) * multiplier),
@@ -213,6 +216,8 @@ export const applyOfficialV2Template = async (
             substitution_group_id: groupId,
             is_primary: idx === 0,
             visual_library_item_id: opt.visual_library_item_id || null,
+            clinical_mass_g: isSalad ? 100 : Math.round((opt.clinical_mass_g || 100) * multiplier),
+            editor_version: 'v2'
           });
         });
       }
