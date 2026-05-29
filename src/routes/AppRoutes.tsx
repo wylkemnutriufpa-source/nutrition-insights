@@ -61,6 +61,8 @@ const BiquiniBrancoDetail = lazy(() => import("../pages/BiquiniBrancoDetail"));
 const MyReferrals = lazy(() => import("../pages/MyReferrals"));
 const MyPublicProfile = lazy(() => import("../pages/MyPublicProfile"));
 const SovereignDashboard = lazy(() => import("../pages/SovereignDashboard"));
+const IntelligenceSettings = lazy(() => import("../pages/IntelligenceSettings"));
+const PatientIntelligence = lazy(() => import("../pages/PatientIntelligence"));
 // Removed V3LibrarySandbox import
 
 export const AppRoutes = () => {
