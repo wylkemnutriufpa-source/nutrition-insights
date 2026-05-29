@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const subCheckRef = useRef(false);
   const fetchInProgressRef = useRef<string | null>(null);
+  const fetchRetryCountRef = useRef(0);
   // 🛡️ Refs para o listener acessar valores atuais sem precisar das deps
   const currentUserIdRef = useRef<string | null>(null);
   const rolesResolvedRef = useRef(false);
@@ -143,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const newRoles = ((result.roles ?? []).map((r: any) => r.role)) as AppRole[];
       console.log(`[AUTH:CORE] Roles resolved: [${newRoles.join(", ")}]`);
       setRoles(newRoles);
+      fetchRetryCountRef.current = 0;
 
       if (profileData?.tenant_id) {
         setTenantId(profileData.tenant_id);
@@ -154,8 +156,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (e: any) {
       console.error("[AUTH:CORE] fetchData failure (recovering with empty roles):", e);
-      // Recovery: Unblock the app even if data is missing
-      setRoles(prev => prev === null ? [] : prev);
+      // Não converter falha temporária em roles vazias: isso dispara redirecionamento indevido
+      // em rotas profissionais (/patients -> /client/dashboard) antes das permissões reais resolverem.
+      if (fetchRetryCountRef.current < 2) {
+        fetchRetryCountRef.current += 1;
+        window.setTimeout(() => {
+          if (currentUserIdRef.current === userId && !rolesResolvedRef.current) {
+            void fetchData(userId);
+          }
+        }, 750);
+      }
     } finally {
       fetchInProgressRef.current = null;
       setIsLoaded(true);
