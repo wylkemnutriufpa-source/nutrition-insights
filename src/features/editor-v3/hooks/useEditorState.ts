@@ -80,15 +80,18 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
   updateFoodQuantity: (mealId, itemInstanceId, newQuantity) => {
     const { meals } = get();
+    const itemToUpdate = meals.find(m => m.id === mealId)?.items.find(i => i.instanceId === itemInstanceId);
+    if (!itemToUpdate) return;
+
+    const blockId = itemToUpdate.blockId;
+    const oldQty = itemToUpdate.clinical_mass_g || itemToUpdate.quantity || 100;
+    const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity)));
+
     const updatedMeals = meals.map(meal => {
-      if (meal.id !== mealId) return meal;
-
       const updatedItems = meal.items.map(item => {
-        if (item.instanceId !== itemInstanceId) return item;
-
-        const oldQty = item.clinical_mass_g || item.quantity || 100;
-        // 🛡️ Defense in Depth: Limitar quantidade entre MIN e MAX
-        const safeNewQty = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(newQuantity)));
+        // Se tiver blockId, atualiza em todos os dias que compartilham o mesmo bloco
+        const isMatch = blockId ? item.blockId === blockId : (meal.id === mealId && item.instanceId === itemInstanceId);
+        if (!isMatch) return item;
 
         const subsWithOriginalQty = (item.substitutions || []).map((sub: any) => ({
           ...sub,
@@ -192,11 +195,18 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
   removeFood: (mealId, itemInstanceId) => {
     const { meals } = get();
+    const itemToRemove = meals.find(m => m.id === mealId)?.items.find(i => i.instanceId === itemInstanceId);
+    if (!itemToRemove) return;
+
+    const blockId = itemToRemove.blockId;
+
     const updatedMeals = meals.map(meal => {
-      if (meal.id !== mealId) return meal;
       return {
         ...meal,
-        items: meal.items.filter(item => item.instanceId !== itemInstanceId)
+        items: meal.items.filter(item => {
+          if (blockId) return item.blockId !== blockId;
+          return meal.id !== mealId || item.instanceId !== itemInstanceId;
+        })
       };
     });
     set({ meals: updatedMeals });
@@ -204,15 +214,21 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
   addFoodToMeal: (mealId, food) => {
     const { meals } = get();
+    const targetMeal = meals.find(m => m.id === mealId);
+    if (!targetMeal) return;
+
+    const quantity = Math.max(1, Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100));
+    const macros = calculateItemMacros(food, quantity);
+    const blockId = (food as any).blockId || crypto.randomUUID();
+    
     const updatedMeals = meals.map(meal => {
-      if (meal.id !== mealId) return meal;
-      
-      const quantity = Math.max(1, Math.round(food.clinical_mass_g || food.quantity || food.portionValue || 100));
-      const macros = calculateItemMacros(food, quantity);
+      // Adiciona o alimento em todas as refeições com o mesmo nome (slot) em todos os dias
+      if (meal.name !== targetMeal.name) return meal;
       
       const newItem: MealItem = {
         ...food,
         instanceId: crypto.randomUUID(),
+        blockId: blockId,
         quantity,
         clinical_mass_g: quantity,
         substitutions: food.substitutions || [],
@@ -246,21 +262,27 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
   updateMealHeader: (mealId, updates) => {
     const { meals } = get();
+    const targetMeal = meals.find(m => m.id === mealId);
+    if (!targetMeal) return;
+
     set({
-      meals: meals.map(m => m.id === mealId ? { ...m, ...updates } : m)
+      meals: meals.map(m => m.name === targetMeal.name ? { ...m, ...updates } : m)
     });
   },
 
   updateMealItemMacros: (mealId, itemInstanceId, targetValue, macroType) => {
     const { meals } = get();
+    const itemToUpdate = meals.find(m => m.id === mealId)?.items.find(i => i.instanceId === itemInstanceId);
+    if (!itemToUpdate) return;
+
+    const blockId = itemToUpdate.blockId;
+    const oldQty = itemToUpdate.clinical_mass_g || itemToUpdate.quantity || 100;
+    const newQuantity = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(scaleItemToTarget(itemToUpdate, targetValue, macroType))));
+
     const updatedMeals = meals.map(meal => {
-      if (meal.id !== mealId) return meal;
-
       const updatedItems = meal.items.map(item => {
-        if (item.instanceId !== itemInstanceId) return item;
-
-        const oldQty = item.clinical_mass_g || item.quantity || 100;
-        const newQuantity = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(scaleItemToTarget(item, targetValue, macroType))));
+        const isMatch = blockId ? item.blockId === blockId : (meal.id === mealId && item.instanceId === itemInstanceId);
+        if (!isMatch) return item;
 
         const updatedSubs = adjustSubstitutionsProportionally(
           (item.substitutions || []) as any,
@@ -291,33 +313,35 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
   addSubstitutionToItem: (mealId, itemInstanceId, food) => {
     const { meals } = get();
+    const itemToUpdate = meals.find(m => m.id === mealId)?.items.find(i => i.instanceId === itemInstanceId);
+    if (!itemToUpdate) return;
+
+    const blockId = itemToUpdate.blockId;
+    const primaryKcal = itemToUpdate.kcal || 0;
+    const primaryQuantity = itemToUpdate.clinical_mass_g || itemToUpdate.quantity || 100;
+    
+    let subKcalPer100g = food.kcal_100g || 0;
+    if (!subKcalPer100g && food.kcal) {
+      const foodQuantity = food.clinical_mass_g || food.quantity || food.portionValue || 100;
+      subKcalPer100g = (food.kcal / foodQuantity) * 100;
+    }
+
+    let substituteQuantity: number;
+    if (primaryKcal > 0 && subKcalPer100g > 0) {
+      substituteQuantity = Math.max(1, Math.round((primaryKcal / subKcalPer100g) * 100));
+    } else {
+      substituteQuantity = primaryQuantity;
+    }
+
+    substituteQuantity = Math.min(MAX_QUANTITY, Math.max(1, Math.round(substituteQuantity)));
+    const subMacros = calculateItemMacros(food, substituteQuantity);
+    const groupId = itemToUpdate.substitution_group_id || crypto.randomUUID();
+
     const updatedMeals = meals.map(meal => {
-      if (meal.id !== mealId) return meal;
-
       const updatedItems = meal.items.map(item => {
-        if (item.instanceId !== itemInstanceId) return item;
+        const isMatch = blockId ? item.blockId === blockId : (meal.id === mealId && item.instanceId === itemInstanceId);
+        if (!isMatch) return item;
 
-        const primaryKcal = item.kcal || 0;
-        const primaryQuantity = item.clinical_mass_g || item.quantity || 100;
-        
-        let subKcalPer100g = food.kcal_100g || 0;
-        if (!subKcalPer100g && food.kcal) {
-          const foodQuantity = food.clinical_mass_g || food.quantity || food.portionValue || 100;
-          subKcalPer100g = (food.kcal / foodQuantity) * 100;
-        }
-
-        let substituteQuantity: number;
-        if (primaryKcal > 0 && subKcalPer100g > 0) {
-          substituteQuantity = Math.max(1, Math.round((primaryKcal / subKcalPer100g) * 100));
-        } else {
-          substituteQuantity = primaryQuantity;
-        }
-
-        substituteQuantity = Math.min(MAX_QUANTITY, Math.max(1, Math.round(substituteQuantity)));
-
-        const subMacros = calculateItemMacros(food, substituteQuantity);
-
-        const groupId = item.substitution_group_id || crypto.randomUUID();
         const newSub = {
           ...food,
           instanceId: crypto.randomUUID(),
@@ -344,13 +368,18 @@ export const useEditorState = create<EditorState>()((set, get) => ({
 
   updateMealItemName: (mealId, itemInstanceId, name) => {
     const { meals } = get();
+    const itemToUpdate = meals.find(m => m.id === mealId)?.items.find(i => i.instanceId === itemInstanceId);
+    if (!itemToUpdate) return;
+
+    const blockId = itemToUpdate.blockId;
+
     const updatedMeals = meals.map(meal => {
-      if (meal.id !== mealId) return meal;
       return {
         ...meal,
-        items: meal.items.map(item => 
-          item.instanceId === itemInstanceId ? { ...item, name } : item
-        )
+        items: meal.items.map(item => {
+          const isMatch = blockId ? item.blockId === blockId : (meal.id === mealId && item.instanceId === itemInstanceId);
+          return isMatch ? { ...item, name } : item;
+        })
       };
     });
     set({ meals: updatedMeals });
