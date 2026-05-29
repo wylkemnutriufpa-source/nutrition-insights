@@ -1,0 +1,59 @@
+================================================================================
+CREDENCIAIS PARA VERCEL — COPIAR E COLAR
+================================================================================
+
+INSTRUÇÕES:
+1. Abra a página de configuração do Vercel
+2. Vá para a seção "Ambientes" (Environment Variables)
+3. Copie cada linha abaixo e cole no Vercel
+
+================================================================================
+VARIÁVEL 1 — SUPABASE URL
+================================================================================
+
+Chave:
+VITE_SUPABASE_URL
+
+Valor:
+https://vkrcobprntictsxqmjjl.supabase.co
+
+================================================================================
+VARIÁVEL 2 — SUPABASE PUBLISHABLE KEY
+================================================================================
+
+Chave:
+VITE_SUPABASE_PUBLISHABLE_KEY
+
+Valor:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrcmNvYnBybnRpY3RzeHFtampsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODgzNjAsImV4cCI6MjA4ODU2NDM2MH0.7EeitVFMX1oFdtDCZpw7t1c6G5gnKjnvOhuScZ83VjU
+
+================================================================================
+CONFIGURAÇÕES BÁSICAS
+================================================================================
+
+Nome do Projeto:
+nutrition-insights-fitjourney
+
+Diretório Raiz:
+./
+
+Comando de Construção:
+npm run build
+
+Diretório de Saída:
+dist
+
+Comando de Instalação:
+npm install
+
+================================================================================
+RESUMO DO QUE FAZER
+================================================================================
+
+1. Preencha as configurações básicas (nome, diretório, comandos)
+2. Adicione as 2 variáveis de ambiente acima
+3. Clique em "Implantar" (Deploy)
+4. Aguarde 2-3 minutos
+5. Você receberá uma URL como: https://nutrition-insights-fitjourney.vercel.app
+
+================================================================================
