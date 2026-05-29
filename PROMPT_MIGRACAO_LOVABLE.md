@@ -1,91 +1,164 @@
-# Prompt para Lovable — Migração de Pacientes para Novo Supabase
+# Prompt para Lovable — Migração de Pacientes para Novo Supabase (CORRIGIDO)
+
+**IMPORTANTE:** Este prompt foi corrigido para usar **server-side migration** com service_role keys, não frontend button.
 
 Copie e cole este prompt no Lovable:
 
 ---
 
-## 📋 TAREFA: Migrar Todos os Pacientes para Novo Supabase
+## 📋 TAREFA: Criar Edge Function para Migração de Pacientes
 
-Preciso que você crie uma **função de migração de dados** que:
+Preciso que você crie uma **Edge Function (server-side)** que migre dados do Supabase antigo para o novo, **respeitando RLS e usando service_role keys**.
 
 ### 🎯 Objetivo
-Migrar TODOS os pacientes, planos de refeição e dados associados do **Supabase antigo** para o **novo Supabase**.
+Migrar pacientes, planos de refeição e itens do plano do **Supabase antigo** para o **novo Supabase**, preservando integridade referencial.
+
+### ⚠️ CONTEXTO CRÍTICO
+
+1. **RLS Respeita Anon Keys** — Anon keys só conseguem ler dados do usuário autenticado. Para migrar TODOS os pacientes, precisamos de **service_role keys** (server-side).
+
+2. **Auth.users Não Pode Ser Migrado via SDK** — Os IDs de `auth.users` são gerenciados pelo Supabase. Não podemos copiar usuários entre projetos via SDK. **Solução:** Migrar apenas os dados de `patients`, `meal_plans`, `meal_plan_items`. Os usuários farão login normalmente no novo projeto.
+
+3. **Frontend Button é Inseguro** — Nunca exponha service_role keys no frontend. A migração DEVE ser uma Edge Function (server-side).
+
+4. **Schema Diferente** — Novo schema é minimalista (6 tabelas). Migrar apenas: `patients`, `meal_plans`, `meal_plan_items`.
 
 ### 📊 Dados a Migrar
-1. **Tabela `patients`** — Todos os pacientes
-2. **Tabela `meal_plans`** — Todos os planos de refeição
-3. **Tabela `meal_plan_items`** — Todos os itens dos planos
-4. **Tabela `anamnesis`** — Todas as anamneses (se existir)
-5. **Tabela `clinical_assessments`** — Todas as avaliações clínicas (se existir)
 
-### 🔑 Credenciais
+**Origem (Supabase Antigo):**
+- Tabela `patients` → Destino `patients`
+- Tabela `meal_plans` → Destino `meal_plans`
+- Tabela `meal_plan_items` → Destino `meal_plan_items`
+
+**Destino (Novo Supabase):**
+- Novo schema com 6 tabelas: `patients`, `foods`, `food_substitutions`, `v3_diet_templates`, `meal_plans`, `meal_plan_items`
+
+### 🔑 Credenciais (VOCÊ FORNECERÁ)
 
 **Supabase Antigo (Origem):**
 ```
 URL: https://vkrcobprntictsxqmjjl.supabase.co
-Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrcmNvYnBybnRpY3RzeHFtampsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODgzNjAsImV4cCI6MjA4ODU2NDM2MH0.7EeitVFMX1oFdtDCZpw7t1c6G5gnKjnvOhuScZ83VjU
+Service Role Key: [VOCÊ FORNECERÁ — vá em Supabase → Settings → API → Service Role Key]
 ```
 
 **Novo Supabase (Destino):**
 ```
 URL: https://bhyyxrllhmisxyobbgfn.supabase.co
-Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoeXl4cmxsaG1pc3h5b2JiZ2ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNjUyNzYsImV4cCI6MjA5NTY0MTI3Nn0.M0adIJ5ot06i1Tr1nroR0YkEyh6skcpBGXB0HxkJyqo
+Service Role Key: [VOCÊ FORNECERÁ — vá em Supabase → Settings → API → Service Role Key]
 ```
 
 ### 🛠️ Implementação
 
-Crie uma **função TypeScript** chamada `migratePatients()` que:
+Crie uma **Edge Function** em:
+```
+supabase/functions/migrate-patients/index.ts
+```
 
-1. **Conecta ao Supabase antigo** usando as credenciais acima
-2. **Extrai todos os dados** das tabelas listadas
-3. **Conecta ao novo Supabase** usando as novas credenciais
-4. **Insere os dados** mantendo os IDs originais (para não quebrar referências)
-5. **Valida a migração** contando registros antes e depois
-6. **Retorna um relatório** com:
-   - Total de pacientes migrados
-   - Total de planos migrados
-   - Total de itens migrados
-   - Erros (se houver)
+A função deve:
 
-### 📝 Requisitos
+1. **Receber POST request** com:
+   ```json
+   {
+     "sourceServiceRoleKey": "...",
+     "destServiceRoleKey": "...",
+     "dryRun": true  // true = apenas contar, false = executar migração
+   }
+   ```
 
-- ✅ Usar `@supabase/supabase-js` para conexão
-- ✅ Manter integridade referencial (IDs iguais)
-- ✅ Tratar erros graciosamente
+2. **Conectar ao Supabase antigo** com service_role key
+3. **Extrair dados** de `patients`, `meal_plans`, `meal_plan_items`
+4. **Conectar ao novo Supabase** com service_role key
+5. **Inserir dados** mantendo IDs originais (para integridade referencial)
+6. **Validar integridade** — contar registros antes/depois
+7. **Retornar relatório:**
+   ```json
+   {
+     "success": true,
+     "summary": {
+       "patients_migrated": 5,
+       "meal_plans_migrated": 12,
+       "meal_plan_items_migrated": 84,
+       "errors": []
+     },
+     "timestamp": "2026-05-29T..."
+   }
+   ```
+
+### 📝 Requisitos Técnicos
+
+- ✅ Usar `@supabase/supabase-js` com service_role keys
+- ✅ Manter IDs originais (não gerar novos UUIDs)
+- ✅ Respeitar integridade referencial (meal_plans.patient_id, meal_plan_items.meal_plan_id)
+- ✅ Suportar `dryRun` mode (contar sem inserir)
+- ✅ Tratar erros graciosamente (não parar na primeira falha)
 - ✅ Adicionar logs detalhados
-- ✅ Criar um botão "Migrar Dados" na interface (opcional, mas útil)
-- ✅ Mostrar progresso da migração
+- ✅ Validar que dados foram inseridos corretamente
 
 ### 🚀 Onde Colocar
 
-Crie o arquivo em:
+**Edge Function:**
 ```
-src/lib/migration/migratePatients.ts
-```
-
-E adicione um botão de teste em:
-```
-src/features/admin/MigrationPanel.tsx
+supabase/functions/migrate-patients/index.ts
 ```
 
-### ⚠️ Importante
+**Teste Local:**
+```bash
+supabase functions serve migrate-patients
+curl -X POST http://localhost:54321/functions/v1/migrate-patients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sourceServiceRoleKey": "...",
+    "destServiceRoleKey": "...",
+    "dryRun": true
+  }'
+```
 
-- **Não delete dados do Supabase antigo** — apenas copie
-- **Teste com 1 paciente primeiro** antes de migrar todos
-- **Faça backup** antes de executar
-- **Valide os dados** após a migração
+### ⚠️ IMPORTANTE — ANTES DE EXECUTAR
 
----
+1. **Obtenha service_role keys:**
+   - Supabase Antigo: Settings → API → Service Role Key (copie)
+   - Novo Supabase: Settings → API → Service Role Key (copie)
 
-## 🎯 Resultado Esperado
+2. **Teste com dryRun=true primeiro:**
+   ```json
+   {
+     "sourceServiceRoleKey": "...",
+     "destServiceRoleKey": "...",
+     "dryRun": true
+   }
+   ```
+   Isso apenas conta registros, não insere nada.
+
+3. **Depois execute com dryRun=false:**
+   ```json
+   {
+     "sourceServiceRoleKey": "...",
+     "destServiceRoleKey": "...",
+     "dryRun": false
+   }
+   ```
+
+4. **Valide os dados** no novo Supabase após migração
+
+### 🎯 Resultado Esperado
 
 Após executar a migração:
 - ✅ Todos os pacientes aparecem no novo Supabase
-- ✅ Todos os planos aparecem com os dados corretos
+- ✅ Todos os planos aparecem com dados corretos
+- ✅ Integridade referencial mantida
+- ✅ Usuários fazem login normalmente no novo projeto
 - ✅ Nenhum dado foi perdido
-- ✅ Usuários conseguem fazer login e ver seus dados
 
 ---
 
-**Pronto! Agora você consegue fazer login no novo Supabase e todos os pacientes estarão lá!**
+## 📌 NOTAS TÉCNICAS
+
+- **Não migre auth.users** — Usuários fazem login normalmente no novo projeto
+- **Não migre tabelas antigas** — Novo schema é minimalista, apenas 6 tabelas
+- **Service_role keys são sensíveis** — Use apenas em Edge Functions, nunca no frontend
+- **Teste com dryRun=true** antes de executar migração real
+
+---
+
+**Pronto! Após executar, todos os pacientes estarão no novo Supabase e usuários conseguem fazer login!**
 
