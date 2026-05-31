@@ -15,7 +15,8 @@ export function PatientRetentionAlerts() {
     riskLevel,
     isDayComplete,
     dailyMission,
-    daysToRecord
+    daysToRecord,
+    isBetterThanLastWeek
   } = useEngagement();
 
   if (!stats) return null;
