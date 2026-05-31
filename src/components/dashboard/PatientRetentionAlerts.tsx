@@ -197,7 +197,7 @@ export function PatientRetentionAlerts() {
             {stats.weekly_adherence_pct}% de adesão semanal
           </p>
           <div className="flex items-center gap-2">
-            {useEngagement().isBetterThanLastWeek && (
+            {isBetterThanLastWeek && (
               <p className="text-[10px] text-primary font-bold flex items-center gap-0.5">
                 <TrendingUp className="w-3 h-3" /> Evoluindo!
               </p>
