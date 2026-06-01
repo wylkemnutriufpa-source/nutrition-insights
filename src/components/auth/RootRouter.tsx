@@ -146,10 +146,9 @@ export function RootRouter() {
   }
 
 
-  // 4. Se não autenticado, login
+  // 4. Se não autenticado, mostra landing page pública em "/"
   if (authStatus === "unauthenticated") {
-    console.warn(`[RASTREADOR] Redirect para /auth disparado por: RootRouter`);
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   // 5. GOVERNANÇA DE ROLE SOBERANA (Anti-contaminação)
