@@ -23,9 +23,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { config } from "dotenv";
 
-config({ path: join(import.meta.dir, ".env") });
+// .env é carregado via flag `bun --env-file=scripts/migrate-to-fj2/.env`
+// (ver README). Não usamos dotenv pra evitar nova dependência.
 
 // ============================================================
 // CONFIG
