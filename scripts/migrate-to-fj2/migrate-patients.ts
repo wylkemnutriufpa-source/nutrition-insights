@@ -41,7 +41,8 @@ const CONSENT_TYPE = "legacy_migration_v1";
 const CONSENT_VERSION = "fj1.0";
 const SCRIPT_TAG = "migration-script-v1";
 
-const OUT_DIR = join(import.meta.dir, "output");
+const SCRIPT_DIR = new URL(".", import.meta.url).pathname;
+const OUT_DIR = join(SCRIPT_DIR, "output");
 const TS = new Date().toISOString().replace(/[:.]/g, "-");
 
 function mustEnv(name: string): string {
