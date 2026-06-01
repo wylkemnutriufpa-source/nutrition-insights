@@ -61,6 +61,8 @@ const BiquiniBrancoDetail = lazy(() => import("../pages/BiquiniBrancoDetail"));
 const MyReferrals = lazy(() => import("../pages/MyReferrals"));
 const MyPublicProfile = lazy(() => import("../pages/MyPublicProfile"));
 const SovereignDashboard = lazy(() => import("../pages/SovereignDashboard"));
+const IntelligenceSettings = lazy(() => import("../pages/IntelligenceSettings"));
+const PatientIntelligence = lazy(() => import("../pages/PatientIntelligence"));
 // Removed V3LibrarySandbox import
 
 export const AppRoutes = () => {
@@ -128,6 +130,10 @@ export const AppRoutes = () => {
       <Route path="/user-guide" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><UserGuide /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/apresentacao" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><SystemPresentation /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/health-quiz" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><HealthCheckQuiz /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/intelligence-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><IntelligenceSettings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient/intelligence" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientIntelligence /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+
+
 
       {/* Protocolos Especiais */}
       <Route path="/biquini-branco" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoLanding /></Suspense>} />

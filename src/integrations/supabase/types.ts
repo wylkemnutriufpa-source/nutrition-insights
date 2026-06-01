@@ -5020,6 +5020,87 @@ export type Database = {
           },
         ]
       }
+      food_substitutions: {
+        Row: {
+          created_at: string | null
+          food_id: string
+          id: string
+          substitute_food_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          food_id: string
+          id?: string
+          substitute_food_id: string
+        }
+        Update: {
+          created_at?: string | null
+          food_id?: string
+          id?: string
+          substitute_food_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_substitutions_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "foods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_substitutions_substitute_food_id_fkey"
+            columns: ["substitute_food_id"]
+            isOneToOne: false
+            referencedRelation: "foods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foods: {
+        Row: {
+          carbs_g: number | null
+          created_at: string | null
+          fat_g: number | null
+          fiber_g: number | null
+          id: string
+          image_url: string | null
+          kcal_100g: number
+          name: string
+          portion_label: string | null
+          protein_g: number | null
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          carbs_g?: number | null
+          created_at?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          image_url?: string | null
+          kcal_100g: number
+          name: string
+          portion_label?: string | null
+          protein_g?: number | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          carbs_g?: number | null
+          created_at?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          image_url?: string | null
+          kcal_100g?: number
+          name?: string
+          portion_label?: string | null
+          protein_g?: number | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       global_action_catalog: {
         Row: {
           action_code: string
@@ -7248,6 +7329,7 @@ export type Database = {
           meta_carboidratos: number | null
           meta_gorduras: number | null
           meta_proteinas: number | null
+          quantity_display: string | null
           substitution_group_id: string | null
           target_percentage: number | null
           tenant_id: string | null
@@ -7277,6 +7359,7 @@ export type Database = {
           meta_carboidratos?: number | null
           meta_gorduras?: number | null
           meta_proteinas?: number | null
+          quantity_display?: string | null
           substitution_group_id?: string | null
           target_percentage?: number | null
           tenant_id?: string | null
@@ -7306,6 +7389,7 @@ export type Database = {
           meta_carboidratos?: number | null
           meta_gorduras?: number | null
           meta_proteinas?: number | null
+          quantity_display?: string | null
           substitution_group_id?: string | null
           target_percentage?: number | null
           tenant_id?: string | null
