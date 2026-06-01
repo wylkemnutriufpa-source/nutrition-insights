@@ -44,7 +44,7 @@ cp .env.example .env
 ### 1. DryRun obrigatório (relatório sem escrever)
 
 ```bash
-bun run scripts/migrate-to-fj2/migrate-patients.ts
+bun --env-file=scripts/migrate-to-fj2/.env run scripts/migrate-to-fj2/migrate-patients.ts
 ```
 
 Sai relatório:
