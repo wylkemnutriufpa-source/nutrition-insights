@@ -60,7 +60,7 @@ Sai relatório:
 ### 2. Execução real
 
 ```bash
-DRY_RUN=false bun run scripts/migrate-to-fj2/migrate-patients.ts
+DRY_RUN=false bun --env-file=scripts/migrate-to-fj2/.env run scripts/migrate-to-fj2/migrate-patients.ts
 ```
 
 Gera dois arquivos em `scripts/migrate-to-fj2/output/`:
