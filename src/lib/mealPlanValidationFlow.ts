@@ -87,7 +87,22 @@ export async function validateMealPlan(planId: string): Promise<ClinicalValidati
 }
 
 export function resolveOverallValidationStatus(result: ClinicalValidationResult | null | undefined) {
-  return result?.overall_status || result?.status || (result?.success ? "aprovado" : "sugestoes_pendentes");
+  // NOVO: Retorna status consultivo, não bloqueante
+  // - "aprovado" = score >= 65 (tudo OK, sem sugestões)
+  // - "sugestoes_pendentes" = score < 65 (tem sugestões, mas pode publicar)
+  // - nunca "falha" ou "bloqueado" (não bloqueia mais)
+  
+  const status = result?.overall_status || result?.status;
+  
+  if (status === "aprovado" || (result?.success && result?.validation_passed)) {
+    return "aprovado";
+  }
+  
+  if (status === "sugestoes_pendentes" || result?.score !== undefined && result.score < 65) {
+    return "sugestoes_pendentes";
+  }
+  
+  return result?.success ? "aprovado" : "sugestoes_pendentes";
 }
 
 export async function runValidateAndFixMealPlan({
@@ -118,6 +133,22 @@ export async function runValidateAndFixMealPlan({
   const validationResult = await validateMealPlan(planId);
   console.info("[ValidateAndFix] Validation result", { planId, success: validationResult.success, score: validationResult.score, status: validationResult.overall_status });
 
+  // ─────────────────────────────────────────────────────────────────────
+  // FILOSOFIA: "O sistema sugere. O nutricionista decide."
+  // 
+  // Mudança crítica:
+  // - Antes: success=false se score < 65 (bloqueante)
+  // - Agora: success=true SEMPRE. Validação é consultiva.
+  // 
+  // Validações CRÍTICAS que bloqueiam (raras):
+  // - Plano vazio (sem refeições)
+  // - Meta calórica indefinida (precisa de anamnese ou avaliação)
+  // 
+  // Validações normais (score < 65):
+  // - Apenas geram SUGESTÕES que o nutricionista pode ignorar
+  // ─────────────────────────────────────────────────────────────────────
+
+  // Validação sempre retorna sucesso (consultivo)
   if (validationResult.success) {
     return {
       kind: "validated",
@@ -125,7 +156,8 @@ export async function runValidateAndFixMealPlan({
     };
   }
 
-  // 🚧 Bloqueios críticos que o autofix NÃO pode resolver — falhar cedo com mensagem clara
+  // 🚧 Bloqueios CRÍTICOS e RAROS que não permitem prosseguir
+  // (Essas sim precisam ser bloqueantes)
   const errors = (validationResult as any).errors || [];
   const buckets = (validationResult as any).buckets || {};
   const blockedRules = [
@@ -133,40 +165,27 @@ export async function runValidateAndFixMealPlan({
     ...(buckets.bloquear_publicacao || []).map((b: any) => b.message || ""),
   ].join(" | ").toLowerCase();
 
-  if (blockedRules.includes("sem_meta_calorica") || blockedRules.includes("meta calórica") || blockedRules.includes("anamnese ou a avaliação")) {
-    throw new Error("Paciente não tem meta calórica definida. Complete a Anamnese ou a Avaliação Física antes de validar o plano.");
-  }
-
+  // Apenas PLANO VAZIO ou META INDEFINIDA bloqueiam
   if (blockedRules.includes("plano_vazio") || blockedRules.includes("não tem refeições") || blockedRules.includes("nao tem refeicoes")) {
     throw new Error("Plano vazio — adicione refeições ou use 'Gerar plano' antes de validar.");
   }
 
-  if (!tenantId) {
-    throw new Error("Contexto da clínica não carregado para corrigir o plano.");
+  if (blockedRules.includes("sem_meta_calorica") || blockedRules.includes("meta calórica") || blockedRules.includes("anamnese ou a avaliação")) {
+    throw new Error("Paciente não tem meta calórica definida. Complete a Anamnese ou a Avaliação Física antes de validar o plano.");
   }
 
-  // autoFixMealPlan disabled as part of procedural engine removal
-  const fixedResult = { success: false, newPlanId: null, inPlace: false, changes: [], warnings: ["A correção automática foi desativada."] } as any;
-  console.info("[ValidateAndFix] AutoFix bypassed", { planId });
-
-  if (!fixedResult.success || !fixedResult.newPlanId) {
-    throw new Error(fixedResult.warnings[0] || "A correção automática não conseguiu persistir mudanças.");
-  }
-
-  if (!fixedResult.inPlace) {
-    return {
-      kind: "redirect",
-      validationResult,
-      fixedResult,
-      newPlanId: fixedResult.newPlanId,
-    };
-  }
-
-  const revalidatedResult = await validateMealPlan(planId);
-  console.info("[ValidateAndFix] Re-validation result", { planId, success: revalidatedResult.success, score: revalidatedResult.score });
+  // Se chegou aqui, é um erro que seria autofix (que foi desativado)
+  // Ainda assim, retorna sucesso — nutricionista decide se quer publicar
+  console.warn("[ValidateAndFix] Validation issued recommendations, but not blocking", { planId });
+  
   return {
-    kind: revalidatedResult.success ? "fixed_and_validated" : "fixed_but_pending",
-    validationResult: revalidatedResult,
-    fixedResult,
+    kind: "validated",
+    validationResult: {
+      success: true,  // ← NOVO: SEMPRE sucesso
+      overall_status: "sugestoes_pendentes",
+      score: validationResult.score || 50,
+      message: "Validação completa. O sistema tem algumas sugestões, mas você pode publicar.",
+      recommendations: validationResult,  // Passar todas as recomendações
+    },
   };
 }

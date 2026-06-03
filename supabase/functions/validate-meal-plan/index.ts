@@ -310,16 +310,25 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             last_validated_at: new Date().toISOString(),
         }).eq("id", meal_plan_id);
 
+        // ─────────────────────────────────────────────────────────────────────
+        // FILOSOFIA: "O sistema sugere. O nutricionista decide."
+        // A validação sempre completa com sucesso. Retorna score + recomendações.
+        // O nutricionista SEMPRE pode publicar — com ou sem seguir as sugestões.
+        // ─────────────────────────────────────────────────────────────────────
         return new Response(JSON.stringify({
-            success: overallScore >= 65,
+            success: true,  // ← SEMPRE sucesso. Validação foi executada.
+            validation_passed: overallScore >= 65,  // ← NOVO: resultado da validação (consultivo, não bloqueante)
+            can_force_publish: true,  // ← NOVO: nutricionista SEMPRE pode publicar
             score: overallScore,
             clinical_score: clinicalScore,
             simplicity_score: simplicityResult.score,
+            overall_status: overallScore >= 65 ? "aprovado" : "sugestoes_pendentes",  // ← NOVO: status consultivo
             executive_summary: executiveSummary,
             prioritized_issues: prioritizedIssues,
+            recommendations: prioritizedIssues.length > 0 ? prioritizedIssues : [],  // ← Recomendações, não bloqueios
             buckets,
             macros: macroResults,
-            errors: clinicalErrors,
+            errors: clinicalErrors,  // ← Mantém para auditoria, mas não bloqueia
             audit,
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
